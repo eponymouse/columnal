@@ -3,6 +3,7 @@ package records.gui;
 import javafx.scene.layout.Pane;
 
 import records.data.Record;
+import records.data.RecordSet;
 import records.data.RecordType;
 
 /**
@@ -12,6 +13,10 @@ public class View extends Pane
 {
     public View()
     {
-        super(new Table(new Record(new RecordType())));
+    }
+
+    public void add(Table table)
+    {
+        getChildren().add(table);
     }
 }
