@@ -2,6 +2,7 @@ package records.data;
 
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
+import org.jetbrains.annotations.NotNull;
 import utility.Utility;
 
 import java.util.List;
@@ -11,16 +12,18 @@ import java.util.List;
  */
 public class RecordSet
 {
-    private List<Column<String>> columns;
+    private final String title;
+    private List<Column<?>> columns;
     private int knownMinCount;
 
-    public RecordSet(List<Column<String>> columns, int knownMinCount)
+    public RecordSet(String title, List<Column<?>> columns, int knownMinCount)
     {
+        this.title = title;
         this.columns = columns;
         this.knownMinCount = knownMinCount;
     }
 
-    public List<TableColumn<Integer, String>> getDisplayColumns()
+    @NotNull public List<TableColumn<Integer, String>> getDisplayColumns()
     {
         return Utility.mapList(columns, data -> {
             TableColumn<Integer, String> c = new TableColumn(data.getName());
@@ -50,7 +53,7 @@ public class RecordSet
                         String val = "ERROR";
                         try
                         {
-                            val = data.get(getIndex());
+                            val = data.get(getIndex()).toString();
                         }
                         catch (Exception ex)
                         {
@@ -68,5 +71,20 @@ public class RecordSet
     public int getCurrentKnownMinRows()
     {
         return knownMinCount;
+    }
+
+    @NotNull public String getTitle()
+    {
+        return title;
+    }
+
+    @NotNull public Column getColumn(String name) throws Exception
+    {
+        for (Column c : columns)
+        {
+            if (c.getName().equals(name))
+                return c;
+        }
+        throw new Exception("Column not found");
     }
 }

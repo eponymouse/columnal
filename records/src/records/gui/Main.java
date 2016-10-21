@@ -36,7 +36,7 @@ public class Main extends Application
             {
                 try
                 {
-                    v.add(new Table(Import.importFile(chosen)));
+                    v.add(new Table(v, Import.importFile(chosen)));
                 }
                 catch (IOException ex)
                 {
@@ -46,7 +46,7 @@ public class Main extends Application
             }
         });
         menu.getItems().add(importItem);
-        v.add(new Table(Import.importFile(new File("J:\\price\\detailed.txt"))));
+        v.add(new Table(v, Import.importFile(new File("J:\\price\\detailed.txt"))));
 
         BorderPane root = new BorderPane(new ScrollPane(v), new MenuBar(menu), null, null, null);
         primaryStage.setScene(new Scene(root));

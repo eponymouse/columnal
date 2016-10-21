@@ -57,11 +57,11 @@ public class Import
                 int columnCount = initial.get(0).split(sep.getKey()).length;
 
                 // TODO work out type of field
-                List<Column<String>> columns = new ArrayList<>();
+                List<Column<?>> columns = new ArrayList<>();
                 for (int i = 0; i < columnCount; i++)
                     columns.add(new TextFileColumn(textFile, sep.getKey(), i));
 
-                return new RecordSet(columns, initial.size() - 1);
+                return new RecordSet(textFile.getName(), columns, initial.size() - 1);
             }
             else
                 throw new IOException("Uncertain of number of columns");

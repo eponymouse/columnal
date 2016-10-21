@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Created by neil on 20/10/2016.
  */
-public class TextFileColumn extends Column<String>
+public class TextFileColumn extends Column
 {
     private static final int CHUNK_LINES = 100;
     private final ArrayList<String> loadedValues = new ArrayList<>();
@@ -55,5 +55,23 @@ public class TextFileColumn extends Column<String>
         }
 
         return loadedValues.get(index);
+    }
+
+    @Override
+    public boolean indexValid(int index)
+    {
+        return true; // TODO lookup number of lines
+    }
+
+    @Override
+    public Class getType()
+    {
+        return String.class; // Allow other types?
+    }
+
+    @Override
+    public long getVersion()
+    {
+        return 1;
     }
 }
