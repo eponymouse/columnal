@@ -41,7 +41,7 @@ public class Main extends Application
                 catch (IOException ex)
                 {
                     ex.printStackTrace();
-                    new Alert(AlertType.ERROR, ex.getMessage(), ButtonType.OK).showAndWait();
+                    new Alert(AlertType.ERROR, ex.getMessage() == null ? "" : ex.getMessage(), ButtonType.OK).showAndWait();
                 }
             }
         });

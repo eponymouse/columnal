@@ -10,7 +10,7 @@ import java.util.List;
 /**
  * Created by neil on 20/10/2016.
  */
-public class TextFileColumn extends Column
+public class TextFileColumn extends Column<Object>
 {
     private static final int CHUNK_LINES = 100;
     private final ArrayList<String> loadedValues = new ArrayList<>();
@@ -64,7 +64,7 @@ public class TextFileColumn extends Column
     }
 
     @Override
-    public Class getType()
+    public Class<?> getType()
     {
         return String.class; // Allow other types?
     }

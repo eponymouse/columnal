@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="CompilerConfiguration">
+    <option name="DEFAULT_COMPILER" value="Javac" />
+    <resourceExtensions />
+    <wildcardResourcePatterns>
+      <entry name="!?*.java" />
+      <entry name="!?*.form" />
+      <entry name="!?*.class" />
+      <entry name="!?*.groovy" />
+      <entry name="!?*.scala" />
+      <entry name="!?*.flex" />
+      <entry name="!?*.kt" />
+      <entry name="!?*.clj" />
+    </wildcardResourcePatterns>
+    <annotationProcessing>
+      <profile default="true" name="Default" enabled="true">
+        <option name="printErrorStack" value="" />
+        <option name="stubs" value="$PROJECT_DIR$/records/stubs" />
+        <option name="stubWarnIfNotFound" value="" />
+        <processor name="org.checkerframework.checker.interning.InterningChecker" />
+        <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <processorPath useClasspath="false">
+          <entry name="$PROJECT_DIR$/records/checker-dist/checker.jar" />
+        </processorPath>
+      </profile>
+    </annotationProcessing>
+  </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$PROJECT_DIR$/records/checker-dist/jdk8.jar -Xlint:unchecked" />
+  </component>
+</project>

@@ -1,0 +1,10 @@
+<component name="libraryTable">
+  <library name="checker">
+    <CLASSES>
+      <root url="jar://$PROJECT_DIR$/records/checker-dist/checker.jar!/" />
+      <root url="jar://$PROJECT_DIR$/records/checker-dist/javac.jar!/" />
+    </CLASSES>
+    <JAVADOC />
+    <SOURCES />
+  </library>
+</component>

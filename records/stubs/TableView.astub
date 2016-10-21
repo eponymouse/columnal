@@ -1,0 +1,14 @@
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.initialization.qual.UnderInitialization;
+
+package javafx.scene.control;
+class TableView
+{
+    //@UnderInitialization(TableView.class) List getItems();
+}
+package javafx.scene.layout;
+class BorderPane
+{
+    BorderPane(@Nullable Node a, @Nullable Node b, @Nullable Node c, @Nullable Node d, @Nullable Node e);
+    //@Initialized void setTop(@Nullable Node a);
+}

@@ -1,7 +1,6 @@
 package records.data;
 
-import org.jetbrains.annotations.NotNull;
-
+import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -21,14 +20,15 @@ public class SummaryStatistics extends Transformation
 
     private final RecordSet result;
 
+    @SuppressWarnings("unchecked")
     public SummaryStatistics(RecordSet src, Map<String, Set<SummaryType>> summaries, List<String> splitBy) throws Exception
     {
-        List<Column<?>> columns = new ArrayList<>();
+        List<Column<Object>> columns = new ArrayList<>();
         for (Entry<String, Set<SummaryType>> e : summaries.entrySet())
         {
             for (SummaryType summaryType : e.getValue())
             {
-                Column srcCol = src.getColumn(e.getKey());
+                Column<Object> srcCol = src.getColumn(e.getKey());
                 switch (summaryType)
                 {
                     case MIN:case MAX:
@@ -48,17 +48,17 @@ public class SummaryStatistics extends Transformation
                         switch (summaryType)
                         {
                             case MIN:
-                                Column<Comparable> srcColComp = srcCol;
-                                Comparable min = srcColComp.get(0);
+                                Column<Object> srcColComp = srcCol;
+                                Comparable<Object> min = (Comparable<Object>)srcColComp.get(0);
                                 for (int i = 1; srcColComp.indexValid(i); i++)
                                 {
-                                    Comparable x = srcColComp.get(index);
+                                    Comparable<Object> x = (Comparable<Object>)srcColComp.get(index);
                                     if (min.compareTo(x) > 0)
                                         min = x;
                                 }
                                 return min;
                         }
-                        return null; // TODO intellij should flag this
+                        throw new Exception("Unsupported summary type");
                     }
 
                     @Override
@@ -68,7 +68,7 @@ public class SummaryStatistics extends Transformation
                     }
 
                     @Override
-                    public Class<Object> getType()
+                    public Class<?> getType()
                     {
                         return srcCol.getType();
                     }
@@ -78,7 +78,6 @@ public class SummaryStatistics extends Transformation
         result = new RecordSet("Summary", columns, 1);
     }
 
-    @NotNull
     public static SummaryStatistics guiCreate(RecordSet src) throws Exception
     {
         // TODO actually show GUI
@@ -86,6 +85,7 @@ public class SummaryStatistics extends Transformation
     }
 
     @Override
+    @NotNull
     public RecordSet getResult()
     {
         return result;

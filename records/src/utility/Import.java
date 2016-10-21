@@ -36,7 +36,10 @@ public class Import
             for (String sep : Arrays.asList(";", ",", "\t"))
             {
                 // Ignore first row; often a header:
-                List<Integer> counts = initial.stream().skip(1).map(l -> Utility.countIn(sep, l)).collect(Collectors.toList());
+                
+                List<Integer> counts = new ArrayList<>(initial.size() - 1);
+                for (int i = 1; i < initial.size(); i++)
+                    counts.add(Utility.countIn(sep, initial.get(i)));
                 if (counts.stream().allMatch(c -> c.intValue() == 0))
                 {
                     // None found; so rubbish we shouldn't record
@@ -57,7 +60,7 @@ public class Import
                 int columnCount = initial.get(0).split(sep.getKey()).length;
 
                 // TODO work out type of field
-                List<Column<?>> columns = new ArrayList<>();
+                List<Column<Object>> columns = new ArrayList<>();
                 for (int i = 0; i < columnCount; i++)
                     columns.add(new TextFileColumn(textFile, sep.getKey(), i));
 

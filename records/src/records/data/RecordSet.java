@@ -1,11 +1,15 @@
 package records.data;
 
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
-import org.jetbrains.annotations.NotNull;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 import utility.Utility;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Created by neil on 20/10/2016.
@@ -13,59 +17,36 @@ import java.util.List;
 public class RecordSet
 {
     private final String title;
-    private List<Column<?>> columns;
+    private List<Column<Object>> columns;
     private int knownMinCount;
 
-    public RecordSet(String title, List<Column<?>> columns, int knownMinCount)
+    public RecordSet(String title, List<Column<Object>> columns, int knownMinCount)
     {
         this.title = title;
         this.columns = columns;
         this.knownMinCount = knownMinCount;
     }
 
-    @NotNull public List<TableColumn<Integer, String>> getDisplayColumns()
+    public List<TableColumn<Integer, String>> getDisplayColumns()
     {
-        return Utility.mapList(columns, data -> {
-            TableColumn<Integer, String> c = new TableColumn(data.getName());
-            c.setCellFactory(col ->
+        Function<@NonNull Column<Object>, @NonNull TableColumn<Integer, String>> makeDisplayColumn = data ->
+        {
+            TableColumn<Integer, String> c = new TableColumn<>(data.getName());
+            c.setCellValueFactory(cdf ->
             {
-                // TODO is it necessary to use a custom cell?  I think
-                // custom cell value factory would be enough now that we use an index
-                // as a data item.
-                return new TableCell<Integer, String>() {
-                    // The Strings will always be null, but they may have changed:
-                    @Override
-                    protected boolean isItemChanged(String oldItem, String newItem)
-                    {
-                        return true;
-                    }
-
-                    @Override
-                    protected void updateItem(String item, boolean empty)
-                    {
-                        if (empty || getIndex() == -1)
-                        {
-                            setText("");
-                            super.updateItem(null, empty);
-                            return;
-                        }
-
-                        String val = "ERROR";
-                        try
-                        {
-                            val = data.get(getIndex()).toString();
-                        }
-                        catch (Exception ex)
-                        {
-                            ex.printStackTrace();
-                        }
-                        setText(val);
-                        super.updateItem(val, empty);
-                    }
-                };
+                try
+                {
+                    return new ReadOnlyStringWrapper(data.get(cdf.getValue()).toString());
+                }
+                catch (Exception ex)
+                {
+                    ex.printStackTrace();
+                    return new ReadOnlyStringWrapper("");
+                }
             });
             return c;
-        });
+        };
+        return Utility.mapList(columns, makeDisplayColumn);
     }
 
     public int getCurrentKnownMinRows()
@@ -73,14 +54,14 @@ public class RecordSet
         return knownMinCount;
     }
 
-    @NotNull public String getTitle()
+    public String getTitle()
     {
         return title;
     }
 
-    @NotNull public Column getColumn(String name) throws Exception
+    public Column<Object> getColumn(String name) throws Exception
     {
-        for (Column c : columns)
+        for (Column<Object> c : columns)
         {
             if (c.getName().equals(name))
                 return c;

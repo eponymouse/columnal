@@ -12,7 +12,7 @@ import java.util.Map;
 public abstract class CalculatedColumn<T> extends Column<T>
 {
     private final String name;
-    private final ArrayList<T> cachedValues = new ArrayList<>();
+    private final ArrayList<T> cachedValues = new ArrayList<T>();
     private final ArrayList<Column> dependencies;
     // Version of each of the dependencies at last calculation:
     private final Map<Column, Long> calcVersions = new IdentityHashMap<>();

@@ -5,18 +5,24 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 /**
  * Created by neil on 20/10/2016.
  */
 public class Utility
 {
-    public static <R,T> List<R> mapList(List<T> list, Function<T, R> func)
+    public static <R,T> List<@NonNull R> mapList(List<@NonNull T> list, Function<@NonNull T, @NonNull R> func)
     {
-        return list.stream().map(func).collect(Collectors.toList());
+        ArrayList<@NonNull R> r = new ArrayList<>(list.size());
+        for (T t : list)
+            r.add(func.apply(t));
+        return r;
     }
 
     // From http://stackoverflow.com/questions/453018/number-of-lines-in-a-file-in-java
