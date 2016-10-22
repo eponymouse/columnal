@@ -1,5 +1,6 @@
 package records.data;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.error.FetchException;
 import records.error.UserException;
 import utility.CompleteStringPool;
@@ -13,6 +14,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by neil on 20/10/2016.
@@ -61,5 +63,12 @@ public class TextFileStringColumn extends TextFileColumn
     public Class<String> getType()
     {
         return String.class;
+    }
+
+    @Override
+    public Optional<List<@NonNull ? extends Object>> fastDistinct() throws UserException
+    {
+        indexValid(0);
+        return (loadedValues.size() < rowCount || pool.isFull()) ? Optional.<List<@NonNull ? extends Object>>empty() : Optional.<List<@NonNull ? extends Object>>of(pool.get());
     }
 }

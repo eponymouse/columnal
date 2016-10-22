@@ -19,7 +19,7 @@ public abstract class TextFileColumn extends Column
     protected final int columnIndex;
     private final String columnName;
     protected ReadState lastFilePosition;
-    private long rowCount = -1;
+    protected long rowCount = -1;
 
     protected TextFileColumn(File textFile, int headerRows, byte sep, String columnName, int columnIndex) throws IOException
     {
@@ -47,7 +47,6 @@ public abstract class TextFileColumn extends Column
         }
         return index < rowCount;
     }
-
 
     @Override
     public final long getVersion()

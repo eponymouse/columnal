@@ -15,7 +15,6 @@
     </wildcardResourcePatterns>
     <annotationProcessing>
       <profile default="true" name="Default" enabled="true">
-        <option name="printErrorStack" value="" />
         <option name="stubs" value="$PROJECT_DIR$/records/stubs" />
         <option name="stubWarnIfNotFound" value="" />
         <processor name="org.checkerframework.checker.interning.InterningChecker" />

@@ -5,7 +5,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.lang.ref.WeakReference;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -21,8 +23,8 @@ import java.util.Map;
  */
 public class CompleteStringPool
 {
-    private @Nullable String @NonNull [] pool = new String[]{"", null, null, null};
-    private int used = 1;
+    private @Nullable String @NonNull [] pool = new String[]{null, null, null, null};
+    private int used = 0;
     private final int limit;
 
     public CompleteStringPool(int limit)
@@ -61,6 +63,16 @@ public class CompleteStringPool
             used += 1;
         }
         return s;
+    }
 
+    public boolean isFull()
+    {
+        return used >= limit;
+    }
+
+    @SuppressWarnings("nullness")
+    public List<@NonNull String> get()
+    {
+        return Collections.unmodifiableList(Arrays.asList(Arrays.copyOfRange(pool, 0, used)));
     }
 }

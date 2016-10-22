@@ -1,5 +1,6 @@
 package records.data;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.Utility;
@@ -13,6 +14,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -27,9 +29,83 @@ public class SummaryStatistics extends Transformation
 
     private final RecordSet result;
 
+    private static class JoinedSplit
+    {
+        private final List<String> colName = new ArrayList<>();
+        private final List<Object> colValue = new ArrayList<>();
+
+        public JoinedSplit()
+        {
+        }
+
+        public JoinedSplit(String name, Object value, JoinedSplit addTo)
+        {
+            colName.add(name);
+            colValue.add(value);
+            colName.addAll(addTo.colName);
+            colValue.addAll(addTo.colValue);
+        }
+
+        public boolean satisfied(RecordSet src, int index) throws InternalException, UserException
+        {
+            for (int c = 0; c < colName.size(); c++)
+            {
+                if (!src.getColumn(colName.get(c)).get(index).equals(colValue.get(c)))
+                    return false;
+            }
+            return true;
+        }
+    }
+
     public SummaryStatistics(RecordSet src, Map<String, Set<SummaryType>> summaries, List<String> splitBy) throws InternalException, UserException
     {
+        List<JoinedSplit> splits = calcSplits(src, splitBy);
+
         List<Column> columns = new ArrayList<>();
+
+        if (!splitBy.isEmpty())
+        {
+            for (int i = 0; i < splitBy.size(); i++)
+            {
+                String colName = splitBy.get(i);
+                Column orig = src.getColumn(colName);
+                int iFinal = i;
+                columns.add(new Column()
+                {
+
+                    @Override
+                    public Object get(int index) throws UserException, InternalException
+                    {
+                        return splits.get(index).colValue.get(iFinal);
+                    }
+
+                    @Override
+                    public String getName()
+                    {
+                        return colName;
+                    }
+
+                    @Override
+                    public long getVersion()
+                    {
+                        return 1;
+                    }
+
+                    @Override
+                    public Class<?> getType()
+                    {
+                        return orig.getType();
+                    }
+
+                    @Override
+                    public boolean indexValid(int index) throws UserException
+                    {
+                        return index < splits.size();
+                    }
+                });
+            }
+        }
+
         for (Entry<String, Set<SummaryType>> e : summaries.entrySet())
         {
             for (SummaryType summaryType : e.getValue())
@@ -49,27 +125,40 @@ public class SummaryStatistics extends Transformation
                     @Override
                     protected Object calculate(int index) throws UserException, InternalException
                     {
-                        // TODO implement split by
-                        if (index > 0)
-                            throw new InternalException("Looking for item beyond end");
+                        if (index >= splits.size())
+                            throw new InternalException("Looking for item beyond end of summary");
+                        JoinedSplit split = splits.get(index);
                         switch (summaryType)
                         {
                             case MIN:
                             case MAX:
-                                Comparable<Object> cur = (Comparable<Object>) srcCol.get(0);
-                                for (int i = 1; srcCol.indexValid(i); i++)
+                                Comparable<Object> cur = null;
+                                for (int i = 0; srcCol.indexValid(i); i++)
                                 {
+                                    if (!split.satisfied(src, i))
+                                        continue;
+
                                     Comparable<Object> x = (Comparable<Object>) srcCol.get(i);
-                                    int comparison;
-                                    if (srcColIsNumber)
-                                        comparison = Utility.compareNumbers(cur, x);
-                                    else
-                                        comparison = cur.compareTo(x);
-                                    if ((summaryType == SummaryType.MIN && comparison > 0)
-                                         || (summaryType == SummaryType.MAX && comparison < 0))
+                                    if (cur == null)
+                                    {
                                         cur = x;
+                                    }
+                                    else
+                                    {
+                                        int comparison;
+                                        if (srcColIsNumber)
+                                            comparison = Utility.compareNumbers(cur, x);
+                                        else
+                                            comparison = cur.compareTo(x);
+                                        if ((summaryType == SummaryType.MIN && comparison > 0)
+                                            || (summaryType == SummaryType.MAX && comparison < 0))
+                                            cur = x;
+                                    }
                                 }
-                                return cur;
+                                if (cur != null)
+                                    return cur;
+                                else
+                                    throw new UserException("Missing value");
                         }
                         throw new UserException("Unsupported summary type");
                     }
@@ -77,7 +166,7 @@ public class SummaryStatistics extends Transformation
                     @Override
                     public boolean indexValid(int index)
                     {
-                        return index == 0; // TODO add split by
+                        return index < splits.size();
                     }
 
                     @Override
@@ -88,7 +177,63 @@ public class SummaryStatistics extends Transformation
                 });
             }
         }
-        result = new RecordSet("Summary", columns, 1);
+        result = new RecordSet("Summary", columns, splits.size());
+    }
+
+    private static class SingleSplit
+    {
+        private String colName;
+        private List<@NonNull ?> values;
+
+        public SingleSplit(String colName, List<@NonNull ?> values)
+        {
+            this.colName = colName;
+            this.values = values;
+        }
+    }
+
+    private static List<JoinedSplit> calcSplits(RecordSet src, List<String> splitBy) throws UserException, InternalException
+    {
+        // Each item in outer is a column.
+        // Each item in inner is a possible value of that column;
+        List<SingleSplit> splits = new ArrayList<>();
+        for (String colName : splitBy)
+        {
+            Column c = src.getColumn(colName);
+            Optional<List<@NonNull ?>> fastDistinct = c.fastDistinct();
+            if (fastDistinct.isPresent())
+                splits.add(new SingleSplit(colName, fastDistinct.get()));
+            else
+            {
+                HashSet<Object> r = new HashSet<>();
+                for (int i = 0; c.indexValid(i); i++)
+                {
+                    r.add(c.get(i));
+                }
+                splits.add(new SingleSplit(colName, new ArrayList(r)));
+            }
+
+        }
+        // Now form cross-product:
+        return crossProduct(splits, 0);
+    }
+
+    private static List<JoinedSplit> crossProduct(List<SingleSplit> allDistincts, int from)
+    {
+        if (from >= allDistincts.size())
+            return Collections.singletonList(new JoinedSplit());
+        // Take next list:
+        SingleSplit cur = allDistincts.get(from);
+        List<JoinedSplit> rest = crossProduct(allDistincts, from + 1);
+        List<JoinedSplit> r = new ArrayList<>();
+        for (Object o : cur.values)
+        {
+            for (JoinedSplit js : rest)
+            {
+                r.add(new JoinedSplit(cur.colName, o, js));
+            }
+        }
+        return r;
     }
 
     public static SummaryStatistics guiCreate(RecordSet src) throws InternalException, UserException
@@ -97,10 +242,11 @@ public class SummaryStatistics extends Transformation
         Map<String, Set<SummaryType>> summaries = new HashMap<>();
         for (Column c : src.getColumns())
         {
-            summaries.put(c.getName(), new HashSet(Arrays.asList(SummaryType.MIN, SummaryType.MAX)));
+            if (!c.getName().equals("Mistake"))
+                summaries.put(c.getName(), new HashSet(Arrays.asList(SummaryType.MIN, SummaryType.MAX)));
         }
 
-        return new SummaryStatistics(src, summaries, Collections.emptyList());
+        return new SummaryStatistics(src, summaries, Collections.singletonList("Mistake"));
     }
 
     @Override
