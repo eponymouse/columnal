@@ -2,6 +2,7 @@ package records.data;
 
 import records.error.FetchException;
 import records.error.UserException;
+import utility.CompleteStringPool;
 import utility.Utility;
 import utility.Utility.ReadState;
 
@@ -19,6 +20,7 @@ import java.util.List;
 public class TextFileStringColumn extends TextFileColumn
 {
     private final ArrayList<String> loadedValues = new ArrayList<>();
+    private final CompleteStringPool pool = new CompleteStringPool(1000);
 
     public TextFileStringColumn(File textFile, int headerRows, byte sep, String columnName, int columnIndex) throws IOException
     {
@@ -38,7 +40,9 @@ public class TextFileStringColumn extends TextFileColumn
                 lastFilePosition = Utility.readColumnChunk(textFile, lastFilePosition, sep, columnIndex, next);
                 if (!lastFilePosition.isEOF())
                 {
-                    loadedValues.addAll(next);
+                    loadedValues.ensureCapacity(loadedValues.size() + next.size());
+                    for (String s : next)
+                        loadedValues.add(pool.pool(s));
                 }
                 else
                     throw new FetchException("Error reading line", new EOFException());
