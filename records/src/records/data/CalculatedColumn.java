@@ -41,9 +41,9 @@ public abstract class CalculatedColumn<T extends Object> extends Column
             version += 1;
         }
         // Fetch values:
-        for (int i = 0; i <= index; i++)
+        for (int i = cachedValues.size(); i <= index; i++)
         {
-            cachedValues.add(calculate(index));
+            cachedValues.add(calculate(i));
         }
         return cachedValues.get(index);
     }
