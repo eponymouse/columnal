@@ -1,5 +1,8 @@
 package records.data;
 
+import records.error.InternalException;
+import records.error.UserException;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -25,7 +28,7 @@ public abstract class CalculatedColumn<T> extends Column<T>
     }
 
     @Override
-    public final T get(int index) throws Exception
+    public final T get(int index) throws UserException, InternalException
     {
         if (checkCacheValid())
         {
@@ -66,7 +69,7 @@ public abstract class CalculatedColumn<T> extends Column<T>
         return name;
     }
 
-    protected abstract T calculate(int index) throws Exception;
+    protected abstract T calculate(int index) throws UserException, InternalException;
 
     @Override
     public final long getVersion()

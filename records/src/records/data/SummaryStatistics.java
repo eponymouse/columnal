@@ -1,5 +1,8 @@
 package records.data;
 
+import records.error.InternalException;
+import records.error.UserException;
+
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,11 +43,11 @@ public class SummaryStatistics extends Transformation
                 columns.add(new CalculatedColumn<Object>(e.getKey() + "." + summaryType, srcCol)
                 {
                     @Override
-                    protected Object calculate(int index) throws Exception
+                    protected Object calculate(int index) throws UserException, InternalException
                     {
                         // TODO implement split by
                         if (index > 0)
-                            throw new Exception("Looking for item beyond end");
+                            throw new InternalException("Looking for item beyond end");
                         switch (summaryType)
                         {
                             case MIN:
@@ -52,13 +55,13 @@ public class SummaryStatistics extends Transformation
                                 Comparable<Object> min = (Comparable<Object>)srcColComp.get(0);
                                 for (int i = 1; srcColComp.indexValid(i); i++)
                                 {
-                                    Comparable<Object> x = (Comparable<Object>)srcColComp.get(index);
+                                    Comparable<Object> x = (Comparable<Object>)srcColComp.get(i);
                                     if (min.compareTo(x) > 0)
                                         min = x;
                                 }
                                 return min;
                         }
-                        throw new Exception("Unsupported summary type");
+                        throw new UserException("Unsupported summary type");
                     }
 
                     @Override
@@ -81,7 +84,7 @@ public class SummaryStatistics extends Transformation
     public static SummaryStatistics guiCreate(RecordSet src) throws Exception
     {
         // TODO actually show GUI
-        return new SummaryStatistics(src, Collections.emptyMap(), Collections.emptyList());
+        return new SummaryStatistics(src, Collections.singletonMap("Src3", Collections.singleton(SummaryType.MIN)), Collections.emptyList());
     }
 
     @Override

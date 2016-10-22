@@ -1,5 +1,9 @@
 package records.data;
 
+import records.error.FetchException;
+import records.error.UserException;
+import utility.Utility;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -18,6 +22,7 @@ public class TextFileColumn extends Column<Object>
     private final String sep;
     private final int columnIndex;
     private long lastFilePosition = 0;
+    private long rowCount = -1;
 
     public TextFileColumn(File textFile, String sep, int columnIndex)
     {
@@ -33,34 +38,59 @@ public class TextFileColumn extends Column<Object>
     }
 
     @Override
-    public String get(int index) throws Exception
+    public String get(int index) throws UserException
     {
-        // TODO share loading across columns?  Maybe have boolean indicating whether to do so;
-        // true if user scrolled in table, false if we are performing a calculation
-        while (index >= loadedValues.size())
+        String line = "";
+        try
         {
-            try (BufferedReader br = new BufferedReader(new FileReader(textFile)))
+            // TODO share loading across columns?  Maybe have boolean indicating whether to do so;
+            // true if user scrolled in table, false if we are performing a calculation
+            while (index >= loadedValues.size())
             {
-                if (lastFilePosition != br.skip(lastFilePosition))
-                    throw new IOException("Skip didn't work");
-                String line;
-                int read = 0;
-                while ((line = br.readLine()) != null && read++ < CHUNK_LINES)
+                try (BufferedReader br = new BufferedReader(new FileReader(textFile)))
                 {
-                    lastFilePosition += line.length();
-                    loadedValues.add(line.split(sep)[columnIndex]);
+                    if (lastFilePosition != br.skip(lastFilePosition))
+                        throw new IOException("Skip didn't work");
+                    int read = 0;
+                    while ((line = br.readLine()) != null && read++ < CHUNK_LINES)
+                    {
+                        lastFilePosition += line.length() + 1;// TODO this is a hack which assumes only Unix endings
+                        loadedValues.add(line.split(sep)[columnIndex]);
+                        System.err.println("Loaded: " + loadedValues.size());
+                    }
                 }
+                // TODO prevent infinite loop, in the case that the file changed.
             }
-            // TODO prevent infinite loop, in the case that the file changed.
-        }
 
-        return loadedValues.get(index);
+            return loadedValues.get(index);
+        }
+        catch (ArrayIndexOutOfBoundsException e)
+        {
+            System.err.println("Error on line: \"" + line + "\"");
+            e.printStackTrace();
+            throw new UserException("TODO");
+        }
+        catch (IOException e)
+        {
+            throw new FetchException(e);
+        }
     }
 
     @Override
-    public boolean indexValid(int index)
+    public boolean indexValid(int index) throws UserException
     {
-        return true; // TODO lookup number of lines
+        if (rowCount == -1)
+        {
+            try
+            {
+                rowCount = Utility.countLines(textFile);
+            }
+            catch (IOException e)
+            {
+                throw new FetchException(e);
+            }
+        }
+        return index < rowCount;
     }
 
     @Override
