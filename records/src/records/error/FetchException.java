@@ -7,8 +7,13 @@ import java.io.IOException;
  */
 public class FetchException extends UserException
 {
-    public FetchException(IOException e)
+    public FetchException(String message, IOException e)
     {
-        super("IOException: " + e.getLocalizedMessage(), e);
+        super(message, e);
+    }
+
+    public FetchException(String message, NumberFormatException cause)
+    {
+        super(message, cause);
     }
 }

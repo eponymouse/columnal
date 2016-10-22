@@ -5,9 +5,11 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import records.error.UserException;
 import utility.Utility;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 
@@ -17,10 +19,10 @@ import java.util.function.Function;
 public class RecordSet
 {
     private final String title;
-    private List<Column<Object>> columns;
+    private List<Column> columns;
     private int knownMinCount;
 
-    public RecordSet(String title, List<Column<Object>> columns, int knownMinCount)
+    public RecordSet(String title, List<Column> columns, int knownMinCount)
     {
         this.title = title;
         this.columns = columns;
@@ -29,7 +31,7 @@ public class RecordSet
 
     public List<TableColumn<Integer, String>> getDisplayColumns()
     {
-        Function<@NonNull Column<Object>, @NonNull TableColumn<Integer, String>> makeDisplayColumn = data ->
+        Function<@NonNull Column, @NonNull TableColumn<Integer, String>> makeDisplayColumn = data ->
         {
             TableColumn<Integer, String> c = new TableColumn<>(data.getName());
             c.setCellValueFactory(cdf ->
@@ -59,13 +61,18 @@ public class RecordSet
         return title;
     }
 
-    public Column<Object> getColumn(String name) throws Exception
+    public Column getColumn(String name) throws UserException
     {
-        for (Column<Object> c : columns)
+        for (Column c : columns)
         {
             if (c.getName().equals(name))
                 return c;
         }
-        throw new Exception("Column not found");
+        throw new UserException("Column not found");
+    }
+
+    public List<Column> getColumns()
+    {
+        return Collections.unmodifiableList(columns);
     }
 }

@@ -2,10 +2,14 @@ package records.data;
 
 import records.error.InternalException;
 import records.error.UserException;
+import utility.Utility;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -23,20 +27,20 @@ public class SummaryStatistics extends Transformation
 
     private final RecordSet result;
 
-    @SuppressWarnings("unchecked")
-    public SummaryStatistics(RecordSet src, Map<String, Set<SummaryType>> summaries, List<String> splitBy) throws Exception
+    public SummaryStatistics(RecordSet src, Map<String, Set<SummaryType>> summaries, List<String> splitBy) throws InternalException, UserException
     {
-        List<Column<Object>> columns = new ArrayList<>();
+        List<Column> columns = new ArrayList<>();
         for (Entry<String, Set<SummaryType>> e : summaries.entrySet())
         {
             for (SummaryType summaryType : e.getValue())
             {
-                Column<Object> srcCol = src.getColumn(e.getKey());
+                Column srcCol = src.getColumn(e.getKey());
+                boolean srcColIsNumber = Number.class.equals(srcCol.getType());
                 switch (summaryType)
                 {
                     case MIN:case MAX:
-                        if (!Comparable.class.isAssignableFrom(srcCol.getType()))
-                            throw new Exception("Summary column not comparable for " + summaryType);
+                        if (!Comparable.class.isAssignableFrom(srcCol.getType()) && !srcColIsNumber)
+                            throw new UserException("Summary column not comparable for " + summaryType + ": " + srcCol.getType());
                         break;
                 }
 
@@ -51,15 +55,21 @@ public class SummaryStatistics extends Transformation
                         switch (summaryType)
                         {
                             case MIN:
-                                Column<Object> srcColComp = srcCol;
-                                Comparable<Object> min = (Comparable<Object>)srcColComp.get(0);
-                                for (int i = 1; srcColComp.indexValid(i); i++)
+                            case MAX:
+                                Comparable<Object> cur = (Comparable<Object>) srcCol.get(0);
+                                for (int i = 1; srcCol.indexValid(i); i++)
                                 {
-                                    Comparable<Object> x = (Comparable<Object>)srcColComp.get(i);
-                                    if (min.compareTo(x) > 0)
-                                        min = x;
+                                    Comparable<Object> x = (Comparable<Object>) srcCol.get(i);
+                                    int comparison;
+                                    if (srcColIsNumber)
+                                        comparison = Utility.compareNumbers(cur, x);
+                                    else
+                                        comparison = cur.compareTo(x);
+                                    if ((summaryType == SummaryType.MIN && comparison > 0)
+                                         || (summaryType == SummaryType.MAX && comparison < 0))
+                                        cur = x;
                                 }
-                                return min;
+                                return cur;
                         }
                         throw new UserException("Unsupported summary type");
                     }
@@ -81,10 +91,16 @@ public class SummaryStatistics extends Transformation
         result = new RecordSet("Summary", columns, 1);
     }
 
-    public static SummaryStatistics guiCreate(RecordSet src) throws Exception
+    public static SummaryStatistics guiCreate(RecordSet src) throws InternalException, UserException
     {
         // TODO actually show GUI
-        return new SummaryStatistics(src, Collections.singletonMap("Src3", Collections.singleton(SummaryType.MIN)), Collections.emptyList());
+        Map<String, Set<SummaryType>> summaries = new HashMap<>();
+        for (Column c : src.getColumns())
+        {
+            summaries.put(c.getName(), new HashSet(Arrays.asList(SummaryType.MIN, SummaryType.MAX)));
+        }
+
+        return new SummaryStatistics(src, summaries, Collections.emptyList());
     }
 
     @Override

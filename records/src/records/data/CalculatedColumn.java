@@ -12,7 +12,7 @@ import java.util.Map;
 /**
  * Created by neil on 21/10/2016.
  */
-public abstract class CalculatedColumn<T> extends Column<T>
+public abstract class CalculatedColumn<T extends Object> extends Column
 {
     private final String name;
     private final ArrayList<T> cachedValues = new ArrayList<T>();

@@ -6,9 +6,9 @@ import records.error.UserException;
 /**
  * Created by neil on 20/10/2016.
  */
-public abstract class Column<T>
+public abstract class Column
 {
-    public abstract T get(int index) throws UserException, InternalException;
+    public abstract Object get(int index) throws UserException, InternalException;
 
     public abstract String getName();
 

@@ -1,21 +1,22 @@
 package utility;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.Column;
 import records.data.RecordSet;
-import records.data.TextFileColumn;
+import records.data.TextFileNumericColumn;
+import records.data.TextFileStringColumn;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.stream.Collectors;
 
 /**
  * Created by neil on 20/10/2016.
@@ -59,10 +60,28 @@ public class Import
                 // Spot on!  Read first line of initial to get column count
                 int columnCount = initial.get(0).split(sep.getKey()).length;
 
-                // TODO work out type of field
-                List<Column<Object>> columns = new ArrayList<>();
+                List<@NonNull String @NonNull[]> initialVals = Utility.<@NonNull String, @NonNull String @NonNull []>mapList(initial, s -> s.split(sep.getKey()));
+
+                List<Column> columns = new ArrayList<>();
                 for (int i = 0; i < columnCount; i++)
-                    columns.add(new TextFileColumn(textFile, sep.getKey(), i));
+                {
+                    // Have a guess at column type:
+                    boolean allNumeric = true;
+                    for (int j = 1; j < initialVals.size(); j++)
+                    {
+                        try
+                        {
+                            new BigDecimal(initialVals.get(j)[i]);
+                        }
+                        catch (NumberFormatException e)
+                        {
+                            allNumeric = false;
+                        }
+                    }
+                    columns.add(allNumeric ?
+                        new TextFileNumericColumn(textFile, 1, (byte) sep.getKey().charAt(0), initialVals.get(0)[i], i)
+                        : new TextFileStringColumn(textFile, 1, (byte) sep.getKey().charAt(0), initialVals.get(0)[i], i));
+                }
 
                 return new RecordSet(textFile.getName(), columns, initial.size() - 1);
             }
