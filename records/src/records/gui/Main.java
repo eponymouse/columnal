@@ -46,7 +46,7 @@ public class Main extends Application
             }
         });
         menu.getItems().add(importItem);
-        v.add(new Table(v, Import.importFile(new File("J:\\price\\detailed.txt"))));
+        v.add(new Table(v, Import.importFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"))));
 
         BorderPane root = new BorderPane(new ScrollPane(v), new MenuBar(menu), null, null, null);
         primaryStage.setScene(new Scene(root));

@@ -151,8 +151,8 @@ public class Utility
     {
         if (src.isEmpty())
             return 0;
-        double mean = src.stream().mapToDouble(Number::doubleValue).summaryStatistics().getAverage();
-        return src.stream().mapToDouble(Number::doubleValue).map(x -> (x - mean) * (x - mean)).sum();
+        double mean = src.stream().<Number>mapToDouble(Number::doubleValue).summaryStatistics().getAverage();
+        return src.stream().<Number>mapToDouble(Number::doubleValue).map(x -> (x - mean) * (x - mean)).sum();
     }
 
     public static ReadState skipFirstNRows(File src, final int headerRows) throws IOException

@@ -72,7 +72,6 @@ public class SummaryStatistics extends Transformation
                 int iFinal = i;
                 columns.add(new Column()
                 {
-
                     @Override
                     public Object get(int index) throws UserException, InternalException
                     {
@@ -122,6 +121,12 @@ public class SummaryStatistics extends Transformation
 
                 columns.add(new CalculatedColumn<Object>(e.getKey() + "." + summaryType, srcCol)
                 {
+                    @Override
+                    protected boolean isSingleExpensive()
+                    {
+                        return true;
+                    }
+
                     @Override
                     protected Object calculate(int index) throws UserException, InternalException
                     {

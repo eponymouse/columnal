@@ -2,6 +2,7 @@ package records.data;
 
 import records.error.InternalException;
 import records.error.UserException;
+import utility.Workers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -44,8 +45,23 @@ public abstract class CalculatedColumn<T extends Object> extends Column
         for (int i = cachedValues.size(); i <= index; i++)
         {
             cachedValues.add(calculate(i));
+            if (isSingleExpensive() || (i % 100) == 0)
+                Workers.maybeYield();
         }
         return cachedValues.get(index);
+    }
+
+    protected abstract boolean isSingleExpensive();
+
+    @Override
+    protected final double indexProgress(int index) throws UserException
+    {
+        if (index < cachedValues.size())
+            return 2.0;
+        else if (index == 0)
+            return 0.0;
+        else
+            return (double)(cachedValues.size() - 1) / (double)index;
     }
 
     private boolean checkCacheValid()

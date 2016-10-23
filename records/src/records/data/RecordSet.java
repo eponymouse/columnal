@@ -1,11 +1,15 @@
 package records.data;
 
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 
+import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.error.UserException;
+import records.gui.DisplayValue;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -29,22 +33,25 @@ public class RecordSet
         this.knownMinCount = knownMinCount;
     }
 
-    public List<TableColumn<Integer, String>> getDisplayColumns()
+    @UIEffect
+    public List<TableColumn<Integer, DisplayValue>> getDisplayColumns()
     {
-        Function<@NonNull Column, @NonNull TableColumn<Integer, String>> makeDisplayColumn = data ->
+        Function<@NonNull Column, @NonNull TableColumn<Integer, DisplayValue>> makeDisplayColumn = data ->
         {
-            TableColumn<Integer, String> c = new TableColumn<>(data.getName());
+            TableColumn<Integer, DisplayValue> c = new TableColumn<>(data.getName());
             c.setCellValueFactory(cdf ->
             {
-                try
-                {
-                    return new ReadOnlyStringWrapper(data.get(cdf.getValue()).toString());
-                }
-                catch (Exception ex)
-                {
-                    ex.printStackTrace();
-                    return new ReadOnlyStringWrapper("");
-                }
+                //try
+                //{
+                    ObservableValue<DisplayValue> val = data.getDisplay(cdf.getValue());
+                    //return Bindings.convert(val);
+                    return val;
+                //}
+                //catch (Exception ex)
+                //{
+                    //ex.printStackTrace();
+                    //return new ReadOnlyStringWrapper("");
+                //}
             });
             return c;
         };

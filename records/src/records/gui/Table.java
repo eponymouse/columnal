@@ -9,6 +9,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 
+import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import records.data.Record;
 import records.data.RecordSet;
@@ -22,6 +23,7 @@ public class Table extends BorderPane
     private static class TableDisplay extends TableView<Integer>
     {
         @SuppressWarnings("initialization")
+        @UIEffect
         public TableDisplay(RecordSet recordSet)
         {
             super();

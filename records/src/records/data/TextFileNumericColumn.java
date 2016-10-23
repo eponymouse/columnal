@@ -5,6 +5,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import utility.Utility;
 import utility.Utility.ReadState;
+import utility.Workers;
 
 import java.io.EOFException;
 import java.io.File;
@@ -47,6 +48,7 @@ public class TextFileNumericColumn extends TextFileColumn
                             throw new FetchException("Could not parse number: \"" + s + "\"", e);
                         }
                     }
+                    Workers.maybeYield();
                 }
                 else
                     throw new FetchException("Error reading line: " + loadedValues.filled(), new EOFException());
@@ -59,6 +61,17 @@ public class TextFileNumericColumn extends TextFileColumn
         {
             throw new FetchException("Error reading " + textFile, e);
         }
+    }
+
+    @Override
+    protected double indexProgress(int index) throws UserException
+    {
+        if (index < loadedValues.filled())
+            return 2.0;
+        else if (index == 0)
+            return 0.0;
+        else
+            return (double)(loadedValues.filled() - 1) / (double)index;
     }
 
     @Override

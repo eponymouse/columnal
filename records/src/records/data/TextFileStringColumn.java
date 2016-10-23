@@ -6,6 +6,7 @@ import records.error.UserException;
 import utility.CompleteStringPool;
 import utility.Utility;
 import utility.Utility.ReadState;
+import utility.Workers;
 
 import java.io.BufferedReader;
 import java.io.EOFException;
@@ -36,8 +37,12 @@ public class TextFileStringColumn extends TextFileColumn
         {
             // TODO share loading across columns?  Maybe have boolean indicating whether to do so;
             // true if user scrolled in table, false if we are performing a calculation
+            boolean firstChunk = true;
             while (index >= loadedValues.size())
             {
+                if (!firstChunk)
+                    Workers.maybeYield();
+                firstChunk = false;
                 ArrayList<String> next = new ArrayList<>();
                 lastFilePosition = Utility.readColumnChunk(textFile, lastFilePosition, sep, columnIndex, next);
                 if (!lastFilePosition.isEOF())
@@ -57,6 +62,17 @@ public class TextFileStringColumn extends TextFileColumn
         {
             throw new FetchException("Error reading " + textFile, e);
         }
+    }
+
+    @Override
+    protected double indexProgress(int index) throws UserException
+    {
+        if (index < loadedValues.size())
+            return 2.0;
+        else if (index == 0)
+            return 0.0;
+        else
+            return (double)(loadedValues.size() - 1) / (double)index;
     }
 
     @Override
