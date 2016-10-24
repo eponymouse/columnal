@@ -48,7 +48,10 @@ public abstract class CalculatedColumn<T extends Object> extends Column
         {
             cachedValues.add(calculate(i));
             if (isSingleExpensive() || (i % 100) == 0)
+            {
+                gotMore();
                 Workers.maybeYield();
+            }
         }
         gotMore();
         return cachedValues.get(index);

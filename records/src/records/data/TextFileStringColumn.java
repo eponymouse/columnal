@@ -50,6 +50,7 @@ public class TextFileStringColumn extends TextFileColumn
                     loadedValues.ensureCapacity(loadedValues.size() + next.size());
                     for (String s : next)
                         loadedValues.add(pool.pool(s));
+                    gotMore();
                 }
                 else
                     throw new FetchException("Error reading line", new EOFException());

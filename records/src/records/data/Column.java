@@ -19,6 +19,7 @@ import utility.Workers;
 import utility.Workers.Worker;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
@@ -39,6 +40,7 @@ public abstract class Column
     private static interface MoreListener
     {
         @SafeEffect
+        @OnThread(Tag.Simulation)
         public void gotMore();
     }
     @OnThread(Tag.Simulation)
@@ -94,12 +96,12 @@ public abstract class Column
                 {
                     System.out.println("Starting fetch for " + index);
                     Platform.runLater(() -> v.setValue(new DisplayValue(d)));
+
                     // Fetch:
                     startFetch(index);
-                    //TODO rather than poll, make the column notify when more is available
-                    //and listen to that.
-                    // Check back again soon:
-                    Workers.onWorkerThread("Re-check value load for display: " + index, this, 1000);
+                    // Come back when there's more available:
+                    addMoreListener(this::run);
+
                 }
             }
             catch (UserException | InternalException e)
@@ -120,6 +122,7 @@ public abstract class Column
     }
 
     // Takes place on worker thread
+    // Only call if indexProgress(index) <= 1.0
     @OnThread(Tag.Simulation)
     private void startFetch(int index)
     {
@@ -137,15 +140,16 @@ public abstract class Column
         submittedFetch = () -> {
             try
             {
-                int lastKnownFetch = index;
-                while (lastKnownFetch < fetchUpTo.get())
+                int curRequest;
+                do
                 {
-                    lastKnownFetch = fetchUpTo.get();
-                    get(lastKnownFetch);
+                    curRequest = fetchUpTo.get();
+                    get(curRequest);
                     // Although get usually yields, it only does so per-chunk
                     // so we yield to avoid getting one chunk at a time and never yielding:
                     Workers.maybeYield();
                 }
+                while (curRequest < fetchUpTo.get());
                 // Post-condition: we only return when we have got up to the
                 // value of fetchUpTo
             }
@@ -182,6 +186,14 @@ public abstract class Column
         if (moreListeners != null)
             for (MoreListener l : moreListeners)
                 l.gotMore();
+    }
+
+    @OnThread(Tag.Simulation)
+    public final void addMoreListener(MoreListener l)
+    {
+        if (moreListeners == null)
+            moreListeners = new ArrayList<>();
+        moreListeners.add(l);
     }
 
     // If supported, get number of distinct values quickly:

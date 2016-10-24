@@ -48,6 +48,7 @@ public class TextFileNumericColumn extends TextFileColumn
                             throw new FetchException("Could not parse number: \"" + s + "\"", e);
                         }
                     }
+                    gotMore();
                     Workers.maybeYield();
                 }
                 else
