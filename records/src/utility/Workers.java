@@ -1,8 +1,11 @@
 package utility;
 
+import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 import java.util.Comparator;
 import java.util.PriorityQueue;
@@ -12,18 +15,26 @@ import java.util.concurrent.locks.Lock;
 /**
  * Created by neil on 23/10/2016.
  */
+@OnThread(Tag.Simulation)
 public class Workers
 {
+    @FunctionalInterface
+    public static interface Worker
+    {
+        @OnThread(Tag.Simulation)
+        public void run();
+    }
+
     @GuardedBy("<self>")
     private static Stack<WorkChunk> currentlyRunning = new Stack<>();
 
     private static class WorkChunk
     {
-        private final Runnable work;
+        private final Worker work;
         private final String title;
         private final long timeReady;
 
-        public WorkChunk(String title, Runnable work, long timeReady)
+        public WorkChunk(String title, Worker work, long timeReady)
         {
             this.title = title;
             this.work = work;
@@ -31,7 +42,9 @@ public class Workers
         }
     }
 
+    @OnThread(Tag.Any)
     private static final Object workQueueLock = new Object();
+    @OnThread(Tag.Any)
     @GuardedBy("workQueueLock")
     private static final PriorityQueue<@NonNull WorkChunk> workQueue = new PriorityQueue<>((a, b) -> Long.compare(a.timeReady, b.timeReady));
 
@@ -79,12 +92,14 @@ public class Workers
         thread.start();
     }
 
-    public static void onWorkerThread(String title, Runnable runnable)
+    @OnThread(Tag.Any)
+    public static void onWorkerThread(String title, Worker runnable)
     {
         onWorkerThread(title, runnable, 0);
     }
 
-    public static void onWorkerThread(String title, Runnable runnable, long delay)
+    @OnThread(Tag.Any)
+    public static void onWorkerThread(String title, Worker runnable, long delay)
     {
         synchronized (workQueueLock)
         {

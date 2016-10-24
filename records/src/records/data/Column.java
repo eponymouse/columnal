@@ -4,14 +4,19 @@ import com.sun.xml.internal.ws.api.pipe.FiberContextSwitchInterceptor.Work;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
+import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayValue;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Workers;
+import utility.Workers.Worker;
 
 import java.util.ArrayDeque;
 import java.util.List;
@@ -22,12 +27,25 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * Created by neil on 20/10/2016.
  */
+@OnThread(Tag.Simulation)
 public abstract class Column
 {
     // Only modified on worker thread
-    private @Nullable Runnable submittedFetch;
+    @OnThread(Tag.Simulation)
+    private @Nullable Worker submittedFetch;
     // Only modified on worker thread
+    @OnThread(Tag.Simulation)
     private final AtomicInteger fetchUpTo = new AtomicInteger(-1);
+    private static interface MoreListener
+    {
+        @SafeEffect
+        public void gotMore();
+    }
+    @OnThread(Tag.Simulation)
+    @MonotonicNonNull
+    private List<MoreListener> moreListeners;
+
+    @OnThread(Tag.FXPlatform)
     private static class DisplayCache
     {
         private final int index;
@@ -39,22 +57,26 @@ public abstract class Column
             this.display = display;
         }
     }
-    private int DISPLAY_CACHE_SIZE = 1000;
-    private final Queue<DisplayCache> displayCache = new ArrayDeque<>(DISPLAY_CACHE_SIZE);
+    private static final int DISPLAY_CACHE_SIZE = 1000;
+    @MonotonicNonNull
+    @OnThread(Tag.FXPlatform)
+    private Queue<DisplayCache> displayCache;
 
+    @OnThread(Tag.Simulation)
     public abstract Object get(int index) throws UserException, InternalException;
 
-    @UIEffect
+    @OnThread(Tag.FXPlatform)
     public final ObservableValue<DisplayValue> getDisplay(int index)
     {
-        for (DisplayCache c : displayCache)
-            if (c.index == index)
-                return c.display;
+        if (displayCache == null)
+            displayCache = new ArrayDeque<>(DISPLAY_CACHE_SIZE);
+        else
+            for (DisplayCache c : displayCache)
+                if (c.index == index)
+                    return c.display;
 
         SimpleObjectProperty<DisplayValue> v = new SimpleObjectProperty<>(new DisplayValue(0));
-        System.out.println("Queueing look for " + index);
-        Workers.onWorkerThread("Value load for display: " + index, new Runnable() { public void run() {
-            System.out.println("Running look for " + index);
+        Workers.onWorkerThread("Value load for display: " + index, new Worker() { public void run() {
             try
             {
                 // If > 1.0 then ready
@@ -74,8 +96,8 @@ public abstract class Column
                     Platform.runLater(() -> v.setValue(new DisplayValue(d)));
                     // Fetch:
                     startFetch(index);
-                    // TODO rather than poll, make the column notify when more is available
-                    // and listen to that.
+                    //TODO rather than poll, make the column notify when more is available
+                    //and listen to that.
                     // Check back again soon:
                     Workers.onWorkerThread("Re-check value load for display: " + index, this, 1000);
                 }
@@ -98,6 +120,7 @@ public abstract class Column
     }
 
     // Takes place on worker thread
+    @OnThread(Tag.Simulation)
     private void startFetch(int index)
     {
         if (submittedFetch != null)
@@ -145,6 +168,7 @@ public abstract class Column
     }
 
     @Pure
+    @OnThread(Tag.Any)
     public abstract String getName();
 
     public abstract long getVersion();
@@ -152,6 +176,13 @@ public abstract class Column
     public abstract Class<?> getType();
 
     public abstract boolean indexValid(int index) throws UserException;
+
+    protected final void gotMore()
+    {
+        if (moreListeners != null)
+            for (MoreListener l : moreListeners)
+                l.gotMore();
+    }
 
     // If supported, get number of distinct values quickly:
     public Optional<List<@NonNull ?>> fastDistinct() throws UserException

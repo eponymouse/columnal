@@ -2,6 +2,8 @@ package records.data;
 
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Workers;
 
 import java.util.ArrayList;
@@ -48,6 +50,7 @@ public abstract class CalculatedColumn<T extends Object> extends Column
             if (isSingleExpensive() || (i % 100) == 0)
                 Workers.maybeYield();
         }
+        gotMore();
         return cachedValues.get(index);
     }
 
@@ -80,6 +83,7 @@ public abstract class CalculatedColumn<T extends Object> extends Column
     }
 
     @Override
+    @OnThread(Tag.Any)
     public final String getName()
     {
         return name;

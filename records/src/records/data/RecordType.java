@@ -12,11 +12,5 @@ public class RecordType
     public RecordType()
     {
     }
-    
-    public final List<TableColumn<Record, ?>> getColumns()
-    {
-        return Arrays.asList(new TableColumn<Record, String>() {
-            
-        });
-    }
+
 }

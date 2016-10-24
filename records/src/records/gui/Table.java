@@ -14,12 +14,16 @@ import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import records.data.Record;
 import records.data.RecordSet;
 import records.data.SummaryStatistics;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 /**
  * Created by neil on 18/10/2016.
  */
+@OnThread(Tag.FXPlatform)
 public class Table extends BorderPane
 {
+    @OnThread(Tag.FXPlatform)
     private static class TableDisplay extends TableView<Integer>
     {
         @SuppressWarnings("initialization")
@@ -43,7 +47,7 @@ public class Table extends BorderPane
         addButton.setOnAction(e -> {
             try
             {
-                parent.add(new Table(parent, SummaryStatistics.guiCreate(rs).getResult()));
+                SummaryStatistics.withGUICreate(rs, r -> parent.add(new Table(parent, r.getResult())));
             }
             catch (Exception ex)
             {

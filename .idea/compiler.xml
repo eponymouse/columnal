@@ -16,16 +16,18 @@
     <annotationProcessing>
       <profile default="true" name="Default" enabled="true">
         <option name="stubs" value="$PROJECT_DIR$/records/stubs" />
-        <option name="stubWarnIfNotFound" value="" />
+        <processor name="org.checkerframework.checker.guieffect.GuiEffectChecker" />
         <processor name="org.checkerframework.checker.interning.InterningChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <processorPath useClasspath="false">
           <entry name="$PROJECT_DIR$/records/checker-dist/checker.jar" />
+          <entry name="J:/intellij-projects/bluej/threadchecker/pluginclasses" />
+          <entry name="J:/intellij-projects/bluej/threadchecker/classes" />
         </processorPath>
       </profile>
     </annotationProcessing>
   </component>
   <component name="JavacSettings">
-    <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$PROJECT_DIR$/records/checker-dist/jdk8.jar -Xlint:unchecked" />
+    <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$PROJECT_DIR$/records/checker-dist/jdk8.jar -Xlint:unchecked -Xplugin:threadchecker.TCPlugin" />
   </component>
 </project>

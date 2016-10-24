@@ -1,9 +1,14 @@
 package records.data;
 
+import javafx.application.Platform;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.Utility;
+import utility.Workers;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
@@ -79,6 +84,7 @@ public class SummaryStatistics extends Transformation
                     }
 
                     @Override
+                    @OnThread(Tag.Any)
                     public String getName()
                     {
                         return colName;
@@ -241,7 +247,8 @@ public class SummaryStatistics extends Transformation
         return r;
     }
 
-    public static SummaryStatistics guiCreate(RecordSet src) throws InternalException, UserException
+    @OnThread(Tag.FXPlatform)
+    public static void withGUICreate(RecordSet src, FXPlatformConsumer<SummaryStatistics> andThen) throws InternalException, UserException
     {
         // TODO actually show GUI
         Map<String, Set<SummaryType>> summaries = new HashMap<>();
@@ -251,11 +258,18 @@ public class SummaryStatistics extends Transformation
                 summaries.put(c.getName(), new HashSet(Arrays.asList(SummaryType.MIN, SummaryType.MAX)));
         }
 
-        return new SummaryStatistics(src, summaries, Collections.singletonList("Mistake"));
+        Workers.onWorkerThread("Create summary statistics", () -> {
+            Utility.alertOnError(() -> {
+                SummaryStatistics ss = new SummaryStatistics(src, summaries, Collections.singletonList("Mistake"));
+                Platform.runLater(() -> andThen.consume(ss));
+                return (Void)null;
+            });
+        });
     }
 
     @Override
     @NotNull
+    @OnThread(Tag.Any)
     public RecordSet getResult()
     {
         return result;

@@ -2,6 +2,8 @@ package records.data;
 
 import records.error.FetchException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Utility;
 import utility.Utility.ReadState;
 
@@ -55,6 +57,7 @@ public abstract class TextFileColumn extends Column
     }
 
     @Override
+    @OnThread(Tag.Any)
     public final String getName()
     {
         return columnName;

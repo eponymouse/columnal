@@ -10,6 +10,8 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.error.UserException;
 import records.gui.DisplayValue;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -22,8 +24,12 @@ import java.util.function.Function;
  */
 public class RecordSet
 {
+    @OnThread(Tag.Any)
     private final String title;
-    private List<Column> columns;
+    @OnThread(Tag.Any)
+    private final List<Column> columns;
+    // TODO revamp this:
+    @OnThread(Tag.Any)
     private int knownMinCount;
 
     public RecordSet(String title, List<Column> columns, int knownMinCount)
@@ -33,7 +39,7 @@ public class RecordSet
         this.knownMinCount = knownMinCount;
     }
 
-    @UIEffect
+    @OnThread(Tag.FXPlatform)
     public List<TableColumn<Integer, DisplayValue>> getDisplayColumns()
     {
         Function<@NonNull Column, @NonNull TableColumn<Integer, DisplayValue>> makeDisplayColumn = data ->
@@ -58,11 +64,13 @@ public class RecordSet
         return Utility.mapList(columns, makeDisplayColumn);
     }
 
+    @OnThread(Tag.Any)
     public int getCurrentKnownMinRows()
     {
         return knownMinCount;
     }
 
+    @OnThread(Tag.Any)
     public String getTitle()
     {
         return title;
@@ -78,6 +86,7 @@ public class RecordSet
         throw new UserException("Column not found");
     }
 
+    @OnThread(Tag.Any)
     public List<Column> getColumns()
     {
         return Collections.unmodifiableList(columns);

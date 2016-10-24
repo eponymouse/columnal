@@ -11,13 +11,21 @@ import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import javafx.application.Platform;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
+import javafx.scene.control.ButtonType;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.FetchException;
 import records.error.InternalException;
+import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 /**
  * Created by neil on 20/10/2016.
@@ -216,5 +224,29 @@ public class Utility
             return Long.compare(((Number)a).longValue(), ((Number)b).longValue());
         }
 
+    }
+
+    public static interface GenOrError<T>
+    {
+        @OnThread(Tag.Simulation)
+        T run() throws InternalException, UserException;
+    }
+
+    @OnThread(Tag.Simulation)
+    public static <T> Optional<T> alertOnError(GenOrError<T> r)
+    {
+        try
+        {
+            return Optional.of(r.run());
+        }
+        catch (InternalException | UserException e)
+        {
+            Platform.runLater(() ->
+            {
+                String localizedMessage = e.getLocalizedMessage();
+                new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK).showAndWait();
+            });
+            return Optional.empty();
+        }
     }
 }

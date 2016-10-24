@@ -1,6 +1,8 @@
 package records.gui;
 
+import com.sun.xml.internal.ws.api.pipe.FiberContextSwitchInterceptor.Work;
 import javafx.application.Application;
+import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
@@ -13,7 +15,11 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import records.data.RecordSet;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Import;
+import utility.Workers;
 
 import java.io.File;
 import java.io.IOException;
@@ -24,6 +30,7 @@ import java.io.IOException;
 public class Main extends Application
 {
     @Override
+    @OnThread(value = Tag.FXPlatform,ignoreParent = true)
     public void start(final Stage primaryStage) throws Exception
     {
         View v = new View();
@@ -34,19 +41,32 @@ public class Main extends Application
             File chosen = fc.showOpenDialog(primaryStage);
             if (chosen != null)
             {
-                try
+                Workers.onWorkerThread("Import data", () ->
                 {
-                    v.add(new Table(v, Import.importFile(chosen)));
-                }
-                catch (IOException ex)
-                {
-                    ex.printStackTrace();
-                    new Alert(AlertType.ERROR, ex.getMessage() == null ? "" : ex.getMessage(), ButtonType.OK).showAndWait();
-                }
+                    try
+                    {
+                        RecordSet rs = Import.importFile(chosen);
+                        Platform.runLater(() -> v.add(new Table(v, rs)));
+                    }
+                    catch (IOException ex)
+                    {
+                        ex.printStackTrace();
+                        Platform.runLater(() -> new Alert(AlertType.ERROR, ex.getMessage() == null ? "" : ex.getMessage(), ButtonType.OK).showAndWait());
+                    }
+                });
             }
         });
         menu.getItems().add(importItem);
-        v.add(new Table(v, Import.importFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"))));
+        Workers.onWorkerThread("Example import", () -> {
+            try
+            {
+                RecordSet rs = Import.importFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"));
+                Platform.runLater(() -> v.add(new Table(v, rs)));
+            }
+            catch (IOException ex)
+            {
+            }
+        });
 
         BorderPane root = new BorderPane(new ScrollPane(v), new MenuBar(menu), null, null, null);
         primaryStage.setScene(new Scene(root));

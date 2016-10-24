@@ -5,6 +5,8 @@ import records.data.Column;
 import records.data.RecordSet;
 import records.data.TextFileNumericColumn;
 import records.data.TextFileStringColumn;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,6 +25,7 @@ import java.util.Map.Entry;
  */
 public class Import
 {
+    @OnThread(Tag.Simulation)
     public static RecordSet importFile(File textFile) throws IOException
     {
         // Read the first few lines:
