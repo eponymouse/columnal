@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * A RecordSet is a collection of columns.
@@ -80,9 +81,29 @@ public abstract class RecordSet
     //package-protected:
     public abstract boolean indexValid(int index) throws UserException;
 
+    // Only use when you really need to know the length!
+    // Override in subclasses if you can do it faster
+    public int getLength() throws UserException
+    {
+        int i = 0;
+        while (indexValid(i))
+        {
+            i += 1;
+        }
+        return i;
+    }
+
     @OnThread(Tag.Any)
     public List<Column> getColumns()
     {
         return Collections.unmodifiableList(columns);
+    }
+
+    public String debugGetVals(int i)
+    {
+        return columns.stream().map(c -> { try
+        {
+            return "\"" + c.get(i).toString() + "\"";
+        }catch (Exception e) { return "ERR"; }}).collect(Collectors.joining(","));
     }
 }

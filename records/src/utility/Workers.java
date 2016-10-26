@@ -89,6 +89,8 @@ public class Workers
         }
     });
     static {
+        // TODO will want better shutdown than this;
+        thread.setDaemon(true);
         thread.start();
     }
 

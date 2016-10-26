@@ -69,6 +69,9 @@ public class SummaryStatistics extends Transformation
 
         List<Function<RecordSet, Column>> columns = new ArrayList<>();
 
+        // Will be zero by default, which we take advantage of:
+        int[] splitIndexes = new int[src.getLength()];
+
         if (!splitBy.isEmpty())
         {
             for (int i = 0; i < splitBy.size(); i++)
@@ -103,6 +106,20 @@ public class SummaryStatistics extends Transformation
                         return orig.getType();
                     }
                 });
+            }
+
+            outer: for (int i = 0; i < splitIndexes.length; i++ )
+            {
+                // TODO could do this O(#splitBy) not O(#splits) if we design JoinedSplit right
+                for (int s = 0; s < splits.size(); s++)
+                {
+                    if (splits.get(s).satisfied(i))
+                    {
+                        splitIndexes[i] = s;
+                        continue outer;
+                    }
+                }
+                throw new InternalException("Split not found for row " + i + ": " + src.debugGetVals(i));
             }
         }
 
@@ -142,7 +159,7 @@ public class SummaryStatistics extends Transformation
                                 Comparable<Object> cur = null;
                                 for (int i = 0; srcCol.indexValid(i); i++)
                                 {
-                                    if (!split.satisfied(i))
+                                    if (splitIndexes[i] != index)
                                         continue;
 
                                     Comparable<Object> x = (Comparable<Object>) srcCol.get(i);
@@ -183,6 +200,12 @@ public class SummaryStatistics extends Transformation
             public boolean indexValid(int index) throws UserException
             {
                 return index < splits.size();
+            }
+
+            @Override
+            public int getLength() throws UserException
+            {
+                return splits.size();
             }
         };
     }

@@ -96,10 +96,16 @@ public class Import
                 }
 
                 return new RecordSet(textFile.getName(), columns) {
-                    protected long rowCount = -1;
+                    protected int rowCount = -1;
 
                     @Override
                     public final boolean indexValid(int index) throws UserException
+                    {
+                        return index < getLength();
+                    }
+
+                    @Override
+                    public int getLength() throws UserException
                     {
                         if (rowCount == -1)
                         {
@@ -112,7 +118,7 @@ public class Import
                                 throw new FetchException("Error counting rows", e);
                             }
                         }
-                        return index < rowCount;
+                        return rowCount;
                     }
                 };
             }
