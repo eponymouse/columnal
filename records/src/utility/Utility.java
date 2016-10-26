@@ -233,11 +233,15 @@ public class Utility
     }
 
     @OnThread(Tag.Simulation)
-    public static <T> Optional<T> alertOnError(GenOrError<T> r)
+    public static <T> Optional<T> alertOnError(GenOrError<@Nullable T> r)
     {
         try
         {
-            return Optional.of(r.run());
+            @Nullable T t = r.run();
+            if (t == null)
+                return Optional.empty();
+            else
+                return Optional.of(t);
         }
         catch (InternalException | UserException e)
         {
