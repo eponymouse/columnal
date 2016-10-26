@@ -184,7 +184,8 @@ public abstract class Column
     protected final void gotMore()
     {
         if (moreListeners != null)
-            for (MoreListener l : moreListeners)
+            // Operate on a copy in case it changes:
+            for (MoreListener l : new ArrayList<>(moreListeners))
                 l.gotMore();
     }
 
