@@ -14,6 +14,7 @@ import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -22,7 +23,7 @@ import java.util.Optional;
  */
 public class TextFileStringColumn extends TextFileColumn
 {
-    private final ArrayList<String> loadedValues = new ArrayList<>();
+    private String[] loadedValues = new String[0];
     private final CompleteStringPool pool = new CompleteStringPool(1000);
 
     public TextFileStringColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, String columnName, int columnIndex)
@@ -38,7 +39,7 @@ public class TextFileStringColumn extends TextFileColumn
             // TODO share loading across columns?  Maybe have boolean indicating whether to do so;
             // true if user scrolled in table, false if we are performing a calculation
             boolean firstChunk = true;
-            while (index >= loadedValues.size())
+            while (index >= loadedValues.length)
             {
                 if (!firstChunk)
                     Workers.maybeYield();
@@ -47,9 +48,16 @@ public class TextFileStringColumn extends TextFileColumn
                 lastFilePosition = Utility.readColumnChunk(textFile, lastFilePosition, sep, columnIndex, next);
                 if (!lastFilePosition.isEOF())
                 {
-                    loadedValues.ensureCapacity(loadedValues.size() + next.size());
-                    for (String s : next)
-                        loadedValues.add(pool.pool(s));
+                    int prevSize = loadedValues.length;
+                    // Yes they do become null, but they won't be null
+                    // after we've finished the loop:
+                    @SuppressWarnings("nullness")
+                    String[] newLoadedValues = Arrays.copyOf(loadedValues, prevSize + next.size());
+                    for (int i = 0; i < next.size(); i++)
+                    {
+                        newLoadedValues[prevSize + i] = pool.pool(next.get(i));
+                    }
+                    loadedValues = newLoadedValues;
                     gotMore();
                 }
                 else
@@ -57,7 +65,7 @@ public class TextFileStringColumn extends TextFileColumn
                 // TODO handle case where file changed outside.
             }
 
-            return loadedValues.get(index);
+            return loadedValues[index];
         }
         catch (IOException e)
         {
@@ -68,12 +76,12 @@ public class TextFileStringColumn extends TextFileColumn
     @Override
     protected double indexProgress(int index) throws UserException
     {
-        if (index < loadedValues.size())
+        if (index < loadedValues.length)
             return 2.0;
         else if (index == 0)
             return 0.0;
         else
-            return (double)(loadedValues.size() - 1) / (double)index;
+            return (double)(loadedValues.length - 1) / (double)index;
     }
 
     @Override

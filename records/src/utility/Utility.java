@@ -98,7 +98,7 @@ public class Utility
     {
         try (InputStream is = new BufferedInputStream(new FileInputStream(filename)))
         {
-            byte[] buf = new byte[65536];
+            byte[] buf = new byte[1048576 * 4];
             is.skip(state.startFrom);
             int readChars = is.read(buf);
             state.eof = readChars <= 0;
