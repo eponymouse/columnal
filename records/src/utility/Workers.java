@@ -124,20 +124,28 @@ public class Workers
                 return;
         }
 
-        synchronized (workQueueLock)
+
+        while (true)
         {
-            if (workQueue.isEmpty())
-                return;
-            long now = System.currentTimeMillis();
-            // Clear work queue up to the point we arrived:
-            // Makes sure we can't be here forever because all new arrivals will
-            // have later ready time.
             @Nullable WorkChunk work;
-            while ((work = workQueue.peek()) != null && work.timeReady < now)
+            synchronized (workQueueLock)
             {
-                workQueue.poll();
-                run(work);
+                // No more work to yield to:
+                if (workQueue.isEmpty())
+                    return;
+                long now = System.currentTimeMillis();
+                // Clear work queue up to the point we arrived:
+                // Makes sure we can't be here forever because all new arrivals will
+                // have later ready time.
+                if ((work = workQueue.peek()) != null && work.timeReady < now)
+                {
+                    // Ready before we came; we'll take it and run it:
+                    workQueue.poll();
+                }
+                else // Not ready before we came; leave it alone:
+                    return;
             }
+            run(work);
         }
     }
 
