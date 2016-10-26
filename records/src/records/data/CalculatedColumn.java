@@ -8,7 +8,6 @@ import utility.Workers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -24,8 +23,9 @@ public abstract class CalculatedColumn<T extends Object> extends Column
     private final Map<Column, Long> calcVersions = new IdentityHashMap<>();
     private long version = 1;
 
-    public CalculatedColumn(String name, Column... dependencies)
+    public CalculatedColumn(RecordSet recordSet, String name, Column... dependencies)
     {
+        super(recordSet);
         this.name = name;
         this.dependencies = new ArrayList<>(Arrays.asList(dependencies));
     }

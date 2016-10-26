@@ -19,9 +19,9 @@ public class TextFileNumericColumn extends TextFileColumn
 {
     private final NumericColumnStorage loadedValues = new NumericColumnStorage();
 
-    public TextFileNumericColumn(File textFile, int headerRows, byte sep, String columnName, int columnIndex) throws IOException
+    public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, String columnName, int columnIndex)
     {
-        super(textFile, headerRows, sep, columnName, columnIndex);
+        super(recordSet, textFile, fileStartPosition, sep, columnName, columnIndex);
     }
 
     @Override

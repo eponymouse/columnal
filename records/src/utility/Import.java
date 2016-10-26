@@ -5,6 +5,8 @@ import records.data.Column;
 import records.data.RecordSet;
 import records.data.TextFileNumericColumn;
 import records.data.TextFileStringColumn;
+import records.error.FetchException;
+import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -19,6 +21,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Function;
 
 /**
  * Created by neil on 20/10/2016.
@@ -58,6 +61,8 @@ public class Import
                 throw new IOException("Couldn't deduce separator"); // TODO: ask!
             Entry<String, Double> sep = sepScores.entrySet().stream().min(Entry.comparingByValue()).get();
 
+            int headerRows = 1;
+
             if (sep.getValue().doubleValue() == 0.0)
             {
                 // Spot on!  Read first line of initial to get column count
@@ -65,7 +70,7 @@ public class Import
 
                 List<@NonNull String @NonNull[]> initialVals = Utility.<@NonNull String, @NonNull String @NonNull []>mapList(initial, s -> s.split(sep.getKey()));
 
-                List<Column> columns = new ArrayList<>();
+                List<Function<RecordSet, Column>> columns = new ArrayList<>();
                 for (int i = 0; i < columnCount; i++)
                 {
                     // Have a guess at column type:
@@ -81,12 +86,35 @@ public class Import
                             allNumeric = false;
                         }
                     }
-                    columns.add(allNumeric ?
-                        new TextFileNumericColumn(textFile, 1, (byte) sep.getKey().charAt(0), initialVals.get(0)[i], i)
-                        : new TextFileStringColumn(textFile, 1, (byte) sep.getKey().charAt(0), initialVals.get(0)[i], i));
+                    boolean allNumericFinal = allNumeric;
+                    String colName = initialVals.get(0)[i];
+                    int colIndex = i;
+                    long startPosition = Utility.skipFirstNRows(textFile, headerRows).startFrom;
+                    columns.add(rs -> allNumericFinal ?
+                        new TextFileNumericColumn(rs, textFile, startPosition, (byte) sep.getKey().charAt(0), colName, colIndex)
+                        : new TextFileStringColumn(rs, textFile, startPosition, (byte) sep.getKey().charAt(0), colName, colIndex));
                 }
 
-                return new RecordSet(textFile.getName(), columns, initial.size() - 1);
+                return new RecordSet(textFile.getName(), columns) {
+                    protected long rowCount = -1;
+
+                    @Override
+                    public final boolean indexValid(int index) throws UserException
+                    {
+                        if (rowCount == -1)
+                        {
+                            try
+                            {
+                                rowCount = Utility.countLines(textFile) - headerRows;
+                            }
+                            catch (IOException e)
+                            {
+                                throw new FetchException("Error counting rows", e);
+                            }
+                        }
+                        return index < rowCount;
+                    }
+                };
             }
             else
                 throw new IOException("Uncertain of number of columns");

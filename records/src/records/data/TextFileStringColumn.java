@@ -25,9 +25,9 @@ public class TextFileStringColumn extends TextFileColumn
     private final ArrayList<String> loadedValues = new ArrayList<>();
     private final CompleteStringPool pool = new CompleteStringPool(1000);
 
-    public TextFileStringColumn(File textFile, int headerRows, byte sep, String columnName, int columnIndex) throws IOException
+    public TextFileStringColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, String columnName, int columnIndex)
     {
-        super(textFile, headerRows, sep, columnName, columnIndex);
+        super(recordSet, textFile, initialFilePosition, sep, columnName, columnIndex);
     }
 
     @Override
@@ -85,7 +85,8 @@ public class TextFileStringColumn extends TextFileColumn
     @Override
     public Optional<List<@NonNull ? extends Object>> fastDistinct() throws UserException
     {
-        indexValid(0);
-        return (loadedValues.size() < rowCount || pool.isFull()) ? Optional.<List<@NonNull ? extends Object>>empty() : Optional.<List<@NonNull ? extends Object>>of(pool.get());
+        //indexValid(0);
+        //return (loadedValues.size() < rowCount || pool.isFull()) ? Optional.<List<@NonNull ? extends Object>>empty() : Optional.<List<@NonNull ? extends Object>>of(pool.get());
+        return Optional.empty();
     }
 }

@@ -69,7 +69,7 @@ public class Utility
 
     public static class ReadState
     {
-        private long startFrom;
+        public long startFrom;
         private int currentCol;
         private byte @Nullable [] currentEntry;
         private boolean eof;
@@ -82,7 +82,7 @@ public class Utility
             eof = false;
         }
 
-        private ReadState(long posOfRowStart)
+        public ReadState(long posOfRowStart)
         {
             this();
             startFrom = posOfRowStart;
@@ -230,6 +230,29 @@ public class Utility
     {
         @OnThread(Tag.Simulation)
         T run() throws InternalException, UserException;
+    }
+    public static interface RunOrError
+    {
+        @OnThread(Tag.Simulation)
+        void run() throws InternalException, UserException;
+    }
+
+
+    @OnThread(Tag.Simulation)
+    public static void alertOnError_(RunOrError r)
+    {
+        try
+        {
+            r.run();
+        }
+        catch (InternalException | UserException e)
+        {
+            Platform.runLater(() ->
+            {
+                String localizedMessage = e.getLocalizedMessage();
+                new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK).showAndWait();
+            });
+        }
     }
 
     @OnThread(Tag.Simulation)

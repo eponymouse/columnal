@@ -7,6 +7,7 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 
 import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.error.UserException;
 import records.gui.DisplayValue;
@@ -20,23 +21,32 @@ import java.util.List;
 import java.util.function.Function;
 
 /**
- * Created by neil on 20/10/2016.
+ * A RecordSet is a collection of columns.
+ *
+ * RecordSet assumptions:
+ *
+ *  - All of the columns in RecordSet have the same number of entries.
+ *    A RecordSet will not be bottom-ragged.
+ *  - This number of entries is not known a priori.  See Column.indexValid
+ *    for a discussion of that method.
+ *  - Columns are otherwise treated independently.  Just because one column
+ *    value is loaded doesn't mean that any values in any other columns
+ *    will/won't be loaded.
  */
-public class RecordSet
+public abstract class RecordSet
 {
     @OnThread(Tag.Any)
     private final String title;
     @OnThread(Tag.Any)
     private final List<Column> columns;
-    // TODO revamp this:
-    @OnThread(Tag.Any)
-    private int knownMinCount;
 
-    public RecordSet(String title, List<Column> columns, int knownMinCount)
+    @SuppressWarnings("initialization")
+    public RecordSet(String title, List<Function<RecordSet, Column>> columns)
     {
         this.title = title;
-        this.columns = columns;
-        this.knownMinCount = knownMinCount;
+        this.columns = new ArrayList<>();
+        for (Function<RecordSet, Column> f : columns)
+            this.columns.add(f.apply(this));
     }
 
     @OnThread(Tag.FXPlatform)
@@ -45,29 +55,10 @@ public class RecordSet
         Function<@NonNull Column, @NonNull TableColumn<Integer, DisplayValue>> makeDisplayColumn = data ->
         {
             TableColumn<Integer, DisplayValue> c = new TableColumn<>(data.getName());
-            c.setCellValueFactory(cdf ->
-            {
-                //try
-                //{
-                    ObservableValue<DisplayValue> val = data.getDisplay(cdf.getValue());
-                    //return Bindings.convert(val);
-                    return val;
-                //}
-                //catch (Exception ex)
-                //{
-                    //ex.printStackTrace();
-                    //return new ReadOnlyStringWrapper("");
-                //}
-            });
+            c.setCellValueFactory(cdf -> data.getDisplay(cdf.getValue()));
             return c;
         };
         return Utility.mapList(columns, makeDisplayColumn);
-    }
-
-    @OnThread(Tag.Any)
-    public int getCurrentKnownMinRows()
-    {
-        return knownMinCount;
     }
 
     @OnThread(Tag.Any)
@@ -85,6 +76,9 @@ public class RecordSet
         }
         throw new UserException("Column not found");
     }
+
+    //package-protected:
+    public abstract boolean indexValid(int index) throws UserException;
 
     @OnThread(Tag.Any)
     public List<Column> getColumns()

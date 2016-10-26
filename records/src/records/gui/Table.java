@@ -1,5 +1,6 @@
 package records.gui;
 
+import javafx.application.Platform;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableView;
@@ -14,8 +15,13 @@ import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import records.data.Record;
 import records.data.RecordSet;
 import records.data.SummaryStatistics;
+import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
+import utility.Workers;
+
+import java.util.ArrayList;
 
 /**
  * Created by neil on 18/10/2016.
@@ -23,6 +29,9 @@ import threadchecker.Tag;
 @OnThread(Tag.FXPlatform)
 public class Table extends BorderPane
 {
+    private static final int INITIAL_LOAD = 100;
+    private static final int LOAD_CHUNK = 100;
+
     @OnThread(Tag.FXPlatform)
     private static class TableDisplay extends TableView<Integer>
     {
@@ -32,8 +41,19 @@ public class Table extends BorderPane
         {
             super();
             getColumns().setAll(recordSet.getDisplayColumns());
-            for (int i = 0; i < recordSet.getCurrentKnownMinRows(); i++)
-                getItems().add(Integer.valueOf(i));
+            Workers.onWorkerThread("Determining row count for " + recordSet.getTitle(), () -> {
+                ArrayList<Integer> indexesToAdd = new ArrayList<Integer>();
+                Utility.alertOnError_(() -> {
+                    for (int i = 0; i < INITIAL_LOAD; i++)
+                        if (recordSet.indexValid(i))
+                            indexesToAdd.add(Integer.valueOf(i));
+
+                });
+                // TODO when user causes a row to be shown, load LOAD_CHUNK entries
+                // afterwards.
+                Platform.runLater(() -> getItems().addAll(indexesToAdd));
+            });
+
         }
     }
 

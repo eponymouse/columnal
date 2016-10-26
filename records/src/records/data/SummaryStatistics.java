@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 
 /**
  * Created by neil on 21/10/2016.
@@ -36,26 +37,26 @@ public class SummaryStatistics extends Transformation
 
     private static class JoinedSplit
     {
-        private final List<String> colName = new ArrayList<>();
+        private final List<Column> colName = new ArrayList<>();
         private final List<Object> colValue = new ArrayList<>();
 
         public JoinedSplit()
         {
         }
 
-        public JoinedSplit(String name, Object value, JoinedSplit addTo)
+        public JoinedSplit(Column column, Object value, JoinedSplit addTo)
         {
-            colName.add(name);
+            colName.add(column);
             colValue.add(value);
             colName.addAll(addTo.colName);
             colValue.addAll(addTo.colValue);
         }
 
-        public boolean satisfied(RecordSet src, int index) throws InternalException, UserException
+        public boolean satisfied(int index) throws InternalException, UserException
         {
             for (int c = 0; c < colName.size(); c++)
             {
-                if (!src.getColumn(colName.get(c)).get(index).equals(colValue.get(c)))
+                if (!colName.get(c).get(index).equals(colValue.get(c)))
                     return false;
             }
             return true;
@@ -66,7 +67,7 @@ public class SummaryStatistics extends Transformation
     {
         List<JoinedSplit> splits = calcSplits(src, splitBy);
 
-        List<Column> columns = new ArrayList<>();
+        List<Function<RecordSet, Column>> columns = new ArrayList<>();
 
         if (!splitBy.isEmpty())
         {
@@ -75,7 +76,7 @@ public class SummaryStatistics extends Transformation
                 String colName = splitBy.get(i);
                 Column orig = src.getColumn(colName);
                 int iFinal = i;
-                columns.add(new Column()
+                columns.add(rs -> new Column(rs)
                 {
                     @Override
                     public Object get(int index) throws UserException, InternalException
@@ -101,12 +102,6 @@ public class SummaryStatistics extends Transformation
                     {
                         return orig.getType();
                     }
-
-                    @Override
-                    public boolean indexValid(int index) throws UserException
-                    {
-                        return index < splits.size();
-                    }
                 });
             }
         }
@@ -125,7 +120,7 @@ public class SummaryStatistics extends Transformation
                         break;
                 }
 
-                columns.add(new CalculatedColumn<Object>(e.getKey() + "." + summaryType, srcCol)
+                columns.add(rs -> new CalculatedColumn<Object>(rs, e.getKey() + "." + summaryType, srcCol)
                 {
                     @Override
                     protected boolean isSingleExpensive()
@@ -143,10 +138,11 @@ public class SummaryStatistics extends Transformation
                         {
                             case MIN:
                             case MAX:
+                                //TODO use JFR to see what is taking so long...
                                 Comparable<Object> cur = null;
                                 for (int i = 0; srcCol.indexValid(i); i++)
                                 {
-                                    if (!split.satisfied(src, i))
+                                    if (!split.satisfied(i))
                                         continue;
 
                                     Comparable<Object> x = (Comparable<Object>) srcCol.get(i);
@@ -175,12 +171,6 @@ public class SummaryStatistics extends Transformation
                     }
 
                     @Override
-                    public boolean indexValid(int index)
-                    {
-                        return index < splits.size();
-                    }
-
-                    @Override
                     public Class<?> getType()
                     {
                         return srcCol.getType();
@@ -188,17 +178,23 @@ public class SummaryStatistics extends Transformation
                 });
             }
         }
-        result = new RecordSet("Summary", columns, splits.size());
+        result = new RecordSet("Summary", columns) {
+            @Override
+            public boolean indexValid(int index) throws UserException
+            {
+                return index < splits.size();
+            }
+        };
     }
 
     private static class SingleSplit
     {
-        private String colName;
+        private Column column;
         private List<@NonNull ?> values;
 
-        public SingleSplit(String colName, List<@NonNull ?> values)
+        public SingleSplit(Column column, List<@NonNull ?> values)
         {
-            this.colName = colName;
+            this.column = column;
             this.values = values;
         }
     }
@@ -213,7 +209,7 @@ public class SummaryStatistics extends Transformation
             Column c = src.getColumn(colName);
             Optional<List<@NonNull ?>> fastDistinct = c.fastDistinct();
             if (fastDistinct.isPresent())
-                splits.add(new SingleSplit(colName, fastDistinct.get()));
+                splits.add(new SingleSplit(c, fastDistinct.get()));
             else
             {
                 HashSet<Object> r = new HashSet<>();
@@ -221,7 +217,7 @@ public class SummaryStatistics extends Transformation
                 {
                     r.add(c.get(i));
                 }
-                splits.add(new SingleSplit(colName, new ArrayList(r)));
+                splits.add(new SingleSplit(c, new ArrayList(r)));
             }
 
         }
@@ -241,7 +237,7 @@ public class SummaryStatistics extends Transformation
         {
             for (JoinedSplit js : rest)
             {
-                r.add(new JoinedSplit(cur.colName, o, js));
+                r.add(new JoinedSplit(cur.column, o, js));
             }
         }
         return r;
