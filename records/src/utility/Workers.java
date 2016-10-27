@@ -1,16 +1,15 @@
 package utility;
 
-import org.checkerframework.checker.guieffect.qual.SafeEffect;
+import org.checkerframework.checker.interning.qual.UsesObjectEquals;
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
-import java.util.Comparator;
+import java.util.Iterator;
 import java.util.PriorityQueue;
 import java.util.Stack;
-import java.util.concurrent.locks.Lock;
 
 /**
  * Created by neil on 23/10/2016.
@@ -19,10 +18,20 @@ import java.util.concurrent.locks.Lock;
 public class Workers
 {
     @FunctionalInterface
+    @UsesObjectEquals
     public static interface Worker
     {
         @OnThread(Tag.Simulation)
         public void run();
+
+        // Optional methods to get updates on your place in the queue:
+        // addedToQueue is guaranteed to be called and return
+        // before queueMoved is called.
+        @OnThread(Tag.Simulation)
+        public default void queueMoved(long finished, long lastQueued) {};
+        // Don't do too much here; the lock is held!
+        @OnThread(Tag.FXPlatform)
+        public default void addedToQueue(long finished, long us) {};
     }
 
     @GuardedBy("<self>")
@@ -42,33 +51,44 @@ public class Workers
         }
     }
 
-    @OnThread(Tag.Any)
-    private static final Object workQueueLock = new Object();
-    @OnThread(Tag.Any)
-    @GuardedBy("workQueueLock")
+    @OnThread(value = Tag.Any, requireSynchronized = true)
     private static final PriorityQueue<@NonNull WorkChunk> workQueue = new PriorityQueue<>((a, b) -> Long.compare(a.timeReady, b.timeReady));
 
+    @OnThread(value = Tag.Any, requireSynchronized = true)
+    private static long finished = 0;
+
     private static final Thread thread = new Thread(() -> {
+        long lastQueueUpdate = System.currentTimeMillis();
         while (true)
         {
             try
             {
                 @Nullable WorkChunk next = null;
-                synchronized (workQueueLock)
+                synchronized (Workers.class)
                 {
+                    finished += 1; // Not strictly right on startup but doesn't matter
                     do
                     {
                         @Nullable WorkChunk work = workQueue.peek();
                         if (work == null)
                         {
-                            workQueueLock.wait();
+                            Workers.class.wait();
                         }
                         else
                         {
                             long now = System.currentTimeMillis();
+                            if (now > lastQueueUpdate + 1000)
+                            {
+                                for (WorkChunk w : workQueue)
+                                {
+                                    w.work.queueMoved(finished, finished + workQueue.size());
+                                }
+                                lastQueueUpdate = now;
+                            }
+
                             if (now < work.timeReady)
                             {
-                                workQueueLock.wait(work.timeReady - now);
+                                Workers.class.wait(work.timeReady - now);
                             }
                             else
                             {
@@ -94,29 +114,53 @@ public class Workers
         thread.start();
     }
 
-    @OnThread(Tag.Any)
+    @OnThread(Tag.FXPlatform)
     public static void onWorkerThread(String title, Worker runnable)
     {
         onWorkerThread(title, runnable, 0);
     }
 
-    @OnThread(Tag.Any)
+    @OnThread(Tag.FXPlatform)
     public static void onWorkerThread(String title, Worker runnable, long delay)
     {
-        synchronized (workQueueLock)
+        int numAhead;
+        synchronized (Workers.class)
         {
             // We ask for current time.  If we just used 0, then all immediates
             // would queue-jump all timed ones.  Giving new immediates a larger
             // ready time than old delayed ones makes sure the delayed ones aren't starved.
             workQueue.add(new WorkChunk(title, runnable, System.currentTimeMillis() + delay));
+
+            // TODO this isn't right if we actually use the delay feature:
+            runnable.addedToQueue(finished, finished + workQueue.size());
+
             //synchronized (currentlyRunning)
             //{
                 //System.out.println("Work queue size: " + workQueue.size() + " cur running: " + (currentlyRunning.isEmpty() ? "none" : currentlyRunning.peek().title));
             //}
-            workQueueLock.notify();
+            Workers.class.notify();
         }
     }
 
+    @OnThread(Tag.FXPlatform)
+    public static void cancel(Worker worker)
+    {
+        synchronized (Workers.class)
+        {
+            for (Iterator<WorkChunk> iterator = workQueue.iterator(); iterator.hasNext(); )
+            {
+                WorkChunk c = iterator.next();
+                if (c.work == worker)
+                {
+                    iterator.remove();
+                    return;
+                }
+            }
+        }
+
+    }
+
+    /*
     public static void maybeYield()
     {
         synchronized (currentlyRunning)
@@ -149,7 +193,7 @@ public class Workers
             }
             run(work);
         }
-    }
+    }*/
 
     private static void run(WorkChunk work)
     {

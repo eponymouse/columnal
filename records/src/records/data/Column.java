@@ -4,13 +4,14 @@ import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
-import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DisplayCache;
+import records.gui.DisplayCacheItem;
 import records.gui.DisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -55,119 +56,32 @@ import java.util.concurrent.atomic.AtomicInteger;
 @OnThread(Tag.Simulation)
 public abstract class Column
 {
-    private final RecordSet recordSet;
-
-    // Only modified on worker thread
-    @OnThread(Tag.Simulation)
-    private @Nullable Worker submittedFetch;
-    // Only modified on worker thread
-    @OnThread(Tag.Simulation)
-    private final AtomicInteger fetchUpTo = new AtomicInteger(-1);
+    protected final RecordSet recordSet;
 
     protected Column(RecordSet recordSet)
     {
         this.recordSet = recordSet;
     }
 
-    private static interface MoreListener
-    {
-        @SafeEffect
-        @OnThread(Tag.Simulation)
-        public void gotMore();
-    }
-    @OnThread(Tag.Simulation)
-    @MonotonicNonNull
-    private List<MoreListener> moreListeners;
-
-    @OnThread(Tag.FXPlatform)
-    private static class DisplayCache
-    {
-        private final int index;
-        private final SimpleObjectProperty<DisplayValue> display;
-
-        public DisplayCache(int index, SimpleObjectProperty<DisplayValue> display)
-        {
-            this.index = index;
-            this.display = display;
-        }
-    }
-    private static final int DISPLAY_CACHE_SIZE = 1000;
     @MonotonicNonNull
     @OnThread(Tag.FXPlatform)
-    private Queue<DisplayCache> displayCache;
-
-    @OnThread(Tag.Simulation)
-    public abstract Object get(int index) throws UserException, InternalException;
+    private DisplayCache displayCache;
 
     @OnThread(Tag.FXPlatform)
     public final ObservableValue<DisplayValue> getDisplay(int index)
     {
         if (displayCache == null)
-            displayCache = new ArrayDeque<>(DISPLAY_CACHE_SIZE);
-        else
-            for (DisplayCache c : displayCache)
-                if (c.index == index)
-                    return c.display;
-
-        SimpleObjectProperty<DisplayValue> v = new SimpleObjectProperty<>(new DisplayValue(0));
-        Workers.onWorkerThread("Value load for display: " + index, new ValueLoader(index, v));
-
-        // Add to cache:
-        if (displayCache.size() >= DISPLAY_CACHE_SIZE)
-            displayCache.poll();
-        displayCache.offer(new DisplayCache(index, v));
-
-        return v;
+            displayCache = new DisplayCache(this);
+        return displayCache.getDisplay(index);
     }
 
-    // Takes place on worker thread
-    // Only call if indexProgress(index) <= 1.0
-    @OnThread(Tag.Simulation)
-    private void startFetch(int index)
+    @OnThread(Tag.FXPlatform)
+    public final void cancelGetDisplay(int index)
     {
-        if (submittedFetch != null)
+        if (displayCache != null)
         {
-            int prev = fetchUpTo.get();
-            if (prev < index)
-                fetchUpTo.set(index);
+            displayCache.cancelGetDisplay(index);
         }
-        else
-        {
-            fetchUpTo.set(index);
-        }
-
-        submittedFetch = () -> {
-            try
-            {
-                int curRequest;
-                do
-                {
-                    curRequest = fetchUpTo.get();
-                    get(curRequest);
-                    // Although get usually yields, it only does so per-chunk
-                    // so we yield to avoid getting one chunk at a time and never yielding:
-                    Workers.maybeYield();
-                }
-                while (curRequest < fetchUpTo.get());
-                // Post-condition: we only return when we have got up to the
-                // value of fetchUpTo
-            }
-            catch (InternalException | UserException e)
-            {
-
-            }
-            finally
-            {
-                submittedFetch = null;
-            }
-        };
-        Workers.onWorkerThread("startFetch: " + getName(), submittedFetch);
-    }
-
-    protected double indexProgress(int index) throws UserException
-    {
-        // Default:
-        return indexValid(index) ? 2.0 : 0.0;
     }
 
     @Pure
@@ -178,32 +92,15 @@ public abstract class Column
 
     public abstract Class<?> getType();
 
+    public final Object get(int index) throws UserException, InternalException
+    {
+        return getWithProgress(index, null);
+    }
+    public abstract Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException;
+
     public final boolean indexValid(int index) throws UserException
     {
         return recordSet.indexValid(index);
-    }
-
-    protected final void gotMore()
-    {
-        if (moreListeners != null)
-            // Operate on a copy in case it changes:
-            for (MoreListener l : new ArrayList<>(moreListeners))
-                l.gotMore();
-    }
-
-    @OnThread(Tag.Simulation)
-    public final void addMoreListener(MoreListener l)
-    {
-        if (moreListeners == null)
-            moreListeners = new ArrayList<>();
-        moreListeners.add(l);
-    }
-
-    public final void removeMoreListener(MoreListener l)
-    {
-        if (moreListeners == null)
-            moreListeners = new ArrayList<>();
-        moreListeners.remove(l);
     }
 
     // If supported, get number of distinct values quickly:
@@ -212,58 +109,14 @@ public abstract class Column
         return Optional.empty();
     }
 
-    private class ValueLoader implements Worker, MoreListener
+    public final int getLength() throws UserException
     {
-        private final int index;
-        private final SimpleObjectProperty<DisplayValue> v;
+        return recordSet.getLength();
+    }
 
-        @OnThread(Tag.FXPlatform)
-        public ValueLoader(int index, SimpleObjectProperty<DisplayValue> v)
-        {
-            this.index = index;
-            this.v = v;
-        }
-
-        public void run() {
-            try
-            {
-                // If > 1.0 then ready
-                double d = indexProgress(index);
-                if (d > 1.0)
-                {
-                    //System.out.println("Found value for " + index);
-                    String val = get(index).toString();
-                    Platform.runLater(() -> {
-                        v.setValue(new DisplayValue(val));
-                    });
-                    // TODO catch exceptions
-                }
-                else
-                {
-                    //System.out.println("Starting fetch for " + index);
-                    Platform.runLater(() -> v.setValue(new DisplayValue(d)));
-
-                    // Fetch:
-                    startFetch(index);
-                    // Come back when there's more available:
-                    addMoreListener(this);
-
-                }
-            }
-            catch (UserException | InternalException e)
-            {
-                Platform.runLater(() -> {
-                    String msg = e.getLocalizedMessage();
-                    v.setValue(new DisplayValue(msg == null ? "ERROR" : msg, true));
-                });
-            }
-        }
-
-        @Override
-        public @OnThread(Tag.Simulation) void gotMore()
-        {
-            removeMoreListener(this);
-            run();
-        }
+    public static interface ProgressListener
+    {
+        @OnThread(Tag.Simulation)
+        public void progressUpdate(double progress);
     }
 }

@@ -1,5 +1,6 @@
 package records.data;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
@@ -25,7 +26,7 @@ public class TextFileNumericColumn extends TextFileColumn
     }
 
     @Override
-    public Number get(int index) throws InternalException, UserException
+    public Number getWithProgress(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
         try
         {
@@ -33,6 +34,7 @@ public class TextFileNumericColumn extends TextFileColumn
             // true if user scrolled in table, false if we are performing a calculation
             while (index >= loadedValues.filled())
             {
+                double startedAt = loadedValues.filled();
                 ArrayList<String> next = new ArrayList<>();
                 lastFilePosition = Utility.readColumnChunk(textFile, lastFilePosition, sep, columnIndex, next);
                 if (!lastFilePosition.isEOF())
@@ -48,8 +50,8 @@ public class TextFileNumericColumn extends TextFileColumn
                             throw new FetchException("Could not parse number: \"" + s + "\"", e);
                         }
                     }
-                    gotMore();
-                    Workers.maybeYield();
+                    if (progressListener != null)
+                        progressListener.progressUpdate(((double)loadedValues.filled() - startedAt) / ((double)index - startedAt));
                 }
                 else
                     throw new FetchException("Error reading line: " + loadedValues.filled(), new EOFException());
@@ -62,17 +64,6 @@ public class TextFileNumericColumn extends TextFileColumn
         {
             throw new FetchException("Error reading " + textFile, e);
         }
-    }
-
-    @Override
-    protected double indexProgress(int index) throws UserException
-    {
-        if (index < loadedValues.filled())
-            return 2.0;
-        else if (index == 0)
-            return 0.0;
-        else
-            return (double)(loadedValues.filled() - 1) / (double)index;
     }
 
     @Override

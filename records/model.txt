@@ -1,0 +1,9 @@
+Each file is a collection of record sets.
+
+Each record set is a collection of typed columns of equal length.  A record set may be an import from a data source (e.g. a CSV file) or a transformation applied to one or more other record sets (e.g. a map operation, or a manual replacement of some data).
+
+Each column may depend on columns in other record sets, but it is independent of other columns in the same record set (except that they may come from the same data source, and will have the same number of rows).
+
+Data is calculated on-demand, either when the user views it (or views a dependency) or exports it.  However, if the data set is small enough, the result may be cached.
+
+Viewing is done from the FX thread.  All other calculation is done on a single calculation thread.

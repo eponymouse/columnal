@@ -4,38 +4,65 @@ import org.checkerframework.checker.lock.qual.GuardSatisfied;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
- * Created by neil on 23/10/2016.
+ * A value describing how to display a single piece of data.
+ *
+ * It can be in three states:
+ *  - Loading (with a progress amount)
+ *  - Successfully loaded (with a String which is what to show in the cell)
+ *  - Unsuccessful (with a String giving an error description)
  */
 public class DisplayValue
 {
-    private double loading; // If -1, use String
-    private String show;
-    private boolean isError; // Highlight the string differently.
+    public static enum ProgressState
+    {
+        GETTING, QUEUED;
+    }
 
+    private final @Nullable ProgressState state;
+    private final double loading; // If -1, use String
+    private final @Nullable String show;
+    private final boolean isError; // Highlight the string differently.
+
+    /**
+     * Create successfully loaded item
+     */
     public DisplayValue(String s)
     {
-        loading = -1;
         show = s;
+        state = null;
+        loading = -1;
+        isError = false;
     }
 
-    public DisplayValue(double d)
+    /**
+     * Creating loading-in-progress item (param is progress, 0 to 1)
+     */
+    public DisplayValue(ProgressState state, double d)
     {
+        this.state = state;
         loading = d;
-        show = "";
+        show = null;
+        isError = false;
     }
 
+    /**
+     * Create error item (if err is true; err being false is same as single-arg constructor).
+     */
     public DisplayValue(String s, boolean err)
     {
         show = s;
         isError = err;
+        loading = -1;
+        state = null;
     }
 
     @Override
+    @SuppressWarnings("nullness")
     public String toString()
     {
         if (loading == -1)
             return show;
         else
-            return "Loading: " + loading;
+            return state.toString() + ": " + loading;
     }
 }

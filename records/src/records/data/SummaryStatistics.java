@@ -2,6 +2,7 @@ package records.data;
 
 import javafx.application.Platform;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -82,7 +83,7 @@ public class SummaryStatistics extends Transformation
                 columns.add(rs -> new Column(rs)
                 {
                     @Override
-                    public Object get(int index) throws UserException, InternalException
+                    public Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
                     {
                         return splits.get(index).colValue.get(iFinal);
                     }
@@ -140,12 +141,6 @@ public class SummaryStatistics extends Transformation
                 columns.add(rs -> new CalculatedColumn<Object>(rs, e.getKey() + "." + summaryType, srcCol)
                 {
                     @Override
-                    protected boolean isSingleExpensive()
-                    {
-                        return true;
-                    }
-
-                    @Override
                     protected Object calculate(int index) throws UserException, InternalException
                     {
                         if (index >= splits.size())
@@ -155,7 +150,6 @@ public class SummaryStatistics extends Transformation
                         {
                             case MIN:
                             case MAX:
-                                //TODO use JFR to see what is taking so long...
                                 Comparable<Object> cur = null;
                                 for (int i = 0; srcCol.indexValid(i); i++)
                                 {
@@ -178,6 +172,11 @@ public class SummaryStatistics extends Transformation
                                             || (summaryType == SummaryType.MAX && comparison < 0))
                                             cur = x;
                                     }
+
+
+                                    // OK to use getLength as we're forcing the whole column anyway:
+                                    if ((i & 127) == 0)
+                                        updateProgress((double)i / srcCol.getLength());
                                 }
                                 if (cur != null)
                                     return cur;

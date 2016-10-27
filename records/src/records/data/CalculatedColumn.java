@@ -1,5 +1,6 @@
 package records.data;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -31,7 +32,7 @@ public abstract class CalculatedColumn<T extends Object> extends Column
     }
 
     @Override
-    public final T get(int index) throws UserException, InternalException
+    public final T getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
     {
         if (checkCacheValid())
         {
@@ -43,32 +44,17 @@ public abstract class CalculatedColumn<T extends Object> extends Column
             cachedValues.clear();
             version += 1;
         }
+        //this.progressListener = progressListener;
+        // TODO technically we don't have to stream in order, do we?
         // Fetch values:
         for (int i = cachedValues.size(); i <= index; i++)
         {
             cachedValues.add(calculate(i));
-            if (isSingleExpensive() || (i % 100) == 0)
-            {
-                gotMore();
-                Workers.maybeYield();
-            }
         }
-        gotMore();
         return cachedValues.get(index);
     }
 
-    protected abstract boolean isSingleExpensive();
-
-    @Override
-    protected final double indexProgress(int index) throws UserException
-    {
-        if (index < cachedValues.size())
-            return 2.0;
-        else if (index == 0)
-            return 0.0;
-        else
-            return (double)(cachedValues.size() - 1) / (double)index;
-    }
+    protected final void updateProgress(double d) { }
 
     private boolean checkCacheValid()
     {

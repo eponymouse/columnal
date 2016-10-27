@@ -1,6 +1,7 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.FetchException;
 import records.error.UserException;
 import utility.CompleteStringPool;
@@ -32,18 +33,14 @@ public class TextFileStringColumn extends TextFileColumn
     }
 
     @Override
-    public String get(int index) throws UserException
+    public String getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException
     {
         try
         {
             // TODO share loading across columns?  Maybe have boolean indicating whether to do so;
             // true if user scrolled in table, false if we are performing a calculation
-            boolean firstChunk = true;
             while (index >= loadedValues.length)
             {
-                if (!firstChunk)
-                    Workers.maybeYield();
-                firstChunk = false;
                 ArrayList<String> next = new ArrayList<>();
                 lastFilePosition = Utility.readColumnChunk(textFile, lastFilePosition, sep, columnIndex, next);
                 if (!lastFilePosition.isEOF())
@@ -58,7 +55,8 @@ public class TextFileStringColumn extends TextFileColumn
                         newLoadedValues[prevSize + i] = pool.pool(next.get(i));
                     }
                     loadedValues = newLoadedValues;
-                    gotMore();
+                    if (progressListener != null)
+                        progressListener.progressUpdate((double)loadedValues.length / index);
                 }
                 else
                     throw new FetchException("Error reading line", new EOFException());
@@ -71,17 +69,6 @@ public class TextFileStringColumn extends TextFileColumn
         {
             throw new FetchException("Error reading " + textFile, e);
         }
-    }
-
-    @Override
-    protected double indexProgress(int index) throws UserException
-    {
-        if (index < loadedValues.length)
-            return 2.0;
-        else if (index == 0)
-            return 0.0;
-        else
-            return (double)(loadedValues.length - 1) / (double)index;
     }
 
     @Override
