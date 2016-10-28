@@ -1,6 +1,7 @@
 package utility;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.RecordSet;
 import records.data.TextFileNumericColumn;
@@ -45,6 +46,36 @@ public class Import
             this.type = type;
             this.title = title;
         }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            ColumnInfo that = (ColumnInfo) o;
+
+            if (type != that.type) return false;
+            return title.equals(that.title);
+
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = type.hashCode();
+            result = 31 * result + title.hashCode();
+            return result;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "ColumnInfo{" +
+                "type=" + type +
+                ", title='" + title + '\'' +
+                '}';
+        }
     }
 
     public static class Format
@@ -68,6 +99,36 @@ public class Import
         {
             problems.add(problem);
         }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Format format = (Format) o;
+
+            if (headerRows != format.headerRows) return false;
+            return columnTypes.equals(format.columnTypes);
+
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = headerRows;
+            result = 31 * result + columnTypes.hashCode();
+            return result;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "Format{" +
+                "headerRows=" + headerRows +
+                ", columnTypes=" + columnTypes +
+                '}';
+        }
     }
 
     public static class TextFormat extends Format
@@ -78,6 +139,43 @@ public class Import
         {
             super(copyFrom);
             this.separator = separator;
+        }
+
+        public TextFormat(int headerRows, List<ColumnInfo> columnTypes, char separator)
+        {
+            super(headerRows, columnTypes);
+            this.separator = separator;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+            if (!super.equals(o)) return false;
+
+            TextFormat that = (TextFormat) o;
+
+            return separator == that.separator;
+
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = super.hashCode();
+            result = 31 * result + (int) separator;
+            return result;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "TextFormat{" +
+                "headerRows=" + headerRows +
+                ", columnTypes=" + columnTypes +
+                ", separator=" + separator +
+                '}';
         }
     }
 
@@ -99,7 +197,7 @@ public class Import
             while ((line = br.readLine()) != null && initial.size() < 100) {
                 initial.add(line);
             }
-            TextFormat format = guessTextFormat(textFile, initial);
+            TextFormat format = guessTextFormat(initial);
 
             long startPosition = Utility.skipFirstNRows(textFile, format.headerRows).startFrom;
 
@@ -153,7 +251,7 @@ public class Import
         }
     }
 
-    private static TextFormat guessTextFormat(File textFile, List<String> initial)
+    public static TextFormat guessTextFormat(List<String> initial)
     {
         try
         {
