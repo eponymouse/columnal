@@ -45,8 +45,8 @@ public class Main extends Application
                 {
                     try
                     {
-                        RecordSet rs = Import.importFile(chosen);
-                        Platform.runLater(() -> v.add(new Table(v, rs)));
+                        Import.importTextFile(chosen, rs ->
+                            Platform.runLater(() -> v.add(new Table(v, rs))));
                     }
                     catch (IOException ex)
                     {
@@ -60,8 +60,8 @@ public class Main extends Application
         Workers.onWorkerThread("Example import", () -> {
             try
             {
-                RecordSet rs = Import.importFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"));
-                Platform.runLater(() -> v.add(new Table(v, rs)));
+                Import.importTextFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"), rs ->
+                Platform.runLater(() -> v.add(new Table(v, rs))));
             }
             catch (IOException ex)
             {

@@ -17,10 +17,12 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -28,8 +30,67 @@ import java.util.function.Function;
  */
 public class Import
 {
+    public static enum ColumnType
+    {
+        NUMERIC, TEXT, BLANK;
+    }
+
+    public static class ColumnInfo
+    {
+        private final ColumnType type;
+        private final String title;
+
+        public ColumnInfo(ColumnType type, String title)
+        {
+            this.type = type;
+            this.title = title;
+        }
+    }
+
+    public static class Format
+    {
+        public final int headerRows;
+        public final List<ColumnInfo> columnTypes;
+        public final List<String> problems = new ArrayList<>();
+
+        public Format(int headerRows, List<ColumnInfo> columnTypes)
+        {
+            this.headerRows = headerRows;
+            this.columnTypes = columnTypes;
+        }
+
+        public Format(Format copyFrom)
+        {
+            this(copyFrom.headerRows, copyFrom.columnTypes);
+        }
+
+        public void recordProblem(String problem)
+        {
+            problems.add(problem);
+        }
+    }
+
+    public static class TextFormat extends Format
+    {
+        public final char separator;
+
+        public TextFormat(Format copyFrom, char separator)
+        {
+            super(copyFrom);
+            this.separator = separator;
+        }
+    }
+
+    public static class GuessException extends Exception
+    {
+        public GuessException(String message)
+        {
+            super(message);
+        }
+    }
+
     @OnThread(Tag.Simulation)
-    public static RecordSet importFile(File textFile) throws IOException
+    public static void importTextFile(File textFile, Consumer<RecordSet> afterLoaded) throws IOException
     {
         // Read the first few lines:
         try (BufferedReader br = new BufferedReader(new FileReader(textFile))) {
@@ -38,64 +99,31 @@ public class Import
             while ((line = br.readLine()) != null && initial.size() < 100) {
                 initial.add(line);
             }
-            Map<String, Double> sepScores = new HashMap<>();
-            // Guess the separator:
-            for (String sep : Arrays.asList(";", ",", "\t"))
+            TextFormat format = guessTextFormat(textFile, initial);
+
+            long startPosition = Utility.skipFirstNRows(textFile, format.headerRows).startFrom;
+
+            List<Function<RecordSet, Column>> columns = new ArrayList<>();
+            for (int i = 0; i < format.columnTypes.size(); i++)
             {
-                // Ignore first row; often a header:
-                
-                List<Integer> counts = new ArrayList<>(initial.size() - 1);
-                for (int i = 1; i < initial.size(); i++)
-                    counts.add(Utility.countIn(sep, initial.get(i)));
-                if (counts.stream().allMatch(c -> c.intValue() == 0))
+                ColumnInfo columnInfo = format.columnTypes.get(i);
+                int iFinal = i;
+                switch (columnInfo.type)
                 {
-                    // None found; so rubbish we shouldn't record
-                }
-                else
-                {
-                    sepScores.put(sep, Utility.variance(counts));
+                    case NUMERIC:
+                        columns.add(rs -> new TextFileNumericColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal));
+                        break;
+                    case TEXT:
+                        columns.add(rs -> new TextFileStringColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal));
+                        break;
+                    // If it's blank, should we add any column?
+                    // Maybe if it has title?
                 }
             }
 
-            if (sepScores.isEmpty())
-                throw new IOException("Couldn't deduce separator"); // TODO: ask!
-            Entry<String, Double> sep = sepScores.entrySet().stream().min(Entry.comparingByValue()).get();
 
-            int headerRows = 1;
 
-            if (sep.getValue().doubleValue() == 0.0)
-            {
-                // Spot on!  Read first line of initial to get column count
-                int columnCount = initial.get(0).split(sep.getKey()).length;
-
-                List<@NonNull String @NonNull[]> initialVals = Utility.<@NonNull String, @NonNull String @NonNull []>mapList(initial, s -> s.split(sep.getKey()));
-
-                List<Function<RecordSet, Column>> columns = new ArrayList<>();
-                for (int i = 0; i < columnCount; i++)
-                {
-                    // Have a guess at column type:
-                    boolean allNumeric = true;
-                    for (int j = 1; j < initialVals.size(); j++)
-                    {
-                        try
-                        {
-                            new BigDecimal(initialVals.get(j)[i]);
-                        }
-                        catch (NumberFormatException e)
-                        {
-                            allNumeric = false;
-                        }
-                    }
-                    boolean allNumericFinal = allNumeric;
-                    String colName = initialVals.get(0)[i];
-                    int colIndex = i;
-                    long startPosition = Utility.skipFirstNRows(textFile, headerRows).startFrom;
-                    columns.add(rs -> allNumericFinal ?
-                        new TextFileNumericColumn(rs, textFile, startPosition, (byte) sep.getKey().charAt(0), colName, colIndex)
-                        : new TextFileStringColumn(rs, textFile, startPosition, (byte) sep.getKey().charAt(0), colName, colIndex));
-                }
-
-                return new RecordSet(textFile.getName(), columns) {
+            afterLoaded.accept(new RecordSet(textFile.getName(), columns) {
                     protected int rowCount = -1;
 
                     @Override
@@ -111,7 +139,7 @@ public class Import
                         {
                             try
                             {
-                                rowCount = Utility.countLines(textFile) - headerRows;
+                                rowCount = Utility.countLines(textFile) - format.headerRows;
                             }
                             catch (IOException e)
                             {
@@ -120,10 +148,91 @@ public class Import
                         }
                         return rowCount;
                     }
-                };
-            }
-            else
-                throw new IOException("Uncertain of number of columns");
+                });
+
         }
+    }
+
+    private static TextFormat guessTextFormat(File textFile, List<String> initial)
+    {
+        try
+        {
+            Map<String, Double> sepScores = new HashMap<>();
+            // Guess the separator:
+            for (String sep : Arrays.asList(";", ",", "\t"))
+            {
+                // Ignore first row; often a header:
+
+                List<Integer> counts = new ArrayList<>(initial.size() - 1);
+                for (int i = 1; i < initial.size(); i++)
+                    counts.add(Utility.countIn(sep, initial.get(i)));
+                if (counts.stream().allMatch(c -> c.intValue() == 0))
+                {
+                    // None found; so rubbish we shouldn't record
+                } else
+                {
+                    sepScores.put(sep, Utility.variance(counts));
+                }
+            }
+
+            if (sepScores.isEmpty())
+                throw new GuessException("Couldn't deduce separator");
+            Entry<String, Double> sep = sepScores.entrySet().stream().min(Entry.comparingByValue()).get();
+
+            int headerRows = 1;
+
+            if (sep.getValue().doubleValue() == 0.0)
+            {
+                // Spot on!  Read first line of initial to get column count
+                int columnCount = initial.get(0).split(sep.getKey()).length;
+
+                List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> Arrays.asList(s.split(sep.getKey())));
+
+                //List<Function<RecordSet, Column>> columns = new ArrayList<>();
+                return new TextFormat(guessFormat(columnCount, headerRows,initialVals), sep.getKey().charAt(0));
+
+            } else
+                throw new GuessException("Uncertain of number of columns");
+        }
+        catch (GuessException e)
+        {
+            // Always valid backup: a single text column, no header
+            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(ColumnType.TEXT, ""))), (char)-1);
+            String msg = e.getLocalizedMessage();
+            fmt.recordProblem(msg == null ? "Unknown" : msg);
+            return fmt;
+        }
+    }
+
+    private static Format guessFormat(int columnCount, int headerRows, @NonNull List<@NonNull List<@NonNull String>> initialVals)
+    {
+        List<ColumnInfo> columns = new ArrayList<>();
+        for (int i = 0; i < columnCount; i++)
+        {
+            // Have a guess at column type:
+            boolean allNumeric = true;
+            boolean allBlank = true;
+            for (int rowIndex = headerRows; rowIndex < initialVals.size(); rowIndex++)
+            {
+                List<String> row = initialVals.get(rowIndex);
+                if (!row.isEmpty())
+                {
+                    allBlank = false;
+                    try
+                    {
+                        new BigDecimal(row.get(i));
+                    }
+                    catch (NumberFormatException e)
+                    {
+                        allNumeric = false;
+                    }
+                }
+            }
+            columns.add(new ColumnInfo(allBlank ? ColumnType.BLANK : (allNumeric ? ColumnType.NUMERIC : ColumnType.TEXT), initialVals.get(0).get(i)));
+            /*columns.add(rs -> allNumericFinal ?
+                new TextFileNumericColumn(rs, textFile, startPosition, (byte) sep.getKey().charAt(0), colName, colIndex)
+                : new TextFileStringColumn(rs, textFile, startPosition, (byte) sep.getKey().charAt(0), colName, colIndex));*/
+        }
+        return new Format(headerRows, columns);
     }
 }
