@@ -140,7 +140,7 @@ public class Import
 
     public static class TextFormat extends Format
     {
-        public final char separator;
+        public char separator;
 
         public TextFormat(Format copyFrom, char separator)
         {
@@ -265,12 +265,12 @@ public class Import
             // All-text formats, indexed by number of header rows:
             final TreeMap<Integer, TextFormat> allText = new TreeMap<>();
             // We advance the number of header rows until everything makes sense:
-            for (int headerRows = 0; headerRows < MAX_HEADER_ROWS; headerRows++)
+            for (int headerRows = 0; headerRows < Math.min(MAX_HEADER_ROWS, initial.size() - 1); headerRows++)
             {
 
                 Map<String, Double> sepScores = new HashMap<>();
                 // Guess the separator:
-                for (String sep : Arrays.asList(";", ",", "\t"))
+                for (String sep : Arrays.asList(";", ",", "\t", " ", ":"))
                 {
                     List<Integer> counts = new ArrayList<>(initial.size() - headerRows);
                     for (int i = headerRows; i < initial.size(); i++)

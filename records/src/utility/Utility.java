@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.ArrayList;
@@ -37,6 +38,17 @@ public class Utility
         ArrayList<@NonNull R> r = new ArrayList<>(list.size());
         for (T t : list)
             r.add(func.apply(t));
+        return r;
+    }
+
+    public static <T, R> @NonNull R @NonNull [] mapArray(Class<R> cls, @NonNull T @NonNull [] src, Function<@NonNull T, @NonNull R> func)
+    {
+        @SuppressWarnings("unchecked")
+        @NonNull R @NonNull [] r = (@NonNull R @NonNull [])Array.newInstance(cls, src.length);
+        for (int i = 0; i < src.length; i++)
+        {
+            r[i] = func.apply(src[i]);
+        }
         return r;
     }
 
