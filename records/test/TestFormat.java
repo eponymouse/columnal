@@ -24,6 +24,10 @@ public class TestFormat
     {
         assertFormat(new TextFormat(1, c(new ColumnInfo(NUM, "A"), new ColumnInfo(NUM, "B")), ','),
             "A,B", "0,0", "1,1", "2,2");
+        assertFormat(new TextFormat(2, c(new ColumnInfo(NUM, "A"), new ColumnInfo(NUM, "B")), ','),
+            "# Some comment", "A,B", "0,0", "1,1", "2,2");
+        assertFormat(new TextFormat(3, c(new ColumnInfo(NUM, "A"), new ColumnInfo(NUM, "B")), ','),
+            "# Some comment", "A,B", "===", "0,0", "1,1", "2,2");
         assertFormat(new TextFormat(0, c(new ColumnInfo(NUM, ""), new ColumnInfo(NUM, "")), ','),
             "0,0", "1,1", "2,2");
 

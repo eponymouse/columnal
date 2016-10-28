@@ -19,10 +19,13 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 
@@ -31,6 +34,10 @@ import java.util.function.Function;
  */
 public class Import
 {
+
+    public static final int MAX_HEADER_ROWS = 20;
+    public static final int INITIAL_ROWS_TEXT_FILE = 100;
+
     public static enum ColumnType
     {
         NUMERIC, TEXT, BLANK;
@@ -194,7 +201,7 @@ public class Import
         try (BufferedReader br = new BufferedReader(new FileReader(textFile))) {
             String line;
             List<String> initial = new ArrayList<>();
-            while ((line = br.readLine()) != null && initial.size() < 100) {
+            while ((line = br.readLine()) != null && initial.size() < INITIAL_ROWS_TEXT_FILE) {
                 initial.add(line);
             }
             TextFormat format = guessTextFormat(initial);
@@ -255,42 +262,57 @@ public class Import
     {
         try
         {
-            Map<String, Double> sepScores = new HashMap<>();
-            // Guess the separator:
-            for (String sep : Arrays.asList(";", ",", "\t"))
+            // All-text formats, indexed by number of header rows:
+            final TreeMap<Integer, TextFormat> allText = new TreeMap<>();
+            // We advance the number of header rows until everything makes sense:
+            for (int headerRows = 0; headerRows < MAX_HEADER_ROWS; headerRows++)
             {
-                // Ignore first row; often a header:
 
-                List<Integer> counts = new ArrayList<>(initial.size() - 1);
-                for (int i = 1; i < initial.size(); i++)
-                    counts.add(Utility.countIn(sep, initial.get(i)));
-                if (counts.stream().allMatch(c -> c.intValue() == 0))
+                Map<String, Double> sepScores = new HashMap<>();
+                // Guess the separator:
+                for (String sep : Arrays.asList(";", ",", "\t"))
                 {
-                    // None found; so rubbish we shouldn't record
-                } else
+                    List<Integer> counts = new ArrayList<>(initial.size() - headerRows);
+                    for (int i = headerRows; i < initial.size(); i++)
+                        counts.add(Utility.countIn(sep, initial.get(i)));
+                    if (counts.stream().allMatch(c -> c.intValue() == 0))
+                    {
+                        // None found; so rubbish we shouldn't record
+                    } else
+                    {
+                        sepScores.put(sep, Utility.variance(counts));
+                    }
+                }
+
+                if (sepScores.isEmpty())
+                    continue;
+
+                Entry<String, Double> sep = sepScores.entrySet().stream().min(Entry.comparingByValue()).get();
+
+                if (sep.getValue().doubleValue() == 0.0)
                 {
-                    sepScores.put(sep, Utility.variance(counts));
+                    // Spot on!  Read first line after headers to get column count
+                    int columnCount = initial.get(headerRows).split(sep.getKey()).length;
+
+                    List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> Arrays.asList(s.split(sep.getKey())));
+
+                    //List<Function<RecordSet, Column>> columns = new ArrayList<>();
+                    Format format = guessFormat(columnCount, headerRows, initialVals);
+                    TextFormat textFormat = new TextFormat(format, sep.getKey().charAt(0));
+                    // If they are all text record this as feasible but keep going in case we get better
+                    // result with more header rows:
+                    if (format.columnTypes.stream().allMatch(c -> c.type == ColumnType.TEXT || c.type == ColumnType.BLANK))
+                        allText.put(headerRows, textFormat);
+                    else // Not all just text; go with it:
+                        return textFormat;
+
                 }
             }
-
-            if (sepScores.isEmpty())
-                throw new GuessException("Couldn't deduce separator");
-            Entry<String, Double> sep = sepScores.entrySet().stream().min(Entry.comparingByValue()).get();
-
-            int headerRows = 1;
-
-            if (sep.getValue().doubleValue() == 0.0)
-            {
-                // Spot on!  Read first line of initial to get column count
-                int columnCount = initial.get(0).split(sep.getKey()).length;
-
-                List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> Arrays.asList(s.split(sep.getKey())));
-
-                //List<Function<RecordSet, Column>> columns = new ArrayList<>();
-                return new TextFormat(guessFormat(columnCount, headerRows,initialVals), sep.getKey().charAt(0));
-
-            } else
-                throw new GuessException("Uncertain of number of columns");
+            Entry<Integer, TextFormat> firstAllText = allText.firstEntry();
+            if (firstAllText != null)
+                return firstAllText.getValue();
+            else
+                throw new GuessException("Couldn't guess column separator");
         }
         catch (GuessException e)
         {
@@ -304,8 +326,10 @@ public class Import
 
     private static Format guessFormat(int columnCount, int headerRows, @NonNull List<@NonNull List<@NonNull String>> initialVals)
     {
-        List<ColumnInfo> columns = new ArrayList<>();
-        for (int i = 0; i < columnCount; i++)
+        // Per row, for how many columns is it viable to get column name?
+        Map<Integer, Integer> viableColumnNameRows = new HashMap<>();
+        List<ColumnType> columnTypes = new ArrayList<>();
+        for (int columnIndex = 0; columnIndex < columnCount; columnIndex++)
         {
             // Have a guess at column type:
             boolean allNumeric = true;
@@ -318,7 +342,7 @@ public class Import
                     allBlank = false;
                     try
                     {
-                        new BigDecimal(row.get(i));
+                        new BigDecimal(row.get(columnIndex));
                     }
                     catch (NumberFormatException e)
                     {
@@ -326,11 +350,24 @@ public class Import
                     }
                 }
             }
-            columns.add(new ColumnInfo(allBlank ? ColumnType.BLANK : (allNumeric ? ColumnType.NUMERIC : ColumnType.TEXT), initialVals.get(0).get(i)));
-            /*columns.add(rs -> allNumericFinal ?
-                new TextFileNumericColumn(rs, textFile, startPosition, (byte) sep.getKey().charAt(0), colName, colIndex)
-                : new TextFileStringColumn(rs, textFile, startPosition, (byte) sep.getKey().charAt(0), colName, colIndex));*/
+            columnTypes.add(allBlank ? ColumnType.BLANK : (allNumeric ? ColumnType.NUMERIC : ColumnType.TEXT));
+            // Go backwards to find column titles:
+
+            for (int headerRow = headerRows - 1; headerRow >= 0; headerRow--)
+            {
+                // Must actually have our column in it:
+                if (columnIndex < initialVals.get(headerRow).size())
+                {
+                    viableColumnNameRows.compute(headerRow, (a, pre) -> pre == null ? 1 : (1 + pre));
+                }
+            }
         }
+        // All must think it's viable, and then pick last one:
+        Optional<List<String>> headerRow = viableColumnNameRows.entrySet().stream().filter(e -> e.getValue() == columnCount).max(Entry.comparingByKey()).map(e -> initialVals.get(e.getKey()));
+
+        List<ColumnInfo> columns = new ArrayList<>(columnCount);
+        for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
+            columns.add(new ColumnInfo(columnTypes.get(columnIndex), headerRow.isPresent() ? headerRow.get().get(columnIndex) : ""));
         return new Format(headerRows, columns);
     }
 }
