@@ -45,9 +45,9 @@ public class Import
 
     public static class ColumnInfo
     {
-        private final ColumnType type;
-        private final String title;
-        private final String displayPrefix;
+        public final ColumnType type;
+        public final String title;
+        public final String displayPrefix;
 
         public ColumnInfo(ColumnType type, String title)
         {
@@ -352,10 +352,12 @@ public class Import
                 List<String> row = initialVals.get(rowIndex);
                 if (!row.isEmpty())
                 {
-                    allBlank = false;
+
                     try
                     {
                         String val = row.get(columnIndex).trim();
+                        if (!val.isEmpty())
+                            allBlank = false;
                         if (commonPrefix.isEmpty())
                         {
                             // Look for a prefix of currency symbol:

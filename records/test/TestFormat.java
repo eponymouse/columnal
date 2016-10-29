@@ -1,3 +1,5 @@
+import com.pholser.junit.quickcheck.From;
+import com.pholser.junit.quickcheck.Property;
 import org.junit.Test;
 import utility.Import;
 import utility.Import.ColumnInfo;
@@ -5,8 +7,11 @@ import utility.Import.ColumnType;
 import utility.Import.TextFormat;
 import utility.Utility;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 

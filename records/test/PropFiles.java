@@ -1,6 +1,8 @@
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import utility.Utility;
 
@@ -12,7 +14,7 @@ import static org.junit.Assert.assertEquals;
  * Created by neil on 26/10/2016.
  */
 @RunWith(JUnitQuickcheck.class)
-public class TestFiles
+public class PropFiles
 {
     @Property
     public void testLineCount(@From(GenFile.class) TestTextFile input) throws IOException
@@ -20,7 +22,7 @@ public class TestFiles
         assertEqualsMsg(input.getLineCount(), Utility.countLines(input.getFile()));
     }
 
-    private void assertEqualsMsg(int exp, int act)
+    public static <T> void assertEqualsMsg(@NonNull T exp, @NonNull T act)
     {
         try
         {
