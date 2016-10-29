@@ -17,6 +17,19 @@ public class TestFiles
     @Property
     public void testLineCount(@From(GenFile.class) TestTextFile input) throws IOException
     {
-        assertEquals(input.getLineCount(), Utility.countLines(input.getFile()));
+        assertEqualsMsg(input.getLineCount(), Utility.countLines(input.getFile()));
+    }
+
+    private void assertEqualsMsg(int exp, int act)
+    {
+        try
+        {
+            assertEquals(exp, act);
+        }
+        catch (AssertionError err)
+        {
+            System.err.println("Expected: " + exp + " Actual: " + act);
+            throw err;
+        }
     }
 }

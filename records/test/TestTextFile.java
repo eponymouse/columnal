@@ -37,4 +37,12 @@ public class TestTextFile
     {
         return lineCount;
     }
+
+    @Override
+    public String toString()
+    {
+        return "TestTextFile{" +
+            "lineCount=" + lineCount +
+            '}';
+    }
 }

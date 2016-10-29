@@ -58,7 +58,7 @@ public class Utility
         InputStream is = new BufferedInputStream(new FileInputStream(filename));
         try {
             byte[] c = new byte[65536];
-            int count = 0;
+            int count = 1;
             int readChars = 0;
             boolean empty = true;
             boolean lastWasNewline = false;
@@ -73,7 +73,15 @@ public class Utility
                         lastWasNewline = false;
                 }
             }
-            return (count == 0 && !empty) ? 1 : (count - (lastWasNewline ? 1 : 0));
+            // Nothing at all; zero lines
+            if (empty)
+                return 0;
+            // Some content, no newline, must be one line:
+            else if (count == 1 && !empty)
+                return 1;
+            else
+            // Some content with newlines; ignore blank extra line if \n is very end of file:
+                return count - (lastWasNewline ? 1 : 0);
         } finally {
             is.close();
         }

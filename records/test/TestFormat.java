@@ -35,6 +35,7 @@ public class TestFormat
             "A,B", "0,0", "1,1", "1.5,D", "2,2");
 
         //#error TODO add support for date columns
+        //#error TODO add some property based tests for format detection
     }
     @Test
     public void testCurrency()
