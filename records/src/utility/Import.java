@@ -47,11 +47,18 @@ public class Import
     {
         private final ColumnType type;
         private final String title;
+        private final String displayPrefix;
 
         public ColumnInfo(ColumnType type, String title)
         {
+            this(type, title, "");
+        }
+
+        public ColumnInfo(ColumnType type, String title, String displayPrefix)
+        {
             this.type = type;
             this.title = title;
+            this.displayPrefix = displayPrefix;
         }
 
         @Override
@@ -63,7 +70,7 @@ public class Import
             ColumnInfo that = (ColumnInfo) o;
 
             if (type != that.type) return false;
-            return title.equals(that.title);
+            return title.equals(that.title) && displayPrefix.equals(that.displayPrefix);
 
         }
 
@@ -72,6 +79,7 @@ public class Import
         {
             int result = type.hashCode();
             result = 31 * result + title.hashCode();
+            result = 31 * result + displayPrefix.hashCode();
             return result;
         }
 
@@ -81,6 +89,7 @@ public class Import
             return "ColumnInfo{" +
                 "type=" + type +
                 ", title='" + title + '\'' +
+                ", displayPrefix='" + displayPrefix + '\'' +
                 '}';
         }
     }
@@ -270,7 +279,9 @@ public class Import
 
                 Map<String, Double> sepScores = new HashMap<>();
                 // Guess the separator:
-                for (String sep : Arrays.asList(";", ",", "\t", " ", ":"))
+                // Earlier in this list is most preferred:
+                List<String> seps = Arrays.asList(";", ",", "\t", ":", " ");
+                for (String sep : seps)
                 {
                     List<Integer> counts = new ArrayList<>(initial.size() - headerRows);
                     for (int i = headerRows; i < initial.size(); i++)
@@ -287,7 +298,7 @@ public class Import
                 if (sepScores.isEmpty())
                     continue;
 
-                Entry<String, Double> sep = sepScores.entrySet().stream().min(Entry.comparingByValue()).get();
+                Entry<String, Double> sep = sepScores.entrySet().stream().min(Comparator.<Entry<String, Double>, Double>comparing(e -> e.getValue()).thenComparing(e -> seps.indexOf(e.getKey()))).get();
 
                 if (sep.getValue().doubleValue() == 0.0)
                 {
@@ -329,11 +340,13 @@ public class Import
         // Per row, for how many columns is it viable to get column name?
         Map<Integer, Integer> viableColumnNameRows = new HashMap<>();
         List<ColumnType> columnTypes = new ArrayList<>();
+        List<String> columnPrefixes = new ArrayList<>();
         for (int columnIndex = 0; columnIndex < columnCount; columnIndex++)
         {
             // Have a guess at column type:
             boolean allNumeric = true;
             boolean allBlank = true;
+            String commonPrefix = "";
             for (int rowIndex = headerRows; rowIndex < initialVals.size(); rowIndex++)
             {
                 List<String> row = initialVals.get(rowIndex);
@@ -342,15 +355,42 @@ public class Import
                     allBlank = false;
                     try
                     {
-                        new BigDecimal(row.get(columnIndex));
+                        String val = row.get(columnIndex).trim();
+                        if (commonPrefix.isEmpty())
+                        {
+                            // Look for a prefix of currency symbol:
+                            for (int i = 0; i < val.length(); i = val.offsetByCodePoints(i, 1))
+                            {
+                                if (Character.getType(val.codePointAt(i)) == Character.CURRENCY_SYMBOL)
+                                    commonPrefix += val.substring(i, val.offsetByCodePoints(i, 1));
+                                else
+                                    break;
+                            }
+                        }
+                        // Not an else; if we just picked commonPrefix, we should find it here:
+                        if (!commonPrefix.isEmpty() && val.startsWith(commonPrefix))
+                        {
+                            // Take off prefix and continue as is:
+                            val = val.substring(commonPrefix.length()).trim();
+                        }
+                        else if (!commonPrefix.isEmpty())
+                        {
+                            // We thought we had a prefix, but we haven't found it here, so give up:
+                            commonPrefix = "";
+                            allNumeric = false;
+                            break;
+                        }
+                        new BigDecimal(val);
                     }
                     catch (NumberFormatException e)
                     {
                         allNumeric = false;
+                        commonPrefix = "";
                     }
                 }
             }
             columnTypes.add(allBlank ? ColumnType.BLANK : (allNumeric ? ColumnType.NUMERIC : ColumnType.TEXT));
+            columnPrefixes.add(commonPrefix);
             // Go backwards to find column titles:
 
             for (int headerRow = headerRows - 1; headerRow >= 0; headerRow--)
@@ -367,7 +407,7 @@ public class Import
 
         List<ColumnInfo> columns = new ArrayList<>(columnCount);
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
-            columns.add(new ColumnInfo(columnTypes.get(columnIndex), headerRow.isPresent() ? headerRow.get().get(columnIndex) : ""));
+            columns.add(new ColumnInfo(columnTypes.get(columnIndex), headerRow.isPresent() ? headerRow.get().get(columnIndex) : "", columnPrefixes.get(columnIndex)));
         return new Format(headerRows, columns);
     }
 }

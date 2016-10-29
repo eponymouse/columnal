@@ -1,16 +1,12 @@
 import org.junit.Test;
-import records.data.Column;
 import utility.Import;
 import utility.Import.ColumnInfo;
 import utility.Import.ColumnType;
 import utility.Import.TextFormat;
 import utility.Utility;
 
-import java.io.File;
 import java.util.Arrays;
 import java.util.List;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
 
 import static org.junit.Assert.assertEquals;
 
@@ -20,6 +16,7 @@ import static org.junit.Assert.assertEquals;
 public class TestFormat
 {
     private static final ColumnType NUM = ColumnType.NUMERIC;
+    private static final ColumnType TEXT = ColumnType.TEXT;
     @Test
     public void testFormat()
     {
@@ -32,6 +29,22 @@ public class TestFormat
         assertFormatCR(new TextFormat(0, c(new ColumnInfo(NUM, ""), new ColumnInfo(NUM, "")), ','),
             "0,0", "1,1", "2,2");
 
+        assertFormatCR(new TextFormat(0, c(new ColumnInfo(TEXT, ""), new ColumnInfo(TEXT, "")), ','),
+            "A,B", "0,0", "1,1", "C,D", "2,2");
+        assertFormatCR(new TextFormat(1, c(new ColumnInfo(NUM, "A"), new ColumnInfo(TEXT, "B")), ','),
+            "A,B", "0,0", "1,1", "1.5,D", "2,2");
+
+        //#error TODO add support for date columns
+    }
+    @Test
+    public void testCurrency()
+    {
+        assertFormat(new TextFormat(0, c(new ColumnInfo(NUM, "", "$"), new ColumnInfo(ColumnType.TEXT, "", "")), ','),
+            "$0, A", "$1, Whatever", "$2, C");
+        assertFormat(new TextFormat(0, c(new ColumnInfo(NUM, "", "£"), new ColumnInfo(ColumnType.TEXT, "", "")), ','),
+            "£ 0, A", "£ 1, Whatever", "£ 2, C");
+        assertFormat(new TextFormat(0, c(new ColumnInfo(TEXT, "", ""), new ColumnInfo(ColumnType.TEXT, "", "")), ','),
+            "A0, A", "A1, Whatever", "A2, C");
     }
 
     private static void assertFormatCR(TextFormat fmt, String... lines)
