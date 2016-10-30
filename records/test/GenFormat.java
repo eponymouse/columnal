@@ -2,6 +2,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.type.ColumnType;
+import records.data.type.CleanDateColumnType;
 import records.data.type.NumericColumnType;
 import records.data.type.TextColumnType;
 import utility.Import.ColumnInfo;
@@ -18,6 +19,7 @@ public class GenFormat extends Generator<TextFormat>
 {
     public static List<Character> seps = Arrays.asList(',', ';', '\t', ':');
     public static List<String> currencies = Arrays.asList("$", "£", "€");
+    public static List<String> dateFormats = CleanDateColumnType.DATE_FORMATS;
 
     public GenFormat()
     {
@@ -35,7 +37,11 @@ public class GenFormat extends Generator<TextFormat>
         int columnCount = sourceOfRandomness.nextInt(1, 40);
         for (int i = 0; i < columnCount; i++)
         {
-            ColumnType type = sourceOfRandomness.choose(Arrays.asList(ColumnType.BLANK, new TextColumnType(), new NumericColumnType(sourceOfRandomness.nextBoolean() ? "" : sourceOfRandomness.choose(currencies))));
+            ColumnType type = sourceOfRandomness.choose(Arrays.asList(
+                ColumnType.BLANK,
+                new TextColumnType(),
+                new NumericColumnType(sourceOfRandomness.nextBoolean() ? "" : sourceOfRandomness.choose(currencies)),
+                new CleanDateColumnType(sourceOfRandomness.choose(dateFormats))));
             // Don't end with blank:
             if (i == columnCount - 1 && type.isBlank())
                 type = new TextColumnType();

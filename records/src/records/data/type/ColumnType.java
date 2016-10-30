@@ -10,5 +10,5 @@ public class ColumnType
     public boolean isText() { return false; }
     public boolean isBlank() { return false; }
     public boolean isNumeric() { return false; }
-
+    public boolean isDate() { return false; }
 }

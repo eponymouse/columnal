@@ -2,13 +2,16 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
+import records.data.type.CleanDateColumnType;
 import records.data.type.NumericColumnType;
 import utility.Import;
 import utility.Import.ColumnInfo;
 
 import java.io.IOException;
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -25,6 +28,7 @@ public class PropFormat
     {
         List<String> fileContent = new ArrayList<>();
         fileContent.add(format.columnTypes.stream().map(c -> c.title).collect(Collectors.joining("" + format.separator)));
+        Random rnd = new Random();
         for (int row = 0; row < 100; row++)
         {
             StringBuilder line = new StringBuilder();
@@ -35,6 +39,16 @@ public class PropFormat
                     line.append(((NumericColumnType)c.type).displayPrefix).append(0);
                 else if (c.type.isText())
                     line.append("s");
+                else if (c.type.isDate())
+                {
+                    int year = 1900 + rnd.nextInt(199);
+                    int month = 1 + rnd.nextInt(12);
+                    int day = 1 + rnd.nextInt(28); // TODO have dates with 30th, etc
+                    LocalDate date = LocalDate.of(year, month, day);
+                    line.append(date.format(((CleanDateColumnType)c.type).getDateTimeFormatter()));
+                }
+                else if (!c.type.isBlank())
+                    throw new UnsupportedOperationException("Missing case for column type? " + c.type.getClass());
                 line.append(format.separator);
             }
             fileContent.add(line.toString());
