@@ -1,9 +1,11 @@
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import org.junit.Test;
+import records.data.type.ColumnType;
+import records.data.type.NumericColumnType;
+import records.data.type.TextColumnType;
 import utility.Import;
 import utility.Import.ColumnInfo;
-import utility.Import.ColumnType;
 import utility.Import.TextFormat;
 import utility.Utility;
 
@@ -20,8 +22,8 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestFormat
 {
-    private static final ColumnType NUM = ColumnType.NUMERIC;
-    private static final ColumnType TEXT = ColumnType.TEXT;
+    private static final ColumnType NUM = new NumericColumnType("");
+    private static final ColumnType TEXT = new TextColumnType();
     @Test
     public void testFormat()
     {
@@ -40,16 +42,15 @@ public class TestFormat
             "A,B", "0,0", "1,1", "1.5,D", "2,2");
 
         //#error TODO add support for date columns
-        //#error TODO add some property based tests for format detection
     }
     @Test
     public void testCurrency()
     {
-        assertFormat(new TextFormat(0, c(new ColumnInfo(NUM, "", "$"), new ColumnInfo(ColumnType.TEXT, "", "")), ','),
+        assertFormat(new TextFormat(0, c(new ColumnInfo(NUM("$"), ""), new ColumnInfo(TEXT, "")), ','),
             "$0, A", "$1, Whatever", "$2, C");
-        assertFormat(new TextFormat(0, c(new ColumnInfo(NUM, "", "£"), new ColumnInfo(ColumnType.TEXT, "", "")), ','),
+        assertFormat(new TextFormat(0, c(new ColumnInfo(NUM("£"), ""), new ColumnInfo(TEXT, "")), ','),
             "£ 0, A", "£ 1, Whatever", "£ 2, C");
-        assertFormat(new TextFormat(0, c(new ColumnInfo(TEXT, "", ""), new ColumnInfo(ColumnType.TEXT, "", "")), ','),
+        assertFormat(new TextFormat(0, c(new ColumnInfo(TEXT, ""), new ColumnInfo(TEXT, "")), ','),
             "A0, A", "A1, Whatever", "A2, C");
     }
 
@@ -71,5 +72,10 @@ public class TestFormat
     private static List<ColumnInfo> c(ColumnInfo... ts)
     {
         return Arrays.asList(ts);
+    }
+
+    private static NumericColumnType NUM(String displayPrefix)
+    {
+        return new NumericColumnType(displayPrefix);
     }
 }

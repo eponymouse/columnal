@@ -2,6 +2,7 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
+import records.data.type.NumericColumnType;
 import utility.Import;
 import utility.Import.ColumnInfo;
 
@@ -30,12 +31,10 @@ public class PropFormat
             for (ColumnInfo c : format.columnTypes)
             {
                 // TODO add random spaces, randomise content
-                switch (c.type)
-                {
-                    case BLANK: break;
-                    case NUMERIC: line.append(c.displayPrefix).append(0); break;
-                    case TEXT: line.append("s"); break;
-                }
+                if (c.type.isNumeric())
+                    line.append(((NumericColumnType)c.type).displayPrefix).append(0);
+                else if (c.type.isText())
+                    line.append("s");
                 line.append(format.separator);
             }
             fileContent.add(line.toString());

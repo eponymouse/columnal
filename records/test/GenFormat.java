@@ -1,8 +1,10 @@
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import records.data.type.ColumnType;
+import records.data.type.NumericColumnType;
+import records.data.type.TextColumnType;
 import utility.Import.ColumnInfo;
-import utility.Import.ColumnType;
 import utility.Import.TextFormat;
 
 import java.util.ArrayList;
@@ -33,18 +35,12 @@ public class GenFormat extends Generator<TextFormat>
         int columnCount = sourceOfRandomness.nextInt(1, 40);
         for (int i = 0; i < columnCount; i++)
         {
-            ColumnType type = sourceOfRandomness.choose(ColumnType.values());
+            ColumnType type = sourceOfRandomness.choose(Arrays.asList(ColumnType.BLANK, new TextColumnType(), new NumericColumnType(sourceOfRandomness.nextBoolean() ? "" : sourceOfRandomness.choose(currencies))));
             // Don't end with blank:
-            if (i == columnCount - 1 && type == ColumnType.BLANK)
-                type = ColumnType.TEXT;
+            if (i == columnCount - 1 && type.isBlank())
+                type = new TextColumnType();
             String title = hasTitle ? "C" + i : "";
-            if (type == ColumnType.NUMERIC && sourceOfRandomness.nextBoolean())
-            {
-
-                columns.add(new ColumnInfo(type, title, sourceOfRandomness.choose(currencies)));
-            }
-            else
-                columns.add(new ColumnInfo(type, title));
+            columns.add(new ColumnInfo(type, title));
         }
         TextFormat format = new TextFormat(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), columns, sep);
         return format;

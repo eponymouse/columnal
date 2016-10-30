@@ -6,6 +6,9 @@ import records.data.Column;
 import records.data.RecordSet;
 import records.data.TextFileNumericColumn;
 import records.data.TextFileStringColumn;
+import records.data.type.ColumnType;
+import records.data.type.NumericColumnType;
+import records.data.type.TextColumnType;
 import records.error.FetchException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -34,31 +37,18 @@ import java.util.function.Function;
  */
 public class Import
 {
-
     public static final int MAX_HEADER_ROWS = 20;
     public static final int INITIAL_ROWS_TEXT_FILE = 100;
-
-    public static enum ColumnType
-    {
-        NUMERIC, TEXT, BLANK;
-    }
 
     public static class ColumnInfo
     {
         public final ColumnType type;
         public final String title;
-        public final String displayPrefix;
 
         public ColumnInfo(ColumnType type, String title)
         {
-            this(type, title, "");
-        }
-
-        public ColumnInfo(ColumnType type, String title, String displayPrefix)
-        {
             this.type = type;
             this.title = title;
-            this.displayPrefix = displayPrefix;
         }
 
         @Override
@@ -69,8 +59,7 @@ public class Import
 
             ColumnInfo that = (ColumnInfo) o;
 
-            if (type != that.type) return false;
-            return title.equals(that.title) && displayPrefix.equals(that.displayPrefix);
+            return title.equals(that.title) && type.equals(that.type);
 
         }
 
@@ -79,7 +68,6 @@ public class Import
         {
             int result = type.hashCode();
             result = 31 * result + title.hashCode();
-            result = 31 * result + displayPrefix.hashCode();
             return result;
         }
 
@@ -89,7 +77,6 @@ public class Import
             return "ColumnInfo{" +
                 "type=" + type +
                 ", title='" + title + '\'' +
-                ", displayPrefix='" + displayPrefix + '\'' +
                 '}';
         }
     }
@@ -222,17 +209,12 @@ public class Import
             {
                 ColumnInfo columnInfo = format.columnTypes.get(i);
                 int iFinal = i;
-                switch (columnInfo.type)
-                {
-                    case NUMERIC:
-                        columns.add(rs -> new TextFileNumericColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal));
-                        break;
-                    case TEXT:
-                        columns.add(rs -> new TextFileStringColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal));
-                        break;
-                    // If it's blank, should we add any column?
-                    // Maybe if it has title?
-                }
+                if (columnInfo.type.isNumeric())
+                    columns.add(rs -> new TextFileNumericColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal));
+                else if (columnInfo.type.isText())
+                    columns.add(rs -> new TextFileStringColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal));
+                // If it's blank, should we add any column?
+                // Maybe if it has title?                }
             }
 
 
@@ -312,7 +294,7 @@ public class Import
                     TextFormat textFormat = new TextFormat(format, sep.getKey().charAt(0));
                     // If they are all text record this as feasible but keep going in case we get better
                     // result with more header rows:
-                    if (format.columnTypes.stream().allMatch(c -> c.type == ColumnType.TEXT || c.type == ColumnType.BLANK))
+                    if (format.columnTypes.stream().allMatch(c -> c.type.isText() || c.type.isBlank()))
                         allText.put(headerRows, textFormat);
                     else // Not all just text; go with it:
                         return textFormat;
@@ -328,7 +310,7 @@ public class Import
         catch (GuessException e)
         {
             // Always valid backup: a single text column, no header
-            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(ColumnType.TEXT, ""))), (char)-1);
+            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), ""))), (char)-1);
             String msg = e.getLocalizedMessage();
             fmt.recordProblem(msg == null ? "Unknown" : msg);
             return fmt;
@@ -340,7 +322,6 @@ public class Import
         // Per row, for how many columns is it viable to get column name?
         Map<Integer, Integer> viableColumnNameRows = new HashMap<>();
         List<ColumnType> columnTypes = new ArrayList<>();
-        List<String> columnPrefixes = new ArrayList<>();
         for (int columnIndex = 0; columnIndex < columnCount; columnIndex++)
         {
             // Have a guess at column type:
@@ -391,8 +372,7 @@ public class Import
                     }
                 }
             }
-            columnTypes.add(allBlank ? ColumnType.BLANK : (allNumeric ? ColumnType.NUMERIC : ColumnType.TEXT));
-            columnPrefixes.add(commonPrefix);
+            columnTypes.add(allBlank ? ColumnType.BLANK : (allNumeric ? new NumericColumnType(commonPrefix) : new TextColumnType()));
             // Go backwards to find column titles:
 
             for (int headerRow = headerRows - 1; headerRow >= 0; headerRow--)
@@ -409,7 +389,7 @@ public class Import
 
         List<ColumnInfo> columns = new ArrayList<>(columnCount);
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
-            columns.add(new ColumnInfo(columnTypes.get(columnIndex), headerRow.isPresent() ? headerRow.get().get(columnIndex) : "", columnPrefixes.get(columnIndex)));
+            columns.add(new ColumnInfo(columnTypes.get(columnIndex), headerRow.isPresent() ? headerRow.get().get(columnIndex) : ""));
         return new Format(headerRows, columns);
     }
 }
