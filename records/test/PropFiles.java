@@ -30,7 +30,7 @@ public class PropFiles
         }
         catch (AssertionError err)
         {
-            System.err.println("Expected: " + exp + " Actual: " + act);
+            System.err.println("Expected: " + exp + "\n  Actual: " + act);
             throw err;
         }
     }
