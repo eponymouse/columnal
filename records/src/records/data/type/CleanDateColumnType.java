@@ -1,5 +1,6 @@
 package records.data.type;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.time.format.DateTimeFormatter;
@@ -12,11 +13,11 @@ import java.util.List;
  */
 public class CleanDateColumnType extends ColumnType
 {
-    public static List<String> DATE_FORMATS = new ArrayList<>();
+    public static List<@NonNull String> DATE_FORMATS = new ArrayList<>();
     @FunctionalInterface
     private interface DateAssembler
     {
-        public String assemble(String y, String d, String m, String sep);
+        public @Nullable String assemble(String y, String d, String m, String sep);
     }
     static {
         List<String> years = Arrays.asList("yyyy", "yy");
@@ -24,7 +25,7 @@ public class CleanDateColumnType extends ColumnType
         List<String> days = Arrays.asList("dd", "d");
         List<String> seps = Arrays.asList("/", "-", " ", ".");
         List<DateAssembler> assemblers = Arrays.asList(
-            (y,d,m,x) -> y + x + m + x + d, // YMD; ISO style
+            (y,d,m,x) -> y.equals("yyyy") ? y + x + m + x + d : null, // YMD; ISO style; only allowed if year is four digits
             (y,d,m,x) -> d + x + m + x + y, // DMY; most countries
             (y,d,m,x) -> m + x + d + x + y // MDY; US style.
         );
@@ -35,10 +36,18 @@ public class CleanDateColumnType extends ColumnType
                 for (String m : months)
                     for (String x : seps)
                         for (DateAssembler asm : assemblers)
-                            DATE_FORMATS.add(asm.assemble(y, d, m, x));
+                        {
+                            String fmt = asm.assemble(y, d, m, x);
+                            if (fmt != null)
+                                DATE_FORMATS.add(fmt);
+                        }
         // We allow no dividers, but only in the case where four digit years, and two digit days and months are used:
         for (DateAssembler asm : assemblers)
-            DATE_FORMATS.add(asm.assemble("yyyy", "MM", "dd", ""));
+        {
+            String fmt = asm.assemble("yyyy", "MM", "dd", "");
+            if (fmt != null)
+                DATE_FORMATS.add(fmt);
+        }
     }
 
     // As passed to DateTimeFormatter.ofPattern
