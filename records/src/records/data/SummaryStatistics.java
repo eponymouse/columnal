@@ -3,6 +3,7 @@ package records.data;
 import javafx.application.Platform;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -68,7 +69,7 @@ public class SummaryStatistics extends Transformation
     {
         List<JoinedSplit> splits = calcSplits(src, splitBy);
 
-        List<Function<RecordSet, Column>> columns = new ArrayList<>();
+        List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
 
         // Will be zero by default, which we take advantage of:
         int[] splitIndexes = new int[src.getLength()];

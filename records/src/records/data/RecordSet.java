@@ -9,6 +9,8 @@ import javafx.scene.control.TableColumn;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import records.error.FunctionInt;
+import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayValue;
 import threadchecker.OnThread;
@@ -42,11 +44,11 @@ public abstract class RecordSet
     private final List<Column> columns;
 
     @SuppressWarnings("initialization")
-    public RecordSet(String title, List<Function<RecordSet, Column>> columns)
+    public RecordSet(String title, List<FunctionInt<RecordSet, Column>> columns) throws InternalException
     {
         this.title = title;
         this.columns = new ArrayList<>();
-        for (Function<RecordSet, Column> f : columns)
+        for (FunctionInt<RecordSet, Column> f : columns)
             this.columns.add(f.apply(this));
     }
 

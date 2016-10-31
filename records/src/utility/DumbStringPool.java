@@ -21,13 +21,13 @@ import java.util.Map;
  *
  * TODO add a pool which counts references.
  */
-public class CompleteStringPool
+public class DumbStringPool
 {
     private @Nullable String @NonNull [] pool = new String[]{null, null, null, null};
     private int used = 0;
     private final int limit;
 
-    public CompleteStringPool(int limit)
+    public DumbStringPool(int limit)
     {
         this.limit = limit;
     }

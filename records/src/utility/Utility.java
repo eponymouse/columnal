@@ -87,6 +87,17 @@ public class Utility
         }
     }
 
+    public static List<String> slice(List<List<String>> vals, int skipRows, int columnIndex)
+    {
+        List<String> items = new ArrayList<>(vals.size());
+        for (int i = skipRows; i < vals.size(); i++)
+        {
+            List<String> row = vals.get(i);
+            items.add(row.get(columnIndex));
+        }
+        return items;
+    }
+
     public static class ReadState
     {
         public long startFrom;

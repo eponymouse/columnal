@@ -11,18 +11,20 @@ import java.util.List;
 public class Format
 {
     public final int headerRows;
+    public final List<Integer> blankRowsToIgnore;
     public final List<ColumnInfo> columnTypes;
     public final List<String> problems = new ArrayList<>();
 
-    public Format(int headerRows, List<ColumnInfo> columnTypes)
+    public Format(int headerRows, List<ColumnInfo> columnTypes, List<Integer> blankRowsToIgnore)
     {
         this.headerRows = headerRows;
         this.columnTypes = columnTypes;
+        this.blankRowsToIgnore = blankRowsToIgnore;
     }
 
     public Format(Format copyFrom)
     {
-        this(copyFrom.headerRows, copyFrom.columnTypes);
+        this(copyFrom.headerRows, copyFrom.columnTypes, copyFrom.blankRowsToIgnore);
     }
 
     public void recordProblem(String problem)

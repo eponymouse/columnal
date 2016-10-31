@@ -30,6 +30,42 @@ public class GuessFormat
     public static final int MAX_HEADER_ROWS = 20;
     public static final int INITIAL_ROWS_TEXT_FILE = 100;
 
+    public static Format guessGeneralFormat(List<List<String>> vals)
+    {
+        try
+        {
+            // All-text formats, indexed by number of header rows:
+            final TreeMap<Integer, Format> allText = new TreeMap<>();
+            // Guesses header rows:
+            for (int headerRows = 0; headerRows < Math.min(MAX_HEADER_ROWS, vals.size() - 1); headerRows++)
+            {
+                try
+                {
+                    Format format = guessBodyFormat(vals.get(headerRows).size(), headerRows, vals);
+                    // If they are all text record this as feasible but keep going in case we get better
+                    // result with more header rows:
+                    if (format.columnTypes.stream().allMatch(c -> c.type.isText() || c.type.isBlank()))
+                        allText.put(headerRows, format);
+                    else // Not all just text; go with it:
+                        return format;
+                }
+                catch (GuessException e)
+                {
+                    // Ignore and skip more header rows
+                }
+            }
+            throw new GuessException("Problem figuring out header rows, or data empty");
+        }
+        catch (GuessException e)
+        {
+            // Always valid backup: a single text column, no header
+            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), "")), Collections.emptyList()), (char) -1);
+            String msg = e.getLocalizedMessage();
+            fmt.recordProblem(msg == null ? "Unknown" : msg);
+            return fmt;
+        }
+    }
+
     public static class GuessException extends Exception
     {
         public GuessException(String message)
@@ -79,7 +115,7 @@ public class GuessFormat
                     List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> Arrays.asList(s.split(sep.getKey())));
 
                     //List<Function<RecordSet, Column>> columns = new ArrayList<>();
-                    Format format = guessFormat(columnCount, headerRows, initialVals);
+                    Format format = guessBodyFormat(columnCount, headerRows, initialVals);
                     TextFormat textFormat = new TextFormat(format, sep.getKey().charAt(0));
                     // If they are all text record this as feasible but keep going in case we get better
                     // result with more header rows:
@@ -99,18 +135,19 @@ public class GuessFormat
         catch (GuessException e)
         {
             // Always valid backup: a single text column, no header
-            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), ""))), (char)-1);
+            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), "")), Collections.emptyList()), (char)-1);
             String msg = e.getLocalizedMessage();
             fmt.recordProblem(msg == null ? "Unknown" : msg);
             return fmt;
         }
     }
 
-    private static Format guessFormat(int columnCount, int headerRows, @NonNull List<@NonNull List<@NonNull String>> initialVals)
+    private static Format guessBodyFormat(int columnCount, int headerRows, @NonNull List<@NonNull List<@NonNull String>> initialVals) throws GuessException
     {
         // Per row, for how many columns is it viable to get column name?
         Map<Integer, Integer> viableColumnNameRows = new HashMap<>();
         List<ColumnType> columnTypes = new ArrayList<>();
+        List<Integer> blankRows = new ArrayList<>();
         for (int columnIndex = 0; columnIndex < columnCount; columnIndex++)
         {
             // Have a guess at column type:
@@ -121,7 +158,13 @@ public class GuessFormat
             for (int rowIndex = headerRows; rowIndex < initialVals.size(); rowIndex++)
             {
                 List<String> row = initialVals.get(rowIndex);
-                if (!row.isEmpty())
+                if (row.isEmpty() || row.stream().allMatch(String::isEmpty))
+                {
+                    // Only add it once:
+                    if (columnIndex == 0)
+                        blankRows.add(rowIndex - headerRows);
+                }
+                else
                 {
                     String val = row.get(columnIndex).trim();
                     if (!val.isEmpty())
@@ -205,6 +248,6 @@ public class GuessFormat
         List<ColumnInfo> columns = new ArrayList<>(columnCount);
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
             columns.add(new ColumnInfo(columnTypes.get(columnIndex), headerRow.isPresent() ? headerRow.get().get(columnIndex) : ""));
-        return new Format(headerRows, columns);
+        return new Format(headerRows, columns, blankRows);
     }
 }

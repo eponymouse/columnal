@@ -13,6 +13,9 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import records.data.RecordSet;
+import records.error.InternalException;
+import records.importers.HTMLImport;
 import records.importers.TextImport;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -42,10 +45,10 @@ public class Main extends Application
                 {
                     try
                     {
-                        TextImport.importTextFile(chosen, rs ->
-                            Platform.runLater(() -> v.add(new Table(v, rs))));
+                        RecordSet rs = TextImport.importTextFile(chosen);
+                        Platform.runLater(() -> v.add(new Table(v, rs)));
                     }
-                    catch (IOException ex)
+                    catch (IOException | InternalException ex)
                     {
                         ex.printStackTrace();
                         Platform.runLater(() -> new Alert(AlertType.ERROR, ex.getMessage() == null ? "" : ex.getMessage(), ButtonType.OK).showAndWait());
@@ -57,10 +60,11 @@ public class Main extends Application
         Workers.onWorkerThread("Example import", () -> {
             try
             {
-                TextImport.importTextFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"), rs ->
-                Platform.runLater(() -> v.add(new Table(v, rs))));
+                RecordSet rs = HTMLImport.importHTMLFile(new File("S:\\Downloads\\Report_28112014.xls")).get(0);
+                    //TextImport.importTextFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"));
+                Platform.runLater(() -> v.add(new Table(v, rs)));
             }
-            catch (IOException ex)
+            catch (IOException | InternalException ex)
             {
             }
         });

@@ -20,6 +20,14 @@ public class NumericColumnType extends ColumnType
         return true;
     }
 
+    public String removePrefix(String val)
+    {
+        if (val.startsWith(displayPrefix))
+            return val.substring(displayPrefix.length()).trim();
+        else
+            return val.trim();
+    }
+
     @Override
     public boolean equals(@Nullable Object o)
     {

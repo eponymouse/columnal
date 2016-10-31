@@ -195,7 +195,7 @@ public class NumericColumnStorage
     private final void addBigDecimal(BigDecimal bigDecimal) throws InternalException
     {
         // This will convert to LONG_OR_BIG if needed:
-        addLong(SEE_BIGINT, true);
+        addLong(SEE_BIGDEC, true);
 
         if (bigDecimals == null)
         {

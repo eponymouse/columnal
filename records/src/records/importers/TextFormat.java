@@ -2,6 +2,7 @@ package records.importers;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -19,7 +20,7 @@ public class TextFormat extends Format
 
     public TextFormat(int headerRows, List<ColumnInfo> columnTypes, char separator)
     {
-        super(headerRows, columnTypes);
+        super(headerRows, columnTypes, Collections.emptyList());
         this.separator = separator;
     }
 

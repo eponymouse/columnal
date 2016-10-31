@@ -1,7 +1,7 @@
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
-import utility.CompleteStringPool;
+import utility.DumbStringPool;
 
 import static org.junit.Assert.assertEquals;
 
@@ -11,7 +11,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class TestCompleteStringPool
 {
-    private CompleteStringPool pool = new CompleteStringPool(100);
+    private DumbStringPool pool = new DumbStringPool(100);
 
     @Property
     public void sameContent(String s)

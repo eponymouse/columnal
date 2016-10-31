@@ -5,6 +5,8 @@ import records.data.RecordSet;
 import records.data.TextFileNumericColumn;
 import records.data.TextFileStringColumn;
 import records.error.FetchException;
+import records.error.FunctionInt;
+import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -25,7 +27,7 @@ import java.util.function.Function;
 public class TextImport
 {
     @OnThread(Tag.Simulation)
-    public static void importTextFile(File textFile, Consumer<RecordSet> afterLoaded) throws IOException
+    public static RecordSet importTextFile(File textFile) throws IOException, InternalException
     {
         // Read the first few lines:
         try (BufferedReader br = new BufferedReader(new FileReader(textFile))) {
@@ -38,7 +40,7 @@ public class TextImport
 
             long startPosition = Utility.skipFirstNRows(textFile, format.headerRows).startFrom;
 
-            List<Function<RecordSet, Column>> columns = new ArrayList<>();
+            List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
             for (int i = 0; i < format.columnTypes.size(); i++)
             {
                 ColumnInfo columnInfo = format.columnTypes.get(i);
@@ -53,7 +55,7 @@ public class TextImport
 
 
 
-            afterLoaded.accept(new RecordSet(textFile.getName(), columns) {
+            return new RecordSet(textFile.getName(), columns) {
                     protected int rowCount = -1;
 
                     @Override
@@ -78,7 +80,7 @@ public class TextImport
                         }
                         return rowCount;
                     }
-                });
+                };
 
         }
     }

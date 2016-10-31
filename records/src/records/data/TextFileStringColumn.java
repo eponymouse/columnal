@@ -4,15 +4,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.FetchException;
 import records.error.UserException;
-import utility.CompleteStringPool;
+import utility.DumbStringPool;
 import utility.Utility;
-import utility.Utility.ReadState;
-import utility.Workers;
 
-import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,7 +21,7 @@ import java.util.Optional;
 public class TextFileStringColumn extends TextFileColumn
 {
     private String[] loadedValues = new String[0];
-    private final CompleteStringPool pool = new CompleteStringPool(1000);
+    private final DumbStringPool pool = new DumbStringPool(1000);
 
     public TextFileStringColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, String columnName, int columnIndex)
     {
