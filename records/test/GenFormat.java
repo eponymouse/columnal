@@ -5,8 +5,8 @@ import records.data.type.ColumnType;
 import records.data.type.CleanDateColumnType;
 import records.data.type.NumericColumnType;
 import records.data.type.TextColumnType;
-import utility.Import.ColumnInfo;
-import utility.Import.TextFormat;
+import records.importers.ColumnInfo;
+import records.importers.TextFormat;
 
 import java.util.ArrayList;
 import java.util.Arrays;

@@ -1,9 +1,7 @@
 package records.gui;
 
-import com.sun.xml.internal.ws.api.pipe.FiberContextSwitchInterceptor.Work;
 import javafx.application.Application;
 import javafx.application.Platform;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -15,10 +13,9 @@ import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import records.data.RecordSet;
+import records.importers.TextImport;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Import;
 import utility.Workers;
 
 import java.io.File;
@@ -35,17 +32,17 @@ public class Main extends Application
     {
         View v = new View();
         Menu menu = new Menu("Data");
-        MenuItem importItem = new MenuItem("Import");
+        MenuItem importItem = new MenuItem("GuessFormat");
         importItem.setOnAction(e -> {
             FileChooser fc = new FileChooser();
             File chosen = fc.showOpenDialog(primaryStage);
             if (chosen != null)
             {
-                Workers.onWorkerThread("Import data", () ->
+                Workers.onWorkerThread("GuessFormat data", () ->
                 {
                     try
                     {
-                        Import.importTextFile(chosen, rs ->
+                        TextImport.importTextFile(chosen, rs ->
                             Platform.runLater(() -> v.add(new Table(v, rs))));
                     }
                     catch (IOException ex)
@@ -60,7 +57,7 @@ public class Main extends Application
         Workers.onWorkerThread("Example import", () -> {
             try
             {
-                Import.importTextFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"), rs ->
+                TextImport.importTextFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"), rs ->
                 Platform.runLater(() -> v.add(new Table(v, rs))));
             }
             catch (IOException ex)

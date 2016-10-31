@@ -1,19 +1,14 @@
-import com.pholser.junit.quickcheck.From;
-import com.pholser.junit.quickcheck.Property;
 import org.junit.Test;
 import records.data.type.ColumnType;
 import records.data.type.NumericColumnType;
 import records.data.type.TextColumnType;
-import utility.Import;
-import utility.Import.ColumnInfo;
-import utility.Import.TextFormat;
+import records.importers.GuessFormat;
+import records.importers.ColumnInfo;
+import records.importers.TextFormat;
 import utility.Utility;
 
-import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
@@ -66,7 +61,7 @@ public class TestFormat
 
     private static void assertFormat(TextFormat fmt, String... lines)
     {
-        assertEquals(fmt, Import.guessTextFormat(java.util.Arrays.asList(lines)));
+        assertEquals(fmt, GuessFormat.guessTextFormat(java.util.Arrays.asList(lines)));
     }
 
     private static List<ColumnInfo> c(ColumnInfo... ts)

@@ -1,28 +1,14 @@
-package utility;
+package records.importers;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Column;
-import records.data.RecordSet;
-import records.data.TextFileNumericColumn;
-import records.data.TextFileStringColumn;
 import records.data.type.CleanDateColumnType;
 import records.data.type.ColumnType;
 import records.data.type.NumericColumnType;
 import records.data.type.TextColumnType;
-import records.error.FetchException;
-import records.error.UserException;
-import threadchecker.OnThread;
-import threadchecker.Tag;
+import utility.Utility;
 
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,224 +21,20 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
-import java.util.function.Consumer;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Created by neil on 20/10/2016.
  */
-public class Import
+public class GuessFormat
 {
     public static final int MAX_HEADER_ROWS = 20;
     public static final int INITIAL_ROWS_TEXT_FILE = 100;
-
-    public static class ColumnInfo
-    {
-        public final ColumnType type;
-        public final String title;
-
-        public ColumnInfo(ColumnType type, String title)
-        {
-            this.type = type;
-            this.title = title;
-        }
-
-        @Override
-        public boolean equals(@Nullable Object o)
-        {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            ColumnInfo that = (ColumnInfo) o;
-
-            return title.equals(that.title) && type.equals(that.type);
-
-        }
-
-        @Override
-        public int hashCode()
-        {
-            int result = type.hashCode();
-            result = 31 * result + title.hashCode();
-            return result;
-        }
-
-        @Override
-        public String toString()
-        {
-            return "ColumnInfo{" +
-                "type=" + type +
-                ", title='" + title + '\'' +
-                '}';
-        }
-    }
-
-    public static class Format
-    {
-        public final int headerRows;
-        public final List<ColumnInfo> columnTypes;
-        public final List<String> problems = new ArrayList<>();
-
-        public Format(int headerRows, List<ColumnInfo> columnTypes)
-        {
-            this.headerRows = headerRows;
-            this.columnTypes = columnTypes;
-        }
-
-        public Format(Format copyFrom)
-        {
-            this(copyFrom.headerRows, copyFrom.columnTypes);
-        }
-
-        public void recordProblem(String problem)
-        {
-            problems.add(problem);
-        }
-
-        @Override
-        public boolean equals(@Nullable Object o)
-        {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            Format format = (Format) o;
-
-            if (headerRows != format.headerRows) return false;
-            return columnTypes.equals(format.columnTypes);
-
-        }
-
-        @Override
-        public int hashCode()
-        {
-            int result = headerRows;
-            result = 31 * result + columnTypes.hashCode();
-            return result;
-        }
-
-        @Override
-        public String toString()
-        {
-            return "Format{" +
-                "headerRows=" + headerRows +
-                ", columnTypes=" + columnTypes +
-                '}';
-        }
-    }
-
-    public static class TextFormat extends Format
-    {
-        public char separator;
-
-        public TextFormat(Format copyFrom, char separator)
-        {
-            super(copyFrom);
-            this.separator = separator;
-        }
-
-        public TextFormat(int headerRows, List<ColumnInfo> columnTypes, char separator)
-        {
-            super(headerRows, columnTypes);
-            this.separator = separator;
-        }
-
-        @Override
-        public boolean equals(@Nullable Object o)
-        {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-            if (!super.equals(o)) return false;
-
-            TextFormat that = (TextFormat) o;
-
-            return separator == that.separator;
-
-        }
-
-        @Override
-        public int hashCode()
-        {
-            int result = super.hashCode();
-            result = 31 * result + (int) separator;
-            return result;
-        }
-
-        @Override
-        public String toString()
-        {
-            return "TextFormat{" +
-                "headerRows=" + headerRows +
-                ", columnTypes=" + columnTypes +
-                ", separator=" + separator +
-                '}';
-        }
-    }
 
     public static class GuessException extends Exception
     {
         public GuessException(String message)
         {
             super(message);
-        }
-    }
-
-    @OnThread(Tag.Simulation)
-    public static void importTextFile(File textFile, Consumer<RecordSet> afterLoaded) throws IOException
-    {
-        // Read the first few lines:
-        try (BufferedReader br = new BufferedReader(new FileReader(textFile))) {
-            String line;
-            List<String> initial = new ArrayList<>();
-            while ((line = br.readLine()) != null && initial.size() < INITIAL_ROWS_TEXT_FILE) {
-                initial.add(line);
-            }
-            TextFormat format = guessTextFormat(initial);
-
-            long startPosition = Utility.skipFirstNRows(textFile, format.headerRows).startFrom;
-
-            List<Function<RecordSet, Column>> columns = new ArrayList<>();
-            for (int i = 0; i < format.columnTypes.size(); i++)
-            {
-                ColumnInfo columnInfo = format.columnTypes.get(i);
-                int iFinal = i;
-                if (columnInfo.type.isNumeric())
-                    columns.add(rs -> new TextFileNumericColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal));
-                else if (columnInfo.type.isText())
-                    columns.add(rs -> new TextFileStringColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal));
-                // If it's blank, should we add any column?
-                // Maybe if it has title?                }
-            }
-
-
-
-            afterLoaded.accept(new RecordSet(textFile.getName(), columns) {
-                    protected int rowCount = -1;
-
-                    @Override
-                    public final boolean indexValid(int index) throws UserException
-                    {
-                        return index < getLength();
-                    }
-
-                    @Override
-                    public int getLength() throws UserException
-                    {
-                        if (rowCount == -1)
-                        {
-                            try
-                            {
-                                rowCount = Utility.countLines(textFile) - format.headerRows;
-                            }
-                            catch (IOException e)
-                            {
-                                throw new FetchException("Error counting rows", e);
-                            }
-                        }
-                        return rowCount;
-                    }
-                });
-
         }
     }
 
@@ -321,18 +103,6 @@ public class Import
             String msg = e.getLocalizedMessage();
             fmt.recordProblem(msg == null ? "Unknown" : msg);
             return fmt;
-        }
-    }
-
-    private static class DateFormat
-    {
-        public final String formatString;
-        public final DateTimeFormatter formatter;
-
-        public DateFormat(String formatString)
-        {
-            this.formatString = formatString;
-            this.formatter = DateTimeFormatter.ofPattern(formatString);
         }
     }
 

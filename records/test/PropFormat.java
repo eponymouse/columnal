@@ -4,8 +4,9 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.data.type.CleanDateColumnType;
 import records.data.type.NumericColumnType;
-import utility.Import;
-import utility.Import.ColumnInfo;
+import records.importers.GuessFormat;
+import records.importers.ColumnInfo;
+import records.importers.TextFormat;
 
 import java.io.IOException;
 import java.time.LocalDate;
@@ -24,7 +25,7 @@ public class PropFormat
 {
 
     @Property
-    public void testGuessFormat(@From(GenFormat.class) Import.TextFormat format) throws IOException
+    public void testGuessFormat(@From(GenFormat.class) TextFormat format) throws IOException
     {
         List<String> fileContent = new ArrayList<>();
         fileContent.add(format.columnTypes.stream().map(c -> c.title).collect(Collectors.joining("" + format.separator)));
@@ -53,6 +54,6 @@ public class PropFormat
             }
             fileContent.add(line.toString());
         }
-        PropFiles.assertEqualsMsg(format, Import.guessTextFormat(fileContent));
+        PropFiles.assertEqualsMsg(format, GuessFormat.guessTextFormat(fileContent));
     }
 }
