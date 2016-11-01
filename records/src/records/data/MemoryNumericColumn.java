@@ -18,24 +18,19 @@ public class MemoryNumericColumn extends Column
     private final String title;
     private final NumericColumnStorage storage = new NumericColumnStorage();
 
-    public MemoryNumericColumn(RecordSet rs, String title, NumericColumnType type, List<Integer> skipIndexes, List<String> values) throws InternalException
+    public MemoryNumericColumn(RecordSet rs, String title, NumericColumnType type, List<String> values) throws InternalException
     {
         super(rs);
         this.title = title;
         int nextSkip = 0;
-        for (int i = 0; i < values.size(); i++)
+        for (String value : values)
         {
-            if (nextSkip < skipIndexes.size() && skipIndexes.get(nextSkip) == i)
-            {
-                nextSkip += 1;
-            }
             // Add it if it can't be blank, or if isn't blank
-            else if (!type.mayBeBlank || !values.get(i).isEmpty())
+            if (!type.mayBeBlank || !value.isEmpty())
             {
-                String s = values.get(i);
+                String s = value;
                 storage.add(type.removePrefix(s));
-            }
-            else
+            } else
             {
                 storage.addBlank();
             }

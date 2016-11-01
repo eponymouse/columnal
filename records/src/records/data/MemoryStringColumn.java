@@ -19,23 +19,15 @@ public class MemoryStringColumn extends Column
     private final List<String> values;
     private final DumbStringPool pool = new DumbStringPool(1000);
 
-    public MemoryStringColumn(RecordSet recordSet, String title, List<Integer> skipIndexes, List<String> values)
+    public MemoryStringColumn(RecordSet recordSet, String title, List<String> values)
     {
         super(recordSet);
         this.title = title;
         this.values = new ArrayList<>(values.size());
         int nextSkip = 0;
-        for (int i = 0; i < values.size(); i++)
+        for (String s : values)
         {
-            if (nextSkip < skipIndexes.size() && skipIndexes.get(nextSkip) == i)
-            {
-                nextSkip += 1;
-            }
-            else
-            {
-                String s = values.get(i);
-                this.values.add(pool.pool(s));
-            }
+            this.values.add(pool.pool(s));
         }
     }
 

@@ -59,7 +59,7 @@ public class GuessFormat
         catch (GuessException e)
         {
             // Always valid backup: a single text column, no header
-            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), "")), Collections.emptyList()), (char) -1);
+            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), ""))), (char) -1);
             String msg = e.getLocalizedMessage();
             fmt.recordProblem(msg == null ? "Unknown" : msg);
             return fmt;
@@ -135,7 +135,7 @@ public class GuessFormat
         catch (GuessException e)
         {
             // Always valid backup: a single text column, no header
-            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), "")), Collections.emptyList()), (char)-1);
+            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), ""))), (char)-1);
             String msg = e.getLocalizedMessage();
             fmt.recordProblem(msg == null ? "Unknown" : msg);
             return fmt;
@@ -261,6 +261,6 @@ public class GuessFormat
         List<ColumnInfo> columns = new ArrayList<>(columnCount);
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
             columns.add(new ColumnInfo(columnTypes.get(columnIndex), headerRow.isPresent() ? headerRow.get().get(columnIndex) : ""));
-        return new Format(headerRows, columns, blankRows);
+        return new Format(headerRows, columns);
     }
 }

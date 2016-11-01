@@ -20,7 +20,7 @@ public class TextFormat extends Format
 
     public TextFormat(int headerRows, List<ColumnInfo> columnTypes, char separator)
     {
-        super(headerRows, columnTypes, Collections.emptyList());
+        super(headerRows, columnTypes);
         this.separator = separator;
     }
 

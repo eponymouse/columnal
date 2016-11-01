@@ -87,13 +87,16 @@ public class Utility
         }
     }
 
-    public static List<String> slice(List<List<String>> vals, int skipRows, int columnIndex)
+    // Given a table of values, skips the first "skipRows" rows,
+    // Then extracts all values which are not from completely blank rows.
+    public static List<String> sliceSkipBlankRows(List<List<String>> vals, int skipRows, int columnIndex)
     {
         List<String> items = new ArrayList<>(vals.size());
         for (int i = skipRows; i < vals.size(); i++)
         {
             List<String> row = vals.get(i);
-            items.add(row.get(columnIndex));
+            if (!row.isEmpty() && !row.stream().allMatch(String::isEmpty))
+                items.add(row.get(columnIndex));
         }
         return items;
     }

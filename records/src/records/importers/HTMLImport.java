@@ -69,14 +69,14 @@ public class HTMLImport
             {
                 ColumnInfo columnInfo = format.columnTypes.get(i);
                 int iFinal = i;
-                List<String> slice = Utility.slice(vals, format.headerRows, iFinal);
+                List<String> slice = Utility.sliceSkipBlankRows(vals, format.headerRows, iFinal);
                 if (columnInfo.type.isNumeric())
                 {
-                    columns.add(rs -> new MemoryNumericColumn(rs, columnInfo.title, ((NumericColumnType)columnInfo.type), format.blankRowsToIgnore, slice));
+                    columns.add(rs -> new MemoryNumericColumn(rs, columnInfo.title, ((NumericColumnType)columnInfo.type), slice));
                 }
                 else if (columnInfo.type.isText())
                 {
-                    columns.add(rs -> new MemoryStringColumn(rs, columnInfo.title, format.blankRowsToIgnore, slice));
+                    columns.add(rs -> new MemoryStringColumn(rs, columnInfo.title, slice));
                 }
                 // If it's blank, should we add any column?
                 // Maybe if it has title?                }
