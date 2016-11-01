@@ -82,7 +82,7 @@ public class HTMLImport
                 // Maybe if it has title?                }
             }
 
-            int len = vals.size() - format.headerRows;
+            int len = vals.size() - format.headerRows - (int)vals.stream().skip(format.headerRows).filter(r -> r.stream().allMatch(String::isEmpty)).count();
 
             vals = null; // Make sure we don't keep a reference
             // Not because we null it, but because we make it non-final.
