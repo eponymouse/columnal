@@ -37,7 +37,17 @@ public class PropFormat
             {
                 // TODO add random spaces, randomise content
                 if (c.type.isNumeric())
-                    line.append(((NumericColumnType)c.type).displayPrefix).append(0);
+                {
+                    NumericColumnType numericColumnType = (NumericColumnType) c.type;
+                    if (numericColumnType.mayBeBlank && rnd.nextBoolean())
+                    {
+                        line.append(numericColumnType.displayPrefix).append("");
+                    }
+                    else
+                    {
+                        line.append(numericColumnType.displayPrefix).append(0);
+                    }
+                }
                 else if (c.type.isText())
                     line.append("s");
                 else if (c.type.isDate())

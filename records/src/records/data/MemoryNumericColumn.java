@@ -8,6 +8,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 
 import java.util.List;
+import java.util.Optional;
 
 /**
  * Created by neil on 31/10/2016.
@@ -28,10 +29,15 @@ public class MemoryNumericColumn extends Column
             {
                 nextSkip += 1;
             }
-            else
+            // Add it if it can't be blank, or if isn't blank
+            else if (!type.mayBeBlank || !values.get(i).isEmpty())
             {
                 String s = values.get(i);
                 storage.add(type.removePrefix(s));
+            }
+            else
+            {
+                storage.addBlank();
             }
         }
     }
@@ -51,12 +57,13 @@ public class MemoryNumericColumn extends Column
     @Override
     public Class<?> getType()
     {
-        return Number.class;
+        return storage.hasBlanks() ? Optional.class : Number.class;
     }
 
     @Override
+    @SuppressWarnings("nullness")
     public Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
     {
-        return storage.get(index);
+        return storage.hasBlanks() ? Optional.ofNullable(storage.get(index)) : storage.get(index);
     }
 }

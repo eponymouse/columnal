@@ -66,6 +66,7 @@ public class Main extends Application
             }
             catch (IOException | InternalException ex)
             {
+                ex.printStackTrace();
             }
         });
 

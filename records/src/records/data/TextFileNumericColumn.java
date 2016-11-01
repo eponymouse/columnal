@@ -12,6 +12,7 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Optional;
 
 /**
  * Created by neil on 20/10/2016.
@@ -26,7 +27,7 @@ public class TextFileNumericColumn extends TextFileColumn
     }
 
     @Override
-    public Number getWithProgress(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+    public Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
         try
         {
@@ -58,7 +59,7 @@ public class TextFileNumericColumn extends TextFileColumn
                 // TODO handle case where file changed outside.
             }
 
-            return loadedValues.get(index);
+            return getObject(index);
         }
         catch (IOException e)
         {
@@ -66,9 +67,15 @@ public class TextFileNumericColumn extends TextFileColumn
         }
     }
 
-    @Override
-    public Class<Number> getType()
+    @SuppressWarnings("nullness")
+    private Object getObject(int index) throws InternalException
     {
-        return Number.class;
+        return loadedValues.hasBlanks() ? Optional.ofNullable(loadedValues.get(index)) : loadedValues.get(index);
+    }
+
+    @Override
+    public Class<?> getType()
+    {
+        return loadedValues.hasBlanks() ? Optional.class : Number.class;
     }
 }

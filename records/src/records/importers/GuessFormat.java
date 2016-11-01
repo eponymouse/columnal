@@ -152,6 +152,8 @@ public class GuessFormat
         {
             // Have a guess at column type:
             boolean allNumeric = true;
+            // Only false if we find content which is not parseable as a number:
+            boolean allNumericOrBlank = true;
             boolean allBlank = true;
             List<DateFormat> possibleDateFormats = new ArrayList<>(Utility.mapList(CleanDateColumnType.DATE_FORMATS, DateFormat::new));
             String commonPrefix = "";
@@ -160,7 +162,8 @@ public class GuessFormat
                 List<String> row = initialVals.get(rowIndex);
                 if (row.isEmpty() || row.stream().allMatch(String::isEmpty))
                 {
-                    // Only add it once:
+                    // Whole row is blank
+                    // Only add it once, not once per column:
                     if (columnIndex == 0)
                         blankRows.add(rowIndex - headerRows);
                 }
@@ -168,58 +171,65 @@ public class GuessFormat
                 {
                     String val = row.get(columnIndex).trim();
                     if (!val.isEmpty())
-                        allBlank = false;
-                    if (commonPrefix.isEmpty())
                     {
-                        // Look for a prefix of currency symbol:
-                        for (int i = 0; i < val.length(); i = val.offsetByCodePoints(i, 1))
+                        allBlank = false;
+
+                        if (commonPrefix.isEmpty())
                         {
-                            if (Character.getType(val.codePointAt(i)) == Character.CURRENCY_SYMBOL)
-                                commonPrefix += val.substring(i, val.offsetByCodePoints(i, 1));
-                            else
-                                break;
+                            // Look for a prefix of currency symbol:
+                            for (int i = 0; i < val.length(); i = val.offsetByCodePoints(i, 1))
+                            {
+                                if (Character.getType(val.codePointAt(i)) == Character.CURRENCY_SYMBOL)
+                                    commonPrefix += val.substring(i, val.offsetByCodePoints(i, 1));
+                                else
+                                    break;
+                            }
+                        }
+                        // Not an else; if we just picked commonPrefix, we should find it here:
+                        if (!commonPrefix.isEmpty() && val.startsWith(commonPrefix))
+                        {
+                            // Take off prefix and continue as is:
+                            val = val.substring(commonPrefix.length()).trim();
+                        } else if (!commonPrefix.isEmpty())
+                        {
+                            // We thought we had a prefix, but we haven't found it here, so give up:
+                            commonPrefix = "";
+                            allNumeric = false;
+                            allNumericOrBlank = false;
+                            break;
+                        }
+                        try
+                        {
+                            new BigDecimal(val);
+                        } catch (NumberFormatException e)
+                        {
+                            allNumeric = false;
+                            allNumericOrBlank = false;
+                            commonPrefix = "";
+                        }
+                        // Minimum length for date is 6 by my count
+                        if (val.length() < 6)
+                            possibleDateFormats.clear();
+                        else
+                        {
+                            // Seems expensive but most will be knocked out immediately:
+                            for (Iterator<DateFormat> dateFormatIt = possibleDateFormats.iterator(); dateFormatIt.hasNext(); )
+                            {
+                                try
+                                {
+
+                                    dateFormatIt.next().formatter.parse(val, LocalDate::from);
+                                } catch (DateTimeParseException e)
+                                {
+                                    dateFormatIt.remove();
+                                }
+                            }
                         }
                     }
-                    // Not an else; if we just picked commonPrefix, we should find it here:
-                    if (!commonPrefix.isEmpty() && val.startsWith(commonPrefix))
-                    {
-                        // Take off prefix and continue as is:
-                        val = val.substring(commonPrefix.length()).trim();
-                    }
-                    else if (!commonPrefix.isEmpty())
-                    {
-                        // We thought we had a prefix, but we haven't found it here, so give up:
-                        commonPrefix = "";
-                        allNumeric = false;
-                        break;
-                    }
-                    try
-                    {
-                        new BigDecimal(val);
-                    }
-                    catch (NumberFormatException e)
-                    {
-                        allNumeric = false;
-                        commonPrefix = "";
-                    }
-                    // Minimum length for date is 6 by my count
-                    if (val.length() < 6)
-                        possibleDateFormats.clear();
                     else
                     {
-                        // Seems expensive but most will be knocked out immediately:
-                        for (Iterator<DateFormat> dateFormatIt = possibleDateFormats.iterator(); dateFormatIt.hasNext(); )
-                        {
-                            try
-                            {
-
-                                dateFormatIt.next().formatter.parse(val, LocalDate::from);
-                            }
-                            catch (DateTimeParseException e)
-                            {
-                                dateFormatIt.remove();
-                            }
-                        }
+                        // Found a blank:
+                        allNumeric = false;
                     }
                 }
             }
@@ -228,7 +238,9 @@ public class GuessFormat
             else if (!possibleDateFormats.isEmpty())
                 columnTypes.add(new CleanDateColumnType(possibleDateFormats.get(0).formatString));
             else if (allNumeric)
-                columnTypes.add(new NumericColumnType(commonPrefix));
+                columnTypes.add(new NumericColumnType(commonPrefix, false));
+            else if (allNumericOrBlank)
+                columnTypes.add(new NumericColumnType(commonPrefix, true));
             else
                 columnTypes.add(new TextColumnType());
             // Go backwards to find column titles:
@@ -236,14 +248,15 @@ public class GuessFormat
             for (int headerRow = headerRows - 1; headerRow >= 0; headerRow--)
             {
                 // Must actually have our column in it:
-                if (columnIndex < initialVals.get(headerRow).size())
+                if (columnIndex < initialVals.get(headerRow).size() && !initialVals.get(headerRow).get(columnIndex).isEmpty())
                 {
                     viableColumnNameRows.compute(headerRow, (a, pre) -> pre == null ? 1 : (1 + pre));
                 }
             }
         }
+        int nonBlankColumnCount = (int)columnTypes.stream().filter(c -> !c.isBlank()).count();
         // All must think it's viable, and then pick last one:
-        Optional<List<String>> headerRow = viableColumnNameRows.entrySet().stream().filter(e -> e.getValue() == columnCount).max(Entry.comparingByKey()).map(e -> initialVals.get(e.getKey()));
+        Optional<List<String>> headerRow = viableColumnNameRows.entrySet().stream().filter(e -> e.getValue() == nonBlankColumnCount).max(Entry.comparingByKey()).map(e -> initialVals.get(e.getKey()));
 
         List<ColumnInfo> columns = new ArrayList<>(columnCount);
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)

@@ -1,6 +1,7 @@
 package records.data;
 
 import javafx.application.Platform;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.FunctionInt;
@@ -151,12 +152,14 @@ public class SummaryStatistics extends Transformation
                         {
                             case MIN:
                             case MAX:
+                                @MonotonicNonNull
                                 Comparable<Object> cur = null;
                                 for (int i = 0; srcCol.indexValid(i); i++)
                                 {
                                     if (splitIndexes[i] != index)
                                         continue;
 
+                                    @NonNull
                                     Comparable<Object> x = (Comparable<Object>) srcCol.get(i);
                                     if (cur == null)
                                     {
@@ -240,7 +243,7 @@ public class SummaryStatistics extends Transformation
                 {
                     r.add(c.get(i));
                 }
-                splits.add(new SingleSplit(c, new ArrayList(r)));
+                splits.add(new SingleSplit(c, new ArrayList<>(r)));
             }
 
         }
@@ -274,7 +277,7 @@ public class SummaryStatistics extends Transformation
         for (Column c : src.getColumns())
         {
             if (!c.getName().equals("Mistake"))
-                summaries.put(c.getName(), new HashSet(Arrays.asList(SummaryType.MIN, SummaryType.MAX)));
+                summaries.put(c.getName(), new HashSet<>(Arrays.asList(SummaryType.MIN, SummaryType.MAX)));
         }
 
         Workers.onWorkerThread("Create summary statistics", () -> {

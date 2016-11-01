@@ -201,10 +201,20 @@ public class Workers
         {
             currentlyRunning.push(work);
         }
-        work.work.run();
-        synchronized (currentlyRunning)
+        try
         {
-            currentlyRunning.pop();
+            work.work.run();
+        }
+        catch (Throwable t)
+        {
+            t.printStackTrace();
+        }
+        finally
+        {
+            synchronized (currentlyRunning)
+            {
+                currentlyRunning.pop();
+            }
         }
     }
 }

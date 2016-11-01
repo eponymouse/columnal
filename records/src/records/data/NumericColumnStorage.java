@@ -10,12 +10,14 @@ import records.error.InternalException;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.Optional;
 
 /**
  * Created by neil on 22/10/2016.
  */
 public class NumericColumnStorage
 {
+    private boolean hasBlanks = false;
     private int filled = 0;
     // We only use bytes, shorts, ints if all the numbers fit.
     private byte @Nullable [] bytes = new byte[8];
@@ -24,8 +26,20 @@ public class NumericColumnStorage
     // We use longs if most of them fit.  Long.MAX_VALUE means consult bigIntegers array.
     // Long.MIN_VALUE means consult bigDecimals array.
     private long @Nullable [] longs;
+    private static final byte BYTE_BLANK = Byte.MIN_VALUE;
+    private static final byte BYTE_MIN = BYTE_BLANK + 1;
+    private static final byte BYTE_MAX = Byte.MAX_VALUE;
+    private static final short SHORT_BLANK = Short.MIN_VALUE;
+    private static final short SHORT_MIN = SHORT_BLANK + 1;
+    private static final short SHORT_MAX = Short.MAX_VALUE;
+    private static final int INT_BLANK = Integer.MIN_VALUE;
+    private static final int INT_MIN = INT_BLANK + 1;
+    private static final int INT_MAX = Integer.MAX_VALUE;
     private static final long SEE_BIGINT = Long.MIN_VALUE;
-    private static final long SEE_BIGDEC = Long.MAX_VALUE;
+    private static final long SEE_BIGDEC = Long.MIN_VALUE+1;
+    private static final long LONG_BLANK = Long.MIN_VALUE+2;
+    private static final long LONG_MIN = LONG_BLANK + 1;
+    private static final long LONG_MAX = Long.MAX_VALUE;
     private @Nullable BigInteger @Nullable [] bigIntegers;
     // If any are non-integer, we use bigDecimals
     private @Nullable BigDecimal @Nullable [] bigDecimals;
@@ -40,26 +54,38 @@ public class NumericColumnStorage
         try
         {
             long n = Long.valueOf(number);
-            if (Byte.MIN_VALUE <= n && n <= Byte.MAX_VALUE)
-                addByte((byte)n);
-            else if (Short.MIN_VALUE <= n && n <= Short.MAX_VALUE)
-                addShort((short)n);
-            else if (Integer.MIN_VALUE <= n && n <= Integer.MAX_VALUE)
-                addInteger((int)n);
-            else if (Long.MIN_VALUE + 1 <= n && n <= Long.MAX_VALUE - 1)
+            if (BYTE_MIN <= n && n <= BYTE_MAX)
+            {
+                addByte((byte) n);
+                return;
+            }
+            else if (SHORT_MIN <= n && n <= SHORT_MAX)
+            {
+                addShort((short) n);
+                return;
+            }
+            else if (INT_MIN <= n && n <= INT_MAX)
+            {
+                addInteger((int) n);
+                return;
+            }
+            else if (LONG_MIN <= n && n <= LONG_MAX)
+            {
                 addLong(n, false);
-            return;
+                return;
+            }
+            // We may fall out of here if it parsed as a long
+            // but is Long.MIN_VALUE or close by, as they are special values.
         }
         catch (NumberFormatException ex) { }
         // Not a long; is it a big integer?
         try
         {
             addBigInteger(new BigInteger(number));
-            System.err.println("Found BigInt: " + number);
             return;
         }
         catch (NumberFormatException ex) { }
-        // Ok, last try: big decimal (and let it throw if not
+        // Ok, last try: big decimal (and let it throw if not)
         addBigDecimal(new BigDecimal(number));
     }
 
@@ -82,8 +108,16 @@ public class NumericColumnStorage
         if (bytes != null)
         {
             shorts = new short[bytes.length];
-            for (int i = 0; i < shorts.length; i++)
-                shorts[i] = bytes[i];
+            if (hasBlanks)
+            {
+                for (int i = 0; i < shorts.length; i++)
+                    shorts[i] = bytes[i] == BYTE_BLANK ? SHORT_BLANK : bytes[i];
+            }
+            else
+            {
+                for (int i = 0; i < shorts.length; i++)
+                    shorts[i] = bytes[i];
+            }
             bytes = null;
         }
         else if (shorts == null)
@@ -105,15 +139,31 @@ public class NumericColumnStorage
             if (bytes != null)
             {
                 ints = new int[bytes.length];
-                for (int i = 0; i < ints.length; i++)
-                    ints[i] = bytes[i];
+                if (hasBlanks)
+                {
+                    for (int i = 0; i < ints.length; i++)
+                        ints[i] = bytes[i] == BYTE_BLANK ? INT_BLANK : bytes[i];
+                }
+                else
+                {
+                    for (int i = 0; i < ints.length; i++)
+                        ints[i] = bytes[i];
+                }
                 bytes = null;
             }
             else if (shorts != null)
             {
                 ints = new int[shorts.length];
-                for (int i = 0; i < ints.length; i++)
-                    ints[i] = shorts[i];
+                if (hasBlanks)
+                {
+                    for (int i = 0; i < ints.length; i++)
+                        ints[i] = shorts[i] == SHORT_BLANK ? INT_BLANK : shorts[i];
+                }
+                else
+                {
+                    for (int i = 0; i < ints.length; i++)
+                        ints[i] = shorts[i];
+                }
                 shorts = null;
             }
             else
@@ -133,7 +183,7 @@ public class NumericColumnStorage
     private final void addLong(long n, boolean special) throws InternalException
     {
         // If it overlaps our special values but isn't special, store as biginteger:
-        if (!special && (n == SEE_BIGINT || n == SEE_BIGDEC))
+        if (!special && (n < LONG_MIN))
             addBigInteger(BigInteger.valueOf(n));
 
         if (longs == null)
@@ -141,22 +191,46 @@ public class NumericColumnStorage
             if (bytes != null)
             {
                 longs = new long[bytes.length];
-                for (int i = 0; i < longs.length; i++)
-                    longs[i] = bytes[i];
+                if (hasBlanks)
+                {
+                    for (int i = 0; i < longs.length; i++)
+                        longs[i] = bytes[i] == BYTE_BLANK ? LONG_BLANK : bytes[i];
+                }
+                else
+                {
+                    for (int i = 0; i < longs.length; i++)
+                        longs[i] = bytes[i];
+                }
                 bytes = null;
             }
             else if (shorts != null)
             {
                 longs = new long[shorts.length];
-                for (int i = 0; i < longs.length; i++)
-                    longs[i] = shorts[i];
+                if (hasBlanks)
+                {
+                    for (int i = 0; i < longs.length; i++)
+                        longs[i] = shorts[i] == SHORT_BLANK ? LONG_BLANK : shorts[i];
+                }
+                else
+                {
+                    for (int i = 0; i < longs.length; i++)
+                        longs[i] = shorts[i];
+                }
                 shorts = null;
             }
             else if (ints != null)
             {
                 longs = new long[ints.length];
-                for (int i = 0; i < longs.length; i++)
-                    longs[i] = ints[i];
+                if (hasBlanks)
+                {
+                    for (int i = 0; i < longs.length; i++)
+                        longs[i] = ints[i] == INT_BLANK ? LONG_BLANK : ints[i];
+                }
+                else
+                {
+                    for (int i = 0; i < longs.length; i++)
+                        longs[i] = ints[i];
+                }
                 ints = null;
             }
             else
@@ -222,7 +296,19 @@ public class NumericColumnStorage
     }
 
     @Pure
+    @Nullable
+    // If hasBlanks, may return null.
     public Number get(int index) throws InternalException
+    {
+        if (hasBlanks)
+            return getPossBlank(index);
+        else
+            return getNonBlank(index);
+    }
+
+    @Pure
+    @NonNull
+    private Number getNonBlank(int index) throws InternalException
     {
         // Guessing here to order most likely cases:
         if (bytes != null)
@@ -255,5 +341,62 @@ public class NumericColumnStorage
                 return longs[index];
         }
         throw new InternalException("All arrays null in NumericColumnStorage");
+    }
+    @Pure
+    @Nullable
+    private Number getPossBlank(int index) throws InternalException
+    {
+        // Guessing here to order most likely cases:
+        if (bytes != null)
+            return bytes[index] == BYTE_BLANK ? null : bytes[index];
+        else if (ints != null)
+            return ints[index] == INT_BLANK ? null : ints[index];
+        else if (shorts != null)
+            return shorts[index] == SHORT_BLANK ? null : shorts[index];
+        else if (longs != null)
+        {
+            if (longs[index] == LONG_BLANK)
+                return null;
+            else if (longs[index] == SEE_BIGDEC)
+            {
+                if (bigDecimals == null)
+                    throw new InternalException("SEE_BIGDEC but null BigDecimal array");
+                @Nullable BigDecimal bigDecimal = bigDecimals[index];
+                if (bigDecimal == null)
+                    throw new InternalException("SEE_BIGDEC but null BigDecimal");
+                return bigDecimal;
+            }
+            else if (longs[index] == SEE_BIGINT)
+            {
+                if (bigIntegers == null)
+                    throw new InternalException("SEE_BIGINT but null BigInteger array");
+                @Nullable BigInteger bigInteger = bigIntegers[index];
+                if (bigInteger == null)
+                    throw new InternalException("SEE_BIGINT but null BigInteger");
+                return bigInteger;
+            }
+            else
+                return longs[index];
+        }
+        throw new InternalException("All arrays null in NumericColumnStorage");
+    }
+
+    public void addBlank() throws InternalException
+    {
+        hasBlanks = true;
+
+        if (bytes != null)
+            addByte(BYTE_BLANK);
+        else if (ints != null)
+            addInteger(INT_BLANK);
+        else if (shorts != null)
+            addShort(SHORT_BLANK);
+        else if (longs != null)
+            addLong(LONG_BLANK, true);
+    }
+
+    public boolean hasBlanks()
+    {
+        return hasBlanks;
     }
 }

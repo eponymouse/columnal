@@ -139,9 +139,9 @@ public class DisplayCache
         {
             try
             {
-                String val = column.getWithProgress(index, d -> {
+                Object val = column.getWithProgress(index, d -> {
                     Platform.runLater(() -> v.setValue(new DisplayValue(GETTING, d)));
-                }).toString();
+                });
                 Platform.runLater(() -> v.setValue(new DisplayValue(val)));
             }
             catch (UserException | InternalException e)

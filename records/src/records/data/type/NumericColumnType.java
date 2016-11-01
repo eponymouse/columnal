@@ -8,10 +8,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class NumericColumnType extends ColumnType
 {
     public final String displayPrefix;
+    public final boolean mayBeBlank;
 
-    public NumericColumnType(String displayPrefix)
+    public NumericColumnType(String displayPrefix, boolean mayBeBlank)
     {
         this.displayPrefix = displayPrefix;
+        this.mayBeBlank = mayBeBlank;
     }
 
     @Override
@@ -36,13 +38,13 @@ public class NumericColumnType extends ColumnType
 
         NumericColumnType that = (NumericColumnType) o;
 
-        return displayPrefix.equals(that.displayPrefix);
+        return displayPrefix.equals(that.displayPrefix) && mayBeBlank == that.mayBeBlank;
 
     }
 
     @Override
     public int hashCode()
     {
-        return displayPrefix.hashCode();
+        return displayPrefix.hashCode() + (mayBeBlank ? 100000 : 0);
     }
 }
