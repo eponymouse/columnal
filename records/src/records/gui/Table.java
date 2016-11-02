@@ -10,13 +10,13 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import records.data.RecordSet;
-import records.data.SummaryStatistics;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 import utility.Workers;
 
 import java.util.ArrayList;
+import java.util.Optional;
 
 /**
  * Created by neil on 18/10/2016.
@@ -60,15 +60,18 @@ public class Table extends BorderPane
         HBox.setHgrow(spacer, Priority.ALWAYS);
         Button addButton = new Button("+");
         addButton.setOnAction(e -> {
+            /*
             try
             {
-                SummaryStatistics.withGUICreate(rs, r -> parent.add(new Table(parent, r.getResult())));
+                //SummaryStatistics.withGUICreate(rs, r -> parent.add(new Table(parent, r.getResult())));
             }
             catch (Exception ex)
             {
                 ex.printStackTrace();
                 // TODO tell user
             }
+            */
+            new NewTransformationDialog(getScene().getWindow(), parent, rs).show(optNewTable -> optNewTable.ifPresent(t -> parent.add(t)));
         });
 
         setTop(new HBox(new Label(rs.getTitle()), spacer, addButton));

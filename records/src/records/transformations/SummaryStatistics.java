@@ -1,15 +1,36 @@
-package records.data;
+package records.transformations;
 
 import javafx.application.Platform;
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.control.cell.TextFieldListCell;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+import javafx.util.StringConverter;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.CalculatedColumn;
+import records.data.Column;
+import records.data.RecordSet;
+import records.data.Transformation;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.Pair;
+import utility.SimulationSupplier;
 import utility.Utility;
 import utility.Workers;
 
@@ -24,20 +45,21 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 
 /**
  * Created by neil on 21/10/2016.
  */
+@OnThread(Tag.Simulation)
 public class SummaryStatistics extends Transformation
 {
     public static enum SummaryType
     {
-        MEAN, MEDIAN, MIN, MAX;
+        COUNT, MEAN, MIN, MAX, SUM;
     }
 
     private final RecordSet result;
 
+    @OnThread(Tag.Simulation)
     private static class JoinedSplit
     {
         private final List<Column> colName = new ArrayList<>();
@@ -179,7 +201,7 @@ public class SummaryStatistics extends Transformation
 
 
                                     // OK to use getLength as we're forcing the whole column anyway:
-                                    if ((i & 127) == 0)
+                                    if ((i & 127) == 1)
                                         updateProgress((double)i / srcCol.getLength());
                                 }
                                 if (cur != null)
@@ -295,5 +317,74 @@ public class SummaryStatistics extends Transformation
     public RecordSet getResult()
     {
         return result;
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static class Info extends TransformationInfo
+    {
+        @MonotonicNonNull
+        @OnThread(Tag.Any)
+        private RecordSet src;
+        private final BooleanProperty ready = new SimpleBooleanProperty(false);
+        private final ObservableList<@NonNull Pair<Column, SummaryType>> ops = FXCollections.observableArrayList();
+
+        public Info()
+        {
+            super("stats", Arrays.asList("min", "max"), "Basic Statistics");
+        }
+
+        @Override
+        @OnThread(Tag.FXPlatform)
+        public Pane getParameterDisplay(RecordSet src)
+        {
+            this.src = src;
+            HBox colsAndSummaries = new HBox();
+            ListView<Column> columnListView = getColumnListView(src);
+            columnListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+            colsAndSummaries.getChildren().add(columnListView);
+
+            VBox buttons = new VBox();
+            for (SummaryType summaryType : SummaryType.values())
+            {
+                Button button = new Button(summaryType.toString() + ">>");
+                button.setOnAction(e -> {
+                    for (Column column : columnListView.getSelectionModel().getSelectedItems())
+                    {
+                        Pair<Column, SummaryType> op = new Pair<>(column, summaryType);
+                        if (!ops.contains(op))
+                            ops.add(op);
+                    }
+                });
+                buttons.getChildren().add(button);
+            }
+            colsAndSummaries.getChildren().add(buttons);
+
+            ListView<Pair<Column, SummaryType>> opListView = Utility.readOnlyListView(ops, op -> op.getFirst().getName() + "." + op.getSecond().toString());
+            colsAndSummaries.getChildren().add(opListView);
+            return colsAndSummaries;
+        }
+
+        @Override
+        public BooleanExpression canPressOk()
+        {
+            return ready;
+        }
+
+        @Override
+        public SimulationSupplier<Transformation> getTransformation()
+        {
+            return () -> {
+                if (src == null)
+                    throw new NullPointerException("Null source for transformation");
+
+                Map<String, Set<SummaryType>> summaries = new HashMap<>();
+                for (Pair<Column, SummaryType> op : ops)
+                {
+                    Set<SummaryType> summaryTypes = summaries.computeIfAbsent(op.getFirst().getName(), s -> new HashSet<SummaryType>());
+                    summaryTypes.add(op.getSecond());
+                }
+                return new SummaryStatistics(src, summaries, Collections.emptyList());
+            };
+        }
     }
 }

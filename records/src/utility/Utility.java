@@ -17,14 +17,22 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javafx.application.Platform;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
+import javafx.collections.ObservableList;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ListView;
+import javafx.scene.control.cell.TextFieldListCell;
+import javafx.util.*;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Column;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.SummaryStatistics.SummaryType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -309,5 +317,45 @@ public class Utility
             });
             return Optional.empty();
         }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    @SuppressWarnings("nullness")
+    public static <T> void addChangeListenerPlatform(ObservableValue<T> property, FXPlatformConsumer<@Nullable T> listener)
+    {
+        // Defeat thread checker:
+        property.addListener(new ChangeListener<T>()
+        {
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<? extends T> a, T b, T newVal)
+            {
+                listener.consume(newVal);
+            }
+        });
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static <T> ListView<@NonNull T> readOnlyListView(ObservableList<@NonNull T> content, Function<T, String> toString)
+    {
+        ListView<@NonNull T> listView = new ListView<>(content);
+        listView.setCellFactory((ListView<@NonNull T> lv) -> {
+            return new TextFieldListCell<>(new StringConverter<@NonNull T>()
+            {
+                @Override
+                public String toString(T t)
+                {
+                    return toString.apply(t);
+                }
+
+                @Override
+                public @NonNull T fromString(String string)
+                {
+                    throw new UnsupportedOperationException();
+                }
+            });
+        });
+        listView.setEditable(false);
+        return listView;
     }
 }
