@@ -1,6 +1,8 @@
 package records.transformations;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 import java.util.Arrays;
 import java.util.List;
@@ -13,6 +15,7 @@ public class TransformationManager
     @MonotonicNonNull
     private static TransformationManager instance;
 
+    @OnThread(Tag.FXPlatform)
     public static TransformationManager getInstance()
     {
         if (instance == null)
@@ -20,6 +23,7 @@ public class TransformationManager
         return instance;
     }
 
+    @OnThread(Tag.FXPlatform)
     public List<TransformationInfo> getTransformations()
     {
         return Arrays.asList(

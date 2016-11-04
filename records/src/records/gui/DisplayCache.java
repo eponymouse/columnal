@@ -5,7 +5,14 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
+import records.data.Column.ProgressListener;
+import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.DataTypeVisitorGet;
+import records.data.datatype.DataType.GetValue;
+import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -16,6 +23,7 @@ import utility.Workers.Worker;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.Queue;
 
@@ -139,8 +147,30 @@ public class DisplayCache
         {
             try
             {
-                Object val = column.getWithProgress(index, d -> {
+                ProgressListener prog = d -> {
                     Platform.runLater(() -> v.setValue(new DisplayValue(GETTING, d)));
+                };
+                String val = column.getType().apply(new DataTypeVisitorGet<String>()
+                {
+                    @Override
+                    public String number(GetValue<Number> g) throws InternalException, UserException
+                    {
+                        return g.getWithProgress(index, prog).toString();
+                    }
+
+                    @Override
+                    public String text(GetValue<String> g) throws InternalException, UserException
+                    {
+                        return g.getWithProgress(index, prog);
+                    }
+
+                    @Override
+                    public String tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                    {
+                        int tag = g.getWithProgress(index, prog);
+                        TagType tagType = tagTypes.get(tag);
+                        return tagType.getName() + (tagType.getInner() == null ? "" : (" " + tagType.getInner().apply(this)));
+                    }
                 });
                 Platform.runLater(() -> v.setValue(new DisplayValue(val)));
             }

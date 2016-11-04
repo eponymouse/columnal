@@ -8,6 +8,10 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitorGet;
+import records.data.datatype.DataType.GetValue;
+import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayCache;
@@ -20,6 +24,7 @@ import utility.Workers.Worker;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.Queue;
@@ -34,9 +39,9 @@ import java.util.concurrent.atomic.AtomicInteger;
  *   - A Column always belongs to exactly one RecordSet.
  *   - A column has a fixed name.  getName() will always return the same
  *     value.
- *   - A Column has typed entries.  Because the type is only known at
+ *   - A Column has typed entries.  Because the columntype is only known at
  *     run-time, we can't use generics, but you can assume that get(int)
- *     always returns the same type of object for the entire lifetime
+ *     always returns the same columntype of object for the entire lifetime
  *     of this Column object (we may need to revisit this if we introduce
  *     algebraic data types).
  *   - The data in a column is immutable while getVersion() returns the
@@ -90,14 +95,15 @@ public abstract class Column
 
     public abstract long getVersion();
 
-    public abstract Class<?> getType();
+    public abstract DataType getType() throws InternalException, UserException;
 
+    /*
     public final Object get(int index) throws UserException, InternalException
     {
         return getWithProgress(index, null);
     }
     public abstract Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException;
-
+*/
     public final boolean indexValid(int index) throws UserException
     {
         return recordSet.indexValid(index);
@@ -112,6 +118,35 @@ public abstract class Column
     public final int getLength() throws UserException
     {
         return recordSet.getLength();
+    }
+
+    public final List<Object> getCollapsed(int index) throws UserException, InternalException
+    {
+        return getType().apply(new DataTypeVisitorGet<List<Object>>()
+        {
+            @Override
+            public List<Object> number(GetValue<Number> g) throws InternalException, UserException
+            {
+                return Collections.singletonList(g.get(index));
+            }
+
+            @Override
+            public List<Object> text(GetValue<String> g) throws InternalException, UserException
+            {
+                return Collections.singletonList(g.get(index));
+            }
+
+            @Override
+            public List<Object> tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            {
+                List<Object> l = new ArrayList<>();
+                Integer tagIndex = g.get(index);
+                l.add(tagIndex);
+                if (tagTypes.get(tagIndex).getInner() != null)
+                    l.addAll(tagTypes.get(tagIndex).getInner().apply(this));
+                return l;
+            }
+        });
     }
 
     public static interface ProgressListener

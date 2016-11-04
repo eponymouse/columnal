@@ -1,10 +1,10 @@
 package records.importers;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import records.data.type.CleanDateColumnType;
-import records.data.type.ColumnType;
-import records.data.type.NumericColumnType;
-import records.data.type.TextColumnType;
+import records.data.columntype.CleanDateColumnType;
+import records.data.columntype.ColumnType;
+import records.data.columntype.NumericColumnType;
+import records.data.columntype.TextColumnType;
 import utility.Utility;
 
 import java.math.BigDecimal;
@@ -150,7 +150,7 @@ public class GuessFormat
         List<Integer> blankRows = new ArrayList<>();
         for (int columnIndex = 0; columnIndex < columnCount; columnIndex++)
         {
-            // Have a guess at column type:
+            // Have a guess at column columntype:
             boolean allNumeric = true;
             // Only false if we find content which is not parseable as a number:
             boolean allNumericOrBlank = true;

@@ -1,4 +1,4 @@
-package records.data.type;
+package records.data.columntype;
 
 /**
  * Created by neil on 30/10/2016.

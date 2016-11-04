@@ -1,4 +1,4 @@
-package records.data.type;
+package records.data.columntype;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;

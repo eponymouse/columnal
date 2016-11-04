@@ -1,12 +1,11 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.Utility;
-import utility.Utility.ReadState;
-import utility.Workers;
 
 import java.io.EOFException;
 import java.io.File;
@@ -19,15 +18,15 @@ import java.util.Optional;
  */
 public class TextFileNumericColumn extends TextFileColumn
 {
-    private final NumericColumnStorage loadedValues = new NumericColumnStorage();
+    private final NumericColumnStorage loadedValues;
 
-    public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, String columnName, int columnIndex)
+    public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, String columnName, int columnIndex) throws InternalException
     {
         super(recordSet, textFile, fileStartPosition, sep, columnName, columnIndex);
+        loadedValues = new NumericColumnStorage(0);
     }
 
-    @Override
-    public Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+    private Number getWithProgress(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
         try
         {
@@ -44,7 +43,7 @@ public class TextFileNumericColumn extends TextFileColumn
                     {
                         try
                         {
-                            loadedValues.add(s);
+                            loadedValues.addNumber(s);
                         }
                         catch (NumberFormatException e)
                         {
@@ -68,14 +67,14 @@ public class TextFileNumericColumn extends TextFileColumn
     }
 
     @SuppressWarnings("nullness")
-    private Object getObject(int index) throws InternalException
+    private Number getObject(int index) throws InternalException
     {
-        return loadedValues.hasBlanks() ? Optional.ofNullable(loadedValues.get(index)) : loadedValues.get(index);
+        return loadedValues.get(index);
     }
 
     @Override
-    public Class<?> getType()
+    public DataType getType()
     {
-        return loadedValues.hasBlanks() ? Optional.class : Number.class;
+        return loadedValues.getType();
     }
 }

@@ -1,8 +1,11 @@
 package records.data;
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
 import records.error.FetchException;
+import records.error.InternalException;
 import records.error.UserException;
 import utility.DumbStringPool;
 import utility.Utility;
@@ -22,14 +25,15 @@ public class TextFileStringColumn extends TextFileColumn
 {
     private String[] loadedValues = new String[0];
     private final DumbStringPool pool = new DumbStringPool(1000);
+    @MonotonicNonNull
+    private DataType dataType;
 
     public TextFileStringColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, String columnName, int columnIndex)
     {
         super(recordSet, textFile, initialFilePosition, sep, columnName, columnIndex);
     }
 
-    @Override
-    public String getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException
+    private String getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException
     {
         try
         {
@@ -68,9 +72,20 @@ public class TextFileStringColumn extends TextFileColumn
     }
 
     @Override
-    public Class<String> getType()
+    public DataType getType()
     {
-        return String.class;
+        if (dataType == null)
+        {
+            dataType = new DataType()
+            {
+                @Override
+                public <R> R apply(DataTypeVisitorGet<R> visitor) throws UserException, InternalException
+                {
+                    return visitor.text(TextFileStringColumn.this::getWithProgress);
+                }
+            };
+        }
+        return dataType;
     }
 
     @Override

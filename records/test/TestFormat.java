@@ -1,7 +1,7 @@
 import org.junit.Test;
-import records.data.type.ColumnType;
-import records.data.type.NumericColumnType;
-import records.data.type.TextColumnType;
+import records.data.columntype.ColumnType;
+import records.data.columntype.NumericColumnType;
+import records.data.columntype.TextColumnType;
 import records.importers.GuessFormat;
 import records.importers.ColumnInfo;
 import records.importers.TextFormat;

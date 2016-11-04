@@ -1,10 +1,10 @@
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import records.data.type.ColumnType;
-import records.data.type.CleanDateColumnType;
-import records.data.type.NumericColumnType;
-import records.data.type.TextColumnType;
+import records.data.columntype.ColumnType;
+import records.data.columntype.CleanDateColumnType;
+import records.data.columntype.NumericColumnType;
+import records.data.columntype.TextColumnType;
 import records.importers.ColumnInfo;
 import records.importers.TextFormat;
 

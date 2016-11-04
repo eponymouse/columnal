@@ -1,24 +1,28 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.DataTypeVisitorGet;
+import records.data.datatype.DataType.GetValue;
 import records.error.InternalException;
+import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Workers;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Created by neil on 21/10/2016.
  */
-public abstract class CalculatedColumn<T extends Object> extends Column
+public abstract class CalculatedColumn extends Column
 {
     private final String name;
-    private final ArrayList<T> cachedValues = new ArrayList<T>();
     private final ArrayList<Column> dependencies;
     // Version of each of the dependencies at last calculation:
     private final Map<Column, Long> calcVersions = new IdentityHashMap<>();
@@ -31,30 +35,110 @@ public abstract class CalculatedColumn<T extends Object> extends Column
         this.dependencies = new ArrayList<>(Arrays.asList(dependencies));
     }
 
-    @Override
-    public final T getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+    public static interface FoldOperation<T, R>
     {
-        if (checkCacheValid())
-        {
-            if (index < cachedValues.size())
-                return cachedValues.get(index);
-        }
-        else
-        {
-            cachedValues.clear();
-            version += 1;
-        }
-        //this.progressListener = progressListener;
-        // TODO technically we don't have to stream in order, do we?
-        // Fetch values:
-        for (int i = cachedValues.size(); i <= index; i++)
-        {
-            cachedValues.add(calculate(i));
-        }
-        return cachedValues.get(index);
+        List<R> start();
+        List<R> process(T n);
+        List<R> end() throws UserException;
     }
 
-    protected final void updateProgress(double d) { }
+    // Preserves type
+    /*
+    public static CalculatedColumn fold(RecordSet rs, String name, Column src, DataTypeVisitor<FoldOperation> op) throws UserException, InternalException
+    {
+        return src.getType().apply(new DataTypeVisitorGet<CalculatedColumn>()
+        {
+            @Override
+            public CalculatedColumn number(GetValue<Number> g) throws InternalException, UserException
+            {
+                return new PrimitiveCalculatedColumn<Number>(rs, name, src, new NumericColumnStorage(0), op.number(), g)
+                {
+                    private DataType dataType = new DataTypeOf(src.getType())
+                    {
+                        @Override
+                        public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
+                        {
+                            return visitor.number((index, prog) -> {
+                                fillCacheWithProgress(index, prog);
+                                return cache.get(index);
+                            });
+                        }
+                    };
+
+                    @Override
+                    protected void clearCache() throws InternalException
+                    {
+                        cache = new NumericColumnStorage(0);
+                    }
+
+                    @Override
+                    public DataType getType()
+                    {
+                        return dataType;
+                    }
+                };
+            }
+
+            @Override
+            public CalculatedColumn text(GetValue<String> g) throws InternalException, UserException
+            {
+                return new PrimitiveCalculatedColumn<String>(rs, name, src, new StringColumnStorage(), op.text(), g)
+                {
+                    private DataType dataType = new DataTypeOf(src.getType())
+                    {
+                        @Override
+                        public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
+                        {
+                            return visitor.text((index, prog) -> {
+                                fillCacheWithProgress(index, prog);
+                                return cache.get(index);
+                            });
+                        }
+                    };
+
+                    @Override
+                    protected void clearCache() throws InternalException
+                    {
+                        cache = new StringColumnStorage();
+                    }
+
+                    @Override
+                    public DataType getType()
+                    {
+                        return dataType;
+                    }
+                };
+            }
+
+            @Override
+            public CalculatedColumn tagged(int tagIndex, String tag, DataType inner) throws InternalException, UserException
+            {
+                throw new UnimplementedException("");
+            }
+        });
+    }
+*/
+    protected final void fillCacheWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+    {
+        if (!checkCacheValid())
+        {
+            clearCache();
+            version += 1;
+        }
+        // Fetch values:
+        while (index < getCacheFilled())
+        {
+            fillNextCacheChunk();
+        }
+    }
+
+    protected abstract void fillNextCacheChunk() throws UserException, InternalException;
+
+    protected abstract void clearCache() throws InternalException;
+
+    protected abstract int getCacheFilled();
+
+    //protected final void updateProgress(double d) { }
 
     private boolean checkCacheValid()
     {
@@ -78,11 +162,58 @@ public abstract class CalculatedColumn<T extends Object> extends Column
         return name;
     }
 
-    protected abstract T calculate(int index) throws UserException, InternalException;
-
     @Override
     public final long getVersion()
     {
         return version;
+    }
+
+    private static abstract class PrimitiveCalculatedColumn<T> extends CalculatedColumn
+    {
+        protected ColumnStorage<T> cache;
+        protected final FoldOperation<T, T> op;
+        private final Column src;
+        private GetValue<T> get;
+        private int chunkSize = 100;
+
+        public PrimitiveCalculatedColumn(RecordSet rs, String name, Column src, ColumnStorage<T> storage, FoldOperation<T, T> op, GetValue<T> get)
+        {
+            super(rs, name, src);
+            this.src = src;
+            this.cache = storage;
+            this.op = op;
+            this.get = get;
+        }
+
+
+        @Override
+        protected int getCacheFilled()
+        {
+            return cache.filled();
+        }
+
+        int nextSource = -1;
+
+        @Override
+        protected void fillNextCacheChunk() throws UserException, InternalException
+        {
+            if (nextSource == -1)
+            {
+                cache.addAll(op.start());
+                nextSource = 0;
+            }
+
+            int limit = nextSource + chunkSize;
+            int i = nextSource;
+            for (; i < limit && src.indexValid(i); i++)
+            {
+                cache.addAll(op.process(get.getWithProgress(i, null)));
+            }
+            if (i != nextSource && !src.indexValid(i))
+            {
+                cache.addAll(op.end());
+            }
+            nextSource = i;
+        }
     }
 }

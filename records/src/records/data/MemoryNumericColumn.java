@@ -1,12 +1,16 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.type.NumericColumnType;
+import records.data.columntype.NumericColumnType;
+import records.data.datatype.DataType;
+import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
@@ -16,11 +20,14 @@ import java.util.Optional;
 public class MemoryNumericColumn extends Column
 {
     private final String title;
-    private final NumericColumnStorage storage = new NumericColumnStorage();
+    private final NumericColumnStorage storage;
+    private final boolean hasBlanks;
 
     public MemoryNumericColumn(RecordSet rs, String title, NumericColumnType type, List<String> values) throws InternalException
     {
         super(rs);
+        hasBlanks = values.stream().anyMatch(String::isEmpty);
+        storage = new NumericColumnStorage(hasBlanks ? 1 : 0);
         this.title = title;
         int nextSkip = 0;
         for (String value : values)
@@ -29,10 +36,10 @@ public class MemoryNumericColumn extends Column
             if (!type.mayBeBlank || !value.isEmpty())
             {
                 String s = value;
-                storage.add(type.removePrefix(s));
+                storage.addNumber(type.removePrefix(s));
             } else
             {
-                storage.addBlank();
+                storage.addTag(0);
             }
         }
     }
@@ -50,15 +57,25 @@ public class MemoryNumericColumn extends Column
     }
 
     @Override
-    public Class<?> getType()
+    public DataType getType()
     {
-        return storage.hasBlanks() ? Optional.class : Number.class;
-    }
+        if (!hasBlanks)
+            return storage.getType();
 
-    @Override
-    @SuppressWarnings("nullness")
-    public Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
-    {
-        return storage.hasBlanks() ? Optional.ofNullable(storage.get(index)) : storage.get(index);
+        return new DataType()
+        {
+            List<TagType> tagTypes = Arrays.asList(new TagType("Blank", null), new TagType("Number", storage.getType()));
+
+            @Override
+            public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
+            {
+                return visitor.tagged(tagTypes, (i, prog) -> {
+                    int tag = storage.getTag(i);
+                    if (tag == -1)
+                        tag = 1; // No tag means it's a number so second tag
+                    return tag;
+                });
+            }
+        };
     }
 }

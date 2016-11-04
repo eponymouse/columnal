@@ -1,6 +1,8 @@
 package records.data;
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -16,19 +18,16 @@ import java.util.List;
 public class MemoryStringColumn extends Column
 {
     private final String title;
-    private final List<String> values;
-    private final DumbStringPool pool = new DumbStringPool(1000);
+    private final StringColumnStorage storage;
+    @MonotonicNonNull
+    private DataType dataType;
 
-    public MemoryStringColumn(RecordSet recordSet, String title, List<String> values)
+    public MemoryStringColumn(RecordSet recordSet, String title, List<String> values) throws InternalException
     {
         super(recordSet);
         this.title = title;
-        this.values = new ArrayList<>(values.size());
-        int nextSkip = 0;
-        for (String s : values)
-        {
-            this.values.add(pool.pool(s));
-        }
+        this.storage = new StringColumnStorage();
+        this.storage.addAll(values);
     }
 
     @Override
@@ -45,14 +44,24 @@ public class MemoryStringColumn extends Column
     }
 
     @Override
-    public Class<?> getType()
+    public DataType getType()
     {
-        return String.class;
+        if (dataType == null)
+        {
+            dataType = new DataType()
+            {
+                @Override
+                public <R> R apply(DataTypeVisitorGet<R> visitor) throws UserException, InternalException
+                {
+                    return visitor.text(MemoryStringColumn.this::getWithProgress);
+                }
+            };
+        }
+        return dataType;
     }
 
-    @Override
-    public Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+    private String getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
     {
-        return values.get(index);
+        return storage.get(index);
     }
 }

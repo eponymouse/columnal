@@ -1,7 +1,7 @@
 package records.importers;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.type.ColumnType;
+import records.data.columntype.ColumnType;
 
 /**
  * Created by neil on 31/10/2016.
@@ -41,7 +41,7 @@ public class ColumnInfo
     public String toString()
     {
         return "ColumnInfo{" +
-            "type=" + type +
+            "columntype=" + type +
             ", title='" + title + '\'' +
             '}';
     }

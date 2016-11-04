@@ -105,7 +105,7 @@ public abstract class RecordSet
     {
         return columns.stream().map(c -> { try
         {
-            return "\"" + c.get(i).toString() + "\"";
+            return "\"" + c.getCollapsed(i).toString() + "\"";
         }catch (Exception e) { return "ERR"; }}).collect(Collectors.joining(","));
     }
 }

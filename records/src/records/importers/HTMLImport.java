@@ -1,6 +1,5 @@
 package records.importers;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -9,10 +8,7 @@ import records.data.Column;
 import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
 import records.data.RecordSet;
-import records.data.TextFileNumericColumn;
-import records.data.TextFileStringColumn;
-import records.data.type.NumericColumnType;
-import records.error.FetchException;
+import records.data.columntype.NumericColumnType;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
@@ -24,8 +20,6 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * Created by neil on 31/10/2016.

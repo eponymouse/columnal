@@ -5,19 +5,51 @@ import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import records.data.datatype.DataType;
 import records.error.InternalException;
+import records.error.UserException;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Optional;
 
 /**
- * Created by neil on 22/10/2016.
+ * A class to store numbers or a series of values of the type
+ * Tag0, Tag1 Number, Tag2, Tag3, i.e. where at most one tag
+ * has a number argument.  This includes
+ * the case where none of the tags have a number argument;
+ * this class works well for that case.
+ *
+ * The idea behind the class is that we use as small a storage as possible
+ * if the column contains small integers.  So for example, if
+ * we have a column filled with zeroes and ones, we don't want to
+ * use an array of BigDecimal.  Additionally, if the user
+ * has a type like: Missing | Number, we don't want to have to box
+ * all the numbers just because some may be the missing tag.
+ *
+ * So the idea here is twofold.  First, tagged values (like Missing)
+ * are stored as negative numbers, in the lowest values for the type.
+ * So if you have Missing | NA | 0 | 1, these are stored in a byte
+ * as -128, -127, 0 and 1.  Second, we use the smallest type
+ * we need if all are integers. (If some are fractional, we just
+ * accept the cost and store all the integers as longs, but could
+ * revisit that in future).
+ *
+ * So we start with an array of bytes.  If we get any values that
+ * are too big to fit a byte, we upgrade to shorts, then to ints and finally
+ * to longs.  If we see any fractional, we jump straight to long.
+ * Any fractional items are stored in the BigDecimal array
+ * and any integers bigger than long in BigInteger.  But we keep
+ * any integers that will fit in the long array, so ideally
+ * BigDecimal and BigInteger arrays are as sparse as possible.
+ *
  */
-public class NumericColumnStorage
+public class NumericColumnStorage implements ColumnStorage<Number>
 {
-    private boolean hasBlanks = false;
+    private static final int MAX_TAGS = 1_000_000;
+    private final int NUM_TAGS;
     private int filled = 0;
     // We only use bytes, shorts, ints if all the numbers fit.
     private byte @Nullable [] bytes = new byte[8];
@@ -26,29 +58,32 @@ public class NumericColumnStorage
     // We use longs if most of them fit.  Long.MAX_VALUE means consult bigIntegers array.
     // Long.MIN_VALUE means consult bigDecimals array.
     private long @Nullable [] longs;
-    private static final byte BYTE_BLANK = Byte.MIN_VALUE;
-    private static final byte BYTE_MIN = BYTE_BLANK + 1;
+    private final byte BYTE_MIN;
     private static final byte BYTE_MAX = Byte.MAX_VALUE;
-    private static final short SHORT_BLANK = Short.MIN_VALUE;
-    private static final short SHORT_MIN = SHORT_BLANK + 1;
+    private final short SHORT_MIN;
     private static final short SHORT_MAX = Short.MAX_VALUE;
-    private static final int INT_BLANK = Integer.MIN_VALUE;
-    private static final int INT_MIN = INT_BLANK + 1;
+    private final int INT_MIN;
     private static final int INT_MAX = Integer.MAX_VALUE;
     private static final long SEE_BIGINT = Long.MIN_VALUE;
     private static final long SEE_BIGDEC = Long.MIN_VALUE+1;
-    private static final long LONG_BLANK = Long.MIN_VALUE+2;
-    private static final long LONG_MIN = LONG_BLANK + 1;
+    private final long LONG_MIN;
     private static final long LONG_MAX = Long.MAX_VALUE;
     private @Nullable BigInteger @Nullable [] bigIntegers;
     // If any are non-integer, we use bigDecimals
     private @Nullable BigDecimal @Nullable [] bigDecimals;
 
-    public NumericColumnStorage()
+    public NumericColumnStorage(int numberOfTags) throws InternalException
     {
+        if (numberOfTags > MAX_TAGS)
+            throw new InternalException("Tried to create numeric column with " + numberOfTags + " tags");
+        NUM_TAGS = numberOfTags;
+        BYTE_MIN = (int)Byte.MIN_VALUE + numberOfTags >= (int)Byte.MAX_VALUE ? Byte.MAX_VALUE : (byte)((int)Byte.MIN_VALUE + numberOfTags);
+        SHORT_MIN = (int)Short.MIN_VALUE + numberOfTags >= (int)Short.MAX_VALUE ? Short.MAX_VALUE : (short)((int)Short.MIN_VALUE + numberOfTags);
+        INT_MIN = Integer.MIN_VALUE + numberOfTags;
+        LONG_MIN = Long.MIN_VALUE + 2 + numberOfTags; // Allocate space for SEE_BIGINT and SEE_BIGDEC
     }
 
-    public void add(String number) throws InternalException, NumberFormatException
+    public void addNumber(String number) throws InternalException, NumberFormatException
     {
         // First try as a long:
         try
@@ -92,7 +127,7 @@ public class NumericColumnStorage
     private void addByte(byte n) throws InternalException
     {
         if (bytes == null)
-            addShort(n); // Cascade upwards
+            addShort(byteToShort(n)); // Cascade upwards
         else
         {
             if (filled >= bytes.length)
@@ -108,10 +143,10 @@ public class NumericColumnStorage
         if (bytes != null)
         {
             shorts = new short[bytes.length];
-            if (hasBlanks)
+            if (NUM_TAGS > 0)
             {
                 for (int i = 0; i < shorts.length; i++)
-                    shorts[i] = bytes[i] == BYTE_BLANK ? SHORT_BLANK : bytes[i];
+                    shorts[i] = byteToShort(bytes[i]);
             }
             else
             {
@@ -122,7 +157,7 @@ public class NumericColumnStorage
         }
         else if (shorts == null)
         {
-            addInteger(n);
+            addInteger(shortToInt(n));
             return;
         }
         if (filled >= shorts.length)
@@ -132,6 +167,22 @@ public class NumericColumnStorage
         shorts[filled++] = n;
     }
 
+    @Pure
+    private short byteToShort(byte b)
+    {
+        return b < BYTE_MIN ? (short)(SHORT_MIN - (BYTE_MIN - b)) : b;
+    }
+    @Pure
+    private int shortToInt(short s)
+    {
+        return s < SHORT_MIN ? (INT_MIN - (SHORT_MIN - s)) : s;
+    }
+    @Pure
+    private long intToLong(int x)
+    {
+        return x < INT_MIN ? (LONG_MIN - (long)(INT_MIN - x)) : x;
+    }
+
     private void addInteger(int n) throws InternalException
     {
         if (ints == null)
@@ -139,10 +190,10 @@ public class NumericColumnStorage
             if (bytes != null)
             {
                 ints = new int[bytes.length];
-                if (hasBlanks)
+                if (NUM_TAGS > 0)
                 {
                     for (int i = 0; i < ints.length; i++)
-                        ints[i] = bytes[i] == BYTE_BLANK ? INT_BLANK : bytes[i];
+                        ints[i] = shortToInt(byteToShort(bytes[i]));
                 }
                 else
                 {
@@ -154,10 +205,10 @@ public class NumericColumnStorage
             else if (shorts != null)
             {
                 ints = new int[shorts.length];
-                if (hasBlanks)
+                if (NUM_TAGS > 0)
                 {
                     for (int i = 0; i < ints.length; i++)
-                        ints[i] = shorts[i] == SHORT_BLANK ? INT_BLANK : shorts[i];
+                        ints[i] = shortToInt(shorts[i]);
                 }
                 else
                 {
@@ -168,7 +219,7 @@ public class NumericColumnStorage
             }
             else
             {
-                addLong(n, false);
+                addLong(intToLong(n), false);
                 return;
             }
         }
@@ -191,10 +242,10 @@ public class NumericColumnStorage
             if (bytes != null)
             {
                 longs = new long[bytes.length];
-                if (hasBlanks)
+                if (NUM_TAGS > 0)
                 {
                     for (int i = 0; i < longs.length; i++)
-                        longs[i] = bytes[i] == BYTE_BLANK ? LONG_BLANK : bytes[i];
+                        longs[i] = intToLong(shortToInt(byteToShort(bytes[i])));
                 }
                 else
                 {
@@ -206,10 +257,10 @@ public class NumericColumnStorage
             else if (shorts != null)
             {
                 longs = new long[shorts.length];
-                if (hasBlanks)
+                if (NUM_TAGS > 0)
                 {
                     for (int i = 0; i < longs.length; i++)
-                        longs[i] = shorts[i] == SHORT_BLANK ? LONG_BLANK : shorts[i];
+                        longs[i] = intToLong(shortToInt(shorts[i]));
                 }
                 else
                 {
@@ -221,10 +272,10 @@ public class NumericColumnStorage
             else if (ints != null)
             {
                 longs = new long[ints.length];
-                if (hasBlanks)
+                if (NUM_TAGS > 0)
                 {
                     for (int i = 0; i < longs.length; i++)
-                        longs[i] = ints[i] == INT_BLANK ? LONG_BLANK : ints[i];
+                        longs[i] = intToLong(ints[i]);
                 }
                 else
                 {
@@ -296,12 +347,16 @@ public class NumericColumnStorage
     }
 
     @Pure
-    @Nullable
-    // If hasBlanks, may return null.
     public Number get(int index) throws InternalException
     {
-        if (hasBlanks)
-            return getPossBlank(index);
+        if (NUM_TAGS > 0)
+        {
+            if (getTag(index) == -1)
+                return getNonBlank(index);
+            else
+                throw new InternalException("Calling get on tagged item with no" +
+                    " value");
+        }
         else
             return getNonBlank(index);
     }
@@ -342,61 +397,81 @@ public class NumericColumnStorage
         }
         throw new InternalException("All arrays null in NumericColumnStorage");
     }
+    // Returns -1 if that item is not a tag
     @Pure
-    @Nullable
-    private Number getPossBlank(int index) throws InternalException
+    public int getTag(int index) throws InternalException
     {
         // Guessing here to order most likely cases:
         if (bytes != null)
-            return bytes[index] == BYTE_BLANK ? null : bytes[index];
+            return bytes[index] >= BYTE_MIN ? -1 : bytes[index] - Byte.MIN_VALUE;
         else if (ints != null)
-            return ints[index] == INT_BLANK ? null : ints[index];
+            return ints[index] >= INT_MIN ? -1 : ints[index] - Integer.MIN_VALUE;
         else if (shorts != null)
-            return shorts[index] == SHORT_BLANK ? null : shorts[index];
+            return shorts[index] >= SHORT_MIN ? -1 : shorts[index] - Short.MIN_VALUE;
         else if (longs != null)
         {
-            if (longs[index] == LONG_BLANK)
-                return null;
-            else if (longs[index] == SEE_BIGDEC)
-            {
-                if (bigDecimals == null)
-                    throw new InternalException("SEE_BIGDEC but null BigDecimal array");
-                @Nullable BigDecimal bigDecimal = bigDecimals[index];
-                if (bigDecimal == null)
-                    throw new InternalException("SEE_BIGDEC but null BigDecimal");
-                return bigDecimal;
-            }
-            else if (longs[index] == SEE_BIGINT)
-            {
-                if (bigIntegers == null)
-                    throw new InternalException("SEE_BIGINT but null BigInteger array");
-                @Nullable BigInteger bigInteger = bigIntegers[index];
-                if (bigInteger == null)
-                    throw new InternalException("SEE_BIGINT but null BigInteger");
-                return bigInteger;
-            }
-            else
-                return longs[index];
+            return longs[index] >= LONG_MIN ? -1 : (int)(longs[index] - (Long.MIN_VALUE + 2));
         }
         throw new InternalException("All arrays null in NumericColumnStorage");
     }
 
-    public void addBlank() throws InternalException
+    public void addTag(int tagIndex) throws InternalException
     {
-        hasBlanks = true;
-
-        if (bytes != null)
-            addByte(BYTE_BLANK);
+        if (bytes != null && tagIndex < BYTE_MIN - Byte.MIN_VALUE)
+            addByte((byte)(Byte.MIN_VALUE + tagIndex));
+        else if (shorts != null && tagIndex < SHORT_MIN - Short.MIN_VALUE)
+            addShort((short)(Short.MIN_VALUE + tagIndex));
         else if (ints != null)
-            addInteger(INT_BLANK);
-        else if (shorts != null)
-            addShort(SHORT_BLANK);
+            addInteger(Integer.MIN_VALUE + tagIndex);
         else if (longs != null)
-            addLong(LONG_BLANK, true);
+            addLong(Long.MIN_VALUE + 2 + tagIndex, true);
     }
 
-    public boolean hasBlanks()
+    public DataType getType()
     {
-        return hasBlanks;
+        /*
+        if (longs != null)
+        {
+            for (long l : longs)
+                if (l == SEE_BIGDEC)
+                    return v -> v.number();
+        }
+        */
+        return new DataType()
+        {
+            @Override
+            public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
+            {
+                return visitor.number((i, prog) -> getNonBlank(i));
+            }
+        };
+    }
+
+    @Override
+    public void addAll(List<Number> items) throws InternalException
+    {
+        for (Number n : items)
+        {
+            addNumber(n);
+        }
+    }
+
+    public void addNumber(Number n) throws InternalException
+    {
+        if (n instanceof BigDecimal)
+            addBigDecimal((BigDecimal) n);
+        else if (n instanceof BigInteger)
+            addBigInteger((BigInteger) n);
+        else
+        {
+            if ((long)n.byteValue() == n.longValue())
+                addByte(n.byteValue()); // Fits in a byte
+            else if ((long)n.shortValue() == n.longValue())
+                addShort(n.shortValue()); // Fits in a short
+            else if ((long)n.intValue() == n.longValue())
+                addInteger(n.intValue()); // Fits in a int
+            else
+                addLong(n.longValue(), false);
+        }
     }
 }

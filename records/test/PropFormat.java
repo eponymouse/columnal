@@ -2,8 +2,8 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
-import records.data.type.CleanDateColumnType;
-import records.data.type.NumericColumnType;
+import records.data.columntype.CleanDateColumnType;
+import records.data.columntype.NumericColumnType;
 import records.importers.GuessFormat;
 import records.importers.ColumnInfo;
 import records.importers.TextFormat;
@@ -59,7 +59,7 @@ public class PropFormat
                     line.append(date.format(((CleanDateColumnType)c.type).getDateTimeFormatter()));
                 }
                 else if (!c.type.isBlank())
-                    throw new UnsupportedOperationException("Missing case for column type? " + c.type.getClass());
+                    throw new UnsupportedOperationException("Missing case for column columntype? " + c.type.getClass());
                 line.append(format.separator);
             }
             fileContent.add(line.toString());

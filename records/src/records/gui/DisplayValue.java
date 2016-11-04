@@ -28,9 +28,9 @@ public class DisplayValue
     /**
      * Create successfully loaded item
      */
-    public DisplayValue(Object val)
+    public DisplayValue(String val)
     {
-        show = convertToString(val);
+        show = val;
         state = null;
         loading = -1;
         isError = false;
@@ -66,17 +66,5 @@ public class DisplayValue
             return show;
         else
             return state.toString() + ": " + loading;
-    }
-
-    @SuppressWarnings("nullness")
-    private static String convertToString(Object val)
-    {
-        if (val instanceof Optional)
-        {
-            Optional<?> o = (Optional<?>)val;
-            return o.map(DisplayValue::convertToString).orElse("");
-        }
-
-        return val.toString();
     }
 }

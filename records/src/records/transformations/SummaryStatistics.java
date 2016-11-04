@@ -7,24 +7,28 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
-import javafx.scene.control.cell.TextFieldListCell;
-import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import javafx.util.StringConverter;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CalculatedColumn;
+import records.data.CalculatedColumn.FoldOperation;
 import records.data.Column;
+import records.data.NumericColumnStorage;
 import records.data.RecordSet;
 import records.data.Transformation;
+import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.DataTypeVisitorGet;
+import records.data.datatype.DataType.GetValue;
+import records.data.datatype.DataType.TagType;
 import records.error.FunctionInt;
 import records.error.InternalException;
+import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -63,13 +67,13 @@ public class SummaryStatistics extends Transformation
     private static class JoinedSplit
     {
         private final List<Column> colName = new ArrayList<>();
-        private final List<Object> colValue = new ArrayList<>();
+        private final List<List<Object>> colValue = new ArrayList<>();
 
         public JoinedSplit()
         {
         }
 
-        public JoinedSplit(Column column, Object value, JoinedSplit addTo)
+        public JoinedSplit(Column column, List<Object> value, JoinedSplit addTo)
         {
             colName.add(column);
             colValue.add(value);
@@ -81,7 +85,7 @@ public class SummaryStatistics extends Transformation
         {
             for (int c = 0; c < colName.size(); c++)
             {
-                if (!colName.get(c).get(index).equals(colValue.get(c)))
+                if (!colName.get(c).getCollapsed(index).equals(colValue.get(c)))
                     return false;
             }
             return true;
@@ -106,8 +110,7 @@ public class SummaryStatistics extends Transformation
                 int iFinal = i;
                 columns.add(rs -> new Column(rs)
                 {
-                    @Override
-                    public Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                    private List<Object> getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
                     {
                         return splits.get(index).colValue.get(iFinal);
                     }
@@ -126,9 +129,9 @@ public class SummaryStatistics extends Transformation
                     }
 
                     @Override
-                    public Class<?> getType()
+                    public DataType getType() throws InternalException, UserException
                     {
-                        return orig.getType();
+                        return orig.getType().copy(this::getWithProgress);
                     }
                 });
             }
@@ -153,71 +156,86 @@ public class SummaryStatistics extends Transformation
             for (SummaryType summaryType : e.getValue())
             {
                 Column srcCol = src.getColumn(e.getKey());
-                boolean srcColIsNumber = Number.class.equals(srcCol.getType());
-                switch (summaryType)
-                {
-                    case MIN:case MAX:
-                        if (!Comparable.class.isAssignableFrom(srcCol.getType()) && !srcColIsNumber)
-                            throw new UserException("Summary column not comparable for " + summaryType + ": " + srcCol.getType());
-                        break;
-                }
 
-                columns.add(rs -> new CalculatedColumn<Object>(rs, e.getKey() + "." + summaryType, srcCol)
+                columns.add(srcCol.getType().apply(new DataTypeVisitorGet<FunctionInt<RecordSet, Column>>()
                 {
                     @Override
-                    protected Object calculate(int index) throws UserException, InternalException
+                    public FunctionInt<RecordSet, Column> number(GetValue<Number> srcGet) throws InternalException, UserException
                     {
-                        if (index >= splits.size())
-                            throw new InternalException("Looking for item beyond end of summary");
-                        JoinedSplit split = splits.get(index);
-                        switch (summaryType)
-                        {
-                            case MIN:
-                            case MAX:
-                                @MonotonicNonNull
-                                Comparable<Object> cur = null;
-                                for (int i = 0; srcCol.indexValid(i); i++)
+                        return rs -> new CalculatedColumn(rs, e.getKey() + "." + summaryType, srcCol) {
+                            NumericColumnStorage cache = new NumericColumnStorage(0);
+                            @Override
+                            protected void fillNextCacheChunk() throws UserException, InternalException
+                            {
+                                int index = cache.filled();
+
+                                JoinedSplit split = splits.get(index);
+                                switch (summaryType)
                                 {
-                                    if (splitIndexes[i] != index)
-                                        continue;
+                                    case MIN:
+                                    case MAX:
+                                        @MonotonicNonNull
+                                        Number cur = null;
+                                        for (int i = 0; srcCol.indexValid(i); i++)
+                                        {
+                                            if (splitIndexes[i] != index)
+                                                continue;
 
-                                    @NonNull
-                                    Comparable<Object> x = (Comparable<Object>) srcCol.get(i);
-                                    if (cur == null)
-                                    {
-                                        cur = x;
-                                    }
-                                    else
-                                    {
-                                        int comparison;
-                                        if (srcColIsNumber)
-                                            comparison = Utility.compareNumbers(cur, x);
+                                            @NonNull
+                                            Number x = srcGet.get(i);
+                                            if (cur == null)
+                                            {
+                                                cur = x;
+                                            } else
+                                            {
+                                                int comparison = Utility.compareNumbers(cur, x);
+                                                if ((summaryType == SummaryType.MIN && comparison > 0)
+                                                    || (summaryType == SummaryType.MAX && comparison < 0))
+                                                    cur = x;
+                                            }
+                                        }
+                                        if (cur != null)
+                                            cache.addNumber(cur);
                                         else
-                                            comparison = cur.compareTo(x);
-                                        if ((summaryType == SummaryType.MIN && comparison > 0)
-                                            || (summaryType == SummaryType.MAX && comparison < 0))
-                                            cur = x;
-                                    }
-
-
-                                    // OK to use getLength as we're forcing the whole column anyway:
-                                    if ((i & 127) == 1)
-                                        updateProgress((double)i / srcCol.getLength());
+                                            throw new UserException("No values for " + summaryType);
                                 }
-                                if (cur != null)
-                                    return cur;
-                                else
-                                    throw new UserException("Missing value");
-                        }
-                        throw new UserException("Unsupported summary type");
+                            }
+
+                            @Override
+                            protected void clearCache() throws InternalException
+                            {
+                                cache = new NumericColumnStorage(0);
+                            }
+
+                            @Override
+                            protected int getCacheFilled()
+                            {
+                                return cache.filled();
+                            }
+
+                            @Override
+                            public DataType getType() throws UserException, InternalException
+                            {
+                                return srcCol.getType().copy((i, prog) -> {
+                                    fillCacheWithProgress(i, prog);
+                                    return Collections.singletonList(cache.get(i));
+                                });
+                            }
+                        };
                     }
 
                     @Override
-                    public Class<?> getType()
+                    public FunctionInt<RecordSet, Column> text(GetValue<String> g) throws InternalException, UserException
                     {
-                        return srcCol.getType();
+                        throw new UnimplementedException();
                     }
-                });
+
+                    @Override
+                    public FunctionInt<RecordSet, Column> tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                    {
+                        throw new UnimplementedException();
+                    }
+                }));
             }
         }
         result = new RecordSet("Summary", columns) {
@@ -238,9 +256,9 @@ public class SummaryStatistics extends Transformation
     private static class SingleSplit
     {
         private Column column;
-        private List<@NonNull ?> values;
+        private List<@NonNull List<@NonNull Object>> values;
 
-        public SingleSplit(Column column, List<@NonNull ?> values)
+        public SingleSplit(Column column, List<@NonNull List<@NonNull Object>> values)
         {
             this.column = column;
             this.values = values;
@@ -255,15 +273,15 @@ public class SummaryStatistics extends Transformation
         for (String colName : splitBy)
         {
             Column c = src.getColumn(colName);
-            Optional<List<@NonNull ?>> fastDistinct = c.fastDistinct();
-            if (fastDistinct.isPresent())
-                splits.add(new SingleSplit(c, fastDistinct.get()));
-            else
+            //Optional<List<@NonNull ?>> fastDistinct = c.fastDistinct();
+            //if (fastDistinct.isPresent())
+            //    splits.add(new SingleSplit(c, fastDistinct.get()));
+            //else
             {
-                HashSet<Object> r = new HashSet<>();
+                HashSet<List<Object>> r = new HashSet<>();
                 for (int i = 0; c.indexValid(i); i++)
                 {
-                    r.add(c.get(i));
+                    r.add(c.getCollapsed(i));
                 }
                 splits.add(new SingleSplit(c, new ArrayList<>(r)));
             }
@@ -281,7 +299,7 @@ public class SummaryStatistics extends Transformation
         SingleSplit cur = allDistincts.get(from);
         List<JoinedSplit> rest = crossProduct(allDistincts, from + 1);
         List<JoinedSplit> r = new ArrayList<>();
-        for (Object o : cur.values)
+        for (List<Object> o : cur.values)
         {
             for (JoinedSplit js : rest)
             {
