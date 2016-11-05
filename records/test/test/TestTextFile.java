@@ -1,3 +1,5 @@
+package test;
+
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 
 import java.io.BufferedWriter;
@@ -41,7 +43,7 @@ public class TestTextFile
     @Override
     public String toString()
     {
-        return "TestTextFile{" +
+        return "test.TestTextFile{" +
             "lineCount=" + lineCount +
             '}';
     }

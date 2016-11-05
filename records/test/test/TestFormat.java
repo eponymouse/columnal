@@ -1,3 +1,5 @@
+package test;
+
 import org.junit.Test;
 import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
