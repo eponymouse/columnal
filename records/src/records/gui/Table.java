@@ -31,6 +31,7 @@ public class Table extends BorderPane
 {
     private static final int INITIAL_LOAD = 100;
     private static final int LOAD_CHUNK = 100;
+    private final RecordSet recordSet;
     private boolean resizing;
     // In parent coordinates:
     private Bounds originalSize;
@@ -40,6 +41,33 @@ public class Table extends BorderPane
     private boolean resizeRight;
     private boolean resizeTop;
     private boolean resizeBottom;
+
+    @OnThread(Tag.Any)
+    public RecordSet getRecordSet()
+    {
+        return recordSet;
+    }
+
+    @OnThread(Tag.FX)
+    public Point2D closestPointTo(double parentX, double parentY)
+    {
+        Bounds boundsInParent = getBoundsInParent();
+        Point2D middle = Utility.middle(boundsInParent);
+        double angle = Math.atan2(parentY - middle.getY(), parentX - middle.getX());
+        // The line outwards may hit the horizontal edges, or the vertical edges
+        // Rather than work out which it is hitting, we just calculate both
+        // possibilities and take the minimum.
+
+        // Hitting the horizontal edge is tan(angle) * halfWidth
+        // Hitting vertical edge is
+
+        double halfWidth = boundsInParent.getWidth() * 0.5;
+        double halfHeight = boundsInParent.getHeight() * 0.5;
+        double deg90 = Math.toRadians(90);
+
+        return new Point2D(middle.getX() + Math.max(-halfWidth, Math.min(1.0/Math.tan(angle) * ((angle >= 0) ? halfHeight : -halfHeight), halfWidth)),
+            middle.getY() + Math.max(-halfHeight, Math.min(Math.tan(angle) * ((angle >= deg90 || angle <= -deg90) ? -halfWidth : halfWidth), halfHeight)));
+    }
 
     @OnThread(Tag.FXPlatform)
     private static class TableDisplay extends TableView<Integer>
@@ -67,8 +95,10 @@ public class Table extends BorderPane
     }
 
     @SuppressWarnings("initialization")
+    @OnThread(Tag.FXPlatform)
     public Table(View parent, RecordSet rs)
     {
+        this.recordSet = rs;
         StackPane body = new StackPane(new TableDisplay(rs));
         Utility.addStyleClass(body, "table-body");
         setCenter(body);
@@ -90,7 +120,7 @@ public class Table extends BorderPane
                 // TODO tell user
             }
             */
-            new NewTransformationDialog(getScene().getWindow(), parent, rs).show(optNewTable -> optNewTable.ifPresent(t -> parent.add(t, Table.this)));
+            new NewTransformationDialog(getScene().getWindow(), parent, this).show(optNewTable -> optNewTable.ifPresent(t -> parent.add(t)));
         });
 
         Label title = new Label(rs.getTitle());

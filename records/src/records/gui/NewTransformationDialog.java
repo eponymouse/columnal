@@ -46,7 +46,7 @@ public class NewTransformationDialog
     private final Dialog<SimulationSupplier<Transformation>> dialog;
     private final View parentView;
 
-    public NewTransformationDialog(Window owner, View parentView, RecordSet src)
+    public NewTransformationDialog(Window owner, View parentView, Table src)
     {
         this.parentView = parentView;
         dialog = new Dialog<>();
@@ -121,17 +121,14 @@ public class NewTransformationDialog
         });
     }
 
-    public void show(FXPlatformConsumer<Optional<Table>> withResult)
+    public void show(FXPlatformConsumer<Optional<Transformation>> withResult)
     {
         Optional<SimulationSupplier<Transformation>> supplier = dialog.showAndWait();
         if (supplier.isPresent())
         {
             Workers.onWorkerThread("Creating transformation", () -> {
-                Optional<RecordSet> rs = Utility.alertOnError(() -> supplier.get().get().getResult());
-                if (rs.isPresent())
-                    Platform.runLater(() -> withResult.consume(Optional.of(new Table(parentView, rs.get()))));
-                else
-                    Platform.runLater(() -> withResult.consume(Optional.empty()));
+                Optional<Transformation> trans = Utility.alertOnError(() -> supplier.get().get());
+                Platform.runLater(() -> withResult.consume(trans));
             });
         }
         else

@@ -21,6 +21,8 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.css.Styleable;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
@@ -115,6 +117,11 @@ public class Utility
     public static void addStyleClass(Styleable styleable, String... classes)
     {
         styleable.getStyleClass().addAll(classes);
+    }
+
+    public static Point2D middle(Bounds bounds)
+    {
+        return new Point2D((bounds.getMinX() + bounds.getMaxX()) * 0.5, (bounds.getMinY() + bounds.getMaxY()) * 0.5);
     }
 
     public static class ReadState

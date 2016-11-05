@@ -31,6 +31,7 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.Table;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -57,6 +58,8 @@ import java.util.Set;
 @OnThread(Tag.Simulation)
 public class SummaryStatistics extends Transformation
 {
+    private final Table src;
+
     public static enum SummaryType
     {
         COUNT, MEAN, MIN, MAX, SUM;
@@ -93,8 +96,10 @@ public class SummaryStatistics extends Transformation
         }
     }
 
-    public SummaryStatistics(RecordSet src, Map<String, Set<SummaryType>> summaries, List<String> splitBy) throws InternalException, UserException
+    public SummaryStatistics(Table srcTable, Map<String, Set<SummaryType>> summaries, List<String> splitBy) throws InternalException, UserException
     {
+        this.src = srcTable;
+        RecordSet src = srcTable.getRecordSet();
         List<JoinedSplit> splits = calcSplits(src, splitBy);
 
         List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
@@ -390,6 +395,7 @@ public class SummaryStatistics extends Transformation
         return r;
     }
 
+    /*
     @OnThread(Tag.FXPlatform)
     public static void withGUICreate(RecordSet src, FXPlatformConsumer<SummaryStatistics> andThen) throws InternalException, UserException
     {
@@ -409,6 +415,7 @@ public class SummaryStatistics extends Transformation
             });
         });
     }
+    */
 
     @Override
     @NotNull
@@ -421,9 +428,7 @@ public class SummaryStatistics extends Transformation
     @OnThread(Tag.FXPlatform)
     public static class Info extends TransformationInfo
     {
-        @MonotonicNonNull
-        @OnThread(Tag.Any)
-        private RecordSet src;
+        private @MonotonicNonNull Table src;
         private final BooleanProperty ready = new SimpleBooleanProperty(false);
         private final ObservableList<@NonNull Pair<Column, SummaryType>> ops = FXCollections.observableArrayList();
 
@@ -434,11 +439,11 @@ public class SummaryStatistics extends Transformation
 
         @Override
         @OnThread(Tag.FXPlatform)
-        public Pane getParameterDisplay(RecordSet src)
+        public Pane getParameterDisplay(Table src)
         {
             this.src = src;
             HBox colsAndSummaries = new HBox();
-            ListView<Column> columnListView = getColumnListView(src);
+            ListView<Column> columnListView = getColumnListView(this.src.getRecordSet());
             columnListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             colsAndSummaries.getChildren().add(columnListView);
 
@@ -485,5 +490,17 @@ public class SummaryStatistics extends Transformation
                 return new SummaryStatistics(src, summaries, Collections.emptyList());
             };
         }
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) String getTransformationLabel()
+    {
+        return "Summary";
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) Table getSource()
+    {
+        return src;
     }
 }

@@ -11,6 +11,7 @@ import records.data.RecordSet;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.Table;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationSupplier;
@@ -48,7 +49,7 @@ public abstract class TransformationInfo
     }
 
     @OnThread(Tag.FXPlatform)
-    public abstract Pane getParameterDisplay(RecordSet src);
+    public abstract Pane getParameterDisplay(Table src);
 
     @OnThread(Tag.FXPlatform)
     public abstract BooleanExpression canPressOk();

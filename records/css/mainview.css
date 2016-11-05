@@ -17,3 +17,9 @@
     -fx-font-weight: bold;
     -fx-background-color: transparent;
 }
+
+.transformation-arrow {
+    -fx-fill: null;
+    -fx-stroke: black;
+    -fx-stroke-width: 3;
+}
