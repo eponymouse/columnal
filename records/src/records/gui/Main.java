@@ -72,9 +72,11 @@ public class Main extends Application
         });
 
         BorderPane root = new BorderPane(new ScrollPane(v), new MenuBar(menu), null, null, null);
-        primaryStage.setScene(new Scene(root));
-        primaryStage.setWidth(800);
-        primaryStage.setHeight(600);
+        Scene scene = new Scene(root);
+        scene.getStylesheets().add("file:records/css/mainview.css");
+        primaryStage.setScene(scene);
+        primaryStage.setWidth(1000);
+        primaryStage.setHeight(800);
         primaryStage.show();
     }
 

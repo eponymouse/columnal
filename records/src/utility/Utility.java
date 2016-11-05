@@ -20,6 +20,7 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
+import javafx.css.Styleable;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
@@ -32,6 +33,7 @@ import records.data.Column;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.Table;
 import records.transformations.SummaryStatistics.SummaryType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -107,6 +109,12 @@ public class Utility
                 items.add(row.get(columnIndex));
         }
         return items;
+    }
+
+    @OnThread(Tag.FX)
+    public static void addStyleClass(Styleable styleable, String... classes)
+    {
+        styleable.getStyleClass().addAll(classes);
     }
 
     public static class ReadState

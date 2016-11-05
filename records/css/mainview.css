@@ -1,0 +1,19 @@
+/* The window-like wrapper around a table view */
+.table-wrapper {
+    -fx-border-color: gray;
+    -fx-border-radius: 5;
+    -fx-background-color: lightgray;
+}
+.table-body {
+    -fx-padding: 6 6 6 6;
+    -fx-background-color: transparent;
+}
+.table-header {
+    -fx-background-color: steelblue;
+    -fx-padding: 6 6 0 6;
+}
+.table-title {
+    -fx-text-fill: white;
+    -fx-font-weight: bold;
+    -fx-background-color: transparent;
+}
