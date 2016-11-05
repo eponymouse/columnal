@@ -156,14 +156,17 @@ public class SummaryStatistics extends Transformation
             for (SummaryType summaryType : e.getValue())
             {
                 Column srcCol = src.getColumn(e.getKey());
+                String name = e.getKey() + "." + summaryType;
 
                 columns.add(srcCol.getType().apply(new DataTypeVisitorGet<FunctionInt<RecordSet, Column>>()
                 {
                     @Override
                     public FunctionInt<RecordSet, Column> number(GetValue<Number> srcGet) throws InternalException, UserException
                     {
-                        return rs -> new CalculatedColumn(rs, e.getKey() + "." + summaryType, srcCol) {
+                        return rs -> new CalculatedColumn(rs, name, srcCol)
+                        {
                             NumericColumnStorage cache = new NumericColumnStorage(0);
+
                             @Override
                             protected void fillNextCacheChunk() throws UserException, InternalException
                             {
@@ -216,7 +219,8 @@ public class SummaryStatistics extends Transformation
                             @Override
                             public DataType getType() throws UserException, InternalException
                             {
-                                return srcCol.getType().copy((i, prog) -> {
+                                return srcCol.getType().copy((i, prog) ->
+                                {
                                     fillCacheWithProgress(i, prog);
                                     return Collections.singletonList(cache.get(i));
                                 });
@@ -231,9 +235,109 @@ public class SummaryStatistics extends Transformation
                     }
 
                     @Override
-                    public FunctionInt<RecordSet, Column> tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                    public FunctionInt<RecordSet, Column> tagged(List<TagType> tagTypes, GetValue<Integer> getTag) throws InternalException, UserException
                     {
-                        throw new UnimplementedException();
+                        if (DataType.canFitInOneNumeric(tagTypes))
+                        {
+                            boolean ignoreOtherTags = true; //TODO configure through GUI
+                            int numericTag = DataType.findNumericTag(tagTypes);
+                            return rs -> new CalculatedColumn(rs, name, srcCol)
+                            {
+                                NumericColumnStorage cache = new NumericColumnStorage(0);
+
+                                @Override
+                                protected void fillNextCacheChunk() throws UserException, InternalException
+                                {
+                                    int index = cache.filled();
+
+                                    JoinedSplit split = splits.get(index);
+                                    switch (summaryType)
+                                    {
+                                        case MIN:
+                                        case MAX:
+                                            @MonotonicNonNull
+                                            Number cur = null;
+                                            for (int i = 0; srcCol.indexValid(i); i++)
+                                            {
+                                                if (splitIndexes[i] != index)
+                                                    continue;
+
+                                                Integer tag = getTag.get(i);
+                                                if (tagTypes.get(tag).getInner() == null)
+                                                    continue;
+
+                                                int iFinal = i;
+                                                @NonNull
+                                                Number x = tagTypes.get(tag).getInner().apply(new DataTypeVisitorGet<Number>()
+                                                {
+                                                    @Override
+                                                    public Number number(GetValue<Number> g) throws InternalException, UserException
+                                                    {
+                                                        return g.get(iFinal);
+                                                    }
+
+                                                    @Override
+                                                    public Number text(GetValue<String> g) throws InternalException, UserException
+                                                    {
+                                                        throw new InternalException("Text when convinced only numbers");
+                                                    }
+
+                                                    @Override
+                                                    public Number tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                                                    {
+                                                        throw new InternalException("Tagged when convinced only numbers");
+                                                    }
+                                                });
+                                                if (cur == null)
+                                                {
+                                                    cur = x;
+                                                } else
+                                                {
+                                                    int comparison = Utility.compareNumbers(cur, x);
+                                                    if ((summaryType == SummaryType.MIN && comparison > 0)
+                                                        || (summaryType == SummaryType.MAX && comparison < 0))
+                                                        cur = x;
+                                                }
+                                            }
+                                            if (cur != null)
+                                                cache.addNumber(cur);
+                                            else
+                                                throw new UserException("No values for " + summaryType);
+                                    }
+                                }
+
+                                @Override
+                                protected void clearCache() throws InternalException
+                                {
+                                    cache = new NumericColumnStorage(0);
+                                }
+
+                                @Override
+                                protected int getCacheFilled()
+                                {
+                                    int filled = cache.filled();
+                                    return filled;
+                                }
+
+                                @Override
+                                public DataType getType() throws UserException, InternalException
+                                {
+                                    return srcCol.getType().copy((i, prog) ->
+                                    {
+                                        fillCacheWithProgress(i, prog);
+                                        int tag = cache.getTag(i);
+                                        if (tag == -1)
+                                            tag = numericTag;
+                                        if (tagTypes.get(tag).getInner() == null)
+                                            return Collections.<Object>singletonList((Integer)tag);
+                                        else
+                                            return Arrays.<Object>asList(tag, cache.get(i));
+                                    });
+                                }
+                            };
+                        }
+                        else
+                            throw new UnimplementedException();
                     }
                 }));
             }

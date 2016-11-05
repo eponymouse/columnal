@@ -6,6 +6,8 @@ import org.jetbrains.annotations.NotNull;
 import records.data.Column;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,7 +80,7 @@ public abstract class DataType
                     {
                         ArrayList<TagType> tagsCopy = new ArrayList<>();
                         for (TagType tagType : tags)
-                            tagsCopy.add(new TagType(tagType.getName(), copy(get, curIndex + 1)));
+                            tagsCopy.add(new TagType(tagType.getName(), tagType.inner == null ? null : tagType.inner.copy(get, curIndex + 1)));
                         return visitor.tagged(tagsCopy, (i, prog) -> (Integer)get.getWithProgress(i, prog).get(curIndex));
                     }
                 };
@@ -245,5 +247,96 @@ public abstract class DataType
             result = 31 * result + (inner != null ? inner.hashCode() : 0);
             return result;
         }
+    }
+
+
+    @OnThread(Tag.Simulation)
+    public String getHeaderDisplay() throws UserException, InternalException
+    {
+        return apply(new DataTypeVisitor<String>()
+        {
+            @Override
+            public String number() throws InternalException, UserException
+            {
+                return "Number";
+            }
+
+            @Override
+            public String text() throws InternalException, UserException
+            {
+                return "Text";
+            }
+
+            @Override
+            public String tagged(List<TagType> tags) throws InternalException, UserException
+            {
+                return "TODO";
+            }
+        });
+    }
+
+    public static boolean canFitInOneNumeric(List<TagType> tags) throws InternalException, UserException
+    {
+        // Can fit in one numeric if there is no inner types,
+        // or if the only inner type is a single numeric
+        boolean foundNumeric = false;
+        for (TagType t : tags)
+        {
+            if (t.getInner() != null)
+            {
+                if (isNumber(t.getInner()))
+                {
+                    if (foundNumeric)
+                        return false; // Can't have two numeric
+                    foundNumeric = true;
+                }
+                else
+                    return false; // Can't have anything non-numeric
+            }
+        }
+        return foundNumeric;
+    }
+
+    // Only call if canFitInOneNumeric returned true
+    public static int findNumericTag(List<TagType> tags) throws InternalException, UserException
+    {
+        // Can fit in one numeric if there is no inner types,
+        // or if the only inner type is a single numeric
+        for (int i = 0; i < tags.size(); i++)
+        {
+            TagType t = tags.get(i);
+            if (t.getInner() != null)
+            {
+                if (isNumber(t.getInner()))
+                {
+                    return i;
+                }
+            }
+        }
+        return -1;
+    }
+
+    private static boolean isNumber(DataType t) throws UserException, InternalException
+    {
+        return t.apply(new DataTypeVisitor<Boolean>()
+        {
+            @Override
+            public Boolean number() throws InternalException, UserException
+            {
+                return true;
+            }
+
+            @Override
+            public Boolean text() throws InternalException, UserException
+            {
+                return false;
+            }
+
+            @Override
+            public Boolean tagged(List<TagType> tags) throws InternalException, UserException
+            {
+                return false;
+            }
+        });
     }
 }

@@ -126,7 +126,7 @@ public abstract class CalculatedColumn extends Column
             version += 1;
         }
         // Fetch values:
-        while (index < getCacheFilled())
+        while (index >= getCacheFilled())
         {
             fillNextCacheChunk();
         }

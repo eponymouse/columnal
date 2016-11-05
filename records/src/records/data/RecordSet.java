@@ -3,6 +3,7 @@ package records.data;
 import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableValue;
+import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 
@@ -59,6 +60,11 @@ public abstract class RecordSet
         {
             TableColumn<Integer, DisplayValue> c = new TableColumn<>(data.getName());
             c.setCellValueFactory(cdf -> data.getDisplay(cdf.getValue()));
+            c.setSortable(false);
+            data.withDisplayType(type -> {
+                c.setText("");
+                c.setGraphic(new Label(type + "\n" + data.getName()));
+            });
             return c;
         };
         return Utility.mapList(columns, makeDisplayColumn);

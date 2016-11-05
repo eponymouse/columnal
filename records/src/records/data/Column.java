@@ -3,6 +3,7 @@ package records.data;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
+import javafx.util.StringConverter;
 import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -19,6 +20,8 @@ import records.gui.DisplayCacheItem;
 import records.gui.DisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
+import utility.Utility;
 import utility.Workers;
 import utility.Workers.Worker;
 
@@ -95,6 +98,17 @@ public abstract class Column
 
     public abstract long getVersion();
 
+    @OnThread(Tag.FXPlatform)
+    public void withDisplayType(FXPlatformConsumer<String> withType)
+    {
+        Workers.onWorkerThread("Fetching type of column " + getName(), () -> {
+            Utility.alertOnError_(() -> {
+                String s = getType().getHeaderDisplay();
+                Platform.runLater(() -> withType.consume(s));
+            });
+        });
+    }
+
     public abstract DataType getType() throws InternalException, UserException;
 
     /*
@@ -142,8 +156,9 @@ public abstract class Column
                 List<Object> l = new ArrayList<>();
                 Integer tagIndex = g.get(index);
                 l.add(tagIndex);
-                if (tagTypes.get(tagIndex).getInner() != null)
-                    l.addAll(tagTypes.get(tagIndex).getInner().apply(this));
+                @Nullable DataType inner = tagTypes.get(tagIndex).getInner();
+                if (inner != null)
+                    l.addAll(inner.apply(this));
                 return l;
             }
         });
