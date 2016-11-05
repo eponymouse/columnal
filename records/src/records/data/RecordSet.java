@@ -45,7 +45,7 @@ public abstract class RecordSet
     private final List<Column> columns;
 
     @SuppressWarnings("initialization")
-    public RecordSet(String title, List<FunctionInt<RecordSet, Column>> columns) throws InternalException
+    public RecordSet(String title, List<FunctionInt<RecordSet, Column>> columns) throws InternalException, UserException
     {
         this.title = title;
         this.columns = new ArrayList<>();

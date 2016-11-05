@@ -17,6 +17,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CalculatedColumn;
 import records.data.CalculatedColumn.FoldOperation;
+import records.data.CalculatedNumericColumn;
 import records.data.Column;
 import records.data.NumericColumnStorage;
 import records.data.RecordSet;
@@ -163,10 +164,8 @@ public class SummaryStatistics extends Transformation
                     @Override
                     public FunctionInt<RecordSet, Column> number(GetValue<Number> srcGet) throws InternalException, UserException
                     {
-                        return rs -> new CalculatedColumn(rs, name, srcCol)
+                        return rs -> new CalculatedNumericColumn(rs, name, srcCol.getType(), srcCol)
                         {
-                            NumericColumnStorage cache = new NumericColumnStorage(0);
-
                             @Override
                             protected void fillNextCacheChunk() throws UserException, InternalException
                             {
@@ -202,28 +201,6 @@ public class SummaryStatistics extends Transformation
                                         else
                                             throw new UserException("No values for " + summaryType);
                                 }
-                            }
-
-                            @Override
-                            protected void clearCache() throws InternalException
-                            {
-                                cache = new NumericColumnStorage(0);
-                            }
-
-                            @Override
-                            protected int getCacheFilled()
-                            {
-                                return cache.filled();
-                            }
-
-                            @Override
-                            public DataType getType() throws UserException, InternalException
-                            {
-                                return srcCol.getType().copy((i, prog) ->
-                                {
-                                    fillCacheWithProgress(i, prog);
-                                    return Collections.singletonList(cache.get(i));
-                                });
                             }
                         };
                     }

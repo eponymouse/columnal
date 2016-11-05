@@ -27,7 +27,7 @@ import java.util.function.Function;
 public class TextImport
 {
     @OnThread(Tag.Simulation)
-    public static RecordSet importTextFile(File textFile) throws IOException, InternalException
+    public static RecordSet importTextFile(File textFile) throws IOException, InternalException, UserException
     {
         // Read the first few lines:
         try (BufferedReader br = new BufferedReader(new FileReader(textFile))) {

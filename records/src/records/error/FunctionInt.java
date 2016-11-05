@@ -10,5 +10,5 @@ import threadchecker.Tag;
 public interface FunctionInt<T, R>
 {
     @OnThread(Tag.Simulation)
-    public R apply(T param) throws InternalException;
+    public R apply(T param) throws InternalException, UserException;
 }

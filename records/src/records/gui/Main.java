@@ -15,6 +15,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import records.data.RecordSet;
 import records.error.InternalException;
+import records.error.UserException;
 import records.importers.HTMLImport;
 import records.importers.TextImport;
 import threadchecker.OnThread;
@@ -48,7 +49,7 @@ public class Main extends Application
                         RecordSet rs = TextImport.importTextFile(chosen);
                         Platform.runLater(() -> v.add(new Table(v, rs)));
                     }
-                    catch (IOException | InternalException ex)
+                    catch (IOException | InternalException | UserException ex)
                     {
                         ex.printStackTrace();
                         Platform.runLater(() -> new Alert(AlertType.ERROR, ex.getMessage() == null ? "" : ex.getMessage(), ButtonType.OK).showAndWait());
@@ -64,7 +65,7 @@ public class Main extends Application
                     //TextImport.importTextFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"));
                 Platform.runLater(() -> v.add(new Table(v, rs)));
             }
-            catch (IOException | InternalException ex)
+            catch (IOException | InternalException | UserException ex)
             {
                 ex.printStackTrace();
             }

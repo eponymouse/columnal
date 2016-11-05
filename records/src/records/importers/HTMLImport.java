@@ -27,7 +27,7 @@ import java.util.List;
 public class HTMLImport
 {
     @OnThread(Tag.Simulation)
-    public static List<RecordSet> importHTMLFile(File htmlFile) throws IOException, InternalException
+    public static List<RecordSet> importHTMLFile(File htmlFile) throws IOException, InternalException, UserException
     {
         List<RecordSet> results = new ArrayList<>();
         Document doc = parse(htmlFile);
