@@ -90,7 +90,7 @@ public class Table extends BorderPane
                 // TODO tell user
             }
             */
-            new NewTransformationDialog(getScene().getWindow(), parent, rs).show(optNewTable -> optNewTable.ifPresent(t -> parent.add(t)));
+            new NewTransformationDialog(getScene().getWindow(), parent, rs).show(optNewTable -> optNewTable.ifPresent(t -> parent.add(t, Table.this)));
         });
 
         Label title = new Label(rs.getTitle());

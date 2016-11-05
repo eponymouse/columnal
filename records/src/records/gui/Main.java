@@ -47,7 +47,7 @@ public class Main extends Application
                     try
                     {
                         RecordSet rs = TextImport.importTextFile(chosen);
-                        Platform.runLater(() -> v.add(new Table(v, rs)));
+                        Platform.runLater(() -> v.add(new Table(v, rs), null));
                     }
                     catch (IOException | InternalException | UserException ex)
                     {
@@ -63,7 +63,7 @@ public class Main extends Application
             {
                 RecordSet rs = HTMLImport.importHTMLFile(new File("S:\\Downloads\\Report_28112014.xls")).get(0);
                     //TextImport.importTextFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"));
-                Platform.runLater(() -> v.add(new Table(v, rs)));
+                Platform.runLater(() -> v.add(new Table(v, rs), null));
             }
             catch (IOException | InternalException | UserException ex)
             {
