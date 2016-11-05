@@ -338,7 +338,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
 
     private int increaseLength(int length)
     {
-        return length * 2;
+        return Math.max(filled, length) * 2;
     }
 
     public int filled()
