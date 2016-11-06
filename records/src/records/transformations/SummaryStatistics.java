@@ -95,7 +95,7 @@ public class SummaryStatistics extends Transformation
         }
     }
 
-    public SummaryStatistics(Table srcTable, Map<String, Set<SummaryType>> summaries, List<String> splitBy) throws InternalException, UserException
+    private SummaryStatistics(Table srcTable, Map<String, Set<SummaryType>> summaries, List<String> splitBy) throws InternalException, UserException
     {
         this.src = srcTable;
         RecordSet src = srcTable.getRecordSet();
@@ -480,7 +480,7 @@ public class SummaryStatistics extends Transformation
         {
             return () -> {
                 if (src == null)
-                    throw new NullPointerException("Null source for transformation");
+                    throw new InternalException("Null source for transformation");
 
                 Map<String, Set<SummaryType>> summaries = new HashMap<>();
                 for (Pair<Column, SummaryType> op : ops)

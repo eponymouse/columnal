@@ -1,0 +1,257 @@
+package records.transformations;
+
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.control.Button;
+import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
+import records.data.Column;
+import records.data.Column.ProgressListener;
+import records.data.NumericColumnStorage;
+import records.data.RecordSet;
+import records.data.Transformation;
+import records.data.datatype.DataType;
+import records.data.datatype.DataType.NumberDisplayInfo;
+import records.error.FunctionInt;
+import records.error.InternalException;
+import records.error.UserException;
+import records.gui.Table;
+import threadchecker.OnThread;
+import threadchecker.Tag;
+import utility.FXPlatformConsumer;
+import utility.SimulationSupplier;
+import utility.Utility;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
+
+/**
+ * Created by neil on 06/11/2016.
+ */
+@OnThread(Tag.Simulation)
+public class Sort extends Transformation
+{
+    private final Table src;
+    private final RecordSet result;
+    // Not actually a column by itself, but holds a list of integers so reasonable to re-use:
+    private final NumericColumnStorage sortMap = new NumericColumnStorage(NumberDisplayInfo.DEFAULT);
+    // This works like a linked list, but flattened into an integer array.
+    // The first item is the head, then others point onwards.  (Irritatingly, stillToOrder[n]
+    // corresponds to originalIndex=n-1, due to having the head.
+    // To begin with, each item points to the next:
+    // 0 : 1 [HEAD: originalIndex = 0]
+    // 1 : 2 [next item after originalIndex=0 is originalIndex=1]
+    // 2 : 3 [next item after originalIndex=1 is originalIndex=2]
+    // 3 : 4, etc
+    // Then, when we use an item from the list, e.g. item 2 from original list, we update pointers:
+    // 0 : 1
+    // 1 : 2
+    // 2 : 4 [next item after originalIndex=1 is originalIndex=3]
+    // 3 : 4 [now stillToOrder], etc
+    // Then if we use item 1, we update again:
+    // 0 : 1
+    // 1 : 4 [next item after originalIndex=0 is originalIndex=3]
+    // 2 : 4
+    // 3 : 4 [now stillToOrder], etc
+    private int @Nullable [] stillToOrder;
+    private final List<Column> sortBy;
+
+    public Sort(Table src, List<Column> sortBy) throws UserException, InternalException
+    {
+        this.src = src;
+        this.sortBy = sortBy;
+        List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
+
+        RecordSet srcRecordSet = src.getRecordSet();
+        this.stillToOrder = new int[srcRecordSet.getLength() + 1];
+        for (int i = 0; i < stillToOrder.length - 1; i++)
+            stillToOrder[i] = i+1;
+        stillToOrder[stillToOrder.length - 1] = -1;
+        for (Column c : srcRecordSet.getColumns())
+        {
+            columns.add(rs -> new Column(rs)
+            {
+                @Override
+                public @OnThread(Tag.Any) String getName()
+                {
+                    return c.getName();
+                }
+
+                @Override
+                public long getVersion()
+                {
+                    return c.getVersion();
+                }
+
+                @Override
+                @SuppressWarnings({"nullness", "initialization"})
+                public @OnThread(Tag.Any) DataType getType() throws InternalException, UserException
+                {
+                    return c.getType().copyReorder((i, prog) -> {
+                        fillSortMapTo(i, prog);
+                        return sortMap.get(i).intValue();
+                    });
+                }
+            });
+        }
+
+        result = new RecordSet("Sorted", columns)
+        {
+            @Override
+            public boolean indexValid(int index) throws UserException
+            {
+                return srcRecordSet.indexValid(index);
+            }
+
+            @Override
+            public int getLength() throws UserException
+            {
+                return srcRecordSet.getLength();
+            }
+        };
+    }
+
+    private void fillSortMapTo(int target, @Nullable ProgressListener prog) throws InternalException, UserException
+    {
+        int destStart = sortMap.filled();
+        for (int dest = destStart; dest <= target; dest++)
+        {
+            int lowestIndex = 0;
+            @Nullable List<List<Object>> lowest = null;
+            int pointerToLowestIndex = -1;
+            int prevSrc = 0;
+            if (stillToOrder == null)
+                throw new InternalException("Trying to re-sort an already sorted list");
+            for (int src = stillToOrder[prevSrc]; src != -1; src = stillToOrder[src])
+            {
+                // src is in stillToOrder terms, which is one more than original indexes
+                List<List<Object>> cur = getItem(src - 1);
+                if (lowest == null || Utility.compareLists(cur, lowest) < 0)
+                {
+                    lowest = cur;
+                    lowestIndex = src;
+                    pointerToLowestIndex = prevSrc;
+                }
+                prevSrc = src;
+            }
+            if (lowest != null)
+            {
+                // Make the pointer behind lowest point to entry after lowest:
+                stillToOrder[pointerToLowestIndex] = stillToOrder[lowestIndex];
+                // Still to order is empty, so null it to garbage collect the memory:
+                if (stillToOrder[0] == -1)
+                    stillToOrder = null;
+                // lowestIndex is in stillToOrder terms, which is one more than original indexes
+                sortMap.add(lowestIndex - 1);
+            }
+            else
+            {
+                throw new InternalException("Not enough items available to fill source list");
+            }
+
+            if (prog != null)
+                prog.progressUpdate((double)(dest - destStart) / (double)(target - dest));
+        }
+    }
+
+    @Pure
+    private List<List<Object>> getItem(int srcIndex) throws UserException, InternalException
+    {
+        List<List<Object>> r = new ArrayList<>();
+        for (Column c : sortBy)
+            r.add(c.getType().getCollapsed(srcIndex));
+        return r;
+    }
+
+    @Override
+    public @OnThread(Tag.Any) RecordSet getResult()
+    {
+        return result;
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) String getTransformationLabel()
+    {
+        return "Sort";
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) Table getSource()
+    {
+        return src;
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static class Info extends TransformationInfo
+    {
+        private @MonotonicNonNull Table src;
+        private ObservableList<Optional<Column>> sortBy = FXCollections.observableArrayList();
+
+        public Info()
+        {
+            super("sort", Collections.emptyList(), "Sort");
+            sortBy.add(Optional.empty());
+        }
+
+        private final BooleanProperty ready = new SimpleBooleanProperty(false);
+
+        @Override
+        public @OnThread(Tag.FXPlatform) Pane getParameterDisplay(Table src, FXPlatformConsumer<Exception> reportError)
+        {
+            this.src = src;
+            HBox colsAndSort = new HBox();
+            ListView<Column> columnListView = getColumnListView(this.src.getRecordSet());
+            columnListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+            colsAndSort.getChildren().add(columnListView);
+
+            VBox buttons = new VBox();
+            Button button = new Button(">>");
+            button.setOnAction(e ->
+            {
+                for (Column column : columnListView.getSelectionModel().getSelectedItems())
+                {
+                    if (!sortBy.contains(Optional.of(column)))
+                        sortBy.add(sortBy.size() - 1, Optional.of(column));
+                }
+            });
+            buttons.getChildren().add(button);
+            colsAndSort.getChildren().add(buttons);
+
+            ListView<Optional<Column>> sortByView = Utility.readOnlyListView(sortBy, c -> !c.isPresent() ? "Original order" : c.get().getName() + ", then if equal, by");
+            colsAndSort.getChildren().add(sortByView);
+            return colsAndSort;
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) BooleanExpression canPressOk()
+        {
+            return ready;
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) SimulationSupplier<Transformation> getTransformation()
+        {
+            return () -> {
+                if (src == null)
+                    throw new InternalException("Null source for transformation");
+                List<Column> presentSortBy = new ArrayList<>();
+                for (Optional<Column> c : sortBy)
+                    if (c.isPresent())
+                        presentSortBy.add(c.get());
+                return new Sort(src, presentSortBy);
+            };
+        }
+    }
+}

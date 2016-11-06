@@ -4,6 +4,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
+import records.data.Column.ProgressListener;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -77,6 +78,62 @@ public abstract class DataType
                 return l;
             }
         });
+    }
+
+    public DataType copyReorder(GetValue<Integer> getOriginalIndex) throws UserException, InternalException
+    {
+        return apply(new DataTypeVisitorGet<DataType>()
+        {
+            @Override
+            public DataType number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException
+            {
+                return new DataType() {
+                    @Override
+                    public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
+                    {
+                        return visitor.number(reOrder(getOriginalIndex, g), displayInfo);
+                    }
+                };
+            }
+
+            @Override
+            public DataType text(GetValue<String> g) throws InternalException, UserException
+            {
+                return new DataType()
+                {
+                    @Override
+                    public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
+                    {
+                        return visitor.text(reOrder(getOriginalIndex, g));
+                    }
+                };
+            }
+
+            @Override
+            public DataType tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            {
+                return new DataType()
+                {
+                    @Override
+                    public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
+                    {
+                        List<TagType> newTagTypes = new ArrayList<>();
+                        for (TagType t : tagTypes)
+                            newTagTypes.add(new TagType(t.getName(), t.inner == null ? null : t.inner.copyReorder(getOriginalIndex)));
+                        return visitor.tagged(newTagTypes, reOrder(getOriginalIndex, g));
+                    }
+                };
+            }
+        });
+    }
+
+    @SuppressWarnings("nullness")
+    private static <T> GetValue<T> reOrder(GetValue<Integer> getOriginalIndex, GetValue<T> g)
+    {
+        return (int destIndex, final ProgressListener prog) -> {
+            int srcIndex = getOriginalIndex.getWithProgress(destIndex, prog == null ? null : (d -> prog.progressUpdate(d*0.5)));
+            return g.getWithProgress(srcIndex, prog == null ? null : (d -> prog.progressUpdate(d * 0.5 + 0.5)));
+        };
     }
 
     @OnThread(Tag.Any)

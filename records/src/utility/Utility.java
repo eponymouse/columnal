@@ -33,6 +33,7 @@ import javafx.util.*;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
 import records.error.FetchException;
 import records.error.InternalException;
@@ -127,7 +128,8 @@ public class Utility
     }
 
     // Compare lexicographically.  Types should match at each stage if earlier part of list was the same
-    public static int compareLists(List<Object> a, List<Object> b)
+    @Pure
+    public static int compareLists(List<@NonNull ?> a, List<@NonNull ?> b) throws InternalException
     {
         for (int i = 0; i < a.size(); i++)
         {
@@ -135,7 +137,15 @@ public class Utility
                 return -1; // A was lower
             Object ax = a.get(i);
             Object bx = b.get(i);
-            int cmp = (ax instanceof Number) ? compareNumbers(ax, bx) : ((Comparable<Object>)ax).compareTo(bx);
+            int cmp;
+            if (ax instanceof Number)
+                cmp = compareNumbers(ax, bx);
+            else if (ax instanceof List)
+                cmp = compareLists((List<@NonNull ?>)ax, (List<@NonNull ?>)bx);
+            else if (ax instanceof Comparable)
+                cmp = ((Comparable<Object>)ax).compareTo(bx);
+            else
+                throw new InternalException("Uncomparable types: " + a.getClass() + " " + b.getClass());
             if (cmp != 0)
                 return cmp;
 

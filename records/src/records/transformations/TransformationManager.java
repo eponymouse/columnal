@@ -27,7 +27,8 @@ public class TransformationManager
     public List<TransformationInfo> getTransformations()
     {
         return Arrays.asList(
-            new SummaryStatistics.Info()
+            new SummaryStatistics.Info(),
+            new Sort.Info()
         );
     }
 }
