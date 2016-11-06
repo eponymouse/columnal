@@ -83,7 +83,10 @@ public abstract class RecordSet
                             integerPart = integerPart.replace("-", "\u2012");
                             Text whole = new Text(integerPart);
                             Utility.addStyleClass(whole, "number-display-int");
-                            Text frac = new Text("."+Utility.getFracPart(n));
+                            String fracPart = Utility.getFracPart(n);
+                            while (fracPart.length() < item.getMinimumDecimalPlaces())
+                                fracPart += "0";
+                            Text frac = new Text("." + fracPart);
                             Utility.addStyleClass(frac, "number-display-frac");
                             container.getChildren().addAll(prefix, whole, frac);
                             setGraphic(container);

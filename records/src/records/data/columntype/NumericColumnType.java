@@ -9,10 +9,12 @@ public class NumericColumnType extends ColumnType
 {
     public final String displayPrefix;
     public final boolean mayBeBlank;
+    public final int minDP;
 
-    public NumericColumnType(String displayPrefix, boolean mayBeBlank)
+    public NumericColumnType(String displayPrefix, int minDP, boolean mayBeBlank)
     {
         this.displayPrefix = displayPrefix;
+        this.minDP = minDP;
         this.mayBeBlank = mayBeBlank;
     }
 

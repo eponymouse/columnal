@@ -18,20 +18,18 @@ public class MemoryNumericColumn extends Column
 {
     private final String title;
     private final NumericColumnStorage storage;
-    private final boolean hasBlanks;
+    private final boolean mayBeBlank;
 
     public MemoryNumericColumn(RecordSet rs, String title, NumericColumnType type, List<String> values) throws InternalException
     {
         super(rs);
-        hasBlanks = values.stream().anyMatch(String::isEmpty);
-        // TODO put blanks back
-        storage = new NumericColumnStorage(new NumberDisplayInfo(type.displayPrefix, 0)); //hasBlanks ? 1 : 0);
+        mayBeBlank = type.mayBeBlank;
+        storage = new NumericColumnStorage(mayBeBlank ? 2 : 0, mayBeBlank ? 1 : -1, new NumberDisplayInfo(type.displayPrefix, type.minDP));
         this.title = title;
-        int nextSkip = 0;
         for (String value : values)
         {
             // Add it if it can't be blank, or if isn't blank
-            if (!type.mayBeBlank || !value.isEmpty())
+            if (!mayBeBlank || !value.isEmpty())
             {
                 String s = value;
                 storage.addRead(type.removePrefix(s));
@@ -57,7 +55,7 @@ public class MemoryNumericColumn extends Column
     @Override
     public DataType getType()
     {
-        if (!hasBlanks)
+        if (!mayBeBlank)
             return storage.getType();
 
         return new DataType()
@@ -67,12 +65,7 @@ public class MemoryNumericColumn extends Column
             @Override
             public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
             {
-                return visitor.tagged(tagTypes, (i, prog) -> {
-                    int tag = storage.getTag(i);
-                    if (tag == -1)
-                        tag = 1; // No tag means it's a number so second tag
-                    return tag;
-                });
+                return visitor.tagged(tagTypes, (i, prog) -> storage.getTag(i));
             }
         };
     }

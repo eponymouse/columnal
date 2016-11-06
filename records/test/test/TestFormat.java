@@ -19,7 +19,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestFormat
 {
-    private static final ColumnType NUM = new NumericColumnType("", false);
+    private static final ColumnType NUM = new NumericColumnType("", 0, false);
     private static final ColumnType TEXT = new TextColumnType();
     @Test
     public void testFormat()
@@ -73,6 +73,6 @@ public class TestFormat
 
     private static NumericColumnType NUM(String displayPrefix)
     {
-        return new NumericColumnType(displayPrefix, false);
+        return new NumericColumnType(displayPrefix, 0, false);
     }
 }

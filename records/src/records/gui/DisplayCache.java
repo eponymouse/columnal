@@ -152,7 +152,7 @@ public class DisplayCache
                     @Override
                     public DisplayValue number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException
                     {
-                        return new DisplayValue(g.getWithProgress(index, prog), displayInfo.getDisplayPrefix());
+                        return new DisplayValue(g.getWithProgress(index, prog), displayInfo.getDisplayPrefix(), displayInfo.getMinimumDP());
                     }
 
                     @Override

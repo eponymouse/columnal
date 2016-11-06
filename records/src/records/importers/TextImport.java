@@ -47,7 +47,7 @@ public class TextImport
                 ColumnInfo columnInfo = format.columnTypes.get(i);
                 int iFinal = i;
                 if (columnInfo.type.isNumeric())
-                    columns.add(rs -> new TextFileNumericColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal, ((NumericColumnType)columnInfo.type).displayPrefix));
+                    columns.add(rs -> new TextFileNumericColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal, (NumericColumnType)columnInfo.type));
                 else if (columnInfo.type.isText())
                     columns.add(rs -> new TextFileStringColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal));
                 // If it's blank, should we add any column?

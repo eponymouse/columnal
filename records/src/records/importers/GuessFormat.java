@@ -157,6 +157,7 @@ public class GuessFormat
             boolean allBlank = true;
             List<DateFormat> possibleDateFormats = new ArrayList<>(Utility.mapList(CleanDateColumnType.DATE_FORMATS, DateFormat::new));
             String commonPrefix = "";
+            List<Integer> decimalPlaces = new ArrayList<>();
             for (int rowIndex = headerRows; rowIndex < initialVals.size(); rowIndex++)
             {
                 List<String> row = initialVals.get(rowIndex);
@@ -200,8 +201,15 @@ public class GuessFormat
                         }
                         try
                         {
-                            new BigDecimal(val);
-                        } catch (NumberFormatException e)
+                            BigDecimal bd = new BigDecimal(val);
+                            int dot = val.indexOf(".");
+                            if (dot == -1)
+                                decimalPlaces.add(0);
+                            else
+                                decimalPlaces.add(val.length() - (dot + 1));
+
+                        }
+                        catch (NumberFormatException e)
                         {
                             allNumeric = false;
                             allNumericOrBlank = false;
@@ -233,14 +241,16 @@ public class GuessFormat
                     }
                 }
             }
+            int minDP = decimalPlaces.stream().mapToInt(i -> i).min().orElse(0);
+
             if (allBlank)
                 columnTypes.add(ColumnType.BLANK);
             else if (!possibleDateFormats.isEmpty())
                 columnTypes.add(new CleanDateColumnType(possibleDateFormats.get(0).formatString));
             else if (allNumeric)
-                columnTypes.add(new NumericColumnType(commonPrefix, false));
+                columnTypes.add(new NumericColumnType(commonPrefix, minDP, false));
             else if (allNumericOrBlank)
-                columnTypes.add(new NumericColumnType(commonPrefix, true));
+                columnTypes.add(new NumericColumnType(commonPrefix, minDP, true));
             else
                 columnTypes.add(new TextColumnType());
             // Go backwards to find column titles:

@@ -22,7 +22,10 @@ public class DisplayValue
     }
 
     private final @Nullable Number number;
+    // These next two are fixed per-column, but it's just
+    // easier to store them with the data item itself:
     private final String displayPrefix;
+    private final int minimumDecimalPlaces;
     private final @Nullable ProgressState state;
     private final double loading; // If -1, use String
     private final @Nullable String show;
@@ -39,10 +42,11 @@ public class DisplayValue
     /**
      * Create successfully loaded item with number
      */
-    public DisplayValue(Number val, String displayPrefix)
+    public DisplayValue(Number val, String displayPrefix, int minimumDecimalPlaces)
     {
         number = val;
         this.displayPrefix = displayPrefix;
+        this.minimumDecimalPlaces = minimumDecimalPlaces;
         show = null;
         state = null;
         loading = -1;
@@ -55,6 +59,7 @@ public class DisplayValue
     public DisplayValue(ProgressState state, double d)
     {
         number = null;
+        minimumDecimalPlaces = 0;
         this.state = state;
         displayPrefix = "";
         loading = d;
@@ -69,6 +74,7 @@ public class DisplayValue
     {
         displayPrefix = "";
         number = null;
+        minimumDecimalPlaces = 0;
         show = s;
         isError = err;
         loading = -1;
@@ -85,6 +91,12 @@ public class DisplayValue
     public String getDisplayPrefix()
     {
         return displayPrefix;
+    }
+
+    @Pure
+    public int getMinimumDecimalPlaces()
+    {
+        return minimumDecimalPlaces;
     }
 
     @Override

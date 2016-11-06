@@ -427,7 +427,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             return shorts[index] >= SHORT_MIN ? numericTag : shorts[index] - Short.MIN_VALUE;
         else if (longs != null)
         {
-            return longs[index] >= LONG_MIN ? numericTag : (int)(longs[index] - (Long.MIN_VALUE + 2));
+            return (longs[index] >= LONG_MIN || longs[index] == SEE_BIGINT || longs[index] == SEE_BIGDEC) ? numericTag : (int)(longs[index] - (Long.MIN_VALUE + 2));
         }
         throw new InternalException("All arrays null in NumericColumnStorage");
     }

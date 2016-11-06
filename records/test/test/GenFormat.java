@@ -42,7 +42,7 @@ public class GenFormat extends Generator<TextFormat>
             ColumnType type = sourceOfRandomness.choose(Arrays.asList(
                 ColumnType.BLANK,
                 new TextColumnType(),
-                new NumericColumnType(sourceOfRandomness.nextBoolean() ? "" : sourceOfRandomness.choose(currencies), sourceOfRandomness.nextBoolean()),
+                new NumericColumnType(sourceOfRandomness.nextBoolean() ? "" : sourceOfRandomness.choose(currencies), sourceOfRandomness.nextInt(0, 6),sourceOfRandomness.nextBoolean()),
                 new CleanDateColumnType(sourceOfRandomness.choose(dateFormats))));
             // Don't end with blank:
             if (i == columnCount - 1 && type.isBlank())
