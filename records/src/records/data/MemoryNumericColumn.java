@@ -27,7 +27,8 @@ public class MemoryNumericColumn extends Column
     {
         super(rs);
         hasBlanks = values.stream().anyMatch(String::isEmpty);
-        storage = new NumericColumnStorage(hasBlanks ? 1 : 0);
+        // TODO put blanks ba
+        storage = new NumericColumnStorage(); //hasBlanks ? 1 : 0);
         this.title = title;
         int nextSkip = 0;
         for (String value : values)

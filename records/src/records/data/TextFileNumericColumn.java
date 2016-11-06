@@ -23,7 +23,7 @@ public class TextFileNumericColumn extends TextFileColumn
     public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, String columnName, int columnIndex) throws InternalException
     {
         super(recordSet, textFile, fileStartPosition, sep, columnName, columnIndex);
-        loadedValues = new NumericColumnStorage(0);
+        loadedValues = new NumericColumnStorage();
     }
 
     private Number getWithProgress(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException

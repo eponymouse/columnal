@@ -1,10 +1,7 @@
 package records.data;
 
 import javafx.application.Platform;
-import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
-import javafx.util.StringConverter;
-import org.checkerframework.checker.guieffect.qual.SafeEffect;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -16,22 +13,17 @@ import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayCache;
-import records.gui.DisplayCacheItem;
 import records.gui.DisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Utility;
 import utility.Workers;
-import utility.Workers.Worker;
 
-import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.Queue;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A column of data in a RecordSet.
@@ -132,36 +124,6 @@ public abstract class Column
     public final int getLength() throws UserException
     {
         return recordSet.getLength();
-    }
-
-    public final List<Object> getCollapsed(int index) throws UserException, InternalException
-    {
-        return getType().apply(new DataTypeVisitorGet<List<Object>>()
-        {
-            @Override
-            public List<Object> number(GetValue<Number> g) throws InternalException, UserException
-            {
-                return Collections.singletonList(g.get(index));
-            }
-
-            @Override
-            public List<Object> text(GetValue<String> g) throws InternalException, UserException
-            {
-                return Collections.singletonList(g.get(index));
-            }
-
-            @Override
-            public List<Object> tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
-            {
-                List<Object> l = new ArrayList<>();
-                Integer tagIndex = g.get(index);
-                l.add(tagIndex);
-                @Nullable DataType inner = tagTypes.get(tagIndex).getInner();
-                if (inner != null)
-                    l.addAll(inner.apply(this));
-                return l;
-            }
-        });
     }
 
     public static interface ProgressListener

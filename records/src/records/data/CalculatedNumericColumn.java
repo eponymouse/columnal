@@ -15,19 +15,19 @@ public abstract class CalculatedNumericColumn extends CalculatedColumn
     private final DataType copyType;
     @MonotonicNonNull
     private DataType type;
-    protected NumericColumnStorage cache;
+    protected final NumericColumnStorage cache;
 
     public CalculatedNumericColumn(RecordSet recordSet, String name, DataType copyType, Column... dependencies) throws InternalException, UserException
     {
         super(recordSet, name, dependencies);
         this.copyType = copyType;
-        cache = new NumericColumnStorage(0);
+        cache = new NumericColumnStorage();
     }
 
     @Override
     protected void clearCache() throws InternalException
     {
-        cache = new NumericColumnStorage(0);
+        cache.clear();
     }
 
     @Override

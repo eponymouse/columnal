@@ -29,6 +29,7 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ListView;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.util.*;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
@@ -122,6 +123,26 @@ public class Utility
     public static Point2D middle(Bounds bounds)
     {
         return new Point2D((bounds.getMinX() + bounds.getMaxX()) * 0.5, (bounds.getMinY() + bounds.getMaxY()) * 0.5);
+    }
+
+    // Compare lexicographically.  Types should match at each stage if earlier part of list was the same
+    public static int compareLists(List<Object> a, List<Object> b)
+    {
+        for (int i = 0; i < a.size(); i++)
+        {
+            if (i >= b.size())
+                return -1; // A was lower
+            Object ax = a.get(i);
+            Object bx = b.get(i);
+            int cmp = (ax instanceof Number) ? compareNumbers(ax, bx) : ((Comparable<Object>)ax).compareTo(bx);
+            if (cmp != 0)
+                return cmp;
+
+        }
+        if (a.size() == b.size())
+            return 0; // Same
+        else
+            return 1; // B must have been longer
     }
 
     public static class ReadState

@@ -1,15 +1,10 @@
 package records.data;
 
-import javafx.beans.binding.Bindings;
-import javafx.beans.property.ReadOnlyStringWrapper;
-import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Label;
-import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 
-import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import records.data.datatype.DataType;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
@@ -111,7 +106,7 @@ public abstract class RecordSet
     {
         return columns.stream().map(c -> { try
         {
-            return "\"" + c.getCollapsed(i).toString() + "\"";
+            return "\"" + c.getType().getCollapsed(i).toString() + "\"";
         }catch (Exception e) { return "ERR"; }}).collect(Collectors.joining(","));
     }
 }

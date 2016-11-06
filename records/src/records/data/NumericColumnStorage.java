@@ -2,6 +2,7 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -71,8 +72,16 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     private @Nullable BigInteger @Nullable [] bigIntegers;
     // If any are non-integer, we use bigDecimals
     private @Nullable BigDecimal @Nullable [] bigDecimals;
+    private int numericTag;
+    @MonotonicNonNull
+    private DataType dataType;
 
-    public NumericColumnStorage(int numberOfTags) throws InternalException
+    public NumericColumnStorage() throws InternalException
+    {
+        this(0, -1);
+    }
+
+    public NumericColumnStorage(int numberOfTags, int tagForNumeric) throws InternalException
     {
         if (numberOfTags > MAX_TAGS)
             throw new InternalException("Tried to create numeric column with " + numberOfTags + " tags");
@@ -351,7 +360,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     {
         if (NUM_TAGS > 0)
         {
-            if (getTag(index) == -1)
+            if (getTag(index) == numericTag)
                 return getNonBlank(index);
             else
                 throw new InternalException("Calling get on tagged item with no" +
@@ -397,20 +406,20 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         }
         throw new InternalException("All arrays null in NumericColumnStorage");
     }
-    // Returns -1 if that item is not a tag
+    // Returns numericTag if that item is not a tag
     @Pure
     public int getTag(int index) throws InternalException
     {
         // Guessing here to order most likely cases:
         if (bytes != null)
-            return bytes[index] >= BYTE_MIN ? -1 : bytes[index] - Byte.MIN_VALUE;
+            return bytes[index] >= BYTE_MIN ? numericTag : bytes[index] - Byte.MIN_VALUE;
         else if (ints != null)
-            return ints[index] >= INT_MIN ? -1 : ints[index] - Integer.MIN_VALUE;
+            return ints[index] >= INT_MIN ? numericTag : ints[index] - Integer.MIN_VALUE;
         else if (shorts != null)
-            return shorts[index] >= SHORT_MIN ? -1 : shorts[index] - Short.MIN_VALUE;
+            return shorts[index] >= SHORT_MIN ? numericTag : shorts[index] - Short.MIN_VALUE;
         else if (longs != null)
         {
-            return longs[index] >= LONG_MIN ? -1 : (int)(longs[index] - (Long.MIN_VALUE + 2));
+            return longs[index] >= LONG_MIN ? numericTag : (int)(longs[index] - (Long.MIN_VALUE + 2));
         }
         throw new InternalException("All arrays null in NumericColumnStorage");
     }
@@ -437,14 +446,18 @@ public class NumericColumnStorage implements ColumnStorage<Number>
                     return v -> v.number();
         }
         */
-        return new DataType()
+        if (dataType == null)
         {
-            @Override
-            public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
+            dataType = new DataType()
             {
-                return visitor.number((i, prog) -> getNonBlank(i));
-            }
-        };
+                @Override
+                public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
+                {
+                    return visitor.number((i, prog) -> getNonBlank(i));
+                }
+            };
+        }
+        return dataType;
     }
 
     @Override
@@ -454,6 +467,18 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         {
             addNumber(n);
         }
+    }
+
+    @Override
+    public void clear()
+    {
+        bytes = new byte[8];
+        shorts = null;
+        ints = null;
+        longs = null;
+        bigDecimals = null;
+        bigIntegers = null;
+        filled = 0;
     }
 
     public void addNumber(Number n) throws InternalException
@@ -473,5 +498,15 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             else
                 addLong(n.longValue(), false);
         }
+    }
+
+    public int getNumericTag()
+    {
+        return numericTag;
+    }
+
+    public void setNumericTag(int numericTag)
+    {
+        this.numericTag = numericTag;
     }
 }

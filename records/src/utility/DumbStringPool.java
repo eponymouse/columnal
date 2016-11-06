@@ -23,7 +23,7 @@ import java.util.Map;
  */
 public class DumbStringPool
 {
-    private @Nullable String @NonNull [] pool = new String[]{null, null, null, null};
+    private @Nullable String @NonNull [] pool = new String[4];
     private int used = 0;
     private final int limit;
 
@@ -74,5 +74,11 @@ public class DumbStringPool
     public List<@NonNull String> get()
     {
         return Collections.unmodifiableList(Arrays.asList(Arrays.copyOfRange(pool, 0, used)));
+    }
+
+    public void clear()
+    {
+        pool = new String[4];
+        used = 0;
     }
 }

@@ -1,6 +1,5 @@
 package records.transformations;
 
-import javafx.application.Platform;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -15,15 +14,12 @@ import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CalculatedColumn;
-import records.data.CalculatedColumn.FoldOperation;
 import records.data.CalculatedNumericColumn;
+import records.data.CalculatedTaggedColumn;
 import records.data.Column;
-import records.data.NumericColumnStorage;
 import records.data.RecordSet;
 import records.data.Transformation;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitorGet;
 import records.data.datatype.DataType.GetValue;
 import records.data.datatype.DataType.TagType;
@@ -34,11 +30,9 @@ import records.error.UserException;
 import records.gui.Table;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
-import utility.Workers;
 
 import javax.validation.constraints.NotNull;
 import java.util.ArrayList;
@@ -49,7 +43,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -89,7 +82,7 @@ public class SummaryStatistics extends Transformation
         {
             for (int c = 0; c < colName.size(); c++)
             {
-                if (!colName.get(c).getCollapsed(index).equals(colValue.get(c)))
+                if (!colName.get(c).getType().getCollapsed(index).equals(colValue.get(c)))
                     return false;
             }
             return true;
@@ -174,9 +167,7 @@ public class SummaryStatistics extends Transformation
                             @Override
                             protected void fillNextCacheChunk() throws UserException, InternalException
                             {
-                                int index = cache.filled();
-
-                                JoinedSplit split = splits.get(index);
+                                int index = getCacheFilled();
                                 switch (summaryType)
                                 {
                                     case MIN:
@@ -219,107 +210,72 @@ public class SummaryStatistics extends Transformation
                     @Override
                     public FunctionInt<RecordSet, Column> tagged(List<TagType> tagTypes, GetValue<Integer> getTag) throws InternalException, UserException
                     {
-                        if (DataType.canFitInOneNumeric(tagTypes))
+                        boolean ignoreNullaryTags = true; //TODO configure through GUI
+                        return rs -> new CalculatedTaggedColumn(rs, name, tagTypes, srcCol)
                         {
-                            boolean ignoreOtherTags = true; //TODO configure through GUI
-                            int numericTag = DataType.findNumericTag(tagTypes);
-                            return rs -> new CalculatedColumn(rs, name, srcCol)
+                            @Override
+                            protected void fillNextCacheChunk() throws UserException, InternalException
                             {
-                                NumericColumnStorage cache = new NumericColumnStorage(0);
+                                int index = getCacheFilled();
 
-                                @Override
-                                protected void fillNextCacheChunk() throws UserException, InternalException
+                                switch (summaryType)
                                 {
-                                    int index = cache.filled();
+                                    case MIN:
+                                    case MAX:
+                                        int bestTag = -1;
+                                        boolean bestTagIsNumeric = false;
+                                        @MonotonicNonNull
+                                        List<Object> bestInner = null;
+                                        for (int i = 0; srcCol.indexValid(i); i++)
+                                        {
+                                            if (splitIndexes[i] != index)
+                                                continue;
 
-                                    JoinedSplit split = splits.get(index);
-                                    switch (summaryType)
-                                    {
-                                        case MIN:
-                                        case MAX:
-                                            @MonotonicNonNull
-                                            Number cur = null;
-                                            for (int i = 0; srcCol.indexValid(i); i++)
+                                            int tag = getTag.get(i);
+
+                                            @Nullable DataType innerType = tagTypes.get(tag).getInner();
+                                            if (ignoreNullaryTags && innerType == null)
+                                                continue;
+                                            if (bestTag != -1 && ((summaryType == SummaryType.MIN && tag > bestTag)
+                                                || (summaryType == SummaryType.MAX && tag < bestTag)))
+                                                continue; // We've seen a better tag already, no need to look further
+
+                                            if (bestTag != tag)
                                             {
-                                                if (splitIndexes[i] != index)
-                                                    continue;
+                                                // Check for numeric column
+                                                bestTagIsNumeric = innerType != null && DataType.isNumber(innerType);
 
-                                                Integer tag = getTag.get(i);
-                                                if (tagTypes.get(tag).getInner() == null)
-                                                    continue;
-
-                                                int iFinal = i;
-                                                @NonNull
-                                                Number x = tagTypes.get(tag).getInner().apply(new DataTypeVisitorGet<Number>()
-                                                {
-                                                    @Override
-                                                    public Number number(GetValue<Number> g) throws InternalException, UserException
-                                                    {
-                                                        return g.get(iFinal);
-                                                    }
-
-                                                    @Override
-                                                    public Number text(GetValue<String> g) throws InternalException, UserException
-                                                    {
-                                                        throw new InternalException("Text when convinced only numbers");
-                                                    }
-
-                                                    @Override
-                                                    public Number tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
-                                                    {
-                                                        throw new InternalException("Tagged when convinced only numbers");
-                                                    }
-                                                });
-                                                if (cur == null)
-                                                {
-                                                    cur = x;
-                                                } else
-                                                {
-                                                    int comparison = Utility.compareNumbers(cur, x);
-                                                    if ((summaryType == SummaryType.MIN && comparison > 0)
-                                                        || (summaryType == SummaryType.MAX && comparison < 0))
-                                                        cur = x;
-                                                }
+                                                // Tag is first we've seen, or better than we've seen
+                                                bestTag = tag;
+                                                bestInner = null;
                                             }
-                                            if (cur != null)
-                                                cache.addNumber(cur);
+
+                                            int iFinal = i;
+                                            @NonNull
+                                            List<Object> x = innerType.getCollapsed(i);
+                                            if (bestInner == null)
+                                            {
+                                                bestInner = x;
+                                            }
                                             else
-                                                throw new UserException("No values for " + summaryType);
-                                    }
-                                }
-
-                                @Override
-                                protected void clearCache() throws InternalException
-                                {
-                                    cache = new NumericColumnStorage(0);
-                                }
-
-                                @Override
-                                protected int getCacheFilled()
-                                {
-                                    int filled = cache.filled();
-                                    return filled;
-                                }
-
-                                @Override
-                                public DataType getType() throws UserException, InternalException
-                                {
-                                    return srcCol.getType().copy((i, prog) ->
-                                    {
-                                        fillCacheWithProgress(i, prog);
-                                        int tag = cache.getTag(i);
-                                        if (tag == -1)
-                                            tag = numericTag;
-                                        if (tagTypes.get(tag).getInner() == null)
-                                            return Collections.<Object>singletonList((Integer)tag);
+                                            {
+                                                int comparison = bestTagIsNumeric ? Utility.compareNumbers(bestInner.get(0), x.get(0)) : Utility.compareLists(bestInner, x);
+                                                if ((summaryType == SummaryType.MIN && comparison > 0)
+                                                    || (summaryType == SummaryType.MAX && comparison < 0))
+                                                    bestInner = x;
+                                            }
+                                        }
+                                        if (bestInner != null) // TODO unpack it to store
+                                        {
+                                            bestInner.add(0, bestTag);
+                                            addUnpacked(bestInner);
+                                        }
                                         else
-                                            return Arrays.<Object>asList(tag, cache.get(i));
-                                    });
+                                            throw new UserException("No values for " + summaryType);
                                 }
-                            };
-                        }
-                        else
-                            throw new UnimplementedException();
+                            }
+
+                        };
                     }
                 }));
             }
@@ -367,7 +323,7 @@ public class SummaryStatistics extends Transformation
                 HashSet<List<Object>> r = new HashSet<>();
                 for (int i = 0; c.indexValid(i); i++)
                 {
-                    r.add(c.getCollapsed(i));
+                    r.add(c.getType().getCollapsed(i));
                 }
                 splits.add(new SingleSplit(c, new ArrayList<>(r)));
             }

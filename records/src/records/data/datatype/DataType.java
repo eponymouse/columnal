@@ -11,6 +11,7 @@ import threadchecker.Tag;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -36,11 +37,41 @@ import java.util.List;
  */
 public abstract class DataType
 {
+    public final List<Object> getCollapsed(int index) throws UserException, InternalException
+    {
+        return apply(new DataTypeVisitorGet<List<Object>>()
+        {
+            @Override
+            public List<Object> number(GetValue<Number> g) throws InternalException, UserException
+            {
+                return Collections.singletonList(g.get(index));
+            }
+
+            @Override
+            public List<Object> text(GetValue<String> g) throws InternalException, UserException
+            {
+                return Collections.singletonList(g.get(index));
+            }
+
+            @Override
+            public List<Object> tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            {
+                List<Object> l = new ArrayList<>();
+                Integer tagIndex = g.get(index);
+                l.add(tagIndex);
+                @Nullable DataType inner = tagTypes.get(tagIndex).getInner();
+                if (inner != null)
+                    l.addAll(inner.apply(this));
+                return l;
+            }
+        });
+    }
+
     public DataType copy(GetValue<List<Object>> get) throws UserException, InternalException
     {
         return copy(get, 0);
     }
-    public DataType copy(GetValue<List<Object>> get, int curIndex) throws UserException, InternalException
+    private DataType copy(GetValue<List<Object>> get, int curIndex) throws UserException, InternalException
     {
         return apply(new DataTypeVisitor<DataType>()
         {
@@ -316,7 +347,7 @@ public abstract class DataType
         return -1;
     }
 
-    private static boolean isNumber(DataType t) throws UserException, InternalException
+    public static boolean isNumber(DataType t) throws UserException, InternalException
     {
         return t.apply(new DataTypeVisitor<Boolean>()
         {

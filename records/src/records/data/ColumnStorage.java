@@ -12,4 +12,5 @@ public interface ColumnStorage<T>
     public int filled();
     public T get(int index) throws InternalException;
     public void addAll(List<T> items) throws InternalException;
+    public void clear();
 }
