@@ -5,6 +5,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -13,9 +14,9 @@ import java.util.List;
 @OnThread(Tag.Simulation)
 public interface FoldOperation<T, R>
 {
-    List<R> start();
+    default List<R> start() { return Collections.emptyList(); }
 
-    List<R> process(@NonNull T n);
+    default List<R> process(@NonNull T n) { return Collections.emptyList(); }
 
-    List<R> end() throws UserException;
+    default List<R> end() throws UserException  { return Collections.emptyList(); }
 }

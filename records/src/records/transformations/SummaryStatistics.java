@@ -38,6 +38,7 @@ import utility.SimulationSupplier;
 import utility.Utility;
 
 import javax.validation.constraints.NotNull;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -182,7 +183,7 @@ public class SummaryStatistics extends Transformation
                                         break;
                                     case MEAN:
                                     case SUM:
-                                        throw new UnimplementedException();
+                                        fold = new MeanSumFold(summaryType);
                                     default:
                                         throw new InternalException("Unrecognised summary type");
                                 }
@@ -237,6 +238,9 @@ public class SummaryStatistics extends Transformation
                     public FunctionInt<RecordSet, Column> tagged(List<TagType> tagTypes, GetValue<Integer> getTag) throws InternalException, UserException
                     {
                         boolean ignoreNullaryTags = true; //TODO configure through GUI
+
+                        if (summaryType == SummaryType.COUNT && !ignoreNullaryTags)
+                            return countColumn(getTag); // Just need to count any entry
                         return rs -> new CalculatedTaggedColumn(rs, name, tagTypes, srcCol)
                         {
                             @Override
@@ -302,6 +306,8 @@ public class SummaryStatistics extends Transformation
                                         }
                                         else
                                             throw new UserException("No values for " + summaryType);
+                                    default:
+                                        throw new UnimplementedException();
                                 }
                             }
 
@@ -503,12 +509,6 @@ public class SummaryStatistics extends Transformation
         }
 
         @Override
-        public List<T> start()
-        {
-            return Collections.emptyList();
-        }
-
-        @Override
         public List<T> process(@NonNull T x)
         {
             if (cur == null)
@@ -569,25 +569,19 @@ public class SummaryStatistics extends Transformation
 
     public static class CountFold<T> implements FoldOperation<T, Number>
     {
-        private int count = 0;
-
-        @Override
-        public List<Number> start()
-        {
-            return Collections.emptyList();
-        }
+        private long count = 0;
 
         @Override
         public List<Number> process(T n)
         {
-            count++;
+            count += 1;
             return Collections.emptyList();
         }
 
         @Override
         public List<Number> end() throws UserException
         {
-            return Collections.singletonList((Integer)count);
+            return Collections.singletonList((Long)count);
         }
     }
 
@@ -602,5 +596,33 @@ public class SummaryStatistics extends Transformation
             cache.addAllNoNull(fold.process(srcGet.get(i)));
         }
         cache.addAllNoNull(fold.end());
+    }
+
+    private static class MeanSumFold implements FoldOperation<Number, Number>
+    {
+        private final SummaryType summaryType;
+        private long count = 0;
+        private BigDecimal total = BigDecimal.ZERO;
+
+        public MeanSumFold(SummaryType summaryType)
+        {
+            this.summaryType = summaryType;
+        }
+        @Override
+        public List<Number> process(Number n)
+        {
+            count += 1;
+            total = total.add(Utility.toBigDecimal(n));
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<Number> end() throws UserException
+        {
+            if (summaryType == SummaryType.MEAN)
+                return Collections.singletonList(total.divide(BigDecimal.valueOf(count)));
+            else
+                return Collections.singletonList(total);
+        }
     }
 }

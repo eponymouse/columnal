@@ -168,6 +168,16 @@ public class Utility
             return number.toString();
     }
 
+    public static BigDecimal toBigDecimal(Number n)
+    {
+        if (n instanceof BigDecimal)
+            return (BigDecimal) n;
+        else if (n instanceof BigInteger)
+            return new BigDecimal((BigInteger)n);
+        else
+            return BigDecimal.valueOf(n.longValue());
+    }
+
     public static class ReadState
     {
         public long startFrom;
