@@ -240,11 +240,18 @@ public abstract class DataType
     {
         private final String name;
         private final @Nullable DataType inner;
+        private final int extra;
 
         public TagType(String name, @Nullable DataType inner)
         {
+            this(name, inner, -1);
+        }
+
+        public TagType(String name, @Nullable DataType inner, int extra)
+        {
             this.name = name;
             this.inner = inner;
+            this.extra = extra;
         }
 
         public String getName()
@@ -256,6 +263,11 @@ public abstract class DataType
         public @Nullable DataType getInner()
         {
             return inner;
+        }
+
+        public int getExtra()
+        {
+            return extra;
         }
 
         @Override

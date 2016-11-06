@@ -1,7 +1,6 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -14,7 +13,6 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * A class to store numbers or a series of values of the type
@@ -92,7 +90,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         LONG_MIN = Long.MIN_VALUE + 2 + numberOfTags; // Allocate space for SEE_BIGINT and SEE_BIGDEC
     }
 
-    public void addNumber(String number) throws InternalException, NumberFormatException
+    public void addRead(String number) throws InternalException, NumberFormatException
     {
         // First try as a long:
         try
@@ -461,11 +459,11 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     }
 
     @Override
-    public void addAll(List<Number> items) throws InternalException
+    public void addAll(List<@Nullable Number> items) throws InternalException
     {
         for (Number n : items)
         {
-            addNumber(n);
+            add(n);
         }
     }
 
@@ -481,8 +479,17 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         filled = 0;
     }
 
-    public void addNumber(Number n) throws InternalException
+    public void add(@Nullable Number n) throws InternalException
     {
+        if (n == null)
+        {
+            // They want to add a blank.  We have no special case for this; we have
+            // to store some sort of number.  So we store Byte.MAX_VALUE which at least
+            // won't increase our storage requirement:
+            addByte(Byte.MAX_VALUE);
+            return;
+        }
+
         if (n instanceof BigDecimal)
             addBigDecimal((BigDecimal) n);
         else if (n instanceof BigInteger)

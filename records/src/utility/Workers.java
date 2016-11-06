@@ -107,7 +107,7 @@ public class Workers
             }
 
         }
-    });
+    }, "Workers Thread");
     static {
         // TODO will want better shutdown than this;
         thread.setDaemon(true);

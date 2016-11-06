@@ -1,6 +1,7 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
@@ -44,11 +45,13 @@ public class StringColumnStorage implements ColumnStorage<String>
     }
 
     @Override
-    public void addAll(List<String> items) throws InternalException
+    public void addAll(List<@Nullable String> items) throws InternalException
     {
         this.values.ensureCapacity(this.values.size() + items.size());
         for (String s : items)
         {
+            if (s == null)
+                s = "";
             this.values.add(pool.pool(s));
         }
     }

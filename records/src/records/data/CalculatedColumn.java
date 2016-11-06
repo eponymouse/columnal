@@ -167,7 +167,7 @@ public abstract class CalculatedColumn extends Column
     {
         return version;
     }
-
+/*
     private static abstract class PrimitiveCalculatedColumn<T> extends CalculatedColumn
     {
         protected ColumnStorage<T> cache;
@@ -216,4 +216,5 @@ public abstract class CalculatedColumn extends Column
             nextSource = i;
         }
     }
+    */
 }

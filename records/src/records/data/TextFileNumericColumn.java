@@ -11,7 +11,6 @@ import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Optional;
 
 /**
  * Created by neil on 20/10/2016.
@@ -43,7 +42,7 @@ public class TextFileNumericColumn extends TextFileColumn
                     {
                         try
                         {
-                            loadedValues.addNumber(s);
+                            loadedValues.addRead(s);
                         }
                         catch (NumberFormatException e)
                         {

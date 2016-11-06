@@ -193,7 +193,7 @@ public class SummaryStatistics extends Transformation
                                             }
                                         }
                                         if (cur != null)
-                                            cache.addNumber(cur);
+                                            cache.add(cur);
                                         else
                                             throw new UserException("No values for " + summaryType);
                                 }
@@ -224,7 +224,7 @@ public class SummaryStatistics extends Transformation
                                     case MAX:
                                         int bestTag = -1;
                                         boolean bestTagIsNumeric = false;
-                                        @MonotonicNonNull
+                                        @Nullable
                                         List<Object> bestInner = null;
                                         for (int i = 0; srcCol.indexValid(i); i++)
                                         {
@@ -249,6 +249,8 @@ public class SummaryStatistics extends Transformation
                                                 bestTag = tag;
                                                 bestInner = null;
                                             }
+                                            if (innerType == null)
+                                                continue; // Nullary tag, don't need to do any inner comparison
 
                                             int iFinal = i;
                                             @NonNull
@@ -267,6 +269,8 @@ public class SummaryStatistics extends Transformation
                                         }
                                         if (bestInner != null) // TODO unpack it to store
                                         {
+                                            if (!(bestInner instanceof ArrayList))
+                                                bestInner = new ArrayList<>(bestInner);
                                             bestInner.add(0, bestTag);
                                             addUnpacked(bestInner);
                                         }

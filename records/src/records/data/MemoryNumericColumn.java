@@ -1,18 +1,14 @@
 package records.data;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * Created by neil on 31/10/2016.
@@ -37,7 +33,7 @@ public class MemoryNumericColumn extends Column
             if (!type.mayBeBlank || !value.isEmpty())
             {
                 String s = value;
-                storage.addNumber(type.removePrefix(s));
+                storage.addRead(type.removePrefix(s));
             } else
             {
                 storage.addTag(0);

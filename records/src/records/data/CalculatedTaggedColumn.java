@@ -2,15 +2,18 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.Pair;
+import utility.UnitType;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 
 /**
@@ -19,10 +22,11 @@ import java.util.List;
 public abstract class CalculatedTaggedColumn extends CalculatedColumn
 {
     // This stores tags.  It may also be re-used to store the
-    // first numeric value, if applicable:
+    // first numeric value, if applicable.  It is the first item
+    // in valueStores but kept out here too for convenience:
     @NonNull
     protected final NumericColumnStorage tagCache;
-    // This may include tagCache for the first numeric store:
+    // This will include tagCache once at the beginning, and maybe again for the first numeric store:
     protected final List<ColumnStorage<?>> valueStores = new ArrayList<>();
     private final DataType dataType;
 
@@ -32,6 +36,7 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
         super(recordSet, name, dependencies);
 
         tagCache = new NumericColumnStorage(copyTagTypes.size(), -1);
+        valueStores.add(tagCache);
         List<TagType> tagTypes = new ArrayList<>();
         for (int i = 0; i < copyTagTypes.size(); i++)
         {
@@ -81,8 +86,8 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
                             if (tt.getInner() != null)
                             {
                                 Pair<DataType, List<ColumnStorage<?>>> p = tt.getInner().apply(this);
+                                nestedTagTypes.add(new TagType(tt.getName(), p.getFirst(), stores.size()));
                                 stores.addAll(p.getSecond());
-                                nestedTagTypes.add(new TagType(tt.getName(), p.getFirst()));
                             } else
                                 nestedTagTypes.add(new TagType(tt.getName(), null));
                         }
@@ -97,8 +102,9 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
                         }, stores);
                     }
                 });
+                tagTypes.add(new TagType(tagType.getName(), result.getFirst(), valueStores.size()));
                 valueStores.addAll(result.getSecond());
-                tagTypes.add(new TagType(tagType.getName(), result.getFirst()));
+
             }
             else
                 tagTypes.add(new TagType(tagType.getName(), null));
@@ -137,8 +143,48 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
         return tagCache.filled();
     }
 
-    protected void addUnpacked(List<Object> values)
+    protected void addUnpacked(List<Object> values) throws UserException, InternalException
     {
-        //TODO walk the tag structure, adding either next value or null to each cache depending on tag
+        //Walk the tag structure, adding either next value or null to each cache depending on tag:
+
+        getType().apply(new DataTypeVisitor<UnitType>()
+        {
+            Iterator<Object> it = values.iterator();
+            int storeOffset = 0;
+
+            @Override
+            public UnitType number() throws InternalException, UserException
+            {
+                ((ColumnStorage<Object>)valueStores.get(storeOffset)).add(it.next());
+                for (int i = storeOffset + 1; i < valueStores.size(); i++)
+                    valueStores.get(i).add(null);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType text() throws InternalException, UserException
+            {
+                return number(); // Same process
+            }
+
+            @Override
+            public UnitType tagged(List<TagType> tags) throws InternalException, UserException
+            {
+                int tagIndex = (Integer)it.next();
+                TagType t = tags.get(tagIndex);
+                int tagStoreOffset = t.getExtra();
+                // We must add everything up to that item:
+                ((NumericColumnStorage)valueStores.get(storeOffset)).addTag(tagIndex);
+                for (int i = storeOffset + 1; i < ((tagStoreOffset == -1) ? valueStores.size() : (storeOffset + tagStoreOffset)); i++)
+                    valueStores.get(i).add(null);
+                @Nullable DataType inner = t.getInner();
+                if (inner != null)
+                {
+                    storeOffset += tagStoreOffset;
+                    inner.apply(this);
+                }
+                return UnitType.UNIT;
+            }
+        });
     }
 }

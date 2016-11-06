@@ -14,7 +14,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 
 import java.io.IOException;
-import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -30,9 +29,9 @@ public class PropNumericStorage
     @OnThread(Tag.Simulation)
     public void testPureNumbers(@From(GenNumbers.class) List<String> input) throws IOException, InternalException, UserException
     {
-        NumericColumnStorage storage = new NumericColumnStorage(0);
+        NumericColumnStorage storage = new NumericColumnStorage();
         for (String s : input)
-            storage.addNumber(s);
+            storage.addRead(s);
 
         assertEquals(input.size(), storage.filled());
 
