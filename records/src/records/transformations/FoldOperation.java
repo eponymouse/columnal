@@ -1,6 +1,7 @@
 package records.transformations;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -16,7 +17,7 @@ public interface FoldOperation<T, R>
 {
     default List<R> start() { return Collections.emptyList(); }
 
-    default List<R> process(@NonNull T n) { return Collections.emptyList(); }
+    default List<R> process(@NonNull T n, int index) throws InternalException, UserException { return Collections.emptyList(); }
 
     default List<R> end() throws UserException  { return Collections.emptyList(); }
 }

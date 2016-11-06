@@ -9,6 +9,7 @@ import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -176,6 +177,11 @@ public class Utility
             return new BigDecimal((BigInteger)n);
         else
             return BigDecimal.valueOf(n.longValue());
+    }
+
+    public static MathContext getMathContext()
+    {
+        return MathContext.DECIMAL64;
     }
 
     public static class ReadState

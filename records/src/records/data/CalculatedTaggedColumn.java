@@ -144,6 +144,12 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
         return tagCache.filled();
     }
 
+    public void addAllUnpacked(List<List<Object>> values) throws UserException, InternalException
+    {
+        for (List<Object> v : values)
+            addUnpacked(v);
+    }
+
     protected void addUnpacked(List<Object> values) throws UserException, InternalException
     {
         //Walk the tag structure, adding either next value or null to each cache depending on tag:

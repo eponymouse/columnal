@@ -22,6 +22,7 @@ import records.data.ColumnStorage;
 import records.data.RecordSet;
 import records.data.Transformation;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitorGet;
 import records.data.datatype.DataType.GetValue;
 import records.data.datatype.DataType.NumberDisplayInfo;
@@ -184,6 +185,7 @@ public class SummaryStatistics extends Transformation
                                     case MEAN:
                                     case SUM:
                                         fold = new MeanSumFold(summaryType);
+                                        break;
                                     default:
                                         throw new InternalException("Unrecognised summary type");
                                 }
@@ -241,74 +243,35 @@ public class SummaryStatistics extends Transformation
 
                         if (summaryType == SummaryType.COUNT && !ignoreNullaryTags)
                             return countColumn(getTag); // Just need to count any entry
+                        if (summaryType == SummaryType.MEAN || summaryType == SummaryType.SUM)
+                        {
+                            return rs -> new CalculatedNumericColumn(rs, name, DataType.INTEGER, srcCol)
+                            {
+                                @Override
+                                protected void fillNextCacheChunk() throws UserException, InternalException
+                                {
+                                    int index = getCacheFilled();
+                                    applyFold(cache, new MeanSumTaggedFold(summaryType, tagTypes), srcCol, getTag, splitIndexes, index);
+                                }
+                            };
+                        }
                         return rs -> new CalculatedTaggedColumn(rs, name, tagTypes, srcCol)
                         {
                             @Override
                             protected void fillNextCacheChunk() throws UserException, InternalException
                             {
                                 int index = getCacheFilled();
-
+                                final FoldOperation<Integer, List<Object>> fold;
                                 switch (summaryType)
                                 {
                                     case MIN:
                                     case MAX:
-                                        int bestTag = -1;
-                                        boolean bestTagIsNumeric = false;
-                                        @Nullable
-                                        List<Object> bestInner = null;
-                                        for (int i = 0; srcCol.indexValid(i); i++)
-                                        {
-                                            if (splitIndexes[i] != index)
-                                                continue;
-
-                                            int tag = getTag.get(i);
-
-                                            @Nullable DataType innerType = tagTypes.get(tag).getInner();
-                                            if (ignoreNullaryTags && innerType == null)
-                                                continue;
-                                            if (bestTag != -1 && ((summaryType == SummaryType.MIN && tag > bestTag)
-                                                || (summaryType == SummaryType.MAX && tag < bestTag)))
-                                                continue; // We've seen a better tag already, no need to look further
-
-                                            if (bestTag != tag)
-                                            {
-                                                // Check for numeric column
-                                                bestTagIsNumeric = innerType != null && DataType.isNumber(innerType);
-
-                                                // Tag is first we've seen, or better than we've seen
-                                                bestTag = tag;
-                                                bestInner = null;
-                                            }
-                                            if (innerType == null)
-                                                continue; // Nullary tag, don't need to do any inner comparison
-
-                                            int iFinal = i;
-                                            @NonNull
-                                            List<Object> x = innerType.getCollapsed(i);
-                                            if (bestInner == null)
-                                            {
-                                                bestInner = x;
-                                            }
-                                            else
-                                            {
-                                                int comparison = bestTagIsNumeric ? Utility.compareNumbers(bestInner.get(0), x.get(0)) : Utility.compareLists(bestInner, x);
-                                                if ((summaryType == SummaryType.MIN && comparison > 0)
-                                                    || (summaryType == SummaryType.MAX && comparison < 0))
-                                                    bestInner = x;
-                                            }
-                                        }
-                                        if (bestInner != null) // TODO unpack it to store
-                                        {
-                                            if (!(bestInner instanceof ArrayList))
-                                                bestInner = new ArrayList<>(bestInner);
-                                            bestInner.add(0, bestTag);
-                                            addUnpacked(bestInner);
-                                        }
-                                        else
-                                            throw new UserException("No values for " + summaryType);
+                                        fold = new MinMaxTaggedFold(summaryType, tagTypes, ignoreNullaryTags);
+                                        break;
                                     default:
                                         throw new UnimplementedException();
                                 }
+                                applyFold(this, fold, srcCol, getTag, splitIndexes, index);
                             }
 
                         };
@@ -509,7 +472,7 @@ public class SummaryStatistics extends Transformation
         }
 
         @Override
-        public List<T> process(@NonNull T x)
+        public List<T> process(@NonNull T x, int i)
         {
             if (cur == null)
             {
@@ -567,12 +530,79 @@ public class SummaryStatistics extends Transformation
         }
     }
 
+    public static class MinMaxTaggedFold implements FoldOperation<Integer, List<Object>>
+    {
+        private int bestTag = -1;
+        @Nullable
+        List<Object> bestInner = null;
+        private final List<TagType> tagTypes;
+        private final boolean ignoreNullaryTags;
+        private final SummaryType summaryType;
+
+        public MinMaxTaggedFold(SummaryType summaryType, List<TagType> tagTypes, boolean ignoreNullaryTags)
+        {
+            this.tagTypes = tagTypes;
+            this.ignoreNullaryTags = ignoreNullaryTags;
+            this.summaryType = summaryType;
+        }
+
+        @Override
+        public List<List<Object>> process(Integer tagBox, int i) throws InternalException, UserException
+        {
+            int tag = tagBox;
+
+            @Nullable DataType innerType = tagTypes.get(tag).getInner();
+            if (ignoreNullaryTags && innerType == null)
+                return Collections.emptyList();
+            if (bestTag != -1 && ((summaryType == SummaryType.MIN && tag > bestTag)
+                || (summaryType == SummaryType.MAX && tag < bestTag)))
+                return Collections.emptyList(); // We've seen a better tag already, no need to look further
+
+            if (bestTag != tag)
+            {
+                // Tag is first we've seen, or better than we've seen
+                bestTag = tag;
+                bestInner = null;
+            }
+            if (innerType == null)
+                return Collections.emptyList(); // Nullary tag, don't need to do any inner comparison
+
+            @NonNull
+            List<Object> x = innerType.getCollapsed(i);
+            if (bestInner == null)
+            {
+                bestInner = x;
+            } else
+            {
+                int comparison = Utility.compareLists(bestInner, x);
+                if ((summaryType == SummaryType.MIN && comparison > 0)
+                    || (summaryType == SummaryType.MAX && comparison < 0))
+                    bestInner = x;
+            }
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<List<Object>> end() throws UserException
+        {
+            if (bestInner != null)
+            {
+                if (!(bestInner instanceof ArrayList))
+                    bestInner = new ArrayList<>(bestInner);
+                bestInner.add(0, bestTag);
+                return Collections.singletonList(bestInner);
+            }
+            else
+                throw new UserException("No values for " + summaryType);
+        }
+    }
+
     public static class CountFold<T> implements FoldOperation<T, Number>
     {
         private long count = 0;
 
         @Override
-        public List<Number> process(T n)
+        public List<Number> process(T n, int i)
         {
             count += 1;
             return Collections.emptyList();
@@ -593,9 +623,22 @@ public class SummaryStatistics extends Transformation
             if (splitIndexes[i] != index)
                 continue;
 
-            cache.addAllNoNull(fold.process(srcGet.get(i)));
+            cache.addAllNoNull(fold.process(srcGet.get(i), i));
         }
         cache.addAllNoNull(fold.end());
+    }
+
+    private static void applyFold(CalculatedTaggedColumn c, FoldOperation<Integer, List<Object>> fold, Column srcCol, GetValue<Integer> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
+    {
+        c.addAllUnpacked(fold.start());
+        for (int i = 0; srcCol.indexValid(i); i++)
+        {
+            if (splitIndexes[i] != index)
+                continue;
+
+            c.addAllUnpacked(fold.process(srcGet.get(i), i));
+        }
+        c.addAllUnpacked(fold.end());
     }
 
     private static class MeanSumFold implements FoldOperation<Number, Number>
@@ -609,7 +652,7 @@ public class SummaryStatistics extends Transformation
             this.summaryType = summaryType;
         }
         @Override
-        public List<Number> process(Number n)
+        public List<Number> process(Number n, int i)
         {
             count += 1;
             total = total.add(Utility.toBigDecimal(n));
@@ -620,9 +663,71 @@ public class SummaryStatistics extends Transformation
         public List<Number> end() throws UserException
         {
             if (summaryType == SummaryType.MEAN)
-                return Collections.singletonList(total.divide(BigDecimal.valueOf(count)));
+                return Collections.singletonList(total.divide(BigDecimal.valueOf(count), Utility.getMathContext()));
             else
                 return Collections.singletonList(total);
+        }
+    }
+
+    // Functionality: add all numbers we see; ignore nullary tags and strings
+    @OnThread(Tag.Simulation)
+    private class MeanSumTaggedFold implements FoldOperation<Integer,Number>
+    {
+        private final MeanSumFold numericFold;
+        private final List<TagType> tagTypes;
+
+        public MeanSumTaggedFold(SummaryType summaryType, List<TagType> tagTypes)
+        {
+            this.numericFold = new MeanSumFold(summaryType);
+            this.tagTypes = tagTypes;
+        }
+
+        @Override
+        public List<Number> start()
+        {
+            return numericFold.start();
+        }
+
+        @Override
+        public List<Number> process(Integer n, int index) throws InternalException, UserException
+        {
+            @Nullable DataType inner = tagTypes.get(n).getInner();
+            if (inner != null)
+            {
+                return inner.apply(new DataTypeVisitorGet<List<Number>>()
+                {
+                    @Override
+                    @OnThread(Tag.Simulation)
+                    public List<Number> number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException
+                    {
+                        return numericFold.process(g.get(index), index);
+                    }
+
+                    @Override
+                    public List<Number> text(GetValue<String> g) throws InternalException, UserException
+                    {
+                        return Collections.emptyList();
+                    }
+
+                    @Override
+                    public List<Number> tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                    {
+                        @Nullable DataType nestedInner = tagTypes.get(g.get(index)).getInner();
+                        if (nestedInner != null)
+                            return nestedInner.apply(this);
+                        else
+                            return Collections.emptyList();
+                    }
+                });
+            }
+            else
+                return Collections.emptyList();
+        }
+
+        @Override
+        public List<Number> end() throws UserException
+        {
+            return numericFold.end();
         }
     }
 }
