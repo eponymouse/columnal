@@ -74,7 +74,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     private int numericTag;
     @MonotonicNonNull
     private DataType dataType;
-    private final NumberDisplayInfo displayInfo;
+    private NumberDisplayInfo displayInfo;
 
     public NumericColumnStorage(NumberDisplayInfo displayInfo) throws InternalException
     {
@@ -434,6 +434,10 @@ public class NumericColumnStorage implements ColumnStorage<Number>
 
     public void addTag(int tagIndex) throws InternalException
     {
+        // Don't add the tag if it's the numeric one; that is implicit when we add the number in a sec:
+        if (tagIndex == numericTag)
+            return;
+
         if (bytes != null && tagIndex < BYTE_MIN - Byte.MIN_VALUE)
             addByte((byte)(Byte.MIN_VALUE + tagIndex));
         else if (shorts != null && tagIndex < SHORT_MIN - Short.MIN_VALUE)
@@ -525,5 +529,10 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     public void setNumericTag(int numericTag)
     {
         this.numericTag = numericTag;
+    }
+
+    public void setDisplayInfo(NumberDisplayInfo displayInfo)
+    {
+        this.displayInfo = displayInfo;
     }
 }

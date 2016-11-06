@@ -173,30 +173,16 @@ public class SummaryStatistics extends Transformation
                                 {
                                     case MIN:
                                     case MAX:
-                                        @MonotonicNonNull
-                                        Number cur = null;
+                                        FoldOperation<Number, Number> fold = new MinMaxNumericFold(summaryType);
+                                        cache.addAllNoNull(fold.start());
                                         for (int i = 0; srcCol.indexValid(i); i++)
                                         {
                                             if (splitIndexes[i] != index)
                                                 continue;
 
-                                            @NonNull
-                                            Number x = srcGet.get(i);
-                                            if (cur == null)
-                                            {
-                                                cur = x;
-                                            } else
-                                            {
-                                                int comparison = Utility.compareNumbers(cur, x);
-                                                if ((summaryType == SummaryType.MIN && comparison > 0)
-                                                    || (summaryType == SummaryType.MAX && comparison < 0))
-                                                    cur = x;
-                                            }
+                                            cache.addAllNoNull(fold.process(srcGet.get(i)));
                                         }
-                                        if (cur != null)
-                                            cache.add(cur);
-                                        else
-                                            throw new UserException("No values for " + summaryType);
+                                        cache.addAllNoNull(fold.end());
                                 }
                             }
                         };
@@ -463,5 +449,50 @@ public class SummaryStatistics extends Transformation
     public @OnThread(Tag.FXPlatform) Table getSource()
     {
         return src;
+    }
+
+    @OnThread(Tag.Simulation)
+    private static class MinMaxNumericFold implements FoldOperation<Number, Number>
+    {
+        @MonotonicNonNull
+        private Number cur = null;
+        private final SummaryType summaryType;
+
+        public MinMaxNumericFold(SummaryType summaryType)
+        {
+            this.summaryType = summaryType;
+        }
+
+        @Override
+        public List<Number> start()
+        {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<Number> process(Number x)
+        {
+            if (cur == null)
+            {
+                cur = x;
+            }
+            else
+            {
+                int comparison = Utility.compareNumbers(cur, x);
+                if ((summaryType == SummaryType.MIN && comparison > 0)
+                    || (summaryType == SummaryType.MAX && comparison < 0))
+                    cur = x;
+            }
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<Number> end() throws UserException
+        {
+            if (cur != null)
+                return Collections.singletonList(cur);
+            else
+                throw new UserException("No values for " + summaryType);
+        }
     }
 }

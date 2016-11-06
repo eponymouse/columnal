@@ -60,7 +60,8 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
                         {
                             // Will re-use tag cache
                             tagCache.setNumericTag(iFinal);
-                            return new Pair<>(tagCache.getType(), Collections.emptyList());
+                            tagCache.setDisplayInfo(displayInfo);
+                            return new Pair<>(tagCache.getType(), Collections.singletonList(tagCache));
                         }
                     }
 
@@ -178,8 +179,8 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
                 int tagIndex = (Integer)it.next();
                 TagType t = tags.get(tagIndex);
                 int tagStoreOffset = t.getExtra();
-                // We must add everything up to that item:
                 ((NumericColumnStorage)valueStores.get(storeOffset)).addTag(tagIndex);
+                // We must add everything up to that item:
                 for (int i = storeOffset + 1; i < ((tagStoreOffset == -1) ? valueStores.size() : (storeOffset + tagStoreOffset)); i++)
                     valueStores.get(i).add(null);
                 @Nullable DataType inner = t.getInner();

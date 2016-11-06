@@ -35,13 +35,6 @@ public abstract class CalculatedColumn extends Column
         this.dependencies = new ArrayList<>(Arrays.asList(dependencies));
     }
 
-    public static interface FoldOperation<T, R>
-    {
-        List<R> start();
-        List<R> process(T n);
-        List<R> end() throws UserException;
-    }
-
     // Preserves type
     /*
     public static CalculatedColumn fold(RecordSet rs, String name, Column src, DataTypeVisitor<FoldOperation> op) throws UserException, InternalException
