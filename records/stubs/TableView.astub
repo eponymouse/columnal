@@ -6,6 +6,10 @@ class TableView
 {
     //@UnderInitialization(TableView.class) List getItems();
 }
+class TableCell
+{
+     void setGraphic(@Nullable Node a);
+}
 package javafx.scene.layout;
 class BorderPane
 {

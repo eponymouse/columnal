@@ -2,6 +2,7 @@ package records.gui;
 
 import org.checkerframework.checker.lock.qual.GuardSatisfied;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 
 import java.util.Optional;
 
@@ -20,17 +21,27 @@ public class DisplayValue
         GETTING, QUEUED;
     }
 
+    private final @Nullable Number number;
     private final @Nullable ProgressState state;
     private final double loading; // If -1, use String
     private final @Nullable String show;
     private final boolean isError; // Highlight the string differently.
 
     /**
-     * Create successfully loaded item
+     * Create successfully loaded item with text
      */
     public DisplayValue(String val)
     {
-        show = val;
+        this(val, false);
+    }
+
+    /**
+     * Create successfully loaded item with number
+     */
+    public DisplayValue(Number val)
+    {
+        number = val;
+        show = null;
         state = null;
         loading = -1;
         isError = false;
@@ -41,6 +52,7 @@ public class DisplayValue
      */
     public DisplayValue(ProgressState state, double d)
     {
+        number = null;
         this.state = state;
         loading = d;
         show = null;
@@ -52,18 +64,26 @@ public class DisplayValue
      */
     public DisplayValue(String s, boolean err)
     {
+        number = null;
         show = s;
         isError = err;
         loading = -1;
         state = null;
     }
 
+    @Pure
+    public @Nullable Number getNumber()
+    {
+        return number;
+    }
+
+
     @Override
     @SuppressWarnings("nullness")
     public String toString()
     {
         if (loading == -1)
-            return show;
+            return show == null ? number.toString() : show;
         else
             return state.toString() + ": " + loading;
     }

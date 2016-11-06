@@ -1,8 +1,12 @@
 package records.data;
 
 import javafx.scene.control.Label;
+import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 
+import javafx.scene.layout.HBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.error.FunctionInt;
@@ -55,6 +59,39 @@ public abstract class RecordSet
         {
             TableColumn<Integer, DisplayValue> c = new TableColumn<>(data.getName());
             c.setCellValueFactory(cdf -> data.getDisplay(cdf.getValue()));
+            c.setCellFactory(col -> {
+                return new TableCell<Integer, DisplayValue>() {
+                    @Override
+                    @OnThread(Tag.FX)
+                    protected void updateItem(DisplayValue item, boolean empty)
+                    {
+                        super.updateItem(item, empty);
+                        if (item == null)
+                        {
+                            setText("");
+                            setGraphic(null);
+                        }
+                        else if (item.getNumber() != null)
+                        {
+                            @NonNull Number n = item.getNumber();
+                            setText("");
+                            HBox container = new HBox();
+                            Utility.addStyleClass(container, "number-display");
+                            Text whole = new Text(Utility.getIntegerPart(n));
+                            Utility.addStyleClass(whole, "number-display-int");
+                            Text frac = new Text("."+Utility.getFracPart(n));
+                            Utility.addStyleClass(frac, "number-display-frac");
+                            container.getChildren().addAll(whole, frac);
+                            setGraphic(container);
+                        }
+                        else
+                        {
+                            setGraphic(null);
+                            setText(item.toString());
+                        }
+                    }
+                };
+            });
             c.setSortable(false);
             data.withDisplayType(type -> {
                 c.setText("");

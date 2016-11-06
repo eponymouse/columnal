@@ -145,6 +145,29 @@ public class Utility
             return 1; // B must have been longer
     }
 
+    public static String getFracPart(Number number)
+    {
+        if (number instanceof BigDecimal)
+        {
+            // From http://stackoverflow.com/a/30761234/412908
+            BigDecimal bd = ((BigDecimal)number).stripTrailingZeros();
+            return bd.remainder(BigDecimal.ONE).movePointRight(bd.scale()).abs().toBigInteger().toString();
+
+        }
+        else
+            return "";
+    }
+
+    public static String getIntegerPart(Number number)
+    {
+        if (number instanceof BigDecimal)
+        {
+            return ((BigDecimal)number).toBigInteger().toString();
+        }
+        else
+            return number.toString();
+    }
+
     public static class ReadState
     {
         public long startFrom;

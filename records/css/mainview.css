@@ -23,3 +23,11 @@
     -fx-stroke: black;
     -fx-stroke-width: 3;
 }
+
+.number-display {
+    /* -fx-spacing: 2; */
+    -fx-alignment: baseline-right;
+}
+.number-display-frac {
+    -fx-font-size: 80%;
+}

@@ -9,7 +9,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitorGet;
 import records.data.datatype.DataType.GetValue;
 import records.data.datatype.DataType.TagType;
@@ -20,12 +19,9 @@ import threadchecker.Tag;
 import utility.Workers;
 import utility.Workers.Worker;
 
-import java.util.ArrayDeque;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.Queue;
 
 import static records.gui.DisplayValue.ProgressState.GETTING;
 import static records.gui.DisplayValue.ProgressState.QUEUED;
@@ -150,29 +146,40 @@ public class DisplayCache
                 ProgressListener prog = d -> {
                     Platform.runLater(() -> v.setValue(new DisplayValue(GETTING, d)));
                 };
-                String val = column.getType().apply(new DataTypeVisitorGet<String>()
+                DisplayValue val = column.getType().apply(new DataTypeVisitorGet<DisplayValue>()
                 {
                     @Override
-                    public String number(GetValue<Number> g) throws InternalException, UserException
+                    public DisplayValue number(GetValue<Number> g) throws InternalException, UserException
                     {
-                        return g.getWithProgress(index, prog).toString();
+                        return new DisplayValue(g.getWithProgress(index, prog));
                     }
 
                     @Override
-                    public String text(GetValue<String> g) throws InternalException, UserException
+                    public DisplayValue text(GetValue<String> g) throws InternalException, UserException
                     {
-                        return g.getWithProgress(index, prog);
+                        return new DisplayValue(g.getWithProgress(index, prog));
                     }
 
                     @Override
-                    public String tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                    public DisplayValue tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
                     {
                         int tag = g.getWithProgress(index, prog);
                         TagType tagType = tagTypes.get(tag);
-                        return tagType.getName() + (tagType.getInner() == null ? "" : (" " + tagType.getInner().apply(this)));
+                        @Nullable DataType inner = tagType.getInner();
+                        if (DataType.canFitInOneNumeric(tagTypes))
+                        {
+                            if (inner == null)
+                                return new DisplayValue(tagType.getName());
+                            else
+                                return inner.apply(this);
+                        }
+                        else
+                        {
+                            return new DisplayValue(tagType.getName() + (inner == null ? "" : (" " + inner.apply(this))));
+                        }
                     }
                 });
-                Platform.runLater(() -> v.setValue(new DisplayValue(val)));
+                Platform.runLater(() -> v.setValue(val));
             }
             catch (UserException | InternalException e)
             {
