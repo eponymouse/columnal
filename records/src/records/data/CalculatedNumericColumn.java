@@ -7,6 +7,8 @@ import records.data.datatype.DataType.NumberDisplayInfo;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 import java.util.Collections;
 
@@ -15,8 +17,10 @@ import java.util.Collections;
  */
 public abstract class CalculatedNumericColumn extends CalculatedColumn
 {
+    @OnThread(Tag.Any)
     private final DataType copyType;
     @MonotonicNonNull
+    @OnThread(value = Tag.Any, requireSynchronized = true)
     private DataType type;
     protected final NumericColumnStorage cache;
 
@@ -47,7 +51,8 @@ public abstract class CalculatedNumericColumn extends CalculatedColumn
     }
 
     @Override
-    public DataType getType() throws UserException, InternalException
+    @OnThread(Tag.Any)
+    public synchronized DataType getType() throws UserException, InternalException
     {
         if (type == null)
         {

@@ -45,23 +45,27 @@ public abstract class DataType
         }
     };
 
+    @OnThread(Tag.Simulation)
     public final List<Object> getCollapsed(int index) throws UserException, InternalException
     {
         return apply(new DataTypeVisitorGet<List<Object>>()
         {
             @Override
+            @OnThread(Tag.Simulation)
             public List<Object> number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException
             {
                 return Collections.singletonList(g.get(index));
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public List<Object> text(GetValue<String> g) throws InternalException, UserException
             {
                 return Collections.singletonList(g.get(index));
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public List<Object> tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 List<Object> l = new ArrayList<>();
@@ -75,10 +79,13 @@ public abstract class DataType
         });
     }
 
+    @OnThread(Tag.Any)
     public DataType copy(GetValue<List<Object>> get) throws UserException, InternalException
     {
         return copy(get, 0);
     }
+
+    @OnThread(Tag.Any)
     private DataType copy(GetValue<List<Object>> get, int curIndex) throws UserException, InternalException
     {
         return apply(new DataTypeVisitor<DataType>()
@@ -306,7 +313,9 @@ public abstract class DataType
 
     public static interface GetValue<T>
     {
+        @OnThread(Tag.Simulation)
         @NonNull T getWithProgress(int index, Column.@Nullable ProgressListener progressListener) throws UserException, InternalException;
+        @OnThread(Tag.Simulation)
         @NonNull default T get(int index) throws UserException, InternalException { return getWithProgress(index, null); }
     }
 

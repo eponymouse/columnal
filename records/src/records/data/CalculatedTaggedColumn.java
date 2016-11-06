@@ -8,6 +8,8 @@ import records.data.datatype.DataType.NumberDisplayInfo;
 import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 import utility.UnitType;
 
@@ -28,6 +30,7 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
     protected final NumericColumnStorage tagCache;
     // This will include tagCache once at the beginning, and maybe again for the first numeric store:
     protected final List<ColumnStorage<?>> valueStores = new ArrayList<>();
+    @OnThread(Tag.Any)
     private final DataType dataType;
 
     @SuppressWarnings("initialization")
@@ -125,6 +128,7 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
     }
 
     @Override
+    @OnThread(Tag.Any)
     public DataType getType() throws InternalException, UserException
     {
         return dataType;
@@ -165,6 +169,7 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
                 return storeSimple();
             }
 
+            @SuppressWarnings("unchecked")
             private UnitType storeSimple() throws InternalException
             {
                 ((ColumnStorage<Object>)valueStores.get(storeOffset)).add(it.next());

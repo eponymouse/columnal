@@ -20,6 +20,7 @@ public class MemoryStringColumn extends Column
     private final String title;
     private final StringColumnStorage storage;
     @MonotonicNonNull
+    @OnThread(value = Tag.Any, requireSynchronized = true)
     private DataType dataType;
 
     public MemoryStringColumn(RecordSet recordSet, String title, List<String> values) throws InternalException
@@ -44,7 +45,8 @@ public class MemoryStringColumn extends Column
     }
 
     @Override
-    public DataType getType()
+    @OnThread(Tag.Any)
+    public synchronized DataType getType()
     {
         if (dataType == null)
         {

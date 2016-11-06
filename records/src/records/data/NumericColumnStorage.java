@@ -9,6 +9,8 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberDisplayInfo;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -73,23 +75,24 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     private @Nullable BigDecimal @Nullable [] bigDecimals;
     private int numericTag;
     @MonotonicNonNull
+    @OnThread(value = Tag.Any, requireSynchronized = true)
     private DataType dataType;
     private NumberDisplayInfo displayInfo;
 
-    public NumericColumnStorage(NumberDisplayInfo displayInfo) throws InternalException
+    public NumericColumnStorage(NumberDisplayInfo displayInfo) throws InternalException, UserException
     {
         this(0, -1, displayInfo);
     }
 
-    public NumericColumnStorage(int numberOfTags) throws InternalException
+    public NumericColumnStorage(int numberOfTags) throws InternalException, UserException
     {
         this(numberOfTags, -1, NumberDisplayInfo.DEFAULT);
     }
 
-    public NumericColumnStorage(int numberOfTags, int tagForNumeric, NumberDisplayInfo displayInfo) throws InternalException
+    public NumericColumnStorage(int numberOfTags, int tagForNumeric, NumberDisplayInfo displayInfo) throws InternalException, UserException
     {
         if (numberOfTags > MAX_TAGS)
-            throw new InternalException("Tried to create numeric column with " + numberOfTags + " tags");
+            throw new UserException("Tried to create numeric column with " + numberOfTags + " tags");
         this.numericTag = tagForNumeric;
         this.displayInfo = displayInfo;
 
@@ -448,7 +451,8 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             addLong(Long.MIN_VALUE + 2 + tagIndex, true);
     }
 
-    public DataType getType()
+    @OnThread(Tag.Any)
+    public synchronized DataType getType()
     {
         /*
         if (longs != null)

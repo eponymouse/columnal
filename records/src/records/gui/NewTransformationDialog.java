@@ -46,6 +46,7 @@ public class NewTransformationDialog
     private final Dialog<SimulationSupplier<Transformation>> dialog;
     private final View parentView;
 
+    @SuppressWarnings("initialization")
     public NewTransformationDialog(Window owner, View parentView, Table src)
     {
         this.parentView = parentView;
@@ -57,6 +58,7 @@ public class NewTransformationDialog
         dialog.setResizable(true);
 
         List<TransformationInfo> available = TransformationManager.getInstance().getTransformations();
+
         //#error TODO add a filter box, a listview with functions
         //and a custom section (per function) for params.
 
@@ -94,7 +96,7 @@ public class NewTransformationDialog
             if (trans == null)
                 infoPane.setCenter(null);
             else
-                infoPane.setCenter(trans.getParameterDisplay(src));
+                infoPane.setCenter(trans.getParameterDisplay(src, this::showError));
         });
         dialog.getDialogPane().setContent(pane);
 
@@ -119,6 +121,11 @@ public class NewTransformationDialog
                 return null;
             }
         });
+    }
+
+    private void showError(Exception e)
+    {
+        //TODO have a pane when we can show it to the user.
     }
 
     public void show(FXPlatformConsumer<Optional<Transformation>> withResult)

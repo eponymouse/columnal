@@ -101,6 +101,7 @@ public abstract class Column
         });
     }
 
+    @OnThread(Tag.Any)
     public abstract DataType getType() throws InternalException, UserException;
 
     /*

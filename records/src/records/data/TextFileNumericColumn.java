@@ -7,6 +7,8 @@ import records.data.datatype.DataType.NumberDisplayInfo;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Utility;
 
 import java.io.EOFException;
@@ -21,7 +23,7 @@ public class TextFileNumericColumn extends TextFileColumn
 {
     private final NumericColumnStorage loadedValues;
 
-    public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, String columnName, int columnIndex, NumericColumnType type) throws InternalException
+    public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, String columnName, int columnIndex, NumericColumnType type) throws InternalException, UserException
     {
         super(recordSet, textFile, fileStartPosition, sep, columnName, columnIndex);
         loadedValues = new NumericColumnStorage(new NumberDisplayInfo(type.displayPrefix, type.minDP));
@@ -74,6 +76,7 @@ public class TextFileNumericColumn extends TextFileColumn
     }
 
     @Override
+    @OnThread(Tag.Any)
     public DataType getType()
     {
         return loadedValues.getType();

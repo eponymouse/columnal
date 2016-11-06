@@ -20,7 +20,7 @@ public class MemoryNumericColumn extends Column
     private final NumericColumnStorage storage;
     private final boolean mayBeBlank;
 
-    public MemoryNumericColumn(RecordSet rs, String title, NumericColumnType type, List<String> values) throws InternalException
+    public MemoryNumericColumn(RecordSet rs, String title, NumericColumnType type, List<String> values) throws InternalException, UserException
     {
         super(rs);
         mayBeBlank = type.mayBeBlank;
@@ -53,6 +53,7 @@ public class MemoryNumericColumn extends Column
     }
 
     @Override
+    @OnThread(Tag.Any)
     public DataType getType()
     {
         if (!mayBeBlank)

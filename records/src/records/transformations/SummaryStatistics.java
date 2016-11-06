@@ -34,6 +34,7 @@ import records.error.UserException;
 import records.gui.Table;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
@@ -394,7 +395,7 @@ public class SummaryStatistics extends Transformation
 
         @Override
         @OnThread(Tag.FXPlatform)
-        public Pane getParameterDisplay(Table src)
+        public Pane getParameterDisplay(Table src, FXPlatformConsumer<Exception> reportError)
         {
             this.src = src;
             HBox colsAndSummaries = new HBox();
@@ -410,8 +411,15 @@ public class SummaryStatistics extends Transformation
                     for (Column column : columnListView.getSelectionModel().getSelectedItems())
                     {
                         Pair<Column, SummaryType> op = new Pair<>(column, summaryType);
-                        if (!ops.contains(op))
-                            ops.add(op);
+                        try
+                        {
+                            if (valid(op.getFirst(), op.getSecond()) && !ops.contains(op))
+                                ops.add(op);
+                        }
+                        catch (Exception ex)
+                        {
+                            reportError.consume(ex);
+                        }
                     }
                 });
                 buttons.getChildren().add(button);
@@ -421,6 +429,44 @@ public class SummaryStatistics extends Transformation
             ListView<Pair<Column, SummaryType>> opListView = Utility.readOnlyListView(ops, op -> op.getFirst().getName() + "." + op.getSecond().toString());
             colsAndSummaries.getChildren().add(opListView);
             return colsAndSummaries;
+        }
+
+        private static boolean valid(Column src, SummaryType summaryType) throws InternalException, UserException
+        {
+            return src.getType().apply(new DataTypeVisitor<Boolean>()
+            {
+                @Override
+                public Boolean number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+                {
+                    return true;
+                }
+
+                @Override
+                public Boolean text() throws InternalException, UserException
+                {
+                    switch (summaryType)
+                    {
+                        case MEAN: case SUM:
+                            return false;
+                        default:
+                            return true;
+                    }
+                }
+
+                @Override
+                public Boolean tagged(List<TagType> tags) throws InternalException, UserException
+                {
+                    // For MEAN and SUM, as long as one is numeric, it's potentially valid:
+                    for (TagType tagType : tags)
+                    {
+                        @Nullable DataType inner = tagType.getInner();
+                        if (inner != null && inner.apply(this))
+                            return true;
+                    }
+                    return false;
+                }
+            });
+
         }
 
         @Override
@@ -710,6 +756,7 @@ public class SummaryStatistics extends Transformation
                     }
 
                     @Override
+                    @OnThread(Tag.Simulation)
                     public List<Number> tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
                     {
                         @Nullable DataType nestedInner = tagTypes.get(g.get(index)).getInner();

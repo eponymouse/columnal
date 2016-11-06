@@ -7,6 +7,8 @@ import records.data.datatype.DataType;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.DumbStringPool;
 import utility.Utility;
 
@@ -26,6 +28,7 @@ public class TextFileStringColumn extends TextFileColumn
     private String[] loadedValues = new String[0];
     private final DumbStringPool pool = new DumbStringPool(1000);
     @MonotonicNonNull
+    @OnThread(value = Tag.Any, requireSynchronized = true)
     private DataType dataType;
 
     public TextFileStringColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, String columnName, int columnIndex)
@@ -72,7 +75,8 @@ public class TextFileStringColumn extends TextFileColumn
     }
 
     @Override
-    public DataType getType()
+    @OnThread(Tag.Any)
+    public synchronized DataType getType()
     {
         if (dataType == null)
         {

@@ -6,6 +6,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.data.Column;
 import records.data.RecordSet;
 import records.data.Transformation;
@@ -14,6 +15,7 @@ import records.error.UserException;
 import records.gui.Table;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.SimulationSupplier;
 
 import java.util.List;
@@ -49,7 +51,7 @@ public abstract class TransformationInfo
     }
 
     @OnThread(Tag.FXPlatform)
-    public abstract Pane getParameterDisplay(Table src);
+    public abstract Pane getParameterDisplay(Table src, FXPlatformConsumer<Exception> reportError);
 
     @OnThread(Tag.FXPlatform)
     public abstract BooleanExpression canPressOk();

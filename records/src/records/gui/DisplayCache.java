@@ -150,18 +150,21 @@ public class DisplayCache
                 DisplayValue val = column.getType().apply(new DataTypeVisitorGet<DisplayValue>()
                 {
                     @Override
+                    @OnThread(Tag.Simulation)
                     public DisplayValue number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException
                     {
                         return new DisplayValue(g.getWithProgress(index, prog), displayInfo.getDisplayPrefix(), displayInfo.getMinimumDP());
                     }
 
                     @Override
+                    @OnThread(Tag.Simulation)
                     public DisplayValue text(GetValue<String> g) throws InternalException, UserException
                     {
                         return new DisplayValue(g.getWithProgress(index, prog));
                     }
 
                     @Override
+                    @OnThread(Tag.Simulation)
                     public DisplayValue tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
                     {
                         int tag = g.getWithProgress(index, prog);
