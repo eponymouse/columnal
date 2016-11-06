@@ -79,7 +79,9 @@ public abstract class RecordSet
                             Utility.addStyleClass(container, "number-display");
                             Text prefix = new Text(item.getDisplayPrefix());
                             Utility.addStyleClass(prefix, "number-display-prefix");
-                            Text whole = new Text(Utility.getIntegerPart(n));
+                            String integerPart = Utility.getIntegerPart(n);
+                            integerPart = integerPart.replace("-", "\u2012");
+                            Text whole = new Text(integerPart);
                             Utility.addStyleClass(whole, "number-display-int");
                             Text frac = new Text("."+Utility.getFracPart(n));
                             Utility.addStyleClass(frac, "number-display-frac");
