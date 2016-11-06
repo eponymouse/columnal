@@ -5,6 +5,8 @@ import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -88,7 +90,10 @@ public abstract class RecordSet
                                 fracPart += "0";
                             Text frac = new Text("." + fracPart);
                             Utility.addStyleClass(frac, "number-display-frac");
-                            container.getChildren().addAll(prefix, whole, frac);
+                            Pane spacer = new Pane();
+                            spacer.setVisible(false);
+                            HBox.setHgrow(spacer, Priority.ALWAYS);
+                            container.getChildren().addAll(prefix, spacer, whole, frac);
                             setGraphic(container);
                         }
                         else
