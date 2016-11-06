@@ -22,6 +22,7 @@ import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitorGet;
 import records.data.datatype.DataType.GetValue;
+import records.data.datatype.DataType.NumberDisplayInfo;
 import records.data.datatype.DataType.TagType;
 import records.error.FunctionInt;
 import records.error.InternalException;
@@ -160,7 +161,7 @@ public class SummaryStatistics extends Transformation
                 columns.add(srcCol.getType().apply(new DataTypeVisitorGet<FunctionInt<RecordSet, Column>>()
                 {
                     @Override
-                    public FunctionInt<RecordSet, Column> number(GetValue<Number> srcGet) throws InternalException, UserException
+                    public FunctionInt<RecordSet, Column> number(GetValue<Number> srcGet, NumberDisplayInfo displayInfo) throws InternalException, UserException
                     {
                         return rs -> new CalculatedNumericColumn(rs, name, srcCol.getType(), srcCol)
                         {

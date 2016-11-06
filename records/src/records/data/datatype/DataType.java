@@ -2,7 +2,6 @@ package records.data.datatype;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import org.jetbrains.annotations.NotNull;
 import records.data.Column;
 import records.error.InternalException;
 import records.error.UserException;
@@ -10,7 +9,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -42,7 +40,7 @@ public abstract class DataType
         return apply(new DataTypeVisitorGet<List<Object>>()
         {
             @Override
-            public List<Object> number(GetValue<Number> g) throws InternalException, UserException
+            public List<Object> number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException
             {
                 return Collections.singletonList(g.get(index));
             }
@@ -76,14 +74,14 @@ public abstract class DataType
         return apply(new DataTypeVisitor<DataType>()
         {
             @Override
-            public DataType number() throws InternalException, UserException
+            public DataType number(NumberDisplayInfo displayInfo) throws InternalException, UserException
             {
                 return new DataType()
                 {
                     @Override
                     public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
                     {
-                        return visitor.number((i, prog) -> (Number)get.getWithProgress(i, prog).get(curIndex));
+                        return visitor.number((i, prog) -> (Number)get.getWithProgress(i, prog).get(curIndex), displayInfo);
                     }
                 };
             }
@@ -119,15 +117,81 @@ public abstract class DataType
         });
     }
 
+    public static class NumberDisplayInfo
+    {
+        private final String displayPrefix;
+        private final int minimumDP;
+
+        public NumberDisplayInfo(String displayPrefix, int minimumDP)
+        {
+            this.displayPrefix = displayPrefix;
+            this.minimumDP = minimumDP;
+        }
+
+        public static final NumberDisplayInfo DEFAULT = new NumberDisplayInfo("", 0);
+
+        public String getDisplayPrefix()
+        {
+            return displayPrefix;
+        }
+
+        public int getMinimumDP()
+        {
+            return minimumDP;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            NumberDisplayInfo that = (NumberDisplayInfo) o;
+
+            if (minimumDP != that.minimumDP) return false;
+            return displayPrefix.equals(that.displayPrefix);
+
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = displayPrefix.hashCode();
+            result = 31 * result + minimumDP;
+            return result;
+        }
+    }
+
     public static interface DataTypeVisitor<R>
     {
-        R number() throws InternalException, UserException;
+        R number(NumberDisplayInfo displayInfo) throws InternalException, UserException;
         R text() throws InternalException, UserException;
 
         R tagged(List<TagType> tags) throws InternalException, UserException;
         //R tuple() throws InternalException, UserException;
 
         //R array() throws InternalException, UserException;
+    }
+
+    public static class SpecificDataTypeVisitor<R> implements DataTypeVisitor<R>
+    {
+        @Override
+        public R number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+        {
+            throw new InternalException("Unexpected number data type");
+        }
+
+        @Override
+        public R text() throws InternalException, UserException
+        {
+            throw new InternalException("Unexpected text data type");
+        }
+
+        @Override
+        public R tagged(List<TagType> tags) throws InternalException, UserException
+        {
+            throw new InternalException("Unexpected tagged data type");
+        }
     }
 
     /*
@@ -196,7 +260,7 @@ public abstract class DataType
 
     public static interface DataTypeVisitorGet<R>
     {
-        R number(GetValue<Number> g) throws InternalException, UserException;
+        R number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException;
         R text(GetValue<String> g) throws InternalException, UserException;
 
         R tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException;
@@ -210,9 +274,9 @@ public abstract class DataType
         return apply(new DataTypeVisitorGet<R>()
         {
             @Override
-            public R number(GetValue<Number> g) throws InternalException, UserException
+            public R number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException
             {
-                return visitor.number();
+                return visitor.number(displayInfo);
             }
 
             @Override
@@ -299,7 +363,7 @@ public abstract class DataType
         return apply(new DataTypeVisitor<String>()
         {
             @Override
-            public String number() throws InternalException, UserException
+            public String number(NumberDisplayInfo displayInfo) throws InternalException, UserException
             {
                 return "Number";
             }
@@ -364,7 +428,7 @@ public abstract class DataType
         return t.apply(new DataTypeVisitor<Boolean>()
         {
             @Override
-            public Boolean number() throws InternalException, UserException
+            public Boolean number(NumberDisplayInfo displayInfo) throws InternalException, UserException
             {
                 return true;
             }

@@ -2,6 +2,9 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.error.InternalException;
 import records.error.UserException;
 
@@ -21,7 +24,14 @@ public abstract class CalculatedNumericColumn extends CalculatedColumn
     {
         super(recordSet, name, dependencies);
         this.copyType = copyType;
-        cache = new NumericColumnStorage();
+        cache = this.copyType.apply(new SpecificDataTypeVisitor<NumericColumnStorage>()
+        {
+            @Override
+            public NumericColumnStorage number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+            {
+                return new NumericColumnStorage(displayInfo);
+            }
+        });
     }
 
     @Override

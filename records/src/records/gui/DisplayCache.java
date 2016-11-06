@@ -11,6 +11,7 @@ import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitorGet;
 import records.data.datatype.DataType.GetValue;
+import records.data.datatype.DataType.NumberDisplayInfo;
 import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
 import records.error.UserException;
@@ -149,9 +150,9 @@ public class DisplayCache
                 DisplayValue val = column.getType().apply(new DataTypeVisitorGet<DisplayValue>()
                 {
                     @Override
-                    public DisplayValue number(GetValue<Number> g) throws InternalException, UserException
+                    public DisplayValue number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException
                     {
-                        return new DisplayValue(g.getWithProgress(index, prog));
+                        return new DisplayValue(g.getWithProgress(index, prog), displayInfo.getDisplayPrefix());
                     }
 
                     @Override

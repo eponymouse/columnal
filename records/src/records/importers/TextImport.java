@@ -4,6 +4,7 @@ import records.data.Column;
 import records.data.RecordSet;
 import records.data.TextFileNumericColumn;
 import records.data.TextFileStringColumn;
+import records.data.columntype.NumericColumnType;
 import records.error.FetchException;
 import records.error.FunctionInt;
 import records.error.InternalException;
@@ -46,7 +47,7 @@ public class TextImport
                 ColumnInfo columnInfo = format.columnTypes.get(i);
                 int iFinal = i;
                 if (columnInfo.type.isNumeric())
-                    columns.add(rs -> new TextFileNumericColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal));
+                    columns.add(rs -> new TextFileNumericColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal, ((NumericColumnType)columnInfo.type).displayPrefix));
                 else if (columnInfo.type.isText())
                     columns.add(rs -> new TextFileStringColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal));
                 // If it's blank, should we add any column?

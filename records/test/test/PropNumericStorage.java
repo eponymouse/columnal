@@ -8,6 +8,7 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.data.NumericColumnStorage;
+import records.data.datatype.DataType.NumberDisplayInfo;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -29,7 +30,7 @@ public class PropNumericStorage
     @OnThread(Tag.Simulation)
     public void testPureNumbers(@From(GenNumbers.class) List<String> input) throws IOException, InternalException, UserException
     {
-        NumericColumnStorage storage = new NumericColumnStorage();
+        NumericColumnStorage storage = new NumericColumnStorage(NumberDisplayInfo.DEFAULT);
         for (String s : input)
             storage.addRead(s);
 

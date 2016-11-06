@@ -6,6 +6,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.NumberDisplayInfo;
 import records.error.InternalException;
 import records.error.UserException;
 
@@ -73,16 +74,25 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     private int numericTag;
     @MonotonicNonNull
     private DataType dataType;
+    private final NumberDisplayInfo displayInfo;
 
-    public NumericColumnStorage() throws InternalException
+    public NumericColumnStorage(NumberDisplayInfo displayInfo) throws InternalException
     {
-        this(0, -1);
+        this(0, -1, displayInfo);
     }
 
-    public NumericColumnStorage(int numberOfTags, int tagForNumeric) throws InternalException
+    public NumericColumnStorage(int numberOfTags) throws InternalException
+    {
+        this(numberOfTags, -1, NumberDisplayInfo.DEFAULT);
+    }
+
+    public NumericColumnStorage(int numberOfTags, int tagForNumeric, NumberDisplayInfo displayInfo) throws InternalException
     {
         if (numberOfTags > MAX_TAGS)
             throw new InternalException("Tried to create numeric column with " + numberOfTags + " tags");
+        this.numericTag = tagForNumeric;
+        this.displayInfo = displayInfo;
+
         NUM_TAGS = numberOfTags;
         BYTE_MIN = (int)Byte.MIN_VALUE + numberOfTags >= (int)Byte.MAX_VALUE ? Byte.MAX_VALUE : (byte)((int)Byte.MIN_VALUE + numberOfTags);
         SHORT_MIN = (int)Short.MIN_VALUE + numberOfTags >= (int)Short.MAX_VALUE ? Short.MAX_VALUE : (short)((int)Short.MIN_VALUE + numberOfTags);
@@ -451,7 +461,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
                 @Override
                 public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
                 {
-                    return visitor.number((i, prog) -> getNonBlank(i));
+                    return visitor.number((i, prog) -> getNonBlank(i), displayInfo);
                 }
             };
         }

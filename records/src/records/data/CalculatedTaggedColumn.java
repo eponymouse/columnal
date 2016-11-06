@@ -1,10 +1,10 @@
 package records.data;
 
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.NumberDisplayInfo;
 import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
 import records.error.UserException;
@@ -35,7 +35,7 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
     {
         super(recordSet, name, dependencies);
 
-        tagCache = new NumericColumnStorage(copyTagTypes.size(), -1);
+        tagCache = new NumericColumnStorage(copyTagTypes.size());
         valueStores.add(tagCache);
         List<TagType> tagTypes = new ArrayList<>();
         for (int i = 0; i < copyTagTypes.size(); i++)
@@ -49,12 +49,12 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
                     boolean nested = false;
 
                     @Override
-                    public Pair<DataType, List<ColumnStorage<?>>> number() throws InternalException, UserException
+                    public Pair<DataType, List<ColumnStorage<?>>> number(NumberDisplayInfo displayInfo) throws InternalException, UserException
                     {
                         if (tagCache.getNumericTag() != -1 || nested)
                         {
                             // Already re-used tag cache; need another column
-                            NumericColumnStorage storage = new NumericColumnStorage();
+                            NumericColumnStorage storage = new NumericColumnStorage(displayInfo);
                             return new Pair<>(storage.getType(), Collections.singletonList(storage));
                         } else
                         {
@@ -77,7 +77,7 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
                         // Flatten, no re-use for nested columns at the moment:
                         ArrayList<ColumnStorage<?>> stores = new ArrayList<>();
                         ArrayList<TagType> nestedTagTypes = new ArrayList<>();
-                        NumericColumnStorage nestedTagStorage = new NumericColumnStorage(tags.size(), -1);
+                        NumericColumnStorage nestedTagStorage = new NumericColumnStorage(tags.size());
                         stores.add(nestedTagStorage);
                         boolean oldNested = nested;
                         nested = true;
@@ -153,7 +153,12 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
             int storeOffset = 0;
 
             @Override
-            public UnitType number() throws InternalException, UserException
+            public UnitType number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+            {
+                return storeSimple();
+            }
+
+            private UnitType storeSimple() throws InternalException
             {
                 ((ColumnStorage<Object>)valueStores.get(storeOffset)).add(it.next());
                 for (int i = storeOffset + 1; i < valueStores.size(); i++)
@@ -164,7 +169,7 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
             @Override
             public UnitType text() throws InternalException, UserException
             {
-                return number(); // Same process
+                return storeSimple(); // Same process
             }
 
             @Override

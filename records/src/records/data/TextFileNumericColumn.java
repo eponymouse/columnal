@@ -2,6 +2,7 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.NumberDisplayInfo;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
@@ -19,10 +20,10 @@ public class TextFileNumericColumn extends TextFileColumn
 {
     private final NumericColumnStorage loadedValues;
 
-    public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, String columnName, int columnIndex) throws InternalException
+    public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, String columnName, int columnIndex, String displayPrefix) throws InternalException
     {
         super(recordSet, textFile, fileStartPosition, sep, columnName, columnIndex);
-        loadedValues = new NumericColumnStorage();
+        loadedValues = new NumericColumnStorage(new NumberDisplayInfo(displayPrefix, 0));
     }
 
     private Number getWithProgress(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException

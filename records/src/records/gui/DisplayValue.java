@@ -22,6 +22,7 @@ public class DisplayValue
     }
 
     private final @Nullable Number number;
+    private final String displayPrefix;
     private final @Nullable ProgressState state;
     private final double loading; // If -1, use String
     private final @Nullable String show;
@@ -38,9 +39,10 @@ public class DisplayValue
     /**
      * Create successfully loaded item with number
      */
-    public DisplayValue(Number val)
+    public DisplayValue(Number val, String displayPrefix)
     {
         number = val;
+        this.displayPrefix = displayPrefix;
         show = null;
         state = null;
         loading = -1;
@@ -54,6 +56,7 @@ public class DisplayValue
     {
         number = null;
         this.state = state;
+        displayPrefix = "";
         loading = d;
         show = null;
         isError = false;
@@ -64,6 +67,7 @@ public class DisplayValue
      */
     public DisplayValue(String s, boolean err)
     {
+        displayPrefix = "";
         number = null;
         show = s;
         isError = err;
@@ -77,6 +81,11 @@ public class DisplayValue
         return number;
     }
 
+    @Pure
+    public String getDisplayPrefix()
+    {
+        return displayPrefix;
+    }
 
     @Override
     @SuppressWarnings("nullness")

@@ -2,6 +2,7 @@ package records.data;
 
 import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.NumberDisplayInfo;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -23,8 +24,8 @@ public class MemoryNumericColumn extends Column
     {
         super(rs);
         hasBlanks = values.stream().anyMatch(String::isEmpty);
-        // TODO put blanks ba
-        storage = new NumericColumnStorage(); //hasBlanks ? 1 : 0);
+        // TODO put blanks back
+        storage = new NumericColumnStorage(new NumberDisplayInfo(type.displayPrefix, 0)); //hasBlanks ? 1 : 0);
         this.title = title;
         int nextSkip = 0;
         for (String value : values)

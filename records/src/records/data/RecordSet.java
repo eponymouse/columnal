@@ -77,11 +77,13 @@ public abstract class RecordSet
                             setText("");
                             HBox container = new HBox();
                             Utility.addStyleClass(container, "number-display");
+                            Text prefix = new Text(item.getDisplayPrefix());
+                            Utility.addStyleClass(prefix, "number-display-prefix");
                             Text whole = new Text(Utility.getIntegerPart(n));
                             Utility.addStyleClass(whole, "number-display-int");
                             Text frac = new Text("."+Utility.getFracPart(n));
                             Utility.addStyleClass(frac, "number-display-frac");
-                            container.getChildren().addAll(whole, frac);
+                            container.getChildren().addAll(prefix, whole, frac);
                             setGraphic(container);
                         }
                         else
