@@ -15,8 +15,10 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.CalculatedNumericColumn;
+import records.data.CalculatedStringColumn;
 import records.data.CalculatedTaggedColumn;
 import records.data.Column;
+import records.data.ColumnStorage;
 import records.data.RecordSet;
 import records.data.Transformation;
 import records.data.datatype.DataType;
@@ -163,35 +165,72 @@ public class SummaryStatistics extends Transformation
                     @Override
                     public FunctionInt<RecordSet, Column> number(GetValue<Number> srcGet, NumberDisplayInfo displayInfo) throws InternalException, UserException
                     {
+                        if (summaryType == SummaryType.COUNT)
+                            return countColumn(srcGet);
                         return rs -> new CalculatedNumericColumn(rs, name, srcCol.getType(), srcCol)
                         {
                             @Override
                             protected void fillNextCacheChunk() throws UserException, InternalException
                             {
                                 int index = getCacheFilled();
+                                final FoldOperation<Number, Number> fold;
                                 switch (summaryType)
                                 {
                                     case MIN:
                                     case MAX:
-                                        FoldOperation<Number, Number> fold = new MinMaxNumericFold(summaryType);
-                                        cache.addAllNoNull(fold.start());
-                                        for (int i = 0; srcCol.indexValid(i); i++)
-                                        {
-                                            if (splitIndexes[i] != index)
-                                                continue;
-
-                                            cache.addAllNoNull(fold.process(srcGet.get(i)));
-                                        }
-                                        cache.addAllNoNull(fold.end());
+                                        fold = new MinMaxNumericFold(summaryType);
+                                        break;
+                                    case MEAN:
+                                    case SUM:
+                                        throw new UnimplementedException();
+                                    default:
+                                        throw new InternalException("Unrecognised summary type");
                                 }
+                                applyFold(cache, fold, srcCol, srcGet, splitIndexes, index);
                             }
                         };
                     }
 
                     @Override
-                    public FunctionInt<RecordSet, Column> text(GetValue<String> g) throws InternalException, UserException
+                    public FunctionInt<RecordSet, Column> text(GetValue<String> srcGet) throws InternalException, UserException
                     {
-                        throw new UnimplementedException();
+                        if (summaryType == SummaryType.COUNT)
+                            return countColumn(srcGet);
+                        return rs -> new CalculatedStringColumn(rs, name, srcCol.getType(), srcCol) {
+
+                            @Override
+                            protected void fillNextCacheChunk() throws UserException, InternalException
+                            {
+                                int index = getCacheFilled();
+                                final FoldOperation<String, String> fold;
+                                switch (summaryType)
+                                {
+                                    case MIN:
+                                    case MAX:
+                                        fold = new MinMaxStringFold(summaryType);
+                                        break;
+                                    case MEAN:
+                                    case SUM:
+                                        throw new UserException("Cannot perform " + summaryType + " on String data");
+                                    default:
+                                        throw new InternalException("Unrecognised summary type");
+                                }
+                                applyFold(cache, fold, srcCol, srcGet, splitIndexes, index);
+                            }
+                        };
+                    }
+
+                    private <T> FunctionInt<RecordSet,Column> countColumn(GetValue<T> srcGet)
+                    {
+                        return rs -> new CalculatedNumericColumn(rs, name, DataType.INTEGER, srcCol)
+                        {
+                            @Override
+                            protected void fillNextCacheChunk() throws UserException, InternalException
+                            {
+                                int index = getCacheFilled();
+                                applyFold(cache, new CountFold<T>(), srcCol, srcGet, splitIndexes, index);
+                            }
+                        };
                     }
 
                     @Override
@@ -452,25 +491,25 @@ public class SummaryStatistics extends Transformation
     }
 
     @OnThread(Tag.Simulation)
-    private static class MinMaxNumericFold implements FoldOperation<Number, Number>
+    private abstract static class MinMaxFold<T> implements FoldOperation<T, T>
     {
         @MonotonicNonNull
-        private Number cur = null;
+        private T cur = null;
         private final SummaryType summaryType;
 
-        public MinMaxNumericFold(SummaryType summaryType)
+        public MinMaxFold(SummaryType summaryType)
         {
             this.summaryType = summaryType;
         }
 
         @Override
-        public List<Number> start()
+        public List<T> start()
         {
             return Collections.emptyList();
         }
 
         @Override
-        public List<Number> process(Number x)
+        public List<T> process(@NonNull T x)
         {
             if (cur == null)
             {
@@ -478,7 +517,7 @@ public class SummaryStatistics extends Transformation
             }
             else
             {
-                int comparison = Utility.compareNumbers(cur, x);
+                int comparison = compare(cur, x);
                 if ((summaryType == SummaryType.MIN && comparison > 0)
                     || (summaryType == SummaryType.MAX && comparison < 0))
                     cur = x;
@@ -487,12 +526,81 @@ public class SummaryStatistics extends Transformation
         }
 
         @Override
-        public List<Number> end() throws UserException
+        public List<T> end() throws UserException
         {
             if (cur != null)
                 return Collections.singletonList(cur);
             else
                 throw new UserException("No values for " + summaryType);
         }
+
+        protected abstract int compare(T a, T b);
+    }
+
+    @OnThread(Tag.Simulation)
+    private static class MinMaxNumericFold extends MinMaxFold<Number>
+    {
+        public MinMaxNumericFold(SummaryType summaryType)
+        {
+            super(summaryType);
+        }
+
+        @Override
+        protected int compare(Number a, Number b)
+        {
+            return Utility.compareNumbers(a, b);
+        }
+    }
+
+    @OnThread(Tag.Simulation)
+    private static class MinMaxStringFold extends MinMaxFold<String>
+    {
+        public MinMaxStringFold(SummaryType summaryType)
+        {
+            super(summaryType);
+        }
+
+        @Override
+        protected int compare(String a, String b)
+        {
+            return a.compareTo(b);
+        }
+    }
+
+    public static class CountFold<T> implements FoldOperation<T, Number>
+    {
+        private int count = 0;
+
+        @Override
+        public List<Number> start()
+        {
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<Number> process(T n)
+        {
+            count++;
+            return Collections.emptyList();
+        }
+
+        @Override
+        public List<Number> end() throws UserException
+        {
+            return Collections.singletonList((Integer)count);
+        }
+    }
+
+    private static <T, R> void applyFold(ColumnStorage<R> cache, FoldOperation<T, R> fold, Column srcCol, GetValue<T> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
+    {
+        cache.addAllNoNull(fold.start());
+        for (int i = 0; srcCol.indexValid(i); i++)
+        {
+            if (splitIndexes[i] != index)
+                continue;
+
+            cache.addAllNoNull(fold.process(srcGet.get(i)));
+        }
+        cache.addAllNoNull(fold.end());
     }
 }

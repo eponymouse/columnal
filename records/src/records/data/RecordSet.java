@@ -88,7 +88,7 @@ public abstract class RecordSet
                             String fracPart = Utility.getFracPart(n);
                             while (fracPart.length() < item.getMinimumDecimalPlaces())
                                 fracPart += "0";
-                            Text frac = new Text("." + fracPart);
+                            Text frac = new Text(fracPart.isEmpty() ? "" : ("." + fracPart));
                             Utility.addStyleClass(frac, "number-display-frac");
                             Pane spacer = new Pane();
                             spacer.setVisible(false);

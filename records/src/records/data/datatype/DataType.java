@@ -1,5 +1,6 @@
 package records.data.datatype;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
@@ -35,6 +36,15 @@ import java.util.List;
  */
 public abstract class DataType
 {
+    public static final DataType INTEGER = new DataType()
+    {
+        @Override
+        public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
+        {
+            return visitor.number((i, prog) -> {throw new InternalException("Fetching from in-built type");}, NumberDisplayInfo.DEFAULT);
+        }
+    };
+
     public final List<Object> getCollapsed(int index) throws UserException, InternalException
     {
         return apply(new DataTypeVisitorGet<List<Object>>()
@@ -296,8 +306,8 @@ public abstract class DataType
 
     public static interface GetValue<T>
     {
-        T getWithProgress(int index, Column.@Nullable ProgressListener progressListener) throws UserException, InternalException;
-        default T get(int index) throws UserException, InternalException { return getWithProgress(index, null); }
+        @NonNull T getWithProgress(int index, Column.@Nullable ProgressListener progressListener) throws UserException, InternalException;
+        @NonNull default T get(int index) throws UserException, InternalException { return getWithProgress(index, null); }
     }
 
     public static class TagType
