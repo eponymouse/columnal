@@ -15,6 +15,7 @@
     </wildcardResourcePatterns>
     <annotationProcessing>
       <profile default="true" name="Default" enabled="true">
+        <option name="skipDefs" value="records.grammar." />
         <option name="stubs" value="$PROJECT_DIR$/records/stubs" />
         <processor name="org.checkerframework.checker.guieffect.GuiEffectChecker" />
         <processor name="org.checkerframework.checker.interning.InterningChecker" />
