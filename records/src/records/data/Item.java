@@ -3,6 +3,7 @@ package records.data;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 
 import javax.validation.constraints.NotNull;
 import java.io.File;
@@ -17,5 +18,5 @@ public abstract class Item
     public abstract RecordSet getData();
 
     @OnThread(Tag.FXPlatform)
-    public abstract String save(@Nullable File destination);
+    public abstract void save(@Nullable File destination, FXPlatformConsumer<String> then);
 }

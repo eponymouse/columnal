@@ -91,9 +91,9 @@ public abstract class Column
     public abstract long getVersion();
 
     @OnThread(Tag.FXPlatform)
-    public void withDisplayType(FXPlatformConsumer<String> withType)
+    public void withDisplay(FXPlatformConsumer<String> withType)
     {
-        Workers.onWorkerThread("Fetching type of column " + getName(), () -> {
+        Workers.onWorkerThread("Fetching display from column " + getName(), () -> {
             Utility.alertOnError_(() -> {
                 String s = getType().getHeaderDisplay();
                 Platform.runLater(() -> withType.consume(s));

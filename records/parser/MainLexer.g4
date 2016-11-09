@@ -26,7 +26,8 @@ DATE : 'DATE';
 // Should include all except END:
 IDENTIFIER : DATA | TEXTFILE | LINKED | BEGIN | TRANSFORMATION | FORMAT | POSITION | TEXT | BLANK | DATE;
 
-ITEM : (IDENTIFIER | WORD_OTHER | STRING) ;
+// An item can be e.g. Foo:"Hello" for storing tagged data, as long as there's no space
+ITEM : (IDENTIFIER | WORD_OTHER | STRING)+ ;
 
 LINE : WS? ITEM (WS ITEM)+ WS? NEWLINE;
 

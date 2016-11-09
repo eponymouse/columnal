@@ -8,9 +8,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import records.data.datatype.DataType;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
@@ -105,7 +103,7 @@ public abstract class RecordSet
                 };
             });
             c.setSortable(false);
-            data.withDisplayType(type -> {
+            data.withDisplay(type -> {
                 c.setText("");
                 c.setGraphic(new Label(type + "\n" + data.getName()));
             });

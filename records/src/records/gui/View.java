@@ -11,13 +11,16 @@ import javafx.scene.layout.Pane;
 import javafx.scene.shape.QuadCurve;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
+import records.data.Item;
 import records.data.Transformation;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.Utility;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -35,9 +38,31 @@ public class View extends Pane
     private final List<Transformation> transformations = new ArrayList<>();
 
     // Does not write to that destination, just uses it for relative paths
-    public String save(@Nullable File destination)
+    public void save(@Nullable File destination, FXPlatformConsumer<String> then)
     {
-        return Stream.concat(sources.stream(), transformations.stream()).map(s -> s.save(destination)).collect(Collectors.joining("\n\n"));
+        class Fetcher implements FXPlatformConsumer<String>
+        {
+            private final List<String> all = new ArrayList<>();
+            private final Iterator<Item> it = Stream.concat(sources.stream(), transformations.stream()).iterator();
+            @Override
+            public @OnThread(Tag.FXPlatform) void consume(String s)
+            {
+                all.add(s);
+                getNext();
+            }
+
+            @OnThread(Tag.FXPlatform)
+            private void getNext()
+            {
+                if (it.hasNext())
+                {
+                    it.next().save(destination, this);
+                }
+                else
+                    then.consume(all.stream().collect(Collectors.joining("\n\n")));
+            }
+        };
+        new Fetcher().getNext();
     }
 
     @OnThread(Tag.FXPlatform)

@@ -363,9 +363,14 @@ public class Utility
         @OnThread(Tag.Simulation)
         void run() throws InternalException, UserException;
     }
+    public static interface RunOrErrorFX
+    {
+        @OnThread(Tag.FXPlatform)
+        void run() throws InternalException, UserException;
+    }
 
 
-    @OnThread(Tag.Any)
+    @OnThread(Tag.Simulation)
     public static void alertOnError_(RunOrError r)
     {
         try
@@ -379,6 +384,20 @@ public class Utility
                 String localizedMessage = e.getLocalizedMessage();
                 new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK).showAndWait();
             });
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static void alertOnErrorFX_(RunOrErrorFX r)
+    {
+        try
+        {
+            r.run();
+        }
+        catch (InternalException | UserException e)
+        {
+            String localizedMessage = e.getLocalizedMessage();
+            new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK).showAndWait();
         }
     }
 

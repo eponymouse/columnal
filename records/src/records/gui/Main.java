@@ -64,8 +64,8 @@ public class Main extends Application
         menu.getItems().add(importItem);
         MenuItem saveItem = new MenuItem("Save to Clipboard");
         saveItem.setOnAction(e -> {
-            String s = v.save(null);
-            Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, s));
+            v.save(null, s ->
+                Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, s)));
         });
         menu.getItems().add(saveItem);
         Workers.onWorkerThread("Example import", () -> {

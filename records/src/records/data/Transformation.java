@@ -1,8 +1,10 @@
 package records.data;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.Table;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 
 import javax.validation.constraints.NotNull;
 import java.io.File;
@@ -24,9 +26,9 @@ public abstract class Transformation extends Item
 
 
     @Override
-    public @OnThread(Tag.FXPlatform) String save(File destination)
+    public @OnThread(Tag.FXPlatform) void save(@Nullable File destination, FXPlatformConsumer<String> then)
     {
         // TEMPORARY!
-        return "";
+        then.consume("");
     }
 }

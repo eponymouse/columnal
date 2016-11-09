@@ -1,9 +1,11 @@
 package records.data;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 
 import java.io.File;
 
@@ -31,14 +33,14 @@ public class LinkedDataSource extends DataSource
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) String save(File destination)
+    public @OnThread(Tag.FXPlatform) void save(@Nullable File destination, FXPlatformConsumer<String> then)
     {
         //dataSourceLinkHeader : DATA tableId LINKED importType filePath NEWLINE;
         OutputBuilder b = new OutputBuilder();
         b.t(MainLexer.DATA).id(getId()).t(MainLexer.LINKED).t(this.typeToken);
-        b.path(destination.toPath().relativize(this.path.toPath()));
+        b.path(destination == null ? this.path.toPath() : destination.toPath().relativize(this.path.toPath()));
         b.nl();
-        return b.toString();
+        then.consume(b.toString());
     }
 
 }

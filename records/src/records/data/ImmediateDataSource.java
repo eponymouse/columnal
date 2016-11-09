@@ -1,11 +1,15 @@
 package records.data;
 
+import javafx.application.Platform;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.UserException;
 import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.Utility;
+import utility.Workers;
 
 import java.io.File;
 
@@ -28,7 +32,7 @@ public class ImmediateDataSource extends DataSource
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) String save(File destination)
+    public @OnThread(Tag.FXPlatform) void save(@Nullable File destination, FXPlatformConsumer<String> then)
     {
         //dataSourceImmedate : DATA tableId BEGIN NEWLINE;
         //immediateDataLine : ITEM+ NEWLINE;
@@ -37,16 +41,20 @@ public class ImmediateDataSource extends DataSource
         OutputBuilder b = new OutputBuilder();
         b.t(MainLexer.DATA).id(getId()).t(MainLexer.BEGIN).nl();
 
-        Utility.alertOnError_(() -> {
-            for (int i = 0; data.indexValid(i); i++)
-            {
-                //TODO!
-                //for (Column c : data.getColumns())
-                    //c.getSave(i);
-            }
+        Workers.onWorkerThread("Fetching data for save", () -> {
+            Utility.alertOnError_(() -> {
+                for (int i = 0; data.indexValid(i); i++)
+                {
+                    b.ws(" ");
+                    for (Column c : data.getColumns())
+                        b.data(c.getType(), i);
+                    b.nl();
+                }
+            });
+            Platform.runLater(() -> {
+                b.t(MainLexer.END).t(MainLexer.DATA).nl();
+                then.consume(b.toString());
+            });
         });
-
-        b.t(MainLexer.END).t(MainLexer.DATA).nl();
-        return b.toString();
     }
 }
