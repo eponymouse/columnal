@@ -376,7 +376,7 @@ public class SummaryStatistics extends Transformation
     @Override
     @NotNull
     @OnThread(Tag.Any)
-    public RecordSet getResult()
+    public RecordSet getData()
     {
         return result;
     }

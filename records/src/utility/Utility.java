@@ -365,7 +365,7 @@ public class Utility
     }
 
 
-    @OnThread(Tag.Simulation)
+    @OnThread(Tag.Any)
     public static void alertOnError_(RunOrError r)
     {
         try

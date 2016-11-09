@@ -10,9 +10,12 @@ import javafx.scene.control.Menu;
 import javafx.scene.control.MenuBar;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.DataFormat;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import records.data.DataSource;
 import records.data.RecordSet;
 import records.error.InternalException;
 import records.error.UserException;
@@ -24,6 +27,7 @@ import utility.Workers;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.Collections;
 
 /**
  * Created by neil on 18/10/2016.
@@ -46,8 +50,8 @@ public class Main extends Application
                 {
                     try
                     {
-                        RecordSet rs = TextImport.importTextFile(chosen);
-                        Platform.runLater(() -> v.add(new Table(v, rs), null));
+                        DataSource rs = TextImport.importTextFile(chosen);
+                        Platform.runLater(() -> v.add(rs, null));
                     }
                     catch (IOException | InternalException | UserException ex)
                     {
@@ -58,12 +62,18 @@ public class Main extends Application
             }
         });
         menu.getItems().add(importItem);
+        MenuItem saveItem = new MenuItem("Save to Clipboard");
+        saveItem.setOnAction(e -> {
+            String s = v.save(null);
+            Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, s));
+        });
+        menu.getItems().add(saveItem);
         Workers.onWorkerThread("Example import", () -> {
             try
             {
-                RecordSet rs = HTMLImport.importHTMLFile(new File("S:\\Downloads\\Report_28112014.xls")).get(0);
+                DataSource rs = HTMLImport.importHTMLFile(new File("S:\\Downloads\\Report_28112014.xls")).get(0);
                     //TextImport.importTextFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"));
-                Platform.runLater(() -> v.add(new Table(v, rs), null));
+                Platform.runLater(() -> v.add(rs, null));
             }
             catch (IOException | InternalException | UserException ex)
             {

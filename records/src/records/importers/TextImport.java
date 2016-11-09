@@ -1,6 +1,8 @@
 package records.importers;
 
 import records.data.Column;
+import records.data.DataSource;
+import records.data.LinkedDataSource;
 import records.data.RecordSet;
 import records.data.TextFileNumericColumn;
 import records.data.TextFileStringColumn;
@@ -9,6 +11,7 @@ import records.error.FetchException;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.MainLexer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -28,7 +31,7 @@ import java.util.function.Function;
 public class TextImport
 {
     @OnThread(Tag.Simulation)
-    public static RecordSet importTextFile(File textFile) throws IOException, InternalException, UserException
+    public static DataSource importTextFile(File textFile) throws IOException, InternalException, UserException
     {
         // Read the first few lines:
         try (BufferedReader br = new BufferedReader(new FileReader(textFile))) {
@@ -56,7 +59,7 @@ public class TextImport
 
 
 
-            return new RecordSet(textFile.getName(), columns) {
+            RecordSet rs = new RecordSet(textFile.getName(), columns) {
                     protected int rowCount = -1;
 
                     @Override
@@ -82,7 +85,7 @@ public class TextImport
                         return rowCount;
                     }
                 };
-
+            return new LinkedDataSource(rs, MainLexer.TEXTFILE, textFile);
         }
     }
 }

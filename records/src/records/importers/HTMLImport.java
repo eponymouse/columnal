@@ -5,6 +5,8 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import records.data.Column;
+import records.data.DataSource;
+import records.data.ImmediateDataSource;
 import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
 import records.data.RecordSet;
@@ -27,9 +29,9 @@ import java.util.List;
 public class HTMLImport
 {
     @OnThread(Tag.Simulation)
-    public static List<RecordSet> importHTMLFile(File htmlFile) throws IOException, InternalException, UserException
+    public static List<DataSource> importHTMLFile(File htmlFile) throws IOException, InternalException, UserException
     {
-        List<RecordSet> results = new ArrayList<>();
+        List<DataSource> results = new ArrayList<>();
         Document doc = parse(htmlFile);
         Elements tables = doc.select("table");
 
@@ -80,7 +82,7 @@ public class HTMLImport
 
             vals = null; // Make sure we don't keep a reference
             // Not because we null it, but because we make it non-final.
-            results.add(new RecordSet(htmlFile.getName(), columns) {
+            results.add(new ImmediateDataSource(new RecordSet(htmlFile.getName(), columns) {
                 @Override
                 public final boolean indexValid(int index) throws UserException
                 {
@@ -92,7 +94,7 @@ public class HTMLImport
                 {
                     return len;
                 }
-            });
+            }));
 
         }
         return results;

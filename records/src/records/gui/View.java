@@ -8,15 +8,19 @@ import javafx.collections.ObservableMap;
 import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.TilePane;
 import javafx.scene.shape.QuadCurve;
-import javafx.scene.shape.Shape;
-import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.DataSource;
 import records.data.Transformation;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
+
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 18/10/2016.
@@ -27,6 +31,14 @@ public class View extends Pane
     private static final double DEFAULT_SPACE = 150.0;
 
     private final ObservableMap<Transformation, Overlays> overlays;
+    private final List<DataSource> sources = new ArrayList<>();
+    private final List<Transformation> transformations = new ArrayList<>();
+
+    // Does not write to that destination, just uses it for relative paths
+    public String save(@Nullable File destination)
+    {
+        return Stream.concat(sources.stream(), transformations.stream()).map(s -> s.save(destination)).collect(Collectors.joining("\n\n"));
+    }
 
     @OnThread(Tag.FXPlatform)
     private static class Overlays
@@ -114,7 +126,13 @@ public class View extends Pane
 
     // TODO replace Table here with a new DataSource class,
     // i.e. all tables are datasource or transformation
-    public void add(Table table, @Nullable Table alignToRightOf)
+    public void add(DataSource data, @Nullable Table alignToRightOf)
+    {
+        sources.add(data);
+        add(new Table(this, data.getData()), alignToRightOf);
+    }
+
+    private void add(Table table, @Nullable Table alignToRightOf)
     {
         getChildren().add(table);
         if (alignToRightOf != null)
@@ -126,7 +144,8 @@ public class View extends Pane
 
     public void add(Transformation transformation)
     {
-        Table table = new Table(this, transformation.getResult());
+        transformations.add(transformation);
+        Table table = new Table(this, transformation.getData());
         add(table, transformation.getSource());
         overlays.put(transformation, new Overlays(transformation.getSource(), transformation.getTransformationLabel(), table));
 

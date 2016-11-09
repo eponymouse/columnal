@@ -5,15 +5,13 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 
 import javax.validation.constraints.NotNull;
+import java.io.File;
 
 /**
  * Created by neil on 21/10/2016.
  */
-public abstract class Transformation
+public abstract class Transformation extends Item
 {
-    @NotNull
-    @OnThread(Tag.Any)
-    public abstract RecordSet getResult();
 
     @OnThread(Tag.FXPlatform)
     public abstract String getTransformationLabel();
@@ -23,4 +21,12 @@ public abstract class Transformation
 
     //@OnThread(Tag.FXPlatform)
     //public abstract void edit();
+
+
+    @Override
+    public @OnThread(Tag.FXPlatform) String save(File destination)
+    {
+        // TEMPORARY!
+        return "";
+    }
 }

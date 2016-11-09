@@ -10,6 +10,7 @@
       <root url="jar://$PROJECT_DIR$/records/lib/generics-resolver-2.0.1.jar!/" />
       <root url="jar://$PROJECT_DIR$/records/lib/javaruntype-1.2.jar!/" />
       <root url="jar://$PROJECT_DIR$/records/lib/ognl-3.1.2.jar!/" />
+      <root url="jar://$PROJECT_DIR$/records/lib/antlr-4.5.3-complete.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

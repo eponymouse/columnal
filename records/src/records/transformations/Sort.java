@@ -176,7 +176,7 @@ public class Sort extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.Any) RecordSet getResult()
+    public @OnThread(Tag.Any) RecordSet getData()
     {
         return result;
     }
