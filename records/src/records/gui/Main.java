@@ -40,7 +40,7 @@ public class Main extends Application
     {
         View v = new View();
         Menu menu = new Menu("Data");
-        MenuItem importItem = new MenuItem("GuessFormat");
+        MenuItem importItem = new MenuItem("Text");
         importItem.setOnAction(e -> {
             FileChooser fc = new FileChooser();
             File chosen = fc.showOpenDialog(primaryStage);
@@ -61,7 +61,30 @@ public class Main extends Application
                 });
             }
         });
-        menu.getItems().add(importItem);
+        MenuItem importHTMLItem = new MenuItem("HTML");
+        importHTMLItem.setOnAction(e -> {
+            FileChooser fc = new FileChooser();
+            File chosen = fc.showOpenDialog(primaryStage);
+            if (chosen != null)
+            {
+                Workers.onWorkerThread("GuessFormat data", () ->
+                {
+                    try
+                    {
+                        for (DataSource rs : HTMLImport.importHTMLFile(chosen))
+                        {
+                            Platform.runLater(() -> v.add(rs, null));
+                        }
+                    }
+                    catch (IOException | InternalException | UserException ex)
+                    {
+                        ex.printStackTrace();
+                        Platform.runLater(() -> new Alert(AlertType.ERROR, ex.getMessage() == null ? "" : ex.getMessage(), ButtonType.OK).showAndWait());
+                    }
+                });
+            }
+        });
+        menu.getItems().addAll(importItem, importHTMLItem);
         MenuItem saveItem = new MenuItem("Save to Clipboard");
         saveItem.setOnAction(e -> {
             v.save(null, s ->
@@ -71,7 +94,7 @@ public class Main extends Application
         Workers.onWorkerThread("Example import", () -> {
             try
             {
-                DataSource rs = HTMLImport.importHTMLFile(new File("S:\\Downloads\\Report_28112014.xls")).get(0);
+                DataSource rs = HTMLImport.importHTMLFile(new File("S:\\Downloads\\Report_10112016.xls")).get(0);
                     //TextImport.importTextFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"));
                 Platform.runLater(() -> v.add(rs, null));
             }

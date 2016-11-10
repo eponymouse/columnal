@@ -50,6 +50,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 21/10/2016.
@@ -387,6 +388,7 @@ public class SummaryStatistics extends Transformation
         private @MonotonicNonNull Table src;
         private final BooleanProperty ready = new SimpleBooleanProperty(false);
         private final ObservableList<@NonNull Pair<Column, SummaryType>> ops = FXCollections.observableArrayList();
+        private final ObservableList<@NonNull Column> splitBy = FXCollections.observableArrayList();
 
         public Info()
         {
@@ -424,10 +426,16 @@ public class SummaryStatistics extends Transformation
                 });
                 buttons.getChildren().add(button);
             }
+            Button button = new Button("Split>>");
+            button.setOnAction(e -> {
+                splitBy.addAll(columnListView.getSelectionModel().getSelectedItems());
+            });
+            buttons.getChildren().add(button);
             colsAndSummaries.getChildren().add(buttons);
 
             ListView<Pair<Column, SummaryType>> opListView = Utility.readOnlyListView(ops, op -> op.getFirst().getName() + "." + op.getSecond().toString());
-            colsAndSummaries.getChildren().add(opListView);
+            ListView<Column> splitListView = Utility.readOnlyListView(splitBy, s -> s.getName());
+            colsAndSummaries.getChildren().add(new VBox(opListView, splitListView));
             return colsAndSummaries;
         }
 
@@ -488,7 +496,7 @@ public class SummaryStatistics extends Transformation
                     Set<SummaryType> summaryTypes = summaries.computeIfAbsent(op.getFirst().getName(), s -> new HashSet<SummaryType>());
                     summaryTypes.add(op.getSecond());
                 }
-                return new SummaryStatistics(src, summaries, Collections.emptyList());
+                return new SummaryStatistics(src, summaries, Utility.<Column, String>mapList(splitBy, Column::getName));
             };
         }
     }
