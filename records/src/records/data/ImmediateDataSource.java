@@ -45,7 +45,7 @@ public class ImmediateDataSource extends DataSource
             Utility.alertOnError_(() -> {
                 for (int i = 0; data.indexValid(i); i++)
                 {
-                    b.ws(" ");
+                    b.indent();
                     for (Column c : data.getColumns())
                         b.data(c.getType(), i);
                     b.nl();

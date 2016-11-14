@@ -42,6 +42,7 @@ public class OutputBuilder
     }
 
     // Outputs a token
+    @OnThread(Tag.Any)
     public synchronized OutputBuilder t(int token)
     {
         cur().add(stripQuotes(MainLexer.VOCABULARY.getLiteralName(token)));
@@ -57,11 +58,13 @@ public class OutputBuilder
             throw new IllegalArgumentException("Could not remove quotes: <<" + quoted + ">>");
     }
 
+    @OnThread(Tag.Any)
     public synchronized OutputBuilder id(TableId id)
     {
         return id(id.getOutput());
     }
 
+    @OnThread(Tag.Any)
     public synchronized OutputBuilder id(String id)
     {
         //TODO validate
@@ -137,15 +140,34 @@ public class OutputBuilder
 
     // Don't forget, this will get an extra space added to it
     @OnThread(Tag.Any)
-    public synchronized void ws(String whiteSpace)
+    public synchronized OutputBuilder ws(String whiteSpace)
     {
         cur().add(whiteSpace);
+        return this;
     }
 
+    @OnThread(Tag.FXPlatform)
     public synchronized void inner(FXPlatformSupplier<List<String>> genDetail)
     {
         t(MainLexer.BEGIN).nl();
-        lines.addAll(Utility.<String, List<String>>mapList(genDetail.get(), Collections::singletonList));
+        for (String line : genDetail.get())
+        {
+            indent().raw(line).nl();
+        }
         t(MainLexer.END).nl();
+    }
+
+    @OnThread(Tag.Any)
+    private OutputBuilder raw(String item)
+    {
+        cur().add(item);
+        return this;
+    }
+
+    @OnThread(Tag.Any)
+    public OutputBuilder indent()
+    {
+        // Second space will be added after:
+        return ws(" ");
     }
 }
