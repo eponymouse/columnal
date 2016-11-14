@@ -13,7 +13,7 @@ immediateDataLine : ITEM+ NEWLINE;
 dataSource : (dataSourceLinkHeader | (dataSourceImmedate immediateDataLine* END DATA NEWLINE)) dataFormat;
 
 transformationName : ITEM;
-transformation : TRANSFORMATION tableId transformationName NEWLINE transformationDetail+;
+transformation : TRANSFORMATION tableId transformationName BEGIN NEWLINE transformationDetail+;
 
 transformationDetail: ITEM+ NEWLINE;
 

@@ -18,8 +18,12 @@ import records.data.CalculatedNumericColumn;
 import records.data.CalculatedStringColumn;
 import records.data.CalculatedTaggedColumn;
 import records.data.Column;
+import records.data.ColumnId;
 import records.data.ColumnStorage;
 import records.data.RecordSet;
+import records.data.Table;
+import records.data.TableId;
+import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
@@ -31,7 +35,13 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.Table;
+import records.grammar.SortParser;
+import records.grammar.SortParser.OrderByContext;
+import records.grammar.SortParser.SplitByContext;
+import records.grammar.SortParser.SummaryColContext;
+import records.grammar.SortParser.SummaryContext;
+import records.grammar.SortParser.SummaryTypeContext;
+import records.gui.TableDisplay;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -40,6 +50,7 @@ import utility.SimulationSupplier;
 import utility.Utility;
 
 import javax.validation.constraints.NotNull;
+import java.io.File;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,14 +69,21 @@ import java.util.stream.Collectors;
 @OnThread(Tag.Simulation)
 public class SummaryStatistics extends Transformation
 {
-    private final Table src;
+    private final @Nullable Table src;
+    private final TableId srcTableId;
+    @OnThread(Tag.Any)
+    private final Map<ColumnId, Set<SummaryType>> summaries;
+    @OnThread(Tag.Any)
+    private final List<ColumnId> splitBy;
+    @OnThread(Tag.Any)
+    private String error;
 
     public static enum SummaryType
     {
         COUNT, MEAN, MIN, MAX, SUM;
     }
 
-    private final RecordSet result;
+    private final @Nullable RecordSet result;
 
     @OnThread(Tag.Simulation)
     private static class JoinedSplit
@@ -96,10 +114,22 @@ public class SummaryStatistics extends Transformation
         }
     }
 
-    private SummaryStatistics(Table srcTable, Map<String, Set<SummaryType>> summaries, List<String> splitBy) throws InternalException, UserException
+    private SummaryStatistics(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, Map<ColumnId, Set<SummaryType>> summaries, List<ColumnId> splitBy) throws InternalException, UserException
     {
-        this.src = srcTable;
-        RecordSet src = srcTable.getRecordSet();
+        super(thisTableId);
+        this.srcTableId = srcTableId;
+        this.src = mgr.getTable(srcTableId);
+        this.summaries = summaries;
+        this.splitBy = splitBy;
+        if (this.src == null)
+        {
+            this.result = null;
+            error = "Could not find source table: \"" + srcTableId + "\"";
+            throw new WholeTableException(error);
+        }
+        else
+            error = "Unknown error with table \"" + getId() + "\"";
+        RecordSet src = this.src.getData();
         List<JoinedSplit> splits = calcSplits(src, splitBy);
 
         List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
@@ -111,7 +141,7 @@ public class SummaryStatistics extends Transformation
         {
             for (int i = 0; i < splitBy.size(); i++)
             {
-                String colName = splitBy.get(i);
+                ColumnId colName = splitBy.get(i);
                 Column orig = src.getColumn(colName);
                 int iFinal = i;
                 columns.add(rs -> new Column(rs)
@@ -123,7 +153,7 @@ public class SummaryStatistics extends Transformation
 
                     @Override
                     @OnThread(Tag.Any)
-                    public String getName()
+                    public ColumnId getName()
                     {
                         return colName;
                     }
@@ -157,12 +187,12 @@ public class SummaryStatistics extends Transformation
             }
         }
 
-        for (Entry<String, Set<SummaryType>> e : summaries.entrySet())
+        for (Entry<ColumnId, Set<SummaryType>> e : summaries.entrySet())
         {
             for (SummaryType summaryType : e.getValue())
             {
                 Column srcCol = src.getColumn(e.getKey());
-                String name = e.getKey() + "." + summaryType;
+                ColumnId name = new ColumnId(e.getKey() + "." + summaryType);
 
                 columns.add(srcCol.getType().apply(new DataTypeVisitorGet<FunctionInt<RecordSet, Column>>()
                 {
@@ -308,12 +338,12 @@ public class SummaryStatistics extends Transformation
         }
     }
 
-    private static List<JoinedSplit> calcSplits(RecordSet src, List<String> splitBy) throws UserException, InternalException
+    private static List<JoinedSplit> calcSplits(RecordSet src, List<ColumnId> splitBy) throws UserException, InternalException
     {
         // Each item in outer is a column.
         // Each item in inner is a possible value of that column;
         List<SingleSplit> splits = new ArrayList<>();
-        for (String colName : splitBy)
+        for (ColumnId colName : splitBy)
         {
             Column c = src.getColumn(colName);
             //Optional<List<@NonNull ?>> fastDistinct = c.fastDistinct();
@@ -377,15 +407,17 @@ public class SummaryStatistics extends Transformation
     @Override
     @NotNull
     @OnThread(Tag.Any)
-    public RecordSet getData()
+    public RecordSet getData() throws UserException
     {
+        if (result == null)
+            throw new UserException(error);
         return result;
     }
 
     @OnThread(Tag.FXPlatform)
     public static class Info extends TransformationInfo
     {
-        private @MonotonicNonNull Table src;
+        private @MonotonicNonNull TableDisplay src;
         private final BooleanProperty ready = new SimpleBooleanProperty(false);
         private final ObservableList<@NonNull Pair<Column, SummaryType>> ops = FXCollections.observableArrayList();
         private final ObservableList<@NonNull Column> splitBy = FXCollections.observableArrayList();
@@ -397,7 +429,7 @@ public class SummaryStatistics extends Transformation
 
         @Override
         @OnThread(Tag.FXPlatform)
-        public Pane getParameterDisplay(Table src, FXPlatformConsumer<Exception> reportError)
+        public Pane getParameterDisplay(TableDisplay src, FXPlatformConsumer<Exception> reportError)
         {
             this.src = src;
             HBox colsAndSummaries = new HBox();
@@ -434,7 +466,7 @@ public class SummaryStatistics extends Transformation
             colsAndSummaries.getChildren().add(buttons);
 
             ListView<Pair<Column, SummaryType>> opListView = Utility.readOnlyListView(ops, op -> op.getFirst().getName() + "." + op.getSecond().toString());
-            ListView<Column> splitListView = Utility.readOnlyListView(splitBy, s -> s.getName());
+            ListView<Column> splitListView = Utility.readOnlyListView(splitBy, s -> s.getName().toString());
             colsAndSummaries.getChildren().add(new VBox(opListView, splitListView));
             return colsAndSummaries;
         }
@@ -484,21 +516,59 @@ public class SummaryStatistics extends Transformation
         }
 
         @Override
-        public SimulationSupplier<Transformation> getTransformation()
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
             return () -> {
                 if (src == null)
                     throw new InternalException("Null source for transformation");
 
-                Map<String, Set<SummaryType>> summaries = new HashMap<>();
+                Map<ColumnId, Set<SummaryType>> summaries = new HashMap<>();
                 for (Pair<Column, SummaryType> op : ops)
                 {
                     Set<SummaryType> summaryTypes = summaries.computeIfAbsent(op.getFirst().getName(), s -> new HashSet<SummaryType>());
                     summaryTypes.add(op.getSecond());
                 }
-                return new SummaryStatistics(src, summaries, Utility.<Column, String>mapList(splitBy, Column::getName));
+                return new SummaryStatistics(mgr, null, src.getTable().getId(), summaries, Utility.<Column, ColumnId>mapList(splitBy, Column::getName));
             };
         }
+
+        @Override
+        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, TableId tableId, List<String> detail) throws InternalException, UserException
+        {
+            SummaryContext loaded = Utility.parseAsOne(detail, SortParser::new).summary();
+
+            Map<ColumnId, Set<SummaryType>> summaryTypes = new HashMap<>();
+            for (SummaryColContext sumType : loaded.summaryCol())
+            {
+                HashSet<SummaryType> summaries = new HashSet<>();
+                for (SummaryTypeContext type : sumType.summaryType())
+                {
+                    summaries.add(SummaryType.valueOf(type.getText()));
+                }
+                summaryTypes.put(new ColumnId(sumType.column.getText()), summaries);
+            }
+            List<ColumnId> splits = Utility.<SplitByContext, ColumnId>mapList(loaded.splitBy(), s -> new ColumnId(s.getText()));
+            return new SummaryStatistics(mgr, tableId, new TableId(loaded.srcTableId.getText()), summaryTypes, splits);
+        }
+    }
+
+    @Override
+    protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
+    {
+        List<String> details = new ArrayList<>();
+        details.add("SUMMARY " + srcTableId.getOutput());
+        for (Entry<ColumnId, Set<SummaryType>> entry : summaries.entrySet())
+        {
+            if (!entry.getValue().isEmpty())
+            {
+                details.add("FROM " + entry.getKey().getOutput() + " " + entry.getValue().stream().<String>map(SummaryType::toString).collect(Collectors.joining(" ")));
+            }
+        }
+        for (ColumnId c : splitBy)
+        {
+            details.add("SPLIT " + c.getOutput());
+        }
+        return details;
     }
 
     @Override
@@ -508,8 +578,11 @@ public class SummaryStatistics extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) Table getSource()
+    @OnThread(Tag.FXPlatform)
+    public Table getSource() throws UserException
     {
+        if (src == null)
+            throw new UserException(error);
         return src;
     }
 

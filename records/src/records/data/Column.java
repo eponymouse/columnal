@@ -86,7 +86,7 @@ public abstract class Column
 
     @Pure
     @OnThread(Tag.Any)
-    public abstract String getName();
+    public abstract ColumnId getName();
 
     public abstract long getVersion();
 

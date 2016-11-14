@@ -17,13 +17,13 @@ import java.util.List;
  */
 public class MemoryStringColumn extends Column
 {
-    private final String title;
+    private final ColumnId title;
     private final StringColumnStorage storage;
     @MonotonicNonNull
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private DataType dataType;
 
-    public MemoryStringColumn(RecordSet recordSet, String title, List<String> values) throws InternalException
+    public MemoryStringColumn(RecordSet recordSet, ColumnId title, List<String> values) throws InternalException
     {
         super(recordSet);
         this.title = title;
@@ -33,7 +33,7 @@ public class MemoryStringColumn extends Column
 
     @Override
     @OnThread(Tag.Any)
-    public String getName()
+    public ColumnId getName()
     {
         return title;
     }

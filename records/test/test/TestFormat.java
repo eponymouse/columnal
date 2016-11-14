@@ -1,6 +1,7 @@
 package test;
 
 import org.junit.Test;
+import records.data.ColumnId;
 import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
 import records.data.columntype.TextColumnType;
@@ -21,21 +22,27 @@ public class TestFormat
 {
     private static final ColumnType NUM = new NumericColumnType("", 0, false);
     private static final ColumnType TEXT = new TextColumnType();
+    
+    private static ColumnInfo col(ColumnType type, String name)
+    {
+        return new ColumnInfo(type, new ColumnId(name));
+    }
+    
     @Test
     public void testFormat()
     {
-        assertFormatCR(new TextFormat(1, c(new ColumnInfo(NUM, "A"), new ColumnInfo(NUM, "B")), ','),
+        assertFormatCR(new TextFormat(1, c(col(NUM, "A"), col(NUM, "B")), ','),
             "A,B", "0,0", "1,1", "2,2");
-        assertFormatCR(new TextFormat(2, c(new ColumnInfo(NUM, "A"), new ColumnInfo(NUM, "B")), ','),
+        assertFormatCR(new TextFormat(2, c(col(NUM, "A"), col(NUM, "B")), ','),
             "# Some comment", "A,B", "0,0", "1,1", "2,2");
-        assertFormatCR(new TextFormat(3, c(new ColumnInfo(NUM, "A"), new ColumnInfo(NUM, "B")), ','),
+        assertFormatCR(new TextFormat(3, c(col(NUM, "A"), col(NUM, "B")), ','),
             "# Some comment", "A,B", "===", "0,0", "1,1", "2,2");
-        assertFormatCR(new TextFormat(0, c(new ColumnInfo(NUM, ""), new ColumnInfo(NUM, "")), ','),
+        assertFormatCR(new TextFormat(0, c(col(NUM, "C1"), col(NUM, "C2")), ','),
             "0,0", "1,1", "2,2");
 
-        assertFormatCR(new TextFormat(0, c(new ColumnInfo(TEXT, ""), new ColumnInfo(TEXT, "")), ','),
+        assertFormatCR(new TextFormat(0, c(col(TEXT, "C1"), col(TEXT, "C2")), ','),
             "A,B", "0,0", "1,1", "C,D", "2,2");
-        assertFormatCR(new TextFormat(1, c(new ColumnInfo(NUM, "A"), new ColumnInfo(TEXT, "B")), ','),
+        assertFormatCR(new TextFormat(1, c(col(NUM, "A"), col(TEXT, "B")), ','),
             "A,B", "0,0", "1,1", "1.5,D", "2,2");
 
         //#error TODO add support for date columns
@@ -43,11 +50,11 @@ public class TestFormat
     @Test
     public void testCurrency()
     {
-        assertFormat(new TextFormat(0, c(new ColumnInfo(NUM("$"), ""), new ColumnInfo(TEXT, "")), ','),
+        assertFormat(new TextFormat(0, c(col(NUM("$"), "C1"), col(TEXT, "C2")), ','),
             "$0, A", "$1, Whatever", "$2, C");
-        assertFormat(new TextFormat(0, c(new ColumnInfo(NUM("£"), ""), new ColumnInfo(TEXT, "")), ','),
+        assertFormat(new TextFormat(0, c(col(NUM("£"), "C1"), col(TEXT, "C2")), ','),
             "£ 0, A", "£ 1, Whatever", "£ 2, C");
-        assertFormat(new TextFormat(0, c(new ColumnInfo(TEXT, ""), new ColumnInfo(TEXT, "")), ','),
+        assertFormat(new TextFormat(0, c(col(TEXT, "C1"), col(TEXT, "C2")), ','),
             "A0, A", "A1, Whatever", "A2, C");
     }
 

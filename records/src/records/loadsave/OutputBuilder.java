@@ -1,6 +1,7 @@
 package records.loadsave;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitorGet;
 import records.data.datatype.DataType.GetValue;
@@ -11,10 +12,12 @@ import records.error.UserException;
 import records.grammar.MainLexer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformSupplier;
 import utility.Utility;
 
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -24,8 +27,9 @@ import java.util.stream.Collectors;
 @OnThread(Tag.FXPlatform)
 public class OutputBuilder
 {
+    // Each outer item is a line; each inner item is a list of tokens to be glued together with whitespace
     @OnThread(value = Tag.Any, requireSynchronized = true)
-    private final ArrayList<ArrayList<String>> lines = new ArrayList<>();
+    private final ArrayList<List<String>> lines = new ArrayList<>();
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private @Nullable ArrayList<String> curLine = null;
 
@@ -53,8 +57,14 @@ public class OutputBuilder
             throw new IllegalArgumentException("Could not remove quotes: <<" + quoted + ">>");
     }
 
+    public synchronized OutputBuilder id(TableId id)
+    {
+        return id(id.getOutput());
+    }
+
     public synchronized OutputBuilder id(String id)
     {
+        //TODO validate
         cur().add(id);
         return this;
     }
@@ -130,5 +140,12 @@ public class OutputBuilder
     public synchronized void ws(String whiteSpace)
     {
         cur().add(whiteSpace);
+    }
+
+    public synchronized void inner(FXPlatformSupplier<List<String>> genDetail)
+    {
+        t(MainLexer.BEGIN).nl();
+        lines.addAll(Utility.<String, List<String>>mapList(genDetail.get(), Collections::singletonList));
+        t(MainLexer.END).nl();
     }
 }

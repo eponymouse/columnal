@@ -23,6 +23,7 @@ import records.importers.HTMLImport;
 import records.importers.TextImport;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
 import utility.Workers;
 
 import java.io.File;
@@ -51,7 +52,7 @@ public class Main extends Application
                     try
                     {
                         DataSource rs = TextImport.importTextFile(chosen);
-                        Platform.runLater(() -> v.add(rs, null));
+                        Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.add(rs, null)));
                     }
                     catch (IOException | InternalException | UserException ex)
                     {
@@ -73,7 +74,7 @@ public class Main extends Application
                     {
                         for (DataSource rs : HTMLImport.importHTMLFile(chosen))
                         {
-                            Platform.runLater(() -> v.add(rs, null));
+                            Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.add(rs, null)));
                         }
                     }
                     catch (IOException | InternalException | UserException ex)
@@ -96,7 +97,7 @@ public class Main extends Application
             {
                 DataSource rs = HTMLImport.importHTMLFile(new File("S:\\Downloads\\Report_10112016.xls")).get(0);
                     //TextImport.importTextFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"));
-                Platform.runLater(() -> v.add(rs, null));
+                Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.add(rs, null)));
             }
             catch (IOException | InternalException | UserException ex)
             {

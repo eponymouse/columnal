@@ -1,0 +1,11 @@
+Especially when loading a saved-file, it is possible to encounter errors.
+
+Obviously if a file cannot be parsed at all then we can refuse to load.  But wherever possible, we should manage as much as we can and minimise the location of the error.
+
+There are several responses to errors:
+ - Refuse to load.  Usually reserved for antlr parser errors.
+ - Refuse to have any table data.  The table appears but with only an error message.  Usually reserved for when we can't find the source of a transformation, or a vital detail.
+ - Refuse to have any data values.  The table appears with right columns and right length, but all errors.  Like above, but when we have enough info to at least show columns and length.
+ - Refuse to have some data values.  The table appears with right columns and right length, but either isolated cells, or certain columns, have errors as values.
+
+Let's take the sort transformation as an example.  It has an origin table, and a bunch of sort columns.  If there are missing items in the sort header, refuse to load.  If the origin table name is unparseable or unknown, we should give a whole-table error.  If the origin table is found but the sort columns are not found, put errors in every location.

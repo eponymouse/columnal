@@ -20,7 +20,7 @@ public abstract class CalculatedStringColumn extends CalculatedColumn
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private DataType type;
     protected final StringColumnStorage cache;
-    public CalculatedStringColumn(RecordSet recordSet, String name, DataType copyType, Column... dependencies)
+    public CalculatedStringColumn(RecordSet recordSet, ColumnId name, DataType copyType, Column... dependencies)
     {
         super(recordSet, name, dependencies);
         this.copyType = copyType;

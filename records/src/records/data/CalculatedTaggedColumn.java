@@ -34,7 +34,7 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
     private final DataType dataType;
 
     @SuppressWarnings("initialization")
-    public CalculatedTaggedColumn(RecordSet recordSet, String name, List<TagType> copyTagTypes, Column... dependencies) throws InternalException, UserException
+    public CalculatedTaggedColumn(RecordSet recordSet, ColumnId name, List<TagType> copyTagTypes, Column... dependencies) throws InternalException, UserException
     {
         super(recordSet, name, dependencies);
 

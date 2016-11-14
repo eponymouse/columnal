@@ -16,6 +16,8 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import records.data.RecordSet;
+import records.data.Table;
+import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -27,11 +29,13 @@ import java.util.ArrayList;
  * Created by neil on 18/10/2016.
  */
 @OnThread(Tag.FXPlatform)
-public class Table extends BorderPane
+public class TableDisplay extends BorderPane
 {
     private static final int INITIAL_LOAD = 100;
     private static final int LOAD_CHUNK = 100;
     private final RecordSet recordSet;
+    private final Table table;
+    private final String error;
     private boolean resizing;
     // In parent coordinates:
     private Bounds originalSize;
@@ -69,12 +73,18 @@ public class Table extends BorderPane
             middle.getY() + Math.max(-halfHeight, Math.min(Math.tan(angle) * ((angle >= deg90 || angle <= -deg90) ? -halfWidth : halfWidth), halfHeight)));
     }
 
+    @OnThread(Tag.Any)
+    public Table getTable()
+    {
+        return table;
+    }
+
     @OnThread(Tag.FXPlatform)
-    private static class TableDisplay extends TableView<Integer>
+    private static class TableDataDisplay extends TableView<Integer>
     {
         @SuppressWarnings("initialization")
         @UIEffect
-        public TableDisplay(RecordSet recordSet)
+        public TableDataDisplay(RecordSet recordSet)
         {
             super();
             getColumns().setAll(recordSet.getDisplayColumns());
@@ -96,10 +106,24 @@ public class Table extends BorderPane
 
     @SuppressWarnings("initialization")
     @OnThread(Tag.FXPlatform)
-    public Table(View parent, RecordSet rs)
+    public TableDisplay(View parent, Table table)
     {
-        this.recordSet = rs;
-        StackPane body = new StackPane(new TableDisplay(rs));
+        this.table = table;
+        String error;
+        RecordSet recordSet;
+        try
+        {
+            recordSet = table.getData();
+            error = null;
+        }
+        catch (UserException e)
+        {
+            error = e.getLocalizedMessage();
+            recordSet = null;
+        }
+        this.error = error;
+        this.recordSet = recordSet;
+        StackPane body = new StackPane(new TableDataDisplay(recordSet));
         Utility.addStyleClass(body, "table-body");
         setCenter(body);
         Utility.addStyleClass(this, "table-wrapper");
@@ -120,10 +144,10 @@ public class Table extends BorderPane
                 // TODO tell user
             }
             */
-            new NewTransformationDialog(getScene().getWindow(), parent, this).show(optNewTable -> optNewTable.ifPresent(t -> parent.add(t)));
+            new NewTransformationDialog(getScene().getWindow(), parent, this).show(optNewTable -> optNewTable.ifPresent(t -> Utility.alertOnErrorFX_(() -> parent.add(t))));
         });
 
-        Label title = new Label(rs.getTitle());
+        Label title = new Label(recordSet.getTitle());
         Utility.addStyleClass(title, "table-title");
         HBox header = new HBox(title, spacer, addButton);
         Utility.addStyleClass(header, "table-header");

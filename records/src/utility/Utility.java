@@ -30,16 +30,16 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ListView;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.util.*;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.Parser;
+import org.antlr.v4.runtime.TokenStream;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.data.Column;
-import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.Table;
-import records.transformations.SummaryStatistics.SummaryType;
+import records.grammar.BasicLexer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -192,6 +192,15 @@ public class Utility
     public static MathContext getMathContext()
     {
         return MathContext.DECIMAL64;
+    }
+
+    public static <T, PARSER extends Parser> PARSER parseAsOne(List<String> input, Function<TokenStream, PARSER> makeParser)
+    {
+        ANTLRInputStream inputStream = new ANTLRInputStream(input.stream().collect(Collectors.joining("\n")));
+        BasicLexer lexer = new BasicLexer(inputStream);
+        CommonTokenStream tokens = new CommonTokenStream(lexer);
+        PARSER parser = makeParser.apply(tokens);
+        return parser;
     }
 
     public static class ReadState

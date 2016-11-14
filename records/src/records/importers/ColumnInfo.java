@@ -1,6 +1,7 @@
 package records.importers;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnId;
 import records.data.columntype.ColumnType;
 
 /**
@@ -9,9 +10,9 @@ import records.data.columntype.ColumnType;
 public class ColumnInfo
 {
     public final ColumnType type;
-    public final String title;
+    public final ColumnId title;
 
-    public ColumnInfo(ColumnType type, String title)
+    public ColumnInfo(ColumnType type, ColumnId title)
     {
         this.type = type;
         this.title = title;

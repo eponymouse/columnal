@@ -1,7 +1,6 @@
 package records.gui;
 
 import javafx.application.Platform;
-import javafx.beans.binding.Binding;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.collections.FXCollections;
@@ -9,7 +8,6 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldListCell;
@@ -20,11 +18,7 @@ import javafx.stage.Window;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.slf4j.helpers.Util;
-import records.data.RecordSet;
 import records.data.Transformation;
-import records.error.InternalException;
-import records.error.UserException;
 import records.transformations.TransformationInfo;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;
@@ -47,7 +41,7 @@ public class NewTransformationDialog
     private final View parentView;
 
     @SuppressWarnings("initialization")
-    public NewTransformationDialog(Window owner, View parentView, Table src)
+    public NewTransformationDialog(Window owner, View parentView, TableDisplay src)
     {
         this.parentView = parentView;
         dialog = new Dialog<>();
@@ -115,7 +109,7 @@ public class NewTransformationDialog
                     TransformationInfo trans = selectedTransformation.get();
                     if (trans != null)
                     {
-                        return trans.getTransformation();
+                        return trans.getTransformation(parentView);
                     }
                 }
                 return null;

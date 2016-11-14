@@ -23,7 +23,7 @@ public class TextFileNumericColumn extends TextFileColumn
 {
     private final NumericColumnStorage loadedValues;
 
-    public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, String columnName, int columnIndex, NumericColumnType type) throws InternalException, UserException
+    public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, ColumnId columnName, int columnIndex, NumericColumnType type) throws InternalException, UserException
     {
         super(recordSet, textFile, fileStartPosition, sep, columnName, columnIndex);
         loadedValues = new NumericColumnStorage(new NumberDisplayInfo(type.displayPrefix, type.minDP));

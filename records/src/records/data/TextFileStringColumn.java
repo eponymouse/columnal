@@ -31,7 +31,7 @@ public class TextFileStringColumn extends TextFileColumn
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private DataType dataType;
 
-    public TextFileStringColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, String columnName, int columnIndex)
+    public TextFileStringColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, ColumnId columnName, int columnIndex)
     {
         super(recordSet, textFile, initialFilePosition, sep, columnName, columnIndex);
     }

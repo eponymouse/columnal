@@ -17,36 +17,55 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
 import records.data.Column.ProgressListener;
+import records.data.ColumnId;
 import records.data.NumericColumnStorage;
 import records.data.RecordSet;
+import records.data.Table;
+import records.data.TableId;
+import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberDisplayInfo;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.Table;
+import records.grammar.SortParser;
+import records.grammar.SortParser.OrderByContext;
+import records.grammar.SortParser.SortContext;
+import records.gui.TableDisplay;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.SimulationSupplier;
 import utility.Utility;
 
+import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
 /**
- * Created by neil on 06/11/2016.
+ * A transformation which preserves all data from the original table
+ * but sorts it.
+ *
+ * Error behaviour:
+ *   - Errors in every place if the sort-by columns can't be found.
  */
 @OnThread(Tag.Simulation)
 public class Sort extends Transformation
 {
-    private final Table src;
-    private final RecordSet result;
+    private static enum Direction { ASCENDING, DESCENDING; }
+
+    @OnThread(Tag.Any)
+    private String sortByError;
+    @OnThread(Tag.Any)
+    private final TableId srcTableId;
+    private final @Nullable Table src;
+    private final @Nullable RecordSet result;
     // Not actually a column by itself, but holds a list of integers so reasonable to re-use:
     private final NumericColumnStorage sortMap = new NumericColumnStorage(NumberDisplayInfo.DEFAULT);
+
     // This works like a linked list, but flattened into an integer array.
     // The first item is the head, then others point onwards.  (Irritatingly, stillToOrder[n]
     // corresponds to originalIndex=n-1, due to having the head.
@@ -66,15 +85,41 @@ public class Sort extends Transformation
     // 2 : 4
     // 3 : 4 [now stillToOrder], etc
     private int @Nullable [] stillToOrder;
-    private final List<Column> sortBy;
+    @OnThread(Tag.Any)
+    private final @NonNull List<ColumnId> originalSortBy;
+    private final @Nullable List<Column> sortBy;
 
-    public Sort(Table src, List<Column> sortBy) throws UserException, InternalException
+    public Sort(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, List<ColumnId> sortBy) throws UserException, InternalException
     {
-        this.src = src;
-        this.sortBy = sortBy;
+        super(thisTableId);
+        this.srcTableId = srcTableId;
+        this.src = mgr.getTable(srcTableId);
+        this.originalSortBy = sortBy;
+        this.sortByError = "Unknown error with table \"" + thisTableId + "\"";
+        if (this.src == null)
+        {
+            this.result = null;
+            this.sortBy = null;
+            sortByError = "Could not find source table: \"" + srcTableId + "\"";
+            throw new WholeTableException(sortByError);
+        }
+        List<Column> sortByColumns = new ArrayList<>();
+        for (ColumnId c : originalSortBy)
+        {
+            @Nullable Column column = this.src.getData().getColumn(c);
+            if (column == null)
+            {
+                sortByColumns = null;
+                this.sortByError = "Could not find source column to sort by: \"" + c + "\"";
+                break;
+            }
+            sortByColumns.add(column);
+        }
+        this.sortBy = sortByColumns;
+
         List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
 
-        RecordSet srcRecordSet = src.getRecordSet();
+        RecordSet srcRecordSet = src.getData();
         this.stillToOrder = new int[srcRecordSet.getLength() + 1];
         for (int i = 0; i < stillToOrder.length - 1; i++)
             stillToOrder[i] = i+1;
@@ -84,7 +129,7 @@ public class Sort extends Transformation
             columns.add(rs -> new Column(rs)
             {
                 @Override
-                public @OnThread(Tag.Any) String getName()
+                public @OnThread(Tag.Any) ColumnId getName()
                 {
                     return c.getName();
                 }
@@ -169,6 +214,8 @@ public class Sort extends Transformation
     @Pure
     private List<List<Object>> getItem(int srcIndex) throws UserException, InternalException
     {
+        if (sortBy == null)
+            throw new UserException(sortByError);
         List<List<Object>> r = new ArrayList<>();
         for (Column c : sortBy)
             r.add(c.getType().getCollapsed(srcIndex));
@@ -176,8 +223,10 @@ public class Sort extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.Any) RecordSet getData()
+    public @OnThread(Tag.Any) RecordSet getData() throws UserException
     {
+        if (result == null)
+            throw new UserException(sortByError);
         return result;
     }
 
@@ -188,15 +237,17 @@ public class Sort extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) Table getSource()
+    public @OnThread(Tag.FXPlatform) Table getSource() throws UserException
     {
+        if (src == null)
+            throw new UserException(sortByError);
         return src;
     }
 
     @OnThread(Tag.FXPlatform)
     public static class Info extends TransformationInfo
     {
-        private @MonotonicNonNull Table src;
+        private @MonotonicNonNull TableDisplay src;
         private ObservableList<Optional<Column>> sortBy = FXCollections.observableArrayList();
 
         public Info()
@@ -208,7 +259,7 @@ public class Sort extends Transformation
         private final BooleanProperty ready = new SimpleBooleanProperty(false);
 
         @Override
-        public @OnThread(Tag.FXPlatform) Pane getParameterDisplay(Table src, FXPlatformConsumer<Exception> reportError)
+        public @OnThread(Tag.FXPlatform) Pane getParameterDisplay(TableDisplay src, FXPlatformConsumer<Exception> reportError)
         {
             this.src = src;
             HBox colsAndSort = new HBox();
@@ -241,17 +292,37 @@ public class Sort extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) SimulationSupplier<Transformation> getTransformation()
+        public @OnThread(Tag.FXPlatform) SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
             return () -> {
                 if (src == null)
                     throw new InternalException("Null source for transformation");
-                List<Column> presentSortBy = new ArrayList<>();
+                // Ignore the special empty column put in for GUI:
+                List<ColumnId> presentSortBy = new ArrayList<>();
                 for (Optional<Column> c : sortBy)
                     if (c.isPresent())
-                        presentSortBy.add(c.get());
-                return new Sort(src, presentSortBy);
+                        presentSortBy.add(c.get().getName());
+                return new Sort(mgr, null, src.getTable().getId(), presentSortBy);
             };
         }
+
+        @Override
+        @OnThread(Tag.Simulation)
+        public Transformation load(TableManager mgr, TableId tableId, List<String> detail) throws InternalException, UserException
+        {
+            SortContext loaded = Utility.parseAsOne(detail, SortParser::new).sort();
+
+            return new Sort(mgr, tableId, new TableId(loaded.srcTableId.getText()), Utility.<OrderByContext, ColumnId>mapList(loaded.orderBy(), o -> new ColumnId(o.column.getText())));
+        }
+    }
+
+    @Override
+    protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
+    {
+        ArrayList<String> r = new ArrayList<>();
+        r.add("SORT " + srcTableId);
+        for (ColumnId c : originalSortBy)
+            r.add("ASCENDING " + c.getOutput());
+        return r;
     }
 }

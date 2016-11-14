@@ -57,7 +57,7 @@ public abstract class RecordSet
     {
         Function<@NonNull Column, @NonNull TableColumn<Integer, DisplayValue>> makeDisplayColumn = data ->
         {
-            TableColumn<Integer, DisplayValue> c = new TableColumn<>(data.getName());
+            TableColumn<Integer, DisplayValue> c = new TableColumn<>(data.getName().toString());
             c.setCellValueFactory(cdf -> data.getDisplay(cdf.getValue()));
             c.setCellFactory(col -> {
                 return new TableCell<Integer, DisplayValue>() {
@@ -118,7 +118,7 @@ public abstract class RecordSet
         return title;
     }
 
-    public Column getColumn(String name) throws UserException
+    public Column getColumn(ColumnId name) throws UserException
     {
         for (Column c : columns)
         {

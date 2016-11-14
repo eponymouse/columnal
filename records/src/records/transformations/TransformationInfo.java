@@ -6,13 +6,14 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.Pane;
 import javafx.util.StringConverter;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.data.Column;
 import records.data.RecordSet;
+import records.data.TableId;
+import records.data.TableManager;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.Table;
+import records.gui.TableDisplay;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -26,7 +27,7 @@ import java.util.List;
 public abstract class TransformationInfo
 {
     /**
-     * The name, as will be shown in the search bar.
+     * The name, as will be shown in the search bar and used for saving and loading.
      */
     protected final String name;
     /**
@@ -51,13 +52,16 @@ public abstract class TransformationInfo
     }
 
     @OnThread(Tag.FXPlatform)
-    public abstract Pane getParameterDisplay(Table src, FXPlatformConsumer<Exception> reportError);
+    public abstract Pane getParameterDisplay(TableDisplay src, FXPlatformConsumer<Exception> reportError);
 
     @OnThread(Tag.FXPlatform)
     public abstract BooleanExpression canPressOk();
 
     @OnThread(Tag.FXPlatform)
-    public abstract SimulationSupplier<Transformation> getTransformation();
+    public abstract SimulationSupplier<Transformation> getTransformation(TableManager mgr);
+
+    @OnThread(Tag.Simulation)
+    public abstract Transformation load(TableManager mgr, TableId tableId, List<String> detail) throws InternalException, UserException;
 
     public String getDisplayTitle()
     {
@@ -73,7 +77,7 @@ public abstract class TransformationInfo
             @Override
             public String toString(Column col)
             {
-                return col.getName();
+                return col.getName().toString();
             }
 
             @Override

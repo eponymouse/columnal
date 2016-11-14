@@ -30,7 +30,7 @@ public class PropFormat
     public void testGuessFormat(@From(GenFormat.class) TextFormat format) throws IOException
     {
         List<String> fileContent = new ArrayList<>();
-        fileContent.add(format.columnTypes.stream().map(c -> c.title).collect(Collectors.joining("" + format.separator)));
+        fileContent.add(format.columnTypes.stream().map(c -> c.title.getOutput()).collect(Collectors.joining("" + format.separator)));
         Random rnd = new Random();
         for (int row = 0; row < 100; row++)
         {

@@ -3,6 +3,7 @@ package test;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import records.data.ColumnId;
 import records.data.columntype.ColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
@@ -48,7 +49,7 @@ public class GenFormat extends Generator<TextFormat>
             if (i == columnCount - 1 && type.isBlank())
                 type = new TextColumnType();
             String title = hasTitle ? "C" + i : "";
-            columns.add(new ColumnInfo(type, title));
+            columns.add(new ColumnInfo(type, new ColumnId(title)));
         }
         TextFormat format = new TextFormat(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), columns, sep);
         return format;

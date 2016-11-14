@@ -16,11 +16,11 @@ import java.util.List;
  */
 public class MemoryNumericColumn extends Column
 {
-    private final String title;
+    private final ColumnId title;
     private final NumericColumnStorage storage;
     private final boolean mayBeBlank;
 
-    public MemoryNumericColumn(RecordSet rs, String title, NumericColumnType type, List<String> values) throws InternalException, UserException
+    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumericColumnType type, List<String> values) throws InternalException, UserException
     {
         super(rs);
         mayBeBlank = type.mayBeBlank;
@@ -41,7 +41,7 @@ public class MemoryNumericColumn extends Column
     }
 
     @Override
-    public @OnThread(Tag.Any) String getName()
+    public @OnThread(Tag.Any) ColumnId getName()
     {
         return title;
     }

@@ -49,4 +49,14 @@ public class NumericColumnType extends ColumnType
     {
         return displayPrefix.hashCode() + (mayBeBlank ? 100000 : 0);
     }
+
+    @Override
+    public String toString()
+    {
+        return "NumericColumnType{" +
+            "displayPrefix='" + displayPrefix + '\'' +
+            ", mayBeBlank=" + mayBeBlank +
+            ", minDP=" + minDP +
+            '}';
+    }
 }

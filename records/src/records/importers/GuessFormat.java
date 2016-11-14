@@ -1,6 +1,7 @@
 package records.importers;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import records.data.ColumnId;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
@@ -59,7 +60,7 @@ public class GuessFormat
         catch (GuessException e)
         {
             // Always valid backup: a single text column, no header
-            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), ""))), (char) -1);
+            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), new ColumnId("Content")))), (char) -1);
             String msg = e.getLocalizedMessage();
             fmt.recordProblem(msg == null ? "Unknown" : msg);
             return fmt;
@@ -135,7 +136,7 @@ public class GuessFormat
         catch (GuessException e)
         {
             // Always valid backup: a single text column, no header
-            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), ""))), (char)-1);
+            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), new ColumnId("Content")))), (char)-1);
             String msg = e.getLocalizedMessage();
             fmt.recordProblem(msg == null ? "Unknown" : msg);
             return fmt;
@@ -270,7 +271,7 @@ public class GuessFormat
 
         List<ColumnInfo> columns = new ArrayList<>(columnCount);
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
-            columns.add(new ColumnInfo(columnTypes.get(columnIndex), headerRow.isPresent() ? headerRow.get().get(columnIndex) : ""));
+            columns.add(new ColumnInfo(columnTypes.get(columnIndex), new ColumnId(headerRow.isPresent() ? headerRow.get().get(columnIndex) : ("C" + (columnIndex + 1)))));
         return new Format(headerRows, columns);
     }
 }

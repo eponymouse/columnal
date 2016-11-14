@@ -22,13 +22,13 @@ import java.util.Map;
  */
 public abstract class CalculatedColumn extends Column
 {
-    private final String name;
+    private final ColumnId name;
     private final ArrayList<Column> dependencies;
     // Version of each of the dependencies at last calculation:
     private final Map<Column, Long> calcVersions = new IdentityHashMap<>();
     private long version = 1;
 
-    public CalculatedColumn(RecordSet recordSet, String name, Column... dependencies)
+    public CalculatedColumn(RecordSet recordSet, ColumnId name, Column... dependencies)
     {
         super(recordSet);
         this.name = name;
@@ -150,7 +150,7 @@ public abstract class CalculatedColumn extends Column
 
     @Override
     @OnThread(Tag.Any)
-    public final String getName()
+    public final ColumnId getName()
     {
         return name;
     }

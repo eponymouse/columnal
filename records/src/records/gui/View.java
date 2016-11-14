@@ -9,10 +9,15 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.QuadCurve;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
-import records.data.Item;
+import records.data.Table;
+import records.data.TableId;
+import records.data.TableManager;
 import records.data.Transformation;
+import records.error.InternalException;
+import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -20,8 +25,10 @@ import utility.Utility;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -29,13 +36,16 @@ import java.util.stream.Stream;
  * Created by neil on 18/10/2016.
  */
 @OnThread(Tag.FXPlatform)
-public class View extends Pane
+public class View extends Pane implements TableManager
 {
     private static final double DEFAULT_SPACE = 150.0;
 
     private final ObservableMap<Transformation, Overlays> overlays;
+    @OnThread(value = Tag.Any,requireSynchronized = true)
     private final List<DataSource> sources = new ArrayList<>();
+    @OnThread(value = Tag.Any,requireSynchronized = true)
     private final List<Transformation> transformations = new ArrayList<>();
+    private final Map<Table, TableDisplay> tableDisplays = new IdentityHashMap<>();
 
     // Does not write to that destination, just uses it for relative paths
     public void save(@Nullable File destination, FXPlatformConsumer<String> then)
@@ -43,7 +53,13 @@ public class View extends Pane
         class Fetcher implements FXPlatformConsumer<String>
         {
             private final List<String> all = new ArrayList<>();
-            private final Iterator<Item> it = Stream.concat(sources.stream(), transformations.stream()).iterator();
+            private final Iterator<Table> it;
+
+            public Fetcher(List<Table> allTables)
+            {
+                it = allTables.iterator();
+            }
+
             @Override
             public @OnThread(Tag.FXPlatform) void consume(String s)
             {
@@ -62,7 +78,17 @@ public class View extends Pane
                     then.consume(all.stream().collect(Collectors.joining("\n\n")));
             }
         };
-        new Fetcher().getNext();
+        new Fetcher(getAllTables()).getNext();
+    }
+
+    @OnThread(Tag.Any)
+    @NonNull
+    private synchronized List<Table> getAllTables()
+    {
+        List<Table> all = new ArrayList<>();
+        all.addAll(sources);
+        all.addAll(transformations);
+        return all;
     }
 
     @OnThread(Tag.FXPlatform)
@@ -72,7 +98,7 @@ public class View extends Pane
         private final Label name;
         private final QuadCurve arrowTo;
 
-        public Overlays(Table source, String text, Table dest)
+        public Overlays(TableDisplay source, String text, TableDisplay dest)
         {
             name = new Label(text);
             arrowFrom = new QuadCurve();
@@ -149,30 +175,53 @@ public class View extends Pane
         });
     }
 
-    // TODO replace Table here with a new DataSource class,
-    // i.e. all tables are datasource or transformation
-    public void add(DataSource data, @Nullable Table alignToRightOf)
+    public void add(DataSource data, @Nullable Table alignToRightOf) throws InternalException
     {
-        sources.add(data);
-        add(new Table(this, data.getData()), alignToRightOf);
+        synchronized (this)
+        {
+            sources.add(data);
+        }
+        add(new TableDisplay(this, data), alignToRightOf);
     }
 
-    private void add(Table table, @Nullable Table alignToRightOf)
+    private void add(TableDisplay tableDisplay, @Nullable Table alignToRightOf) throws InternalException
     {
-        getChildren().add(table);
+        tableDisplays.put(tableDisplay.getTable(), tableDisplay);
+        getChildren().add(tableDisplay);
         if (alignToRightOf != null)
         {
-            table.setLayoutX(alignToRightOf.getLayoutX() + alignToRightOf.getWidth() + DEFAULT_SPACE);
-            table.setLayoutY(alignToRightOf.getLayoutY());
+            TableDisplay alignToRightOfDisplay = getTableDisplay(alignToRightOf);
+            tableDisplay.setLayoutX(alignToRightOfDisplay.getLayoutX() + alignToRightOfDisplay.getWidth() + DEFAULT_SPACE);
+            tableDisplay.setLayoutY(alignToRightOfDisplay.getLayoutY());
         }
     }
 
-    public void add(Transformation transformation)
+    private TableDisplay getTableDisplay(Table table) throws InternalException
     {
-        transformations.add(transformation);
-        Table table = new Table(this, transformation.getData());
-        add(table, transformation.getSource());
-        overlays.put(transformation, new Overlays(transformation.getSource(), transformation.getTransformationLabel(), table));
+        TableDisplay display = tableDisplays.get(table);
+        if (display == null)
+            throw new InternalException("Could not find display for table: \"" + table.getId() + "\"");
+        return display;
+    }
+
+    public void add(Transformation transformation) throws InternalException
+    {
+        synchronized (this)
+        {
+            transformations.add(transformation);
+        }
+        TableDisplay tableDisplay = new TableDisplay(this, transformation);
+        add(tableDisplay, transformation);
+        try
+        {
+            overlays.put(transformation, new Overlays(getTableDisplay(transformation.getSource()), transformation.getTransformationLabel(), tableDisplay));
+        }
+        catch (UserException e)
+        {
+            // We just don't add the overlays if there is a problem finding the source
+            // Don't show the error as the user has probably already seen it.
+        }
+
 
     }
 
@@ -181,5 +230,24 @@ public class View extends Pane
     public void requestFocus()
     {
         // Don't allow focus
+    }
+
+    @Override
+    @OnThread(Tag.Any)
+    public synchronized @Nullable Table getTable(TableId tableId)
+    {
+        for (DataSource d : this.sources)
+        {
+            if (d.getId().equals(tableId))
+                return d;
+        }
+
+        for (Transformation t : this.transformations)
+        {
+            if (t.getId().equals(tableId))
+                return t;
+        }
+
+        return null;
     }
 }

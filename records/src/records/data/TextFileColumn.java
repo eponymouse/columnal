@@ -18,11 +18,11 @@ public abstract class TextFileColumn extends Column
     protected final File textFile;
     protected final byte sep;
     protected final int columnIndex;
-    private final String columnName;
+    private final ColumnId columnName;
     protected ReadState lastFilePosition;
 
 
-    protected TextFileColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, String columnName, int columnIndex)
+    protected TextFileColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, ColumnId columnName, int columnIndex)
     {
         super(recordSet);
         this.textFile = textFile;
@@ -40,7 +40,7 @@ public abstract class TextFileColumn extends Column
 
     @Override
     @OnThread(Tag.Any)
-    public final String getName()
+    public final ColumnId getName()
     {
         return columnName;
     }
