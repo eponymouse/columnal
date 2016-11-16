@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 /**
  * Created by neil on 16/11/2016.
@@ -34,8 +35,8 @@ public class GenSummaryStats extends Generator<SummaryStatistics>
     {
         Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
         List<ColumnId> splitBy = TestUtil.makeList(sourceOfRandomness, 0, 4, () -> TestUtil.generateColumnId(sourceOfRandomness));
-        Map<ColumnId, Set<SummaryType>> summaries = TestUtil.makeMap(sourceOfRandomness, 1, 5, () -> TestUtil.generateColumnId(sourceOfRandomness),
-            () -> new HashSet<>(TestUtil.makeList(sourceOfRandomness, 1, 5, () -> sourceOfRandomness.choose(SummaryType.values()))));
+        Map<ColumnId, TreeSet<SummaryType>> summaries = TestUtil.makeMap(sourceOfRandomness, 1, 5, () -> TestUtil.generateColumnId(sourceOfRandomness),
+            () -> new TreeSet<>(TestUtil.makeList(sourceOfRandomness, 1, 5, () -> sourceOfRandomness.choose(SummaryType.values()))));
         try
         {
             return new SummaryStatistics(new DummyManager(), ids.getFirst(), ids.getSecond(), summaries, splitBy);

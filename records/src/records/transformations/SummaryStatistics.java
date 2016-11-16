@@ -62,6 +62,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.stream.Collectors;
 
 /**
@@ -74,7 +75,7 @@ public class SummaryStatistics extends Transformation
     private final @Nullable Table src;
     private final TableId srcTableId;
     @OnThread(Tag.Any)
-    private final Map<ColumnId, Set<SummaryType>> summaries;
+    private final Map<ColumnId, TreeSet<SummaryType>> summaries;
     @OnThread(Tag.Any)
     private final List<ColumnId> splitBy;
     @OnThread(Tag.Any)
@@ -116,7 +117,7 @@ public class SummaryStatistics extends Transformation
         }
     }
 
-    public SummaryStatistics(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, Map<ColumnId, Set<SummaryType>> summaries, List<ColumnId> splitBy) throws InternalException, UserException
+    public SummaryStatistics(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, Map<ColumnId, TreeSet<SummaryType>> summaries, List<ColumnId> splitBy) throws InternalException, UserException
     {
         super(mgr, thisTableId);
         this.srcTableId = srcTableId;
@@ -189,7 +190,7 @@ public class SummaryStatistics extends Transformation
             }
         }
 
-        for (Entry<ColumnId, Set<SummaryType>> e : summaries.entrySet())
+        for (Entry<ColumnId, TreeSet<SummaryType>> e : summaries.entrySet())
         {
             for (SummaryType summaryType : e.getValue())
             {
@@ -531,10 +532,10 @@ public class SummaryStatistics extends Transformation
                 if (src == null)
                     throw new InternalException("Null source for transformation");
 
-                Map<ColumnId, Set<SummaryType>> summaries = new HashMap<>();
+                Map<ColumnId, TreeSet<SummaryType>> summaries = new HashMap<>();
                 for (Pair<Column, SummaryType> op : ops)
                 {
-                    Set<SummaryType> summaryTypes = summaries.computeIfAbsent(op.getFirst().getName(), s -> new HashSet<SummaryType>());
+                    Set<SummaryType> summaryTypes = summaries.computeIfAbsent(op.getFirst().getName(), s -> new TreeSet<SummaryType>());
                     summaryTypes.add(op.getSecond());
                 }
                 return new SummaryStatistics(mgr, null, src.getTable().getId(), summaries, Utility.<Column, ColumnId>mapList(splitBy, Column::getName));
@@ -546,17 +547,17 @@ public class SummaryStatistics extends Transformation
         {
             SummaryContext loaded = Utility.parseAsOne(detail, BasicLexer::new, SortParser::new).summary();
 
-            Map<ColumnId, Set<SummaryType>> summaryTypes = new HashMap<>();
+            Map<ColumnId, TreeSet<SummaryType>> summaryTypes = new HashMap<>();
             for (SummaryColContext sumType : loaded.summaryCol())
             {
-                HashSet<SummaryType> summaries = new HashSet<>();
+                TreeSet<SummaryType> summaries = new TreeSet<>();
                 for (SummaryTypeContext type : sumType.summaryType())
                 {
                     summaries.add(SummaryType.valueOf(type.getText()));
                 }
                 summaryTypes.put(new ColumnId(sumType.column.getText()), summaries);
             }
-            List<ColumnId> splits = Utility.<SplitByContext, ColumnId>mapList(loaded.splitBy(), s -> new ColumnId(s.getText()));
+            List<ColumnId> splits = Utility.<SplitByContext, ColumnId>mapList(loaded.splitBy(), s -> new ColumnId(s.column.getText()));
             return new SummaryStatistics(mgr, tableId, new TableId(loaded.srcTableId.getText()), summaryTypes, splits);
         }
     }
@@ -565,8 +566,8 @@ public class SummaryStatistics extends Transformation
     protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
     {
         List<String> details = new ArrayList<>();
-        details.add("SUMMARY " + srcTableId.getOutput());
-        for (Entry<ColumnId, Set<SummaryType>> entry : summaries.entrySet())
+        details.add("SUMMARYOF " + srcTableId.getOutput());
+        for (Entry<ColumnId, TreeSet<SummaryType>> entry : summaries.entrySet())
         {
             if (!entry.getValue().isEmpty())
             {
@@ -866,5 +867,30 @@ public class SummaryStatistics extends Transformation
         {
             return numericFold.end();
         }
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        SummaryStatistics that = (SummaryStatistics) o;
+
+        if (!srcTableId.equals(that.srcTableId)) return false;
+        if (!summaries.equals(that.summaries)) return false;
+        return splitBy.equals(that.splitBy);
+
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = super.hashCode();
+        result = 31 * result + srcTableId.hashCode();
+        result = 31 * result + summaries.hashCode();
+        result = 31 * result + splitBy.hashCode();
+        return result;
     }
 }

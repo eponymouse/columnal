@@ -9,10 +9,10 @@ orderKW : {_input.LT(1).getText().equals("ASCENDING") || _input.LT(1).getText().
 orderBy : orderKW column=ATOM NEWLINE;
 sort : sortKW srcTableId=ATOM NEWLINE orderBy+;
 
-summaryKW : {_input.LT(1).getText().equals("SUMMARY")}? ATOM;
+summaryKW : {_input.LT(1).getText().equals("SUMMARYOF")}? ATOM;
 splitKW : {_input.LT(1).getText().equals("SPLIT")}? ATOM;
 fromKW : {_input.LT(1).getText().equals("FROM")}? ATOM;
 summaryType : ATOM;
-summaryCol : fromKW column=ATOM summaryType* NEWLINE;
+summaryCol : fromKW column=ATOM summaryType+ NEWLINE;
 splitBy : splitKW column=ATOM NEWLINE;
 summary : summaryKW srcTableId=ATOM NEWLINE summaryCol+ splitBy*;
