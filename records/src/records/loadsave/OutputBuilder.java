@@ -67,8 +67,14 @@ public class OutputBuilder
     @OnThread(Tag.Any)
     public synchronized OutputBuilder id(String id)
     {
-        //TODO validate
-        cur().add(id);
+        if (id.contains(" ") || id.startsWith("@"))
+        {
+            cur().add(quoted(id));
+        }
+        else
+        {
+            cur().add(id);
+        }
         return this;
     }
 
