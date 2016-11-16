@@ -33,13 +33,7 @@ public class PropLoadSave
 {
     @Property(trials = 1000)
     @OnThread(value = Tag.Simulation,ignoreParent = true)
-    public void testSort(@From(GenSort.class) Sort sort) throws IOException, ExecutionException, InterruptedException, InternalException, UserException, InvocationTargetException
-    {
-        test(sort);
-    }
-
-    @OnThread(value = Tag.Simulation,ignoreParent = true)
-    private static void test(Transformation original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
+    public void testTransformation(@From(GenSort.class) @From(GenSummaryStats.class) Transformation original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         String saved = save(original);
         try

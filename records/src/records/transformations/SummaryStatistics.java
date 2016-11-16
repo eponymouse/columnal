@@ -116,7 +116,7 @@ public class SummaryStatistics extends Transformation
         }
     }
 
-    private SummaryStatistics(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, Map<ColumnId, Set<SummaryType>> summaries, List<ColumnId> splitBy) throws InternalException, UserException
+    public SummaryStatistics(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, Map<ColumnId, Set<SummaryType>> summaries, List<ColumnId> splitBy) throws InternalException, UserException
     {
         super(mgr, thisTableId);
         this.srcTableId = srcTableId;
@@ -127,7 +127,7 @@ public class SummaryStatistics extends Transformation
         {
             this.result = null;
             error = "Could not find source table: \"" + srcTableId + "\"";
-            throw new WholeTableException(error);
+            return;
         }
         else
             error = "Unknown error with table \"" + getId() + "\"";

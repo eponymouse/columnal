@@ -10,6 +10,7 @@ import records.error.UserException;
 import records.transformations.Sort;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 
 import java.util.List;
 
@@ -31,19 +32,12 @@ public class GenSort extends Generator<Sort>
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public Sort generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        TableId us = TestUtil.generateTableId(sourceOfRandomness);
-        TableId src;
-        do
-        {
-            src = TestUtil.generateTableId(sourceOfRandomness);
-        }
-        while (src.equals(us));
+        Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
         List<ColumnId> cols = TestUtil.makeList(sourceOfRandomness, 1, 10, () -> TestUtil.generateColumnId(sourceOfRandomness));
 
-        TableId srcFinal = src;
         try
         {
-            return new Sort(new DummyManager(), us, srcFinal, cols);
+            return new Sort(new DummyManager(), ids.getFirst(), ids.getSecond(), cols);
         }
         catch (UserException | InternalException e)
         {

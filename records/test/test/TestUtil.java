@@ -5,10 +5,13 @@ import records.data.ColumnId;
 import records.data.Table;
 import records.data.TableId;
 import records.grammar.MainLexer;
+import utility.Pair;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 
 import static org.junit.Assert.assertEquals;
@@ -41,6 +44,19 @@ public class TestUtil
     public static TableId generateTableId(SourceOfRandomness sourceOfRandomness)
     {
         return new TableId(generateIdent(sourceOfRandomness));
+    }
+
+    // Generates a pair of different ids
+    public static Pair<TableId, TableId> generateTableIdPair(SourceOfRandomness r)
+    {
+        TableId us = generateTableId(r);
+        TableId src;
+        do
+        {
+            src = generateTableId(r);
+        }
+        while (src.equals(us));
+        return new Pair<>(us, src);
     }
 
     public static ColumnId generateColumnId(SourceOfRandomness sourceOfRandomness)
@@ -85,6 +101,15 @@ public class TestUtil
         ArrayList<T> list = new ArrayList<>();
         for (int i = 0; i < size; i++)
             list.add(makeOne.get());
+        return list;
+    }
+
+    public static <K, V> Map<K, V> makeMap(SourceOfRandomness r, int minSizeIncl, int maxSizeIncl, Supplier<K> makeKey, Supplier<V> makeValue)
+    {
+        int size = r.nextInt(minSizeIncl, maxSizeIncl);
+        HashMap<K, V> list = new HashMap<>();
+        for (int i = 0; i < size; i++)
+            list.put(makeKey.get(), makeValue.get());
         return list;
     }
 }
