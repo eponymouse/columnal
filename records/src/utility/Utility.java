@@ -30,8 +30,12 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ListView;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.util.*;
+import org.antlr.v4.runtime.ANTLRErrorStrategy;
 import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.BailErrorStrategy;
+import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
+import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.TokenStream;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -194,10 +198,10 @@ public class Utility
         return MathContext.DECIMAL64;
     }
 
-    public static <T, PARSER extends Parser> PARSER parseAsOne(List<String> input, Function<TokenStream, PARSER> makeParser)
+    public static <T, PARSER extends Parser> PARSER parseAsOne(String input, Function<CharStream, Lexer> makeLexer, Function<TokenStream, PARSER> makeParser)
     {
-        ANTLRInputStream inputStream = new ANTLRInputStream(input.stream().collect(Collectors.joining("\n")));
-        BasicLexer lexer = new BasicLexer(inputStream);
+        ANTLRInputStream inputStream = new ANTLRInputStream(input);
+        Lexer lexer = makeLexer.apply(inputStream);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         PARSER parser = makeParser.apply(tokens);
         return parser;

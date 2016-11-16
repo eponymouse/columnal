@@ -10,6 +10,7 @@ import records.data.ImmediateDataSource;
 import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
 import records.data.RecordSet;
+import records.data.TableManager;
 import records.data.columntype.NumericColumnType;
 import records.error.FunctionInt;
 import records.error.InternalException;
@@ -29,7 +30,7 @@ import java.util.List;
 public class HTMLImport
 {
     @OnThread(Tag.Simulation)
-    public static List<DataSource> importHTMLFile(File htmlFile) throws IOException, InternalException, UserException
+    public static List<DataSource> importHTMLFile(TableManager mgr, File htmlFile) throws IOException, InternalException, UserException
     {
         List<DataSource> results = new ArrayList<>();
         Document doc = parse(htmlFile);
@@ -82,7 +83,7 @@ public class HTMLImport
 
             vals = null; // Make sure we don't keep a reference
             // Not because we null it, but because we make it non-final.
-            results.add(new ImmediateDataSource(new RecordSet(htmlFile.getName(), columns) {
+            results.add(new ImmediateDataSource(mgr, new RecordSet(htmlFile.getName(), columns) {
                 @Override
                 public final boolean indexValid(int index) throws UserException
                 {

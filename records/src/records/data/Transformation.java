@@ -18,11 +18,12 @@ import java.util.List;
  */
 public abstract class Transformation extends Table
 {
-    public Transformation(@Nullable TableId tableId) throws UserException
+    public Transformation(TableManager mgr, @Nullable TableId tableId) throws UserException
     {
-        super(tableId);
+        super(mgr, tableId);
     }
 
+    // Label to show between arrows:
     @OnThread(Tag.FXPlatform)
     public abstract String getTransformationLabel();
 
@@ -39,9 +40,15 @@ public abstract class Transformation extends Table
     {
         OutputBuilder b = new OutputBuilder();
         // transformation : TRANSFORMATION tableId transformationName NEWLINE transformationDetail+;
-        b.t(MainLexer.TRANSFORMATION).id(getId()).id(getTransformationLabel()).inner(() -> saveDetail(destination));
+        b.t(MainLexer.TRANSFORMATION).id(getId()).id(getTransformationName()).inner(() -> saveDetail(destination));
+        savePosition(b);
+        b.end().id(getId()).nl();
         then.consume(b.toString());
     }
+
+    // The name as used when saving:
+    @OnThread(Tag.Any)
+    protected abstract String getTransformationName();
 
     @OnThread(Tag.FXPlatform)
     protected abstract List<String> saveDetail(@Nullable File destination);

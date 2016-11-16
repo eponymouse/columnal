@@ -36,7 +36,7 @@ import java.util.stream.Stream;
  * Created by neil on 18/10/2016.
  */
 @OnThread(Tag.FXPlatform)
-public class View extends Pane implements TableManager
+public class View extends Pane
 {
     private static final double DEFAULT_SPACE = 150.0;
 
@@ -46,6 +46,7 @@ public class View extends Pane implements TableManager
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private final List<Transformation> transformations = new ArrayList<>();
     private final Map<Table, TableDisplay> tableDisplays = new IdentityHashMap<>();
+    private final TableManager tableManager = new TableManager();
 
     // Does not write to that destination, just uses it for relative paths
     public void save(@Nullable File destination, FXPlatformConsumer<String> then)
@@ -89,6 +90,12 @@ public class View extends Pane implements TableManager
         all.addAll(sources);
         all.addAll(transformations);
         return all;
+    }
+
+    @OnThread(Tag.Any)
+    public TableManager getManager()
+    {
+        return tableManager;
     }
 
     @OnThread(Tag.FXPlatform)
@@ -230,24 +237,5 @@ public class View extends Pane implements TableManager
     public void requestFocus()
     {
         // Don't allow focus
-    }
-
-    @Override
-    @OnThread(Tag.Any)
-    public synchronized @Nullable Table getTable(TableId tableId)
-    {
-        for (DataSource d : this.sources)
-        {
-            if (d.getId().equals(tableId))
-                return d;
-        }
-
-        for (Transformation t : this.transformations)
-        {
-            if (t.getId().equals(tableId))
-                return t;
-        }
-
-        return null;
     }
 }

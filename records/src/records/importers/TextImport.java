@@ -4,6 +4,7 @@ import records.data.Column;
 import records.data.DataSource;
 import records.data.LinkedDataSource;
 import records.data.RecordSet;
+import records.data.TableManager;
 import records.data.TextFileNumericColumn;
 import records.data.TextFileStringColumn;
 import records.data.columntype.NumericColumnType;
@@ -31,7 +32,7 @@ import java.util.function.Function;
 public class TextImport
 {
     @OnThread(Tag.Simulation)
-    public static DataSource importTextFile(File textFile) throws IOException, InternalException, UserException
+    public static DataSource importTextFile(TableManager mgr, File textFile) throws IOException, InternalException, UserException
     {
         // Read the first few lines:
         try (BufferedReader br = new BufferedReader(new FileReader(textFile))) {
@@ -85,7 +86,7 @@ public class TextImport
                         return rowCount;
                     }
                 };
-            return new LinkedDataSource(rs, MainLexer.TEXTFILE, textFile);
+            return new LinkedDataSource(mgr, rs, MainLexer.TEXTFILE, textFile);
         }
     }
 }

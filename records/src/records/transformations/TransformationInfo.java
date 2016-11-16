@@ -39,6 +39,7 @@ public abstract class TransformationInfo
      */
     protected final String displayTitle;
 
+    @OnThread(Tag.Any)
     public TransformationInfo(String name, List<String> keywords, String displayTitle)
     {
         this.name = name;
@@ -61,7 +62,7 @@ public abstract class TransformationInfo
     public abstract SimulationSupplier<Transformation> getTransformation(TableManager mgr);
 
     @OnThread(Tag.Simulation)
-    public abstract Transformation load(TableManager mgr, TableId tableId, List<String> detail) throws InternalException, UserException;
+    public abstract Transformation load(TableManager mgr, TableId tableId, String detail) throws InternalException, UserException;
 
     public String getDisplayTitle()
     {

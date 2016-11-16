@@ -1,6 +1,7 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.error.UserException;
 import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
@@ -18,8 +19,9 @@ public class LinkedDataSource extends DataSource
     private final int typeToken;
     private final File path;
 
-    public LinkedDataSource(RecordSet rs, int typeToken, File path)
+    public LinkedDataSource(TableManager mgr, RecordSet rs, int typeToken, File path) throws UserException
     {
+        super(mgr, null);
         this.data = rs;
         this.typeToken = typeToken;
         this.path = path;

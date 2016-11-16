@@ -109,6 +109,7 @@ public class TableDisplay extends BorderPane
     public TableDisplay(View parent, Table table)
     {
         this.table = table;
+        this.table.setDisplay(this);
         String error;
         RecordSet recordSet;
         try

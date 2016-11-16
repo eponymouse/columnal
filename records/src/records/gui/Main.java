@@ -51,7 +51,7 @@ public class Main extends Application
                 {
                     try
                     {
-                        DataSource rs = TextImport.importTextFile(chosen);
+                        DataSource rs = TextImport.importTextFile(v.getManager(), chosen);
                         Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.add(rs, null)));
                     }
                     catch (IOException | InternalException | UserException ex)
@@ -72,7 +72,7 @@ public class Main extends Application
                 {
                     try
                     {
-                        for (DataSource rs : HTMLImport.importHTMLFile(chosen))
+                        for (DataSource rs : HTMLImport.importHTMLFile(v.getManager(), chosen))
                         {
                             Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.add(rs, null)));
                         }
@@ -95,7 +95,7 @@ public class Main extends Application
         Workers.onWorkerThread("Example import", () -> {
             try
             {
-                DataSource rs = HTMLImport.importHTMLFile(new File("S:\\Downloads\\Report_10112016.xls")).get(0);
+                DataSource rs = HTMLImport.importHTMLFile(v.getManager(), new File("S:\\Downloads\\Report_10112016.xls")).get(0);
                     //TextImport.importTextFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"));
                 Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.add(rs, null)));
             }

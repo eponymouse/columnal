@@ -2,32 +2,32 @@ parser grammar MainParser;
 
 options { tokenVocab = MainLexer; }
 
-tableId : ITEM;
-importType : ITEM;
-filePath : ITEM;
+item : ~NEWLINE;
+
+tableId : item;
+importType : item;
+filePath : item;
 dataSourceLinkHeader : DATA tableId LINKED importType filePath NEWLINE;
-dataSourceImmedate : DATA tableId BEGIN NEWLINE;
+dataSourceImmedate : DATA tableId detail;
 
-immediateDataLine : ITEM+ NEWLINE;
+dataSource : (dataSourceLinkHeader | (dataSourceImmedate detail NEWLINE)) dataFormat;
 
-dataSource : (dataSourceLinkHeader | (dataSourceImmedate immediateDataLine* END DATA NEWLINE)) dataFormat;
+transformationName : item;
+transformation : TRANSFORMATION tableId transformationName detail NEWLINE;
 
-transformationName : ITEM;
-transformation : TRANSFORMATION tableId transformationName BEGIN NEWLINE transformationDetail+;
+detail: BEGIN DETAIL_LINE+ DETAIL_END;
 
-transformationDetail: ITEM+ NEWLINE;
-
-numRows : ITEM;
+numRows : item;
 dataFormat : FORMAT (SKIP numRows)? BEGIN NEWLINE columnFormat+ END FORMAT NEWLINE;
 
-columnFormat : columnType ITEM NEWLINE;
+columnFormat : columnType item NEWLINE;
 
-columnType : TEXT | BLANK | NUMBER STRING ITEM ITEM | DATE STRING;
+columnType : TEXT | BLANK | NUMBER STRING item item | DATE STRING;
 
 blank : NEWLINE;
 
-positionLine : POSITION ITEM ITEM NEWLINE;
+position : POSITION item item item item NEWLINE;
 
-table : (dataSource | transformation) positionLine END tableId NEWLINE blank+;
+table : (dataSource | transformation) position END tableId NEWLINE;
 
-file : VERSION ITEM NEWLINE blank+ table+;
+file : VERSION item NEWLINE blank+ (table blank*)+;

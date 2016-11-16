@@ -35,6 +35,7 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.grammar.BasicLexer;
 import records.grammar.SortParser;
 import records.grammar.SortParser.OrderByContext;
 import records.grammar.SortParser.SplitByContext;
@@ -69,6 +70,7 @@ import java.util.stream.Collectors;
 @OnThread(Tag.Simulation)
 public class SummaryStatistics extends Transformation
 {
+    public static final String NAME = "stats";
     private final @Nullable Table src;
     private final TableId srcTableId;
     @OnThread(Tag.Any)
@@ -116,7 +118,7 @@ public class SummaryStatistics extends Transformation
 
     private SummaryStatistics(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, Map<ColumnId, Set<SummaryType>> summaries, List<ColumnId> splitBy) throws InternalException, UserException
     {
-        super(thisTableId);
+        super(mgr, thisTableId);
         this.srcTableId = srcTableId;
         this.src = mgr.getTable(srcTableId);
         this.summaries = summaries;
@@ -414,6 +416,12 @@ public class SummaryStatistics extends Transformation
         return result;
     }
 
+    @Override
+    protected @OnThread(Tag.Any) String getTransformationName()
+    {
+        return NAME;
+    }
+
     @OnThread(Tag.FXPlatform)
     public static class Info extends TransformationInfo
     {
@@ -422,9 +430,10 @@ public class SummaryStatistics extends Transformation
         private final ObservableList<@NonNull Pair<Column, SummaryType>> ops = FXCollections.observableArrayList();
         private final ObservableList<@NonNull Column> splitBy = FXCollections.observableArrayList();
 
+        @OnThread(Tag.Any)
         public Info()
         {
-            super("stats", Arrays.asList("min", "max"), "Basic Statistics");
+            super(NAME, Arrays.asList("min", "max"), "Basic Statistics");
         }
 
         @Override
@@ -533,9 +542,9 @@ public class SummaryStatistics extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, TableId tableId, List<String> detail) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, TableId tableId, String detail) throws InternalException, UserException
         {
-            SummaryContext loaded = Utility.parseAsOne(detail, SortParser::new).summary();
+            SummaryContext loaded = Utility.parseAsOne(detail, BasicLexer::new, SortParser::new).summary();
 
             Map<ColumnId, Set<SummaryType>> summaryTypes = new HashMap<>();
             for (SummaryColContext sumType : loaded.summaryCol())

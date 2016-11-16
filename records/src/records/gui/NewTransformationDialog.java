@@ -109,7 +109,7 @@ public class NewTransformationDialog
                     TransformationInfo trans = selectedTransformation.get();
                     if (trans != null)
                     {
-                        return trans.getTransformation(parentView);
+                        return trans.getTransformation(parentView.getManager());
                     }
                 }
                 return null;

@@ -100,7 +100,7 @@ public class OutputBuilder
     @Override
     public synchronized String toString()
     {
-        String finished = lines.stream().map(line -> line.stream().collect(Collectors.joining(" "))).collect(Collectors.joining("\n"));
+        String finished = lines.stream().map(line -> line.stream().collect(Collectors.joining(" ")) + "\n").collect(Collectors.joining());
         if (curLine != null)
             finished += curLine;
         return finished;
@@ -149,12 +149,12 @@ public class OutputBuilder
     @OnThread(Tag.FXPlatform)
     public synchronized void inner(FXPlatformSupplier<List<String>> genDetail)
     {
-        t(MainLexer.BEGIN).nl();
+        raw("@BEGIN").nl();
         for (String line : genDetail.get())
         {
             indent().raw(line).nl();
         }
-        t(MainLexer.END).nl();
+        raw("@END").nl();
     }
 
     @OnThread(Tag.Any)
@@ -169,5 +169,17 @@ public class OutputBuilder
     {
         // Second space will be added after:
         return ws(" ");
+    }
+
+    public OutputBuilder end()
+    {
+        raw("@END");
+        return this;
+    }
+
+    public OutputBuilder d(double number)
+    {
+        cur().add(String.format("%f", number));
+        return this;
     }
 }

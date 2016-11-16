@@ -29,6 +29,7 @@ import records.data.datatype.DataType.NumberDisplayInfo;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.BasicLexer;
 import records.grammar.SortParser;
 import records.grammar.SortParser.OrderByContext;
 import records.grammar.SortParser.SortContext;
@@ -55,6 +56,9 @@ import java.util.Optional;
 @OnThread(Tag.Simulation)
 public class Sort extends Transformation
 {
+
+    public static final String NAME = "sort";
+
     private static enum Direction { ASCENDING, DESCENDING; }
 
     @OnThread(Tag.Any)
@@ -91,7 +95,7 @@ public class Sort extends Transformation
 
     public Sort(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, List<ColumnId> sortBy) throws UserException, InternalException
     {
-        super(thisTableId);
+        super(mgr, thisTableId);
         this.srcTableId = srcTableId;
         this.src = mgr.getTable(srcTableId);
         this.originalSortBy = sortBy;
@@ -101,7 +105,7 @@ public class Sort extends Transformation
             this.result = null;
             this.sortBy = null;
             sortByError = "Could not find source table: \"" + srcTableId + "\"";
-            throw new WholeTableException(sortByError);
+            return;
         }
         List<Column> sortByColumns = new ArrayList<>();
         for (ColumnId c : originalSortBy)
@@ -237,6 +241,12 @@ public class Sort extends Transformation
     }
 
     @Override
+    protected @OnThread(Tag.Any) String getTransformationName()
+    {
+        return NAME;
+    }
+
+    @Override
     public @OnThread(Tag.FXPlatform) Table getSource() throws UserException
     {
         if (src == null)
@@ -250,9 +260,10 @@ public class Sort extends Transformation
         private @MonotonicNonNull TableDisplay src;
         private ObservableList<Optional<Column>> sortBy = FXCollections.observableArrayList();
 
+        @OnThread(Tag.Any)
         public Info()
         {
-            super("sort", Collections.emptyList(), "Sort");
+            super(NAME, Collections.emptyList(), "Sort");
             sortBy.add(Optional.empty());
         }
 
@@ -308,9 +319,9 @@ public class Sort extends Transformation
 
         @Override
         @OnThread(Tag.Simulation)
-        public Transformation load(TableManager mgr, TableId tableId, List<String> detail) throws InternalException, UserException
+        public Transformation load(TableManager mgr, TableId tableId, String detail) throws InternalException, UserException
         {
-            SortContext loaded = Utility.parseAsOne(detail, SortParser::new).sort();
+            SortContext loaded = Utility.parseAsOne(detail, BasicLexer::new, SortParser::new).sort();
 
             return new Sort(mgr, tableId, new TableId(loaded.srcTableId.getText()), Utility.<OrderByContext, ColumnId>mapList(loaded.orderBy(), o -> new ColumnId(o.column.getText())));
         }
@@ -324,5 +335,28 @@ public class Sort extends Transformation
         for (ColumnId c : originalSortBy)
             r.add("ASCENDING " + c.getOutput());
         return r;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        Sort sort = (Sort) o;
+
+        if (!srcTableId.equals(sort.srcTableId)) return false;
+        return originalSortBy.equals(sort.originalSortBy);
+
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = super.hashCode();
+        result = 31 * result + srcTableId.hashCode();
+        result = 31 * result + originalSortBy.hashCode();
+        return result;
     }
 }
