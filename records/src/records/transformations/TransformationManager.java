@@ -1,11 +1,6 @@
 package records.transformations;
 
-import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.Lexer;
-import org.antlr.v4.runtime.ParserRuleContext;
-import org.antlr.v4.runtime.RecognitionException;
-import org.antlr.v4.runtime.Recognizer;
-import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.data.TableId;
@@ -15,13 +10,12 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
 import records.grammar.MainParser;
-import records.grammar.MainParser.PositionContext;
 import records.grammar.MainParser.TableContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
+import utility.Utility.DescriptiveErrorListener;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -52,40 +46,10 @@ public class TransformationManager
         );
     }
 
-    private static class DescriptiveErrorListener extends BaseErrorListener
-    {
-        public final List<String> errors = new ArrayList<>();
-
-        @Override
-        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
-                                int line, int charPositionInLine,
-                                String msg, RecognitionException e)
-        {
-            String sourceName = recognizer.getInputStream().getSourceName();
-            if (!sourceName.isEmpty()) {
-                sourceName = String.format("%s:%d:%d: ", sourceName, line, charPositionInLine);
-            }
-
-            errors.add(sourceName+"line "+line+":"+charPositionInLine+" "+msg);
-        }
-    }
-
     @OnThread(Tag.Simulation)
     public Transformation loadOne(TableManager mgr, String source) throws InternalException, UserException
     {
-        DescriptiveErrorListener del = new DescriptiveErrorListener();
-        MainParser parser = Utility.parseAsOne(source, s -> {
-            Lexer l = new MainLexer(s);
-            l.removeErrorListeners();
-            l.addErrorListener(del);
-            return l;
-        }, MainParser::new);
-        parser.removeErrorListeners();
-        parser.addErrorListener(del);
-        TableContext table = parser.table();
-        if (!del.errors.isEmpty())
-            throw new UserException("Parse errors while loading:\n" + del.errors.stream().collect(Collectors.joining("\n")));
-        return load(mgr, table);
+        return Utility.parseAsOne(source, MainLexer::new, MainParser::new, parser -> load(mgr, parser.table()));
     }
 
     @OnThread(Tag.Simulation)

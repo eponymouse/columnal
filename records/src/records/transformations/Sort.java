@@ -34,6 +34,7 @@ import records.grammar.SortParser;
 import records.grammar.SortParser.OrderByContext;
 import records.grammar.SortParser.SortContext;
 import records.gui.TableDisplay;
+import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -321,7 +322,7 @@ public class Sort extends Transformation
         @OnThread(Tag.Simulation)
         public Transformation load(TableManager mgr, TableId tableId, String detail) throws InternalException, UserException
         {
-            SortContext loaded = Utility.parseAsOne(detail, BasicLexer::new, SortParser::new).sort();
+            SortContext loaded = Utility.parseAsOne(detail, BasicLexer::new, SortParser::new, SortParser::sort);
 
             return new Sort(mgr, tableId, new TableId(loaded.srcTableId.getText()), Utility.<OrderByContext, ColumnId>mapList(loaded.orderBy(), o -> new ColumnId(o.column.getText())));
         }
@@ -330,11 +331,11 @@ public class Sort extends Transformation
     @Override
     protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
     {
-        ArrayList<String> r = new ArrayList<>();
-        r.add("SORT " + srcTableId);
+        OutputBuilder b = new OutputBuilder();
+        b.kw("SORT").id(srcTableId).nl();
         for (ColumnId c : originalSortBy)
-            r.add("ASCENDING " + c.getOutput());
-        return r;
+            b.kw("ASCENDING").id(c).nl();
+        return b.toLines();
     }
 
     @Override

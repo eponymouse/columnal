@@ -1,6 +1,7 @@
 package records.loadsave;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnId;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitorGet;
@@ -33,6 +34,7 @@ public class OutputBuilder
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private @Nullable ArrayList<String> curLine = null;
 
+    // Gets the current line, making a new one if needed
     @OnThread(Tag.Any)
     private synchronized ArrayList<String> cur()
     {
@@ -41,7 +43,7 @@ public class OutputBuilder
         return curLine;
     }
 
-    // Outputs a token
+    // Outputs a token from MainLexer
     @OnThread(Tag.Any)
     public synchronized OutputBuilder t(int token)
     {
@@ -58,16 +60,25 @@ public class OutputBuilder
             throw new IllegalArgumentException("Could not remove quotes: <<" + quoted + ">>");
     }
 
+    // Outputs a table identifier, quoted if necessary
     @OnThread(Tag.Any)
     public synchronized OutputBuilder id(TableId id)
     {
         return id(id.getOutput());
     }
 
+    // Outputs a column identifier, quoted if necessary
+    @OnThread(Tag.Any)
+    public synchronized OutputBuilder id(ColumnId id)
+    {
+        return id(id.getOutput());
+    }
+
+    // Outputs an identifier, quoted if necessary
     @OnThread(Tag.Any)
     public synchronized OutputBuilder id(String id)
     {
-        if (id.contains(" ") || id.startsWith("@"))
+        if (id.contains(" ") || id.startsWith("@") || id.contains("\""))
         {
             cur().add(quoted(id));
         }
@@ -78,6 +89,7 @@ public class OutputBuilder
         return this;
     }
 
+    // Outputs a quoted absolute path
     public synchronized OutputBuilder path(Path path)
     {
         cur().add(quoted(path.toFile().getAbsolutePath()));
@@ -103,6 +115,15 @@ public class OutputBuilder
         return "\"" + s.replace("^", "^^").replace("\"", "^\"").replace("\n", "^n").replace("\r", "^r") + "\"";
     }
 
+    @OnThread(Tag.Any)
+    public synchronized List<String> toLines()
+    {
+        ArrayList<String> finished = new ArrayList<>(Utility.<List<String>, String>mapList(lines, line -> line.stream().collect(Collectors.joining(" "))));
+        if (curLine != null)
+            finished.add(curLine.stream().collect(Collectors.joining(" ")));
+        return finished;
+    }
+
     @Override
     public synchronized String toString()
     {
@@ -112,6 +133,7 @@ public class OutputBuilder
         return finished;
     }
 
+    // Outputs a row of an entire data set
     @OnThread(Tag.Simulation)
     public synchronized void data(DataType type, int index)
     {
@@ -144,7 +166,7 @@ public class OutputBuilder
         });
     }
 
-    // Don't forget, this will get an extra space added to it
+    // Don't forget, this will get an extra space added to it as spacing
     @OnThread(Tag.Any)
     public synchronized OutputBuilder ws(String whiteSpace)
     {
@@ -152,6 +174,7 @@ public class OutputBuilder
         return this;
     }
 
+    // Outputs the set of lines between @BEGIN/@END tags
     @OnThread(Tag.FXPlatform)
     public synchronized void inner(FXPlatformSupplier<List<String>> genDetail)
     {
@@ -163,6 +186,7 @@ public class OutputBuilder
         raw("@END").nl();
     }
 
+    // Outputs the given raw string
     @OnThread(Tag.Any)
     private OutputBuilder raw(String item)
     {
@@ -170,6 +194,7 @@ public class OutputBuilder
         return this;
     }
 
+    // Adds spacing at the current position
     @OnThread(Tag.Any)
     public OutputBuilder indent()
     {
@@ -179,13 +204,19 @@ public class OutputBuilder
 
     public OutputBuilder end()
     {
-        raw("@END");
-        return this;
+        return raw("@END");
     }
 
+    // Outputs a number (without E-notation)
     public OutputBuilder d(double number)
     {
         cur().add(String.format("%f", number));
         return this;
+    }
+
+    // Outputs an arbitrary keyword
+    public OutputBuilder kw(String keyword)
+    {
+        return raw(keyword);
     }
 }

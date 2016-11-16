@@ -13,6 +13,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
@@ -73,7 +74,10 @@ public class TestUtil
         }
         else
         {
-            return "Col" + sourceOfRandomness.nextLong();
+            // These should be escaped, but would be blown away on load: "\n", "\r", "\t"
+            return makeList(sourceOfRandomness, 1, 10, () -> sourceOfRandomness.choose(Arrays.asList(
+                "a", "Z", "0", "9", "-", "=", "+", " ", "^", "@", "\"", "'"
+            ))).stream().collect(Collectors.joining());
         }
     }
 

@@ -43,6 +43,7 @@ import records.grammar.SortParser.SummaryColContext;
 import records.grammar.SortParser.SummaryContext;
 import records.grammar.SortParser.SummaryTypeContext;
 import records.gui.TableDisplay;
+import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -545,7 +546,7 @@ public class SummaryStatistics extends Transformation
         @Override
         public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, TableId tableId, String detail) throws InternalException, UserException
         {
-            SummaryContext loaded = Utility.parseAsOne(detail, BasicLexer::new, SortParser::new).summary();
+            SummaryContext loaded = Utility.parseAsOne(detail, BasicLexer::new, SortParser::new, SortParser::summary);
 
             Map<ColumnId, TreeSet<SummaryType>> summaryTypes = new HashMap<>();
             for (SummaryColContext sumType : loaded.summaryCol())
@@ -565,20 +566,23 @@ public class SummaryStatistics extends Transformation
     @Override
     protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
     {
-        List<String> details = new ArrayList<>();
-        details.add("SUMMARYOF " + srcTableId.getOutput());
+        OutputBuilder b = new OutputBuilder();
+        b.kw("SUMMARYOF").id(srcTableId).nl();
         for (Entry<ColumnId, TreeSet<SummaryType>> entry : summaries.entrySet())
         {
             if (!entry.getValue().isEmpty())
             {
-                details.add("FROM " + entry.getKey().getOutput() + " " + entry.getValue().stream().<String>map(SummaryType::toString).collect(Collectors.joining(" ")));
+                b.kw("FROM").id(entry.getKey());
+                for (SummaryType t : entry.getValue())
+                    b.id(t.toString());
+                b.nl();
             }
         }
         for (ColumnId c : splitBy)
         {
-            details.add("SPLIT " + c.getOutput());
+            b.kw("SPLIT").id(c).nl();
         }
-        return details;
+        return b.toLines();
     }
 
     @Override

@@ -33,10 +33,13 @@ import javafx.util.*;
 import org.antlr.v4.runtime.ANTLRErrorStrategy;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BailErrorStrategy;
+import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
 import org.antlr.v4.runtime.Lexer;
 import org.antlr.v4.runtime.Parser;
+import org.antlr.v4.runtime.RecognitionException;
+import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.TokenStream;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -198,13 +201,21 @@ public class Utility
         return MathContext.DECIMAL64;
     }
 
-    public static <T, PARSER extends Parser> PARSER parseAsOne(String input, Function<CharStream, Lexer> makeLexer, Function<TokenStream, PARSER> makeParser)
+    public static <R, PARSER extends Parser> R parseAsOne(String input, Function<CharStream, Lexer> makeLexer, Function<TokenStream, PARSER> makeParser, ExFunction<PARSER, R> withParser) throws InternalException, UserException
     {
+        DescriptiveErrorListener del = new DescriptiveErrorListener();
         ANTLRInputStream inputStream = new ANTLRInputStream(input);
         Lexer lexer = makeLexer.apply(inputStream);
+        lexer.removeErrorListeners();
+        lexer.addErrorListener(del);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         PARSER parser = makeParser.apply(tokens);
-        return parser;
+        parser.removeErrorListeners();
+        parser.addErrorListener(del);
+        R r = withParser.apply(parser);
+        if (!del.errors.isEmpty())
+            throw new UserException("Parse errors while loading:\n" + del.errors.stream().collect(Collectors.joining("\n")));
+        return r;
     }
 
     public static class ReadState
@@ -474,5 +485,23 @@ public class Utility
         });
         listView.setEditable(false);
         return listView;
+    }
+
+    public static class DescriptiveErrorListener extends BaseErrorListener
+    {
+        public final List<String> errors = new ArrayList<>();
+
+        @Override
+        public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
+                                int line, int charPositionInLine,
+                                String msg, RecognitionException e)
+        {
+            String sourceName = recognizer.getInputStream().getSourceName();
+            if (!sourceName.isEmpty()) {
+                sourceName = String.format("%s:%d:%d: ", sourceName, line, charPositionInLine);
+            }
+
+            errors.add(sourceName+"line "+line+":"+charPositionInLine+" "+msg);
+        }
     }
 }
