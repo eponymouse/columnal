@@ -33,9 +33,9 @@ public class PropLoadSave
 {
     @Property
     @OnThread(value = Tag.Simulation,ignoreParent = true)
-    public void testSort(@From(GenSort.class) GenSort.MakeSort sort) throws IOException, ExecutionException, InterruptedException, InternalException, UserException, InvocationTargetException
+    public void testSort(@From(GenSort.class) Sort sort) throws IOException, ExecutionException, InterruptedException, InternalException, UserException, InvocationTargetException
     {
-        test(sort.apply(new DummyManager()));
+        test(sort);
     }
 
     @OnThread(value = Tag.Simulation,ignoreParent = true)

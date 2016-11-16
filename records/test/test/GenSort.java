@@ -5,34 +5,31 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.ColumnId;
 import records.data.TableId;
-import records.data.TableManager;
+import records.error.InternalException;
+import records.error.UserException;
 import records.transformations.Sort;
-import test.GenSort.MakeSort;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExFunction;
 
 import java.util.List;
 
-import static org.hamcrest.CoreMatchers.equalTo;
 import static org.hamcrest.CoreMatchers.not;
+import static org.junit.Assume.assumeNoException;
 import static org.junit.Assume.assumeThat;
 
 /**
  * Created by neil on 16/11/2016.
  */
-public class GenSort extends Generator<MakeSort>
+public class GenSort extends Generator<Sort>
 {
     public GenSort()
     {
-        super(MakeSort.class);
+        super(Sort.class);
     }
 
-    public static interface MakeSort extends ExFunction<TableManager, Sort> { }
-
     @Override
-    @OnThread(value = Tag.Simulation,ignoreParent = true)
-    public MakeSort generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
+    public Sort generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         TableId us = TestUtil.generateTableId(sourceOfRandomness);
         TableId src;
@@ -44,6 +41,14 @@ public class GenSort extends Generator<MakeSort>
         List<ColumnId> cols = TestUtil.makeList(sourceOfRandomness, 1, 10, () -> TestUtil.generateColumnId(sourceOfRandomness));
 
         TableId srcFinal = src;
-        return m -> new Sort(m, us, srcFinal, cols);
+        try
+        {
+            return new Sort(new DummyManager(), us, srcFinal, cols);
+        }
+        catch (UserException | InternalException e)
+        {
+            assumeNoException(e);
+            throw new RuntimeException(e);
+        }
     }
 }
