@@ -21,6 +21,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -53,7 +54,7 @@ public class TransformationManager
 
     private static class DescriptiveErrorListener extends BaseErrorListener
     {
-        public static DescriptiveErrorListener INSTANCE = new DescriptiveErrorListener();
+        public final List<String> errors = new ArrayList<>();
 
         @Override
         public void syntaxError(Recognizer<?, ?> recognizer, Object offendingSymbol,
@@ -65,33 +66,26 @@ public class TransformationManager
                 sourceName = String.format("%s:%d:%d: ", sourceName, line, charPositionInLine);
             }
 
-            System.err.println(sourceName+"line "+line+":"+charPositionInLine+" "+msg);
+            errors.add(sourceName+"line "+line+":"+charPositionInLine+" "+msg);
         }
     }
 
     @OnThread(Tag.Simulation)
     public Transformation loadOne(TableManager mgr, String source) throws InternalException, UserException
     {
-        try
-        {
-            MainParser parser = Utility.parseAsOne(source, s -> {
-                Lexer l = new MainLexer(s);
-                l.removeErrorListeners();
-                l.addErrorListener(DescriptiveErrorListener.INSTANCE);
-                return l;
-            }, MainParser::new);
-            parser.removeErrorListeners();
-            parser.addErrorListener(DescriptiveErrorListener.INSTANCE);
-            return load(mgr, parser.table());
-        }
-        catch (ParseCancellationException ex)
-        {
-            if (ex.getCause() instanceof RecognitionException)
-            {
-                RecognitionException re = (RecognitionException)ex.getCause();
-            }
-            throw ex;
-        }
+        DescriptiveErrorListener del = new DescriptiveErrorListener();
+        MainParser parser = Utility.parseAsOne(source, s -> {
+            Lexer l = new MainLexer(s);
+            l.removeErrorListeners();
+            l.addErrorListener(del);
+            return l;
+        }, MainParser::new);
+        parser.removeErrorListeners();
+        parser.addErrorListener(del);
+        TableContext table = parser.table();
+        if (!del.errors.isEmpty())
+            throw new UserException("Parse errors while loading:\n" + del.errors.stream().collect(Collectors.joining("\n")));
+        return load(mgr, table);
     }
 
     @OnThread(Tag.Simulation)

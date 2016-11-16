@@ -65,6 +65,9 @@ public class TestUtil
     {
         List<String> keywords = new ArrayList<>();
 
+        keywords.add("@BEGIN");
+        keywords.add("@END");
+
         for (int i = 0; i < MainLexer.VOCABULARY.getMaxTokenType(); i++)
         {
             String l = MainLexer.VOCABULARY.getLiteralName(i);

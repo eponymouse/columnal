@@ -31,7 +31,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class PropLoadSave
 {
-    @Property
+    @Property(trials = 1000)
     @OnThread(value = Tag.Simulation,ignoreParent = true)
     public void testSort(@From(GenSort.class) Sort sort) throws IOException, ExecutionException, InterruptedException, InternalException, UserException, InvocationTargetException
     {
@@ -42,17 +42,25 @@ public class PropLoadSave
     private static void test(Transformation original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         String saved = save(original);
-        //Assume users destroy leading whitespace:
-        String savedMangled = saved.replaceAll("\n +", "\n");
-        Table loaded = TransformationManager.getInstance().loadOne(new DummyManager(), savedMangled);
-        String savedAgain = save(loaded);
-        Table loadedAgain = TransformationManager.getInstance().loadOne(new DummyManager(), savedAgain);
+        try
+        {
+            //Assume users destroy leading whitespace:
+            String savedMangled = saved.replaceAll("\n +", "\n");
+            Table loaded = TransformationManager.getInstance().loadOne(new DummyManager(), savedMangled);
+            String savedAgain = save(loaded);
+            Table loadedAgain = TransformationManager.getInstance().loadOne(new DummyManager(), savedAgain);
 
 
-
-        assertEquals(saved, savedAgain);
-        assertEquals(original, loaded);
-        assertEquals(loaded, loadedAgain);
+            assertEquals(saved, savedAgain);
+            assertEquals(original, loaded);
+            assertEquals(loaded, loadedAgain);
+        }
+        catch (Throwable t)
+        {
+            System.err.println("Original:\n" + saved);
+            System.err.flush();
+            throw t;
+        }
     }
 
     private static String save(Table original) throws ExecutionException, InterruptedException, InvocationTargetException
