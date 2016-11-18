@@ -6,21 +6,24 @@ import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
 import javafx.geometry.Point2D;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.QuadCurve;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
 import records.data.Table;
-import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.TransformationInfo.TransformationEditor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
 import utility.Utility;
 
 import java.io.File;
@@ -30,7 +33,6 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * Created by neil on 18/10/2016.
@@ -102,12 +104,14 @@ public class View extends Pane
     private static class Overlays
     {
         private final QuadCurve arrowFrom;
-        private final Label name;
+        private final HBox name;
         private final QuadCurve arrowTo;
 
-        public Overlays(TableDisplay source, String text, TableDisplay dest)
+        public Overlays(TableDisplay source, String text, TableDisplay dest, FXPlatformRunnable edit)
         {
-            name = new Label(text);
+            Button button = new Button("Edit");
+            button.setOnAction(e -> edit.run());
+            name = new HBox(new Label(text), button);
             arrowFrom = new QuadCurve();
             arrowTo = new QuadCurve();
             Utility.addStyleClass(arrowFrom, "transformation-arrow");
@@ -221,7 +225,9 @@ public class View extends Pane
         add(tableDisplay, transformation);
         try
         {
-            overlays.put(transformation, new Overlays(getTableDisplay(transformation.getSource()), transformation.getTransformationLabel(), tableDisplay));
+            overlays.put(transformation, new Overlays(getTableDisplay(transformation.getSource()), transformation.getTransformationLabel(), tableDisplay, () -> {
+                View.this.edit(transformation.edit());
+            }));
         }
         catch (UserException e)
         {
@@ -230,6 +236,24 @@ public class View extends Pane
         }
 
 
+    }
+
+    public void edit(TransformationEditor selectedEditor)
+    {
+        EditTransformationDialog dialog = new EditTransformationDialog(getScene().getWindow(), this, selectedEditor);
+        showEditDialog(dialog);
+    }
+
+    public void edit(Table src)
+    {
+        EditTransformationDialog dialog = new EditTransformationDialog(getScene().getWindow(), this, src);
+        showEditDialog(dialog);
+    }
+
+    private void showEditDialog(EditTransformationDialog dialog)
+    {
+        // TODO re-run any dependencies
+        dialog.show(optNewTable -> optNewTable.ifPresent(t -> Utility.alertOnErrorFX_(() -> add(t))));
     }
 
     @Override

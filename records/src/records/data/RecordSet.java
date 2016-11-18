@@ -53,7 +53,7 @@ public abstract class RecordSet
     }
 
     @OnThread(Tag.FXPlatform)
-    public List<TableColumn<Integer, DisplayValue>> getDisplayColumns()
+    public final List<TableColumn<Integer, DisplayValue>> getDisplayColumns()
     {
         Function<@NonNull Column, @NonNull TableColumn<Integer, DisplayValue>> makeDisplayColumn = data ->
         {
@@ -113,12 +113,13 @@ public abstract class RecordSet
     }
 
     @OnThread(Tag.Any)
-    public String getTitle()
+    public final String getTitle()
     {
         return title;
     }
 
-    public Column getColumn(ColumnId name) throws UserException
+    @OnThread(Tag.Any)
+    public final Column getColumn(ColumnId name) throws UserException
     {
         for (Column c : columns)
         {
@@ -144,7 +145,7 @@ public abstract class RecordSet
     }
 
     @OnThread(Tag.Any)
-    public List<Column> getColumns()
+    public final List<Column> getColumns()
     {
         return Collections.unmodifiableList(columns);
     }
@@ -155,5 +156,11 @@ public abstract class RecordSet
         {
             return "\"" + c.getType().getCollapsed(i).toString() + "\"";
         }catch (Exception e) { return "ERR"; }}).collect(Collectors.joining(","));
+    }
+
+    @OnThread(Tag.Any)
+    public final List<ColumnId> getColumnIds()
+    {
+        return Utility.<Column, ColumnId>mapList(columns, Column::getName);
     }
 }

@@ -6,6 +6,7 @@ import records.error.UserException;
 import records.grammar.MainLexer;
 import records.gui.TableDisplay;
 import records.loadsave.OutputBuilder;
+import records.transformations.TransformationInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -30,8 +31,8 @@ public abstract class Transformation extends Table
     @OnThread(Tag.FXPlatform)
     public abstract Table getSource() throws InternalException, UserException;
 
-    //@OnThread(Tag.FXPlatform)
-    //public abstract void edit();
+    @OnThread(Tag.FXPlatform)
+    public abstract TransformationInfo.TransformationEditor edit();
 
 
     @Override

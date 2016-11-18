@@ -1,8 +1,12 @@
 package records.gui;
 
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.ObjectBinding;
+import javafx.beans.binding.ObjectExpression;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.ButtonType;
@@ -17,9 +21,13 @@ import javafx.stage.Modality;
 import javafx.stage.Window;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Table;
+import records.data.TableId;
 import records.data.Transformation;
 import records.transformations.TransformationInfo;
+import records.transformations.TransformationInfo.TransformationEditor;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -35,13 +43,12 @@ import java.util.Optional;
  * Created by neil on 01/11/2016.
  */
 @OnThread(Tag.FXPlatform)
-public class NewTransformationDialog
+public class EditTransformationDialog
 {
     private final Dialog<SimulationSupplier<Transformation>> dialog;
     private final View parentView;
 
-    @SuppressWarnings("initialization")
-    public NewTransformationDialog(Window owner, View parentView, TableDisplay src)
+    private EditTransformationDialog(Window owner, View parentView, TableId srcId, @Nullable Table src, @Nullable TransformationEditor existing)
     {
         this.parentView = parentView;
         dialog = new Dialog<>();
@@ -60,7 +67,8 @@ public class NewTransformationDialog
         ObservableList<TransformationInfo> filteredList = FXCollections.observableArrayList(available);
         ListView<TransformationInfo> filteredListView = new ListView<>(filteredList);
         filteredListView.setEditable(false);
-        filteredListView.setCellFactory(lv -> {
+        filteredListView.setCellFactory(lv ->
+        {
             return new TextFieldListCell<TransformationInfo>(new StringConverter<TransformationInfo>()
             {
                 @Override
@@ -79,21 +87,30 @@ public class NewTransformationDialog
         });
         pane.setCenter(new VBox(new TextField(), filteredListView));
         ReadOnlyObjectProperty<TransformationInfo> selectedTransformation = filteredListView.getSelectionModel().selectedItemProperty();
+        SimpleObjectProperty<Optional<TransformationEditor>> editor = new SimpleObjectProperty<>();
+        Utility.addChangeListenerPlatform(selectedTransformation, trans ->
+        {
+            if (trans != null)
+                editor.set(Optional.of(trans.editNew(srcId, src)));
+            else
+                editor.set(Optional.empty());
+        });
         BorderPane infoPane = new BorderPane();
         infoPane.setMinWidth(600.0);
         Label title = new Label("");
-        title.textProperty().bind(new DisplayTitleStringBinding(selectedTransformation));
+        title.textProperty().bind(new DisplayTitleStringBinding(editor));
         infoPane.setTop(title);
         pane.setRight(infoPane);
 
-        Utility.addChangeListenerPlatform(selectedTransformation, trans -> {
-            if (trans == null)
+        Utility.addChangeListenerPlatform(editor, ed ->
+        {
+            if (ed == null || !ed.isPresent())
                 infoPane.setCenter(null);
             else
-                infoPane.setCenter(trans.getParameterDisplay(src, this::showError));
+                infoPane.setCenter(ed.get().getParameterDisplay(this::showError));
         });
+        editor.set(Optional.ofNullable(existing));
         dialog.getDialogPane().setContent(pane);
-
 
 
         dialog.setResultConverter(new Callback<ButtonType, SimulationSupplier<Transformation>>()
@@ -106,10 +123,10 @@ public class NewTransformationDialog
             {
                 if (bt.equals(ButtonType.OK))
                 {
-                    TransformationInfo trans = selectedTransformation.get();
-                    if (trans != null)
+                    Optional<TransformationEditor> ed = editor.get();
+                    if (ed.isPresent())
                     {
-                        return trans.getTransformation(parentView.getManager());
+                        return ed.get().getTransformation(parentView.getManager());
                     }
                 }
                 return null;
@@ -117,7 +134,19 @@ public class NewTransformationDialog
         });
     }
 
-    private void showError(Exception e)
+    // Make a new transformation with the given source table
+    public EditTransformationDialog(Window owner, View parentView, Table src)
+    {
+        this(owner, parentView, src.getId(), src, null);
+
+    }
+
+    public EditTransformationDialog(Window window, View parentView, TransformationEditor editor)
+    {
+        this(window, parentView, editor.getSourceId(), editor.getSource(), editor);
+    }
+
+    private void showError(@UnknownInitialization(Object.class) EditTransformationDialog this, Exception e)
     {
         //TODO have a pane when we can show it to the user.
     }
@@ -140,18 +169,19 @@ public class NewTransformationDialog
 
     private static class DisplayTitleStringBinding extends StringBinding
     {
-        private final ReadOnlyObjectProperty<TransformationInfo> selectedTransformation;
+        private final ObjectExpression<Optional<TransformationEditor>> selectedTransformation;
 
-        public DisplayTitleStringBinding(ReadOnlyObjectProperty<TransformationInfo> selectedTransformation)
+        public DisplayTitleStringBinding(ObjectExpression<Optional<TransformationEditor>> selectedTransformation)
         {
             this.selectedTransformation = selectedTransformation;
             super.bind(selectedTransformation);
+            // TODO bind against display title too
         }
 
         @Override
         protected String computeValue()
         {
-            return selectedTransformation.get() == null ? "" : selectedTransformation.get().getDisplayTitle();
+            return (selectedTransformation.get() == null || !selectedTransformation.get().isPresent()) ? "" : selectedTransformation.get().get().displayTitle().get();
         }
     }
 }

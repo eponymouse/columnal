@@ -1,7 +1,9 @@
 package records.transformations;
 
 import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.StringExpression;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -35,6 +37,7 @@ import records.grammar.SortParser.OrderByContext;
 import records.grammar.SortParser.SortContext;
 import records.gui.TableDisplay;
 import records.loadsave.OutputBuilder;
+import records.transformations.TransformationInfo.TransformationEditor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -249,27 +252,83 @@ public class Sort extends Transformation
         return src;
     }
 
+    @Override
+    public @OnThread(Tag.FXPlatform) TransformationInfo.TransformationEditor edit()
+    {
+        return new Editor(getId(), srcTableId, src, originalSortBy);
+    }
+
     @OnThread(Tag.FXPlatform)
     public static class Info extends TransformationInfo
     {
-        private @MonotonicNonNull TableDisplay src;
-        private ObservableList<Optional<Column>> sortBy = FXCollections.observableArrayList();
-
         @OnThread(Tag.Any)
         public Info()
         {
-            super(NAME, Collections.emptyList(), "Sort");
-            sortBy.add(Optional.empty());
+            super(NAME, Collections.emptyList());
         }
 
-        private final BooleanProperty ready = new SimpleBooleanProperty(false);
+        @Override
+        @OnThread(Tag.Simulation)
+        public Transformation load(TableManager mgr, TableId tableId, String detail) throws InternalException, UserException
+        {
+            SortContext loaded = Utility.parseAsOne(detail, BasicLexer::new, SortParser::new, SortParser::sort);
+
+            return new Sort(mgr, tableId, new TableId(loaded.srcTableId.getText()), Utility.<OrderByContext, ColumnId>mapList(loaded.orderBy(), o -> new ColumnId(o.column.getText())));
+        }
 
         @Override
-        public @OnThread(Tag.FXPlatform) Pane getParameterDisplay(TableDisplay src, FXPlatformConsumer<Exception> reportError)
+        public @OnThread(Tag.FXPlatform) TransformationInfo.TransformationEditor editNew(TableId srcTableId, @Nullable Table src)
         {
+            return new Editor(null, srcTableId, src, Collections.emptyList());
+        }
+    }
+
+    private static class Editor extends TransformationEditor
+    {
+        private final @Nullable TableId thisTableId;
+        private final TableId srcTableId;
+        private final @Nullable Table src;
+        private final ObservableList<Optional<ColumnId>> sortBy;
+        private final BooleanProperty ready = new SimpleBooleanProperty(false);
+
+        @OnThread(Tag.FXPlatform)
+        private Editor(@Nullable TableId thisTableId, TableId srcTableId, @Nullable Table src, List<ColumnId> sortBy)
+        {
+            this.thisTableId = thisTableId;
+            this.srcTableId = srcTableId;
             this.src = src;
+            this.sortBy = FXCollections.observableArrayList();
+            // TODO handle case that src table is missing
+            for (ColumnId c : sortBy)
+            {
+                this.sortBy.add(Optional.of(c));
+            }
+            this.sortBy.add(Optional.empty());
+        }
+
+        @Override
+        public @OnThread(Tag.FX) StringExpression displayTitle()
+        {
+            return new ReadOnlyStringWrapper("Sort");
+        }
+
+        @Override
+        public @Nullable Table getSource()
+        {
+            return src;
+        }
+
+        @Override
+        public TableId getSourceId()
+        {
+            return srcTableId;
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
+        {
             HBox colsAndSort = new HBox();
-            ListView<Column> columnListView = getColumnListView(this.src.getRecordSet());
+            ListView<ColumnId> columnListView = getColumnListView(src, srcTableId);
             columnListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             colsAndSort.getChildren().add(columnListView);
 
@@ -277,7 +336,7 @@ public class Sort extends Transformation
             Button button = new Button(">>");
             button.setOnAction(e ->
             {
-                for (Column column : columnListView.getSelectionModel().getSelectedItems())
+                for (ColumnId column : columnListView.getSelectionModel().getSelectedItems())
                 {
                     if (!sortBy.contains(Optional.of(column)))
                         sortBy.add(sortBy.size() - 1, Optional.of(column));
@@ -286,7 +345,7 @@ public class Sort extends Transformation
             buttons.getChildren().add(button);
             colsAndSort.getChildren().add(buttons);
 
-            ListView<Optional<Column>> sortByView = Utility.readOnlyListView(sortBy, c -> !c.isPresent() ? "Original order" : c.get().getName() + ", then if equal, by");
+            ListView<Optional<ColumnId>> sortByView = Utility.readOnlyListView(sortBy, c -> !c.isPresent() ? "Original order" : c.get() + ", then if equal, by");
             colsAndSort.getChildren().add(sortByView);
             return colsAndSort;
         }
@@ -305,20 +364,11 @@ public class Sort extends Transformation
                     throw new InternalException("Null source for transformation");
                 // Ignore the special empty column put in for GUI:
                 List<ColumnId> presentSortBy = new ArrayList<>();
-                for (Optional<Column> c : sortBy)
+                for (Optional<ColumnId> c : sortBy)
                     if (c.isPresent())
-                        presentSortBy.add(c.get().getName());
-                return new Sort(mgr, null, src.getTable().getId(), presentSortBy);
+                        presentSortBy.add(c.get());
+                return new Sort(mgr, null, srcTableId, presentSortBy);
             };
-        }
-
-        @Override
-        @OnThread(Tag.Simulation)
-        public Transformation load(TableManager mgr, TableId tableId, String detail) throws InternalException, UserException
-        {
-            SortContext loaded = Utility.parseAsOne(detail, BasicLexer::new, SortParser::new, SortParser::sort);
-
-            return new Sort(mgr, tableId, new TableId(loaded.srcTableId.getText()), Utility.<OrderByContext, ColumnId>mapList(loaded.orderBy(), o -> new ColumnId(o.column.getText())));
         }
     }
 

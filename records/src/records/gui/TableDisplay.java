@@ -145,7 +145,7 @@ public class TableDisplay extends BorderPane
                 // TODO tell user
             }
             */
-            new NewTransformationDialog(getScene().getWindow(), parent, this).show(optNewTable -> optNewTable.ifPresent(t -> Utility.alertOnErrorFX_(() -> parent.add(t))));
+            parent.edit(getTable());
         });
 
         Label title = new Label(recordSet.getTitle());

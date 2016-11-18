@@ -1,7 +1,9 @@
 package records.transformations;
 
 import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.StringExpression;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -44,6 +46,7 @@ import records.grammar.SortParser.SummaryContext;
 import records.grammar.SortParser.SummaryTypeContext;
 import records.gui.TableDisplay;
 import records.loadsave.OutputBuilder;
+import records.transformations.TransformationInfo.TransformationEditor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -421,24 +424,92 @@ public class SummaryStatistics extends Transformation
     @OnThread(Tag.FXPlatform)
     public static class Info extends TransformationInfo
     {
-        private @MonotonicNonNull TableDisplay src;
-        private final BooleanProperty ready = new SimpleBooleanProperty(false);
-        private final ObservableList<@NonNull Pair<Column, SummaryType>> ops = FXCollections.observableArrayList();
-        private final ObservableList<@NonNull Column> splitBy = FXCollections.observableArrayList();
-
         @OnThread(Tag.Any)
         public Info()
         {
-            super(NAME, Arrays.asList("min", "max"), "Basic Statistics");
+            super(NAME, Arrays.asList("min", "max"));
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) TransformationInfo.TransformationEditor editNew(TableId srcTableId, @Nullable Table src)
+        {
+            return new Editor(null, srcTableId, src, Collections.emptyMap(), Collections.emptyList());
+        }
+
+        @Override
+        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, TableId tableId, String detail) throws InternalException, UserException
+        {
+            SummaryContext loaded = Utility.parseAsOne(detail, BasicLexer::new, SortParser::new, SortParser::summary);
+
+            Map<ColumnId, TreeSet<SummaryType>> summaryTypes = new HashMap<>();
+            for (SummaryColContext sumType : loaded.summaryCol())
+            {
+                TreeSet<SummaryType> summaries = new TreeSet<>();
+                for (SummaryTypeContext type : sumType.summaryType())
+                {
+                    summaries.add(SummaryType.valueOf(type.getText()));
+                }
+                summaryTypes.put(new ColumnId(sumType.column.getText()), summaries);
+            }
+            List<ColumnId> splits = Utility.<SplitByContext, ColumnId>mapList(loaded.splitBy(), s -> new ColumnId(s.column.getText()));
+            return new SummaryStatistics(mgr, tableId, new TableId(loaded.srcTableId.getText()), summaryTypes, splits);
+        }
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) TransformationInfo.TransformationEditor edit()
+    {
+        return new Editor(getId(), srcTableId, src, summaries, splitBy);
+    }
+
+    private static class Editor extends TransformationEditor
+    {
+        private final @Nullable TableId thisTableId;
+        private final TableId srcTableId;
+        private final @Nullable Table src;
+        private final BooleanProperty ready = new SimpleBooleanProperty(false);
+        private final ObservableList<@NonNull Pair<ColumnId, SummaryType>> ops;
+        private final ObservableList<@NonNull ColumnId> splitBy;
+
+        @OnThread(Tag.FXPlatform)
+        private Editor(@Nullable TableId thisTableId, TableId srcTableId, @Nullable Table src, Map<ColumnId, TreeSet<SummaryType>> summaries, List<ColumnId> splitBy)
+        {
+            this.thisTableId = thisTableId;
+            this.srcTableId = srcTableId;
+            this.src = src;
+            this.ops = FXCollections.observableArrayList();
+            this.splitBy = FXCollections.observableArrayList(splitBy);
+            for (Entry<ColumnId, TreeSet<SummaryType>> entry : summaries.entrySet())
+            {
+                for (SummaryType summaryType : entry.getValue())
+                    ops.add(new Pair<>(entry.getKey(), summaryType));
+            }
+        }
+
+        @Override
+        public @Nullable Table getSource()
+        {
+            return src;
+        }
+
+        @Override
+        public TableId getSourceId()
+        {
+            return srcTableId;
+        }
+
+        @Override
+        public @OnThread(Tag.FX) StringExpression displayTitle()
+        {
+            return new ReadOnlyStringWrapper("Basic Statistics");
         }
 
         @Override
         @OnThread(Tag.FXPlatform)
-        public Pane getParameterDisplay(TableDisplay src, FXPlatformConsumer<Exception> reportError)
+        public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
-            this.src = src;
             HBox colsAndSummaries = new HBox();
-            ListView<Column> columnListView = getColumnListView(this.src.getRecordSet());
+            ListView<ColumnId> columnListView = getColumnListView(src, srcTableId);
             columnListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             colsAndSummaries.getChildren().add(columnListView);
 
@@ -447,12 +518,13 @@ public class SummaryStatistics extends Transformation
             {
                 Button button = new Button(summaryType.toString() + ">>");
                 button.setOnAction(e -> {
-                    for (Column column : columnListView.getSelectionModel().getSelectedItems())
+                    for (ColumnId column : columnListView.getSelectionModel().getSelectedItems())
                     {
-                        Pair<Column, SummaryType> op = new Pair<>(column, summaryType);
+                        Pair<ColumnId, SummaryType> op = new Pair<>(column, summaryType);
                         try
                         {
-                            if (valid(op.getFirst(), op.getSecond()) && !ops.contains(op))
+                            Column c = src == null ? null : src.getData().getColumn(op.getFirst());
+                            if (c != null && valid(c, op.getSecond()) && !ops.contains(op))
                                 ops.add(op);
                         }
                         catch (Exception ex)
@@ -470,8 +542,8 @@ public class SummaryStatistics extends Transformation
             buttons.getChildren().add(button);
             colsAndSummaries.getChildren().add(buttons);
 
-            ListView<Pair<Column, SummaryType>> opListView = Utility.readOnlyListView(ops, op -> op.getFirst().getName() + "." + op.getSecond().toString());
-            ListView<Column> splitListView = Utility.readOnlyListView(splitBy, s -> s.getName().toString());
+            ListView<Pair<ColumnId, SummaryType>> opListView = Utility.readOnlyListView(ops, op -> op.getFirst() + "." + op.getSecond().toString());
+            ListView<ColumnId> splitListView = Utility.readOnlyListView(splitBy, s -> s.toString());
             colsAndSummaries.getChildren().add(new VBox(opListView, splitListView));
             return colsAndSummaries;
         }
@@ -528,32 +600,13 @@ public class SummaryStatistics extends Transformation
                     throw new InternalException("Null source for transformation");
 
                 Map<ColumnId, TreeSet<SummaryType>> summaries = new HashMap<>();
-                for (Pair<Column, SummaryType> op : ops)
+                for (Pair<ColumnId, SummaryType> op : ops)
                 {
-                    Set<SummaryType> summaryTypes = summaries.computeIfAbsent(op.getFirst().getName(), s -> new TreeSet<SummaryType>());
+                    Set<SummaryType> summaryTypes = summaries.computeIfAbsent(op.getFirst(), s -> new TreeSet<SummaryType>());
                     summaryTypes.add(op.getSecond());
                 }
-                return new SummaryStatistics(mgr, null, src.getTable().getId(), summaries, Utility.<Column, ColumnId>mapList(splitBy, Column::getName));
+                return new SummaryStatistics(mgr, thisTableId, src.getId(), summaries, splitBy);
             };
-        }
-
-        @Override
-        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, TableId tableId, String detail) throws InternalException, UserException
-        {
-            SummaryContext loaded = Utility.parseAsOne(detail, BasicLexer::new, SortParser::new, SortParser::summary);
-
-            Map<ColumnId, TreeSet<SummaryType>> summaryTypes = new HashMap<>();
-            for (SummaryColContext sumType : loaded.summaryCol())
-            {
-                TreeSet<SummaryType> summaries = new TreeSet<>();
-                for (SummaryTypeContext type : sumType.summaryType())
-                {
-                    summaries.add(SummaryType.valueOf(type.getText()));
-                }
-                summaryTypes.put(new ColumnId(sumType.column.getText()), summaries);
-            }
-            List<ColumnId> splits = Utility.<SplitByContext, ColumnId>mapList(loaded.splitBy(), s -> new ColumnId(s.column.getText()));
-            return new SummaryStatistics(mgr, tableId, new TableId(loaded.srcTableId.getText()), summaryTypes, splits);
         }
     }
 
