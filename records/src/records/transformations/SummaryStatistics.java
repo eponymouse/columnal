@@ -163,12 +163,6 @@ public class SummaryStatistics extends Transformation
                     }
 
                     @Override
-                    public long getVersion()
-                    {
-                        return 1;
-                    }
-
-                    @Override
                     public DataType getType() throws InternalException, UserException
                     {
                         return orig.getType().copy(this::getWithProgress);

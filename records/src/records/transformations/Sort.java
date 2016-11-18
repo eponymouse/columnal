@@ -140,12 +140,6 @@ public class Sort extends Transformation
                 }
 
                 @Override
-                public long getVersion()
-                {
-                    return c.getVersion();
-                }
-
-                @Override
                 @SuppressWarnings({"nullness", "initialization"})
                 public @OnThread(Tag.Any) DataType getType() throws InternalException, UserException
                 {

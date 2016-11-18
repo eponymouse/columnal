@@ -39,12 +39,6 @@ public abstract class CalculatedNumericColumn extends CalculatedColumn
     }
 
     @Override
-    protected void clearCache() throws InternalException
-    {
-        cache.clear();
-    }
-
-    @Override
     protected int getCacheFilled()
     {
         return cache.filled();

@@ -23,16 +23,11 @@ import java.util.Map;
 public abstract class CalculatedColumn extends Column
 {
     private final ColumnId name;
-    private final ArrayList<Column> dependencies;
-    // Version of each of the dependencies at last calculation:
-    private final Map<Column, Long> calcVersions = new IdentityHashMap<>();
-    private long version = 1;
 
     public CalculatedColumn(RecordSet recordSet, ColumnId name, Column... dependencies)
     {
         super(recordSet);
         this.name = name;
-        this.dependencies = new ArrayList<>(Arrays.asList(dependencies));
     }
 
     // Preserves type
@@ -113,11 +108,6 @@ public abstract class CalculatedColumn extends Column
 */
     protected final void fillCacheWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
     {
-        if (!checkCacheValid())
-        {
-            clearCache();
-            version += 1;
-        }
         // Fetch values:
         while (index >= getCacheFilled())
         {
@@ -127,26 +117,7 @@ public abstract class CalculatedColumn extends Column
 
     protected abstract void fillNextCacheChunk() throws UserException, InternalException;
 
-    protected abstract void clearCache() throws InternalException;
-
     protected abstract int getCacheFilled();
-
-    //protected final void updateProgress(double d) { }
-
-    private boolean checkCacheValid()
-    {
-        boolean allValid = true;
-        for (Column c : dependencies)
-        {
-            Long lastVer = calcVersions.get(c);
-            if (lastVer == null || lastVer.longValue() != c.getVersion())
-            {
-                calcVersions.put(c, c.getVersion());
-                allValid = false;
-            }
-        }
-        return allValid;
-    }
 
     @Override
     @OnThread(Tag.Any)
@@ -155,11 +126,6 @@ public abstract class CalculatedColumn extends Column
         return name;
     }
 
-    @Override
-    public final long getVersion()
-    {
-        return version;
-    }
 /*
     private static abstract class PrimitiveCalculatedColumn<T> extends CalculatedColumn
     {

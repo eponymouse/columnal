@@ -47,12 +47,6 @@ public class MemoryNumericColumn extends Column
     }
 
     @Override
-    public long getVersion()
-    {
-        return 1;
-    }
-
-    @Override
     @OnThread(Tag.Any)
     public DataType getType()
     {

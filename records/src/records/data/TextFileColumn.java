@@ -33,12 +33,6 @@ public abstract class TextFileColumn extends Column
     }
 
     @Override
-    public final long getVersion()
-    {
-        return 1;
-    }
-
-    @Override
     @OnThread(Tag.Any)
     public final ColumnId getName()
     {

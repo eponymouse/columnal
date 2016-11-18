@@ -135,14 +135,6 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
     }
 
     @Override
-    protected void clearCache() throws InternalException
-    {
-        tagCache.clear();
-        for (ColumnStorage s : valueStores)
-            s.clear();
-    }
-
-    @Override
     protected int getCacheFilled()
     {
         return tagCache.filled();

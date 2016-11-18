@@ -88,8 +88,6 @@ public abstract class Column
     @OnThread(Tag.Any)
     public abstract ColumnId getName();
 
-    public abstract long getVersion();
-
     @OnThread(Tag.FXPlatform)
     public void withDisplay(FXPlatformConsumer<String> withType)
     {
