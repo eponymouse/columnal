@@ -21,11 +21,13 @@ public class GenGraph extends Generator<Graph>
     {
         public List<Object> nodes;
         public Map<Object, List<Object>> incoming;
+        public List<Object> late;
 
-        public Graph(List<Object> nodes, Map<Object, List<Object>> incoming)
+        public Graph(List<Object> nodes, Map<Object, List<Object>> incoming, List<Object> late)
         {
             this.nodes = nodes;
             this.incoming = incoming;
+            this.late = late;
         }
     }
 
@@ -38,10 +40,12 @@ public class GenGraph extends Generator<Graph>
     @SuppressWarnings("nullness")
     public Graph generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
-        int numNodes = r.nextInt(0, 15);
+        int numNodes = r.nextInt(0, 20);
         // Max edges in DAG is numNodes * (numNodes - 1) / 2
         // Each node can link to all those before it.
         int numEdges = r.nextInt(0, numNodes * (numNodes - 1) / 2);
+        // Keep it on the sparse side by taking lower of two picks:
+        numEdges = Math.min(numEdges, r.nextInt(0, numNodes * (numNodes - 1) / 2));
 
         List<Object> nodes = new ArrayList<>();
         for (int i = 0; i < numNodes; i++)
@@ -60,10 +64,15 @@ public class GenGraph extends Generator<Graph>
             // Remember, it's a map from destination to source:
             edges.get(possibleEdges.get(i).getSecond()).add(possibleEdges.get(i).getFirst());
 
+        // Pick late by shuffling and picking:
+        Collections.shuffle(nodes, r.toJDKRandom());
+        int numLate = r.nextInt(0, Math.min(3, numNodes));
+        List<Object> late = new ArrayList<>(nodes.subList(0, numLate));
+
         // Shuffle the nodes to make sure algorithm doesn't just use our ordering:
         Collections.shuffle(nodes, r.toJDKRandom());
 
-        return new Graph(nodes, edges);
+        return new Graph(nodes, edges, late);
     }
 
 

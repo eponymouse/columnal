@@ -57,7 +57,19 @@ public class GraphUtility
 
         while (!s.isEmpty())
         {
-            T next = s.remove(s.size() - 1); // Faster to remove from end
+            T next = null;
+            // Faster to remove from end:
+            for (int i = s.size() - 1; i >= 0; i--)
+            {
+                if (!putAsLateAsPossible.contains(s.get(i)))
+                {
+                    next = s.remove(i);
+                    break;
+                }
+            }
+            // Have to take a late one:
+            if (next == null)
+                next = s.remove(s.size() - 1); // Faster to remove from end
             l.add(next);
             for (Iterator<Entry<T, List<T>>> iterator = remainingEdges.entrySet().iterator(); iterator.hasNext(); )
             {
