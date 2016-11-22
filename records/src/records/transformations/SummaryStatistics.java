@@ -39,14 +39,11 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import records.grammar.BasicLexer;
 import records.grammar.SortParser;
-import records.grammar.SortParser.OrderByContext;
 import records.grammar.SortParser.SplitByContext;
 import records.grammar.SortParser.SummaryColContext;
 import records.grammar.SortParser.SummaryContext;
 import records.grammar.SortParser.SummaryTypeContext;
-import records.gui.TableDisplay;
 import records.loadsave.OutputBuilder;
-import records.transformations.TransformationInfo.TransformationEditor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -67,7 +64,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
-import java.util.stream.Collectors;
 
 /**
  * Created by neil on 21/10/2016.
@@ -446,7 +442,7 @@ public class SummaryStatistics extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) TransformationInfo.TransformationEditor editNew(TableId srcTableId, @Nullable Table src)
+        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(TableId srcTableId, @Nullable Table src)
         {
             return new Editor(null, srcTableId, src, Collections.emptyMap(), Collections.emptyList());
         }
@@ -472,7 +468,7 @@ public class SummaryStatistics extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) TransformationInfo.TransformationEditor edit()
+    public @OnThread(Tag.FXPlatform) TransformationEditor edit()
     {
         return new Editor(getId(), srcTableId, src, summaries, splitBy);
     }

@@ -21,7 +21,7 @@ import records.data.TableManager;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.TransformationInfo.TransformationEditor;
+import records.transformations.TransformationEditor;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;

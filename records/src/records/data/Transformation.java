@@ -1,12 +1,9 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.error.InternalException;
-import records.error.UserException;
 import records.grammar.MainLexer;
-import records.gui.TableDisplay;
 import records.loadsave.OutputBuilder;
-import records.transformations.TransformationInfo;
+import records.transformations.TransformationEditor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -32,7 +29,7 @@ public abstract class Transformation extends Table
     public abstract List<TableId> getSources();
 
     @OnThread(Tag.FXPlatform)
-    public abstract TransformationInfo.TransformationEditor edit();
+    public abstract TransformationEditor edit();
 
 
     @Override

@@ -1,8 +1,6 @@
 package records.gui;
 
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -27,7 +25,7 @@ import records.data.Table;
 import records.data.TableId;
 import records.data.Transformation;
 import records.transformations.TransformationInfo;
-import records.transformations.TransformationInfo.TransformationEditor;
+import records.transformations.TransformationEditor;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;

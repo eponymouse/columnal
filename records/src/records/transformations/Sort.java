@@ -13,7 +13,6 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -35,9 +34,7 @@ import records.grammar.BasicLexer;
 import records.grammar.SortParser;
 import records.grammar.SortParser.OrderByContext;
 import records.grammar.SortParser.SortContext;
-import records.gui.TableDisplay;
 import records.loadsave.OutputBuilder;
-import records.transformations.TransformationInfo.TransformationEditor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -272,7 +269,7 @@ public class Sort extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) TransformationInfo.TransformationEditor edit()
+    public @OnThread(Tag.FXPlatform) TransformationEditor edit()
     {
         return new Editor(getId(), srcTableId, src, originalSortBy);
     }
@@ -296,7 +293,7 @@ public class Sort extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) TransformationInfo.TransformationEditor editNew(TableId srcTableId, @Nullable Table src)
+        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(TableId srcTableId, @Nullable Table src)
         {
             return new Editor(null, srcTableId, src, Collections.emptyList());
         }
