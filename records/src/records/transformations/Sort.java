@@ -6,7 +6,9 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
@@ -27,6 +29,7 @@ import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataTypeUtility;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
@@ -34,6 +37,7 @@ import records.grammar.BasicLexer;
 import records.grammar.SortParser;
 import records.grammar.SortParser.OrderByContext;
 import records.grammar.SortParser.SortContext;
+import records.gui.DisplayValue;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -341,6 +345,7 @@ public class Sort extends Transformation
         }
 
         @Override
+        @SuppressWarnings({"keyfor", "intern"})
         public @OnThread(Tag.FXPlatform) Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
             HBox colsAndSort = new HBox();
@@ -363,7 +368,135 @@ public class Sort extends Transformation
 
             ListView<Optional<ColumnId>> sortByView = Utility.readOnlyListView(sortBy, c -> !c.isPresent() ? "Original order" : c.get() + ", then if equal, by");
             colsAndSort.getChildren().add(sortByView);
-            return colsAndSort;
+
+            ObservableList<List<DisplayValue>> srcHeaderAndData = FXCollections.observableArrayList();
+            ObservableList<List<DisplayValue>> destHeaderAndData = FXCollections.observableArrayList();
+            List<Column> allColumns = new ArrayList<>();
+            try
+            {
+                if (src != null)
+                    allColumns.addAll(src.getData().getColumns());
+                updateExample(allColumns, getPresent(sortByView.getItems()), srcHeaderAndData, destHeaderAndData);
+                sortByView.getItems().addListener((ListChangeListener<? super Optional<ColumnId>>) c -> {
+                    try
+                    {
+                        updateExample(allColumns, getPresent(sortByView.getItems()), srcHeaderAndData, destHeaderAndData);
+                    }
+                    catch (InternalException e)
+                    {
+                        Utility.report(e);
+                    }
+                    catch (UserException e)
+                    {
+                        e.printStackTrace();
+                    }
+                });
+            }
+            catch (InternalException e)
+            {
+                Utility.report(e);
+            }
+            catch (UserException e)
+            {
+                // Ignore; we'll just leave example blank
+                e.printStackTrace();
+            }
+            Node example = createExplanation(srcHeaderAndData, destHeaderAndData, "The table's rows will be sorted by the values in the chosen columns.");
+
+            return new VBox(colsAndSort, example);
+        }
+
+        private List<Column> getPresent(ObservableList<Optional<ColumnId>> cols) throws UserException
+        {
+            ArrayList<Column> r = new ArrayList<>();
+            for (Optional<ColumnId> col : cols)
+            {
+                if (col.isPresent() && src != null)
+                    r.add(src.getData().getColumn(col.get()));
+            }
+            return r;
+        }
+
+        @OnThread(Tag.FXPlatform)
+        private void updateExample(List<Column> allColumns, List<Column> sortBy, ObservableList<List<DisplayValue>> srcHeaderAndData, ObservableList<List<DisplayValue>> destHeaderAndData) throws UserException, InternalException
+        {
+            // We try to take 1 not involved and 2 which are involved.
+            // If there aren't enough we first take more involved, then more which aren't, then given up
+            List<Column> exampleColumns = new ArrayList<>();
+            if (allColumns.size() > 3)
+            {
+                int involved = Math.min(2, sortBy.size());
+                if (allColumns.size() == sortBy.size())
+                    involved += 1;
+
+                for (int i = 0; i < involved; i++)
+                {
+                    exampleColumns.add(sortBy.get(i));
+                }
+
+                for (Column c : allColumns)
+                {
+                    if (!sortBy.contains(c))
+                    {
+                        exampleColumns.add(c);
+                        if (exampleColumns.size() == 3)
+                            break;
+                    }
+                }
+            }
+            else
+                exampleColumns.addAll(allColumns);
+
+            List<DataType> exampleColumnTypes = new ArrayList<>();
+            for (Column c : exampleColumns)
+                exampleColumnTypes.add(c.getType());
+
+            // Generate four rows of data for each column:
+            List<List<List<Object>>> data = new ArrayList<>();
+            for (int i = 0; i < 4; i++)
+                data.add(new ArrayList<>());
+            for (Column c : exampleColumns)
+            {
+                int index = 0;
+                for (List<List<Object>> row : data)
+                {
+                    row.add(DataTypeUtility.generateExample(c.getType(), index++));
+                }
+            }
+            // Sort it to get result:
+            Collections.<List<List<Object>>>sort(data, (a, b) -> {
+                for (Column c : sortBy)
+                {
+                    int i = exampleColumns.indexOf(c);
+                    if (i != -1)
+                    {
+                        try
+                        {
+                            int cmp = DataTypeUtility.compare(exampleColumnTypes.get(i), a.get(i), b.get(i));
+                            if (cmp != 0)
+                                return cmp;
+                        }
+                        catch (InternalException e)
+                        {
+                            //Report this?
+                            Utility.report(e);
+                        }
+                    }
+                }
+                return 0;
+            });
+            List<List<List<Object>>> unsorted = new ArrayList<>();
+            if (data.size() == 4)
+            {
+                unsorted.add(data.get(2));
+                unsorted.add(data.get(1));
+                unsorted.add(data.get(3));
+                unsorted.add(data.get(0));
+            }
+            // Then produce unsorted version for source:
+            List<DisplayValue> header = Utility.<Column, DisplayValue>mapList(exampleColumns, c -> new DisplayValue(c.getName().toString()));
+            destHeaderAndData.setAll(Utility.consList(header, DataTypeUtility.displayAll(exampleColumnTypes, data)));
+            srcHeaderAndData.setAll(Utility.consList(header, DataTypeUtility.displayAll(exampleColumnTypes, unsorted)));
         }
 
         @Override

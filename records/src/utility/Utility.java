@@ -44,6 +44,7 @@ import org.antlr.v4.runtime.TokenStream;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import records.data.Table;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.BasicLexer;
@@ -216,6 +217,19 @@ public class Utility
         if (!del.errors.isEmpty())
             throw new UserException("Parse errors while loading:\n" + del.errors.stream().collect(Collectors.joining("\n")));
         return r;
+    }
+
+    public static <T> List<T> consList(T header, List<T> data)
+    {
+        ArrayList<T> r = new ArrayList<T>();
+        r.add(header);
+        r.addAll(data);
+        return r;
+    }
+
+    public static void report(InternalException e)
+    {
+        e.printStackTrace(); // TODO log and send back
     }
 
     public static class ReadState
