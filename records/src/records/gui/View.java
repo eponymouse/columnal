@@ -1,5 +1,6 @@
 package records.gui;
 
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
@@ -15,23 +16,34 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
 import records.data.Table;
+import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.TransformationInfo.TransformationEditor;
+import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
+import utility.GraphUtility;
 import utility.Utility;
+import utility.Workers;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 /**
@@ -47,7 +59,6 @@ public class View extends Pane
     private final List<DataSource> sources = new ArrayList<>();
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private final List<Transformation> transformations = new ArrayList<>();
-    private final Map<Table, TableDisplay> tableDisplays = new IdentityHashMap<>();
     private final TableManager tableManager = new TableManager();
 
     // Does not write to that destination, just uses it for relative paths
@@ -107,7 +118,7 @@ public class View extends Pane
         private final HBox name;
         private final QuadCurve arrowTo;
 
-        public Overlays(TableDisplay source, String text, TableDisplay dest, FXPlatformRunnable edit)
+        public Overlays(List<TableDisplay> sources, String text, TableDisplay dest, FXPlatformRunnable edit)
         {
             Button button = new Button("Edit");
             button.setOnAction(e -> edit.run());
@@ -116,6 +127,7 @@ public class View extends Pane
             arrowTo = new QuadCurve();
             Utility.addStyleClass(arrowFrom, "transformation-arrow");
             Utility.addStyleClass(arrowTo, "transformation-arrow");
+            TableDisplay source = sources.get(0);
             // Find midpoint:
             ChangeListener<Object> recalculate = (a, b, c) -> {
                 // ((minXA + maxXA)/2 + (minXB + maxXB)/2)/2
@@ -186,74 +198,174 @@ public class View extends Pane
         });
     }
 
-    public void add(DataSource data, @Nullable Table alignToRightOf) throws InternalException
+    public void addSource(DataSource data)
     {
         synchronized (this)
         {
             sources.add(data);
         }
-        add(new TableDisplay(this, data), alignToRightOf);
+        addDisplay(new TableDisplay(this, data), null);
     }
 
-    private void add(TableDisplay tableDisplay, @Nullable Table alignToRightOf) throws InternalException
-    {
-        tableDisplays.put(tableDisplay.getTable(), tableDisplay);
-        getChildren().add(tableDisplay);
-        if (alignToRightOf != null)
-        {
-            TableDisplay alignToRightOfDisplay = getTableDisplay(alignToRightOf);
-            tableDisplay.setLayoutX(alignToRightOfDisplay.getLayoutX() + alignToRightOfDisplay.getWidth() + DEFAULT_SPACE);
-            tableDisplay.setLayoutY(alignToRightOfDisplay.getLayoutY());
-        }
-    }
-
-    private TableDisplay getTableDisplay(Table table) throws InternalException
-    {
-        TableDisplay display = tableDisplays.get(table);
-        if (display == null)
-            throw new InternalException("Could not find display for table: \"" + table.getId() + "\"");
-        return display;
-    }
-
-    public void add(Transformation transformation) throws InternalException
+    public TableDisplay addTransformation(Transformation transformation)
     {
         synchronized (this)
         {
             transformations.add(transformation);
         }
         TableDisplay tableDisplay = new TableDisplay(this, transformation);
-        add(tableDisplay, transformation);
-        try
-        {
-            overlays.put(transformation, new Overlays(getTableDisplay(transformation.getSource()), transformation.getTransformationLabel(), tableDisplay, () -> {
-                View.this.edit(transformation.edit());
-            }));
-        }
-        catch (UserException e)
-        {
-            // We just don't add the overlays if there is a problem finding the source
-            // Don't show the error as the user has probably already seen it.
-        }
-
-
+        addDisplay(tableDisplay, getTableDisplay(transformation.getSources().get(0)));
+        return tableDisplay;
     }
 
-    public void edit(TransformationEditor selectedEditor)
+    private void addDisplay(TableDisplay tableDisplay, @Nullable TableDisplay alignToRightOf)
+    {
+        getChildren().add(tableDisplay);
+        if (alignToRightOf != null)
+        {
+            tableDisplay.setLayoutX(alignToRightOf.getLayoutX() + alignToRightOf.getWidth() + DEFAULT_SPACE);
+            tableDisplay.setLayoutY(alignToRightOf.getLayoutY());
+        }
+    }
+
+    private @Nullable TableDisplay getTableDisplay(TableId tableId)
+    {
+        @Nullable Table table = tableManager.getTable(tableId);
+        if (table == null)
+            return null;
+        else
+            return table.getDisplay();
+    }
+
+    public void add(@Nullable TableId replaceTableId, Transformation transformation) throws InternalException, UserException
+    {
+        Map<TableId, List<TableId>> edges = new HashMap<>();
+        HashSet<TableId> affected = new HashSet<>();
+        affected.add(transformation.getId());
+        if (replaceTableId != null)
+            affected.add(replaceTableId);
+        HashSet<TableId> allIds = new HashSet<>();
+        synchronized (this)
+        {
+            for (Table t : sources)
+                allIds.add(t.getId());
+            for (Transformation t : transformations)
+            {
+                allIds.add(t.getId());
+                edges.put(t.getId(), t.getSources());
+            }
+        }
+        allIds.addAll(affected);
+        List<TableId> linearised = GraphUtility.lineariseDAG(allIds, edges, affected);
+
+        // Find first affected:
+        int processFrom = affected.stream().mapToInt(linearised::indexOf).min().orElse(-1);
+        // If it's not in affected itself, serialise it:
+        List<String> reRun = new ArrayList<>();
+        AtomicInteger toSave = new AtomicInteger(1); // Keep one extra until we've lined up all jobs
+        CompletableFuture<List<String>> savedToReRun = new CompletableFuture<>();
+        for (int i = processFrom; i < linearised.size(); i++)
+        {
+            if (!affected.contains(linearised.get(i)))
+            {
+                // Add job:
+                toSave.incrementAndGet();
+                removeAndSerialise(linearised.get(i), script -> {
+                    reRun.add(script);
+                    if (toSave.decrementAndGet() == 0)
+                    {
+                        // Saved all of them
+                        savedToReRun.complete(reRun);
+                    }
+                });
+            }
+        }
+        if (toSave.decrementAndGet() == 0) // Remove extra; can complete now when hits zero
+        {
+            savedToReRun.complete(reRun);
+        }
+
+        synchronized (this)
+        {
+            if (replaceTableId != null)
+                removeAndSerialise(replaceTableId, s -> {});
+        }
+        TableDisplay tableDisplay = addTransformation(transformation);
+        List<TableDisplay> sourceDisplays = new ArrayList<>();
+        for (TableId t : transformation.getSources())
+        {
+            TableDisplay td = getTableDisplay(t);
+            if (td != null)
+                sourceDisplays.add(td);
+        }
+        overlays.put(transformation, new Overlays(sourceDisplays, transformation.getTransformationLabel(), tableDisplay, () -> {
+            View.this.edit(transformation.getId(), transformation.edit());
+        }));
+
+        savedToReRun.thenAccept(ss -> {
+            Utility.alertOnErrorFX_(() -> reAddAll(ss));
+        });
+    }
+
+    private void reAddAll(List<String> scripts) throws UserException, InternalException
+    {
+        for (String script : scripts)
+        {
+            Workers.onWorkerThread("Re-running affected table", () -> Utility.alertOnError_(() -> {
+                Transformation transformation = TransformationManager.getInstance().loadOne(tableManager, script);
+                Platform.runLater(() -> addTransformation(transformation));
+            }));
+
+        }
+    }
+
+    private void removeAndSerialise(TableId tableId, FXPlatformConsumer<String> then)
+    {
+        Table removed = null;
+        synchronized (this)
+        {
+            for (Iterator<DataSource> iterator = sources.iterator(); iterator.hasNext(); )
+            {
+                Table t = iterator.next();
+                if (t.getId().equals(tableId))
+                {
+                    iterator.remove();
+                    removed = t;
+                    break;
+                }
+            }
+            if (removed == null)
+                for (Iterator<Transformation> iterator = transformations.iterator(); iterator.hasNext(); )
+                {
+                    Table t = iterator.next();
+                    if (t.getId().equals(tableId))
+                    {
+                        iterator.remove();
+                        removed = t;
+                        break;
+                    }
+                }
+        }
+        if (removed != null)
+            removed.save(null, then);
+    }
+
+    public void edit(TableId existingTableId, TransformationEditor selectedEditor)
     {
         EditTransformationDialog dialog = new EditTransformationDialog(getScene().getWindow(), this, selectedEditor);
-        showEditDialog(dialog);
+        showEditDialog(dialog, existingTableId);
     }
 
     public void edit(Table src)
     {
         EditTransformationDialog dialog = new EditTransformationDialog(getScene().getWindow(), this, src);
-        showEditDialog(dialog);
+        showEditDialog(dialog, null);
     }
 
-    private void showEditDialog(EditTransformationDialog dialog)
+    private void showEditDialog(EditTransformationDialog dialog, @Nullable TableId replaceOnOK)
     {
         // TODO re-run any dependencies
-        dialog.show(optNewTable -> optNewTable.ifPresent(t -> Utility.alertOnErrorFX_(() -> add(t))));
+        dialog.show(optNewTable -> optNewTable.ifPresent(t -> Utility.alertOnErrorFX_(() -> add(replaceOnOK, t))));
     }
 
     @Override

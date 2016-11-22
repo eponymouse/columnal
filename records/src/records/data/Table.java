@@ -125,4 +125,10 @@ public abstract class Table
         result = 31 * result + prevPosition.hashCode();
         return result;
     }
+
+    @OnThread(Tag.FXPlatform)
+    public @Nullable TableDisplay getDisplay()
+    {
+        return display;
+    }
 }

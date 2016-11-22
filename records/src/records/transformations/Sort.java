@@ -245,11 +245,9 @@ public class Sort extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) Table getSource() throws UserException
+    public @OnThread(Tag.FXPlatform) List<TableId> getSources()
     {
-        if (src == null)
-            throw new UserException(sortByError);
-        return src;
+        return Collections.singletonList(srcTableId);
     }
 
     @Override

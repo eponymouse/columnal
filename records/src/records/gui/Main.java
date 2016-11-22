@@ -52,7 +52,7 @@ public class Main extends Application
                     try
                     {
                         DataSource rs = TextImport.importTextFile(v.getManager(), chosen);
-                        Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.add(rs, null)));
+                        Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.addSource(rs)));
                     }
                     catch (IOException | InternalException | UserException ex)
                     {
@@ -74,7 +74,7 @@ public class Main extends Application
                     {
                         for (DataSource rs : HTMLImport.importHTMLFile(v.getManager(), chosen))
                         {
-                            Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.add(rs, null)));
+                            Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.addSource(rs)));
                         }
                     }
                     catch (IOException | InternalException | UserException ex)
@@ -97,7 +97,7 @@ public class Main extends Application
             {
                 DataSource rs = HTMLImport.importHTMLFile(v.getManager(), new File("S:\\Downloads\\Report_10112016.xls")).get(0);
                     //TextImport.importTextFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"));
-                Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.add(rs, null)));
+                Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.addSource(rs)));
             }
             catch (IOException | InternalException | UserException ex)
             {

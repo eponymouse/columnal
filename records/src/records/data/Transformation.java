@@ -29,7 +29,7 @@ public abstract class Transformation extends Table
     public abstract String getTransformationLabel();
 
     @OnThread(Tag.FXPlatform)
-    public abstract Table getSource() throws InternalException, UserException;
+    public abstract List<TableId> getSources();
 
     @OnThread(Tag.FXPlatform)
     public abstract TransformationInfo.TransformationEditor edit();

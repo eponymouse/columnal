@@ -640,11 +640,9 @@ public class SummaryStatistics extends Transformation
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public Table getSource() throws UserException
+    public List<TableId> getSources()
     {
-        if (src == null)
-            throw new UserException(error);
-        return src;
+        return Collections.singletonList(srcTableId);
     }
 
     @OnThread(Tag.Simulation)
