@@ -20,7 +20,7 @@ public class ImmediateDataSource extends DataSource
 {
     private final RecordSet data;
 
-    public ImmediateDataSource(TableManager mgr, RecordSet data) throws UserException
+    public ImmediateDataSource(TableManager mgr, RecordSet data)
     {
         super(mgr, null);
         this.data = data;

@@ -39,7 +39,7 @@ public class GenSort extends Generator<Sort>
         {
             return new Sort(new DummyManager(), ids.getFirst(), ids.getSecond(), cols);
         }
-        catch (UserException | InternalException e)
+        catch (InternalException e)
         {
             assumeNoException(e);
             throw new RuntimeException(e);

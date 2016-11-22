@@ -121,11 +121,11 @@ public class SummaryStatistics extends Transformation
         }
     }
 
-    public SummaryStatistics(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, Map<ColumnId, TreeSet<SummaryType>> summaries, List<ColumnId> splitBy) throws InternalException, UserException
+    public SummaryStatistics(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, Map<ColumnId, TreeSet<SummaryType>> summaries, List<ColumnId> splitBy) throws InternalException
     {
         super(mgr, thisTableId);
         this.srcTableId = srcTableId;
-        this.src = mgr.getTable(srcTableId);
+        this.src = mgr.getSingleTableOrNull(srcTableId);
         this.summaries = summaries;
         this.splitBy = splitBy;
         if (this.src == null)
@@ -136,147 +136,133 @@ public class SummaryStatistics extends Transformation
         }
         else
             error = "Unknown error with table \"" + getId() + "\"";
-        RecordSet src = this.src.getData();
-        List<JoinedSplit> splits = calcSplits(src, splitBy);
 
-        List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
-
-        // Will be zero by default, which we take advantage of:
-        int[] splitIndexes = new int[src.getLength()];
-
-        if (!splitBy.isEmpty())
+        @Nullable RecordSet theResult = null;
+        try
         {
-            for (int i = 0; i < splitBy.size(); i++)
+            RecordSet src = this.src.getData();
+            List<JoinedSplit> splits = calcSplits(src, splitBy);
+
+            List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
+
+            // Will be zero by default, which we take advantage of:
+            int[] splitIndexes = new int[src.getLength()];
+
+            if (!splitBy.isEmpty())
             {
-                ColumnId colName = splitBy.get(i);
-                Column orig = src.getColumn(colName);
-                int iFinal = i;
-                columns.add(rs -> new Column(rs)
+                for (int i = 0; i < splitBy.size(); i++)
                 {
-                    private List<Object> getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                    ColumnId colName = splitBy.get(i);
+                    Column orig = src.getColumn(colName);
+                    int iFinal = i;
+                    columns.add(rs -> new Column(rs)
                     {
-                        return splits.get(index).colValue.get(iFinal);
-                    }
+                        private List<Object> getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                        {
+                            return splits.get(index).colValue.get(iFinal);
+                        }
 
-                    @Override
-                    @OnThread(Tag.Any)
-                    public ColumnId getName()
-                    {
-                        return colName;
-                    }
+                        @Override
+                        @OnThread(Tag.Any)
+                        public ColumnId getName()
+                        {
+                            return colName;
+                        }
 
-                    @Override
-                    public DataType getType() throws InternalException, UserException
-                    {
-                        return orig.getType().copy(this::getWithProgress);
-                    }
-                });
-            }
-
-            outer: for (int i = 0; i < splitIndexes.length; i++ )
-            {
-                // TODO could do this O(#splitBy) not O(#splits) if we design JoinedSplit right
-                for (int s = 0; s < splits.size(); s++)
-                {
-                    if (splits.get(s).satisfied(i))
-                    {
-                        splitIndexes[i] = s;
-                        continue outer;
-                    }
+                        @Override
+                        public DataType getType() throws InternalException, UserException
+                        {
+                            return orig.getType().copy(this::getWithProgress);
+                        }
+                    });
                 }
-                throw new InternalException("Split not found for row " + i + ": " + src.debugGetVals(i));
-            }
-        }
 
-        for (Entry<ColumnId, TreeSet<SummaryType>> e : summaries.entrySet())
-        {
-            for (SummaryType summaryType : e.getValue())
-            {
-                Column srcCol = src.getColumn(e.getKey());
-                ColumnId name = new ColumnId(e.getKey() + "." + summaryType);
-
-                columns.add(srcCol.getType().apply(new DataTypeVisitorGet<FunctionInt<RecordSet, Column>>()
+                outer:
+                for (int i = 0; i < splitIndexes.length; i++)
                 {
-                    @Override
-                    public FunctionInt<RecordSet, Column> number(GetValue<Number> srcGet, NumberDisplayInfo displayInfo) throws InternalException, UserException
+                    // TODO could do this O(#splitBy) not O(#splits) if we design JoinedSplit right
+                    for (int s = 0; s < splits.size(); s++)
                     {
-                        if (summaryType == SummaryType.COUNT)
-                            return countColumn(srcGet);
-                        return rs -> new CalculatedNumericColumn(rs, name, srcCol.getType(), srcCol)
+                        if (splits.get(s).satisfied(i))
                         {
-                            @Override
-                            protected void fillNextCacheChunk() throws UserException, InternalException
-                            {
-                                int index = getCacheFilled();
-                                final FoldOperation<Number, Number> fold;
-                                switch (summaryType)
-                                {
-                                    case MIN:
-                                    case MAX:
-                                        fold = new MinMaxNumericFold(summaryType);
-                                        break;
-                                    case MEAN:
-                                    case SUM:
-                                        fold = new MeanSumFold(summaryType);
-                                        break;
-                                    default:
-                                        throw new InternalException("Unrecognised summary type");
-                                }
-                                applyFold(cache, fold, srcCol, srcGet, splitIndexes, index);
-                            }
-                        };
+                            splitIndexes[i] = s;
+                            continue outer;
+                        }
                     }
+                    throw new InternalException("Split not found for row " + i + ": " + src.debugGetVals(i));
+                }
+            }
 
-                    @Override
-                    public FunctionInt<RecordSet, Column> text(GetValue<String> srcGet) throws InternalException, UserException
+            for (Entry<ColumnId, TreeSet<SummaryType>> e : summaries.entrySet())
+            {
+                for (SummaryType summaryType : e.getValue())
+                {
+                    Column srcCol = src.getColumn(e.getKey());
+                    ColumnId name = new ColumnId(e.getKey() + "." + summaryType);
+
+                    columns.add(srcCol.getType().apply(new DataTypeVisitorGet<FunctionInt<RecordSet, Column>>()
                     {
-                        if (summaryType == SummaryType.COUNT)
-                            return countColumn(srcGet);
-                        return rs -> new CalculatedStringColumn(rs, name, srcCol.getType(), srcCol) {
-
-                            @Override
-                            protected void fillNextCacheChunk() throws UserException, InternalException
-                            {
-                                int index = getCacheFilled();
-                                final FoldOperation<String, String> fold;
-                                switch (summaryType)
-                                {
-                                    case MIN:
-                                    case MAX:
-                                        fold = new MinMaxStringFold(summaryType);
-                                        break;
-                                    case MEAN:
-                                    case SUM:
-                                        throw new UserException("Cannot perform " + summaryType + " on String data");
-                                    default:
-                                        throw new InternalException("Unrecognised summary type");
-                                }
-                                applyFold(cache, fold, srcCol, srcGet, splitIndexes, index);
-                            }
-                        };
-                    }
-
-                    private <T> FunctionInt<RecordSet,Column> countColumn(GetValue<T> srcGet)
-                    {
-                        return rs -> new CalculatedNumericColumn(rs, name, DataType.INTEGER, srcCol)
+                        @Override
+                        public FunctionInt<RecordSet, Column> number(GetValue<Number> srcGet, NumberDisplayInfo displayInfo) throws InternalException, UserException
                         {
-                            @Override
-                            protected void fillNextCacheChunk() throws UserException, InternalException
+                            if (summaryType == SummaryType.COUNT)
+                                return countColumn(srcGet);
+                            return rs -> new CalculatedNumericColumn(rs, name, srcCol.getType(), srcCol)
                             {
-                                int index = getCacheFilled();
-                                applyFold(cache, new CountFold<T>(), srcCol, srcGet, splitIndexes, index);
-                            }
-                        };
-                    }
+                                @Override
+                                protected void fillNextCacheChunk() throws UserException, InternalException
+                                {
+                                    int index = getCacheFilled();
+                                    final FoldOperation<Number, Number> fold;
+                                    switch (summaryType)
+                                    {
+                                        case MIN:
+                                        case MAX:
+                                            fold = new MinMaxNumericFold(summaryType);
+                                            break;
+                                        case MEAN:
+                                        case SUM:
+                                            fold = new MeanSumFold(summaryType);
+                                            break;
+                                        default:
+                                            throw new InternalException("Unrecognised summary type");
+                                    }
+                                    applyFold(cache, fold, srcCol, srcGet, splitIndexes, index);
+                                }
+                            };
+                        }
 
-                    @Override
-                    public FunctionInt<RecordSet, Column> tagged(List<TagType> tagTypes, GetValue<Integer> getTag) throws InternalException, UserException
-                    {
-                        boolean ignoreNullaryTags = true; //TODO configure through GUI
+                        @Override
+                        public FunctionInt<RecordSet, Column> text(GetValue<String> srcGet) throws InternalException, UserException
+                        {
+                            if (summaryType == SummaryType.COUNT)
+                                return countColumn(srcGet);
+                            return rs -> new CalculatedStringColumn(rs, name, srcCol.getType(), srcCol)
+                            {
 
-                        if (summaryType == SummaryType.COUNT && !ignoreNullaryTags)
-                            return countColumn(getTag); // Just need to count any entry
-                        if (summaryType == SummaryType.MEAN || summaryType == SummaryType.SUM)
+                                @Override
+                                protected void fillNextCacheChunk() throws UserException, InternalException
+                                {
+                                    int index = getCacheFilled();
+                                    final FoldOperation<String, String> fold;
+                                    switch (summaryType)
+                                    {
+                                        case MIN:
+                                        case MAX:
+                                            fold = new MinMaxStringFold(summaryType);
+                                            break;
+                                        case MEAN:
+                                        case SUM:
+                                            throw new UserException("Cannot perform " + summaryType + " on String data");
+                                        default:
+                                            throw new InternalException("Unrecognised summary type");
+                                    }
+                                    applyFold(cache, fold, srcCol, srcGet, splitIndexes, index);
+                                }
+                            };
+                        }
+
+                        private <T> FunctionInt<RecordSet, Column> countColumn(GetValue<T> srcGet)
                         {
                             return rs -> new CalculatedNumericColumn(rs, name, DataType.INTEGER, srcCol)
                             {
@@ -284,47 +270,76 @@ public class SummaryStatistics extends Transformation
                                 protected void fillNextCacheChunk() throws UserException, InternalException
                                 {
                                     int index = getCacheFilled();
-                                    applyFold(cache, new MeanSumTaggedFold(summaryType, tagTypes), srcCol, getTag, splitIndexes, index);
+                                    applyFold(cache, new CountFold<T>(), srcCol, srcGet, splitIndexes, index);
                                 }
                             };
                         }
-                        return rs -> new CalculatedTaggedColumn(rs, name, tagTypes, srcCol)
+
+                        @Override
+                        public FunctionInt<RecordSet, Column> tagged(List<TagType> tagTypes, GetValue<Integer> getTag) throws InternalException, UserException
                         {
-                            @Override
-                            protected void fillNextCacheChunk() throws UserException, InternalException
+                            boolean ignoreNullaryTags = true; //TODO configure through GUI
+
+                            if (summaryType == SummaryType.COUNT && !ignoreNullaryTags)
+                                return countColumn(getTag); // Just need to count any entry
+                            if (summaryType == SummaryType.MEAN || summaryType == SummaryType.SUM)
                             {
-                                int index = getCacheFilled();
-                                final FoldOperation<Integer, List<Object>> fold;
-                                switch (summaryType)
+                                return rs -> new CalculatedNumericColumn(rs, name, DataType.INTEGER, srcCol)
                                 {
-                                    case MIN:
-                                    case MAX:
-                                        fold = new MinMaxTaggedFold(summaryType, tagTypes, ignoreNullaryTags);
-                                        break;
-                                    default:
-                                        throw new UnimplementedException();
-                                }
-                                applyFold(this, fold, srcCol, getTag, splitIndexes, index);
+                                    @Override
+                                    protected void fillNextCacheChunk() throws UserException, InternalException
+                                    {
+                                        int index = getCacheFilled();
+                                        applyFold(cache, new MeanSumTaggedFold(summaryType, tagTypes), srcCol, getTag, splitIndexes, index);
+                                    }
+                                };
                             }
+                            return rs -> new CalculatedTaggedColumn(rs, name, tagTypes, srcCol)
+                            {
+                                @Override
+                                protected void fillNextCacheChunk() throws UserException, InternalException
+                                {
+                                    int index = getCacheFilled();
+                                    final FoldOperation<Integer, List<Object>> fold;
+                                    switch (summaryType)
+                                    {
+                                        case MIN:
+                                        case MAX:
+                                            fold = new MinMaxTaggedFold(summaryType, tagTypes, ignoreNullaryTags);
+                                            break;
+                                        default:
+                                            throw new UnimplementedException();
+                                    }
+                                    applyFold(this, fold, srcCol, getTag, splitIndexes, index);
+                                }
 
-                        };
-                    }
-                }));
+                            };
+                        }
+                    }));
+                }
             }
+            theResult = new RecordSet("Summary", columns)
+            {
+                @Override
+                public boolean indexValid(int index) throws UserException
+                {
+                    return index < splits.size();
+                }
+
+                @Override
+                public int getLength() throws UserException
+                {
+                    return splits.size();
+                }
+            };
         }
-        result = new RecordSet("Summary", columns) {
-            @Override
-            public boolean indexValid(int index) throws UserException
-            {
-                return index < splits.size();
-            }
-
-            @Override
-            public int getLength() throws UserException
-            {
-                return splits.size();
-            }
-        };
+        catch (UserException e)
+        {
+            String msg = e.getLocalizedMessage();
+            if (msg != null)
+                this.error = msg;
+        }
+        this.result = theResult;
     }
 
     private static class SingleSplit

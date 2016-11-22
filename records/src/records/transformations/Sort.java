@@ -72,7 +72,7 @@ public class Sort extends Transformation
     private final @Nullable Table src;
     private final @Nullable RecordSet result;
     // Not actually a column by itself, but holds a list of integers so reasonable to re-use:
-    private final NumericColumnStorage sortMap = new NumericColumnStorage(NumberDisplayInfo.DEFAULT);
+    private final @Nullable NumericColumnStorage sortMap;
 
     // This works like a linked list, but flattened into an integer array.
     // The first item is the head, then others point onwards.  (Irritatingly, stillToOrder[n]
@@ -97,81 +97,102 @@ public class Sort extends Transformation
     private final @NonNull List<ColumnId> originalSortBy;
     private final @Nullable List<Column> sortBy;
 
-    public Sort(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, List<ColumnId> sortBy) throws UserException, InternalException
+    public Sort(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, List<ColumnId> sortBy) throws InternalException
     {
         super(mgr, thisTableId);
         this.srcTableId = srcTableId;
-        this.src = mgr.getTable(srcTableId);
+        this.src = mgr.getSingleTableOrNull(srcTableId);
         this.originalSortBy = sortBy;
         this.sortByError = "Unknown error with table \"" + thisTableId + "\"";
         if (this.src == null)
         {
             this.result = null;
             this.sortBy = null;
+            this.sortMap = null;
             sortByError = "Could not find source table: \"" + srcTableId + "\"";
             return;
         }
-        List<Column> sortByColumns = new ArrayList<>();
-        for (ColumnId c : originalSortBy)
+        @Nullable RecordSet theResult = null;
+        @Nullable NumericColumnStorage theSortMap = null;
+        @Nullable List<Column> theSortBy = null;
+        try
         {
-            @Nullable Column column = this.src.getData().getColumn(c);
-            if (column == null)
+            List<Column> sortByColumns = new ArrayList<>();
+            for (ColumnId c : originalSortBy)
             {
-                sortByColumns = null;
-                this.sortByError = "Could not find source column to sort by: \"" + c + "\"";
-                break;
+                @Nullable Column column = this.src.getData().getColumn(c);
+                if (column == null)
+                {
+                    sortByColumns = null;
+                    this.sortByError = "Could not find source column to sort by: \"" + c + "\"";
+                    break;
+                }
+                sortByColumns.add(column);
             }
-            sortByColumns.add(column);
-        }
-        this.sortBy = sortByColumns;
+            theSortBy = sortByColumns;
 
-        List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
+            theSortMap = new NumericColumnStorage(NumberDisplayInfo.DEFAULT);
 
-        RecordSet srcRecordSet = src.getData();
-        this.stillToOrder = new int[srcRecordSet.getLength() + 1];
-        for (int i = 0; i < stillToOrder.length - 1; i++)
-            stillToOrder[i] = i+1;
-        stillToOrder[stillToOrder.length - 1] = -1;
-        for (Column c : srcRecordSet.getColumns())
-        {
-            columns.add(rs -> new Column(rs)
+            List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
+
+            RecordSet srcRecordSet = src.getData();
+            this.stillToOrder = new int[srcRecordSet.getLength() + 1];
+            for (int i = 0; i < stillToOrder.length - 1; i++)
+                stillToOrder[i] = i + 1;
+            stillToOrder[stillToOrder.length - 1] = -1;
+            for (Column c : srcRecordSet.getColumns())
+            {
+                columns.add(rs -> new Column(rs)
+                {
+                    @Override
+                    public @OnThread(Tag.Any) ColumnId getName()
+                    {
+                        return c.getName();
+                    }
+
+                    @Override
+                    @SuppressWarnings({"nullness", "initialization"})
+                    public @OnThread(Tag.Any) DataType getType() throws InternalException, UserException
+                    {
+                        return c.getType().copyReorder((i, prog) ->
+                        {
+                            fillSortMapTo(i, prog);
+                            return sortMap.get(i).intValue();
+                        });
+                    }
+                });
+            }
+
+            theResult = new RecordSet("Sorted", columns)
             {
                 @Override
-                public @OnThread(Tag.Any) ColumnId getName()
+                public boolean indexValid(int index) throws UserException
                 {
-                    return c.getName();
+                    return srcRecordSet.indexValid(index);
                 }
 
                 @Override
-                @SuppressWarnings({"nullness", "initialization"})
-                public @OnThread(Tag.Any) DataType getType() throws InternalException, UserException
+                public int getLength() throws UserException
                 {
-                    return c.getType().copyReorder((i, prog) -> {
-                        fillSortMapTo(i, prog);
-                        return sortMap.get(i).intValue();
-                    });
+                    return srcRecordSet.getLength();
                 }
-            });
+            };
         }
-
-        result = new RecordSet("Sorted", columns)
+        catch (UserException e)
         {
-            @Override
-            public boolean indexValid(int index) throws UserException
-            {
-                return srcRecordSet.indexValid(index);
-            }
-
-            @Override
-            public int getLength() throws UserException
-            {
-                return srcRecordSet.getLength();
-            }
-        };
+            String msg = e.getLocalizedMessage();
+            if (msg != null)
+                this.sortByError = msg;
+        }
+        this.result = theResult;
+        this.sortMap = theSortMap;
+        this.sortBy = theSortBy;
     }
 
     private void fillSortMapTo(int target, @Nullable ProgressListener prog) throws InternalException, UserException
     {
+        if (sortMap == null)
+            throw new InternalException("Trying to fill null sort map; error in initialisation carried forward.");
         int destStart = sortMap.filled();
         for (int dest = destStart; dest <= target; dest++)
         {

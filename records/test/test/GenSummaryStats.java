@@ -41,7 +41,7 @@ public class GenSummaryStats extends Generator<SummaryStatistics>
         {
             return new SummaryStatistics(new DummyManager(), ids.getFirst(), ids.getSecond(), summaries, splitBy);
         }
-        catch (UserException | InternalException e)
+        catch (InternalException e)
         {
             throw new RuntimeException(e);
         }

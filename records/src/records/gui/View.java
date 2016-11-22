@@ -33,12 +33,8 @@ import utility.Workers;
 
 import java.io.File;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -214,7 +210,19 @@ public class View extends Pane
             transformations.add(transformation);
         }
         TableDisplay tableDisplay = new TableDisplay(this, transformation);
-        addDisplay(tableDisplay, getTableDisplay(transformation.getSources().get(0)));
+        addDisplay(tableDisplay, getTableDisplayOrNull(transformation.getSources().get(0)));
+
+        List<TableDisplay> sourceDisplays = new ArrayList<>();
+        for (TableId t : transformation.getSources())
+        {
+            TableDisplay td = getTableDisplayOrNull(t);
+            if (td != null)
+                sourceDisplays.add(td);
+        }
+        overlays.put(transformation, new Overlays(sourceDisplays, transformation.getTransformationLabel(), tableDisplay, () -> {
+            View.this.edit(transformation.getId(), transformation.edit());
+        }));
+
         return tableDisplay;
     }
 
@@ -228,9 +236,9 @@ public class View extends Pane
         }
     }
 
-    private @Nullable TableDisplay getTableDisplay(TableId tableId)
+    private @Nullable TableDisplay getTableDisplayOrNull(TableId tableId)
     {
-        @Nullable Table table = tableManager.getTable(tableId);
+        @Nullable Table table = tableManager.getSingleTableOrNull(tableId);
         if (table == null)
             return null;
         else
@@ -290,17 +298,7 @@ public class View extends Pane
             if (replaceTableId != null)
                 removeAndSerialise(replaceTableId, s -> {});
         }
-        TableDisplay tableDisplay = addTransformation(transformation);
-        List<TableDisplay> sourceDisplays = new ArrayList<>();
-        for (TableId t : transformation.getSources())
-        {
-            TableDisplay td = getTableDisplay(t);
-            if (td != null)
-                sourceDisplays.add(td);
-        }
-        overlays.put(transformation, new Overlays(sourceDisplays, transformation.getTransformationLabel(), tableDisplay, () -> {
-            View.this.edit(transformation.getId(), transformation.edit());
-        }));
+        addTransformation(transformation);
 
         savedToReRun.thenAccept(ss -> {
             Utility.alertOnErrorFX_(() -> reAddAll(ss));
@@ -337,17 +335,21 @@ public class View extends Pane
             if (removed == null)
                 for (Iterator<Transformation> iterator = transformations.iterator(); iterator.hasNext(); )
                 {
-                    Table t = iterator.next();
+                    Transformation t = iterator.next();
                     if (t.getId().equals(tableId))
                     {
                         iterator.remove();
+                        overlays.remove(t); // Listener removes them from display
                         removed = t;
                         break;
                     }
                 }
         }
         if (removed != null)
+        {
+            getChildren().remove(removed.getDisplay());
             removed.save(null, then);
+        }
     }
 
     public void edit(TableId existingTableId, TransformationEditor selectedEditor)

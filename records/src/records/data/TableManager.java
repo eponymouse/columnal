@@ -6,8 +6,10 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -21,11 +23,15 @@ public class TableManager
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private int nextId = 1;
     @OnThread(value = Tag.Any,requireSynchronized = true)
-    private final Map<TableId, Table> usedIds = new HashMap<>();
+    private final Map<TableId, List<Table>> usedIds = new HashMap<>();
 
-    public synchronized @Nullable Table getTable(TableId tableId)
+    public synchronized @Nullable Table getSingleTableOrNull(TableId tableId)
     {
-        return usedIds.get(tableId);
+        List<Table> tables = usedIds.get(tableId);
+        if (tables != null && tables.size() == 1)
+            return tables.get(0);
+        else
+            return null;
     }
 
     // Generates a new unused ID and registers it.
@@ -46,14 +52,12 @@ public class TableManager
     @SuppressWarnings("initialization")
     private synchronized void record(@UnknownInitialization(Object.class) Table table, TableId id)
     {
-        usedIds.put(id, table);
+        usedIds.computeIfAbsent(id, x -> new ArrayList<>()).add(table);
     }
 
     // Throws a UserException if already in use, otherwise registers it as used.
-    public synchronized void checkIdUnused(TableId tableId, @UnknownInitialization(Object.class) Table table) throws UserException
+    public synchronized void registerId(TableId tableId, @UnknownInitialization(Object.class) Table table)
     {
-        if (usedIds.containsKey(tableId))
-            throw new UserException("Duplicate table identifiers in file: \"" + tableId + "\"");
         record(table, tableId);
     }
 

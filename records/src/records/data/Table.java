@@ -39,14 +39,14 @@ public abstract class Table
         this.id = mgr.getNextFreeId(this);
     }
 
-    protected Table(TableManager mgr, @Nullable TableId id) throws UserException
+    protected Table(TableManager mgr, @Nullable TableId id)
     {
         if (id == null)
             this.id = mgr.getNextFreeId(this);
         else
         {
-            mgr.checkIdUnused(id, this);
             this.id = id;
+            mgr.registerId(id, this);
         }
     }
 

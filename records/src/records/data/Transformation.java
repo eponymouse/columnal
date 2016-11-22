@@ -19,7 +19,7 @@ import java.util.List;
  */
 public abstract class Transformation extends Table
 {
-    public Transformation(TableManager mgr, @Nullable TableId tableId) throws UserException
+    public Transformation(TableManager mgr, @Nullable TableId tableId)
     {
         super(mgr, tableId);
     }

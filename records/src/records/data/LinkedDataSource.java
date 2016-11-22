@@ -19,7 +19,7 @@ public class LinkedDataSource extends DataSource
     private final int typeToken;
     private final File path;
 
-    public LinkedDataSource(TableManager mgr, RecordSet rs, int typeToken, File path) throws UserException
+    public LinkedDataSource(TableManager mgr, RecordSet rs, int typeToken, File path)
     {
         super(mgr, null);
         this.data = rs;

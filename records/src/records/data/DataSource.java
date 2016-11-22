@@ -8,7 +8,7 @@ import records.error.UserException;
  */
 public abstract class DataSource extends Table
 {
-    public DataSource(TableManager mgr, @Nullable TableId id) throws UserException
+    public DataSource(TableManager mgr, @Nullable TableId id)
     {
         super(mgr, id);
     }
