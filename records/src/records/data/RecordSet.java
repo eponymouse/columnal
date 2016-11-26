@@ -130,11 +130,11 @@ public abstract class RecordSet
     }
 
     //package-protected:
-    public abstract boolean indexValid(int index) throws UserException;
+    public abstract boolean indexValid(int index) throws UserException, InternalException;
 
     // Only use when you really need to know the length!
     // Override in subclasses if you can do it faster
-    public int getLength() throws UserException
+    public int getLength() throws UserException, InternalException
     {
         int i = 0;
         while (indexValid(i))

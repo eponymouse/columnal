@@ -109,7 +109,7 @@ public class OutputBuilder
 
 
     @OnThread(Tag.Any)
-    private static String quoted(String s)
+    public static String quoted(String s)
     {
         // Order matters; escape ^ by itself first:
         return "\"" + s.replace("^", "^^").replace("\"", "^\"").replace("\n", "^n").replace("\r", "^r") + "\"";

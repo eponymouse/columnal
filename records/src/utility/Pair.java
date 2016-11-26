@@ -8,10 +8,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public final class Pair<A, B>
 {
-    @NonNull private final A first;
-    @NonNull private final B second;
+    private final A first;
+    private final B second;
 
-    public Pair(@NonNull A first, @NonNull B second)
+    public Pair(A first, B second)
     {
         this.first = first;
         this.second = second;
@@ -27,8 +27,8 @@ public final class Pair<A, B>
         return second;
     }
 
+
     @Override
-    @SuppressWarnings("intern")
     public boolean equals(@Nullable Object o)
     {
         if (this == o) return true;
@@ -36,16 +36,15 @@ public final class Pair<A, B>
 
         Pair<?, ?> pair = (Pair<?, ?>) o;
 
-        if (!first.equals(pair.first)) return false;
-        return second.equals(pair.second);
-
+        if (first != null ? !first.equals(pair.first) : pair.first != null) return false;
+        return second != null ? second.equals(pair.second) : pair.second == null;
     }
 
     @Override
     public int hashCode()
     {
-        int result = first.hashCode();
-        result = 31 * result + second.hashCode();
+        int result = first != null ? first.hashCode() : 0;
+        result = 31 * result + (second != null ? second.hashCode() : 0);
         return result;
     }
 }

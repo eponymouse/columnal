@@ -13,6 +13,7 @@ import threadchecker.Tag;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * A data type can be the following:
@@ -264,8 +265,89 @@ public abstract class DataType
         @Override
         public R tagged(List<TagType> tags) throws InternalException, UserException
         {
+            if (isBoolean(tags))
+                return bool();
             throw new InternalException("Unexpected tagged data type");
         }
+
+        protected R bool() throws InternalException
+        {
+            throw new InternalException("Unexpected boolean type");
+        }
+    }
+
+    public static class SpecificDataTypeVisitorGet<R> implements DataTypeVisitorGet<R>
+    {
+        private final @Nullable InternalException internal;
+        private final @Nullable UserException user;
+        private final @Nullable R value;
+
+        public SpecificDataTypeVisitorGet(InternalException e)
+        {
+            this.internal = e;
+            this.user = null;
+            this.value = null;
+        }
+
+        public SpecificDataTypeVisitorGet(UserException e)
+        {
+            this.internal = null;
+            this.user = e;
+            this.value = null;
+        }
+
+        public SpecificDataTypeVisitorGet(R value)
+        {
+            this.value = value;
+            this.internal = null;
+            this.user = null;
+        }
+
+        @Override
+        public R number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException
+        {
+            return defaultOp("Unexpected number data type");
+        }
+
+        private R defaultOp(String msg) throws InternalException, UserException
+        {
+            if (internal != null)
+                throw internal;
+            if (user != null)
+                throw user;
+            if (value != null)
+                return value;
+            throw new InternalException(msg);
+        }
+
+        @Override
+        public R text(GetValue<String> g) throws InternalException, UserException
+        {
+            return defaultOp("Unexpected text data type");
+        }
+
+        @Override
+        public R tagged(List<TagType> tags, GetValue<Integer> g) throws InternalException, UserException
+        {
+            if (isBoolean(tags))
+                return bool(mapValue(g, x -> x == 1));
+            return defaultOp("Unexpected tagged data type");
+        }
+
+        protected R bool(GetValue<Boolean> g) throws InternalException, UserException
+        {
+            return defaultOp("Unexpected boolean type");
+        }
+    }
+
+    private static boolean isBoolean(List<TagType> tags)
+    {
+        return tags.size() == 2 && tags.get(0).getName().toLowerCase().equals("false") && tags.get(1).getName().toLowerCase().equals("true");
+    }
+
+    public static <T, R> GetValue<R> mapValue(GetValue<T> g, Function<T, @NonNull R> map)
+    {
+        return (i, prog) -> map.apply(g.getWithProgress(i, prog));
     }
 
     /*

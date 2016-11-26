@@ -79,20 +79,32 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     private DataType dataType;
     private NumberDisplayInfo displayInfo;
 
-    public NumericColumnStorage(NumberDisplayInfo displayInfo) throws UserException
+    public NumericColumnStorage(NumberDisplayInfo displayInfo)
     {
-        this(0, -1, displayInfo);
+        this(displayInfo, 0, -1);
+    }
+
+    public NumericColumnStorage()
+    {
+        this(NumberDisplayInfo.DEFAULT, 0, -1);
     }
 
     public NumericColumnStorage(int numberOfTags) throws UserException
     {
         this(numberOfTags, -1, NumberDisplayInfo.DEFAULT);
+        if (numberOfTags > MAX_TAGS)
+            throw new UserException("Tried to create numeric column with " + numberOfTags + " tags");
     }
 
     public NumericColumnStorage(int numberOfTags, int tagForNumeric, NumberDisplayInfo displayInfo) throws UserException
     {
+        this(displayInfo, numberOfTags, tagForNumeric);
         if (numberOfTags > MAX_TAGS)
             throw new UserException("Tried to create numeric column with " + numberOfTags + " tags");
+    }
+
+    private NumericColumnStorage(NumberDisplayInfo displayInfo, int numberOfTags, int tagForNumeric)
+    {
         this.numericTag = tagForNumeric;
         this.displayInfo = displayInfo;
 

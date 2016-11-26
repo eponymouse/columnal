@@ -17,6 +17,7 @@ import records.gui.DisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.Utility;
 import utility.Workers;
 
@@ -109,7 +110,7 @@ public abstract class Column
     }
     public abstract Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException;
 */
-    public final boolean indexValid(int index) throws UserException
+    public final boolean indexValid(int index) throws UserException, InternalException
     {
         return recordSet.indexValid(index);
     }
@@ -120,7 +121,7 @@ public abstract class Column
         return Optional.empty();
     }
 
-    public final int getLength() throws UserException
+    public final int getLength() throws UserException, InternalException
     {
         return recordSet.getLength();
     }
@@ -129,5 +130,13 @@ public abstract class Column
     {
         @OnThread(Tag.Simulation)
         public void progressUpdate(double progress);
+
+        public static Pair<@Nullable ProgressListener, @Nullable ProgressListener> split(final @Nullable ProgressListener prog)
+        {
+            if (prog == null)
+                return new Pair<@Nullable ProgressListener, @Nullable ProgressListener>(null, null);
+            @NonNull ProgressListener progFinal = prog;
+            return new Pair<>(a -> progFinal.progressUpdate(a * 0.5), b -> progFinal.progressUpdate(b * 0.5 + 0.5));
+        }
     }
 }
