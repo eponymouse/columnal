@@ -607,16 +607,13 @@ public class SummaryStatistics extends Transformation
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
             return () -> {
-                if (src == null)
-                    throw new InternalException("Null source for transformation");
-
                 Map<ColumnId, TreeSet<SummaryType>> summaries = new HashMap<>();
                 for (Pair<ColumnId, SummaryType> op : ops)
                 {
                     Set<SummaryType> summaryTypes = summaries.computeIfAbsent(op.getFirst(), s -> new TreeSet<SummaryType>());
                     summaryTypes.add(op.getSecond());
                 }
-                return new SummaryStatistics(mgr, thisTableId, src.getId(), summaries, splitBy);
+                return new SummaryStatistics(mgr, thisTableId, srcTableId, summaries, splitBy);
             };
         }
     }

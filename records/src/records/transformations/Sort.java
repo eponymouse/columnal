@@ -114,7 +114,6 @@ public class Sort extends Transformation
             return;
         }
         @Nullable RecordSet theResult = null;
-        @Nullable NumericColumnStorage theSortMap = null;
         @Nullable List<Column> theSortBy = null;
         try
         {
@@ -131,8 +130,6 @@ public class Sort extends Transformation
                 sortByColumns.add(column);
             }
             theSortBy = sortByColumns;
-
-            theSortMap = new NumericColumnStorage(NumberDisplayInfo.DEFAULT);
 
             List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
 
@@ -167,13 +164,13 @@ public class Sort extends Transformation
             theResult = new RecordSet("Sorted", columns)
             {
                 @Override
-                public boolean indexValid(int index) throws UserException
+                public boolean indexValid(int index) throws UserException, InternalException
                 {
                     return srcRecordSet.indexValid(index);
                 }
 
                 @Override
-                public int getLength() throws UserException
+                public int getLength() throws UserException, InternalException
                 {
                     return srcRecordSet.getLength();
                 }
@@ -186,7 +183,7 @@ public class Sort extends Transformation
                 this.sortByError = msg;
         }
         this.result = theResult;
-        this.sortMap = theSortMap;
+        this.sortMap = new NumericColumnStorage(NumberDisplayInfo.DEFAULT);
         this.sortBy = theSortBy;
     }
 
@@ -509,14 +506,12 @@ public class Sort extends Transformation
         public @OnThread(Tag.FXPlatform) SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
             return () -> {
-                if (src == null)
-                    throw new InternalException("Null source for transformation");
                 // Ignore the special empty column put in for GUI:
                 List<ColumnId> presentSortBy = new ArrayList<>();
                 for (Optional<ColumnId> c : sortBy)
                     if (c.isPresent())
                         presentSortBy.add(c.get());
-                return new Sort(mgr, null, srcTableId, presentSortBy);
+                return new Sort(mgr, thisTableId, srcTableId, presentSortBy);
             };
         }
     }

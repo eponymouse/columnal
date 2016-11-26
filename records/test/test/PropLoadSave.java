@@ -16,6 +16,7 @@ import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
+import utility.SimulationSupplier;
 
 import javax.swing.SwingUtilities;
 import java.io.IOException;
@@ -74,4 +75,16 @@ public class PropLoadSave
         return f.get();
     }
 
+    @Property
+    @OnThread(value = Tag.Simulation,ignoreParent = true)
+    public void testNoOpEdit(@From(GenSort.class) @From(GenSummaryStats.class) Transformation original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
+    {
+        TableManager mgr = new TableManager();
+        SwingUtilities.invokeAndWait(() -> new JFXPanel());
+        CompletableFuture<SimulationSupplier<Transformation>> f = new CompletableFuture<>();
+        Platform.runLater(() -> {
+            f.complete(original.edit().getTransformation(mgr));
+        });
+        assertEquals(f.get().get(), original);
+    }
 }
