@@ -34,6 +34,14 @@ public class BinaryOpExpression extends Expression
         {
             this.symbol = symbol;
         }
+
+        public static @Nullable Op parse(String text)
+        {
+            for (Op op : values())
+                if (op.symbol.equals(text))
+                    return op;
+            return null;
+        }
     }
 
     private final Op op;

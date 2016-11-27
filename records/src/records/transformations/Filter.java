@@ -40,6 +40,7 @@ import java.util.List;
 @OnThread(Tag.Simulation)
 public class Filter extends Transformation
 {
+    private static final String PREFIX = "KEEPIF";
     private final TableId srcTableId;
     private final @Nullable Table src;
     // Not actually a column by itself, but holds a list of integers so reasonable to re-use:
@@ -157,7 +158,7 @@ public class Filter extends Transformation
     @Override
     protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
     {
-        return Collections.singletonList(filterExpression.save());
+        return Collections.singletonList(PREFIX + " " + filterExpression.save());
     }
 
     @Override
@@ -228,7 +229,7 @@ public class Filter extends Transformation
         @Override
         public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, TableId tableId, TableId srcTableId, String detail) throws InternalException, UserException
         {
-            return new Filter(mgr, tableId, srcTableId, Expression.parse(detail));
+            return new Filter(mgr, tableId, srcTableId, Expression.parse(PREFIX, detail));
         }
 
         @Override

@@ -1,8 +1,10 @@
 package records.transformations.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableId;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
@@ -15,11 +17,18 @@ import threadchecker.Tag;
  */
 public class ColumnReference extends Expression
 {
+    private final @Nullable TableId tableName;
     private final ColumnId columnName;
+
+    public ColumnReference(@Nullable TableId tableName, ColumnId columnName)
+    {
+        this.tableName = tableName;
+        this.columnName = columnName;
+    }
 
     public ColumnReference(ColumnId columnName)
     {
-        this.columnName = columnName;
+        this(null, columnName);
     }
 
     @Override

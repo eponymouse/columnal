@@ -232,6 +232,24 @@ public class Utility
         e.printStackTrace(); // TODO log and send back
     }
 
+    public static Number parseNumber(String number)
+    {
+        // First try as a long:
+        try
+        {
+            return Long.valueOf(number);
+        }
+        catch (NumberFormatException ex) { }
+        // Not a long; is it a big integer?
+        try
+        {
+            return new BigInteger(number);
+        }
+        catch (NumberFormatException ex) { }
+        // Ok, last try: big decimal (and let it throw if not)
+        return new BigDecimal(number);
+    }
+
     public static class ReadState
     {
         public long startFrom;
