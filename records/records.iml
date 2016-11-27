@@ -15,27 +15,9 @@
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="classes" level="application" />
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="file://J:/intellij-projects/bluej/threadchecker/pluginclasses" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library>
-        <CLASSES>
-          <root url="file://J:/intellij-projects/bluej/threadchecker/classes" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="library" name="Maven: org.checkerframework:checker-qual:2.1.5" level="project" />
-    <orderEntry type="library" name="Maven: org.checkerframework:checker:2.1.5" level="project" />
-    <orderEntry type="library" name="Maven: org.checkerframework:jdk8:2.1.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.1.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.1.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.1.5" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.pholser:junit-quickcheck-core:0.7" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.javaruntype:javaruntype:1.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.antlr:antlr-runtime:3.1.2" level="project" />
