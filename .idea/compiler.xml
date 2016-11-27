@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="CompilerConfiguration">
-    <option name="DEFAULT_COMPILER" value="Javac" />
-    <resourceExtensions />
     <wildcardResourcePatterns>
       <entry name="!?*.java" />
       <entry name="!?*.form" />
@@ -27,7 +25,21 @@
           <entry name="J:/intellij-projects/bluej/threadchecker/classes" />
         </processorPath>
       </profile>
+      <profile name="Annotation profile for records" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <option name="printErrorStack" value="" />
+        <option name="skipDefs" value="records.grammar." />
+        <option name="stubs" value="$PROJECT_DIR$/records/stubs" />
+        <processor name="org.checkerframework.checker.interning.InterningChecker" />
+        <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <module name="records" />
+      </profile>
     </annotationProcessing>
+    <bytecodeTargetLevel>
+      <module name="records" target="1.8" />
+    </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
     <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$PROJECT_DIR$/records/checker-dist/jdk8.jar -Xlint:unchecked -Xplugin:threadchecker.TCPlugin" />

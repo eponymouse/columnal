@@ -17,3 +17,18 @@ class BorderPane
     //@Initialized void setTop(@Nullable Node a);
     void setCenter(@Nullable Node a);
 }
+package java.lang;
+class Object
+{
+    public boolean equals(@Nullable Object o);
+}
+package java.util;
+class List
+{
+    public void remove(@Nullable Object o);
+}
+package java.util;
+class Optional
+{
+    public void remove(@Nullable Object o);
+}
