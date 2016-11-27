@@ -1,0 +1,13 @@
+<component name="libraryTable">
+  <library name="Maven: org.sosy-lab:smtinterpol:comp:2.1-255-gcdd5908">
+    <CLASSES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/sosy-lab/smtinterpol/2.1-255-gcdd5908/smtinterpol-2.1-255-gcdd5908-comp.jar!/" />
+    </CLASSES>
+    <JAVADOC>
+      <root url="jar://$MAVEN_REPOSITORY$/org/sosy-lab/smtinterpol/2.1-255-gcdd5908/smtinterpol-2.1-255-gcdd5908-javadoc.jar!/" />
+    </JAVADOC>
+    <SOURCES>
+      <root url="jar://$MAVEN_REPOSITORY$/org/sosy-lab/smtinterpol/2.1-255-gcdd5908/smtinterpol-2.1-255-gcdd5908-sources.jar!/" />
+    </SOURCES>
+  </library>
+</component>
