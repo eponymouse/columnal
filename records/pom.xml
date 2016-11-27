@@ -133,7 +133,7 @@
                     </annotationProcessors>
                     <compilerArgs>
                         <!-- location of the annotated JDK, which comes from a Maven dependency -->
-                        <arg>-Xbootclasspath/p:C:/Users/neil/.m2/repository/org/checkerframework/jdk8/2.1.5/jdk8-2.1.5.jar</arg>
+                        <arg>-Xbootclasspath/p:${annotatedJdk}</arg>
                         <arg>-AprintErrorStack</arg>
                         <arg>-AskipDefs=records.grammar.</arg>
                         <arg>-Astubs=C:/Users/neil/IdeaProjects/records/records/stubs</arg>
