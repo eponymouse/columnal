@@ -12,6 +12,10 @@ import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
+import java.util.Collections;
+import java.util.Map;
+import java.util.stream.Stream;
+
 /**
  * Created by neil on 25/11/2016.
  */
@@ -43,4 +47,12 @@ public class ColumnReference extends Expression
     {
         return "@" + OutputBuilder.quoted(columnName.getOutput());
     }
+
+    @Override
+    public Stream<ColumnId> allColumnNames()
+    {
+        return Stream.of(columnName);
+    }
 }
+
+

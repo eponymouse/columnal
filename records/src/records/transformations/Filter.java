@@ -4,9 +4,14 @@ import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.Column.ProgressListener;
@@ -21,18 +26,26 @@ import records.data.datatype.DataType;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DisplayValue;
+import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.SimulationSupplier;
+import utility.Utility;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 23/11/2016.
@@ -174,12 +187,46 @@ public class Filter extends Transformation
         private final @Nullable TableId thisTableId;
         private final TableId srcTableId;
         private final @Nullable Table src;
+        private final List<ColumnId> allColumns = new ArrayList<>();
+        private final TextField rawField;
+        private final ObservableList<List<DisplayValue>> srcHeaderAndData;
+        private final ObservableList<List<DisplayValue>> destHeaderAndData;
 
+        @OnThread(Tag.FXPlatform)
         public Editor(@Nullable TableId thisTableId, TableId srcTableId, @Nullable Table src)
         {
             this.thisTableId = thisTableId;
             this.srcTableId = srcTableId;
             this.src = src;
+            this.rawField = new TextField("");
+            this.srcHeaderAndData = FXCollections.observableArrayList();
+            this.destHeaderAndData = FXCollections.observableArrayList();
+        }
+
+        private void updateExample(Expression expression) throws UserException
+        {
+            if (src != null && allColumns.isEmpty())
+            {
+                allColumns.addAll(src.getData().getColumnIds());
+            }
+            /*
+            Map<ColumnId, Long> itemToFreq = expression.allColumnNames().collect(Collectors.groupingBy(Function.<ColumnId>identity(), Collectors.<ColumnId>counting()));
+            List<ColumnId> sortedByFreq = itemToFreq.entrySet().stream().sorted(Entry.<ColumnId, Long>comparingByValue(Comparator.<Long>reverseOrder())).<ColumnId>map(Entry::getKey).limit(3).collect(Collectors.toList());
+            if (sortedByFreq.size() < 3)
+            {
+                // Add any other columns to make it up:
+                for (ColumnId c : allColumns)
+                {
+                    if (!sortedByFreq.contains(c))
+                    {
+                        sortedByFreq.add(c);
+                        if (sortedByFreq.size() == 3)
+                            break;
+                    }
+                }
+            }
+*/
+
         }
 
         @Override
@@ -191,7 +238,29 @@ public class Filter extends Transformation
         @Override
         public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
-            return new BorderPane(new Label("TODO"));
+            Utility.addChangeListenerPlatform(rawField.textProperty(), text -> {
+                try
+                {
+                    if (text != null)
+                        updateExample(Expression.parse(null, text));
+                }
+                catch (Exception e)
+                {
+                    // Never mind, don't update
+                    reportError.consume(e);
+                }
+            });
+            try
+            {
+                updateExample(new BooleanLiteral(true));
+            }
+            catch (Exception e)
+            {
+                reportError.consume(e);
+            }
+
+            Node example = createExplanation(srcHeaderAndData, destHeaderAndData, "Filter examines each row separately.  It evaluates the given expression for that row.  If the expression is true, the row is kept; if it's false, the row is removed.  For example, if you have a column called price, and you write\n@price >= 100\nas your expression then only rows where the price is 100 or higher will be kept.");
+            return new VBox(rawField, example);
         }
 
         @Override
@@ -203,7 +272,8 @@ public class Filter extends Transformation
         @Override
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
-            return () -> new Filter(mgr, thisTableId, srcTableId, new NumericLiteral(0));
+            String expr = rawField.getText();
+            return () -> new Filter(mgr, thisTableId, srcTableId, Expression.parse(null, expr));
         }
 
         @Override

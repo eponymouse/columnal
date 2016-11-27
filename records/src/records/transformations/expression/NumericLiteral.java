@@ -9,7 +9,7 @@ import threadchecker.OnThread;
 /**
  * Created by neil on 25/11/2016.
  */
-public class NumericLiteral extends Expression
+public class NumericLiteral extends Literal
 {
     private final Number value;
 

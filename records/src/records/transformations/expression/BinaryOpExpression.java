@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
+import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.datatype.BooleanDataType;
 import records.data.datatype.DataType;
@@ -17,7 +18,10 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Map;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 25/11/2016.
@@ -159,5 +163,11 @@ public class BinaryOpExpression extends Expression
     public @OnThread(Tag.FXPlatform) String save()
     {
         return "(" + lhs.save() + " " + op.symbol + " " + rhs.save() + ")";
+    }
+
+    @Override
+    public Stream<ColumnId> allColumnNames()
+    {
+        return Stream.concat(lhs.allColumnNames(), rhs.allColumnNames());
     }
 }

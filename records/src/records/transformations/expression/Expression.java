@@ -26,6 +26,9 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
+import java.util.Map;
+import java.util.stream.Stream;
+
 /**
  * Created by neil on 24/11/2016.
  */
@@ -46,6 +49,9 @@ public abstract class Expression
     }
 
     public abstract DataType getType(RecordSet data) throws UserException, InternalException;
+
+    // Note that there will be duplicates if referred to multiple times
+    public abstract Stream<ColumnId> allColumnNames();
 
     @OnThread(Tag.FXPlatform)
     public abstract String save();
