@@ -13,7 +13,8 @@ dataSourceImmedate : DATA tableId detail;
 dataSource : (dataSourceLinkHeader | (dataSourceImmedate detail NEWLINE)) dataFormat;
 
 transformationName : item;
-transformation : TRANSFORMATION tableId transformationName detail NEWLINE;
+sourceName : item;
+transformation : TRANSFORMATION tableId transformationName NEWLINE SOURCE sourceName+ NEWLINE detail NEWLINE;
 
 detail: BEGIN DETAIL_LINE+ DETAIL_END;
 

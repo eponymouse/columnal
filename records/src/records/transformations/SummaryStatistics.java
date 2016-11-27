@@ -433,7 +433,7 @@ public class SummaryStatistics extends Transformation
     }
 
     @OnThread(Tag.FXPlatform)
-    public static class Info extends TransformationInfo
+    public static class Info extends SingleSourceTransformationInfo
     {
         @OnThread(Tag.Any)
         public Info()
@@ -448,7 +448,7 @@ public class SummaryStatistics extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, TableId tableId, String detail) throws InternalException, UserException
+        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, TableId tableId, TableId srcTableId, String detail) throws InternalException, UserException
         {
             SummaryContext loaded = Utility.parseAsOne(detail, BasicLexer::new, SortParser::new, SortParser::summary);
 
@@ -463,7 +463,7 @@ public class SummaryStatistics extends Transformation
                 summaryTypes.put(new ColumnId(sumType.column.getText()), summaries);
             }
             List<ColumnId> splits = Utility.<SplitByContext, ColumnId>mapList(loaded.splitBy(), s -> new ColumnId(s.column.getText()));
-            return new SummaryStatistics(mgr, tableId, new TableId(loaded.srcTableId.getText()), summaryTypes, splits);
+            return new SummaryStatistics(mgr, tableId, srcTableId, summaryTypes, splits);
         }
     }
 
@@ -622,12 +622,11 @@ public class SummaryStatistics extends Transformation
     protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
     {
         OutputBuilder b = new OutputBuilder();
-        b.kw("SUMMARYOF").id(srcTableId).nl();
         for (Entry<ColumnId, TreeSet<SummaryType>> entry : summaries.entrySet())
         {
             if (!entry.getValue().isEmpty())
             {
-                b.kw("FROM").id(entry.getKey());
+                b.kw("SUMMARY").id(entry.getKey());
                 for (SummaryType t : entry.getValue())
                     b.id(t.toString());
                 b.nl();

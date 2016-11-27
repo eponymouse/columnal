@@ -38,7 +38,12 @@ public abstract class Transformation extends Table
     {
         OutputBuilder b = new OutputBuilder();
         // transformation : TRANSFORMATION tableId transformationName NEWLINE transformationDetail+;
-        b.t(MainLexer.TRANSFORMATION).id(getId()).id(getTransformationName()).inner(() -> saveDetail(destination));
+        b.t(MainLexer.TRANSFORMATION).id(getId()).id(getTransformationName()).nl();
+        b.t(MainLexer.SOURCE);
+        for (TableId src : getSources())
+            b.id(src);
+        b.nl();
+        b.inner(() -> saveDetail(destination));
         savePosition(b);
         b.end().id(getId()).nl();
         then.consume(b.toString());

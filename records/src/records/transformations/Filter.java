@@ -30,6 +30,7 @@ import utility.SimulationSupplier;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -214,6 +215,26 @@ public class Filter extends Transformation
         public TableId getSourceId()
         {
             return srcTableId;
+        }
+    }
+
+    public static class Info extends SingleSourceTransformationInfo
+    {
+        public Info()
+        {
+            super("filter", Arrays.asList("remove", "delete"));
+        }
+
+        @Override
+        public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, TableId tableId, TableId srcTableId, String detail) throws InternalException, UserException
+        {
+            return new Filter(mgr, tableId, srcTableId, Expression.parse(detail));
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(TableId srcTableId, @Nullable Table src)
+        {
+            return new Editor(null, srcTableId, src);
         }
     }
 }

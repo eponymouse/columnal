@@ -14,7 +14,7 @@ public class UserException extends Exception
         super(message);
     }
 
-    protected UserException(String message, Throwable cause)
+    public UserException(String message, Throwable cause)
     {
         super(message, cause);
     }

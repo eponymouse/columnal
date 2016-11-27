@@ -39,7 +39,7 @@ public abstract class TransformationInfo
     }
 
     @OnThread(Tag.Simulation)
-    public abstract Transformation load(TableManager mgr, TableId tableId, String detail) throws InternalException, UserException;
+    public abstract Transformation load(TableManager mgr, TableId tableId, List<TableId> source, String detail) throws InternalException, UserException;
 
     @OnThread(Tag.FXPlatform)
     public abstract TransformationEditor editNew(TableId srcTableId, @Nullable Table src);

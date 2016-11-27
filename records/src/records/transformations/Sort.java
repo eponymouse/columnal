@@ -276,7 +276,7 @@ public class Sort extends Transformation
     }
 
     @OnThread(Tag.FXPlatform)
-    public static class Info extends TransformationInfo
+    public static class Info extends SingleSourceTransformationInfo
     {
         @OnThread(Tag.Any)
         public Info()
@@ -286,11 +286,11 @@ public class Sort extends Transformation
 
         @Override
         @OnThread(Tag.Simulation)
-        public Transformation load(TableManager mgr, TableId tableId, String detail) throws InternalException, UserException
+        public Transformation loadSingle(TableManager mgr, TableId tableId, TableId srcTableId, String detail) throws InternalException, UserException
         {
             SortContext loaded = Utility.parseAsOne(detail, BasicLexer::new, SortParser::new, SortParser::sort);
 
-            return new Sort(mgr, tableId, new TableId(loaded.srcTableId.getText()), Utility.<OrderByContext, ColumnId>mapList(loaded.orderBy(), o -> new ColumnId(o.column.getText())));
+            return new Sort(mgr, tableId, srcTableId, Utility.<OrderByContext, ColumnId>mapList(loaded.orderBy(), o -> new ColumnId(o.column.getText())));
         }
 
         @Override
@@ -520,7 +520,6 @@ public class Sort extends Transformation
     protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
     {
         OutputBuilder b = new OutputBuilder();
-        b.kw("SORT").id(srcTableId).nl();
         for (ColumnId c : originalSortBy)
             b.kw("ASCENDING").id(c).nl();
         return b.toLines();

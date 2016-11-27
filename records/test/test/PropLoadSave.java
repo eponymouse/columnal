@@ -34,7 +34,7 @@ public class PropLoadSave
 {
     @Property(trials = 1000)
     @OnThread(value = Tag.Simulation,ignoreParent = true)
-    public void testTransformation(@From(GenSort.class) @From(GenSummaryStats.class) Transformation original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
+    public void testTransformation(@From(GenSort.class) @From(GenSummaryStats.class) @From(GenFilter.class) Transformation original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         String saved = save(original);
         try
@@ -77,7 +77,7 @@ public class PropLoadSave
 
     @Property
     @OnThread(value = Tag.Simulation,ignoreParent = true)
-    public void testNoOpEdit(@From(GenSort.class) @From(GenSummaryStats.class) Transformation original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
+    public void testNoOpEdit(@From(GenSort.class) @From(GenSummaryStats.class) @From(GenFilter.class) Transformation original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         TableManager mgr = new TableManager();
         SwingUtilities.invokeAndWait(() -> new JFXPanel());

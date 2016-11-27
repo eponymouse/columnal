@@ -10,6 +10,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
 import records.grammar.MainParser;
+import records.grammar.MainParser.SourceNameContext;
 import records.grammar.MainParser.TableContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -42,7 +43,8 @@ public class TransformationManager
     {
         return Arrays.asList(
             new SummaryStatistics.Info(),
-            new Sort.Info()
+            new Sort.Info(),
+            new Filter.Info()
         );
     }
 
@@ -55,10 +57,19 @@ public class TransformationManager
     @OnThread(Tag.Simulation)
     private Transformation load(TableManager mgr, TableContext table) throws UserException, InternalException
     {
-        TransformationInfo t = getTransformation(table.transformation().transformationName().getText());
-        Transformation transformation = t.load(mgr, new TableId(table.transformation().tableId().getText()), table.transformation().detail().DETAIL_LINE().stream().<String>map(TerminalNode::getText).collect(Collectors.joining("")));
-        transformation.loadPosition(table.position());
-        return transformation;
+        try
+        {
+            TransformationInfo t = getTransformation(table.transformation().transformationName().getText());
+            String detail = table.transformation().detail().DETAIL_LINE().stream().<String>map(TerminalNode::getText).collect(Collectors.joining(""));
+            List<TableId> source = Utility.<SourceNameContext, TableId>mapList(table.transformation().sourceName(), s -> new TableId(s.item().getText()));
+            Transformation transformation = t.load(mgr, new TableId(table.transformation().tableId().getText()), source, detail);
+            transformation.loadPosition(table.position());
+            return transformation;
+        }
+        catch (NullPointerException e)
+        {
+            throw new UserException("Could not read transformation: failed to read data", e);
+        }
     }
 
     @OnThread(Tag.Any)

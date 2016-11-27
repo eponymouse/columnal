@@ -35,4 +35,9 @@ public abstract class Expression
 
     @OnThread(Tag.FXPlatform)
     public abstract String save();
+
+    public static Expression parse(String src)
+    {
+        return new NumericLiteral(0); // TODO
+    }
 }
