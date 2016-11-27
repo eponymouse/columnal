@@ -58,14 +58,15 @@
             <version>4.12</version>
             <scope>test</scope>
         </dependency>
-        <!--
+
         <dependency>
             <groupId>org.bluej</groupId>
             <artifactId>threadchecker-tags</artifactId>
             <version>0.1</version>
             <scope>system</scope>
-            <systemPath>J:\intellij-projects\bluej\threadchecker\classes</systemPath>
+            <systemPath>${basedir}/lib/threadchecker.jar</systemPath>
         </dependency>
+        <!--
         <dependency>
             <groupId>org.bluej</groupId>
             <artifactId>threadchecker-plugin</artifactId>
@@ -137,10 +138,7 @@
                         <arg>-AprintErrorStack</arg>
                         <arg>-AskipDefs=records.grammar.</arg>
                         <arg>-Astubs=C:/Users/neil/IdeaProjects/records/records/stubs</arg>
-                        <arg>-Xbootclasspath/p:J:/intellij-projects/bluej/threadchecker/classes</arg>
-                        <!--
-                        <arg>-Xbootclasspath/p:J:/intellij-projects/bluej/threadchecker/pluginclasses</arg>
-                        <arg>-Xplugin:threadchecker.TCPlugin</arg> -->
+                        <arg>-Xplugin:threadchecker.TCPlugin</arg>
                     </compilerArgs>
                 </configuration>
             </plugin>
