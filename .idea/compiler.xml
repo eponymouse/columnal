@@ -42,6 +42,6 @@
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
-    <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$PROJECT_DIR$/records/checker-dist/jdk8.jar -Xlint:unchecked -Xplugin:threadchecker.TCPlugin" />
+    <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$MAVEN_REPOSITORY$/org/checkerframework/jdk8/2.1.5/jdk8-2.1.5.jar -Xlint:unchecked -Xplugin:threadchecker.TCPlugin" />
   </component>
 </project>
