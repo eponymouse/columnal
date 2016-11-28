@@ -3,6 +3,7 @@ package records.data;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.DumbStringPool;
@@ -18,7 +19,7 @@ public class StringColumnStorage implements ColumnStorage<String>
     private final ArrayList<String> values;
     private final DumbStringPool pool = new DumbStringPool(1000);
     @MonotonicNonNull
-    private DataType dataType;
+    private DataTypeValue dataType;
 
     public StringColumnStorage()
     {
@@ -56,7 +57,7 @@ public class StringColumnStorage implements ColumnStorage<String>
         }
     }
 
-    public DataType getType()
+    public DataTypeValue getType()
     {
         /*
         if (longs != null)
@@ -68,14 +69,7 @@ public class StringColumnStorage implements ColumnStorage<String>
         */
         if (dataType == null)
         {
-            dataType = new DataType()
-            {
-                @Override
-                public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
-                {
-                    return visitor.text((i, prog) -> get(i));
-                }
-            };
+            dataType = DataTypeValue.text((i, prog) -> get(i));
         }
         return dataType;
     }

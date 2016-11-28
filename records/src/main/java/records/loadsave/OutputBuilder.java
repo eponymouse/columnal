@@ -3,11 +3,11 @@ package records.loadsave;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.TableId;
-import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitorGet;
-import records.data.datatype.DataType.GetValue;
 import records.data.datatype.DataType.NumberDisplayInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
+import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
@@ -17,8 +17,8 @@ import utility.FXPlatformSupplier;
 import utility.Utility;
 
 import java.nio.file.Path;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -135,10 +135,10 @@ public class OutputBuilder
 
     // Outputs a row of an entire data set
     @OnThread(Tag.Simulation)
-    public synchronized void data(DataType type, int index)
+    public synchronized void data(DataTypeValue type, int index)
     {
         Utility.alertOnError_(() -> {
-            cur().add(type.apply(new DataTypeVisitorGet<String>()
+            cur().add(type.applyGet(new DataTypeVisitorGet<String>()
             {
                 @Override
                 public String number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException
@@ -153,14 +153,26 @@ public class OutputBuilder
                 }
 
                 @Override
-                public String tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                public String tagged(List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
                 {
-                    TagType t = tagTypes.get(g.get(index));
-                    @Nullable DataType inner = t.getInner();
+                    TagType<DataTypeValue> t = tagTypes.get(g.get(index));
+                    @Nullable DataTypeValue inner = t.getInner();
                     if (inner == null)
                         return t.getName();
                     else
-                        return t.getName() + ":" + inner.apply(this);
+                        return t.getName() + ":" + inner.applyGet(this);
+                }
+
+                @Override
+                public String bool(GetValue<Boolean> g) throws InternalException, UserException
+                {
+                    return g.get(index).toString();
+                }
+
+                @Override
+                public String date(GetValue<Temporal> g) throws InternalException, UserException
+                {
+                    return g.get(index).toString();
                 }
             }));
         });

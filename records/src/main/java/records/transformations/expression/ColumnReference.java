@@ -11,6 +11,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.NumberDisplayInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.loadsave.OutputBuilder;
@@ -40,7 +41,7 @@ public class ColumnReference extends Expression
     }
 
     @Override
-    public DataType getType(RecordSet data) throws UserException, InternalException
+    public DataTypeValue getTypeValue(RecordSet data) throws UserException, InternalException
     {
         Column c = data.getColumn(columnName);
         return c.getType();
@@ -76,9 +77,21 @@ public class ColumnReference extends Expression
             }
 
             @Override
-            public Formula tagged(List<TagType> tags) throws InternalException, UserException
+            public Formula date() throws InternalException, UserException
+            {
+                throw new UserException("Can't do dates...");
+            }
+
+            @Override
+            public Formula tagged(List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 throw new UserException("Can't do tags...");
+            }
+
+            @Override
+            public Formula bool() throws InternalException, UserException
+            {
+                return formulaManager.getBooleanFormulaManager().makeVariable(columnName.getOutput());
             }
         });
     }

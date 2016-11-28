@@ -7,9 +7,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitorGet;
-import records.data.datatype.DataType.GetValue;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayCache;
@@ -101,7 +100,7 @@ public abstract class Column
     }
 
     @OnThread(Tag.Any)
-    public abstract DataType getType() throws InternalException, UserException;
+    public abstract DataTypeValue getType() throws InternalException, UserException;
 
     /*
     public final Object get(int index) throws UserException, InternalException

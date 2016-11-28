@@ -3,6 +3,7 @@ package records.data;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -21,7 +22,7 @@ public class MemoryStringColumn extends Column
     private final StringColumnStorage storage;
     @MonotonicNonNull
     @OnThread(value = Tag.Any, requireSynchronized = true)
-    private DataType dataType;
+    private DataTypeValue dataType;
 
     public MemoryStringColumn(RecordSet recordSet, ColumnId title, List<String> values) throws InternalException
     {
@@ -40,18 +41,11 @@ public class MemoryStringColumn extends Column
 
     @Override
     @OnThread(Tag.Any)
-    public synchronized DataType getType()
+    public synchronized DataTypeValue getType()
     {
         if (dataType == null)
         {
-            dataType = new DataType()
-            {
-                @Override
-                public <R> R apply(DataTypeVisitorGet<R> visitor) throws UserException, InternalException
-                {
-                    return visitor.text(MemoryStringColumn.this::getWithProgress);
-                }
-            };
+            dataType = DataTypeValue.text(this::getWithProgress);
         }
         return dataType;
     }

@@ -3,6 +3,9 @@ package records.data;
 import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -48,20 +51,12 @@ public class MemoryNumericColumn extends Column
 
     @Override
     @OnThread(Tag.Any)
-    public DataType getType()
+    public DataTypeValue getType()
     {
         if (!mayBeBlank)
             return storage.getType();
 
-        return new DataType()
-        {
-            List<TagType> tagTypes = Arrays.asList(new TagType("Blank", null), new TagType("Number", storage.getType()));
-
-            @Override
-            public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
-            {
-                return visitor.tagged(tagTypes, (i, prog) -> storage.getTag(i));
-            }
-        };
+        return DataTypeValue.tagged(Arrays.asList(new TagType<>("Blank", null), new TagType<>("Number", storage.getType())),
+            (i, prog) -> storage.getTag(i));
     }
 }

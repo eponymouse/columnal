@@ -3,8 +3,6 @@ package records.data;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
-import records.data.datatype.DataType.DataTypeVisitorGet;
-import records.data.datatype.DataType.GetValue;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;

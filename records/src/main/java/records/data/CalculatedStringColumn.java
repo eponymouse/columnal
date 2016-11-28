@@ -2,6 +2,7 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -18,7 +19,7 @@ public abstract class CalculatedStringColumn extends CalculatedColumn
     private final DataType copyType;
     @MonotonicNonNull
     @OnThread(value = Tag.Any, requireSynchronized = true)
-    private DataType type;
+    private DataTypeValue type;
     protected final StringColumnStorage cache;
     public CalculatedStringColumn(RecordSet recordSet, ColumnId name, DataType copyType, Column... dependencies)
     {
@@ -35,7 +36,7 @@ public abstract class CalculatedStringColumn extends CalculatedColumn
 
     @Override
     @OnThread(Tag.Any)
-    public synchronized DataType getType() throws UserException, InternalException
+    public synchronized DataTypeValue getType() throws UserException, InternalException
     {
         if (type == null)
         {

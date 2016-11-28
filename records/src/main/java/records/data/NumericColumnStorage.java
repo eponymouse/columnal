@@ -7,6 +7,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -76,7 +78,8 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     private int numericTag;
     @MonotonicNonNull
     @OnThread(value = Tag.Any, requireSynchronized = true)
-    private DataType dataType;
+    private DataTypeValue dataType;
+    @OnThread(value = Tag.Any, requireSynchronized = true)
     private NumberDisplayInfo displayInfo;
 
     public NumericColumnStorage(NumberDisplayInfo displayInfo)
@@ -464,7 +467,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     }
 
     @OnThread(Tag.Any)
-    public synchronized DataType getType()
+    public synchronized DataTypeValue getType()
     {
         /*
         if (longs != null)
@@ -476,14 +479,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         */
         if (dataType == null)
         {
-            dataType = new DataType()
-            {
-                @Override
-                public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
-                {
-                    return visitor.number((i, prog) -> getNonBlank(i), displayInfo);
-                }
-            };
+            dataType = DataTypeValue.number(displayInfo, (i, prog) -> getNonBlank(i));
         }
         return dataType;
     }
@@ -547,7 +543,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         this.numericTag = numericTag;
     }
 
-    public void setDisplayInfo(NumberDisplayInfo displayInfo)
+    public synchronized void setDisplayInfo(NumberDisplayInfo displayInfo)
     {
         this.displayInfo = displayInfo;
     }

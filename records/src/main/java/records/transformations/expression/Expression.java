@@ -8,8 +8,9 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.GetValue;
-import records.data.datatype.DataType.SpecificDataTypeVisitorGet;
+import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.GetValue;
+import records.data.datatype.DataTypeValue.SpecificDataTypeVisitorGet;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
@@ -35,17 +36,21 @@ public abstract class Expression
     @OnThread(Tag.Simulation)
     public boolean getBoolean(RecordSet data, int rowIndex, @Nullable ProgressListener prog) throws UserException, InternalException
     {
-        return getType(data).apply(new SpecificDataTypeVisitorGet<Boolean>(new UserException("Type must be boolean")) {
+        return getTypeValue(data).applyGet(new SpecificDataTypeVisitorGet<Boolean>(new UserException("Type must be boolean")) {
             @Override
             @OnThread(Tag.Simulation)
-            protected Boolean bool(GetValue<Boolean> g) throws InternalException, UserException
+            public Boolean bool(GetValue<Boolean> g) throws InternalException, UserException
             {
                 return g.getWithProgress(rowIndex, prog);
             }
         });
     }
 
-    public abstract DataType getType(RecordSet data) throws UserException, InternalException;
+    public DataType getType(RecordSet data) throws UserException, InternalException
+    {
+        return getTypeValue(data);
+    }
+    public abstract DataTypeValue getTypeValue(RecordSet data) throws UserException, InternalException;
 
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnId> allColumnNames();

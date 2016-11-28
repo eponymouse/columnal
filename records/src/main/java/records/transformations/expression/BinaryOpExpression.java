@@ -5,19 +5,17 @@ import org.sosy_lab.java_smt.api.BooleanFormula;
 import org.sosy_lab.java_smt.api.BooleanFormulaManager;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
-import org.sosy_lab.java_smt.api.IntegerFormulaManager;
 import org.sosy_lab.java_smt.api.NumeralFormula;
 import org.sosy_lab.java_smt.api.RationalFormulaManager;
 import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.RecordSet;
-import records.data.datatype.BooleanDataType;
-import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitorGet;
-import records.data.datatype.DataType.GetValue;
 import records.data.datatype.DataType.NumberDisplayInfo;
-import records.data.datatype.DataType.SpecificDataTypeVisitorGet;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
+import records.data.datatype.DataTypeValue.GetValue;
+import records.data.datatype.DataTypeValue.SpecificDataTypeVisitorGet;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -25,9 +23,8 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.Collections;
+import java.time.temporal.Temporal;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Stream;
 
 /**
@@ -67,13 +64,13 @@ public class BinaryOpExpression extends Expression
     }
 
     @Override
-    public DataType getType(RecordSet data) throws UserException, InternalException
+    public DataTypeValue getTypeValue(RecordSet data) throws UserException, InternalException
     {
         switch (op)
         {
             case AND:
             case OR:
-                return new BooleanDataType((i, prog) ->
+                return DataTypeValue.bool((i, prog) ->
                 {
                     Pair<@Nullable ProgressListener, @Nullable ProgressListener> progs = ProgressListener.split(prog);
                     boolean lhsVal = lhs.getBoolean(data, i, progs.getFirst());
@@ -83,8 +80,8 @@ public class BinaryOpExpression extends Expression
                     return rhsVal;
                 });
             case EQUALS:
-                return new BooleanDataType((i, prog) -> {
-                    return 0 == compareValueCheckType(lhs.getType(data), rhs.getType(data), i, prog);
+                return DataTypeValue.bool((i, prog) -> {
+                    return 0 == compareValueCheckType(lhs.getTypeValue(data), rhs.getTypeValue(data), i, prog);
                 });
             default:
                 throw new UserException("Unsupported operation: " + op);
@@ -93,16 +90,16 @@ public class BinaryOpExpression extends Expression
     }
 
     @OnThread(Tag.Simulation)
-    private static int compareValueCheckType(DataType typeA, DataType typeB, int index, @Nullable ProgressListener prog) throws UserException, InternalException
+    private static int compareValueCheckType(DataTypeValue typeA, DataTypeValue typeB, int index, @Nullable ProgressListener prog) throws UserException, InternalException
     {
         Pair<@Nullable ProgressListener, @Nullable ProgressListener> progs = ProgressListener.split(prog);
-        return typeA.apply(new DataTypeVisitorGet<Integer>()
+        return typeA.applyGet(new DataTypeVisitorGet<Integer>()
         {
             @Override
             @OnThread(Tag.Simulation)
             public Integer number(GetValue<Number> gA, NumberDisplayInfo displayInfo) throws InternalException, UserException
             {
-                return typeB.apply(new SpecificDataTypeVisitorGet<Integer>(new UserException("Expected numeric type, to match left-hand side")){
+                return typeB.applyGet(new SpecificDataTypeVisitorGet<Integer>(new UserException("Expected numeric type, to match left-hand side")){
                     @Override
                     @OnThread(Tag.Simulation)
                     public Integer number(GetValue<Number> gB, NumberDisplayInfo displayInfo) throws InternalException, UserException
@@ -116,7 +113,7 @@ public class BinaryOpExpression extends Expression
             @OnThread(Tag.Simulation)
             public Integer text(GetValue<String> gA) throws InternalException, UserException
             {
-                return typeB.apply(new SpecificDataTypeVisitorGet<Integer>(new UserException("Expected text type, to match left-hand side")){
+                return typeB.applyGet(new SpecificDataTypeVisitorGet<Integer>(new UserException("Expected text type, to match left-hand side")){
                     @Override
                     @OnThread(Tag.Simulation)
                     public Integer text(GetValue<String> gB) throws InternalException, UserException
@@ -128,20 +125,48 @@ public class BinaryOpExpression extends Expression
 
             @Override
             @OnThread(Tag.Simulation)
-            public Integer tagged(List<TagType> tagsA, GetValue<Integer> gA) throws InternalException, UserException
+            public Integer bool(GetValue<Boolean> gA) throws InternalException, UserException
             {
-                return typeB.apply(new SpecificDataTypeVisitorGet<Integer>(new UserException("Expected tagged type, to match left-hand side")){
+                return typeB.applyGet(new SpecificDataTypeVisitorGet<Integer>(new UserException("Expected boolean type, to match left-hand side")){
                     @Override
                     @OnThread(Tag.Simulation)
-                    public Integer tagged(List<TagType> tagsB, GetValue<Integer> gB) throws InternalException, UserException
+                    public Integer bool(GetValue<Boolean> gB) throws InternalException, UserException
+                    {
+                        return gA.getWithProgress(index, progs.getFirst()).compareTo(gB.getWithProgress(index, progs.getSecond()));
+                    }
+                });
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Integer date(GetValue<Temporal> gA) throws InternalException, UserException
+            {
+                return typeB.applyGet(new SpecificDataTypeVisitorGet<Integer>(new UserException("Expected date type, to match left-hand side")){
+                    @Override
+                    @OnThread(Tag.Simulation)
+                    public Integer date(GetValue<Temporal> gB) throws InternalException, UserException
+                    {
+                        return ((Comparable)gA.getWithProgress(index, progs.getFirst())).compareTo(gB.getWithProgress(index, progs.getSecond()));
+                    }
+                });
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Integer tagged(List<TagType<DataTypeValue>> tagsA, GetValue<Integer> gA) throws InternalException, UserException
+            {
+                return typeB.applyGet(new SpecificDataTypeVisitorGet<Integer>(new UserException("Expected tagged type, to match left-hand side")){
+                    @Override
+                    @OnThread(Tag.Simulation)
+                    public Integer tagged(List<TagType<DataTypeValue>> tagsB, GetValue<Integer> gB) throws InternalException, UserException
                     {
                         checkSame(tagsA, tagsB);
                         int tagA = gA.getWithProgress(index, progs.getFirst());
                         int tagB = gB.getWithProgress(index, progs.getSecond());
                         if (tagA != tagB)
                             return Integer.compare(tagA, tagB);
-                        DataType innerA = tagsA.get(tagA).getInner();
-                        DataType innerB = tagsB.get(tagB).getInner();
+                        DataTypeValue innerA = tagsA.get(tagA).getInner();
+                        DataTypeValue innerB = tagsB.get(tagB).getInner();
                         if (innerA == null && innerB == null)
                             return 0; // No further data, it's a match
                         if (innerA == null || innerB == null)
@@ -153,7 +178,7 @@ public class BinaryOpExpression extends Expression
         });
     }
 
-    private static void checkSame(List<TagType> tagsA, List<TagType> tagsB) throws UserException
+    private static void checkSame(List<TagType<DataTypeValue>> tagsA, List<TagType<DataTypeValue>> tagsB) throws UserException
     {
         if (tagsA.size() != tagsB.size())
             throw new UserException("Types don't match; different number of tags");

@@ -1,5 +1,6 @@
 package records.data.datatype;
 
+import com.sun.org.apache.xpath.internal.operations.Bool;
 import javafx.scene.control.ListView;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DataTypeVisitor;
@@ -11,6 +12,8 @@ import records.gui.DisplayValue;
 import threadchecker.OnThread;
 import utility.Utility;
 
+import java.time.LocalDate;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -39,7 +42,19 @@ public class DataTypeUtility
             }
 
             @Override
-            public List<Object> tagged(List<TagType> tags) throws InternalException, UserException
+            public List<Object> bool() throws InternalException, UserException
+            {
+                return Collections.singletonList((index % 2) == 1);
+            }
+
+            @Override
+            public List<Object> date() throws InternalException, UserException
+            {
+                return Collections.singletonList(LocalDate.ofEpochDay(index));
+            }
+
+            @Override
+            public List<Object> tagged(List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tag = index % tags.size();
                 @Nullable DataType inner = tags.get(tag).getInner();
@@ -111,7 +126,19 @@ public class DataTypeUtility
             }
 
             @Override
-            public DisplayValue tagged(List<TagType> tagTypes) throws InternalException, UserException
+            public DisplayValue bool() throws InternalException, UserException
+            {
+                return new DisplayValue((Boolean)objects.get(index));
+            }
+
+            @Override
+            public DisplayValue date() throws InternalException, UserException
+            {
+                return new DisplayValue((Temporal) objects.get(index));
+            }
+
+            @Override
+            public DisplayValue tagged(List<TagType<DataType>> tagTypes) throws InternalException, UserException
             {
                 int tag = (Integer)objects.get(index++);
                 TagType tagType = tagTypes.get(tag);

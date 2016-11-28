@@ -9,10 +9,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitorGet;
-import records.data.datatype.DataType.GetValue;
 import records.data.datatype.DataType.NumberDisplayInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
+import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -20,6 +21,7 @@ import threadchecker.Tag;
 import utility.Workers;
 import utility.Workers.Worker;
 
+import java.time.temporal.Temporal;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -147,7 +149,7 @@ public class DisplayCache
                 ProgressListener prog = d -> {
                     Platform.runLater(() -> v.setValue(new DisplayValue(GETTING, d)));
                 };
-                DisplayValue val = column.getType().apply(new DataTypeVisitorGet<DisplayValue>()
+                DisplayValue val = column.getType().applyGet(new DataTypeVisitorGet<DisplayValue>()
                 {
                     @Override
                     @OnThread(Tag.Simulation)
@@ -165,22 +167,34 @@ public class DisplayCache
 
                     @Override
                     @OnThread(Tag.Simulation)
-                    public DisplayValue tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                    public DisplayValue tagged(List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
                     {
                         int tag = g.getWithProgress(index, prog);
-                        TagType tagType = tagTypes.get(tag);
-                        @Nullable DataType inner = tagType.getInner();
+                        TagType<DataTypeValue> tagType = tagTypes.get(tag);
+                        @Nullable DataTypeValue inner = tagType.getInner();
                         if (DataType.canFitInOneNumeric(tagTypes))
                         {
                             if (inner == null)
                                 return new DisplayValue(tagType.getName());
                             else
-                                return inner.apply(this);
+                                return inner.applyGet(this);
                         }
                         else
                         {
-                            return new DisplayValue(tagType.getName() + (inner == null ? "" : (" " + inner.apply(this))));
+                            return new DisplayValue(tagType.getName() + (inner == null ? "" : (" " + inner.applyGet(this))));
                         }
+                    }
+
+                    @Override
+                    public DisplayValue bool(GetValue<Boolean> g) throws InternalException, UserException
+                    {
+                        return new DisplayValue(g.getWithProgress(index, prog));
+                    }
+
+                    @Override
+                    public DisplayValue date(GetValue<Temporal> g) throws InternalException, UserException
+                    {
+                        return new DisplayValue(g.getWithProgress(index, prog));
                     }
                 });
                 Platform.runLater(() -> v.setValue(val));

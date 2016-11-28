@@ -1,9 +1,12 @@
 package records.gui;
 
 import org.checkerframework.checker.lock.qual.GuardSatisfied;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import threadchecker.OnThread;
 
+import java.time.temporal.Temporal;
 import java.util.Optional;
 
 /**
@@ -37,6 +40,16 @@ public class DisplayValue
     public DisplayValue(String val)
     {
         this(val, false);
+    }
+
+    public DisplayValue(Temporal temporal)
+    {
+        this(temporal.toString());
+    }
+
+    public DisplayValue(boolean b)
+    {
+        this(Boolean.toString(b));
     }
 
     /**

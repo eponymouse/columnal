@@ -30,6 +30,7 @@ import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberDisplayInfo;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.DataTypeValue;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
@@ -150,7 +151,7 @@ public class Sort extends Transformation
 
                     @Override
                     @SuppressWarnings({"nullness", "initialization"})
-                    public @OnThread(Tag.Any) DataType getType() throws InternalException, UserException
+                    public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
                     {
                         return c.getType().copyReorder((i, prog) ->
                         {

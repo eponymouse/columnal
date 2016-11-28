@@ -4,6 +4,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeValue;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
@@ -29,7 +30,7 @@ public class TextFileStringColumn extends TextFileColumn
     private final DumbStringPool pool = new DumbStringPool(1000);
     @MonotonicNonNull
     @OnThread(value = Tag.Any, requireSynchronized = true)
-    private DataType dataType;
+    private DataTypeValue dataType;
 
     public TextFileStringColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, ColumnId columnName, int columnIndex)
     {
@@ -76,18 +77,11 @@ public class TextFileStringColumn extends TextFileColumn
 
     @Override
     @OnThread(Tag.Any)
-    public synchronized DataType getType()
+    public synchronized DataTypeValue getType()
     {
         if (dataType == null)
         {
-            dataType = new DataType()
-            {
-                @Override
-                public <R> R apply(DataTypeVisitorGet<R> visitor) throws UserException, InternalException
-                {
-                    return visitor.text(TextFileStringColumn.this::getWithProgress);
-                }
-            };
+            dataType = DataTypeValue.text(this::getWithProgress);
         }
         return dataType;
     }

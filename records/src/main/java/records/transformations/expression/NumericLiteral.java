@@ -4,6 +4,8 @@ import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 
@@ -23,16 +25,9 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public DataType getType(RecordSet data) throws UserException, InternalException
+    public DataTypeValue getTypeValue(RecordSet data) throws UserException, InternalException
     {
-        return new DataType()
-        {
-            @Override
-            public <R> R apply(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
-            {
-                return visitor.number((i, prog) -> value, NumberDisplayInfo.DEFAULT);
-            }
-        };
+        return DataTypeValue.number(NumberDisplayInfo.DEFAULT, (i, prog) -> value);
     }
 
     @Override

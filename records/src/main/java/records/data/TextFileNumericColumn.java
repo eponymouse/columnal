@@ -4,6 +4,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataTypeValue;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
@@ -77,7 +78,7 @@ public class TextFileNumericColumn extends TextFileColumn
 
     @Override
     @OnThread(Tag.Any)
-    public DataType getType()
+    public DataTypeValue getType()
     {
         return loadedValues.getType();
     }

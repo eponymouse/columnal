@@ -29,10 +29,11 @@ import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
-import records.data.datatype.DataType.DataTypeVisitorGet;
-import records.data.datatype.DataType.GetValue;
 import records.data.datatype.DataType.NumberDisplayInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
+import records.data.datatype.DataTypeValue.GetValue;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UnimplementedException;
@@ -54,6 +55,7 @@ import utility.Utility;
 import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.math.BigDecimal;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -64,6 +66,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 
 /**
  * Created by neil on 21/10/2016.
@@ -166,7 +169,7 @@ public class SummaryStatistics extends Transformation
                         }
 
                         @Override
-                        public DataType getType() throws InternalException, UserException
+                        public DataTypeValue getType() throws InternalException, UserException
                         {
                             return orig.getType().copy(this::getWithProgress);
                         }
@@ -196,8 +199,14 @@ public class SummaryStatistics extends Transformation
                     Column srcCol = src.getColumn(e.getKey());
                     ColumnId name = new ColumnId(e.getKey() + "." + summaryType);
 
-                    columns.add(srcCol.getType().apply(new DataTypeVisitorGet<FunctionInt<RecordSet, Column>>()
+                    columns.add(srcCol.getType().applyGet(new DataTypeVisitorGet<FunctionInt<RecordSet, Column>>()
                     {
+                        @Override
+                        public FunctionInt<RecordSet, Column> date(GetValue<Temporal> g) throws InternalException, UserException
+                        {
+                            throw new UnimplementedException();
+                        }
+
                         @Override
                         public FunctionInt<RecordSet, Column> number(GetValue<Number> srcGet, NumberDisplayInfo displayInfo) throws InternalException, UserException
                         {
@@ -229,6 +238,35 @@ public class SummaryStatistics extends Transformation
                         }
 
                         @Override
+                        public FunctionInt<RecordSet, Column> bool(GetValue<Boolean> srcGet) throws InternalException, UserException
+                        {
+                            if (summaryType == SummaryType.COUNT)
+                                return countColumn(srcGet);
+                            return rs -> new CalculatedNumericColumn(rs, name, srcCol.getType(), srcCol)
+                            {
+                                @Override
+                                protected void fillNextCacheChunk() throws UserException, InternalException
+                                {
+                                    int index = getCacheFilled();
+                                    final FoldOperation<Boolean, Boolean> fold;
+                                    switch (summaryType)
+                                    {
+                                        case MIN:
+                                        case MAX:
+                                            fold = new MinMaxComparableFold<>(summaryType);
+                                            break;
+                                        case MEAN:
+                                        case SUM:
+                                            throw new UserException("Cannot perform " + summaryType + " on boolean data");
+                                        default:
+                                            throw new InternalException("Unrecognised summary type");
+                                    }
+                                    applyFold(cache, b -> b ? 1 : 0, fold, srcCol, srcGet, splitIndexes, index);
+                                }
+                            };
+                        }
+
+                        @Override
                         public FunctionInt<RecordSet, Column> text(GetValue<String> srcGet) throws InternalException, UserException
                         {
                             if (summaryType == SummaryType.COUNT)
@@ -245,7 +283,7 @@ public class SummaryStatistics extends Transformation
                                     {
                                         case MIN:
                                         case MAX:
-                                            fold = new MinMaxStringFold(summaryType);
+                                            fold = new MinMaxComparableFold<>(summaryType);
                                             break;
                                         case MEAN:
                                         case SUM:
@@ -272,7 +310,7 @@ public class SummaryStatistics extends Transformation
                         }
 
                         @Override
-                        public FunctionInt<RecordSet, Column> tagged(List<TagType> tagTypes, GetValue<Integer> getTag) throws InternalException, UserException
+                        public FunctionInt<RecordSet, Column> tagged(List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag) throws InternalException, UserException
                         {
                             boolean ignoreNullaryTags = true; //TODO configure through GUI
 
@@ -582,7 +620,7 @@ public class SummaryStatistics extends Transformation
                 }
 
                 @Override
-                public Boolean tagged(List<TagType> tags) throws InternalException, UserException
+                public Boolean tagged(List<TagType<DataType>> tags) throws InternalException, UserException
                 {
                     // For MEAN and SUM, as long as one is numeric, it's potentially valid:
                     for (TagType tagType : tags)
@@ -592,6 +630,30 @@ public class SummaryStatistics extends Transformation
                             return true;
                     }
                     return false;
+                }
+
+                @Override
+                public Boolean date() throws InternalException, UserException
+                {
+                    switch (summaryType)
+                    {
+                        case MEAN: case SUM:
+                        return false;
+                        default:
+                            return true;
+                    }
+                }
+
+                @Override
+                public Boolean bool() throws InternalException, UserException
+                {
+                    switch (summaryType)
+                    {
+                        case MEAN: case SUM:
+                        return false;
+                        default:
+                            return true;
+                    }
                 }
             });
 
@@ -709,15 +771,15 @@ public class SummaryStatistics extends Transformation
     }
 
     @OnThread(Tag.Simulation)
-    private static class MinMaxStringFold extends MinMaxFold<String>
+    private static class MinMaxComparableFold<T extends Comparable<T>> extends MinMaxFold<T>
     {
-        public MinMaxStringFold(SummaryType summaryType)
+        public MinMaxComparableFold(SummaryType summaryType)
         {
             super(summaryType);
         }
 
         @Override
-        protected int compare(String a, String b)
+        protected int compare(T a, T b)
         {
             return a.compareTo(b);
         }
@@ -728,11 +790,11 @@ public class SummaryStatistics extends Transformation
         private int bestTag = -1;
         @Nullable
         List<Object> bestInner = null;
-        private final List<TagType> tagTypes;
+        private final List<TagType<DataTypeValue>> tagTypes;
         private final boolean ignoreNullaryTags;
         private final SummaryType summaryType;
 
-        public MinMaxTaggedFold(SummaryType summaryType, List<TagType> tagTypes, boolean ignoreNullaryTags)
+        public MinMaxTaggedFold(SummaryType summaryType, List<TagType<DataTypeValue>> tagTypes, boolean ignoreNullaryTags)
         {
             this.tagTypes = tagTypes;
             this.ignoreNullaryTags = ignoreNullaryTags;
@@ -744,7 +806,7 @@ public class SummaryStatistics extends Transformation
         {
             int tag = tagBox;
 
-            @Nullable DataType innerType = tagTypes.get(tag).getInner();
+            @Nullable DataTypeValue innerType = tagTypes.get(tag).getInner();
             if (ignoreNullaryTags && innerType == null)
                 return Collections.emptyList();
             if (bestTag != -1 && ((summaryType == SummaryType.MIN && tag > bestTag)
@@ -810,15 +872,20 @@ public class SummaryStatistics extends Transformation
 
     private static <T, R> void applyFold(ColumnStorage<R> cache, FoldOperation<T, R> fold, Column srcCol, GetValue<T> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
     {
-        cache.addAllNoNull(fold.start());
+        applyFold(cache, Function.identity(), fold, srcCol, srcGet, splitIndexes, index);
+    }
+
+    private static <T, R, S> void applyFold(ColumnStorage<S> cache, Function<R, S> convert, FoldOperation<T, R> fold, Column srcCol, GetValue<T> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
+    {
+        cache.addAllNoNull(Utility.mapList(fold.start(), convert));
         for (int i = 0; srcCol.indexValid(i); i++)
         {
             if (splitIndexes[i] != index)
                 continue;
 
-            cache.addAllNoNull(fold.process(srcGet.get(i), i));
+            cache.addAllNoNull(Utility.mapList(fold.process(srcGet.get(i), i), convert));
         }
-        cache.addAllNoNull(fold.end());
+        cache.addAllNoNull(Utility.mapList(fold.end(), convert));
     }
 
     private static void applyFold(CalculatedTaggedColumn c, FoldOperation<Integer, List<Object>> fold, Column srcCol, GetValue<Integer> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
@@ -867,9 +934,9 @@ public class SummaryStatistics extends Transformation
     private class MeanSumTaggedFold implements FoldOperation<Integer,Number>
     {
         private final MeanSumFold numericFold;
-        private final List<TagType> tagTypes;
+        private final List<TagType<DataTypeValue>> tagTypes;
 
-        public MeanSumTaggedFold(SummaryType summaryType, List<TagType> tagTypes)
+        public MeanSumTaggedFold(SummaryType summaryType, List<TagType<DataTypeValue>> tagTypes)
         {
             this.numericFold = new MeanSumFold(summaryType);
             this.tagTypes = tagTypes;
@@ -884,10 +951,10 @@ public class SummaryStatistics extends Transformation
         @Override
         public List<Number> process(Integer n, int index) throws InternalException, UserException
         {
-            @Nullable DataType inner = tagTypes.get(n).getInner();
+            @Nullable DataTypeValue inner = tagTypes.get(n).getInner();
             if (inner != null)
             {
-                return inner.apply(new DataTypeVisitorGet<List<Number>>()
+                return inner.applyGet(new DataTypeVisitorGet<List<Number>>()
                 {
                     @Override
                     @OnThread(Tag.Simulation)
@@ -897,18 +964,30 @@ public class SummaryStatistics extends Transformation
                     }
 
                     @Override
+                    public List<Number> bool(GetValue<Boolean> g) throws InternalException, UserException
+                    {
+                        return numericFold.process(g.get(index) ? 1L :0L, index);
+                    }
+
+                    @Override
                     public List<Number> text(GetValue<String> g) throws InternalException, UserException
                     {
                         return Collections.emptyList();
                     }
 
                     @Override
-                    @OnThread(Tag.Simulation)
-                    public List<Number> tagged(List<TagType> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                    public List<Number> date(GetValue<Temporal> g) throws InternalException, UserException
                     {
-                        @Nullable DataType nestedInner = tagTypes.get(g.get(index)).getInner();
+                        return Collections.emptyList();
+                    }
+
+                    @Override
+                    @OnThread(Tag.Simulation)
+                    public List<Number> tagged(List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                    {
+                        @Nullable DataTypeValue nestedInner = tagTypes.get(g.get(index)).getInner();
                         if (nestedInner != null)
-                            return nestedInner.apply(this);
+                            return nestedInner.applyGet(this);
                         else
                             return Collections.emptyList();
                     }

@@ -3,8 +3,8 @@ package records.transformations.expression;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.RecordSet;
-import records.data.datatype.BooleanDataType;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -23,9 +23,9 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    public DataType getType(RecordSet data) throws UserException, InternalException
+    public DataTypeValue getTypeValue(RecordSet data) throws UserException, InternalException
     {
-        return new BooleanDataType((i, prog) -> value);
+        return DataTypeValue.bool((i, prog) -> value);
     }
 
     @Override
