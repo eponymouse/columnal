@@ -18,7 +18,7 @@ AT: '@';
 
 NUMBER : [+-]? [0-9]+ ('.' [0-9]+)?;
 
-UNQUOTED_IDENT : ~[ \t\n\r"()]+;
+UNQUOTED_IDENT : ~[ \t\n\r"()@+-/*&|=]+;
 
 
 

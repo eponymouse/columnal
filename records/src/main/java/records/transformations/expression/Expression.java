@@ -77,7 +77,7 @@ public abstract class Expression
         {
             TableIdContext tableIdContext = ctx.tableId();
             if (ctx.columnId() == null)
-                throw new RuntimeException("WTF, yo? " + ctx.getText());
+                throw new RuntimeException("WTF, yo? " + ctx.getText() + " " + ctx.columnId() + " " + ctx.tableId() + " " + ctx.children.size());
             return new ColumnReference(tableIdContext == null ? null : new TableId(tableIdContext.getText()), new ColumnId(ctx.columnId().getText()));
         }
 

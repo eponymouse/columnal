@@ -240,7 +240,7 @@ public class Filter extends Transformation
                 LogManager logger = BasicLogManager.create(config);
                 ShutdownManager shutdown = ShutdownManager.create();
                 SolverContext ctx = SolverContextFactory.createSolverContext(
-                    config, logger, shutdown.getNotifier(), Solvers.SMTINTERPOL);
+                    config, logger, shutdown.getNotifier(), Solvers.Z3);
                 BooleanFormula f = (BooleanFormula)expression.toSolver(ctx.getFormulaManager(), src.getData());
 
                 try (ProverEnvironment prover = ctx.newProverEnvironment(ProverOptions.GENERATE_MODELS)) {
@@ -254,15 +254,17 @@ public class Filter extends Transformation
             }
             catch (UserException | InternalException e)
             {
-
+                e.printStackTrace();
             }
             catch (ClassCastException e)
             {
                 // Types issue
+                e.printStackTrace();
             }
             catch (InvalidConfigurationException | SolverException | InterruptedException e)
             {
                 // Never mind then...
+                e.printStackTrace();
             }
 
         }

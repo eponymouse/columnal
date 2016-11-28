@@ -148,6 +148,7 @@ public class EditTransformationDialog
     private void showError(@UnknownInitialization(Object.class) EditTransformationDialog this, Exception e)
     {
         //TODO have a pane when we can show it to the user.
+        e.printStackTrace();
     }
 
     public void show(FXPlatformConsumer<Optional<Transformation>> withResult)
