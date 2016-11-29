@@ -4,13 +4,28 @@ options { tokenVocab = ExpressionLexer; }
 
 tableId : (STRING | UNQUOTED_IDENT);
 columnId : (STRING | UNQUOTED_IDENT);
-columnRef : tableId? AT columnId;
+columnRef : tableId? COLREF columnId;
 
 numericLiteral : NUMBER;
 
 terminal : columnRef | numericLiteral;
 
-binaryOp : BINARY_OP;
-binaryOpExpression : OPEN_BRACKET expression binaryOp expression CLOSE_BRACKET;
+plusMinusExpression : OPEN_BRACKET expression (PLUS_MINUS expression)+ CLOSE_BRACKET;
+timesExpression : OPEN_BRACKET expression (TIMES expression)+ CLOSE_BRACKET;
+divideExpression : OPEN_BRACKET expression DIVIDE expression CLOSE_BRACKET;
+equalExpression : OPEN_BRACKET expression EQUALITY expression CLOSE_BRACKET;
+lessThanExpression : OPEN_BRACKET expression (LESS_THAN expression)+ CLOSE_BRACKET;
+greaterThanExpression : OPEN_BRACKET expression (GREATER_THAN expression)+ CLOSE_BRACKET;
+andExpression : OPEN_BRACKET expression (AND expression)+ CLOSE_BRACKET;
+orExpression : OPEN_BRACKET expression (OR expression)+ CLOSE_BRACKET;
+compoundExpression : plusMinusExpression | timesExpression | divideExpression | equalExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression;
 
-expression : binaryOpExpression | terminal;
+variable : NEWVAR UNQUOTED_IDENT;
+constructor : STRING | UNQUOTED_IDENT;
+patternMatch : constructor (CONS patternMatch)? | variable | expression;
+pattern : patternMatch (AND expression)*;
+
+matchClause : pattern (DELIM pattern)* MAPSTO expression;
+match : OPEN_BRACKET expression MATCH matchClause (DELIM matchClause)* CLOSE_BRACKET;
+
+expression : compoundExpression | terminal | match;

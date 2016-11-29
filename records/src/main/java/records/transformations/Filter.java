@@ -40,6 +40,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayValue;
 import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -140,7 +141,7 @@ public class Filter extends Transformation
         int start = indexMap.filled();
         while (indexMap.filled() <= index && data.indexValid(nextIndexToExamine))
         {
-            boolean keep = filterExpression.getBoolean(data, nextIndexToExamine, prog);
+            boolean keep = filterExpression.getBoolean(data, nextIndexToExamine, new EvaluateState(), prog);
             if (keep)
                 indexMap.add(nextIndexToExamine);
             nextIndexToExamine += 1;

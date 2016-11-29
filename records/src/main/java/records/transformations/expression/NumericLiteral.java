@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.RecordSet;
@@ -11,6 +12,7 @@ import records.error.UserException;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.function.BiConsumer;
 
 /**
  * Created by neil on 25/11/2016.
@@ -25,7 +27,13 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public DataTypeValue getTypeValue(RecordSet data) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, BiConsumer<Expression, String> onError)
+    {
+        return DataType.NUMBER;
+    }
+
+    @Override
+    public DataTypeValue getTypeValue(RecordSet data, EvaluateState state) throws UserException, InternalException
     {
         return DataTypeValue.number(NumberDisplayInfo.DEFAULT, (i, prog) -> value);
     }

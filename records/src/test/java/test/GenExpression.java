@@ -4,7 +4,6 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.transformations.expression.BinaryOpExpression;
-import records.transformations.expression.BinaryOpExpression.Op;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
@@ -40,9 +39,12 @@ public class GenExpression extends Generator<Expression>
         else
         {
             // Non-terminal:
+            /*
             return new BinaryOpExpression(genDepth(r, depth + 1),
                 r.choose(Op.values()),
                 genDepth(r, depth + 1));
+            */
+            throw new RuntimeException("TODO");
         }
     }
 }

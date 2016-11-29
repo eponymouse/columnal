@@ -2,6 +2,7 @@ package records.data.datatype;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.units.qual.K;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
 import records.data.Column.ProgressListener;
@@ -10,12 +11,16 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * A data type can be the following:
@@ -40,6 +45,7 @@ import java.util.function.Function;
  */
 public class DataType
 {
+
     // Flattened ADT.  kind is the head tag, other bits are null/non-null depending:
     public static enum Kind {NUMBER, TEXT, DATE, BOOLEAN, TAGGED }
     final Kind kind;
@@ -53,7 +59,8 @@ public class DataType
         this.tagTypes = tagTypes;
     }
 
-    public static final DataType INTEGER = new DataType(Kind.NUMBER, NumberDisplayInfo.DEFAULT, null);
+    public static final DataType NUMBER = new DataType(Kind.NUMBER, NumberDisplayInfo.DEFAULT, null);
+    public static final DataType INTEGER = NUMBER;
     public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null);
 
     public static class NumberDisplayInfo
@@ -328,6 +335,30 @@ public class DataType
             (i, prog) -> (Integer) get.getWithProgress(i, prog).get(curIndex));
     }
 
+    public boolean isTagged()
+    {
+        return kind == Kind.TAGGED;
+    }
+
+
+    // Returns (true, null) if there's no inner type.  Returns (false, null) if no such constructor.
+    // Throws internal exception if not a tagged type
+    public Pair<Integer, @Nullable DataType> unwrapTag(String constructor) throws InternalException
+    {
+        if (tagTypes == null)
+            throw new InternalException("Type is not a tagged type: " + this);
+        List<Pair<Integer, @Nullable DataType>> tags = new ArrayList<>();
+        for (int i = 0; i < tagTypes.size(); i++)
+        {
+            if (tagTypes.get(i).getName().equals(constructor))
+                tags.add(new Pair<>(i, tagTypes.get(i).getInner()));
+        }
+        if (tags.size() > 1)
+            throw new InternalException("Duplicate tag names in type: " + this);
+        if (tags.size() == 0)
+            return new Pair<>(-1, null); // Not found
+        return tags.get(0);
+    }
 
     @Override
     public boolean equals(@Nullable Object o)
@@ -338,8 +369,6 @@ public class DataType
         DataType dataType = (DataType) o;
 
         if (kind != dataType.kind) return false;
-        if (numberDisplayInfo != null ? !numberDisplayInfo.equals(dataType.numberDisplayInfo) : dataType.numberDisplayInfo != null)
-            return false;
         return tagTypes != null ? tagTypes.equals(dataType.tagTypes) : dataType.tagTypes == null;
     }
 
@@ -347,8 +376,24 @@ public class DataType
     public int hashCode()
     {
         int result = kind.hashCode();
-        result = 31 * result + (numberDisplayInfo != null ? numberDisplayInfo.hashCode() : 0);
         result = 31 * result + (tagTypes != null ? tagTypes.hashCode() : 0);
         return result;
+    }
+
+    public NumberDisplayInfo getNumberDisplayInfo() throws InternalException
+    {
+        if (numberDisplayInfo != null)
+            return numberDisplayInfo;
+        else
+            throw new InternalException("Requesting numeric display info for non-numeric type: " + this);
+    }
+
+    public static <T extends DataType> @Nullable T checkAllSame(List<T> types, Consumer<String> onError)
+    {
+        HashSet<T> noDups = new HashSet<>(types);
+        if (noDups.size() == 1)
+            return noDups.iterator().next();
+        onError.accept("Differing types: " + noDups.stream().map(Object::toString).collect(Collectors.joining(" and ")));
+        return null;
     }
 }

@@ -13,12 +13,24 @@ WS : ( ' ' | '\t' )+ -> skip ;
 OPEN_BRACKET : '(';
 CLOSE_BRACKET : ')';
 
-BINARY_OP : [+-/*&|=];
-AT: '@';
+PLUS_MINUS: [+-];
+TIMES: '*';
+DIVIDE: '/';
+AND: '&';
+OR: '|';
+EQUALITY : '=';
+LESS_THAN: '<=' | '<';
+GREATER_THAN: '>=' | '>';
+COLREF: '@';
+MATCH : '?';
+CONS: ':';
+DELIM : ';';
+MAPSTO : '~';
+NEWVAR : '$';
 
 NUMBER : [+-]? [0-9]+ ('.' [0-9]+)?;
 
-UNQUOTED_IDENT : ~[ \t\n\r"()@+-/*&|=]+;
+UNQUOTED_IDENT : ~[ \t\n\r"()@+-/*&|=?:;~$!<>]+;
 
 
 

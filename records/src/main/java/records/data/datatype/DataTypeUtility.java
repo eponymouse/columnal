@@ -1,6 +1,5 @@
 package records.data.datatype;
 
-import com.sun.org.apache.xpath.internal.operations.Bool;
 import javafx.scene.control.ListView;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DataTypeVisitor;

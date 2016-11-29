@@ -13,12 +13,14 @@ import records.data.datatype.DataType.NumberDisplayInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
+import records.error.UnimplementedException;
 import records.error.UserException;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 /**
@@ -41,10 +43,15 @@ public class ColumnReference extends Expression
     }
 
     @Override
-    public DataTypeValue getTypeValue(RecordSet data) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, BiConsumer<Expression, String> onError) throws UserException, InternalException
     {
-        Column c = data.getColumn(columnName);
-        return c.getType();
+        return data.getColumn(columnName).getType();
+    }
+
+    @Override
+    public DataTypeValue getTypeValue(RecordSet data, EvaluateState state) throws UserException, InternalException
+    {
+        return data.getColumn(columnName).getType();
     }
 
     @Override
@@ -62,7 +69,9 @@ public class ColumnReference extends Expression
     @Override
     public Formula toSolver(FormulaManager formulaManager, RecordSet src) throws InternalException, UserException
     {
-        return getType(src).apply(new DataTypeVisitor<Formula>()
+        throw new UnimplementedException();
+        /*
+        return check(src).apply(new DataTypeVisitor<Formula>()
         {
             @Override
             public Formula number(NumberDisplayInfo displayInfo) throws InternalException, UserException
@@ -94,6 +103,7 @@ public class ColumnReference extends Expression
                 return formulaManager.getBooleanFormulaManager().makeVariable(columnName.getOutput());
             }
         });
+        */
     }
 }
 
