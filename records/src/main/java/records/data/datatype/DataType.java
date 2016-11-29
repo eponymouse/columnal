@@ -229,10 +229,16 @@ public class DataType
             result = 31 * result + (inner != null ? inner.hashCode() : 0);
             return result;
         }
+
+        @Override
+        public String toString()
+        {
+            return name + (inner == null ? "" : (":" + inner.toString()));
+        }
     }
 
 
-    @OnThread(Tag.Simulation)
+    @OnThread(Tag.Any)
     public String getHeaderDisplay() throws UserException, InternalException
     {
         return apply(new DataTypeVisitor<String>()
@@ -252,7 +258,16 @@ public class DataType
             @Override
             public String tagged(List<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return "TODO";
+                if (tags.size() == 1)
+                {
+                    return tags.get(0).toString();
+                }
+                // Look for one tag plus one with content:
+                if (tags.size() == 2)
+                {
+                    return tags.get(0) + "|" + tags.get(1);
+                }
+                return "...";
             }
 
             @Override
@@ -267,6 +282,19 @@ public class DataType
                 return "Boolean";
             }
         });
+    }
+
+    @Override
+    public String toString()
+    {
+        try
+        {
+            return getHeaderDisplay();
+        }
+        catch (UserException | InternalException e)
+        {
+            return "Error";
+        }
     }
 
     public static boolean canFitInOneNumeric(List<? extends TagType> tags) throws InternalException, UserException
