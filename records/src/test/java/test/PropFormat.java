@@ -28,7 +28,7 @@ public class PropFormat
 {
 
     @Property
-    public void testGuessFormat(@When(seed=-6048680926732308692L)@From(GenFormat.class) TextFormat format, @When(seed=2000350635130734286L)@From(GenRandom.class) Random rnd) throws IOException
+    public void testGuessFormat(@From(GenFormat.class) TextFormat format, @From(GenRandom.class) Random rnd) throws IOException
     {
         List<String> fileContent = new ArrayList<>();
         fileContent.add(format.columnTypes.stream().map(c -> c.title.getOutput()).collect(Collectors.joining("" + format.separator)));
@@ -43,7 +43,7 @@ public class PropFormat
                 if (c.type.isNumeric())
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) c.type;
-                    if (numericColumnType.mayBeBlank && (row == 10 || rnd.nextBoolean())) // Make sure to put at least one blank in
+                    if (numericColumnType.mayBeBlank && row > 0 && (row == 10 || rnd.nextBoolean())) // Make sure to put at least one blank in, but don't put blank at top
                     {
                         line.append("");
                     } else

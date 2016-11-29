@@ -272,7 +272,7 @@ public class GuessFormat
 
         List<ColumnInfo> columns = new ArrayList<>(columnCount);
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
-            columns.add(new ColumnInfo(columnTypes.get(columnIndex), new ColumnId(headerRow.isPresent() ? headerRow.get().get(columnIndex) : ("Col" + (columnIndex + 1)))));
+            columns.add(new ColumnInfo(columnTypes.get(columnIndex), new ColumnId(headerRow.isPresent() ? headerRow.get().get(columnIndex) : ("C" + (columnIndex + 1)))));
         return new Format(headerRows, columns);
     }
 }

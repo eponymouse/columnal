@@ -45,12 +45,12 @@ public class GenFormat extends Generator<TextFormat>
                 new TextColumnType(),
                 new NumericColumnType(sourceOfRandomness.nextBoolean() ? "" : sourceOfRandomness.choose(currencies), sourceOfRandomness.nextInt(0, 6),sourceOfRandomness.nextBoolean()),
                 new CleanDateColumnType(sourceOfRandomness.choose(dateFormats))));
-            // Don't let all be text:
-            if (i == columnCount - 1 && columns.stream().allMatch(c -> c.type.isText()))
-                type = new CleanDateColumnType(sourceOfRandomness.choose(dateFormats));
             // Don't end with blank:
             if (i == columnCount - 1 && (type.isBlank() || columns.stream().allMatch(GenFormat::canBeBlank)))
                 type = new TextColumnType();
+            // Don't let all be text/blank:
+            if (i == columnCount - 1 && columns.stream().allMatch(c -> c.type.isText() || c.type.isBlank()))
+                type = new CleanDateColumnType(sourceOfRandomness.choose(dateFormats));
             String title = hasTitle ? "GenCol" + i : "";
             columns.add(new ColumnInfo(type, new ColumnId(title)));
         }
@@ -68,8 +68,8 @@ public class GenFormat extends Generator<TextFormat>
             if (i == larger.columnTypes.size() - 1 && i >= 1 && reducedCols.get(i - 1).type.isBlank())
                 continue; // Don't remove last one if one before is blank
             reducedCols.remove(i);
-            // Don't let them all be blank or all text:
-            if (reducedCols.stream().allMatch(GenFormat::canBeBlank) || reducedCols.stream().allMatch(c -> c.type.isText()))
+            // Don't let them all be blank or all text/blank:
+            if (reducedCols.stream().allMatch(GenFormat::canBeBlank) || reducedCols.stream().allMatch(c -> c.type.isText() || c.type.isBlank()))
                 continue;
             TextFormat smaller = new TextFormat(larger.headerRows, reducedCols, larger.separator);
             if (reducedCols.size() >= 2) // TODO allow one column
