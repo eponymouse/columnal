@@ -113,7 +113,7 @@ public class GuessFormat
                     // Spot on!  Read first line after headers to get column count
                     int columnCount = initial.get(headerRows).split(sep.getKey()).length;
 
-                    List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> Arrays.asList(s.split(sep.getKey())));
+                    List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> Arrays.asList(s.split(sep.getKey(), -1)));
 
                     //List<Function<RecordSet, Column>> columns = new ArrayList<>();
                     Format format = guessBodyFormat(columnCount, headerRows, initialVals);
@@ -202,7 +202,8 @@ public class GuessFormat
                         }
                         try
                         {
-                            BigDecimal bd = new BigDecimal(val);
+                            // TODO: support . as thousands separator and comma as decimal point
+                            BigDecimal bd = new BigDecimal(val.replace(",", ""));
                             int dot = val.indexOf(".");
                             if (dot == -1)
                                 decimalPlaces.add(0);
@@ -267,11 +268,11 @@ public class GuessFormat
         }
         int nonBlankColumnCount = (int)columnTypes.stream().filter(c -> !c.isBlank()).count();
         // All must think it's viable, and then pick last one:
-        Optional<List<String>> headerRow = viableColumnNameRows.entrySet().stream().filter(e -> e.getValue() == nonBlankColumnCount).max(Entry.comparingByKey()).map(e -> initialVals.get(e.getKey()));
+        Optional<List<String>> headerRow = viableColumnNameRows.entrySet().stream().filter(e -> e.getValue() == nonBlankColumnCount || e.getValue() == columnTypes.size()).max(Entry.comparingByKey()).map(e -> initialVals.get(e.getKey()));
 
         List<ColumnInfo> columns = new ArrayList<>(columnCount);
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
-            columns.add(new ColumnInfo(columnTypes.get(columnIndex), new ColumnId(headerRow.isPresent() ? headerRow.get().get(columnIndex) : ("C" + (columnIndex + 1)))));
+            columns.add(new ColumnInfo(columnTypes.get(columnIndex), new ColumnId(headerRow.isPresent() ? headerRow.get().get(columnIndex) : ("Col" + (columnIndex + 1)))));
         return new Format(headerRows, columns);
     }
 }

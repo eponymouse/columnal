@@ -4,6 +4,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 31/10/2016.
@@ -50,7 +51,7 @@ public class TextFormat extends Format
     {
         return "TextFormat{" +
             "headerRows=" + headerRows +
-            ", columnTypes=" + columnTypes +
+            ", columnTypes=" + columnTypes.stream().map(c -> "\n" + c).collect(Collectors.joining()) +
             ", separator=" + separator +
             '}';
     }

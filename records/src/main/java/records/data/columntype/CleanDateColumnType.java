@@ -82,6 +82,12 @@ public class CleanDateColumnType extends ColumnType
         return formatString.hashCode();
     }
 
+    @Override
+    public String toString()
+    {
+        return "CleanDate \"" + formatString + "\"";
+    }
+
     public DateTimeFormatter getDateTimeFormatter()
     {
         return DateTimeFormatter.ofPattern(formatString);
