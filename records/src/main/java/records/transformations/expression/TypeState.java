@@ -4,6 +4,9 @@ import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.error.InternalException;
+import records.error.UserException;
+import utility.ExConsumer;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -31,7 +34,7 @@ public class TypeState
         this.variables = variables;
     }
 
-    public @Nullable TypeState add(String varName, DataType type, Consumer<String> error)
+    public @Nullable TypeState add(String varName, DataType type, ExConsumer<String> error) throws InternalException, UserException
     {
         HashMap<String, DataType> copy = new HashMap<>(variables);
         if (copy.containsKey(varName))
@@ -43,7 +46,7 @@ public class TypeState
         return new TypeState(copy);
     }
 
-    public static @Nullable TypeState checkAllSame(List<TypeState> typeStates, Consumer<String> onError)
+    public static @Nullable TypeState checkAllSame(List<TypeState> typeStates, ExConsumer<String> onError) throws InternalException, UserException
     {
         HashSet<TypeState> noDups = new HashSet<>(typeStates);
         if (noDups.size() == 1)

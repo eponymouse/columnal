@@ -1,26 +1,28 @@
 package records.transformations.expression;
 
+import edu.emory.mathcs.backport.java.util.Collections;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.error.InternalException;
+import records.error.UnimplementedException;
 import records.error.UserException;
-import threadchecker.OnThread;
-import threadchecker.Tag;
+import records.loadsave.OutputBuilder;
 import utility.ExBiConsumer;
 
-import java.util.Collections;
+import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.util.List;
 
 /**
- * Created by neil on 27/11/2016.
+ * Created by neil on 25/11/2016.
  */
-public class BooleanLiteral extends Literal
+public class StringLiteral extends Literal
 {
-    private final boolean value;
+    private final String value;
 
-    public BooleanLiteral(boolean value)
+    public StringLiteral(String value)
     {
         this.value = value;
     }
@@ -28,7 +30,7 @@ public class BooleanLiteral extends Literal
     @Override
     public DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError)
     {
-        return DataType.BOOLEAN;
+        return DataType.TEXT;
     }
 
     @Override
@@ -38,14 +40,14 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) String save()
+    public String save()
     {
-        return Boolean.toString(value);
+        return OutputBuilder.quoted(value);
     }
 
     @Override
     public Formula toSolver(FormulaManager formulaManager, RecordSet src)
     {
-        return formulaManager.getBooleanFormulaManager().makeBoolean(value);
+        throw new UnimplementedException();
     }
 }

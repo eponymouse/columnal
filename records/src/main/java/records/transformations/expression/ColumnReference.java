@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -8,19 +9,15 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitor;
-import records.data.datatype.DataType.NumberDisplayInfo;
-import records.data.datatype.DataType.TagType;
-import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExBiConsumer;
 
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.stream.Stream;
 
 /**
@@ -30,6 +27,7 @@ public class ColumnReference extends Expression
 {
     private final @Nullable TableId tableName;
     private final ColumnId columnName;
+    private @MonotonicNonNull Column column;
 
     public ColumnReference(@Nullable TableId tableName, ColumnId columnName)
     {
@@ -43,15 +41,18 @@ public class ColumnReference extends Expression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, BiConsumer<Expression, String> onError) throws UserException, InternalException
+    public DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
-        return data.getColumn(columnName).getType();
+        column = data.getColumn(columnName);
+        return column.getType();
     }
 
     @Override
-    public DataTypeValue getTypeValue(RecordSet data, EvaluateState state) throws UserException, InternalException
+    public List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        return data.getColumn(columnName).getType();
+        if (column == null)
+            throw new InternalException("Attempting to fetch value despite type check failure");
+        return column.getType().getCollapsed(rowIndex);
     }
 
     @Override

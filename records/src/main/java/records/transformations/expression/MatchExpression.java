@@ -6,12 +6,12 @@ import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
-import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExBiConsumer;
 import utility.Pair;
 import utility.Utility;
 
@@ -37,7 +37,7 @@ public class MatchExpression extends Expression
             this.outcome = outcome;
         }
 
-        public @Nullable DataType check(RecordSet data, TypeState state, BiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
+        public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
         {
             List<TypeState> rhsStates = new ArrayList<>();
             for (Pattern p : patterns)
@@ -55,11 +55,11 @@ public class MatchExpression extends Expression
 
         //Returns null if no match
         @OnThread(Tag.Simulation)
-        public @Nullable EvaluateState matches(List<Object> value, EvaluateState state, RecordSet data, int rowIndex) throws UserException, InternalException
+        public @Nullable EvaluateState matches(List<Object> value, EvaluateState state, int rowIndex) throws UserException, InternalException
         {
             for (Pattern p : patterns)
             {
-                EvaluateState newState = p.match(value, data, rowIndex, state);
+                EvaluateState newState = p.match(value, rowIndex, state);
                 if (newState != null) // Did it match?
                     return newState;
             }
@@ -80,7 +80,7 @@ public class MatchExpression extends Expression
         }
 
         @Override
-        public @Nullable TypeState check(RecordSet data, TypeState state, BiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
+        public @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
         {
             if (!srcType.isTagged())
             {
@@ -132,7 +132,7 @@ public class MatchExpression extends Expression
         }
 
         @Override
-        public @Nullable TypeState check(RecordSet data, TypeState state, BiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
+        public @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
         {
             @Nullable DataType ourType = expression.check(data, state, onError);
             if (ourType == null)
@@ -162,7 +162,7 @@ public class MatchExpression extends Expression
         }
 
         @Override
-        public @Nullable TypeState check(RecordSet data, TypeState state, BiConsumer<Expression, String> onError, DataType srcType)
+        public @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws UserException, InternalException
         {
             // Variable always type checks against anything
             return state.add(varName, srcType, err -> onError.accept(MatchExpression.this, err));
@@ -177,7 +177,7 @@ public class MatchExpression extends Expression
 
     public static interface PatternMatch
     {
-        @Nullable TypeState check(RecordSet data, TypeState state, BiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException;
+        @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException;
 
         @Nullable EvaluateState match(List<Object> value, int next, EvaluateState state) throws InternalException;
     }
@@ -193,7 +193,7 @@ public class MatchExpression extends Expression
             this.guards = guards;
         }
 
-        public @Nullable TypeState check(RecordSet data, TypeState state, BiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
+        public @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
         {
             TypeState rhsState = pattern.check(data, state, onError, srcType);
             if (rhsState == null)
@@ -210,14 +210,14 @@ public class MatchExpression extends Expression
         }
 
         @OnThread(Tag.Simulation)
-        public @Nullable EvaluateState match(List<Object> value, RecordSet data, int rowIndex, EvaluateState state) throws InternalException, UserException
+        public @Nullable EvaluateState match(List<Object> value, int rowIndex, EvaluateState state) throws InternalException, UserException
         {
             @Nullable EvaluateState newState = pattern.match(value, 0, state);
             if (newState == null)
                 return null;
             for (Expression guard : guards)
             {
-                if (!guard.getBoolean(data, rowIndex, newState, null))
+                if (!guard.getBoolean(rowIndex, newState, null))
                     return null;
             }
             return newState;
@@ -235,20 +235,19 @@ public class MatchExpression extends Expression
     }
 
     @Override
-    public DataTypeValue getTypeValue(RecordSet data, EvaluateState state) throws UserException, InternalException
+    public List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         // It's type checked so can just copy first clause:
-        return clauses.get(0).outcome.getTypeValue(data, state).copy((i, prog) -> {
-            List<Object> value = expression.getTypeValue(data, state).getCollapsed(i);
-            for (MatchClause clause : clauses)
+        List<Object> value = expression.getValue(rowIndex, state);
+        for (MatchClause clause : clauses)
+        {
+            EvaluateState newState = clause.matches(value, state, rowIndex);
+            if (newState != null)
             {
-                EvaluateState newState = clause.matches(value, state, data, i);
-                if (newState != null)
-                    return clause.outcome.getTypeValue(data, newState).getCollapsed(i);
+                return clause.outcome.getValue(rowIndex, newState);
             }
-            throw new UserException("No matching clause found");
-        });
-
+        }
+        throw new UserException("No matching clause found");
     }
 
     @Override
@@ -264,7 +263,7 @@ public class MatchExpression extends Expression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, BiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
         // Need to check several things:
         //   - That all of the patterns have the same type as the expression being matched

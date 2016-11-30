@@ -1,5 +1,6 @@
 package records.data.datatype;
 
+import edu.emory.mathcs.backport.java.util.Arrays;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.units.qual.K;
@@ -11,6 +12,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExConsumer;
 import utility.Pair;
 
 import java.time.temporal.Temporal;
@@ -62,6 +64,7 @@ public class DataType
     public static final DataType NUMBER = new DataType(Kind.NUMBER, NumberDisplayInfo.DEFAULT, null);
     public static final DataType INTEGER = NUMBER;
     public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null);
+    public static final DataType TEXT = new DataType(Kind.TEXT, null, null);
 
     public static class NumberDisplayInfo
     {
@@ -415,8 +418,20 @@ public class DataType
         else
             throw new InternalException("Requesting numeric display info for non-numeric type: " + this);
     }
+    public static <T extends DataType> @Nullable T checkSame(@Nullable T a, @Nullable T b, ExConsumer<String> onError) throws UserException, InternalException
+    {
+        ArrayList<T> ts = new ArrayList<T>();
+        if (a == null || b == null)
+        {
+            return null;
+        }
+        ts.add(a);
+        ts.add(b);
+        return checkAllSame(ts, onError);
+    }
 
-    public static <T extends DataType> @Nullable T checkAllSame(List<T> types, Consumer<String> onError)
+
+    public static <T extends DataType> @Nullable T checkAllSame(List<T> types, ExConsumer<String> onError) throws InternalException, UserException
     {
         HashSet<T> noDups = new HashSet<>(types);
         if (noDups.size() == 1)

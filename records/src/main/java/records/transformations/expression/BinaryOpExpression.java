@@ -54,8 +54,8 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     private final Op op;*/
-    private final Expression lhs;
-    private final Expression rhs;
+    protected final Expression lhs;
+    protected final Expression rhs;
 
     protected BinaryOpExpression(Expression lhs, Expression rhs)
     {

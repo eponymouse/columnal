@@ -10,6 +10,7 @@ import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.ShutdownManager;
 import org.sosy_lab.common.configuration.Configuration;
@@ -42,6 +43,7 @@ import records.gui.DisplayValue;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
+import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -72,6 +74,8 @@ public class Filter extends Transformation
     private int nextIndexToExamine = 0;
     @OnThread(Tag.Any)
     private final Expression filterExpression;
+    private @MonotonicNonNull DataType type;
+    private boolean typeChecked = false;
 
     @SuppressWarnings("initialization")
     public Filter(TableManager mgr, @Nullable TableId tableId, TableId srcTableId, Expression filterExpression) throws InternalException
@@ -122,7 +126,7 @@ public class Filter extends Transformation
                             return true;
 
                         fillIndexMapTo(index, data, null);
-                        return false;
+                        return index < indexMap.filled();
                     }
                 };
             }
@@ -138,10 +142,25 @@ public class Filter extends Transformation
 
     private void fillIndexMapTo(int index, RecordSet data, @Nullable ProgressListener prog) throws UserException, InternalException
     {
+        if (type == null)
+        {
+            if (!typeChecked)
+            {
+                // Must set it before, in case it throws:
+                typeChecked = true;
+                @Nullable DataType checked = filterExpression.check(data, new TypeState(), (e, s) -> {throw new UserException(s);});
+                if (checked != null)
+                    type = checked;
+
+            }
+            if (type == null)
+                return;
+        }
+
         int start = indexMap.filled();
         while (indexMap.filled() <= index && data.indexValid(nextIndexToExamine))
         {
-            boolean keep = filterExpression.getBoolean(data, nextIndexToExamine, new EvaluateState(), prog);
+            boolean keep = filterExpression.getBoolean(nextIndexToExamine, new EvaluateState(), prog);
             if (keep)
                 indexMap.add(nextIndexToExamine);
             nextIndexToExamine += 1;

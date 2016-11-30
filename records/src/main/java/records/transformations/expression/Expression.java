@@ -8,9 +8,6 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
-import records.data.datatype.DataTypeValue;
-import records.data.datatype.DataTypeValue.GetValue;
-import records.data.datatype.DataTypeValue.SpecificDataTypeVisitorGet;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
@@ -19,24 +16,24 @@ import records.grammar.ExpressionParser.ColumnRefContext;
 import records.grammar.ExpressionParser.ExpressionContext;
 import records.grammar.ExpressionParser.MatchClauseContext;
 import records.grammar.ExpressionParser.MatchContext;
+import records.grammar.ExpressionParser.NotEqualExpressionContext;
 import records.grammar.ExpressionParser.NumericLiteralContext;
 import records.grammar.ExpressionParser.PatternContext;
 import records.grammar.ExpressionParser.PatternMatchContext;
+import records.grammar.ExpressionParser.StringLiteralContext;
 import records.grammar.ExpressionParser.TableIdContext;
 import records.grammar.ExpressionParserBaseVisitor;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.MatchExpression.PatternMatch;
-import records.transformations.expression.MatchExpression.PatternMatchConstructor;
 import records.transformations.expression.MatchExpression.PatternMatchExpression;
-import records.transformations.expression.MatchExpression.PatternMatchVariable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExBiConsumer;
 import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.BiConsumer;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -46,23 +43,21 @@ import java.util.stream.Stream;
 public abstract class Expression
 {
     @OnThread(Tag.Simulation)
-    public boolean getBoolean(RecordSet data, int rowIndex, EvaluateState state, @Nullable ProgressListener prog) throws UserException, InternalException
+    public boolean getBoolean(int rowIndex, EvaluateState state, @Nullable ProgressListener prog) throws UserException, InternalException
     {
-        return getTypeValue(data, state).applyGet(new SpecificDataTypeVisitorGet<Boolean>(new UserException("Type must be boolean")) {
-            @Override
-            @OnThread(Tag.Simulation)
-            public Boolean bool(GetValue<Boolean> g) throws InternalException, UserException
-            {
-                return g.getWithProgress(rowIndex, prog);
-            }
-        });
+        Object val = getValue(rowIndex, state).get(0);
+        if (val instanceof Boolean)
+            return (Boolean) val;
+        else
+            throw new InternalException("Expected boolean but got: " + val.getClass());
     }
 
     // Checks that all used variable names and column references are defined,
     // and that types check.  Return null if any problems
-    public abstract @Nullable DataType check(RecordSet data, TypeState state, BiConsumer<Expression, String> onError) throws UserException, InternalException;
+    public abstract @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException;
 
-    public abstract DataTypeValue getTypeValue(RecordSet data, EvaluateState state) throws UserException, InternalException;
+    @OnThread(Tag.Simulation)
+    public abstract List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException;
 
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnId> allColumnNames();
@@ -102,6 +97,20 @@ public abstract class Expression
         public Expression visitNumericLiteral(NumericLiteralContext ctx)
         {
             return new NumericLiteral(Utility.parseNumber(ctx.getText()));
+        }
+
+        @Override
+        public Expression visitStringLiteral(StringLiteralContext ctx)
+        {
+            return new StringLiteral(ctx.getText());
+        }
+
+
+
+        @Override
+        public Expression visitNotEqualExpression(NotEqualExpressionContext ctx)
+        {
+            return new NotEqualExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
         }
 
         /*
