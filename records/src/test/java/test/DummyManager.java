@@ -8,7 +8,7 @@ import records.data.TableManager;
 /**
  * Created by neil on 16/11/2016.
  */
-class DummyManager extends TableManager
+public class DummyManager extends TableManager
 {
 
 }

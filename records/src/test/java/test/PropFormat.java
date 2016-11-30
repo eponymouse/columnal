@@ -2,7 +2,6 @@ package test;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.data.columntype.CleanDateColumnType;
@@ -10,6 +9,8 @@ import records.data.columntype.NumericColumnType;
 import records.importers.GuessFormat;
 import records.importers.ColumnInfo;
 import records.importers.TextFormat;
+import test.gen.GenFormat;
+import test.gen.GenRandom;
 
 import java.io.IOException;
 import java.time.LocalDate;

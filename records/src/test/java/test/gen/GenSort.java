@@ -1,4 +1,4 @@
-package test;
+package test.gen;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
@@ -7,6 +7,8 @@ import records.data.ColumnId;
 import records.data.TableId;
 import records.error.InternalException;
 import records.transformations.Sort;
+import test.DummyManager;
+import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;

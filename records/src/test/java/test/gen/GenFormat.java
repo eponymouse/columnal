@@ -1,4 +1,4 @@
-package test;
+package test.gen;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;

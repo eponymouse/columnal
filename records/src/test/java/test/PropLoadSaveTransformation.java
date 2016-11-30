@@ -12,6 +12,9 @@ import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.TransformationManager;
+import test.gen.GenFilter;
+import test.gen.GenSort;
+import test.gen.GenSummaryStats;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationSupplier;
@@ -27,7 +30,7 @@ import static org.junit.Assert.assertEquals;
  * Created by neil on 16/11/2016.
  */
 @RunWith(JUnitQuickcheck.class)
-public class PropLoadSave
+public class PropLoadSaveTransformation
 {
     @Property(trials = 1000)
     @OnThread(value = Tag.Simulation,ignoreParent = true)

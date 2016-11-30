@@ -6,7 +6,8 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
-import test.GenGraph.Graph;
+import test.gen.GenGraph;
+import test.gen.GenGraph.Graph;
 import utility.GraphUtility;
 
 import java.util.ArrayList;

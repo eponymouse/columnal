@@ -1,4 +1,4 @@
-package test;
+package test.gen;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
@@ -6,6 +6,8 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.TableId;
 import records.error.InternalException;
 import records.transformations.Filter;
+import test.DummyManager;
+import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;

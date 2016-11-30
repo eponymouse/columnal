@@ -1,4 +1,4 @@
-package test;
+package test.gen;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
@@ -6,7 +6,9 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.transformations.expression.BinaryOpExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.Expression;
+import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
+import test.TestUtil;
 
 /**
  * Created by neil on 27/11/2016.
@@ -39,12 +41,7 @@ public class GenExpression extends Generator<Expression>
         else
         {
             // Non-terminal:
-            /*
-            return new BinaryOpExpression(genDepth(r, depth + 1),
-                r.choose(Op.values()),
-                genDepth(r, depth + 1));
-            */
-            throw new RuntimeException("TODO");
+            return new NotEqualExpression(genDepth(r, depth + 1), genDepth(r, depth + 1));
         }
     }
 }

@@ -1,9 +1,9 @@
-package test;
+package test.gen;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import test.GenGraph.Graph;
+import test.gen.GenGraph.Graph;
 import utility.Pair;
 
 import java.util.ArrayList;
