@@ -4,6 +4,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.Temporal;
+import java.time.temporal.TemporalQuery;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -14,6 +16,7 @@ import java.util.List;
 public class CleanDateColumnType extends ColumnType
 {
     public static List<@NonNull String> DATE_FORMATS = new ArrayList<>();
+
     @FunctionalInterface
     private interface DateAssembler
     {
@@ -52,10 +55,12 @@ public class CleanDateColumnType extends ColumnType
 
     // As passed to DateTimeFormatter.ofPattern
     private final String formatString;
+    private final TemporalQuery<? extends Temporal> query;
 
-    public CleanDateColumnType(String formatString)
+    public CleanDateColumnType(String formatString, TemporalQuery<? extends Temporal> query)
     {
         this.formatString = formatString;
+        this.query = query;
     }
 
     @Override
@@ -92,4 +97,10 @@ public class CleanDateColumnType extends ColumnType
     {
         return DateTimeFormatter.ofPattern(formatString);
     }
+
+    public Temporal parse(@NonNull String s)
+    {
+        return getDateTimeFormatter().parse(s, query);
+    }
+
 }

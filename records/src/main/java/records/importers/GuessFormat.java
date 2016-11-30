@@ -156,7 +156,7 @@ public class GuessFormat
             // Only false if we find content which is not parseable as a number:
             boolean allNumericOrBlank = true;
             boolean allBlank = true;
-            List<DateFormat> possibleDateFormats = new ArrayList<>(Utility.mapList(CleanDateColumnType.DATE_FORMATS, DateFormat::new));
+            List<DateFormat> possibleDateFormats = new ArrayList<>(Utility.mapList(CleanDateColumnType.DATE_FORMATS, (formatString) -> new DateFormat(formatString, LocalDate::from)));
             String commonPrefix = "";
             List<Integer> decimalPlaces = new ArrayList<>();
             for (int rowIndex = headerRows; rowIndex < initialVals.size(); rowIndex++)
@@ -248,7 +248,7 @@ public class GuessFormat
             if (allBlank)
                 columnTypes.add(ColumnType.BLANK);
             else if (!possibleDateFormats.isEmpty())
-                columnTypes.add(new CleanDateColumnType(possibleDateFormats.get(0).formatString));
+                columnTypes.add(new CleanDateColumnType(possibleDateFormats.get(0).formatString, possibleDateFormats.get(0).destQuery));
             else if (allNumeric)
                 columnTypes.add(new NumericColumnType(commonPrefix, minDP, false));
             else if (allNumericOrBlank)

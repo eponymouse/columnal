@@ -11,6 +11,7 @@ import records.data.columntype.TextColumnType;
 import records.importers.ColumnInfo;
 import records.importers.TextFormat;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,13 +45,13 @@ public class GenFormat extends Generator<TextFormat>
                 ColumnType.BLANK,
                 new TextColumnType(),
                 new NumericColumnType(sourceOfRandomness.nextBoolean() ? "" : sourceOfRandomness.choose(currencies), sourceOfRandomness.nextInt(0, 6),sourceOfRandomness.nextBoolean()),
-                new CleanDateColumnType(sourceOfRandomness.choose(dateFormats))));
+                new CleanDateColumnType(sourceOfRandomness.choose(dateFormats), LocalDate::from)));
             // Don't end with blank:
             if (i == columnCount - 1 && (type.isBlank() || columns.stream().allMatch(GenFormat::canBeBlank)))
                 type = new TextColumnType();
             // Don't let all be text/blank:
             if (i == columnCount - 1 && columns.stream().allMatch(c -> c.type.isText() || c.type.isBlank()))
-                type = new CleanDateColumnType(sourceOfRandomness.choose(dateFormats));
+                type = new CleanDateColumnType(sourceOfRandomness.choose(dateFormats), LocalDate::from);
             String title = hasTitle ? "GenCol" + i : "";
             columns.add(new ColumnInfo(type, new ColumnId(title)));
         }

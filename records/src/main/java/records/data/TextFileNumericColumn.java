@@ -45,14 +45,7 @@ public class TextFileNumericColumn extends TextFileColumn
                 {
                     for (String s : next)
                     {
-                        try
-                        {
-                            loadedValues.addRead(s);
-                        }
-                        catch (NumberFormatException e)
-                        {
-                            throw new FetchException("Could not parse number: \"" + s + "\"", e);
-                        }
+                        loadedValues.addRead(s);
                     }
                     if (progressListener != null)
                         progressListener.progressUpdate(((double)loadedValues.filled() - startedAt) / ((double)index - startedAt));

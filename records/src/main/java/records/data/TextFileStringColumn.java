@@ -3,14 +3,12 @@ package records.data;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
 import records.error.FetchException;
-import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.DumbStringPool;
+import utility.DumbObjectPool;
 import utility.Utility;
 
 import java.io.EOFException;
@@ -27,7 +25,7 @@ import java.util.Optional;
 public class TextFileStringColumn extends TextFileColumn
 {
     private String[] loadedValues = new String[0];
-    private final DumbStringPool pool = new DumbStringPool(1000);
+    private final DumbObjectPool<String> pool = new DumbObjectPool<>(String.class, 1000);
     @MonotonicNonNull
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private DataTypeValue dataType;

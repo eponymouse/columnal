@@ -51,6 +51,11 @@ public class DataTypeValue extends DataType
         return new DataTypeValue(Kind.TEXT, null, null, null, getText, null, null, null);
     }
 
+    public static DataTypeValue date(GetValue<Temporal> getDate)
+    {
+        return new DataTypeValue(Kind.DATE, null, null, null, null, getDate, null, null);
+    }
+
     public static DataTypeValue number(NumberDisplayInfo numberDisplayInfo, GetValue<Number> getNumber)
     {
         return new DataTypeValue(Kind.NUMBER, numberDisplayInfo, null, getNumber, null, null, null, null);

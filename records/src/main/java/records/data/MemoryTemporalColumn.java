@@ -8,25 +8,24 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.Temporal;
 import java.util.List;
 
 /**
- * Created by neil on 31/10/2016.
+ * Created by neil on 30/11/2016.
  */
-public class MemoryStringColumn extends Column
+public class MemoryTemporalColumn extends Column
 {
     private final ColumnId title;
-    private final StringColumnStorage storage;
-    @MonotonicNonNull
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private DataTypeValue dataType;
+    private final DateColumnStorage storage;
 
-    public MemoryStringColumn(RecordSet recordSet, ColumnId title, List<String> values) throws InternalException
+    public MemoryTemporalColumn(RecordSet rs, ColumnId title, List<Temporal> list) throws InternalException
     {
-        super(recordSet);
+        super(rs);
         this.title = title;
-        this.storage = new StringColumnStorage();
-        this.storage.addAllNoNull(values);
+        this.storage = new DateColumnStorage();
+        this.storage.addAllNoNull(list);
     }
 
     @Override
@@ -43,7 +42,7 @@ public class MemoryStringColumn extends Column
         return storage.getType();
     }
 
-    private String getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+    private Temporal getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
     {
         return storage.get(index);
     }

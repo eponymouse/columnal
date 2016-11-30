@@ -3,7 +3,7 @@ package test;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
-import utility.DumbStringPool;
+import utility.DumbObjectPool;
 
 import static org.junit.Assert.assertEquals;
 
@@ -13,7 +13,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class TestCompleteStringPool
 {
-    private DumbStringPool pool = new DumbStringPool(100);
+    private DumbObjectPool<String> pool = new DumbObjectPool<>(String.class, 100);
 
     @Property
     public void sameContent(String s)

@@ -11,6 +11,8 @@ import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
 import records.data.RecordSet;
 import records.data.TableManager;
+import records.data.MemoryTemporalColumn;
+import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
 import records.error.FunctionInt;
 import records.error.InternalException;
@@ -21,6 +23,7 @@ import utility.Utility;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -74,6 +77,14 @@ public class HTMLImport
                 else if (columnInfo.type.isText())
                 {
                     columns.add(rs -> new MemoryStringColumn(rs, columnInfo.title, slice));
+                }
+                else if (columnInfo.type.isDate())
+                {
+                    columns.add(rs -> new MemoryTemporalColumn(rs, columnInfo.title, Utility.<String, Temporal>mapList(slice, s -> ((CleanDateColumnType)columnInfo.type).parse(s))));
+                }
+                else if (!columnInfo.type.isBlank())
+                {
+                    throw new InternalException("Unhandled column type: " + columnInfo.type);
                 }
                 // If it's blank, should we add any column?
                 // Maybe if it has title?                }

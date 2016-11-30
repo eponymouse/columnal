@@ -8,21 +8,22 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DumbObjectPool;
 
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by neil on 04/11/2016.
  */
-public class StringColumnStorage implements ColumnStorage<String>
+public class DateColumnStorage implements ColumnStorage<Temporal>
 {
-    private final ArrayList<String> values;
-    private final DumbObjectPool<String> pool = new DumbObjectPool<>(String.class, 1000);
+    private final ArrayList<Temporal> values;
+    private final DumbObjectPool<Temporal> pool = new DumbObjectPool<>(Temporal.class, 1000);
     @MonotonicNonNull
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private DataTypeValue dataType;
 
-    public StringColumnStorage()
+    public DateColumnStorage()
     {
         values = new ArrayList<>();
     }
@@ -41,20 +42,19 @@ public class StringColumnStorage implements ColumnStorage<String>
     }
 
     @Override
-    public String get(int index) throws InternalException
+    public Temporal get(int index) throws InternalException
     {
         return values.get(index);
     }
 
     @Override
-    public void addAll(List<@Nullable String> items) throws InternalException
+    public void addAll(List<@Nullable Temporal> items) throws InternalException
     {
         this.values.ensureCapacity(this.values.size() + items.size());
-        for (String s : items)
+        for (Temporal t : items)
         {
-            if (s == null)
-                s = "";
-            this.values.add(pool.pool(s));
+            if (t != null)
+                this.values.add(pool.pool(t));
         }
     }
 
@@ -71,7 +71,7 @@ public class StringColumnStorage implements ColumnStorage<String>
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.text((i, prog) -> get(i));
+            dataType = DataTypeValue.date((i, prog) -> get(i));
         }
         return dataType;
     }

@@ -4,6 +4,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.lang.ref.WeakReference;
+import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
@@ -21,14 +22,17 @@ import java.util.Map;
  *
  * TODO add a pool which counts references.
  */
-public class DumbStringPool
+public class DumbObjectPool<T>
 {
-    private @Nullable String @NonNull [] pool = new String[4];
+    private final Class<T> cls;
+    private @Nullable T @NonNull [] pool;
     private int used = 0;
     private final int limit;
 
-    public DumbStringPool(int limit)
+    public DumbObjectPool(Class<T> cls, int limit)
     {
+        this.cls = cls;
+        pool = (T[])Array.newInstance(cls, 4);
         this.limit = limit;
     }
 
@@ -37,7 +41,7 @@ public class DumbStringPool
      * @param s
      * @return
      */
-    public String pool(String s)
+    public T pool(T s)
     {
         int index = Arrays.binarySearch((Object[])pool, 0, used, s);
         if (index >= 0 && pool[index] != null && pool[index].equals(s))
@@ -54,7 +58,7 @@ public class DumbStringPool
             }
             else
             {
-                String[] newPool = new String[Math.min(limit, pool.length * 2)];
+                T[] newPool = (T[])Array.newInstance(cls, Math.min(limit, pool.length * 2));
                 System.arraycopy(pool, 0, newPool, 0, index);
                 System.arraycopy(pool, index, newPool, index + 1, used - index);
                 pool = newPool;
@@ -71,14 +75,14 @@ public class DumbStringPool
     }
 
     @SuppressWarnings("nullness")
-    public List<@NonNull String> get()
+    public List<@NonNull T> get()
     {
         return Collections.unmodifiableList(Arrays.asList(Arrays.copyOfRange(pool, 0, used)));
     }
 
     public void clear()
     {
-        pool = new String[4];
+        pool = (T[])Array.newInstance(cls, 4);
         used = 0;
     }
 }

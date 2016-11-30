@@ -9,6 +9,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberDisplayInfo;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
+import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -118,8 +119,9 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         LONG_MIN = Long.MIN_VALUE + 2 + numberOfTags; // Allocate space for SEE_BIGINT and SEE_BIGDEC
     }
 
-    public void addRead(String number) throws InternalException, NumberFormatException
+    public void addRead(String number) throws InternalException, UserException
     {
+        number = number.replace(",", ""); // TODO parameterise this behaviour
         // First try as a long:
         try
         {
@@ -155,8 +157,15 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             return;
         }
         catch (NumberFormatException ex) { }
-        // Ok, last try: big decimal (and let it throw if not)
-        addBigDecimal(new BigDecimal(number));
+        // Ok, last try: big decimal (and rethrow if not)
+        try
+        {
+            addBigDecimal(new BigDecimal(number));
+        }
+        catch (NumberFormatException e)
+        {
+            throw new FetchException("Could not parse number: \"" + number + "\"", e);
+        }
     }
 
     private void addByte(byte n) throws InternalException
