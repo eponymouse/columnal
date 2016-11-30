@@ -13,8 +13,6 @@ import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.loadsave.OutputBuilder;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.ExBiConsumer;
 
 import java.util.List;
@@ -56,9 +54,9 @@ public class ColumnReference extends Expression
     }
 
     @Override
-    public String save()
+    public String save(boolean topLevel)
     {
-        return "@" + OutputBuilder.quoted(columnName.getOutput());
+        return "@" + OutputBuilder.quotedIfNecessary(columnName.getOutput());
     }
 
     @Override

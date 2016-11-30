@@ -31,6 +31,9 @@ NEWVAR : '$';
 
 NUMBER : [+-]? [0-9]+ ('.' [0-9]+)?;
 
+TRUE: 'true';
+FALSE: 'false';
+
 UNQUOTED_IDENT : ~[ \t\n\r"()@+-/*&|=?:;~$!<>]+;
 
 

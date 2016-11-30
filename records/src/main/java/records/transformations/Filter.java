@@ -197,7 +197,7 @@ public class Filter extends Transformation
     @Override
     protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
     {
-        return Collections.singletonList(PREFIX + " " + filterExpression.save());
+        return Collections.singletonList(PREFIX + " " + filterExpression.save(true));
     }
 
     @Override

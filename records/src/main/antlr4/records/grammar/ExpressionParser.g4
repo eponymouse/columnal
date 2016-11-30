@@ -8,18 +8,19 @@ columnRef : tableId? COLREF columnId;
 
 numericLiteral : NUMBER;
 stringLiteral : STRING;
+booleanLiteral : TRUE | FALSE;
 
-terminal : columnRef | numericLiteral | stringLiteral;
+terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral;
 
-plusMinusExpression : OPEN_BRACKET expression (PLUS_MINUS expression)+ CLOSE_BRACKET;
-timesExpression : OPEN_BRACKET expression (TIMES expression)+ CLOSE_BRACKET;
-divideExpression : OPEN_BRACKET expression DIVIDE expression CLOSE_BRACKET;
-equalExpression : OPEN_BRACKET expression EQUALITY expression CLOSE_BRACKET;
-notEqualExpression : OPEN_BRACKET expression NON_EQUALITY expression CLOSE_BRACKET;
-lessThanExpression : OPEN_BRACKET expression (LESS_THAN expression)+ CLOSE_BRACKET;
-greaterThanExpression : OPEN_BRACKET expression (GREATER_THAN expression)+ CLOSE_BRACKET;
-andExpression : OPEN_BRACKET expression (AND expression)+ CLOSE_BRACKET;
-orExpression : OPEN_BRACKET expression (OR expression)+ CLOSE_BRACKET;
+plusMinusExpression :  expression (PLUS_MINUS expression)+;
+timesExpression :  expression (TIMES expression)+;
+divideExpression :  expression DIVIDE expression;
+equalExpression :  expression EQUALITY expression;
+notEqualExpression :  expression NON_EQUALITY expression;
+lessThanExpression :  expression (LESS_THAN expression)+;
+greaterThanExpression :  expression (GREATER_THAN expression)+;
+andExpression :  expression (AND expression)+;
+orExpression :  expression (OR expression)+;
 compoundExpression : plusMinusExpression | timesExpression | divideExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression;
 
 variable : NEWVAR UNQUOTED_IDENT;
@@ -30,4 +31,7 @@ pattern : patternMatch (AND expression)*;
 matchClause : pattern (DELIM pattern)* MAPSTO expression;
 match : OPEN_BRACKET expression MATCH matchClause (DELIM matchClause)* CLOSE_BRACKET;
 
-expression : compoundExpression | terminal | match;
+bracketedCompound : OPEN_BRACKET compoundExpression CLOSE_BRACKET;
+bracketedMatch : OPEN_BRACKET match CLOSE_BRACKET;
+expression : bracketedCompound | terminal | bracketedMatch;
+topLevelExpression : compoundExpression | match | expression /* includes terminal */;

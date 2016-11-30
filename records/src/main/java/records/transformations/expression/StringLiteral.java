@@ -1,6 +1,5 @@
 package records.transformations.expression;
 
-import edu.emory.mathcs.backport.java.util.Collections;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -12,8 +11,7 @@ import records.error.UserException;
 import records.loadsave.OutputBuilder;
 import utility.ExBiConsumer;
 
-import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -41,7 +39,7 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    public String save()
+    public String save(boolean topLevel)
     {
         return OutputBuilder.quoted(value);
     }

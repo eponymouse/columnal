@@ -1,30 +1,8 @@
 package records.transformations.expression;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.sosy_lab.java_smt.api.BooleanFormula;
-import org.sosy_lab.java_smt.api.BooleanFormulaManager;
-import org.sosy_lab.java_smt.api.Formula;
-import org.sosy_lab.java_smt.api.FormulaManager;
-import org.sosy_lab.java_smt.api.NumeralFormula;
-import org.sosy_lab.java_smt.api.RationalFormulaManager;
-import records.data.Column.ProgressListener;
 import records.data.ColumnId;
-import records.data.RecordSet;
-import records.data.datatype.DataType.NumberDisplayInfo;
-import records.data.datatype.DataType.TagType;
-import records.data.datatype.DataTypeValue;
-import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
-import records.data.datatype.DataTypeValue.GetValue;
-import records.data.datatype.DataTypeValue.SpecificDataTypeVisitorGet;
-import records.error.InternalException;
-import records.error.UserException;
-import threadchecker.OnThread;
-import threadchecker.Tag;
-import utility.Pair;
-import utility.Utility;
 
-import java.time.temporal.Temporal;
-import java.util.List;
 import java.util.stream.Stream;
 
 /**
@@ -64,9 +42,13 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @Override
-    public String save()
+    public String save(boolean topLevel)
     {
-        return "(" + lhs.save() + " " + saveOp() + " " + rhs.save() + ")";
+        String inner = lhs.save(false) + " " + saveOp() + " " + rhs.save(false);
+        if (topLevel)
+            return inner;
+        else
+            return "(" + inner + ")";
     }
 
     protected abstract String saveOp();

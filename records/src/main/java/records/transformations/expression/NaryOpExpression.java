@@ -1,8 +1,6 @@
 package records.transformations.expression;
 
 import records.data.ColumnId;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 
 import java.util.List;
 import java.util.stream.Stream;
@@ -26,16 +24,17 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public String save()
+    public String save(boolean topLevel)
     {
-        StringBuilder s = new StringBuilder("(");
+        StringBuilder s = new StringBuilder(topLevel ? "" : "(");
         for (int i = 0; i < expressions.size(); i++)
         {
             if (i > 0)
                 s.append(" ").append(saveOp(i - 1)).append(" ");
-            s.append(expressions.get(i).save());
+            s.append(expressions.get(i).save(false));
         }
-        s.append(")");
+        if (!topLevel)
+            s.append(")");
         return s.toString();
     }
 

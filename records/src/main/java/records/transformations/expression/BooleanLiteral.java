@@ -7,8 +7,6 @@ import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.ExBiConsumer;
 
 import java.util.Collections;
@@ -39,7 +37,7 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    public String save()
+    public String save(boolean topLevel)
     {
         return Boolean.toString(value);
     }

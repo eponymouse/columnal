@@ -1,5 +1,10 @@
 package records.transformations.expression;
 
+import org.antlr.v4.runtime.tree.ErrorNode;
+import org.antlr.v4.runtime.tree.ParseTree;
+import org.antlr.v4.runtime.tree.ParseTreeVisitor;
+import org.antlr.v4.runtime.tree.RuleNode;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -12,6 +17,9 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
+import records.grammar.ExpressionParser.BooleanLiteralContext;
+import records.grammar.ExpressionParser.BracketedCompoundContext;
+import records.grammar.ExpressionParser.BracketedMatchContext;
 import records.grammar.ExpressionParser.ColumnRefContext;
 import records.grammar.ExpressionParser.ExpressionContext;
 import records.grammar.ExpressionParser.MatchClauseContext;
@@ -62,7 +70,7 @@ public abstract class Expression
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnId> allColumnNames();
 
-    public abstract String save();
+    public abstract String save(boolean topLevel);
 
     public static Expression parse(@Nullable String keyword, String src) throws UserException, InternalException
     {
@@ -74,9 +82,17 @@ public abstract class Expression
             else
                 throw new UserException("Missing keyword: " + keyword);
         }
-        return Utility.parseAsOne(src.replace("\r", "").replace("\n", ""), ExpressionLexer::new, ExpressionParser::new, p -> {
-            return new CompileExpression().visit(p.expression());
-        });
+        try
+        {
+            return Utility.parseAsOne(src.replace("\r", "").replace("\n", ""), ExpressionLexer::new, ExpressionParser::new, p ->
+            {
+                return new CompileExpression().visit(p.topLevelExpression());
+            });
+        }
+        catch (RuntimeException e)
+        {
+            throw new UserException("Problem parsing expression", e);
+        }
     }
 
     public abstract Formula toSolver(FormulaManager formulaManager, RecordSet src) throws InternalException, UserException;
@@ -104,12 +120,28 @@ public abstract class Expression
             return new StringLiteral(ctx.getText());
         }
 
-
+        @Override
+        public Expression visitBooleanLiteral(BooleanLiteralContext ctx)
+        {
+            return new BooleanLiteral(Boolean.valueOf(ctx.getText()));
+        }
 
         @Override
         public Expression visitNotEqualExpression(NotEqualExpressionContext ctx)
         {
             return new NotEqualExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+        }
+
+        @Override
+        public Expression visitBracketedCompound(BracketedCompoundContext ctx)
+        {
+            return visitCompoundExpression(ctx.compoundExpression());
+        }
+
+        @Override
+        public Expression visitBracketedMatch(BracketedMatchContext ctx)
+        {
+            return visitMatch(ctx.match());
         }
 
         /*
@@ -159,11 +191,26 @@ public abstract class Expression
             }
             throw new RuntimeException("Unknown case in processPatternMatch");
         }
+
+        public Expression visitChildren(RuleNode node) {
+            @Nullable Expression result = this.defaultResult();
+            int n = node.getChildCount();
+
+            for(int i = 0; i < n && this.shouldVisitNextChild(node, result); ++i) {
+                ParseTree c = node.getChild(i);
+                Expression childResult = c.accept(this);
+                result = this.aggregateResult(result, childResult);
+            }
+            if (result == null)
+                throw new RuntimeException("No rules matched for " + node.getText());
+            else
+                return result;
+        }
     }
 
     @Override
     public String toString()
     {
-        return save();
+        return save(true);
     }
 }

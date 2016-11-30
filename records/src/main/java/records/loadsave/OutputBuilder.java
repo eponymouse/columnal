@@ -1,5 +1,6 @@
 package records.loadsave;
 
+import org.apache.commons.lang.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.TableId;
@@ -78,14 +79,7 @@ public class OutputBuilder
     @OnThread(Tag.Any)
     public synchronized OutputBuilder id(String id)
     {
-        if (id.contains(" ") || id.startsWith("@") || id.contains("\""))
-        {
-            cur().add(quoted(id));
-        }
-        else
-        {
-            cur().add(id);
-        }
+        cur().add(quotedIfNecessary(id));
         return this;
     }
 
@@ -113,6 +107,16 @@ public class OutputBuilder
     {
         // Order matters; escape ^ by itself first:
         return "\"" + s.replace("^", "^^").replace("\"", "^\"").replace("\n", "^n").replace("\r", "^r") + "\"";
+    }
+
+    @OnThread(Tag.Any)
+    public static String quotedIfNecessary(String s)
+    {
+        if (StringUtils.isAlpha(s))
+            return s;
+        else
+            return quoted(s);
+
     }
 
     @OnThread(Tag.Any)

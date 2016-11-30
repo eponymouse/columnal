@@ -9,6 +9,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.ExBiConsumer;
+import utility.Utility;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -39,7 +40,7 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public String save()
+    public String save(boolean topLevel)
     {
         if (value instanceof Double)
             return String.format("%f", value.doubleValue());
@@ -67,7 +68,7 @@ public class NumericLiteral extends Literal
 
         NumericLiteral that = (NumericLiteral) o;
 
-        return value.equals(that.value);
+        return Utility.compareNumbers(value, that.value) == 0;
     }
 
     @Override
