@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import edu.emory.mathcs.backport.java.util.Collections;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.RecordSet;
@@ -49,5 +50,22 @@ public class StringLiteral extends Literal
     public Formula toSolver(FormulaManager formulaManager, RecordSet src)
     {
         throw new UnimplementedException();
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        StringLiteral that = (StringLiteral) o;
+
+        return value.equals(that.value);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return value.hashCode();
     }
 }

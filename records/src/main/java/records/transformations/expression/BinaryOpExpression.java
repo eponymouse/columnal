@@ -64,7 +64,7 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) String save()
+    public String save()
     {
         return "(" + lhs.save() + " " + saveOp() + " " + rhs.save() + ")";
     }
@@ -77,4 +77,25 @@ public abstract class BinaryOpExpression extends Expression
         return Stream.concat(lhs.allColumnNames(), rhs.allColumnNames());
     }
 
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BinaryOpExpression that = (BinaryOpExpression) o;
+
+        if (!saveOp().equals(that.saveOp())) return false;
+        if (!lhs.equals(that.lhs)) return false;
+        return rhs.equals(that.rhs);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = lhs.hashCode();
+        result = 31 * result + saveOp().hashCode();
+        result = 31 * result + rhs.hashCode();
+        return result;
+    }
 }

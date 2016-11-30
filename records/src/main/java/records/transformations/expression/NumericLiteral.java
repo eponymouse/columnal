@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import edu.emory.mathcs.backport.java.util.Collections;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.RecordSet;
@@ -56,5 +57,22 @@ public class NumericLiteral extends Literal
             return formulaManager.getIntegerFormulaManager().makeNumber((BigInteger)value);
         else
             return formulaManager.getIntegerFormulaManager().makeNumber(value.longValue());
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        NumericLiteral that = (NumericLiteral) o;
+
+        return value.equals(that.value);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return value.hashCode();
     }
 }

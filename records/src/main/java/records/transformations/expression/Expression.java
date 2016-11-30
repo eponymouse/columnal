@@ -62,7 +62,6 @@ public abstract class Expression
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnId> allColumnNames();
 
-    @OnThread(Tag.FXPlatform)
     public abstract String save();
 
     public static Expression parse(@Nullable String keyword, String src) throws UserException, InternalException
@@ -160,5 +159,11 @@ public abstract class Expression
             }
             throw new RuntimeException("Unknown case in processPatternMatch");
         }
+    }
+
+    @Override
+    public String toString()
+    {
+        return save();
     }
 }

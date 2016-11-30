@@ -257,7 +257,7 @@ public class MatchExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) String save()
+    public String save()
     {
         return "TODO";
     }

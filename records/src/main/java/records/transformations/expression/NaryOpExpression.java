@@ -26,7 +26,7 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) String save()
+    public String save()
     {
         StringBuilder s = new StringBuilder("(");
         for (int i = 0; i < expressions.size(); i++)

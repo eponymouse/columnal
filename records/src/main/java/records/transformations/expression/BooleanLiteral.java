@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.RecordSet;
@@ -38,7 +39,7 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) String save()
+    public String save()
     {
         return Boolean.toString(value);
     }
@@ -47,5 +48,22 @@ public class BooleanLiteral extends Literal
     public Formula toSolver(FormulaManager formulaManager, RecordSet src)
     {
         return formulaManager.getBooleanFormulaManager().makeBoolean(value);
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BooleanLiteral that = (BooleanLiteral) o;
+
+        return value == that.value;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return (value ? 1 : 0);
     }
 }

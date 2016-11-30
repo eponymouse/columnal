@@ -56,7 +56,7 @@ public class ColumnReference extends Expression
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) String save()
+    public String save()
     {
         return "@" + OutputBuilder.quoted(columnName.getOutput());
     }
@@ -105,6 +105,26 @@ public class ColumnReference extends Expression
             }
         });
         */
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        ColumnReference that = (ColumnReference) o;
+
+        if (tableName != null ? !tableName.equals(that.tableName) : that.tableName != null) return false;
+        return columnName.equals(that.columnName);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = tableName != null ? tableName.hashCode() : 0;
+        result = 31 * result + columnName.hashCode();
+        return result;
     }
 }
 
