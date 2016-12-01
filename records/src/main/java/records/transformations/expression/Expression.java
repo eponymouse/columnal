@@ -1,10 +1,7 @@
 package records.transformations.expression;
 
-import org.antlr.v4.runtime.tree.ErrorNode;
 import org.antlr.v4.runtime.tree.ParseTree;
-import org.antlr.v4.runtime.tree.ParseTreeVisitor;
 import org.antlr.v4.runtime.tree.RuleNode;
-import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -38,10 +35,12 @@ import records.transformations.expression.MatchExpression.PatternMatchExpression
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -50,6 +49,8 @@ import java.util.stream.Stream;
  */
 public abstract class Expression
 {
+    public static final int MAX_STRING_SOLVER_LENGTH = 8;
+
     @OnThread(Tag.Simulation)
     public boolean getBoolean(int rowIndex, EvaluateState state, @Nullable ProgressListener prog) throws UserException, InternalException
     {
@@ -95,7 +96,7 @@ public abstract class Expression
         }
     }
 
-    public abstract Formula toSolver(FormulaManager formulaManager, RecordSet src) throws InternalException, UserException;
+    public abstract Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException;
 
     private static class CompileExpression extends ExpressionParserBaseVisitor<Expression>
     {

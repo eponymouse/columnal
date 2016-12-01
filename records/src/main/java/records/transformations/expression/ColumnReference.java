@@ -9,13 +9,17 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.loadsave.OutputBuilder;
 import utility.ExBiConsumer;
+import utility.Pair;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Stream;
 
 /**
@@ -66,22 +70,23 @@ public class ColumnReference extends Expression
     }
 
     @Override
-    public Formula toSolver(FormulaManager formulaManager, RecordSet src) throws InternalException, UserException
+    public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
     {
-        throw new UnimplementedException();
-        /*
-        return check(src).apply(new DataTypeVisitor<Formula>()
+        if (column == null)
+            throw new InternalException("Asking for solver when type checking failed");
+        Pair<@Nullable TableId, ColumnId> key = new Pair<>(tableName, columnName);
+        return column.getType().apply(new DataTypeVisitor<Formula>()
         {
             @Override
             public Formula number(NumberDisplayInfo displayInfo) throws InternalException, UserException
             {
-                return formulaManager.getRationalFormulaManager().makeVariable(columnName.getOutput());
+                return columnVariables.computeIfAbsent(key, (Pair x) -> formulaManager.getRationalFormulaManager().makeVariable(columnName.getOutput()));
             }
 
             @Override
             public Formula text() throws InternalException, UserException
             {
-                throw new UserException("Can't do text...");
+                return columnVariables.computeIfAbsent(key, (Pair x) -> formulaManager.getBitvectorFormulaManager().makeVariable(32* MAX_STRING_SOLVER_LENGTH, columnName.getOutput()));
             }
 
             @Override
@@ -99,10 +104,9 @@ public class ColumnReference extends Expression
             @Override
             public Formula bool() throws InternalException, UserException
             {
-                return formulaManager.getBooleanFormulaManager().makeVariable(columnName.getOutput());
+                return columnVariables.computeIfAbsent(key, (Pair x) -> formulaManager.getBooleanFormulaManager().makeVariable(columnName.getOutput()));
             }
         });
-        */
     }
 
     @Override

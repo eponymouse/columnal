@@ -19,7 +19,11 @@ import org.sosy_lab.common.log.BasicLogManager;
 import org.sosy_lab.common.log.LogManager;
 import org.sosy_lab.java_smt.SolverContextFactory;
 import org.sosy_lab.java_smt.SolverContextFactory.Solvers;
+import org.sosy_lab.java_smt.api.BitvectorFormula;
+import org.sosy_lab.java_smt.api.BitvectorFormulaManager;
 import org.sosy_lab.java_smt.api.BooleanFormula;
+import org.sosy_lab.java_smt.api.BooleanFormulaManager;
+import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.Model;
 import org.sosy_lab.java_smt.api.ProverEnvironment;
 import org.sosy_lab.java_smt.api.SolverContext;
@@ -47,14 +51,19 @@ import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 
 import java.io.File;
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Created by neil on 23/11/2016.
@@ -229,9 +238,11 @@ public class Filter extends Transformation
             this.destHeaderAndData = FXCollections.observableArrayList();
         }
 
-        private void updateExample(Expression expression) throws UserException
+        private void updateExample(Expression expression) throws UserException, InternalException
         {
             if (src == null)
+                return;
+            if (expression.check(src.getData(), new TypeState(), (e, s) -> {}) == null)
                 return;
 
             if (allColumns.isEmpty())
@@ -262,14 +273,51 @@ public class Filter extends Transformation
                 ShutdownManager shutdown = ShutdownManager.create();
                 SolverContext ctx = SolverContextFactory.createSolverContext(
                     config, logger, shutdown.getNotifier(), Solvers.Z3);
-                BooleanFormula f = (BooleanFormula)expression.toSolver(ctx.getFormulaManager(), src.getData());
+
+                Map<Pair<@Nullable TableId, ColumnId>, Formula> vars = new HashMap<>();
+                BooleanFormula f = (BooleanFormula)expression.toSolver(ctx.getFormulaManager(), src.getData(), vars);
+
+                System.out.println("Example: " + f.toString());
 
                 try (ProverEnvironment prover = ctx.newProverEnvironment(ProverOptions.GENERATE_MODELS)) {
                     prover.addConstraint(f);
+                    for (Formula var : vars.values())
+                    {
+                        if (var instanceof BitvectorFormula)
+                        {
+                            prover.addConstraint(asciiRange(ctx.getFormulaManager().getBooleanFormulaManager(), ctx.getFormulaManager().getBitvectorFormulaManager(), (BitvectorFormula)var, 0));
+                        }
+                    }
+
+
                     boolean isUnsat = prover.isUnsat();
                     System.out.println("Satisfiable: " + !isUnsat);
                     if (!isUnsat) {
                         Model model = prover.getModel();
+                        for (Entry<Pair<@Nullable TableId, ColumnId>, Formula> var : vars.entrySet())
+                        {
+                            System.out.println("Variable " + var.getKey() + " = " + show(model.evaluate(var.getValue())));
+                        }
+                    }
+                }
+                try (ProverEnvironment prover = ctx.newProverEnvironment(ProverOptions.GENERATE_MODELS)) {
+                    prover.addConstraint(ctx.getFormulaManager().getBooleanFormulaManager().not(f));
+                    /*for (Formula var : vars.values())
+                    {
+                        if (var instanceof BitvectorFormula)
+                        {
+                            prover.addConstraint(asciiRange(ctx.getFormulaManager().getBooleanFormulaManager(), ctx.getFormulaManager().getBitvectorFormulaManager(), (BitvectorFormula)var, 0));
+                        }
+                    }*/
+
+                    boolean isUnsat = prover.isUnsat();
+                    System.out.println("Satisfiable negation: " + !isUnsat);
+                    if (!isUnsat) {
+                        Model model = prover.getModel();
+                        for (Entry<Pair<@Nullable TableId, ColumnId>, Formula> var : vars.entrySet())
+                        {
+                            System.out.println("Variable " + var.getKey() + " = " + show(model.evaluate(var.getValue())));
+                        }
                     }
                 }
             }
@@ -288,6 +336,37 @@ public class Filter extends Transformation
                 e.printStackTrace();
             }
 
+        }
+
+        private String show(@Nullable Object v)
+        {
+            if (v == null)
+                return "null";
+            if (v instanceof BigInteger)
+            {
+                BigInteger i = (BigInteger) v;
+                StringBuilder sb = new StringBuilder();
+                for (int nextCodePoint = i.intValue(); nextCodePoint != 0; i = i.shiftRight(32), nextCodePoint = i.intValue())
+                {
+                    sb.appendCodePoint(nextCodePoint);
+                }
+                return sb.reverse().toString();
+            }
+            return v.getClass().toString();
+        }
+
+        private BooleanFormula asciiRange(BooleanFormulaManager b, BitvectorFormulaManager v, BitvectorFormula cur, int index)
+        {
+            if (index >= Expression.MAX_STRING_SOLVER_LENGTH)
+                return b.makeBoolean(true);
+
+            // A valid option is string is blank from here on
+            BooleanFormula isZero = v.equal(cur, v.makeBitvector(32 * Expression.MAX_STRING_SOLVER_LENGTH, 0));
+            // If it's not all blank, we look at next character and check it is in ASCII range
+            BitvectorFormula nextChar = v.and(cur, v.makeBitvector(32 * Expression.MAX_STRING_SOLVER_LENGTH, 127));
+            BooleanFormula nextCharASCII = b.and(v.lessThan(v.makeBitvector(32 * Expression.MAX_STRING_SOLVER_LENGTH, 32), nextChar, false), v.lessThan(nextChar, v.makeBitvector(32 * Expression.MAX_STRING_SOLVER_LENGTH, 122), false));
+            BooleanFormula thereafter = asciiRange(b, v, v.shiftRight(cur, v.makeBitvector(32 * Expression.MAX_STRING_SOLVER_LENGTH, 32), false), index + 1);
+            return b.or(isZero, b.and(nextCharASCII, thereafter));
         }
 
         @Override

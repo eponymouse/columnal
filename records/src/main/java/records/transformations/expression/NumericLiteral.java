@@ -4,16 +4,20 @@ import edu.emory.mathcs.backport.java.util.Collections;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
+import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.TableId;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.ExBiConsumer;
+import utility.Pair;
 import utility.Utility;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by neil on 25/11/2016.
@@ -49,7 +53,7 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public Formula toSolver(FormulaManager formulaManager, RecordSet src)
+    public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables)
     {
         // TODO handle non-integers
         if (value instanceof BigDecimal)
