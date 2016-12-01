@@ -166,7 +166,7 @@
                         <arg>-Xbootclasspath/p:${annotatedJdk}</arg>
                         <arg>-AprintErrorStack</arg>
                         <arg>-AskipDefs=records.grammar.</arg>
-                        <arg>-Astubs=C:/Users/neil/IdeaProjects/records/records/stubs</arg>
+                        <arg>-Astubs=${basedir}/stubs</arg>
                         <arg>-Xplugin:threadchecker.TCPlugin</arg>
                     </compilerArgs>
                 </configuration>
