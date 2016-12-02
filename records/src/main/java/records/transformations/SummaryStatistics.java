@@ -436,7 +436,6 @@ public class SummaryStatistics extends Transformation
     @OnThread(Tag.FXPlatform)
     public static void withGUICreate(RecordSet src, FXPlatformConsumer<SummaryStatistics> andThen) throws InternalException, UserException
     {
-        // TODO actually show GUI
         Map<String, Set<SummaryType>> summaries = new HashMap<>();
         for (Column c : src.getColumns())
         {

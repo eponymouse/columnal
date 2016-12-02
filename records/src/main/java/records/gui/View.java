@@ -366,7 +366,7 @@ public class View extends Pane
 
     private void showEditDialog(EditTransformationDialog dialog, @Nullable TableId replaceOnOK)
     {
-        // TODO re-run any dependencies
+        // add will re-run any dependencies:
         dialog.show(optNewTable -> optNewTable.ifPresent(t -> Utility.alertOnErrorFX_(() -> add(replaceOnOK, t))));
     }
 

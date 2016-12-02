@@ -40,7 +40,7 @@ public class PropFormat
             for (int i = 0; i < columnTypes.size(); i++)
             {
                 ColumnInfo c = columnTypes.get(i);
-                // TODO add random spaces, randomise content
+                // TODO add random spaces, randomise content using generators
                 if (c.type.isNumeric())
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) c.type;
@@ -61,7 +61,7 @@ public class PropFormat
                 {
                     int year = 1900 + rnd.nextInt(199);
                     int month = 1 + rnd.nextInt(12);
-                    int day = 1 + rnd.nextInt(28); // TODO have dates with 30th, etc
+                    int day = 1 + rnd.nextInt(28);
                     LocalDate date = LocalDate.of(year, month, day);
                     line.append(date.format(((CleanDateColumnType) c.type).getDateTimeFormatter()));
                 } else if (!c.type.isBlank())

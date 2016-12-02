@@ -55,7 +55,7 @@ public class NumericLiteral extends Literal
     @Override
     public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables)
     {
-        // TODO handle non-integers
+        // TODO handle non-integers properly
         if (value instanceof BigDecimal)
             return formulaManager.getIntegerFormulaManager().makeNumber((BigDecimal)value);
         if (value instanceof BigInteger)
