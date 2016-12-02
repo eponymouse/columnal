@@ -15,9 +15,9 @@
     <orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="classes" level="application" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.1.5" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.1.5" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.1.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.1.6" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.1.6" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.1.6" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.5" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.pholser:junit-quickcheck-core:0.7" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.javaruntype:javaruntype:1.2" level="project" />
