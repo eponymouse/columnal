@@ -9,6 +9,7 @@ import one.util.streamex.StreamEx.Emitter;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.RecordSet;
 import records.data.Table;
 import records.data.TableId;
 import records.data.datatype.DataTypeValue;
@@ -25,6 +26,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -132,6 +134,46 @@ public class TestUtil
     }
 
     @OnThread(Tag.Simulation)
+    public static StreamEx<List<List<Object>>> streamFlattened(RecordSet src)
+    {
+        return new StreamEx.Emitter<List<List<Object>>>()
+        {
+            int nextIndex = 0;
+            @Override
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
+            public @Nullable Emitter<List<List<Object>>> next(Consumer<? super List<List<Object>>> consumer)
+            {
+                try
+                {
+                    if (src.indexValid(nextIndex))
+                    {
+                        List<List<Object>> collapsed = src.getColumns().stream().map(c ->
+                        {
+                            try
+                            {
+                                return c.getType().getCollapsed(nextIndex);
+                            }
+                            catch (UserException | InternalException e)
+                            {
+                                throw new RuntimeException(e);
+                            }
+                        }).collect(Collectors.toList());
+                        consumer.accept(collapsed);
+                        nextIndex += 1;
+                        return this;
+                    }
+                    else
+                        return null; // No more elements
+                }
+                catch (UserException | InternalException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            }
+        }.stream();
+    }
+
+    @OnThread(Tag.Simulation)
     public static StreamEx<List<Object>> streamFlattened(Column column)
     {
         return new StreamEx.Emitter<List<Object>>()
@@ -160,8 +202,15 @@ public class TestUtil
         }.stream();
     }
 
-    public static <T> List<T> makeList(int len, Generator<T> gen, SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+    public static <T> List<T> makeList(int len, Generator<? extends T> gen, SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         return Stream.generate(() -> gen.generate(sourceOfRandomness, generationStatus)).limit(len).collect(Collectors.toList());
+    }
+
+    @OnThread(Tag.Simulation)
+    @SuppressWarnings("nullness")
+    public static Map<List<List<Object>>, Long> getRowFreq(RecordSet src)
+    {
+        return streamFlattened(src).collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
     }
 }

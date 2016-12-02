@@ -18,8 +18,11 @@ import threadchecker.Tag;
 import utility.Utility;
 
 import java.util.Collections;
+import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -59,6 +62,9 @@ public class PropRunTransformation
                 }
             })
             .has(true));
-        //TODO also check that all the rows which occurred originally, occur again with same frequencies
+        // Check that the same set of rows is present:
+        assertEquals(TestUtil.getRowFreq(src), TestUtil.getRowFreq(sort.getData()));
     }
+
+
 }
