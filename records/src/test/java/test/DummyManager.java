@@ -10,5 +10,7 @@ import records.data.TableManager;
  */
 public class DummyManager extends TableManager
 {
+    public static final DummyManager INSTANCE = new DummyManager();
 
+    private DummyManager() {};
 }

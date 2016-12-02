@@ -30,7 +30,7 @@
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="printErrorStack" value="" />
-        <option name="skipDefs" value="records.grammar." />
+        <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="C:\Users\neil\IdeaProjects\records\records/stubs" />
         <processor name="org.checkerframework.checker.interning.InterningChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />

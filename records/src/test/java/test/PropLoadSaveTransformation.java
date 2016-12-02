@@ -41,9 +41,9 @@ public class PropLoadSaveTransformation
         {
             //Assume users destroy leading whitespace:
             String savedMangled = saved.replaceAll("\n +", "\n");
-            Table loaded = TransformationManager.getInstance().loadOne(new DummyManager(), savedMangled);
+            Table loaded = TransformationManager.getInstance().loadOne(DummyManager.INSTANCE, savedMangled);
             String savedAgain = save(loaded);
-            Table loadedAgain = TransformationManager.getInstance().loadOne(new DummyManager(), savedAgain);
+            Table loadedAgain = TransformationManager.getInstance().loadOne(DummyManager.INSTANCE, savedAgain);
 
 
             assertEquals(saved, savedAgain);

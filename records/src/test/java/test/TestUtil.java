@@ -1,10 +1,22 @@
 package test;
 
+import com.pholser.junit.quickcheck.generator.GenerationStatus;
+import com.pholser.junit.quickcheck.generator.Generator;
+import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import one.util.streamex.StreamEx;
+import one.util.streamex.StreamEx.Emitter;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Column;
 import records.data.ColumnId;
 import records.data.Table;
 import records.data.TableId;
+import records.data.datatype.DataTypeValue;
+import records.error.InternalException;
+import records.error.UserException;
 import records.grammar.MainLexer;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.ArrayList;
@@ -12,8 +24,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
 
@@ -115,5 +129,39 @@ public class TestUtil
         for (int i = 0; i < size; i++)
             list.put(makeKey.get(), makeValue.get());
         return list;
+    }
+
+    @OnThread(Tag.Simulation)
+    public static StreamEx<List<Object>> streamFlattened(Column column)
+    {
+        return new StreamEx.Emitter<List<Object>>()
+        {
+            int nextIndex = 0;
+            @Override
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
+            public @Nullable Emitter<List<Object>> next(Consumer<? super List<Object>> consumer)
+            {
+                try
+                {
+                    if (column.indexValid(nextIndex))
+                    {
+                        List<Object> collapsed = column.getType().getCollapsed(nextIndex);
+                        consumer.accept(collapsed);
+                        nextIndex += 1;
+                        return this;
+                    }
+                    else
+                        return null; // No more elements
+                }
+                catch (UserException | InternalException e)
+                {
+                    throw new RuntimeException(e);                }
+            }
+        }.stream();
+    }
+
+    public static <T> List<T> makeList(int len, Generator<T> gen, SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+    {
+        return Stream.generate(() -> gen.generate(sourceOfRandomness, generationStatus)).limit(len).collect(Collectors.toList());
     }
 }

@@ -38,7 +38,7 @@ public class GenSummaryStats extends Generator<SummaryStatistics>
             () -> new TreeSet<>(TestUtil.makeList(sourceOfRandomness, 1, 5, () -> sourceOfRandomness.choose(SummaryType.values()))));
         try
         {
-            return new SummaryStatistics(new DummyManager(), ids.getFirst(), ids.getSecond(), summaries, splitBy);
+            return new SummaryStatistics(DummyManager.INSTANCE, ids.getFirst(), ids.getSecond(), summaries, splitBy);
         }
         catch (InternalException e)
         {

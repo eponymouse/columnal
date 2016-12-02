@@ -29,7 +29,7 @@ public class GenFilter extends Generator<Filter>
         Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
         try
         {
-            return new Filter(new DummyManager(), ids.getFirst(), ids.getSecond(), gen().make(GenExpression.class).generate(sourceOfRandomness, generationStatus));
+            return new Filter(DummyManager.INSTANCE, ids.getFirst(), ids.getSecond(), gen().make(GenExpression.class).generate(sourceOfRandomness, generationStatus));
         }
         catch (InternalException e)
         {

@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * A RecordSet is a collection of columns.
@@ -148,6 +149,18 @@ public abstract class RecordSet
     public final List<Column> getColumns()
     {
         return Collections.unmodifiableList(columns);
+    }
+
+    public String debugGetVals()
+    {
+        try
+        {
+            return IntStream.range(0, getLength()).mapToObj(this::debugGetVals).collect(Collectors.joining("\n"));
+        }
+        catch (InternalException | UserException e)
+        {
+            return "ERR:" + e.getLocalizedMessage();
+        }
     }
 
     public String debugGetVals(int i)

@@ -38,7 +38,7 @@ public class GenSort extends Generator<Sort>
 
         try
         {
-            return new Sort(new DummyManager(), ids.getFirst(), ids.getSecond(), cols);
+            return new Sort(DummyManager.INSTANCE, ids.getFirst(), ids.getSecond(), cols);
         }
         catch (InternalException e)
         {
