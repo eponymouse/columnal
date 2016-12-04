@@ -44,7 +44,7 @@ public class PropRunTransformation
         // TODO sort by multiple columns, too
         // TODO test compareLists, separately
 
-        assertTrue("Sorting by " + sortBy.getName() + ":\n" + src.debugGetVals(), TestUtil.streamFlattened(sort.getData().getColumn(sortBy.getName()))
+        assertTrue("Sorting by " + sortBy.getName() + ":\n" + src.debugGetVals(), !TestUtil.streamFlattened(sort.getData().getColumn(sortBy.getName()))
             .pairMap((a, b) ->
             {
                 try
@@ -61,7 +61,7 @@ public class PropRunTransformation
                     throw new RuntimeException(e);
                 }
             })
-            .has(true));
+            .has(false));
         // Check that the same set of rows is present:
         assertEquals(TestUtil.getRowFreq(src), TestUtil.getRowFreq(sort.getData()));
     }
