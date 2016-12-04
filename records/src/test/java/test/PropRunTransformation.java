@@ -42,7 +42,6 @@ public class PropRunTransformation
         Sort sort = new Sort(DummyManager.INSTANCE, null, srcTable.getId(), Collections.singletonList(sortBy.getName()));
 
         // TODO sort by multiple columns, too
-        // TODO test compareLists, separately
 
         assertTrue("Sorting by " + sortBy.getName() + ":\n" + src.debugGetVals(), !TestUtil.streamFlattened(sort.getData().getColumn(sortBy.getName()))
             .pairMap((a, b) ->

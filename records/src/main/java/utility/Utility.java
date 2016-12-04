@@ -135,7 +135,24 @@ public class Utility
         return new Point2D((bounds.getMinX() + bounds.getMaxX()) * 0.5, (bounds.getMinY() + bounds.getMaxY()) * 0.5);
     }
 
-    // Compare lexicographically.  Types should match at each stage if earlier part of list was the same
+    /**
+     * Used to compare two unpacked values. 
+     * 
+     * Compares two lists lexicographically, i.e. it starts by comparing the first item
+     * If that differs, that's the result, otherwise compare the next items, and so on.
+     * 
+     * The types of the first item in each list should match each other, and the
+     * types should match at each subsequent stage if the lists up to that point
+     * are identical.  That is:
+     * 
+     * 0, "hi", "bye" can compare to 1, 2.
+     * 0, "hi", "bye" can compare to 0, "a", "b"
+     * 0, "hi", "bye" CANNOT compare to 0, 1, "c"
+     * 
+     * The list can contain lists (which recurse to compare), any comparable
+     * of the same type (e.g. String, Temporal, etc). Numbers are compared using compareNumbers;
+     * see that method for more details.
+     */
     @Pure
     public static int compareLists(List<@NonNull ?> a, List<@NonNull ?> b) throws InternalException
     {
