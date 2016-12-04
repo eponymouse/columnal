@@ -142,7 +142,7 @@ public class Utility
         for (int i = 0; i < a.size(); i++)
         {
             if (i >= b.size())
-                return -1; // A was lower
+                return 1; // A was larger
             Object ax = a.get(i);
             Object bx = b.get(i);
             int cmp;
@@ -161,7 +161,7 @@ public class Utility
         if (a.size() == b.size())
             return 0; // Same
         else
-            return 1; // B must have been longer
+            return -1; // B must have been longer
     }
 
     public static String getFracPart(Number number)
