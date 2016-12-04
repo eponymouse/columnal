@@ -20,7 +20,11 @@ public class PropLoadSaveExpression
     @Property
     public void testLoadSave(@From(GenExpression.class) Expression expression) throws InternalException, UserException
     {
-        Expression reloaded = Expression.parse(null, expression.save(true));
+        String saved = expression.save(true);
+        Expression reloaded = Expression.parse(null, saved);
         assertEquals(expression, reloaded);
+        String resaved = reloaded.save(true);
+        assertEquals(saved, resaved);
+        
     }
 }

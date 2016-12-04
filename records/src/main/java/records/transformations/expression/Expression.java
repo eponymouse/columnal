@@ -134,6 +134,12 @@ public abstract class Expression
         }
 
         @Override
+        public Expression visitEqualExpression(ExpressionParser.EqualExpressionContext ctx)
+        {
+            return new EqualExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+        }
+
+        @Override
         public Expression visitBracketedCompound(BracketedCompoundContext ctx)
         {
             return visitCompoundExpression(ctx.compoundExpression());
@@ -184,7 +190,7 @@ public abstract class Expression
             }
             else if (ctx.variable() != null)
             {
-                return me.new PatternMatchVariable(ctx.variable().UNQUOTED_IDENT().getText());
+                return me.new PatternMatchVariable(ctx.variable().getText().substring(1));
             }
             else if (ctx.expression() != null)
             {

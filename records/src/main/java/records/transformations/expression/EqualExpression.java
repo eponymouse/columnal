@@ -1,5 +1,9 @@
 package records.transformations.expression;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.BitvectorFormula;
 import org.sosy_lab.java_smt.api.BitvectorFormulaManager;
@@ -16,16 +20,12 @@ import utility.ExBiConsumer;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-
 /**
  * Created by neil on 30/11/2016.
  */
-public class NotEqualExpression extends BinaryOpExpression
+public class EqualExpression extends BinaryOpExpression
 {
-    public NotEqualExpression(Expression lhs, Expression rhs)
+    public EqualExpression(Expression lhs, Expression rhs)
     {
         super(lhs, rhs);
     }
@@ -33,7 +33,13 @@ public class NotEqualExpression extends BinaryOpExpression
     @Override
     protected String saveOp()
     {
-        return "!";
+        return "=";
+    }
+
+    @Override
+    public BinaryOpExpression copy(@Nullable Expression replaceLHS, @Nullable Expression replaceRHS)
+    {
+        return new EqualExpression(replaceLHS == null ? lhs : replaceLHS, replaceRHS == null ? rhs : replaceRHS);
     }
 
     @Override
@@ -47,13 +53,7 @@ public class NotEqualExpression extends BinaryOpExpression
     {
         List<Object> lhsVal = lhs.getValue(rowIndex, state);
         List<Object> rhsVal = rhs.getValue(rowIndex, state);
-        return Collections.singletonList(0 != Utility.compareLists(lhsVal, rhsVal));
-    }
-
-    @Override
-    public BinaryOpExpression copy(@Nullable Expression replaceLHS, @Nullable Expression replaceRHS)
-    {
-        return new NotEqualExpression(replaceLHS == null ? lhs : replaceLHS, replaceRHS == null ? rhs : replaceRHS);
+        return Collections.singletonList(0 == Utility.compareLists(lhsVal, rhsVal));
     }
 
     @Override
@@ -64,7 +64,7 @@ public class NotEqualExpression extends BinaryOpExpression
         if (lhsForm instanceof BitvectorFormula && rhsForm instanceof BitvectorFormula)
         {
             BitvectorFormulaManager m = formulaManager.getBitvectorFormulaManager();
-            return formulaManager.getBooleanFormulaManager().not(m.equal((BitvectorFormula)lhsForm, (BitvectorFormula)rhsForm));
+            return m.equal((BitvectorFormula)lhsForm, (BitvectorFormula)rhsForm);
         }
         throw new UnimplementedException();
     }

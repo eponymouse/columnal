@@ -80,4 +80,6 @@ public abstract class BinaryOpExpression extends Expression
         result = 31 * result + rhs.hashCode();
         return result;
     }
+    
+    public abstract BinaryOpExpression copy(@Nullable Expression replaceLHS, @Nullable Expression replaceRHS);
 }

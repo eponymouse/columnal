@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -10,6 +11,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
@@ -20,6 +22,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -36,6 +39,16 @@ public class MatchExpression extends Expression
         {
             this.patterns = patterns;
             this.outcome = outcome;
+        }
+
+        public List<Pattern> getPatterns()
+        {
+            return patterns;
+        }
+
+        public Expression getOutcome()
+        {
+            return outcome;
         }
 
         public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
@@ -65,6 +78,37 @@ public class MatchExpression extends Expression
                     return newState;
             }
             return null;
+        }
+
+        public String save()
+        {
+            return patterns.stream().map(p -> p.save()).collect(Collectors.joining(";")) + " ~ " + outcome.save(false);
+        }
+
+        public MatchClause copy(MatchExpression e)
+        {
+            return e.new MatchClause(patterns, outcome); //TODO deep copy patterns
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            MatchClause that = (MatchClause)o;
+
+            if (!patterns.equals(that.patterns)) return false;
+            return outcome.equals(that.outcome);
+
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = patterns.hashCode();
+            result = 31 * result + outcome.hashCode();
+            return result;
         }
     }
 
@@ -121,6 +165,33 @@ public class MatchExpression extends Expression
                 return ((Integer)val) == tagIndex ? (subPattern == null ? state : subPattern.match(value, next + 1, state)) : null;
             throw new InternalException("Unexpected type; should be integer for tag index but was " + value.get(next).getClass());
         }
+
+        @Override
+        public String save()
+        {
+            return OutputBuilder.quotedIfNecessary(constructor) + (subPattern == null ? "" : (":" + subPattern.save()));
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            PatternMatchConstructor that = (PatternMatchConstructor)o;
+
+            if (!constructor.equals(that.constructor)) return false;
+            return subPattern != null ? subPattern.equals(that.subPattern) : that.subPattern == null;
+
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = constructor.hashCode();
+            result = 31 * result + (subPattern != null ? subPattern.hashCode() : 0);
+            return result;
+        }
     }
 
     public static class PatternMatchExpression implements PatternMatch
@@ -151,6 +222,30 @@ public class MatchExpression extends Expression
         {
             throw new UnimplementedException();
         }
+
+        @Override
+        public String save()
+        {
+            return expression.save(false);
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            PatternMatchExpression that = (PatternMatchExpression)o;
+
+            return expression.equals(that.expression);
+
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return expression.hashCode();
+        }
     }
 
     public class PatternMatchVariable implements PatternMatch
@@ -174,6 +269,30 @@ public class MatchExpression extends Expression
         {
             return state.add(varName, value.subList(next, value.size()));
         }
+
+        @Override
+        public String save()
+        {
+            return "$" + OutputBuilder.quotedIfNecessary(varName);
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            PatternMatchVariable that = (PatternMatchVariable)o;
+
+            return varName.equals(that.varName);
+
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return varName.hashCode();
+        }
     }
 
     public static interface PatternMatch
@@ -181,6 +300,8 @@ public class MatchExpression extends Expression
         @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException;
 
         @Nullable EvaluateState match(List<Object> value, int next, EvaluateState state) throws InternalException;
+
+        String save();
     }
 
     public static class Pattern
@@ -223,6 +344,37 @@ public class MatchExpression extends Expression
             }
             return newState;
         }
+
+        public String save()
+        {
+            return pattern.save() + guards.stream().map(e -> " & " + e.save(false)).collect(Collectors.joining());
+        }
+
+        public PatternMatch getPattern()
+        {
+            return pattern;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            Pattern pattern1 = (Pattern)o;
+
+            if (!pattern.equals(pattern1.pattern)) return false;
+            return guards.equals(pattern1.guards);
+
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = pattern.hashCode();
+            result = 31 * result + guards.hashCode();
+            return result;
+        }
     }
 
     private final Expression expression;
@@ -233,6 +385,16 @@ public class MatchExpression extends Expression
     {
         this.expression = expression;
         this.clauses = Utility.<Function<MatchExpression, MatchClause>, MatchClause>mapList(clauses, f -> f.apply(this));
+    }
+
+    public Expression getExpression()
+    {
+        return expression;
+    }
+
+    public List<MatchClause> getClauses()
+    {
+        return clauses;
     }
 
     @Override
@@ -260,7 +422,8 @@ public class MatchExpression extends Expression
     @Override
     public String save(boolean topLevel)
     {
-        return "TODO";
+        String inner = expression.save(false) + " ? " + clauses.stream().map(c -> c.save()).collect(Collectors.joining(";"));
+        return topLevel ? inner : ("(" + inner + ")");
     }
 
     @Override
@@ -293,4 +456,24 @@ public class MatchExpression extends Expression
         throw new UnimplementedException();
     }
 
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        MatchExpression that = (MatchExpression)o;
+
+        if (!expression.equals(that.expression)) return false;
+        return clauses.equals(that.clauses);
+
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = expression.hashCode();
+        result = 31 * result + clauses.hashCode();
+        return result;
+    }
 }

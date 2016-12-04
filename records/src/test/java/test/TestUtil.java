@@ -10,9 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
-import records.data.Table;
 import records.data.TableId;
-import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
@@ -212,5 +210,15 @@ public class TestUtil
     public static Map<List<List<Object>>, Long> getRowFreq(RecordSet src)
     {
         return streamFlattened(src).collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+    }
+
+    public static String makeString(SourceOfRandomness r, GenerationStatus gs)
+    {
+        // Makes either totally random String from generator, or "awkward" string
+        // with things likely to trip up parser
+        if (r.nextBoolean())
+            return new StringGenerator().generate(r, gs);
+        else
+            return generateIdent(r);
     }
 }

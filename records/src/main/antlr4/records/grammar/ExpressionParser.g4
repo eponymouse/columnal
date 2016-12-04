@@ -23,13 +23,13 @@ andExpression :  expression (AND expression)+;
 orExpression :  expression (OR expression)+;
 compoundExpression : plusMinusExpression | timesExpression | divideExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression;
 
-variable : NEWVAR UNQUOTED_IDENT;
+variable : NEWVAR (STRING | UNQUOTED_IDENT);
 constructor : STRING | UNQUOTED_IDENT;
 patternMatch : constructor (CONS patternMatch)? | variable | expression;
 pattern : patternMatch (AND expression)*;
 
 matchClause : pattern (DELIM pattern)* MAPSTO expression;
-match : OPEN_BRACKET expression MATCH matchClause (DELIM matchClause)* CLOSE_BRACKET;
+match : expression MATCH matchClause (DELIM matchClause)*;
 
 bracketedCompound : OPEN_BRACKET compoundExpression CLOSE_BRACKET;
 bracketedMatch : OPEN_BRACKET match CLOSE_BRACKET;

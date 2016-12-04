@@ -112,7 +112,7 @@ public class OutputBuilder
     @OnThread(Tag.Any)
     public static String quotedIfNecessary(String s)
     {
-        if (StringUtils.isAlpha(s))
+        if (!s.isEmpty() && StringUtils.isAlpha(s))
             return s;
         else
             return quoted(s);
