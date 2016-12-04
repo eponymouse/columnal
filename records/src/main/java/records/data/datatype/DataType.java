@@ -111,17 +111,22 @@ public class DataType
         }
     }
 
-    public static interface DataTypeVisitor<R>
+    public static interface DataTypeVisitorEx<R, E extends Throwable>
     {
-        R number(NumberDisplayInfo displayInfo) throws InternalException, UserException;
-        R text() throws InternalException, UserException;
-        R date() throws InternalException, UserException;
-        R bool() throws InternalException, UserException;
+        R number(NumberDisplayInfo displayInfo) throws InternalException, E;
+        R text() throws InternalException, E;
+        R date() throws InternalException, E;
+        R bool() throws InternalException, E;
 
-        R tagged(List<TagType<DataType>> tags) throws InternalException, UserException;
-        //R tuple() throws InternalException, UserException;
+        R tagged(List<TagType<DataType>> tags) throws InternalException, E;
+        //R tuple() throws InternalException, E;
 
-        //R array() throws InternalException, UserException;
+        //R array() throws InternalException, E;
+    }
+
+    public static interface DataTypeVisitor<R> extends DataTypeVisitorEx<R, UserException>
+    {
+        
     }
 
     public static class SpecificDataTypeVisitor<R> implements DataTypeVisitor<R>
@@ -159,7 +164,7 @@ public class DataType
 
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
-    public final <R> R apply(DataTypeVisitor<R> visitor) throws InternalException, UserException
+    public final <R, E extends Throwable> R apply(DataTypeVisitorEx<R, E> visitor) throws InternalException, E
     {
         switch (kind)
         {

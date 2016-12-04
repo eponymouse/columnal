@@ -1,6 +1,5 @@
 package records.data;
 
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
@@ -8,7 +7,6 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
-import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 import java.util.List;
 
@@ -25,7 +23,7 @@ public class MemoryTemporalColumn extends Column
         super(rs);
         this.title = title;
         this.storage = new DateColumnStorage();
-        this.storage.addAllNoNull(list);
+        this.storage.addAll(list);
     }
 
     @Override

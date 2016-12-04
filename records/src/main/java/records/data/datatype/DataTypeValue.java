@@ -131,22 +131,29 @@ public class DataTypeValue extends DataType
     }
 
     @OnThread(Tag.Simulation)
-    public static interface DataTypeVisitorGet<R>
+    public static interface DataTypeVisitorGetEx<R, E extends Throwable>
     {
-        R number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException;
-        R text(GetValue<String> g) throws InternalException, UserException;
-        R bool(GetValue<Boolean> g) throws InternalException, UserException;
-        R date(GetValue<Temporal> g) throws InternalException, UserException;
+        R number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, E;
+        R text(GetValue<String> g) throws InternalException, E;
+        R bool(GetValue<Boolean> g) throws InternalException, E;
+        R date(GetValue<Temporal> g) throws InternalException, E;
 
-        R tagged(List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException;
-        //R tuple(List<DataType> types) throws InternalException, UserException;
+        R tagged(List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
+        //R tuple(List<DataType> types) throws InternalException, E;
 
-        //R array(DataType type) throws InternalException, UserException;
+        //R array(DataType type) throws InternalException, E;
     }
+
+    @OnThread(Tag.Simulation)
+    public static interface DataTypeVisitorGet<R> extends DataTypeVisitorGetEx<R, UserException>
+    {
+        
+    }
+    
 
     @SuppressWarnings("nullness")
     @OnThread(Tag.Simulation)
-    public final <R> R applyGet(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
+    public final <R, E extends Throwable> R applyGet(DataTypeVisitorGetEx<R, E> visitor) throws InternalException, E
     {
         switch (kind)
         {
@@ -173,9 +180,9 @@ public class DataTypeValue extends DataType
         @NonNull default T get(int index) throws UserException, InternalException { return getWithProgress(index, null); }
     }
 
-
+    
     @OnThread(Tag.Simulation)
-    public final List<Object> getCollapsed(int index) throws UserException, InternalException
+    public final List<Object> getCollapsed(int index) throws InternalException, UserException
     {
         return applyGet(new DataTypeVisitorGet<List<Object>>()
         {

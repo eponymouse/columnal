@@ -35,26 +35,18 @@ public class DateColumnStorage implements ColumnStorage<Temporal>
     }
 
     @Override
-    public void clear()
-    {
-        values.clear();
-        pool.clear();
-    }
-
-    @Override
     public Temporal get(int index) throws InternalException
     {
         return values.get(index);
     }
 
     @Override
-    public void addAll(List<@Nullable Temporal> items) throws InternalException
+    public void addAll(List<Temporal> items) throws InternalException
     {
         this.values.ensureCapacity(this.values.size() + items.size());
         for (Temporal t : items)
         {
-            if (t != null)
-                this.values.add(pool.pool(t));
+            this.values.add(pool.pool(t));
         }
     }
 

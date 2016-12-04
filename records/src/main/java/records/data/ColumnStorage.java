@@ -2,6 +2,7 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
+import records.error.UserException;
 
 import java.util.Collections;
 import java.util.List;
@@ -12,17 +13,12 @@ import java.util.List;
 public interface ColumnStorage<T>
 {
     public int filled();
-    public T get(int index) throws InternalException;
+    public T get(int index) throws InternalException, UserException;
     default public void add(@Nullable T item) throws InternalException
     {
-        addAll(Collections.singletonList(item));
+        if (item != null)
+            addAll(Collections.singletonList(item));
     }
-    public void addAll(List<@Nullable T> items) throws InternalException;
-    public void clear();
+    public void addAll(List<T> items) throws InternalException;
 
-    @SuppressWarnings("nullness")
-    default public void addAllNoNull(List<T> values) throws InternalException
-    {
-        addAll(values);
-    }
 }

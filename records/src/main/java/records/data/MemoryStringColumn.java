@@ -26,7 +26,7 @@ public class MemoryStringColumn extends Column
         super(recordSet);
         this.title = title;
         this.storage = new StringColumnStorage();
-        this.storage.addAllNoNull(values);
+        this.storage.addAll(values);
     }
 
     @Override

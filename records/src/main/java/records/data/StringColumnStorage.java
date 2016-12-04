@@ -32,14 +32,7 @@ public class StringColumnStorage implements ColumnStorage<String>
     {
         return values.size();
     }
-
-    @Override
-    public void clear()
-    {
-        values.clear();
-        pool.clear();
-    }
-
+    
     @Override
     public String get(int index) throws InternalException
     {
@@ -47,13 +40,11 @@ public class StringColumnStorage implements ColumnStorage<String>
     }
 
     @Override
-    public void addAll(List<@Nullable String> items) throws InternalException
+    public void addAll(List<String> items) throws InternalException
     {
         this.values.ensureCapacity(this.values.size() + items.size());
         for (String s : items)
         {
-            if (s == null)
-                s = "";
             this.values.add(pool.pool(s));
         }
     }

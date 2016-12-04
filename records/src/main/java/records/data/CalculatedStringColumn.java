@@ -21,9 +21,9 @@ public abstract class CalculatedStringColumn extends CalculatedColumn
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private DataTypeValue type;
     protected final StringColumnStorage cache;
-    public CalculatedStringColumn(RecordSet recordSet, ColumnId name, DataType copyType, Column... dependencies)
+    public CalculatedStringColumn(RecordSet recordSet, ColumnId name, DataType copyType)
     {
-        super(recordSet, name, dependencies);
+        super(recordSet, name);
         this.copyType = copyType;
         cache = new StringColumnStorage();
     }

@@ -22,7 +22,7 @@ public abstract class CalculatedColumn extends Column
 {
     private final ColumnId name;
 
-    public CalculatedColumn(RecordSet recordSet, ColumnId name, Column... dependencies)
+    public CalculatedColumn(RecordSet recordSet, ColumnId name)
     {
         super(recordSet);
         this.name = name;

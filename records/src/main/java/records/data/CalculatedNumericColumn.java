@@ -25,9 +25,9 @@ public abstract class CalculatedNumericColumn extends CalculatedColumn
     private DataTypeValue type;
     protected final NumericColumnStorage cache;
 
-    public CalculatedNumericColumn(RecordSet recordSet, ColumnId name, DataType copyType, Column... dependencies) throws InternalException, UserException
+    public CalculatedNumericColumn(RecordSet recordSet, ColumnId name, DataType copyType) throws InternalException, UserException
     {
-        super(recordSet, name, dependencies);
+        super(recordSet, name);
         this.copyType = copyType;
         cache = this.copyType.apply(new SpecificDataTypeVisitor<NumericColumnStorage>()
         {

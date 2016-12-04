@@ -494,26 +494,14 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     }
 
     @Override
-    public void addAll(List<@Nullable Number> items) throws InternalException
+    public void addAll(List<Number> items) throws InternalException
     {
         for (Number n : items)
         {
             add(n);
         }
     }
-
-    @Override
-    public void clear()
-    {
-        bytes = new byte[8];
-        shorts = null;
-        ints = null;
-        longs = null;
-        bigDecimals = null;
-        bigIntegers = null;
-        filled = 0;
-    }
-
+    
     public void add(@Nullable Number n) throws InternalException
     {
         if (n == null)

@@ -212,7 +212,7 @@ public class SummaryStatistics extends Transformation
                         {
                             if (summaryType == SummaryType.COUNT)
                                 return countColumn(srcGet);
-                            return rs -> new CalculatedNumericColumn(rs, name, srcCol.getType(), srcCol)
+                            return rs -> new CalculatedNumericColumn(rs, name, srcCol.getType())
                             {
                                 @Override
                                 protected void fillNextCacheChunk() throws UserException, InternalException
@@ -242,7 +242,7 @@ public class SummaryStatistics extends Transformation
                         {
                             if (summaryType == SummaryType.COUNT)
                                 return countColumn(srcGet);
-                            return rs -> new CalculatedNumericColumn(rs, name, srcCol.getType(), srcCol)
+                            return rs -> new CalculatedNumericColumn(rs, name, srcCol.getType())
                             {
                                 @Override
                                 protected void fillNextCacheChunk() throws UserException, InternalException
@@ -271,7 +271,7 @@ public class SummaryStatistics extends Transformation
                         {
                             if (summaryType == SummaryType.COUNT)
                                 return countColumn(srcGet);
-                            return rs -> new CalculatedStringColumn(rs, name, srcCol.getType(), srcCol)
+                            return rs -> new CalculatedStringColumn(rs, name, srcCol.getType())
                             {
 
                                 @Override
@@ -298,7 +298,7 @@ public class SummaryStatistics extends Transformation
 
                         private <T> FunctionInt<RecordSet, Column> countColumn(GetValue<T> srcGet)
                         {
-                            return rs -> new CalculatedNumericColumn(rs, name, DataType.INTEGER, srcCol)
+                            return rs -> new CalculatedNumericColumn(rs, name, DataType.INTEGER)
                             {
                                 @Override
                                 protected void fillNextCacheChunk() throws UserException, InternalException
@@ -318,7 +318,7 @@ public class SummaryStatistics extends Transformation
                                 return countColumn(getTag); // Just need to count any entry
                             if (summaryType == SummaryType.MEAN || summaryType == SummaryType.SUM)
                             {
-                                return rs -> new CalculatedNumericColumn(rs, name, DataType.INTEGER, srcCol)
+                                return rs -> new CalculatedNumericColumn(rs, name, DataType.INTEGER)
                                 {
                                     @Override
                                     protected void fillNextCacheChunk() throws UserException, InternalException
@@ -328,7 +328,7 @@ public class SummaryStatistics extends Transformation
                                     }
                                 };
                             }
-                            return rs -> new CalculatedTaggedColumn(rs, name, tagTypes, srcCol)
+                            return rs -> new CalculatedTaggedColumn(rs, name, tagTypes)
                             {
                                 @Override
                                 protected void fillNextCacheChunk() throws UserException, InternalException
@@ -876,15 +876,15 @@ public class SummaryStatistics extends Transformation
 
     private static <T, R, S> void applyFold(ColumnStorage<S> cache, Function<R, S> convert, FoldOperation<T, R> fold, Column srcCol, GetValue<T> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
     {
-        cache.addAllNoNull(Utility.mapList(fold.start(), convert));
+        cache.addAll(Utility.mapList(fold.start(), convert));
         for (int i = 0; srcCol.indexValid(i); i++)
         {
             if (splitIndexes[i] != index)
                 continue;
 
-            cache.addAllNoNull(Utility.mapList(fold.process(srcGet.get(i), i), convert));
+            cache.addAll(Utility.mapList(fold.process(srcGet.get(i), i), convert));
         }
-        cache.addAllNoNull(Utility.mapList(fold.end(), convert));
+        cache.addAll(Utility.mapList(fold.end(), convert));
     }
 
     private static void applyFold(CalculatedTaggedColumn c, FoldOperation<Integer, List<Object>> fold, Column srcCol, GetValue<Integer> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
