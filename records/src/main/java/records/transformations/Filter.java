@@ -413,7 +413,10 @@ public class Filter extends Transformation
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
             String expr = rawField.getText();
-            return () -> new Filter(mgr, thisTableId, srcTableId, Expression.parse(null, expr));
+            if (expr.isEmpty())
+                expr = "true";
+            String exprFinal = expr;
+            return () -> new Filter(mgr, thisTableId, srcTableId, Expression.parse(null, exprFinal));
         }
 
         @Override
