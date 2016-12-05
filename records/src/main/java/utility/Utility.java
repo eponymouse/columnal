@@ -267,6 +267,27 @@ public class Utility
         return new BigDecimal(number);
     }
 
+    /**
+     * Things like a00, abcd, random unicode emoji, return true
+     * Things like 0aa, a+0, a.0, "a a" return false
+     *
+     * This method is used both to check for valid variable names and
+     * what can be printed without needing quotes (same concept, essentially)
+     *
+     *
+     * @param s
+     * @return
+     */
+    public static boolean validUnquoted(String s)
+    {
+        if (s.isEmpty() || s.equals("true") || s.equals("false"))
+            return false;
+        int firstCodepoint = s.codePointAt(0);
+        if (!Character.isAlphabetic(firstCodepoint))
+            return false;
+        return s.codePoints().skip(1).allMatch(Character::isLetterOrDigit);
+    }
+
     public static class ReadState
     {
         public long startFrom;

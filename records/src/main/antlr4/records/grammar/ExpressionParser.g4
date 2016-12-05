@@ -10,7 +10,9 @@ numericLiteral : NUMBER;
 stringLiteral : STRING;
 booleanLiteral : TRUE | FALSE;
 
-terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral;
+varRef  : UNQUOTED_IDENT;
+
+terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef;
 
 plusMinusExpression :  expression (PLUS_MINUS expression)+;
 timesExpression :  expression (TIMES expression)+;
@@ -23,8 +25,8 @@ andExpression :  expression (AND expression)+;
 orExpression :  expression (OR expression)+;
 compoundExpression : plusMinusExpression | timesExpression | divideExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression;
 
-variable : NEWVAR (STRING | UNQUOTED_IDENT);
-constructor : STRING | UNQUOTED_IDENT;
+variable : NEWVAR UNQUOTED_IDENT;
+constructor : CONSTRUCTOR (STRING | UNQUOTED_IDENT);
 patternMatch : constructor (CONS patternMatch)? | variable | expression;
 pattern : patternMatch (AND expression)*;
 

@@ -1,0 +1,39 @@
+Target Initial Set
+===
+
+ - CSV import
+ - CSV export
+ - Export to human-readable
+ - Structured expression editor
+   - Include ability to multi-select columns and add all together
+ - Expressions, including functions for:
+   - String<->text conversion
+   - String trimming, substring
+   - String concatenation
+   - Date manipulation
+ - Date/time as well as just date
+ - Saving/loading pipelines
+ - Display operations: auto-arrange, show only changed columns
+ - Operations:
+   - Manual data entry (entirely new table, adding columns to existing).  Allow freezing?
+   - Removing/hiding columns
+   - Retitling columns
+   - Sort
+   - Transform-each (map), both adding new column and hiding existing
+   - Fold?
+   - Scan? (for running totals)
+   - Filter
+   - Summary (count, sum, average, min max) with split and condition
+   - Quartiles/median/etc
+   - Mode
+
+Professional Version
+===
+
+ - HTML import
+ - Excel import (both data, and data+formulae)
+ - Excel export (both data, and data+formulae)
+ - Graphing
+ - Multi-source operations (e.g. lookup, merge) -- or should this be free?
+ - Tuples and arrays of data
+

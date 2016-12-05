@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import edu.emory.mathcs.backport.java.util.Collections;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import records.error.InternalException;
 import records.transformations.expression.BinaryOpExpression;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
@@ -85,7 +86,16 @@ public class GenExpression extends Generator<Expression>
     {
         return r.choose(Arrays.<Supplier<MatchExpression.PatternMatch>>asList(
             () -> new MatchExpression.PatternMatchExpression(genDepth(r, depth, gs)),
-            () -> e.new PatternMatchVariable(TestUtil.makeString(r, gs)),
+            () -> {
+                try
+                {
+                    return e.new PatternMatchVariable(TestUtil.makeUnquotedIdent(r, gs));
+                }
+                catch (InternalException ex)
+                {
+                    throw new RuntimeException(ex);
+                }
+            },
             () -> e.new PatternMatchConstructor(TestUtil.makeString(r, gs), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1))
         )).get();
     }
@@ -103,9 +113,11 @@ public class GenExpression extends Generator<Expression>
         if (larger instanceof MatchExpression)
         {
             MatchExpression e = (MatchExpression)larger;
+            alt.add(e.getExpression());
             for (Expression shrunk : doShrink(random, e.getExpression()))
                 alt.add(new MatchExpression(shrunk, Utility.<MatchExpression.MatchClause, Function<MatchExpression, MatchExpression.MatchClause>>mapList(e.getClauses(), c -> c::copy)));
             alt.add(new MatchExpression(e.getExpression(), e.getClauses().stream().<Function<MatchExpression, MatchExpression.MatchClause>>map((MatchExpression.MatchClause c) -> {
+                alt.add(c.getOutcome());
                 return (MatchExpression ne) -> ne.new MatchClause(Utility.<MatchExpression.Pattern, MatchExpression.Pattern>mapList(c.getPatterns(), p -> shrinkPattern(random, p, ne)), random.choose(doShrink(random, c.getOutcome())));
             }).collect(Collectors.<Function<MatchExpression, MatchExpression.MatchClause>>toList())));
         }

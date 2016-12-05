@@ -1,6 +1,5 @@
 package records.loadsave;
 
-import org.apache.commons.lang.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.TableId;
@@ -112,7 +111,7 @@ public class OutputBuilder
     @OnThread(Tag.Any)
     public static String quotedIfNecessary(String s)
     {
-        if (!s.isEmpty() && StringUtils.isAlpha(s))
+        if (Utility.validUnquoted(s))
             return s;
         else
             return quoted(s);

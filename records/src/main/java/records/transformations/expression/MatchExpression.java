@@ -169,7 +169,7 @@ public class MatchExpression extends Expression
         @Override
         public String save()
         {
-            return OutputBuilder.quotedIfNecessary(constructor) + (subPattern == null ? "" : (":" + subPattern.save()));
+            return "\\" + OutputBuilder.quotedIfNecessary(constructor) + (subPattern == null ? "" : (":" + subPattern.save()));
         }
 
         @Override
@@ -252,9 +252,13 @@ public class MatchExpression extends Expression
     {
         private final String varName;
 
-        public PatternMatchVariable(String varName)
+        public PatternMatchVariable(String varName) throws InternalException
         {
             this.varName = varName;
+            if (!Utility.validUnquoted(varName))
+            {
+                throw new InternalException("Invalid variable name: \"" + varName + "\"");
+            }
         }
 
         @Override

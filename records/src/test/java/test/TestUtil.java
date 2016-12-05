@@ -17,6 +17,7 @@ import records.grammar.MainLexer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -220,5 +221,16 @@ public class TestUtil
             return new StringGenerator().generate(r, gs);
         else
             return generateIdent(r);
+    }
+
+    public static String makeUnquotedIdent(SourceOfRandomness r, GenerationStatus gs)
+    {
+        String s;
+        do
+        {
+            s = makeString(r, gs);
+        }
+        while (!Utility.validUnquoted(s));
+        return s;
     }
 }

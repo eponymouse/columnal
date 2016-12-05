@@ -28,13 +28,14 @@ CONS: ':';
 DELIM : ';';
 MAPSTO : '~';
 NEWVAR : '$';
+CONSTRUCTOR : '\\';
 
 NUMBER : [+-]? [0-9]+ ('.' [0-9]+)?;
 
 TRUE: 'true';
 FALSE: 'false';
 
-UNQUOTED_IDENT : ~[ \t\n\r"()@+-/*&|=?:;~$!<>]+;
+UNQUOTED_IDENT : ~[ \t\n\r"()@+-/*&|=?:;~$!<>\\]+ {utility.Utility.validUnquoted(getText())}?;
 
 
 

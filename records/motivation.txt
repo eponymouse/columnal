@@ -1,14 +1,25 @@
 Ease
 ====
 
-Most people use spreadsheets for things which it is not the right model for (e.g. difficulty in arranging the sheet) or that it makes very awkward (e.g. filters, rolling averages/selecting every Nth item).  We can make an easier interface using classic functional operations: map, filter, reduce, etc
+Most people use spreadsheets for things which it is not the right model for (e.g. difficulty in arranging the sheet) or that it makes very awkward (e.g. filters, rolling averages/selecting every Nth item, sorting and reverting).  We can make an easier interface using classic functional operations: map, filter, reduce, etc
 
 Provenance
 ===
 
 Many spreadsheets become hard to follow, partly because of Ease item, and partly because it's hard to see at a glance what operations are being performed and what special cases there are (because every cell is editable).  Arranging it in terms of source data, operations and resulting states is much better, and also makes it possible to save transformations to run on alternate sets of source data.
 
+Transparency
+===
+
+Spreadsheets are hard to use with version control because you can't use standard diff/merge tools.  It should be possible to use a format designed for easier diffing and merging.
+
+Safety
+===
+
+In Excel it's easy to confuse dates with numbers by formatting differently or numbers for strings.  Instead we have typed columns which prevent confusion.
+
 Scalability
 ===
 
 Excel has a fixed limit on the number of rows.  It should be possible to increase this, and to decouple computation from display; as the data size increases, seeing the data is much less important than being able to calculate with the data.  Additionally, if we use lazy evaluation we should be able to make the interface faster (by calculating data on demand) and handle larger data sets.
+

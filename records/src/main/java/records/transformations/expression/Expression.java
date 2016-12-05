@@ -173,7 +173,14 @@ public abstract class Expression
                     for (PatternContext patternContext : matchClauseContext.pattern())
                     {
                         List<Expression> guards = Utility.<ExpressionContext, Expression>mapList(patternContext.expression(), this::visitExpression);
-                        patterns.add(new Pattern(processPatternMatch(me, patternContext.patternMatch()), guards));
+                        try
+                        {
+                            patterns.add(new Pattern(processPatternMatch(me, patternContext.patternMatch()), guards));
+                        }
+                        catch (InternalException e)
+                        {
+                            throw new RuntimeException(e);
+                        }
                     }
                     return me.new MatchClause(patterns, visitExpression(matchClauseContext.expression()));
                 });
@@ -181,12 +188,12 @@ public abstract class Expression
             return new MatchExpression(visitExpression(ctx.expression()), clauses);
         }
 
-        private PatternMatch processPatternMatch(MatchExpression me, PatternMatchContext ctx)
+        private PatternMatch processPatternMatch(MatchExpression me, PatternMatchContext ctx) throws InternalException
         {
             if (ctx.constructor() != null)
             {
                 PatternMatchContext subPattern = ctx.patternMatch();
-                return me.new PatternMatchConstructor(ctx.constructor().getText(), subPattern == null ? null : processPatternMatch(me, subPattern));
+                return me.new PatternMatchConstructor(ctx.constructor().getText().substring(1), subPattern == null ? null : processPatternMatch(me, subPattern));
             }
             else if (ctx.variable() != null)
             {
