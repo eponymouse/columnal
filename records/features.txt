@@ -11,7 +11,7 @@ Target Initial Set
    - String trimming, substring
    - String concatenation
    - Date manipulation
- - Date/time as well as just date
+ - Date/time and time as well as just date
  - Saving/loading pipelines
  - Display operations: auto-arrange, show only changed columns
  - Operations:
@@ -26,6 +26,7 @@ Target Initial Set
    - Summary (count, sum, average, min max) with split and condition
    - Quartiles/median/etc
    - Mode
+   - Add row number column
 
 Professional Version
 ===
