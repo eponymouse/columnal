@@ -48,6 +48,7 @@ import records.data.Table;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.BasicLexer;
+import records.gui.DisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -286,6 +287,17 @@ public class Utility
         if (!Character.isAlphabetic(firstCodepoint))
             return false;
         return s.codePoints().skip(1).allMatch(Character::isLetterOrDigit);
+    }
+
+    public static DisplayValue toDisplayValue(Object o)
+    {
+        if (o instanceof Boolean)
+            return new DisplayValue((Boolean)o);
+        else if (o instanceof Number)
+            return new DisplayValue((Number)o, "", 0);
+        else if (o instanceof String)
+            return new DisplayValue((String)o);
+        throw new RuntimeException("Unexpected toDisplayValue type: " + o.getClass());
     }
 
     public static class ReadState

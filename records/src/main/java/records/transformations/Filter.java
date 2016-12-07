@@ -11,6 +11,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.ShutdownManager;
 import org.sosy_lab.common.configuration.Configuration;
@@ -224,8 +225,8 @@ public class Filter extends Transformation
         private final @Nullable Table src;
         private final List<ColumnId> allColumns = new ArrayList<>();
         private final TextField rawField;
-        private final ObservableList<List<DisplayValue>> srcHeaderAndData;
-        private final ObservableList<List<DisplayValue>> destHeaderAndData;
+        private final ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData;
+        private final ObservableList<Pair<String, List<DisplayValue>>> destHeaderAndData;
 
         @OnThread(Tag.FXPlatform)
         public Editor(@Nullable TableId thisTableId, TableId srcTableId, @Nullable Table src)
@@ -274,7 +275,7 @@ public class Filter extends Transformation
                 SolverContext ctx = SolverContextFactory.createSolverContext(
                     config, logger, shutdown.getNotifier(), Solvers.Z3);
 
-                Map<Pair<@Nullable TableId, ColumnId>, Formula> vars = new HashMap<>();
+                Map<Pair<@Nullable TableId, ColumnId>, @NonNull Formula> vars = new HashMap<>();
                 BooleanFormula f = (BooleanFormula)expression.toSolver(ctx.getFormulaManager(), src.getData(), vars);
 
                 System.out.println("Example: " + f.toString());
@@ -293,22 +294,28 @@ public class Filter extends Transformation
                     boolean isUnsat = prover.isUnsat();
                     System.out.println("Satisfiable: " + !isUnsat);
                     if (!isUnsat) {
+                        srcHeaderAndData.clear();
                         Model model = prover.getModel();
-                        for (Entry<Pair<@Nullable TableId, ColumnId>, Formula> var : vars.entrySet())
+                        for (Entry<Pair<@Nullable TableId, ColumnId>, @NonNull Formula> var : vars.entrySet())
                         {
-                            System.out.println("Variable " + var.getKey() + " = " + show(model.evaluate(var.getValue())));
+                            Object evaluated = model.evaluate(var.getValue());
+                            if (evaluated != null)
+                            {
+                                System.out.println("Variable " + var.getKey() + " = " + show(evaluated));
+                                srcHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(Utility.toDisplayValue(show(evaluated)))));
+                            }
                         }
                     }
                 }
                 try (ProverEnvironment prover = ctx.newProverEnvironment(ProverOptions.GENERATE_MODELS)) {
                     prover.addConstraint(ctx.getFormulaManager().getBooleanFormulaManager().not(f));
-                    /*for (Formula var : vars.values())
+                    for (Formula var : vars.values())
                     {
                         if (var instanceof BitvectorFormula)
                         {
                             prover.addConstraint(asciiRange(ctx.getFormulaManager().getBooleanFormulaManager(), ctx.getFormulaManager().getBitvectorFormulaManager(), (BitvectorFormula)var, 0));
                         }
-                    }*/
+                    }
 
                     boolean isUnsat = prover.isUnsat();
                     System.out.println("Satisfiable negation: " + !isUnsat);

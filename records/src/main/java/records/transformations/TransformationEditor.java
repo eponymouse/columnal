@@ -3,7 +3,6 @@ package records.transformations;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -16,6 +15,7 @@ import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
@@ -28,8 +28,10 @@ import records.gui.DisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.SimulationSupplier;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -90,38 +92,45 @@ public abstract class TransformationEditor
     }
 
     @SuppressWarnings({"keyfor", "intern"})
-    protected static TableView<List<DisplayValue>> createExampleTable(ObservableList<List<DisplayValue>> headerAndData)
+    protected static TableView<List<DisplayValue>> createExampleTable(ObservableList<Pair<String, List<DisplayValue>>> headerAndData)
     {
         TableView<List<DisplayValue>> t = new TableView<>();
         setHeaderAndData(t, headerAndData);
-        headerAndData.addListener((ListChangeListener<? super List<DisplayValue>>) c -> setHeaderAndData(t, headerAndData));
+        headerAndData.addListener((ListChangeListener<? super Pair<String, List<DisplayValue>>>) c -> setHeaderAndData(t, headerAndData));
         return t;
     }
 
-    private static void setHeaderAndData(TableView<List<DisplayValue>> t, ObservableList<List<DisplayValue>> headerAndData)
+    private static void setHeaderAndData(TableView<List<DisplayValue>> t, List<Pair<String, List<DisplayValue>>> headerAndData)
     {
         t.getColumns().clear();
         t.getItems().clear();
+        List<List<DisplayValue>> rows = new ArrayList<>();
+        // Arrange into rows:
+        for (Pair<String, List<DisplayValue>> h : headerAndData)
+        {
+            for (int i = 0; i < h.getSecond().size(); i++)
+            {
+                while (rows.size() <= i)
+                    rows.add(new ArrayList<>());
+                rows.get(i).add(h.getSecond().get(i));
+            }
+        }
+        t.getItems().setAll(rows);
+        
         for (int i = 0; i < headerAndData.size(); i++)
         {
-            if (i == 0)
-            {
-                List<DisplayValue> header = headerAndData.get(i);
-                for (int j = 0; j < header.size(); j++)
-                {
-                    int jFinal = j;
-                    TableColumn<List<DisplayValue>, DisplayValue> column = new TableColumn<List<DisplayValue>, DisplayValue>(header.get(j).toString());
-                    column.setCellValueFactory(cdf -> new ReadOnlyObjectWrapper(cdf.getValue().get(jFinal)));
-                    t.getColumns().add(column);
-                }
-            }
-            else
-                t.getItems().add(headerAndData.get(i));
+            Pair<String, List<DisplayValue>> h = headerAndData.get(i);
+            TableColumn<List<DisplayValue>, DisplayValue> column = new TableColumn<List<DisplayValue>, DisplayValue>(h.getFirst());
+            int colIndex = i;
+            column.setCellValueFactory(cdf -> new ReadOnlyObjectWrapper(cdf.getValue().get(colIndex)));
+            t.getColumns().add(column);
         }
     }
 
-    protected static Node createExplanation(ObservableList<List<DisplayValue>> srcHeaderAndData, ObservableList<List<DisplayValue>> destHeaderAndData, String explanation)
+    protected static Node createExplanation(ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData, ObservableList<Pair<String, List<DisplayValue>>> destHeaderAndData, String explanation)
     {
-        return new BorderPane(new Label("->"), null, createExampleTable(destHeaderAndData), new Text(explanation), createExampleTable(srcHeaderAndData));
+        TextFlow textFlow = new TextFlow(new Text(explanation));
+        textFlow.setPrefWidth(500);
+        return new BorderPane(new Label("->"), null, createExampleTable(destHeaderAndData), textFlow, createExampleTable(srcHeaderAndData));
     }
 }

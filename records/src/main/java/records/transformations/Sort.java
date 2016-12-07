@@ -43,6 +43,7 @@ import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 
@@ -367,8 +368,8 @@ public class Sort extends Transformation
             ListView<Optional<ColumnId>> sortByView = Utility.readOnlyListView(sortBy, c -> !c.isPresent() ? "Original order" : c.get() + ", then if equal, by");
             colsAndSort.getChildren().add(sortByView);
 
-            ObservableList<List<DisplayValue>> srcHeaderAndData = FXCollections.observableArrayList();
-            ObservableList<List<DisplayValue>> destHeaderAndData = FXCollections.observableArrayList();
+            ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData = FXCollections.observableArrayList();
+            ObservableList<Pair<String, List<DisplayValue>>> destHeaderAndData = FXCollections.observableArrayList();
             List<Column> allColumns = new ArrayList<>();
             try
             {
@@ -416,7 +417,7 @@ public class Sort extends Transformation
         }
 
         @OnThread(Tag.FXPlatform)
-        private void updateExample(List<Column> allColumns, List<Column> sortBy, ObservableList<List<DisplayValue>> srcHeaderAndData, ObservableList<List<DisplayValue>> destHeaderAndData) throws UserException, InternalException
+        private void updateExample(List<Column> allColumns, List<Column> sortBy, ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData, ObservableList<Pair<String, List<DisplayValue>>> destHeaderAndData) throws UserException, InternalException
         {
             // We try to take 1 not involved and 2 which are involved.
             // If there aren't enough we first take more involved, then more which aren't, then given up
@@ -458,7 +459,7 @@ public class Sort extends Transformation
                 int index = 0;
                 for (List<List<Object>> row : data)
                 {
-                    row.add(DataTypeUtility.generateExample(c.getType(), index++));
+                    row.add(DataTypeUtility.generateExample(c.getType(), (index++ + row.size()) % 4));
                 }
             }
             // Sort it to get result:
@@ -492,9 +493,25 @@ public class Sort extends Transformation
                 unsorted.add(data.get(0));
             }
             // Then produce unsorted version for source:
-            List<DisplayValue> header = Utility.<Column, DisplayValue>mapList(exampleColumns, c -> new DisplayValue(c.getName().toString()));
-            destHeaderAndData.setAll(Utility.consList(header, DataTypeUtility.displayAll(exampleColumnTypes, data)));
-            srcHeaderAndData.setAll(Utility.consList(header, DataTypeUtility.displayAll(exampleColumnTypes, unsorted)));
+            List<Pair<String, List<DisplayValue>>> destCols = new ArrayList<>();
+            List<Pair<String, List<DisplayValue>>> srcCols = new ArrayList<>();
+            for (int i = 0; i < exampleColumns.size(); i++)
+            {
+                List<DisplayValue> sortedCol = new ArrayList<>();
+                for (List<List<Object>> row : data)
+                {
+                    sortedCol.add(DataTypeUtility.display(exampleColumnTypes.get(i), row.get(i)));
+                }
+                List<DisplayValue> unsortedCol = new ArrayList<>();
+                for (List<List<Object>> row : unsorted)
+                {
+                    unsortedCol.add(DataTypeUtility.display(exampleColumnTypes.get(i), row.get(i)));
+                }
+                destCols.add(new Pair<>(exampleColumns.get(i).getName().toString(), sortedCol));
+                srcCols.add(new Pair<>(exampleColumns.get(i).getName().toString(), unsortedCol));
+            }
+            destHeaderAndData.setAll(destCols);
+            srcHeaderAndData.setAll(srcCols);
         }
 
         @Override
