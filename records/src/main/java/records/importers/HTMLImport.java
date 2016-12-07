@@ -7,6 +7,7 @@ import org.jsoup.select.Elements;
 import records.data.Column;
 import records.data.DataSource;
 import records.data.ImmediateDataSource;
+import records.data.KnownLengthRecordSet;
 import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
 import records.data.RecordSet;
@@ -94,19 +95,7 @@ public class HTMLImport
 
             vals = null; // Make sure we don't keep a reference
             // Not because we null it, but because we make it non-final.
-            results.add(new ImmediateDataSource(mgr, new RecordSet(htmlFile.getName(), columns) {
-                @Override
-                public final boolean indexValid(int index) throws UserException
-                {
-                    return index < getLength();
-                }
-
-                @Override
-                public int getLength() throws UserException
-                {
-                    return len;
-                }
-            }));
+            results.add(new ImmediateDataSource(mgr, new KnownLengthRecordSet(htmlFile.getName(), columns, len)));
 
         }
         return results;

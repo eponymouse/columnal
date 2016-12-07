@@ -7,23 +7,23 @@ item : ~NEWLINE;
 tableId : item;
 importType : item;
 filePath : item;
-dataSourceLinkHeader : DATA tableId LINKED importType filePath NEWLINE;
-dataSourceImmedate : DATA tableId detail;
+dataSourceLinkHeader : DATA tableId LINKED importType filePath dataFormat;
+dataSourceImmediate : DATA tableId dataFormat VALUES detail VALUES NEWLINE;
 
-dataSource : (dataSourceLinkHeader | (dataSourceImmedate detail NEWLINE)) dataFormat;
+dataSource : dataSourceLinkHeader | dataSourceImmediate;
 
 transformationName : item;
 sourceName : item;
 transformation : TRANSFORMATION tableId transformationName NEWLINE SOURCE sourceName+ NEWLINE detail NEWLINE;
 
-detail: BEGIN DETAIL_LINE+ DETAIL_END;
+detail: BEGIN DETAIL_LINE* DETAIL_END;
 
 numRows : item;
-dataFormat : FORMAT (SKIP numRows)? BEGIN NEWLINE columnFormat+ END FORMAT NEWLINE;
+dataFormat : FORMAT (SKIPROWS numRows)? detail FORMAT NEWLINE;
 
-columnFormat : columnType item NEWLINE;
+//columnFormat : columnType item NEWLINE;
 
-columnType : TEXT | BLANK | NUMBER STRING item item | DATE STRING;
+//columnType : TEXT | BLANK | NUMBER STRING item item | DATE STRING;
 
 blank : NEWLINE;
 

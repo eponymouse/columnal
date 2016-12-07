@@ -8,6 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.DataSource;
 import records.data.ImmediateDataSource;
+import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.datatype.DataTypeValue;
@@ -50,14 +51,7 @@ public class GenTable extends Generator<Table>
                 columns.add(rs -> genColumn.generate(sourceOfRandomness, generationStatus).apply(length, rs));
             }
 
-            RecordSet data = new RecordSet("GenRS", columns)
-            {
-                @Override
-                public boolean indexValid(int index) throws UserException, InternalException
-                {
-                    return index < length;
-                }
-            };
+            RecordSet data = new KnownLengthRecordSet("GenRS", columns, length);
             return new ImmediateDataSource(DummyManager.INSTANCE, data);
         }
         catch (InternalException | UserException e)

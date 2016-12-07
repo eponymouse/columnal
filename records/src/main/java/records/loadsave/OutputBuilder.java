@@ -136,11 +136,10 @@ public class OutputBuilder
         return finished;
     }
 
-    // Outputs a row of an entire data set
+    // Outputs an element of an entire data set
     @OnThread(Tag.Simulation)
-    public synchronized void data(DataTypeValue type, int index)
+    public synchronized void data(DataTypeValue type, int index) throws UserException, InternalException
     {
-        Utility.alertOnError_(() -> {
             cur().add(type.applyGet(new DataTypeVisitorGet<String>()
             {
                 @Override
@@ -178,7 +177,6 @@ public class OutputBuilder
                     return g.get(index).toString();
                 }
             }));
-        });
     }
 
     // Don't forget, this will get an extra space added to it as spacing

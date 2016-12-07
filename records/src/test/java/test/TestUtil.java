@@ -233,4 +233,16 @@ public class TestUtil
         while (!Utility.validUnquoted(s));
         return s;
     }
+
+    public static List<ColumnId> generateColumnIds(SourceOfRandomness r, int numColumns)
+    {
+        List<ColumnId> columnIds = new ArrayList<>();
+        while (columnIds.size() < numColumns)
+        {
+            ColumnId c = generateColumnId(r);
+            if (!columnIds.contains(c))
+                columnIds.add(c);
+        }
+        return columnIds;
+    }
 }

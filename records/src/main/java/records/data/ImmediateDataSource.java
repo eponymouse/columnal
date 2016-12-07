@@ -26,6 +26,12 @@ public class ImmediateDataSource extends DataSource
         this.data = data;
     }
 
+    public ImmediateDataSource(TableManager mgr, TableId tableId, RecordSet data)
+    {
+        super(mgr, tableId);
+        this.data = data;
+    }
+
     @Override
     public @OnThread(Tag.Any) RecordSet getData()
     {
@@ -40,7 +46,9 @@ public class ImmediateDataSource extends DataSource
         //dataSource : (dataSourceLinkHeader | (dataSourceImmedate immediateDataLine* END DATA NEWLINE)) dataFormat;
 
         OutputBuilder b = new OutputBuilder();
-        b.t(MainLexer.DATA).id(getId()).begin().nl();
+        b.t(MainLexer.DATA).id(getId()).t(MainLexer.FORMAT).begin().nl();
+        b.kw("TODO:dataformat").nl().end().t(MainLexer.FORMAT).nl();
+        b.t(MainLexer.VALUES).begin().nl();
 
         Workers.onWorkerThread("Fetching data for save", () -> {
             Utility.alertOnError_(() -> {
@@ -53,7 +61,9 @@ public class ImmediateDataSource extends DataSource
                 }
             });
             Platform.runLater(() -> {
-                b.end().t(MainLexer.DATA).nl();
+                b.end().t(MainLexer.VALUES).nl();
+                savePosition(b);
+                b.end().id(getId()).nl();
                 then.consume(b.toString());
             });
         });

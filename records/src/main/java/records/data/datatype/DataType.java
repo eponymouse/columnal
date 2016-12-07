@@ -7,6 +7,9 @@ import org.checkerframework.checker.units.qual.K;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
 import records.data.Column.ProgressListener;
+import records.data.ColumnId;
+import records.data.MemoryStringColumn;
+import records.data.RecordSet;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -47,7 +50,6 @@ import java.util.stream.Collectors;
  */
 public class DataType
 {
-
     // Flattened ADT.  kind is the head tag, other bits are null/non-null depending:
     public static enum Kind {NUMBER, TEXT, DATE, BOOLEAN, TAGGED }
     final Kind kind;
@@ -65,6 +67,7 @@ public class DataType
     public static final DataType INTEGER = NUMBER;
     public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null);
     public static final DataType TEXT = new DataType(Kind.TEXT, null, null);
+    public static final DataType DATE = new DataType(Kind.DATE, null, null);
 
     public static class NumberDisplayInfo
     {
@@ -443,5 +446,17 @@ public class DataType
             return noDups.iterator().next();
         onError.accept("Differing types: " + noDups.stream().map(Object::toString).collect(Collectors.joining(" and ")));
         return null;
+    }
+
+    @OnThread(Tag.Simulation)
+    public Column makeImmediateColumn(RecordSet rs, ColumnId columnId, List<List<String>> allData, int columnIndex) throws InternalException
+    {
+        //TODO other types
+        List<String> column = new ArrayList<>(allData.size());
+        for (List<String> row : allData)
+        {
+            column.add(row.get(columnIndex));
+        }
+        return new MemoryStringColumn(rs, columnId, column);
     }
 }
