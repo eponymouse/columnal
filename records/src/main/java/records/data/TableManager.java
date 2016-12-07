@@ -12,6 +12,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -20,8 +21,6 @@ import java.util.concurrent.atomic.AtomicInteger;
 @OnThread(Tag.Any)
 public class TableManager
 {
-    @OnThread(value = Tag.Any,requireSynchronized = true)
-    private int nextId = 1;
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private final Map<TableId, List<Table>> usedIds = new HashMap<>();
 
@@ -38,10 +37,10 @@ public class TableManager
     public synchronized TableId getNextFreeId(@UnknownInitialization(Object.class) Table table)
     {
         TableId id;
+        // So GUID is very unlikely to be in use already, but no harm in checking:
         do
         {
-            id = new TableId("T" + nextId);
-            nextId += 1;
+            id = new TableId("Auto-" + UUID.randomUUID().toString());
         }
         while (usedIds.containsKey(id));
         record(table, id);
