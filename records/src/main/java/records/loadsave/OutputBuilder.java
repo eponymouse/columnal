@@ -193,12 +193,18 @@ public class OutputBuilder
     @OnThread(Tag.FXPlatform)
     public synchronized void inner(FXPlatformSupplier<List<String>> genDetail)
     {
-        raw("@BEGIN").nl();
+        begin().nl();
         for (String line : genDetail.get())
         {
             indent().raw(line).nl();
         }
-        raw("@END").nl();
+        end().nl();
+    }
+
+    @OnThread(Tag.Any)
+    public OutputBuilder begin()
+    {
+        return raw("@BEGIN");
     }
 
     // Outputs the given raw string

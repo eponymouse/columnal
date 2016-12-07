@@ -40,7 +40,7 @@ public class ImmediateDataSource extends DataSource
         //dataSource : (dataSourceLinkHeader | (dataSourceImmedate immediateDataLine* END DATA NEWLINE)) dataFormat;
 
         OutputBuilder b = new OutputBuilder();
-        b.t(MainLexer.DATA).id(getId()).t(MainLexer.BEGIN).nl();
+        b.t(MainLexer.DATA).id(getId()).begin().nl();
 
         Workers.onWorkerThread("Fetching data for save", () -> {
             Utility.alertOnError_(() -> {
@@ -53,7 +53,7 @@ public class ImmediateDataSource extends DataSource
                 }
             });
             Platform.runLater(() -> {
-                b.t(MainLexer.END).t(MainLexer.DATA).nl();
+                b.end().t(MainLexer.DATA).nl();
                 then.consume(b.toString());
             });
         });
