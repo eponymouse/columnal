@@ -67,4 +67,9 @@ public class DateColumnStorage implements ColumnStorage<Temporal>
         }
         return dataType;
     }
+
+    public List<Temporal> getShrunk(int shrunkLength)
+    {
+        return values.subList(0, shrunkLength);
+    }
 }

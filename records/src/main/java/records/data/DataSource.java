@@ -1,5 +1,6 @@
 package records.data;
 
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -7,6 +8,10 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.grammar.DataLexer;
+import records.grammar.DataParser;
+import records.grammar.DataParser.ItemContext;
+import records.grammar.DataParser.RowContext;
 import records.grammar.MainLexer;
 import records.grammar.MainParser;
 import records.grammar.MainParser.DataFormatContext;
@@ -47,7 +52,7 @@ public abstract class DataSource extends Table
             List<Pair<ColumnId, DataType>> format = loadFormat(immed.dataFormat());
             List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
 
-            List<List<String>> dataRows = loadRawData(immed.detail());
+            List<List<ItemContext>> dataRows = loadData(immed.detail());
             //TODO check for data row even length, error if not (allow & ignore blank lines)
             for (int i = 0; i < format.size(); i++)
             {
@@ -63,10 +68,21 @@ public abstract class DataSource extends Table
             throw new UnimplementedException();
     }
 
-    private static List<List<String>> loadRawData(DetailContext detail)
+    private static List<List<ItemContext>> loadData(DetailContext detail) throws UserException, InternalException
     {
-        //TODO split on space is not enough, if strings have spaces.  Need to lex.
-        return detail.DETAIL_LINE().stream().map(l -> l.getText().trim()).filter(l -> !l.isEmpty()).map(l -> Arrays.<@NonNull String>asList(l.split("\\s+"))).collect(Collectors.<@NonNull List<@NonNull String>>toList());
+        List<List<ItemContext>> rows = new ArrayList<>();
+        for (TerminalNode line : detail.DETAIL_LINE())
+        {
+            Utility.parseAsOne(line.getText(), DataLexer::new, DataParser::new, p -> {
+                RowContext row = p.row();
+                if (row != null)
+                {
+                    rows.add(row.item());
+                }
+                return 0;
+            });
+        }
+        return rows;
     }
 
     private static List<Pair<ColumnId, DataType>> loadFormat(DataFormatContext dataFormatContext)

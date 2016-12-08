@@ -44,4 +44,10 @@ public class MemoryTemporalColumn extends Column
     {
         return storage.get(index);
     }
+
+    @Override
+    public Column shrink(RecordSet rs, int shrunkLength) throws InternalException
+    {
+        return new MemoryTemporalColumn(rs, title, storage.getShrunk(shrunkLength));
+    }
 }

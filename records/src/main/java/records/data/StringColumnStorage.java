@@ -66,4 +66,9 @@ public class StringColumnStorage implements ColumnStorage<String>
         }
         return dataType;
     }
+
+    public List<String> getShrunk(int shrunkLength)
+    {
+        return values.subList(0, shrunkLength);
+    }
 }

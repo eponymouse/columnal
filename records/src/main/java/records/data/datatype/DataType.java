@@ -13,6 +13,8 @@ import records.data.RecordSet;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.DataParser.ItemContext;
+import records.grammar.DataParser.StringContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExConsumer;
@@ -449,13 +451,16 @@ public class DataType
     }
 
     @OnThread(Tag.Simulation)
-    public Column makeImmediateColumn(RecordSet rs, ColumnId columnId, List<List<String>> allData, int columnIndex) throws InternalException
+    public Column makeImmediateColumn(RecordSet rs, ColumnId columnId, List<List<ItemContext>> allData, int columnIndex) throws InternalException, UserException
     {
         //TODO other types
         List<String> column = new ArrayList<>(allData.size());
-        for (List<String> row : allData)
+        for (List<ItemContext> row : allData)
         {
-            column.add(row.get(columnIndex));
+            StringContext value = row.get(columnIndex).string();
+            if (value == null)
+                throw new UserException("Expected string value but found: \"" + row.get(columnIndex).getText() + "\"");
+            column.add(value.getText());
         }
         return new MemoryStringColumn(rs, columnId, column);
     }

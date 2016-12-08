@@ -21,6 +21,7 @@ import threadchecker.Tag;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -39,7 +40,8 @@ public class GenImmediateData extends Generator<ImmediateDataSource>
     {
         try
         {
-            final int length = r.nextInt(0, 1111);
+            // Bias towards small:
+            final int length = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 1111);
             List<DataType> types = TestUtil.makeList(r, 1, 10, () -> r.choose(Arrays.asList(
                 DataType.NUMBER,
                 DataType.BOOLEAN,
@@ -67,6 +69,29 @@ public class GenImmediateData extends Generator<ImmediateDataSource>
         catch (InternalException | UserException e)
         {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
+    public List<ImmediateDataSource> doShrink(SourceOfRandomness random, ImmediateDataSource larger)
+    {
+        try
+        {
+            // Don't shrink to zero, gets weird:
+            int shrunkLength = Math.max(1, larger.getData().getLength() / 4);
+            List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
+            for (Column column : larger.getData().getColumns())
+            {
+                columns.add(rs -> column.shrink(rs, shrunkLength));
+            }
+            //TODO also remove arbitrary column(s)
+            return Collections.singletonList(new ImmediateDataSource(DummyManager.INSTANCE, new KnownLengthRecordSet(larger.getData().getTitle(), columns, shrunkLength)));
+        }
+        catch (Exception e)
+        {
+            e.printStackTrace();
+            return super.doShrink(random, larger);
         }
     }
 }

@@ -59,4 +59,10 @@ public class MemoryNumericColumn extends Column
         return DataTypeValue.tagged(Arrays.asList(new TagType<>("Blank", null), new TagType<>("Number", storage.getType())),
             (i, prog) -> storage.getTag(i));
     }
+
+    @Override
+    public Column shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
+    {
+        return new MemoryNumericColumn(rs, title, new NumericColumnType("", 0, mayBeBlank), storage.getShrunk(shrunkLength));
+    }
 }

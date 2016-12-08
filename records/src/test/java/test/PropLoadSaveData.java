@@ -34,7 +34,7 @@ public class PropLoadSaveData
 {
     @Property(trials = 1000)
     @OnThread(value = Tag.Simulation,ignoreParent = true)
-    public void testTransformation(@From(GenImmediateData.class) DataSource original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
+    public void testImmediate(@From(GenImmediateData.class) DataSource original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         String saved = save(original);
         try
@@ -52,8 +52,8 @@ public class PropLoadSaveData
         }
         catch (Throwable t)
         {
-            System.err.println("Original:\n" + saved);
-            System.err.flush();
+            //System.err.println("Original:\n" + saved);
+            //System.err.flush();
             throw t;
         }
     }

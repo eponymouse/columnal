@@ -1,6 +1,7 @@
 Target Initial Set
 ===
 
+ - Units of measure
  - CSV import
  - CSV export
  - Export to human-readable
@@ -37,4 +38,5 @@ Professional Version
  - Graphing
  - Multi-source operations (e.g. lookup, merge) -- or should this be free?
  - Tuples and arrays of data
+
 

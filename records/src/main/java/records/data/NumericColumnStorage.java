@@ -17,6 +17,7 @@ import threadchecker.Tag;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -543,5 +544,19 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     public synchronized void setDisplayInfo(NumberDisplayInfo displayInfo)
     {
         this.displayInfo = displayInfo;
+    }
+
+    public List<String> getShrunk(int shrunkLength) throws InternalException
+    {
+        List<String> r = new ArrayList<>();
+        for (int i = 0; i < shrunkLength; i++)
+        {
+            Number n = get(i);
+            if (n instanceof BigDecimal)
+                r.add(((BigDecimal)n).toPlainString());
+            else
+                r.add(n.toString());
+        }
+        return r;
     }
 }

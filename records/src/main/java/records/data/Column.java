@@ -125,6 +125,12 @@ public abstract class Column
         return recordSet.getLength();
     }
 
+    // For testing: return copy of column with length trimmed to shrunkLength
+    public Column shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
+    {
+        throw new RuntimeException("Unshrinkable!");
+    }
+
     public static interface ProgressListener
     {
         @OnThread(Tag.Simulation)
