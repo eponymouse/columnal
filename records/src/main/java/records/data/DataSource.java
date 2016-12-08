@@ -12,6 +12,12 @@ import records.grammar.DataLexer;
 import records.grammar.DataParser;
 import records.grammar.DataParser.ItemContext;
 import records.grammar.DataParser.RowContext;
+import records.grammar.FormatLexer;
+import records.grammar.FormatParser;
+import records.grammar.FormatParser.ATypeContext;
+import records.grammar.FormatParser.ColumnContext;
+import records.grammar.FormatParser.ColumnNameContext;
+import records.grammar.FormatParser.TypeContext;
 import records.grammar.MainLexer;
 import records.grammar.MainParser;
 import records.grammar.MainParser.DataFormatContext;
@@ -85,9 +91,25 @@ public abstract class DataSource extends Table
         return rows;
     }
 
-    private static List<Pair<ColumnId, DataType>> loadFormat(DataFormatContext dataFormatContext)
+    private static List<Pair<ColumnId, DataType>> loadFormat(DataFormatContext dataFormatContext) throws UserException, InternalException
     {
-        //TODO
-        return Collections.singletonList(new Pair<>(new ColumnId("DUMMY"), DataType.TEXT));
+        List<Pair<ColumnId, DataType>> r = new ArrayList<>();
+        for (TerminalNode line : dataFormatContext.detail().DETAIL_LINE())
+        {
+            Utility.parseAsOne(line.getText(), FormatLexer::new, FormatParser::new, p -> {
+                ColumnContext column = p.column();
+                ColumnNameContext colName;
+                if (column == null || (colName = column.columnName()) == null)
+                    throw new UserException("Problem on line " + line.getText());
+                String name = colName.getText();
+                TypeContext type = column.type();
+                ATypeContext aType;
+                if (type == null || (aType = type.aType()) == null)
+                    throw new UserException("Null type on line \"" + line.getText() + "\" name: " + name + " type: " + type.getText());
+                r.add(new Pair<>(new ColumnId(name), DataType.loadType(aType)));
+                return 0;
+            });
+        }
+        return r;
     }
 }

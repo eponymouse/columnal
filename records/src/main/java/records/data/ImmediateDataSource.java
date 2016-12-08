@@ -3,6 +3,7 @@ package records.data;
 import javafx.application.Platform;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.UserException;
+import records.grammar.FormatLexer;
 import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
@@ -47,12 +48,18 @@ public class ImmediateDataSource extends DataSource
 
         OutputBuilder b = new OutputBuilder();
         b.t(MainLexer.DATA).id(getId()).t(MainLexer.FORMAT).begin().nl();
-        #error need to save/load data formats
-        b.kw("TODO:dataformat").nl().end().t(MainLexer.FORMAT).nl();
-        b.t(MainLexer.VALUES).begin().nl();
-
+        Utility.alertOnErrorFX_(() ->
+        {
+            for (Column c : data.getColumns())
+            {
+                b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).quote(c.getName());
+                c.getType().save(b).nl();
+            }
+        });
+        b.end().t(MainLexer.FORMAT).nl();
         Workers.onWorkerThread("Fetching data for save", () -> {
             Utility.alertOnError_(() -> {
+                b.t(MainLexer.VALUES).begin().nl();
                 for (int i = 0; data.indexValid(i); i++)
                 {
                     b.indent();

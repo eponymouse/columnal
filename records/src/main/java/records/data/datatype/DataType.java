@@ -15,10 +15,17 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.DataParser.ItemContext;
 import records.grammar.DataParser.StringContext;
+import records.grammar.FormatLexer;
+import records.grammar.FormatParser.ATypeContext;
+import records.grammar.FormatParser.NumberContext;
+import records.grammar.FormatParser.TagItemContext;
+import records.grammar.FormatParser.TypeContext;
+import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExConsumer;
 import utility.Pair;
+import utility.UnitType;
 
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
@@ -463,5 +470,81 @@ public class DataType
             column.add(value.getText());
         }
         return new MemoryStringColumn(rs, columnId, column);
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public OutputBuilder save(OutputBuilder b) throws InternalException
+    {
+        apply(new DataTypeVisitorEx<UnitType, InternalException>()
+        {
+            @Override
+            public UnitType number(NumberDisplayInfo displayInfo) throws InternalException, InternalException
+            {
+                //TODO
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType text() throws InternalException, InternalException
+            {
+                b.t(FormatLexer.TEXT, FormatLexer.VOCABULARY);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType date() throws InternalException, InternalException
+            {
+                b.t(FormatLexer.DATE, FormatLexer.VOCABULARY);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType bool() throws InternalException, InternalException
+            {
+                b.t(FormatLexer.BOOLEAN, FormatLexer.VOCABULARY);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType tagged(List<TagType<DataType>> tags) throws InternalException, InternalException
+            {
+                //TODO
+                return UnitType.UNIT;
+            }
+        });
+        return b;
+    }
+
+
+    public static DataType loadType(ATypeContext type) throws InternalException
+    {
+        if (type.BOOLEAN() != null)
+            return BOOLEAN;
+        else if (type.TEXT() != null)
+            return TEXT;
+        else if (type.DATE() != null)
+            return DATE;
+        else if (type.number() != null)
+        {
+            NumberContext n = type.number();
+            //TODO store the unit
+            return new DataType(Kind.NUMBER, new NumberDisplayInfo(n.STRING().getText(), Integer.valueOf(n.DIGITS().getText())), null);
+        }
+        else if (type.tagged() != null)
+        {
+            List<TagType<DataType>> tags = new ArrayList<>();
+            for (TagItemContext item : type.tagged().tagItem())
+            {
+                String tagName = item.CONSTRUCTOR().getChild(1).getText();
+                if (item.type() != null)
+                    tags.add(new TagType<DataType>(tagName, loadType(item.type().aType())));
+                else
+                    tags.add(new TagType<DataType>(tagName, null));
+            }
+
+            return new DataType(Kind.TAGGED, null, tags);
+        }
+        else
+            throw new InternalException("Unrecognised case: " + type);
     }
 }

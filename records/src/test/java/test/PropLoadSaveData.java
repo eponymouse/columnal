@@ -32,7 +32,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class PropLoadSaveData
 {
-    @Property(trials = 1000)
+    @Property
     @OnThread(value = Tag.Simulation,ignoreParent = true)
     public void testImmediate(@From(GenImmediateData.class) DataSource original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {

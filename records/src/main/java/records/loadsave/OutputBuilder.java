@@ -1,5 +1,6 @@
 package records.loadsave;
 
+import org.antlr.v4.runtime.Vocabulary;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.TableId;
@@ -47,7 +48,14 @@ public class OutputBuilder
     @OnThread(Tag.Any)
     public synchronized OutputBuilder t(int token)
     {
-        cur().add(stripQuotes(MainLexer.VOCABULARY.getLiteralName(token)));
+        return t(token, MainLexer.VOCABULARY);
+    }
+
+    // Outputs a token from given vocab
+    @OnThread(Tag.Any)
+    public synchronized OutputBuilder t(int token, Vocabulary vocabulary)
+    {
+        cur().add(stripQuotes(vocabulary.getLiteralName(token)));
         return this;
     }
 
@@ -72,6 +80,14 @@ public class OutputBuilder
     public synchronized OutputBuilder id(ColumnId id)
     {
         return id(id.getOutput());
+    }
+
+    // Outputs a column identifier, quoted if necessary
+    @OnThread(Tag.Any)
+    public synchronized OutputBuilder quote(ColumnId id)
+    {
+        cur().add(quoted(id.getOutput()));
+        return this;
     }
 
     // Outputs an identifier, quoted if necessary
