@@ -52,4 +52,14 @@ public class NumericColumnType extends ColumnType
         result = 31 * result + minDP;
         return result;
     }
+
+    @Override
+    public String toString()
+    {
+        return "NumericColumnType{" +
+            "unit=" + unit +
+            ", mayBeBlank=" + mayBeBlank +
+            ", minDP=" + minDP +
+            '}';
+    }
 }

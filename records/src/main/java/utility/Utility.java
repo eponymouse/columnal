@@ -224,8 +224,19 @@ public class Utility
 
     public static <R, PARSER extends Parser> R parseAsOne(String input, Function<CharStream, Lexer> makeLexer, Function<TokenStream, PARSER> makeParser, ExFunction<PARSER, R> withParser) throws InternalException, UserException
     {
-        DescriptiveErrorListener del = new DescriptiveErrorListener();
         ANTLRInputStream inputStream = new ANTLRInputStream(input);
+        return parse(makeLexer, makeParser, withParser, inputStream);
+    }
+
+    public static <R, PARSER extends Parser> R parseAsOne(InputStream input, Function<CharStream, Lexer> makeLexer, Function<TokenStream, PARSER> makeParser, ExFunction<PARSER, R> withParser) throws InternalException, UserException, IOException
+    {
+        ANTLRInputStream inputStream = new ANTLRInputStream(input);
+        return parse(makeLexer, makeParser, withParser, inputStream);
+    }
+
+    private static <R, PARSER extends Parser> R parse(Function<CharStream, Lexer> makeLexer, Function<TokenStream, PARSER> makeParser, ExFunction<PARSER, R> withParser, ANTLRInputStream inputStream) throws UserException, InternalException
+    {
+        DescriptiveErrorListener del = new DescriptiveErrorListener();
         Lexer lexer = makeLexer.apply(inputStream);
         lexer.removeErrorListeners();
         lexer.addErrorListener(del);

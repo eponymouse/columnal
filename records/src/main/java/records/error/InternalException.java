@@ -12,4 +12,9 @@ public class InternalException extends Exception
     {
         super(message);
     }
+
+    public InternalException(String message, Exception e)
+    {
+        super(message, e);
+    }
 }

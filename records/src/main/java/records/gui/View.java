@@ -55,7 +55,7 @@ public class View extends Pane
     private final List<DataSource> sources = new ArrayList<>();
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private final List<Transformation> transformations = new ArrayList<>();
-    private final TableManager tableManager = new TableManager();
+    private final TableManager tableManager;
 
     // Does not write to that destination, just uses it for relative paths
     public void save(@Nullable File destination, FXPlatformConsumer<String> then)
@@ -177,8 +177,9 @@ public class View extends Pane
     }
 
     @SuppressWarnings({"initialization", "keyfor", "interning"})
-    public View()
+    public View() throws InternalException, UserException
     {
+        tableManager = new TableManager();
         overlays = FXCollections.observableHashMap();
         overlays.addListener((MapChangeListener<? super Transformation, ? super Overlays>) c -> {
             Overlays removed = c.getValueRemoved();

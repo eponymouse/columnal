@@ -22,5 +22,6 @@ OPEN_BRACKET: '(';
 CLOSE_BRACKET: ')';
 PREFIX : 'PREFIX';
 SUFFIX : 'SUFFIX';
+ALIAS : 'ALIAS';
 
 IDENT : ~[0-9 \t\r\n^*/@()={}[\]]+;

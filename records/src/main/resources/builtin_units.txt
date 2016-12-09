@@ -20,12 +20,12 @@ UNIT kg "Kilograms" = 1000g
 UNIT mg "Milligrams" = 10^-3 g
 
 
-UNIT USD "US Dollars"
-UNIT $ = USD
-UNIT GBP "Great British Pounds"
-UNIT £ = GBP
-UNIT EUR "Euros"
-UNIT € = EUR
+UNIT USD "US Dollars" PREFIX "$"
+ALIAS $ = USD
+UNIT GBP "Great British Pounds" PREFIX "£"
+ALIAS £ = GBP
+UNIT EUR "Euros" PREFIX "€"
+ALIAS € = EUR
 
 UNIT deg "Degrees"
 UNIT rad "Radians"
