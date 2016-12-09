@@ -1,9 +1,7 @@
 package records.data;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
-import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -13,16 +11,16 @@ import java.util.List;
 /**
  * Created by neil on 30/11/2016.
  */
-public class MemoryTemporalColumn extends Column
+public class MemoryBooleanColumn extends Column
 {
     private final ColumnId title;
-    private final DateColumnStorage storage;
+    private final BooleanColumnStorage storage;
 
-    public MemoryTemporalColumn(RecordSet rs, ColumnId title, List<Temporal> list) throws InternalException
+    public MemoryBooleanColumn(RecordSet rs, ColumnId title, List<Boolean> list) throws InternalException
     {
         super(rs);
         this.title = title;
-        this.storage = new DateColumnStorage();
+        this.storage = new BooleanColumnStorage();
         this.storage.addAll(list);
     }
 
@@ -43,6 +41,6 @@ public class MemoryTemporalColumn extends Column
     @Override
     public Column shrink(RecordSet rs, int shrunkLength) throws InternalException
     {
-        return new MemoryTemporalColumn(rs, title, storage.getShrunk(shrunkLength));
+        return new MemoryBooleanColumn(rs, title, storage.getShrunk(shrunkLength));
     }
 }

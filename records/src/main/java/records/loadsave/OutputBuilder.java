@@ -190,7 +190,7 @@ public class OutputBuilder
                 @Override
                 public String date(GetValue<Temporal> g) throws InternalException, UserException
                 {
-                    return g.get(index).toString();
+                    return quoted(g.get(index).toString());
                 }
             }));
     }

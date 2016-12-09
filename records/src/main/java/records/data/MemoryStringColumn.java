@@ -17,9 +17,6 @@ public class MemoryStringColumn extends Column
 {
     private final ColumnId title;
     private final StringColumnStorage storage;
-    @MonotonicNonNull
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private DataTypeValue dataType;
 
     public MemoryStringColumn(RecordSet recordSet, ColumnId title, List<String> values) throws InternalException
     {
@@ -41,11 +38,6 @@ public class MemoryStringColumn extends Column
     public synchronized DataTypeValue getType()
     {
         return storage.getType();
-    }
-
-    private String getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
-    {
-        return storage.get(index);
     }
 
     @Override

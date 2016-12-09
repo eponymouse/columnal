@@ -8,11 +8,15 @@ import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.ColumnId;
+import records.data.MemoryBooleanColumn;
 import records.data.MemoryStringColumn;
+import records.data.MemoryTemporalColumn;
 import records.data.RecordSet;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
+import records.error.UnimplementedException;
 import records.error.UserException;
+import records.grammar.DataParser.BoolContext;
 import records.grammar.DataParser.ItemContext;
 import records.grammar.DataParser.StringContext;
 import records.grammar.FormatLexer;
@@ -27,6 +31,7 @@ import utility.ExConsumer;
 import utility.Pair;
 import utility.UnitType;
 
+import java.time.LocalDate;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -460,16 +465,65 @@ public class DataType
     @OnThread(Tag.Simulation)
     public Column makeImmediateColumn(RecordSet rs, ColumnId columnId, List<List<ItemContext>> allData, int columnIndex) throws InternalException, UserException
     {
-        //TODO other types
-        List<String> column = new ArrayList<>(allData.size());
-        for (List<ItemContext> row : allData)
+        return apply(new DataTypeVisitor<Column>()
         {
-            StringContext value = row.get(columnIndex).string();
-            if (value == null)
-                throw new UserException("Expected string value but found: \"" + row.get(columnIndex).getText() + "\"");
-            column.add(value.getText());
-        }
-        return new MemoryStringColumn(rs, columnId, column);
+            @Override
+            public Column number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+            {
+                throw new UnimplementedException();
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Column text() throws InternalException, UserException
+            {
+                List<String> column = new ArrayList<>(allData.size());
+                for (List<ItemContext> row : allData)
+                {
+                    StringContext string = row.get(columnIndex).string();
+                    if (string == null)
+                        throw new UserException("Expected string value but found: \"" + row.get(columnIndex).getText() + "\"");
+                    column.add(string.getText());
+                }
+                return new MemoryStringColumn(rs, columnId, column);
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Column date() throws InternalException, UserException
+            {
+                List<Temporal> values = new ArrayList<>(allData.size());
+                for (List<ItemContext> row : allData)
+                {
+                    StringContext c = row.get(columnIndex).string();
+                    if (c == null)
+                        throw new UserException("Expected quoted date value but found: \"" + row.get(columnIndex).getText() + "\"");
+                    values.add(LocalDate.parse(c.getText()));
+                }
+                return new MemoryTemporalColumn(rs, columnId, values);
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Column bool() throws InternalException, UserException
+            {
+                List<Boolean> values = new ArrayList<>(allData.size());
+                for (List<ItemContext> row : allData)
+                {
+                    BoolContext b = row.get(columnIndex).bool();
+                    if (b == null)
+                        throw new UserException("Expected boolean value but found: \"" + row.get(columnIndex).getText() + "\"");
+                    values.add(b.getText().equals("true"));
+                }
+                return new MemoryBooleanColumn(rs, columnId, values);
+            }
+
+            @Override
+            public Column tagged(List<TagType<DataType>> tags) throws InternalException, UserException
+            {
+                throw new UnimplementedException();
+            }
+        });
     }
 
     @OnThread(Tag.FXPlatform)

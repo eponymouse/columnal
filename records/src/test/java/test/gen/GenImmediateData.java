@@ -2,13 +2,17 @@ package test.gen;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
+import com.pholser.junit.quickcheck.generator.java.lang.BooleanGenerator;
 import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
+import com.pholser.junit.quickcheck.generator.java.time.LocalDateGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.ImmediateDataSource;
 import records.data.KnownLengthRecordSet;
+import records.data.MemoryBooleanColumn;
 import records.data.MemoryStringColumn;
+import records.data.MemoryTemporalColumn;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.error.FunctionInt;
@@ -42,13 +46,6 @@ public class GenImmediateData extends Generator<ImmediateDataSource>
         {
             // Bias towards small:
             final int length = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 1111);
-            List<DataType> types = TestUtil.makeList(r, 1, 10, () -> r.choose(Arrays.asList(
-                DataType.NUMBER,
-                DataType.BOOLEAN,
-                DataType.TEXT,
-                DataType.DATE
-                // TODO add tagged
-            )));
 
             int numColumns = r.nextInt(1, 12);
             List<ColumnId> colNames = TestUtil.generateColumnIds(r, numColumns);
@@ -56,10 +53,10 @@ public class GenImmediateData extends Generator<ImmediateDataSource>
             for (ColumnId colName : colNames)
             {
                 columns.add(r.choose(Arrays.asList(
-                    rs ->
-                    {
-                        return new MemoryStringColumn(rs, colName, TestUtil.makeList(length, new StringGenerator(), r, generationStatus));
-                    }
+                    rs -> new MemoryStringColumn(rs, colName, TestUtil.makeList(length, new StringGenerator(), r, generationStatus)),
+                    rs -> new MemoryTemporalColumn(rs, colName, TestUtil.makeList(length, new LocalDateGenerator(), r, generationStatus)),
+                    rs -> new MemoryBooleanColumn(rs, colName, TestUtil.makeList(length, new BooleanGenerator(), r, generationStatus))
+                    //TODO numbers, tags
                 )));
             }
 
