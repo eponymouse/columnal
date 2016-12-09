@@ -141,28 +141,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
             (len, rs) -> {
                 try
                 {
-                    List<TagType<DataType>> tags = TestUtil.makeList(sourceOfRandomness, 1, 10, new Supplier<TagType<DataType>>()
-                    {
-                        Set<String> usedNames = new HashSet<>();
-                        @Override
-                        public TagType<DataType> get()
-                        {
-                            String name;
-                            do
-                            {
-                                name = TestUtil.makeString(sourceOfRandomness, generationStatus);
-                            }
-                            while (usedNames.contains(name));
-                            usedNames.add(name);
-                            return new TagType<DataType>(name, sourceOfRandomness.choose(Arrays.asList(
-                                null,
-                                DataType.TEXT,
-                                DataType.NUMBER,
-                                DataType.BOOLEAN,
-                                DataType.DATE // TODO permit nested tags
-                            )));
-                        }
-                    });
+                    List<TagType<DataType>> tags = makeTags(0, sourceOfRandomness, generationStatus);
                     return new MemoryTaggedColumn(rs, nextCol.get(), tags, TestUtil.makeList(len, new TagDataGenerator(tags), sourceOfRandomness, generationStatus));
                 }
                 catch (InternalException | UserException e)
@@ -171,6 +150,33 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                 }
             }
         ));
+    }
+
+    private static List<TagType<DataType>> makeTags(int depth, final SourceOfRandomness sourceOfRandomness, final GenerationStatus generationStatus)
+    {
+        return TestUtil.makeList(sourceOfRandomness, 1, 10, new Supplier<TagType<DataType>>()
+        {
+            Set<String> usedNames = new HashSet<>();
+            @Override
+            public TagType<DataType> get()
+            {
+                String name;
+                do
+                {
+                    name = TestUtil.makeString(sourceOfRandomness, generationStatus);
+                }
+                while (usedNames.contains(name));
+                usedNames.add(name);
+                return new TagType<DataType>(name, sourceOfRandomness.choose(Arrays.<Supplier<@Nullable DataType>>asList(
+                    () -> null,
+                    () -> DataType.TEXT,
+                    () -> DataType.NUMBER,
+                    () -> DataType.BOOLEAN,
+                    () -> DataType.DATE,
+                    () -> depth < 3 ? DataType.tagged(makeTags(depth + 1, sourceOfRandomness, generationStatus)) : null
+                )).get());
+            }
+        });
     }
 
     private static class TagDataGenerator extends Generator<List<Object>>

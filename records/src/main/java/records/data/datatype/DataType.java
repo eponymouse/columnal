@@ -310,6 +310,11 @@ public class DataType
         }
     }
 
+    public static DataType tagged(List<TagType<DataType>> tagTypes)
+    {
+        return new DataType(Kind.TAGGED, null, tagTypes);
+    }
+
     public static boolean canFitInOneNumeric(List<? extends TagType> tags) throws InternalException, UserException
     {
         // Can fit in one numeric if there is no inner types,
