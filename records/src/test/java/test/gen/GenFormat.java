@@ -46,6 +46,7 @@ public class GenFormat extends Generator<TextFormat>
                 new TextColumnType(),
                 new NumericColumnType(sourceOfRandomness.nextBoolean() ? "" : sourceOfRandomness.choose(currencies), sourceOfRandomness.nextInt(0, 6),sourceOfRandomness.nextBoolean()),
                 new CleanDateColumnType(sourceOfRandomness.choose(dateFormats), LocalDate::from)));
+                //TODO tag?, boolean
             // Don't end with blank:
             if (i == columnCount - 1 && (type.isBlank() || columns.stream().allMatch(GenFormat::canBeBlank)))
                 type = new TextColumnType();

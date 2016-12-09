@@ -14,10 +14,9 @@ public interface ColumnStorage<T>
 {
     public int filled();
     public T get(int index) throws InternalException, UserException;
-    default public void add(@Nullable T item) throws InternalException
+    default public void add(T item) throws InternalException
     {
-        if (item != null)
-            addAll(Collections.singletonList(item));
+        addAll(Collections.singletonList(item));
     }
     public void addAll(List<T> items) throws InternalException;
 

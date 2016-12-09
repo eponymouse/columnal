@@ -176,9 +176,9 @@ public class OutputBuilder
                     TagType<DataTypeValue> t = tagTypes.get(g.get(index));
                     @Nullable DataTypeValue inner = t.getInner();
                     if (inner == null)
-                        return "\\" + t.getName();
+                        return "\\" + quotedIfNecessary(t.getName());
                     else
-                        return "\\" + t.getName() + ":" + inner.applyGet(this);
+                        return "\\" + quotedIfNecessary(t.getName()) + ":" + inner.applyGet(this);
                 }
 
                 @Override

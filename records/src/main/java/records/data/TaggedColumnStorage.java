@@ -1,11 +1,12 @@
 package records.data;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
@@ -13,123 +14,109 @@ import records.data.datatype.DataType.NumberDisplayInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.UnitType;
+import utility.Utility;
 
 /**
  * Created by neil on 05/11/2016.
  */
 public class TaggedColumnStorage implements ColumnStorage<List<Object>>
 {
-    // This stores tags.  It may also be re-used to store the
-    // first numeric value, if applicable.  It is the first item
-    // in valueStores but kept out here too for convenience:
-    @NonNull
-    protected final NumericColumnStorage tagCache;
-    // This will include tagCache once at the beginning, and maybe again for the first numeric store:
-    protected final List<ColumnStorage<?>> valueStores = new ArrayList<>();
+    // This stores the tag index as a tag, not a number.
+    private final NumericColumnStorage tagStore;
+    // This stores the index at which each inner value resides.
+    // For example, let's stay you have the type:
+    // \A:Number \B \C:Date \D:Number
+    // And you add the following data:
+    // \A:0
+    // \B
+    // \A:4
+    // \C:...
+    // \D:6
+    // \A:5
+    // tagIndexStore will have 0, 1, 0, 2, 3, 0 (the tag indexes)
+    // innerValueIndex will have 0, -1, 1, 0, 0, 2 (effectively, the per-tag index
+    // within the corresponding value store)
+    private final NumericColumnStorage innerValueIndex;
+    // This is the list of storage columns for inner types.
+    // We could share them among same-types, but it doesn't save memory so
+    // we keep it simple.  We put a null entry where there is no inner type.
+    // We could also collapse nested tagged columns, but we choose not to,
+    // again to keep it simple:
+    protected final List<@Nullable ColumnStorage<?>> valueStores;
+    private final List<TagType<DataTypeValue>> tagTypes;
+    // Effectively a cached version of tagTypes:
     @OnThread(Tag.Any)
     private final DataTypeValue dataType;
 
     @SuppressWarnings("initialization")
     public <DT extends DataType> TaggedColumnStorage(List<TagType<DT>> copyTagTypes) throws InternalException, UserException
     {
-        tagCache = new NumericColumnStorage(copyTagTypes.size());
-        valueStores.add(tagCache);
-        List<TagType<DataTypeValue>> tagTypes = new ArrayList<>();
+        tagStore = new NumericColumnStorage(copyTagTypes.size());
+        innerValueIndex = new NumericColumnStorage();
+        valueStores = new ArrayList<>();
+        tagTypes = new ArrayList<>();
         for (int i = 0; i < copyTagTypes.size(); i++)
         {
             TagType<? extends DataType> tagType = copyTagTypes.get(i);
-            if (tagType.getInner() != null)
+            DataType inner = tagType.getInner();
+            if (inner != null)
             {
-                int iFinal = i;
-                Pair<DataTypeValue, List<ColumnStorage<?>>> result = tagType.getInner().apply(new DataTypeVisitor<Pair<DataTypeValue, List<ColumnStorage<?>>>>()
+                Pair<ColumnStorage<?>, DataTypeValue> result = inner.apply(new DataTypeVisitor<Pair<ColumnStorage<?>, DataTypeValue>>()
                 {
-                    boolean nested = false;
-
-                    @Override
-                    public Pair<DataTypeValue, List<ColumnStorage<?>>> number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+                    private Pair<ColumnStorage<?>, DataTypeValue> simple(ColumnStorage<?> storage) throws InternalException, UserException
                     {
-                        if (tagCache.getNumericTag() != -1 || nested)
-                        {
-                            // Already re-used tag cache; need another column
-                            NumericColumnStorage storage = new NumericColumnStorage(displayInfo);
-                            return new Pair<>(storage.getType(), Collections.singletonList(storage));
-                        } else
-                        {
-                            // Will re-use tag cache
-                            tagCache.setNumericTag(iFinal);
-                            tagCache.setDisplayInfo(displayInfo);
-                            return new Pair<>(tagCache.getType(), Collections.singletonList(tagCache));
-                        }
+                        return new Pair<>(storage, inner.copy((rowIndex, prog) -> Collections.singletonList(storage.get(innerValueIndex.get(rowIndex).intValue()))));
                     }
 
                     @Override
-                    public Pair<DataTypeValue, List<ColumnStorage<?>>> bool() throws InternalException, UserException
+                    public Pair<ColumnStorage<?>, DataTypeValue> number(NumberDisplayInfo displayInfo) throws InternalException, UserException
                     {
-                        if (tagCache.getNumericTag() != -1 || nested)
-                        {
-                            // Already re-used tag cache; need another column
-                            NumericColumnStorage storage = new NumericColumnStorage();
-                            return new Pair<>(storage.getType(), Collections.singletonList(storage));
-                        } else
-                        {
-                            // Will re-use tag cache
-                            tagCache.setNumericTag(iFinal);
-                            return new Pair<>(tagCache.getType(), Collections.singletonList(tagCache));
-                        }
+                        return simple(new NumericColumnStorage(displayInfo));
                     }
 
                     @Override
-                    public Pair<DataTypeValue, List<ColumnStorage<?>>> text() throws InternalException, UserException
+                    public Pair<ColumnStorage<?>, DataTypeValue> bool() throws InternalException, UserException
                     {
-                        StringColumnStorage storage = new StringColumnStorage();
-                        return new Pair<>(storage.getType(), Collections.singletonList(storage));
+                        return simple(new BooleanColumnStorage());
                     }
 
                     @Override
-                    public Pair<DataTypeValue, List<ColumnStorage<?>>> date() throws InternalException, UserException
+                    public Pair<ColumnStorage<?>, DataTypeValue> text() throws InternalException, UserException
                     {
-                        throw new UnimplementedException();
+                        return simple(new StringColumnStorage());
                     }
 
                     @Override
-                    public Pair<DataTypeValue, List<ColumnStorage<?>>> tagged(List<TagType<DataType>> tags) throws InternalException, UserException
+                    public Pair<ColumnStorage<?>, DataTypeValue> date() throws InternalException, UserException
                     {
-                        // Flatten, no re-use for nested columns at the moment:
-                        ArrayList<ColumnStorage<?>> stores = new ArrayList<>();
-                        ArrayList<TagType<DataTypeValue>> nestedTagTypes = new ArrayList<>();
-                        NumericColumnStorage nestedTagStorage = new NumericColumnStorage(tags.size());
-                        stores.add(nestedTagStorage);
-                        boolean oldNested = nested;
-                        nested = true;
-                        for (TagType tt : tags)
-                        {
-                            if (tt.getInner() != null)
-                            {
-                                Pair<DataTypeValue, List<ColumnStorage<?>>> p = tt.getInner().apply(this);
-                                nestedTagTypes.add(new TagType<DataTypeValue>(tt.getName(), p.getFirst(), stores.size()));
-                                stores.addAll(p.getSecond());
-                            } else
-                                nestedTagTypes.add(new TagType<DataTypeValue>(tt.getName(), null));
-                        }
-                        nested = oldNested;
-                        return new Pair<>(DataTypeValue.tagged(nestedTagTypes, (i, prog) -> nestedTagStorage.getTag(i)), stores);
+                        return simple(new DateColumnStorage());
+                    }
+
+                    @Override
+                    public Pair<ColumnStorage<?>, DataTypeValue> tagged(List<TagType<DataType>> tags) throws InternalException, UserException
+                    {
+                        TaggedColumnStorage storage = new TaggedColumnStorage(tags);
+                        // In contrast to simple, we flatten things by returning the inner list
+                        // instead of nesting it in another list:
+                        return new Pair<>(storage, inner.copy((rowIndex, prog) -> storage.get(innerValueIndex.get(rowIndex).intValue())));
                     }
                 });
-                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), result.getFirst(), valueStores.size()));
-                valueStores.addAll(result.getSecond());
-
+                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), result.getSecond()));
+                valueStores.add(result.getFirst());
             }
             else
+            {
                 tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), null));
+                valueStores.add(null);
+            }
         }
         dataType = DataTypeValue.tagged(tagTypes, (i, prog) -> {
-                return tagCache.getTag(i);
+                return tagStore.getTag(i);
                 });
     }
 
@@ -142,7 +129,7 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
     @Override
     public int filled()
     {
-        return tagCache.filled();
+        return tagStore.filled();
     }
 
     @Override
@@ -159,13 +146,21 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
 
     protected void addUnpacked(List<Object> values) throws InternalException
     {
-        //Walk the tag structure, adding either next value or null to each cache depending on tag:
+        //Walk the tag structure, adding to store depending on tag:
+        Object tag = values.get(0);
+        if (!(tag instanceof Integer))
+            throw new InternalException("Tag not integer: " + tag.getClass());
+        int tagIndex = (Integer) tag;
+        tagStore.addTag(tagIndex);
 
-        getType().apply(new DataType.DataTypeVisitorEx<UnitType, InternalException>()
+        @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();
+        if (inner == null)
         {
-            Iterator<Object> it = values.iterator();
-            int storeOffset = 0;
-
+            innerValueIndex.add(-1);
+            return;
+        }
+        inner.apply(new DataType.DataTypeVisitorEx<UnitType, InternalException>()
+        {
             @Override
             public UnitType number(NumberDisplayInfo displayInfo) throws InternalException
             {
@@ -175,16 +170,18 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
             @SuppressWarnings("unchecked")
             private UnitType storeSimple() throws InternalException
             {
-                ((ColumnStorage<Object>)valueStores.get(storeOffset)).add(it.next());
-                for (int i = storeOffset + 1; i < valueStores.size(); i++)
-                    valueStores.get(i).add(null);
+                ColumnStorage storage = valueStores.get(tagIndex);
+                if (storage == null)
+                    throw new InternalException("Value but no store for tag " + tagIndex);
+                innerValueIndex.add(storage.filled());
+                storage.add(values.get(1));
                 return UnitType.UNIT;
             }
 
             @Override
             public UnitType text() throws InternalException
             {
-                return storeSimple(); // Same process
+                return storeSimple();
             }
 
             @Override
@@ -202,19 +199,11 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
             @Override
             public UnitType tagged(List<TagType<DataType>> tags) throws InternalException
             {
-                int tagIndex = (Integer)it.next();
-                TagType t = tags.get(tagIndex);
-                int tagStoreOffset = t.getExtra();
-                ((NumericColumnStorage)valueStores.get(storeOffset)).addTag(tagIndex);
-                // We must add everything up to that item:
-                for (int i = storeOffset + 1; i < ((tagStoreOffset == -1) ? valueStores.size() : (storeOffset + tagStoreOffset)); i++)
-                    valueStores.get(i).add(null);
-                @Nullable DataType inner = t.getInner();
-                if (inner != null)
-                {
-                    storeOffset += tagStoreOffset;
-                    inner.apply(this);
-                }
+                ColumnStorage storage = valueStores.get(tagIndex);
+                if (storage == null)
+                    throw new InternalException("Value but no store for tag " + tagIndex);
+                innerValueIndex.add(storage.filled());
+                storage.add(values.subList(1, values.size()));
                 return UnitType.UNIT;
             }
         });

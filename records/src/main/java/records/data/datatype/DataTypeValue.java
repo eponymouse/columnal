@@ -26,7 +26,8 @@ public class DataTypeValue extends DataType
     private final @Nullable GetValue<Boolean> getBoolean;
     private final @Nullable GetValue<Integer> getTag;
 
-    public DataTypeValue(Kind kind, @Nullable NumberDisplayInfo numberDisplayInfo, @Nullable List<TagType<DataTypeValue>> tagTypes, @Nullable GetValue<Number> getNumber, @Nullable GetValue<String> getText, @Nullable GetValue<Temporal> getDate, @Nullable GetValue<Boolean> getBoolean, @Nullable GetValue<Integer> getTag)
+    // package-visible
+    DataTypeValue(Kind kind, @Nullable NumberDisplayInfo numberDisplayInfo, @Nullable List<TagType<DataTypeValue>> tagTypes, @Nullable GetValue<Number> getNumber, @Nullable GetValue<String> getText, @Nullable GetValue<Temporal> getDate, @Nullable GetValue<Boolean> getBoolean, @Nullable GetValue<Integer> getTag)
     {
         super(kind, numberDisplayInfo, (List<TagType<DataType>>)(List)tagTypes);
         this.getNumber = getNumber;

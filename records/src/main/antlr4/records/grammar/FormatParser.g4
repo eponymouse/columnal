@@ -3,11 +3,11 @@ parser grammar FormatParser;
 options { tokenVocab = FormatLexer; }
 
 number : NUMBER STRING DIGITS UNIT;
-aType : BOOLEAN | number | TEXT | DATE | tagged;
-type : aType | OPEN_BRACKET aType CLOSE_BRACKET;
-tagged : TAGGED tagItem+;
+type : BOOLEAN | number | TEXT | DATE | tagged;
+tagged : TAGGED OPEN_BRACKET tagItem+ CLOSE_BRACKET;
 
-tagItem : CONSTRUCTOR (CONS type)?;
+constructor : UNQUOTED_CONSTRUCTOR | QUOTED_CONSTRUCTOR;
+tagItem : constructor (CONS type)?;
 
 columnName : STRING;
 column : COLUMN columnName type NEWLINE;

@@ -21,8 +21,9 @@ TAGGED : 'TAGGED';
 WS : ( ' ' | '\t' )+ -> skip;
 
 CONS: ':';
-CONSTRUCTOR : '\\' (~[ \t\r\n:]+ | STRING);
-
+QUOTED_CONSTRUCTOR : ('\\' '"' ( ESCAPED_QUOTE | ESCAPED_R | ESCAPED_N | ESCAPED_ESCAPE | ~[\n\r^"] )*? '"')
+                            { String orig = getText(); setText(orig.substring(2, orig.length() - 1).replace("^\"", "\"").replace("^n", "\n").replace("^r", "\r").replace("^^","^")); };
+UNQUOTED_CONSTRUCTOR : ('\\' ~[ \t\r\n:"]+) { setText(getText().substring(1)); };
 OPEN_BRACKET : '(';
 CLOSE_BRACKET : ')';
 

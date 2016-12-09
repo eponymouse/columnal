@@ -21,9 +21,9 @@ import records.grammar.DataParser.ItemContext;
 import records.grammar.DataParser.StringContext;
 import records.grammar.DataParser.TaggedContext;
 import records.grammar.FormatLexer;
-import records.grammar.FormatParser.ATypeContext;
 import records.grammar.FormatParser.NumberContext;
 import records.grammar.FormatParser.TagItemContext;
+import records.grammar.FormatParser.TypeContext;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -33,6 +33,7 @@ import utility.UnitType;
 import utility.Utility;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -203,18 +204,11 @@ public class DataType
     {
         private final String name;
         private final @Nullable T inner;
-        private final int extra;
 
         public TagType(String name, @Nullable T inner)
         {
-            this(name, inner, -1);
-        }
-
-        public TagType(String name, @Nullable T inner, int extra)
-        {
             this.name = name;
             this.inner = inner;
-            this.extra = extra;
         }
 
         public String getName()
@@ -226,11 +220,6 @@ public class DataType
         public @Nullable T getInner()
         {
             return inner;
-        }
-
-        public int getExtra()
-        {
-            return extra;
         }
 
         @Override
@@ -563,25 +552,44 @@ public class DataType
                         @Override
                         public List<Object> number(NumberDisplayInfo displayInfo) throws InternalException, UserException
                         {
-                            return Collections.singletonList(Utility.parseNumber(item.number().getText()));
+                            DataParser.NumberContext number = item.number();
+                            if (number == null)
+                                throw new UserException("Expected number, found: " + item.getText() + item.getStart());
+                            return Collections.singletonList(Utility.parseNumber(number.getText()));
                         }
 
                         @Override
                         public List<Object> text() throws InternalException, UserException
                         {
-                            return Collections.singletonList(item.string().getText());
+                            StringContext string = item.string();
+                            if (string == null)
+                                throw new UserException("Expected string, found: " + item.getText() + item.getStart());
+                            return Collections.singletonList(string.getText());
                         }
 
                         @Override
                         public List<Object> date() throws InternalException, UserException
                         {
-                            return Collections.singletonList(item.string().getText());
+                            StringContext string = item.string();
+                            if (string == null)
+                                throw new UserException("Expected quoted date, found: " + item.getText() + item.getStart());
+                            try
+                            {
+                                return Collections.singletonList(LocalDate.parse(string.getText()));
+                            }
+                            catch (DateTimeParseException e)
+                            {
+                                throw new UserException("Error loading date time \"" + string.getText() + "\"", e);
+                            }
                         }
 
                         @Override
                         public List<Object> bool() throws InternalException, UserException
                         {
-                            return Collections.singletonList(item.bool().getText().equals("true"));
+                            BoolContext bool = item.bool();
+                            if (bool == null)
+                                throw new UserException("Expected bool, found: " + item.getText() + item.getStart());
+                            return Collections.singletonList(bool.getText().equals("true"));
                         }
 
                         @Override
@@ -640,13 +648,14 @@ public class DataType
             @Override
             public UnitType tagged(List<TagType<DataType>> tags) throws InternalException, InternalException
             {
-                b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
+                b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY).t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
                 for (TagType<DataType> tag : tags)
                 {
                     b.kw("\\" + b.quotedIfNecessary(tag.getName()) + (tag.getInner() != null ? ":" : ""));
                     if (tag.getInner() != null)
                         tag.getInner().apply(this);
                 }
+                b.t(FormatLexer.CLOSE_BRACKET, FormatLexer.VOCABULARY);
                 return UnitType.UNIT;
             }
         });
@@ -654,7 +663,7 @@ public class DataType
     }
 
 
-    public static DataType loadType(ATypeContext type) throws InternalException
+    public static DataType loadType(TypeContext type) throws InternalException, UserException
     {
         if (type.BOOLEAN() != null)
             return BOOLEAN;
@@ -673,9 +682,13 @@ public class DataType
             List<TagType<DataType>> tags = new ArrayList<>();
             for (TagItemContext item : type.tagged().tagItem())
             {
-                String tagName = item.CONSTRUCTOR().getText().substring(1);
+                String tagName = item.constructor().getText();
+
+                if (tags.stream().anyMatch(t -> t.getName().equals(tagName)))
+                    throw new UserException("Duplicate tag names in format: \"" + tagName + "\"");
+
                 if (item.type() != null)
-                    tags.add(new TagType<DataType>(tagName, loadType(item.type().aType())));
+                    tags.add(new TagType<DataType>(tagName, loadType(item.type())));
                 else
                     tags.add(new TagType<DataType>(tagName, null));
             }

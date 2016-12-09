@@ -14,7 +14,6 @@ import records.grammar.DataParser.ItemContext;
 import records.grammar.DataParser.RowContext;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
-import records.grammar.FormatParser.ATypeContext;
 import records.grammar.FormatParser.ColumnContext;
 import records.grammar.FormatParser.ColumnNameContext;
 import records.grammar.FormatParser.TypeContext;
@@ -106,12 +105,14 @@ public abstract class DataSource extends Table
                 ColumnNameContext colName;
                 if (column == null || (colName = column.columnName()) == null)
                     throw new UserException("Problem on line " + line.getText());
-                String name = colName.getText();
+                ColumnId name = new ColumnId(colName.getText());
+                if (r.stream().anyMatch(pr -> pr.getFirst().equals(name)))
+                    throw new UserException("Duplicate column name: \"" + name + "\"");
+
                 TypeContext type = column.type();
-                ATypeContext aType;
-                if (type == null || (aType = type.aType()) == null)
+                if (type == null)
                     throw new UserException("Null type on line \"" + line.getText() + "\" name: " + name + " type: " + type.getText());
-                r.add(new Pair<>(new ColumnId(name), DataType.loadType(aType)));
+                r.add(new Pair<>(name, DataType.loadType(type)));
                 return 0;
             });
         }
