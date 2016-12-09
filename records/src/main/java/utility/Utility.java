@@ -236,6 +236,7 @@ public class Utility
 
     private static <R, PARSER extends Parser> R parse(Function<CharStream, Lexer> makeLexer, Function<TokenStream, PARSER> makeParser, ExFunction<PARSER, R> withParser, ANTLRInputStream inputStream) throws UserException, InternalException
     {
+        // Could try speeding things up with: https://github.com/antlr/antlr4/issues/192
         DescriptiveErrorListener del = new DescriptiveErrorListener();
         Lexer lexer = makeLexer.apply(inputStream);
         lexer.removeErrorListeners();
