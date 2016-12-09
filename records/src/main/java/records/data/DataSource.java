@@ -52,6 +52,11 @@ public abstract class DataSource extends Table
     private static Table load(TableManager manager, TableContext table) throws UserException, InternalException
     {
         DataSourceContext dataSource = table.dataSource();
+        if (dataSource == null)
+        {
+            throw new UserException("Error parsing: \"" + (table.getText().length() > 100 ? (table.getText().substring(0, 100) + "...") : table.getText()) + "\"");
+        }
+
         if (dataSource.dataSourceImmediate() != null)
         {
             DataSourceImmediateContext immed = dataSource.dataSourceImmediate();

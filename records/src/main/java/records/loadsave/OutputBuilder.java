@@ -176,9 +176,9 @@ public class OutputBuilder
                     TagType<DataTypeValue> t = tagTypes.get(g.get(index));
                     @Nullable DataTypeValue inner = t.getInner();
                     if (inner == null)
-                        return t.getName();
+                        return "\\" + t.getName();
                     else
-                        return t.getName() + ":" + inner.applyGet(this);
+                        return "\\" + t.getName() + ":" + inner.applyGet(this);
                 }
 
                 @Override
@@ -243,15 +243,35 @@ public class OutputBuilder
     }
 
     // Outputs a number (without E-notation)
-    public OutputBuilder d(double number)
+    @OnThread(Tag.Any)
+    public synchronized OutputBuilder d(double number)
     {
         cur().add(String.format("%f", number));
         return this;
     }
 
     // Outputs an arbitrary keyword
-    public OutputBuilder kw(String keyword)
+    @OnThread(Tag.Any)
+    public synchronized OutputBuilder kw(String keyword)
     {
         return raw(keyword);
+    }
+
+    @OnThread(Tag.Any)
+    public synchronized void s(String string)
+    {
+        cur().add(quoted(string));
+    }
+
+    @OnThread(Tag.Any)
+    public synchronized void unit(String s)
+    {
+        cur().add("{" + s + "}");
+    }
+
+    @OnThread(Tag.Any)
+    public synchronized void n(long n)
+    {
+        cur().add(Long.toString(n));
     }
 }

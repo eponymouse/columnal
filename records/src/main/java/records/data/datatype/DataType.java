@@ -1,35 +1,36 @@
 package records.data.datatype;
 
-import edu.emory.mathcs.backport.java.util.Arrays;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.units.qual.K;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
-import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.MemoryBooleanColumn;
+import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
+import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
 import records.data.RecordSet;
+import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.grammar.DataParser;
 import records.grammar.DataParser.BoolContext;
 import records.grammar.DataParser.ItemContext;
 import records.grammar.DataParser.StringContext;
+import records.grammar.DataParser.TaggedContext;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser.ATypeContext;
 import records.grammar.FormatParser.NumberContext;
 import records.grammar.FormatParser.TagItemContext;
-import records.grammar.FormatParser.TypeContext;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExConsumer;
 import utility.Pair;
 import utility.UnitType;
+import utility.Utility;
 
 import java.time.LocalDate;
 import java.time.temporal.Temporal;
@@ -37,8 +38,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -468,9 +467,18 @@ public class DataType
         return apply(new DataTypeVisitor<Column>()
         {
             @Override
+            @OnThread(Tag.Simulation)
             public Column number(NumberDisplayInfo displayInfo) throws InternalException, UserException
             {
-                throw new UnimplementedException();
+                List<String> column = new ArrayList<>(allData.size());
+                for (List<ItemContext> row : allData)
+                {
+                    DataParser.NumberContext number = row.get(columnIndex).number();
+                    if (number == null)
+                        throw new UserException("Expected string value but found: \"" + row.get(columnIndex).getText() + "\"");
+                    column.add(number.getText());
+                }
+                return new MemoryNumericColumn(rs, columnId, new NumericColumnType(displayInfo.getDisplayPrefix(), displayInfo.getMinimumDP(), false), column);
             }
 
             @Override
@@ -519,11 +527,78 @@ public class DataType
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Column tagged(List<TagType<DataType>> tags) throws InternalException, UserException
             {
-                throw new UnimplementedException();
+                List<List<Object>> values = new ArrayList<>(allData.size());
+                for (List<ItemContext> row : allData)
+                {
+                    TaggedContext b = row.get(columnIndex).tagged();
+                    if (b == null)
+                        throw new UserException("Expected tagged value but found: \"" + row.get(columnIndex).getText() + "\"");
+                    values.add(loadValue(tags, b));
+                }
+                return new MemoryTaggedColumn(rs, columnId, tags, values);
             }
         });
+    }
+
+    private static List<Object> loadValue(List<TagType<DataType>> tags, TaggedContext taggedContext) throws UserException, InternalException
+    {
+        String constructor = taggedContext.tag().getText();
+        for (int i = 0; i < tags.size(); i++)
+        {
+            TagType<DataType> tag = tags.get(i);
+            if (tag.getName().equals(constructor))
+            {
+                List<Object> r = new ArrayList<>();
+                r.add((Integer)i);
+                ItemContext item = taggedContext.item();
+                if (tag.getInner() != null)
+                {
+                    if (item == null)
+                        throw new UserException("Expected inner type but found no inner value: \"" + taggedContext.getText() + "\"");
+                    r.addAll(tag.getInner().apply(new DataTypeVisitor<List<Object>>()
+                    {
+                        @Override
+                        public List<Object> number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+                        {
+                            return Collections.singletonList(Utility.parseNumber(item.number().getText()));
+                        }
+
+                        @Override
+                        public List<Object> text() throws InternalException, UserException
+                        {
+                            return Collections.singletonList(item.string().getText());
+                        }
+
+                        @Override
+                        public List<Object> date() throws InternalException, UserException
+                        {
+                            return Collections.singletonList(item.string().getText());
+                        }
+
+                        @Override
+                        public List<Object> bool() throws InternalException, UserException
+                        {
+                            return Collections.singletonList(item.bool().getText().equals("true"));
+                        }
+
+                        @Override
+                        public List<Object> tagged(List<TagType<DataType>> tags) throws InternalException, UserException
+                        {
+                            return loadValue(tags, item.tagged());
+                        }
+                    }));
+                }
+                else if (item != null)
+                    throw new UserException("Expected no inner type but found inner value: \"" + taggedContext.getText() + "\"");
+
+                return r;
+            }
+        }
+        throw new UserException("Could not find matching tag for: \"" + taggedContext.tag().getText() + "\" in: " + tags.stream().map(t -> t.getName()).collect(Collectors.joining(", ")));
+
     }
 
     @OnThread(Tag.FXPlatform)
@@ -534,7 +609,10 @@ public class DataType
             @Override
             public UnitType number(NumberDisplayInfo displayInfo) throws InternalException, InternalException
             {
-                //TODO
+                b.t(FormatLexer.NUMBER, FormatLexer.VOCABULARY);
+                b.s(displayInfo.getDisplayPrefix());
+                b.n(displayInfo.getMinimumDP());
+                b.unit("");
                 return UnitType.UNIT;
             }
 
@@ -562,7 +640,13 @@ public class DataType
             @Override
             public UnitType tagged(List<TagType<DataType>> tags) throws InternalException, InternalException
             {
-                //TODO
+                b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
+                for (TagType<DataType> tag : tags)
+                {
+                    b.kw("\\" + b.quotedIfNecessary(tag.getName()) + (tag.getInner() != null ? ":" : ""));
+                    if (tag.getInner() != null)
+                        tag.getInner().apply(this);
+                }
                 return UnitType.UNIT;
             }
         });
@@ -589,7 +673,7 @@ public class DataType
             List<TagType<DataType>> tags = new ArrayList<>();
             for (TagItemContext item : type.tagged().tagItem())
             {
-                String tagName = item.CONSTRUCTOR().getChild(1).getText();
+                String tagName = item.CONSTRUCTOR().getText().substring(1);
                 if (item.type() != null)
                     tags.add(new TagType<DataType>(tagName, loadType(item.type().aType())));
                 else

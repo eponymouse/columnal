@@ -11,9 +11,12 @@ import records.data.ColumnId;
 import records.data.ImmediateDataSource;
 import records.data.KnownLengthRecordSet;
 import records.data.MemoryBooleanColumn;
+import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
+import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
 import records.data.RecordSet;
+import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType;
 import records.error.FunctionInt;
 import records.error.InternalException;
@@ -27,6 +30,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.BiFunction;
 
 /**
  * Created by neil on 07/12/2016.
@@ -48,23 +52,19 @@ public class GenImmediateData extends Generator<ImmediateDataSource>
             final int length = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 1111);
 
             int numColumns = r.nextInt(1, 12);
-            List<ColumnId> colNames = TestUtil.generateColumnIds(r, numColumns);
             List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
-            for (ColumnId colName : colNames)
+            GenColumn genColumn = new GenColumn();
+            for (int i = 0; i < numColumns; i++)
             {
-                columns.add(r.choose(Arrays.asList(
-                    rs -> new MemoryStringColumn(rs, colName, TestUtil.makeList(length, new StringGenerator(), r, generationStatus)),
-                    rs -> new MemoryTemporalColumn(rs, colName, TestUtil.makeList(length, new LocalDateGenerator(), r, generationStatus)),
-                    rs -> new MemoryBooleanColumn(rs, colName, TestUtil.makeList(length, new BooleanGenerator(), r, generationStatus))
-                    //TODO numbers, tags
-                )));
+                BiFunction<Integer, RecordSet, Column> col = genColumn.generate(r, generationStatus);
+                columns.add(rs -> col.apply(length, rs));
             }
-
 
             return new ImmediateDataSource(DummyManager.INSTANCE, new KnownLengthRecordSet("Title", columns, length));
         }
         catch (InternalException | UserException e)
         {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }

@@ -2,15 +2,13 @@ package test;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.generator.GenerationStatus;
-import com.pholser.junit.quickcheck.generator.Generator;
-import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.data.NumericColumnStorage;
 import records.data.datatype.DataType.NumberDisplayInfo;
 import records.error.InternalException;
 import records.error.UserException;
+import test.gen.GenNumbers;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -42,37 +40,4 @@ public class PropNumericStorage
         TestUtil.assertEqualList(input, out);
     }
 
-    public static class GenNumbers extends Generator<List<String>>
-    {
-        @SuppressWarnings("unchecked")
-        public GenNumbers()
-        {
-            super((Class<List<String>>)(Class<?>)List.class);
-        }
-
-        @Override
-        public List<String> generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
-        {
-            List<String> r = new ArrayList<>();
-            int length = sourceOfRandomness.nextInt(0, 100);
-            boolean includeFractional = sourceOfRandomness.nextBoolean();
-            int maxBits = sourceOfRandomness.nextInt(6, 80);
-            for (int i = 0; i < length; i++)
-            {
-                if (includeFractional && sourceOfRandomness.nextBoolean())
-                {
-                    // I don't think it matters here whether we come up with
-                    // double or big decimal; will be stored in big decimal either way.
-                    r.add(String.format("%f", sourceOfRandomness.nextDouble()));
-                }
-                else
-                {
-                    // We geometrically distribute by uniformly distributing number of bits:
-                    r.add(sourceOfRandomness.nextBigInteger(sourceOfRandomness.nextInt(1, maxBits)).toString());
-
-                }
-            }
-            return r;
-        }
-    }
 }

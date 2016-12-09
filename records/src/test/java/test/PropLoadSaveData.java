@@ -52,8 +52,8 @@ public class PropLoadSaveData
         }
         catch (Throwable t)
         {
-            //System.err.println("Original:\n" + saved);
-            //System.err.flush();
+            System.err.println("Original:\n" + saved);
+            System.err.flush();
             throw t;
         }
     }
@@ -69,6 +69,7 @@ public class PropLoadSaveData
             }
             catch (Throwable t)
             {
+                t.printStackTrace();
                 f.complete("");
             }
         });

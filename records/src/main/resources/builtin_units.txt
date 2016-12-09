@@ -1,0 +1,27 @@
+UNIT m "Metres"
+UNIT km "Kilometres" = 1000m
+UNIT cm "Centimetres" = 0.01m
+UNIT mm "Millimetres" = 10^-3 m
+
+UNIT inch "Inches" = 2.54cm
+UNIT foot "Feet" = 12 inch
+UNIT mile "Miles" = 5280 foot
+
+UNIT l "litre" = 10^-3 m^3
+UNIT ml "millilitre" = 10^-3 l
+
+
+UNIT s "Seconds"
+UNIT min "Minutes" = 60s
+UNIT hour "Hours" = 60min
+
+UNIT g "Grams"
+UNIT kg "Kilograms" = 1000g
+UNIT mg "Milligrams" = 10^-3 g
+
+
+UNIT USD "US Dollars"
+UNIT $ "US Dollars" = USD
+
+UNIT deg "Degrees"
+UNIT rad "Radians"

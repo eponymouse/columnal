@@ -219,4 +219,14 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
             }
         });
     }
+
+    public List<List<Object>> getShrunk(int shrunkLength) throws UserException, InternalException
+    {
+        List<List<Object>> s = new ArrayList<>();
+        for (int i = 0; i < shrunkLength; i++)
+        {
+            s.add(get(i));
+        }
+        return s;
+    }
 }
