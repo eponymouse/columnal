@@ -28,7 +28,7 @@ import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.FunctionInt;
@@ -185,7 +185,7 @@ public class Sort extends Transformation
                 this.sortByError = msg;
         }
         this.result = theResult;
-        this.sortMap = new NumericColumnStorage(NumberDisplayInfo.DEFAULT);
+        this.sortMap = new NumericColumnStorage(NumberInfo.DEFAULT);
         this.sortBy = theSortBy;
     }
 

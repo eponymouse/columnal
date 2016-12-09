@@ -4,7 +4,7 @@ import org.antlr.v4.runtime.Vocabulary;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.TableId;
-import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
@@ -159,7 +159,7 @@ public class OutputBuilder
             cur().add(type.applyGet(new DataTypeVisitorGet<String>()
             {
                 @Override
-                public String number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException
+                public String number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
                 {
                     return g.get(index).toString();
                 }

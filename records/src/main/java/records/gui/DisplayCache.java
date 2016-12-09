@@ -9,7 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
@@ -153,9 +153,9 @@ public class DisplayCache
                 {
                     @Override
                     @OnThread(Tag.Simulation)
-                    public DisplayValue number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException
+                    public DisplayValue number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
                     {
-                        return new DisplayValue(g.getWithProgress(index, prog), displayInfo.getDisplayPrefix(), displayInfo.getMinimumDP());
+                        return new DisplayValue(g.getWithProgress(index, prog), displayInfo.getUnit(), displayInfo.getMinimumDP());
                     }
 
                     @Override

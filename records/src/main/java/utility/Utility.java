@@ -44,7 +44,9 @@ import org.antlr.v4.runtime.TokenStream;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import org.sosy_lab.common.rationals.Rational;
 import records.data.Table;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.BasicLexer;
@@ -294,10 +296,31 @@ public class Utility
         if (o instanceof Boolean)
             return new DisplayValue((Boolean)o);
         else if (o instanceof Number)
-            return new DisplayValue((Number)o, "", 0);
+            return new DisplayValue((Number)o, Unit.SCALAR, 0);
         else if (o instanceof String)
             return new DisplayValue((String)o);
         throw new RuntimeException("Unexpected toDisplayValue type: " + o.getClass());
+    }
+
+    public static Rational rationalToPower(Rational original, int power)
+    {
+        Rational r = original;
+        if (power < 0)
+        {
+            r = r.reciprocal();
+            power = -power;
+        }
+        while (power > 1)
+        {
+            r = r.times(r);
+            power -= 1;
+        }
+        return r;
+    }
+
+    public static Rational parseRational(String text)
+    {
+        return Rational.ofBigDecimal(new BigDecimal(text));
     }
 
     public static class ReadState

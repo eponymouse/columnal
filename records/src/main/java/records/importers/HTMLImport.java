@@ -63,7 +63,7 @@ public class HTMLImport
                 }
             }
 
-            Format format = GuessFormat.guessGeneralFormat(vals);
+            Format format = GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals);
 
             List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
             for (int i = 0; i < format.columnTypes.size(); i++)

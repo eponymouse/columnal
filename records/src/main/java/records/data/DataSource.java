@@ -1,9 +1,9 @@
 package records.data;
 
 import org.antlr.v4.runtime.tree.TerminalNode;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.unit.UnitManager;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UnimplementedException;
@@ -28,10 +28,7 @@ import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Created by neil on 09/11/2016.
@@ -59,7 +56,7 @@ public abstract class DataSource extends Table
         if (dataSource.dataSourceImmediate() != null)
         {
             DataSourceImmediateContext immed = dataSource.dataSourceImmediate();
-            List<Pair<ColumnId, DataType>> format = loadFormat(immed.dataFormat());
+            List<Pair<ColumnId, DataType>> format = loadFormat(manager.getUnitManager(), immed.dataFormat());
             List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
 
             List<List<ItemContext>> dataRows = loadData(immed.detail());
@@ -95,7 +92,7 @@ public abstract class DataSource extends Table
         return rows;
     }
 
-    private static List<Pair<ColumnId, DataType>> loadFormat(DataFormatContext dataFormatContext) throws UserException, InternalException
+    private static List<Pair<ColumnId, DataType>> loadFormat(UnitManager mgr, DataFormatContext dataFormatContext) throws UserException, InternalException
     {
         List<Pair<ColumnId, DataType>> r = new ArrayList<>();
         for (TerminalNode line : dataFormatContext.detail().DETAIL_LINE())
@@ -112,7 +109,7 @@ public abstract class DataSource extends Table
                 TypeContext type = column.type();
                 if (type == null)
                     throw new UserException("Null type on line \"" + line.getText() + "\" name: " + name + " type: " + type.getText());
-                r.add(new Pair<>(name, DataType.loadType(type)));
+                r.add(new Pair<>(name, DataType.loadType(mgr, type)));
                 return 0;
             });
         }

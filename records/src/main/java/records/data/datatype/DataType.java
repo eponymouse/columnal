@@ -12,8 +12,9 @@ import records.data.MemoryTemporalColumn;
 import records.data.RecordSet;
 import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataTypeValue.GetValue;
+import records.data.unit.Unit;
+import records.data.unit.UnitManager;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.grammar.DataParser;
 import records.grammar.DataParser.BoolContext;
@@ -67,39 +68,34 @@ public class DataType
     // Flattened ADT.  kind is the head tag, other bits are null/non-null depending:
     public static enum Kind {NUMBER, TEXT, DATE, BOOLEAN, TAGGED }
     final Kind kind;
-    final @Nullable NumberDisplayInfo numberDisplayInfo;
+    final @Nullable NumberInfo numberInfo;
     final @Nullable List<TagType<DataType>> tagTypes;
 
-    DataType(Kind kind, @Nullable NumberDisplayInfo numberDisplayInfo, @Nullable List<TagType<DataType>> tagTypes)
+    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable List<TagType<DataType>> tagTypes)
     {
         this.kind = kind;
-        this.numberDisplayInfo = numberDisplayInfo;
+        this.numberInfo = numberInfo;
         this.tagTypes = tagTypes;
     }
 
-    public static final DataType NUMBER = new DataType(Kind.NUMBER, NumberDisplayInfo.DEFAULT, null);
+    public static final DataType NUMBER = new DataType(Kind.NUMBER, NumberInfo.DEFAULT, null);
     public static final DataType INTEGER = NUMBER;
     public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null);
     public static final DataType TEXT = new DataType(Kind.TEXT, null, null);
     public static final DataType DATE = new DataType(Kind.DATE, null, null);
 
-    public static class NumberDisplayInfo
+    public static class NumberInfo
     {
-        private final String displayPrefix;
+        private final Unit unit;
         private final int minimumDP;
 
-        public NumberDisplayInfo(String displayPrefix, int minimumDP)
+        public NumberInfo(Unit unit, int minimumDP)
         {
-            this.displayPrefix = displayPrefix;
+            this.unit = unit;
             this.minimumDP = minimumDP;
         }
 
-        public static final NumberDisplayInfo DEFAULT = new NumberDisplayInfo("", 0);
-
-        public String getDisplayPrefix()
-        {
-            return displayPrefix;
-        }
+        public static final NumberInfo DEFAULT = new NumberInfo(Unit.SCALAR, 0);
 
         public int getMinimumDP()
         {
@@ -112,25 +108,29 @@ public class DataType
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            NumberDisplayInfo that = (NumberDisplayInfo) o;
+            NumberInfo that = (NumberInfo) o;
 
             if (minimumDP != that.minimumDP) return false;
-            return displayPrefix.equals(that.displayPrefix);
-
+            return unit.equals(that.unit);
         }
 
         @Override
         public int hashCode()
         {
-            int result = displayPrefix.hashCode();
+            int result = unit.hashCode();
             result = 31 * result + minimumDP;
             return result;
+        }
+
+        public Unit getUnit()
+        {
+            return unit;
         }
     }
 
     public static interface DataTypeVisitorEx<R, E extends Throwable>
     {
-        R number(NumberDisplayInfo displayInfo) throws InternalException, E;
+        R number(NumberInfo displayInfo) throws InternalException, E;
         R text() throws InternalException, E;
         R date() throws InternalException, E;
         R bool() throws InternalException, E;
@@ -149,7 +149,7 @@ public class DataType
     public static class SpecificDataTypeVisitor<R> implements DataTypeVisitor<R>
     {
         @Override
-        public R number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+        public R number(NumberInfo displayInfo) throws InternalException, UserException
         {
             throw new InternalException("Unexpected number data type");
         }
@@ -186,7 +186,7 @@ public class DataType
         switch (kind)
         {
             case NUMBER:
-                return visitor.number(numberDisplayInfo);
+                return visitor.number(numberInfo);
             case TEXT:
                 return visitor.text();
             case DATE:
@@ -257,7 +257,7 @@ public class DataType
         return apply(new DataTypeVisitor<String>()
         {
             @Override
-            public String number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+            public String number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 return "Number";
             }
@@ -373,7 +373,7 @@ public class DataType
             for (TagType tagType : this.tagTypes)
                 newTagTypes.add(new TagType<>(tagType.getName(), tagType.getInner() == null ? null : tagType.getInner().copy(get, curIndex + 1)));
         }
-        return new DataTypeValue(kind, numberDisplayInfo, newTagTypes,
+        return new DataTypeValue(kind, numberInfo, newTagTypes,
             (i, prog) -> (Number)get.getWithProgress(i, prog).get(curIndex),
             (i, prog) -> (String)get.getWithProgress(i, prog).get(curIndex),
             (i, prog) -> (Temporal) get.getWithProgress(i, prog).get(curIndex),
@@ -426,10 +426,10 @@ public class DataType
         return result;
     }
 
-    public NumberDisplayInfo getNumberDisplayInfo() throws InternalException
+    public NumberInfo getNumberInfo() throws InternalException
     {
-        if (numberDisplayInfo != null)
-            return numberDisplayInfo;
+        if (numberInfo != null)
+            return numberInfo;
         else
             throw new InternalException("Requesting numeric display info for non-numeric type: " + this);
     }
@@ -462,7 +462,7 @@ public class DataType
         {
             @Override
             @OnThread(Tag.Simulation)
-            public Column number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+            public Column number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 List<String> column = new ArrayList<>(allData.size());
                 for (List<ItemContext> row : allData)
@@ -472,7 +472,7 @@ public class DataType
                         throw new UserException("Expected string value but found: \"" + row.get(columnIndex).getText() + "\"");
                     column.add(number.getText());
                 }
-                return new MemoryNumericColumn(rs, columnId, new NumericColumnType(displayInfo.getDisplayPrefix(), displayInfo.getMinimumDP(), false), column);
+                return new MemoryNumericColumn(rs, columnId, new NumericColumnType(displayInfo.getUnit(), displayInfo.getMinimumDP(), false), column);
             }
 
             @Override
@@ -555,7 +555,7 @@ public class DataType
                     r.addAll(tag.getInner().apply(new DataTypeVisitor<List<Object>>()
                     {
                         @Override
-                        public List<Object> number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+                        public List<Object> number(NumberInfo displayInfo) throws InternalException, UserException
                         {
                             DataParser.NumberContext number = item.number();
                             if (number == null)
@@ -620,10 +620,9 @@ public class DataType
         apply(new DataTypeVisitorEx<UnitType, InternalException>()
         {
             @Override
-            public UnitType number(NumberDisplayInfo displayInfo) throws InternalException, InternalException
+            public UnitType number(NumberInfo displayInfo) throws InternalException, InternalException
             {
                 b.t(FormatLexer.NUMBER, FormatLexer.VOCABULARY);
-                b.s(displayInfo.getDisplayPrefix());
                 b.n(displayInfo.getMinimumDP());
                 b.unit("");
                 return UnitType.UNIT;
@@ -668,7 +667,7 @@ public class DataType
     }
 
 
-    public static DataType loadType(TypeContext type) throws InternalException, UserException
+    public static DataType loadType(UnitManager mgr, TypeContext type) throws InternalException, UserException
     {
         if (type.BOOLEAN() != null)
             return BOOLEAN;
@@ -679,8 +678,8 @@ public class DataType
         else if (type.number() != null)
         {
             NumberContext n = type.number();
-            //TODO store the unit
-            return new DataType(Kind.NUMBER, new NumberDisplayInfo(n.STRING().getText(), Integer.valueOf(n.DIGITS().getText())), null);
+            Unit unit = mgr.loadUse(n.UNIT().getText());
+            return new DataType(Kind.NUMBER, new NumberInfo(unit, Integer.valueOf(n.DIGITS().getText())), null);
         }
         else if (type.tagged() != null)
         {
@@ -693,7 +692,7 @@ public class DataType
                     throw new UserException("Duplicate tag names in format: \"" + tagName + "\"");
 
                 if (item.type() != null)
-                    tags.add(new TagType<DataType>(tagName, loadType(item.type())));
+                    tags.add(new TagType<DataType>(tagName, loadType(mgr, item.type())));
                 else
                     tags.add(new TagType<DataType>(tagName, null));
             }

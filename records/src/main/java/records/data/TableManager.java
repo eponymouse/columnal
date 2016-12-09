@@ -2,6 +2,7 @@ package records.data;
 
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.unit.UnitManager;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -23,6 +24,7 @@ public class TableManager
 {
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private final Map<TableId, List<Table>> usedIds = new HashMap<>();
+    private final UnitManager unitManager = new UnitManager();
 
     public synchronized @Nullable Table getSingleTableOrNull(TableId tableId)
     {
@@ -60,4 +62,8 @@ public class TableManager
         record(table, tableId);
     }
 
+    public UnitManager getUnitManager()
+    {
+        return unitManager;
+    }
 }

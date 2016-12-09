@@ -2,7 +2,7 @@ parser grammar FormatParser;
 
 options { tokenVocab = FormatLexer; }
 
-number : NUMBER STRING DIGITS UNIT;
+number : NUMBER DIGITS UNIT;
 type : BOOLEAN | number | TEXT | DATE | tagged;
 tagged : TAGGED OPEN_BRACKET tagItem+ CLOSE_BRACKET;
 

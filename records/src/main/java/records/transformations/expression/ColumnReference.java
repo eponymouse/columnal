@@ -10,7 +10,7 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
-import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
 import records.error.UserException;
@@ -78,7 +78,7 @@ public class ColumnReference extends Expression
         return column.getType().apply(new DataTypeVisitor<Formula>()
         {
             @Override
-            public Formula number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+            public Formula number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 return columnVariables.computeIfAbsent(key, (Pair x) -> formulaManager.getRationalFormulaManager().makeVariable(columnName.getOutput()));
             }

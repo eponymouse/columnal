@@ -1,14 +1,12 @@
 package records.data.datatype;
 
-import javafx.scene.control.ListView;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DataTypeVisitor;
-import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayValue;
-import threadchecker.OnThread;
 import utility.Utility;
 
 import java.time.LocalDate;
@@ -29,7 +27,7 @@ public class DataTypeUtility
         {
 
             @Override
-            public List<Object> number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+            public List<Object> number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 return Collections.singletonList((Long)(long)index);
             }
@@ -74,7 +72,7 @@ public class DataTypeUtility
             int index = 0;
 
             @Override
-            public Integer number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+            public Integer number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 return Utility.compareNumbers(as.get(index), bs.get(index));
             }
@@ -113,9 +111,9 @@ public class DataTypeUtility
         {
             int index = 0;
             @Override
-            public DisplayValue number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+            public DisplayValue number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return new DisplayValue((Number)objects.get(index), displayInfo.getDisplayPrefix(), displayInfo.getMinimumDP());
+                return new DisplayValue((Number)objects.get(index), displayInfo.getUnit(), displayInfo.getMinimumDP());
             }
 
             @Override

@@ -29,7 +29,7 @@ import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
-import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
@@ -208,7 +208,7 @@ public class SummaryStatistics extends Transformation
                         }
 
                         @Override
-                        public FunctionInt<RecordSet, Column> number(GetValue<Number> srcGet, NumberDisplayInfo displayInfo) throws InternalException, UserException
+                        public FunctionInt<RecordSet, Column> number(GetValue<Number> srcGet, NumberInfo displayInfo) throws InternalException, UserException
                         {
                             if (summaryType == SummaryType.COUNT)
                                 return countColumn(srcGet);
@@ -601,7 +601,7 @@ public class SummaryStatistics extends Transformation
             return src.getType().apply(new DataTypeVisitor<Boolean>()
             {
                 @Override
-                public Boolean number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+                public Boolean number(NumberInfo displayInfo) throws InternalException, UserException
                 {
                     return true;
                 }
@@ -957,7 +957,7 @@ public class SummaryStatistics extends Transformation
                 {
                     @Override
                     @OnThread(Tag.Simulation)
-                    public List<Number> number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException
+                    public List<Number> number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
                     {
                         return numericFold.process(g.get(index), index);
                     }

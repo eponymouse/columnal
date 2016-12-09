@@ -20,5 +20,7 @@ EQUALS : '=';
 UNIT : 'UNIT';
 OPEN_BRACKET: '(';
 CLOSE_BRACKET: ')';
+PREFIX : 'PREFIX';
+SUFFIX : 'SUFFIX';
 
 IDENT : ~[0-9 \t\r\n^*/@()={}[\]]+;

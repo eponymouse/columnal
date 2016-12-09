@@ -5,6 +5,9 @@ import records.data.ColumnId;
 import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
 import records.data.columntype.TextColumnType;
+import records.data.unit.Unit;
+import records.error.InternalException;
+import records.error.UserException;
 import records.importers.GuessFormat;
 import records.importers.ColumnInfo;
 import records.importers.TextFormat;
@@ -20,7 +23,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestFormat
 {
-    private static final ColumnType NUM = new NumericColumnType("", 0, false);
+    private static final ColumnType NUM = new NumericColumnType(Unit.SCALAR, 0, false);
     private static final ColumnType TEXT = new TextColumnType();
     
     private static ColumnInfo col(ColumnType type, String name)
@@ -70,7 +73,7 @@ public class TestFormat
 
     private static void assertFormat(TextFormat fmt, String... lines)
     {
-        assertEquals(fmt, GuessFormat.guessTextFormat(java.util.Arrays.asList(lines)));
+        assertEquals(fmt, GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), java.util.Arrays.asList(lines)));
     }
 
     private static List<ColumnInfo> c(ColumnInfo... ts)
@@ -78,8 +81,15 @@ public class TestFormat
         return Arrays.asList(ts);
     }
 
-    private static NumericColumnType NUM(String displayPrefix)
+    private static NumericColumnType NUM(String unit)
     {
-        return new NumericColumnType(displayPrefix, 0, false);
+        try
+        {
+            return new NumericColumnType(DummyManager.INSTANCE.getUnitManager().loadUse(unit), 0, false);
+        }
+        catch (InternalException | UserException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 }

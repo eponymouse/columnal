@@ -4,6 +4,7 @@ import org.checkerframework.checker.lock.qual.GuardSatisfied;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import records.data.unit.Unit;
 import threadchecker.OnThread;
 
 import java.time.temporal.Temporal;
@@ -27,7 +28,7 @@ public class DisplayValue
     private final @Nullable Number number;
     // These next two are fixed per-column, but it's just
     // easier to store them with the data item itself:
-    private final String displayPrefix;
+    private final Unit unit;
     private final int minimumDecimalPlaces;
     private final @Nullable ProgressState state;
     private final double loading; // If -1, use String
@@ -55,10 +56,10 @@ public class DisplayValue
     /**
      * Create successfully loaded item with number
      */
-    public DisplayValue(Number val, String displayPrefix, int minimumDecimalPlaces)
+    public DisplayValue(Number val, Unit unit, int minimumDecimalPlaces)
     {
         number = val;
-        this.displayPrefix = displayPrefix;
+        this.unit = unit;
         this.minimumDecimalPlaces = minimumDecimalPlaces;
         show = null;
         state = null;
@@ -74,7 +75,7 @@ public class DisplayValue
         number = null;
         minimumDecimalPlaces = 0;
         this.state = state;
-        displayPrefix = "";
+        this.unit = Unit.SCALAR;
         loading = d;
         show = null;
         isError = false;
@@ -85,7 +86,7 @@ public class DisplayValue
      */
     public DisplayValue(String s, boolean err)
     {
-        displayPrefix = "";
+        unit = Unit.SCALAR;
         number = null;
         minimumDecimalPlaces = 0;
         show = s;
@@ -101,9 +102,9 @@ public class DisplayValue
     }
 
     @Pure
-    public String getDisplayPrefix()
+    public Unit getUnit()
     {
-        return displayPrefix;
+        return unit;
     }
 
     @Pure

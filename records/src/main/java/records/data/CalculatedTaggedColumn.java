@@ -1,24 +1,13 @@
 package records.data;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitor;
-import records.data.datatype.DataType.NumberDisplayInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
-import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
-import utility.UnitType;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 
 /**

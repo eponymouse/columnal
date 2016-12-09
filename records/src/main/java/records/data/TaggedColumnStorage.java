@@ -1,16 +1,13 @@
 package records.data;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
-import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
@@ -19,7 +16,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.UnitType;
-import utility.Utility;
 
 /**
  * Created by neil on 05/11/2016.
@@ -74,7 +70,7 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
                     }
 
                     @Override
-                    public Pair<ColumnStorage<?>, DataTypeValue> number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+                    public Pair<ColumnStorage<?>, DataTypeValue> number(NumberInfo displayInfo) throws InternalException, UserException
                     {
                         return simple(new NumericColumnStorage(displayInfo));
                     }
@@ -162,7 +158,7 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
         inner.apply(new DataType.DataTypeVisitorEx<UnitType, InternalException>()
         {
             @Override
-            public UnitType number(NumberDisplayInfo displayInfo) throws InternalException
+            public UnitType number(NumberInfo displayInfo) throws InternalException
             {
                 return storeSimple();
             }

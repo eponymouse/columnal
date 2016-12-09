@@ -1,11 +1,9 @@
 package records.data;
 
 import records.data.columntype.NumericColumnType;
-import records.data.datatype.DataType;
-import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
-import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -27,7 +25,7 @@ public class MemoryNumericColumn extends Column
     {
         super(rs);
         mayBeBlank = type.mayBeBlank;
-        storage = new NumericColumnStorage(mayBeBlank ? 2 : 0, mayBeBlank ? 1 : -1, new NumberDisplayInfo(type.displayPrefix, type.minDP));
+        storage = new NumericColumnStorage(mayBeBlank ? 2 : 0, mayBeBlank ? 1 : -1, new NumberInfo(type.unit, type.minDP));
         this.title = title;
         for (String value : values)
         {
@@ -63,6 +61,6 @@ public class MemoryNumericColumn extends Column
     @Override
     public Column shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        return new MemoryNumericColumn(rs, title, new NumericColumnType("", 0, mayBeBlank), storage.getShrunk(shrunkLength));
+        return new MemoryNumericColumn(rs, title, new NumericColumnType(storage.getDisplayInfo().getUnit(), storage.getDisplayInfo().getMinimumDP(), mayBeBlank), storage.getShrunk(shrunkLength));
     }
 }

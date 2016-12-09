@@ -21,7 +21,11 @@ UNIT mg "Milligrams" = 10^-3 g
 
 
 UNIT USD "US Dollars"
-UNIT $ "US Dollars" = USD
+UNIT $ = USD
+UNIT GBP "Great British Pounds"
+UNIT £ = GBP
+UNIT EUR "Euros"
+UNIT € = EUR
 
 UNIT deg "Degrees"
 UNIT rad "Radians"

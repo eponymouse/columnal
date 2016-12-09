@@ -27,9 +27,9 @@ public class DataTypeValue extends DataType
     private final @Nullable GetValue<Integer> getTag;
 
     // package-visible
-    DataTypeValue(Kind kind, @Nullable NumberDisplayInfo numberDisplayInfo, @Nullable List<TagType<DataTypeValue>> tagTypes, @Nullable GetValue<Number> getNumber, @Nullable GetValue<String> getText, @Nullable GetValue<Temporal> getDate, @Nullable GetValue<Boolean> getBoolean, @Nullable GetValue<Integer> getTag)
+    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable List<TagType<DataTypeValue>> tagTypes, @Nullable GetValue<Number> getNumber, @Nullable GetValue<String> getText, @Nullable GetValue<Temporal> getDate, @Nullable GetValue<Boolean> getBoolean, @Nullable GetValue<Integer> getTag)
     {
-        super(kind, numberDisplayInfo, (List<TagType<DataType>>)(List)tagTypes);
+        super(kind, numberInfo, (List<TagType<DataType>>)(List)tagTypes);
         this.getNumber = getNumber;
         this.getText = getText;
         this.getDate = getDate;
@@ -57,9 +57,9 @@ public class DataTypeValue extends DataType
         return new DataTypeValue(Kind.DATE, null, null, null, null, getDate, null, null);
     }
 
-    public static DataTypeValue number(NumberDisplayInfo numberDisplayInfo, GetValue<Number> getNumber)
+    public static DataTypeValue number(NumberInfo numberInfo, GetValue<Number> getNumber)
     {
-        return new DataTypeValue(Kind.NUMBER, numberDisplayInfo, null, getNumber, null, null, null, null);
+        return new DataTypeValue(Kind.NUMBER, numberInfo, null, getNumber, null, null, null, null);
     }
 
     public static class SpecificDataTypeVisitorGet<R> implements DataTypeVisitorGet<R>
@@ -90,7 +90,7 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException
+        public R number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
         {
             return defaultOp("Unexpected number data type");
         }
@@ -134,7 +134,7 @@ public class DataTypeValue extends DataType
     @OnThread(Tag.Simulation)
     public static interface DataTypeVisitorGetEx<R, E extends Throwable>
     {
-        R number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, E;
+        R number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, E;
         R text(GetValue<String> g) throws InternalException, E;
         R bool(GetValue<Boolean> g) throws InternalException, E;
         R date(GetValue<Temporal> g) throws InternalException, E;
@@ -159,7 +159,7 @@ public class DataTypeValue extends DataType
         switch (kind)
         {
             case NUMBER:
-                return visitor.number(getNumber, numberDisplayInfo);
+                return visitor.number(getNumber, numberInfo);
             case TEXT:
                 return visitor.text(getText);
             case DATE:
@@ -189,7 +189,7 @@ public class DataTypeValue extends DataType
         {
             @Override
             @OnThread(Tag.Simulation)
-            public List<Object> number(GetValue<Number> g, NumberDisplayInfo displayInfo) throws InternalException, UserException
+            public List<Object> number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
                 return Collections.singletonList(g.get(index));
             }
@@ -241,7 +241,7 @@ public class DataTypeValue extends DataType
         }
 
 
-        return new DataTypeValue(kind, numberDisplayInfo, newTagTypes,
+        return new DataTypeValue(kind, numberInfo, newTagTypes,
             reOrder(getOriginalIndex, getNumber),
             reOrder(getOriginalIndex, getText),
             reOrder(getOriginalIndex, getDate),

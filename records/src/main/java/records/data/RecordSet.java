@@ -78,7 +78,7 @@ public abstract class RecordSet
                             setText("");
                             HBox container = new HBox();
                             Utility.addStyleClass(container, "number-display");
-                            Text prefix = new Text(item.getDisplayPrefix());
+                            Text prefix = new Text(item.getUnit().getDisplayPrefix());
                             Utility.addStyleClass(prefix, "number-display-prefix");
                             String integerPart = Utility.getIntegerPart(n);
                             integerPart = integerPart.replace("-", "\u2012");

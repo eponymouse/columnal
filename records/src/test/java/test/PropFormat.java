@@ -49,7 +49,7 @@ public class PropFormat
                         line.append("");
                     } else
                     {
-                        line.append(numericColumnType.displayPrefix).append(String.format(format.separator == ',' ? "%d" : "%,d", rnd.nextLong()));
+                        line.append(numericColumnType.unit.getDisplayPrefix()).append(String.format(format.separator == ',' ? "%d" : "%,d", rnd.nextLong()));
                         if (numericColumnType.minDP > 0)
                         {
                             line.append("." + String.format("%0" + numericColumnType.minDP + "d", Math.abs(rnd.nextInt())).substring(0, numericColumnType.minDP));
@@ -75,6 +75,6 @@ public class PropFormat
             if (!lineString.replace("" + format.separator, "").isEmpty())
                 fileContent.add(lineString);
         }
-        assertEquals("Failure with content: " + fileContent.stream().collect(Collectors.joining("\n")), format, GuessFormat.guessTextFormat(fileContent));
+        assertEquals("Failure with content: " + fileContent.stream().collect(Collectors.joining("\n")), format, GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), fileContent));
     }
 }

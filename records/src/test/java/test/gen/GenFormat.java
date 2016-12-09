@@ -8,8 +8,12 @@ import records.data.columntype.ColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
 import records.data.columntype.TextColumnType;
+import records.data.unit.Unit;
+import records.error.InternalException;
+import records.error.UserException;
 import records.importers.ColumnInfo;
 import records.importers.TextFormat;
+import test.DummyManager;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -22,7 +26,21 @@ import java.util.List;
 public class GenFormat extends Generator<TextFormat>
 {
     public static List<Character> seps = Arrays.asList(',', ';', '\t', ':');
-    public static List<String> currencies = Arrays.asList("$", "£", "€");
+    public static List<Unit> currencies;
+    static {
+        try
+        {
+            currencies = Arrays.asList(
+                DummyManager.INSTANCE.getUnitManager().loadUse("$"),
+                DummyManager.INSTANCE.getUnitManager().loadUse("£"),
+                DummyManager.INSTANCE.getUnitManager().loadUse("€")
+            );
+        }
+        catch (InternalException | UserException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
     public static List<String> dateFormats = CleanDateColumnType.DATE_FORMATS;
 
     public GenFormat()
@@ -44,7 +62,7 @@ public class GenFormat extends Generator<TextFormat>
             ColumnType type = sourceOfRandomness.choose(Arrays.asList(
                 ColumnType.BLANK,
                 new TextColumnType(),
-                new NumericColumnType(sourceOfRandomness.nextBoolean() ? "" : sourceOfRandomness.choose(currencies), sourceOfRandomness.nextInt(0, 6),sourceOfRandomness.nextBoolean()),
+                new NumericColumnType(sourceOfRandomness.nextBoolean() ? Unit.SCALAR : sourceOfRandomness.choose(currencies), sourceOfRandomness.nextInt(0, 6),sourceOfRandomness.nextBoolean()),
                 new CleanDateColumnType(sourceOfRandomness.choose(dateFormats), LocalDate::from)));
                 //TODO tag?, boolean
             // Don't end with blank:

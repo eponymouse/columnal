@@ -18,11 +18,11 @@ import records.data.RecordSet;
 import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
-import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -32,14 +32,11 @@ import java.math.BigDecimal;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
-import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -131,7 +128,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                             }
                         };
                     }
-                    return new MemoryNumericColumn(rs, nextCol.get(), new NumericColumnType("", 0, false), TestUtil.<String>makeList(len, gen, sourceOfRandomness, generationStatus));
+                    return new MemoryNumericColumn(rs, nextCol.get(), new NumericColumnType(Unit.SCALAR, 0, false), TestUtil.<String>makeList(len, gen, sourceOfRandomness, generationStatus));
                 }
                 catch (InternalException | UserException e)
                 {
@@ -207,7 +204,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                     {
 
                         @Override
-                        public List<Object> number(NumberDisplayInfo displayInfo) throws InternalException, UserException
+                        public List<Object> number(NumberInfo displayInfo) throws InternalException, UserException
                         {
                             return Collections.singletonList(Utility.parseNumber(new GenNumber().generate(r, generationStatus)));
                         }

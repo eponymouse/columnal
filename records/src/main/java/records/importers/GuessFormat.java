@@ -6,6 +6,7 @@ import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
 import records.data.columntype.TextColumnType;
+import records.data.unit.UnitManager;
 import utility.Utility;
 
 import java.math.BigDecimal;
@@ -31,7 +32,7 @@ public class GuessFormat
     public static final int MAX_HEADER_ROWS = 20;
     public static final int INITIAL_ROWS_TEXT_FILE = 100;
 
-    public static Format guessGeneralFormat(List<List<String>> vals)
+    public static Format guessGeneralFormat(UnitManager mgr, List<List<String>> vals)
     {
         try
         {
@@ -42,7 +43,7 @@ public class GuessFormat
             {
                 try
                 {
-                    Format format = guessBodyFormat(vals.get(headerRows).size(), headerRows, vals);
+                    Format format = guessBodyFormat(mgr, vals.get(headerRows).size(), headerRows, vals);
                     // If they are all text record this as feasible but keep going in case we get better
                     // result with more header rows:
                     if (format.columnTypes.stream().allMatch(c -> c.type.isText() || c.type.isBlank()))
@@ -75,7 +76,7 @@ public class GuessFormat
         }
     }
 
-    public static TextFormat guessTextFormat(List<String> initial)
+    public static TextFormat guessTextFormat(UnitManager mgr, List<String> initial)
     {
         try
         {
@@ -116,7 +117,7 @@ public class GuessFormat
                     List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> Arrays.asList(s.split(sep.getKey(), -1)));
 
                     //List<Function<RecordSet, Column>> columns = new ArrayList<>();
-                    Format format = guessBodyFormat(columnCount, headerRows, initialVals);
+                    Format format = guessBodyFormat(mgr, columnCount, headerRows, initialVals);
                     TextFormat textFormat = new TextFormat(format, sep.getKey().charAt(0));
                     // If they are all text record this as feasible but keep going in case we get better
                     // result with more header rows:
@@ -143,7 +144,7 @@ public class GuessFormat
         }
     }
 
-    private static Format guessBodyFormat(int columnCount, int headerRows, @NonNull List<@NonNull List<@NonNull String>> initialVals) throws GuessException
+    private static Format guessBodyFormat(UnitManager mgr, int columnCount, int headerRows, @NonNull List<@NonNull List<@NonNull String>> initialVals) throws GuessException
     {
         // Per row, for how many columns is it viable to get column name?
         Map<Integer, Integer> viableColumnNameRows = new HashMap<>();
@@ -250,9 +251,9 @@ public class GuessFormat
             else if (!possibleDateFormats.isEmpty())
                 columnTypes.add(new CleanDateColumnType(possibleDateFormats.get(0).formatString, possibleDateFormats.get(0).destQuery));
             else if (allNumeric)
-                columnTypes.add(new NumericColumnType(commonPrefix, minDP, false));
+                columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, false));
             else if (allNumericOrBlank)
-                columnTypes.add(new NumericColumnType(commonPrefix, minDP, true));
+                columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, true));
             else
                 columnTypes.add(new TextColumnType());
             // Go backwards to find column titles:

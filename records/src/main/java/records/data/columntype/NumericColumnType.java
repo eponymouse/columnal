@@ -1,19 +1,20 @@
 package records.data.columntype;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.unit.Unit;
 
 /**
  * Created by neil on 30/10/2016.
  */
 public class NumericColumnType extends ColumnType
 {
-    public final String displayPrefix;
+    public final Unit unit;
     public final boolean mayBeBlank;
     public final int minDP;
 
-    public NumericColumnType(String displayPrefix, int minDP, boolean mayBeBlank)
+    public NumericColumnType(Unit unit, int minDP, boolean mayBeBlank)
     {
-        this.displayPrefix = displayPrefix;
+        this.unit = unit;
         this.minDP = minDP;
         this.mayBeBlank = mayBeBlank;
     }
@@ -26,8 +27,8 @@ public class NumericColumnType extends ColumnType
 
     public String removePrefix(String val)
     {
-        if (val.startsWith(displayPrefix))
-            return val.substring(displayPrefix.length()).trim();
+        if (val.startsWith(unit.getDisplayPrefix()))
+            return val.substring(unit.getDisplayPrefix().length()).trim();
         else
             return val.trim();
     }
@@ -40,23 +41,15 @@ public class NumericColumnType extends ColumnType
 
         NumericColumnType that = (NumericColumnType) o;
 
-        return displayPrefix.equals(that.displayPrefix) && mayBeBlank == that.mayBeBlank;
-
+        if (minDP != that.minDP) return false;
+        return unit.equals(that.unit);
     }
 
     @Override
     public int hashCode()
     {
-        return displayPrefix.hashCode() + (mayBeBlank ? 100000 : 0);
-    }
-
-    @Override
-    public String toString()
-    {
-        return "NumericColumnType{" +
-            "displayPrefix='" + displayPrefix + '\'' +
-            ", mayBeBlank=" + mayBeBlank +
-            ", minDP=" + minDP +
-            '}';
+        int result = unit.hashCode();
+        result = 31 * result + minDP;
+        return result;
     }
 }

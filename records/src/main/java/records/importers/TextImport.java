@@ -41,7 +41,7 @@ public class TextImport
             while ((line = br.readLine()) != null && initial.size() < GuessFormat.INITIAL_ROWS_TEXT_FILE) {
                 initial.add(line);
             }
-            TextFormat format = GuessFormat.guessTextFormat(initial);
+            TextFormat format = GuessFormat.guessTextFormat(mgr.getUnitManager(), initial);
 
             long startPosition = Utility.skipFirstNRows(textFile, format.headerRows).startFrom;
 

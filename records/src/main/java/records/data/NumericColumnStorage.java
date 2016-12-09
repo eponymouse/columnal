@@ -6,9 +6,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataTypeValue;
-import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
@@ -81,34 +80,34 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     @MonotonicNonNull
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private DataTypeValue dataType;
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private NumberDisplayInfo displayInfo;
+    @OnThread(value = Tag.Any)
+    private final NumberInfo displayInfo;
 
-    public NumericColumnStorage(NumberDisplayInfo displayInfo)
+    public NumericColumnStorage(NumberInfo displayInfo)
     {
         this(displayInfo, 0, -1);
     }
 
     public NumericColumnStorage()
     {
-        this(NumberDisplayInfo.DEFAULT, 0, -1);
+        this(NumberInfo.DEFAULT, 0, -1);
     }
 
     public NumericColumnStorage(int numberOfTags) throws UserException
     {
-        this(numberOfTags, -1, NumberDisplayInfo.DEFAULT);
+        this(numberOfTags, -1, NumberInfo.DEFAULT);
         if (numberOfTags > MAX_TAGS)
             throw new UserException("Tried to create numeric column with " + numberOfTags + " tags");
     }
 
-    public NumericColumnStorage(int numberOfTags, int tagForNumeric, NumberDisplayInfo displayInfo) throws UserException
+    public NumericColumnStorage(int numberOfTags, int tagForNumeric, NumberInfo displayInfo) throws UserException
     {
         this(displayInfo, numberOfTags, tagForNumeric);
         if (numberOfTags > MAX_TAGS)
             throw new UserException("Tried to create numeric column with " + numberOfTags + " tags");
     }
 
-    private NumericColumnStorage(NumberDisplayInfo displayInfo, int numberOfTags, int tagForNumeric)
+    private NumericColumnStorage(NumberInfo displayInfo, int numberOfTags, int tagForNumeric)
     {
         this.numericTag = tagForNumeric;
         this.displayInfo = displayInfo;
@@ -541,11 +540,6 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         this.numericTag = numericTag;
     }
 
-    public synchronized void setDisplayInfo(NumberDisplayInfo displayInfo)
-    {
-        this.displayInfo = displayInfo;
-    }
-
     public List<String> getShrunk(int shrunkLength) throws InternalException
     {
         List<String> r = new ArrayList<>();
@@ -558,5 +552,10 @@ public class NumericColumnStorage implements ColumnStorage<Number>
                 r.add(n.toString());
         }
         return r;
+    }
+
+    public NumberInfo getDisplayInfo()
+    {
+        return displayInfo;
     }
 }

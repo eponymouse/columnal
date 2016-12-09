@@ -2,8 +2,7 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.columntype.NumericColumnType;
-import records.data.datatype.DataType;
-import records.data.datatype.DataType.NumberDisplayInfo;
+import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataTypeValue;
 import records.error.FetchException;
 import records.error.InternalException;
@@ -27,7 +26,7 @@ public class TextFileNumericColumn extends TextFileColumn
     public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, ColumnId columnName, int columnIndex, NumericColumnType type) throws InternalException, UserException
     {
         super(recordSet, textFile, fileStartPosition, sep, columnName, columnIndex);
-        loadedValues = new NumericColumnStorage(new NumberDisplayInfo(type.displayPrefix, type.minDP));
+        loadedValues = new NumericColumnStorage(new NumberInfo(type.unit, type.minDP));
     }
 
     private Number getWithProgress(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
