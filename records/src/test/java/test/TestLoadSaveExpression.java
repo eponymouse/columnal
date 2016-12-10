@@ -23,6 +23,7 @@ public class TestLoadSaveExpression
     @Test
     public void testParseSimple() throws InternalException, UserException
     {
+        //TODO add tests with units
         assertBothWays(
             new ColumnReference(new ColumnId("Card")),
             "@Card"
@@ -32,7 +33,7 @@ public class TestLoadSaveExpression
             "true"
         );
         assertBothWays(
-            new NumericLiteral(0),
+            new NumericLiteral(0, null),
             "0"
         );
         assertEquals(
@@ -60,23 +61,23 @@ public class TestLoadSaveExpression
             "false ! true"
         );
         assertBothWays(
-            new NotEqualExpression(new NumericLiteral(23), new BooleanLiteral(true)),
+            new NotEqualExpression(new NumericLiteral(23, null), new BooleanLiteral(true)),
             "23 ! true"
         );
         assertBothWays(
-            new NotEqualExpression(new NumericLiteral(0), new BooleanLiteral(true)),
+            new NotEqualExpression(new NumericLiteral(0, null), new BooleanLiteral(true)),
             "0 ! true"
         );
         assertBothWays(
             new NotEqualExpression(new BooleanLiteral(false),
-                new NotEqualExpression(new NumericLiteral(0), new BooleanLiteral(true))),
+                new NotEqualExpression(new NumericLiteral(0, null), new BooleanLiteral(true))),
             "false ! (0 ! true)"
         );
 
         assertBothWays(
-            new NotEqualExpression(new NumericLiteral(new BigDecimal("1403426927672136511427478267571691349056738827396")),
+            new NotEqualExpression(new NumericLiteral(new BigDecimal("1403426927672136511427478267571691349056738827396"), null),
                 new NotEqualExpression(
-                    new NotEqualExpression(new BooleanLiteral(false), new NumericLiteral(new BigDecimal("807027098579703254931175241526980987544176732399"))),
+                    new NotEqualExpression(new BooleanLiteral(false), new NumericLiteral(new BigDecimal("807027098579703254931175241526980987544176732399"), null)),
                     new BooleanLiteral(false)
                 )
             ),

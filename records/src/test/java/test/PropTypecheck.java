@@ -67,14 +67,14 @@ public class PropTypecheck
     @SuppressWarnings("nullness")
     public void propTypeCheckFail(@From(GenTypecheckFail.class) GenTypecheckFail.TypecheckInfo src) throws InternalException, UserException
     {
-        assertNull(src.expression.check(src.recordSet, new TypeState(), (e, s) -> {}));
+        assertNull(src.expression.check(src.recordSet, TestUtil.typeState(), (e, s) -> {}));
     }
 
     @Property
     @SuppressWarnings("nullness")
     public void propTypeCheckSucceed(@From(GenExpressionValue.class) GenExpressionValue.ExpressionValue src) throws InternalException, UserException
     {
-        assertEquals(src.type, src.expression.check(src.recordSet, new TypeState(), (e, s) -> {}));
+        assertEquals(src.expression.toString(), src.type, src.expression.check(src.recordSet, TestUtil.typeState(), (e, s) -> {}));
     }
 
     //#error Have property which generates tables/expressions of given types, and check they don't typecheck

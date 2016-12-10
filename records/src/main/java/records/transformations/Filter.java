@@ -48,7 +48,6 @@ import records.gui.DisplayValue;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
-import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -158,7 +157,7 @@ public class Filter extends Transformation
             {
                 // Must set it before, in case it throws:
                 typeChecked = true;
-                @Nullable DataType checked = filterExpression.check(data, new TypeState(), (e, s) -> {throw new UserException(s);});
+                @Nullable DataType checked = filterExpression.check(data, getTypeState(), (e, s) -> {throw new UserException(s);});
                 if (checked != null)
                     type = checked;
 
@@ -195,7 +194,7 @@ public class Filter extends Transformation
     @Override
     public @OnThread(Tag.FXPlatform) TransformationEditor edit()
     {
-        return new Editor(getId(), srcTableId, src);
+        return new Editor(getManager(), getId(), srcTableId, src);
     }
 
     @Override
@@ -227,10 +226,12 @@ public class Filter extends Transformation
         private final TextField rawField;
         private final ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData;
         private final ObservableList<Pair<String, List<DisplayValue>>> destHeaderAndData;
+        private final TableManager mgr;
 
         @OnThread(Tag.FXPlatform)
-        public Editor(@Nullable TableId thisTableId, TableId srcTableId, @Nullable Table src)
+        public Editor(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, @Nullable Table src)
         {
+            this.mgr = mgr;
             this.thisTableId = thisTableId;
             this.srcTableId = srcTableId;
             this.src = src;
@@ -243,7 +244,7 @@ public class Filter extends Transformation
         {
             if (src == null)
                 return;
-            if (expression.check(src.getData(), new TypeState(), (e, s) -> {}) == null)
+            if (expression.check(src.getData(), mgr.getTypeState(), (e, s) -> {}) == null)
                 return;
 
             if (allColumns.isEmpty())
@@ -453,9 +454,9 @@ public class Filter extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(TableId srcTableId, @Nullable Table src)
+        public TransformationEditor editNew(TableManager mgr, TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(null, srcTableId, src);
+            return new Editor(mgr, null, srcTableId, src);
         }
     }
 }

@@ -24,6 +24,7 @@ import records.grammar.MainParser.DataSourceContext;
 import records.grammar.MainParser.DataSourceImmediateContext;
 import records.grammar.MainParser.DetailContext;
 import records.grammar.MainParser.TableContext;
+import records.transformations.expression.TypeState;
 import utility.Pair;
 import utility.Utility;
 
@@ -56,7 +57,7 @@ public abstract class DataSource extends Table
         if (dataSource.dataSourceImmediate() != null)
         {
             DataSourceImmediateContext immed = dataSource.dataSourceImmediate();
-            List<Pair<ColumnId, DataType>> format = loadFormat(manager.getUnitManager(), immed.dataFormat());
+            List<Pair<ColumnId, DataType>> format = loadFormat(manager.getUnitManager(), manager.getTypeState(), immed.dataFormat());
             List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
 
             List<List<ItemContext>> dataRows = loadData(immed.detail());
@@ -92,7 +93,7 @@ public abstract class DataSource extends Table
         return rows;
     }
 
-    private static List<Pair<ColumnId, DataType>> loadFormat(UnitManager mgr, DataFormatContext dataFormatContext) throws UserException, InternalException
+    private static List<Pair<ColumnId, DataType>> loadFormat(UnitManager mgr, TypeState typeState, DataFormatContext dataFormatContext) throws UserException, InternalException
     {
         List<Pair<ColumnId, DataType>> r = new ArrayList<>();
         for (TerminalNode line : dataFormatContext.detail().DETAIL_LINE())
@@ -109,7 +110,7 @@ public abstract class DataSource extends Table
                 TypeContext type = column.type();
                 if (type == null)
                     throw new UserException("Null type on line \"" + line.getText() + "\" name: " + name + " type: " + type.getText());
-                r.add(new Pair<>(name, DataType.loadType(mgr, type)));
+                r.add(new Pair<>(name, DataType.loadType(mgr, typeState, type)));
                 return 0;
             });
         }

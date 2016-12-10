@@ -139,7 +139,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                 try
                 {
                     List<TagType<DataType>> tags = makeTags(0, sourceOfRandomness, generationStatus);
-                    return new MemoryTaggedColumn(rs, nextCol.get(), tags, TestUtil.makeList(len, new TagDataGenerator(tags), sourceOfRandomness, generationStatus));
+                    return new MemoryTaggedColumn(rs, nextCol.get(), TestUtil.makeString(sourceOfRandomness, generationStatus), tags, TestUtil.makeList(len, new TagDataGenerator(tags), sourceOfRandomness, generationStatus));
                 }
                 catch (InternalException | UserException e)
                 {
@@ -170,7 +170,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                     () -> DataType.NUMBER,
                     () -> DataType.BOOLEAN,
                     () -> DataType.DATE,
-                    () -> depth < 3 ? DataType.tagged(makeTags(depth + 1, sourceOfRandomness, generationStatus)) : null
+                    () -> depth < 3 ? DataType.tagged(TestUtil.makeString(sourceOfRandomness, generationStatus), makeTags(depth + 1, sourceOfRandomness, generationStatus)) : null
                 )).get());
             }
         });
@@ -228,7 +228,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                         }
 
                         @Override
-                        public List<Object> tagged(List<TagType<DataType>> tags) throws InternalException, UserException
+                        public List<Object> tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
                         {
                             return new TagDataGenerator(tags).generate(r, generationStatus);
                         }

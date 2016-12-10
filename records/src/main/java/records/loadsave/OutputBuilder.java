@@ -171,7 +171,7 @@ public class OutputBuilder
                 }
 
                 @Override
-                public String tagged(List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                public String tagged(String typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
                 {
                     TagType<DataTypeValue> t = tagTypes.get(g.get(index));
                     @Nullable DataTypeValue inner = t.getInner();

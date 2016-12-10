@@ -29,6 +29,7 @@ public class DumbObjectPool<T>
     private int used = 0;
     private final int limit;
 
+    @SuppressWarnings("unchecked")
     public DumbObjectPool(Class<T> cls, int limit)
     {
         this.cls = cls;
@@ -41,6 +42,7 @@ public class DumbObjectPool<T>
      * @param s
      * @return
      */
+    @SuppressWarnings("unchecked")
     public T pool(T s)
     {
         int index = Arrays.binarySearch((Object[])pool, 0, used, s);
@@ -78,11 +80,5 @@ public class DumbObjectPool<T>
     public List<@NonNull T> get()
     {
         return Collections.unmodifiableList(Arrays.asList(Arrays.copyOfRange(pool, 0, used)));
-    }
-
-    public void clear()
-    {
-        pool = (T[])Array.newInstance(cls, 4);
-        used = 0;
     }
 }

@@ -54,7 +54,7 @@ public class MemoryNumericColumn extends Column
         if (!mayBeBlank)
             return storage.getType();
 
-        return DataTypeValue.tagged(Arrays.asList(new TagType<>("Blank", null), new TagType<>("Number", storage.getType())),
+        return DataTypeValue.tagged("_BlankOrNumber", Arrays.asList(new TagType<>("Blank", null), new TagType<>("Number", storage.getType())),
             (i, prog) -> storage.getTag(i));
     }
 

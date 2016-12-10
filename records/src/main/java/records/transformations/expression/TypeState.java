@@ -6,15 +6,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.loadsave.OutputBuilder;
 import utility.ExConsumer;
+import utility.Pair;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
-import java.util.function.BiConsumer;
-import java.util.function.Consumer;
+import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 /**
@@ -23,15 +25,17 @@ import java.util.stream.Collectors;
 public class TypeState
 {
     private final HashMap<String, DataType> variables;
+    private final HashMap<String, DataType> tagTypes;
 
-    public TypeState()
+    public TypeState(Map<String, DataType> tagTypes)
     {
-        this(new HashMap<>());
+        this(new HashMap<>(), new HashMap<>(tagTypes));
     }
 
-    private TypeState(HashMap<String, DataType> variables)
+    private TypeState(HashMap<String, DataType> variables, HashMap<String, DataType> tagTypes)
     {
         this.variables = variables;
+        this.tagTypes = tagTypes;
     }
 
     public @Nullable TypeState add(String varName, DataType type, ExConsumer<String> error) throws InternalException, UserException
@@ -74,5 +78,55 @@ public class TypeState
     public int hashCode()
     {
         return variables.hashCode();
+    }
+
+    public @Nullable DataType findTaggedType(String typeName)
+    {
+        return tagTypes.get(typeName);
+    }
+
+    public @Nullable Pair<DataType, Integer> findTaggedType(Pair<@Nullable String, String> tagName, ExConsumer<String> onError) throws InternalException, UserException
+    {
+        @Nullable String typeName = tagName.getFirst();
+        @Nullable DataType type;
+        if (typeName != null)
+        {
+            type = tagTypes.get(typeName);
+            if (type == null)
+            {
+                onError.accept("Could not find tagged type: \"" + typeName + "\"");
+                return null;
+            }
+        }
+        else
+        {
+            // Try to infer.
+            List<Entry<String, DataType>> matches = new ArrayList<>();
+            for (Entry<String, DataType> entry : tagTypes.entrySet())
+            {
+                if (entry.getValue().hasTag(tagName.getSecond()))
+                    matches.add(entry);
+            }
+            if (matches.size() == 0)
+            {
+                onError.accept("Could not find type for tag: \"" + tagName + "\"");
+                return null;
+            }
+            else if (matches.size() > 1)
+            {
+                onError.accept("Multiple types match tag: \"" + tagName + "\" (" + matches.stream().map(Entry::getKey).collect(Collectors.joining(", ")) + ").  To select type, qualify the tag, e.g. \\" + OutputBuilder.quotedIfNecessary(matches.get(0).getKey()) + "\\" + OutputBuilder.quotedIfNecessary(tagName.getSecond()));
+                return null;
+            }
+            type = matches.get(0).getValue();
+        }
+
+        int tagIndex = type.unwrapTag(tagName.getSecond()).getFirst();
+        if (tagIndex == -1)
+        {
+            onError.accept("Type \"" + typeName + "\" does not have tag: \"" + tagName + "\"");
+            return null;
+        }
+
+        return new Pair<>(type, tagIndex);
     }
 }

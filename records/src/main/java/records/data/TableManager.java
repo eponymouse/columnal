@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -71,5 +72,11 @@ public class TableManager
     public UnitManager getUnitManager()
     {
         return unitManager;
+    }
+
+    public TypeState getTypeState()
+    {
+        // TODO keep track of known types
+        return new TypeState(new HashMap<>());
     }
 }

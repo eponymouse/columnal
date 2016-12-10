@@ -19,6 +19,7 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
+import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -263,13 +264,23 @@ public class TestUtil
                 DataType.number(new NumberInfo(new Unit(Rational.of(2)), 0)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m"), 0)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("cm"), 0)),
-                DataType.tagged(Arrays.asList(new TagType<DataType>("Single", null))),
-                DataType.tagged(Arrays.asList(new TagType<DataType>("Single ", null)))
+                DataType.tagged("A", Arrays.asList(new TagType<DataType>("Single", null))),
+                DataType.tagged("B", Arrays.asList(new TagType<DataType>("Single ", null)))
             );
         }
         catch (UserException | InternalException e)
         {
             throw new RuntimeException(e);
         }
+    }
+    private static Pair<@Nullable String, DataType> t(DataType type)
+    {
+        return new Pair<>(null, type);
+    }
+
+    @SuppressWarnings("nullness")
+    public static TypeState typeState()
+    {
+        return new TypeState(distinctTypes.stream().filter(p -> p.isTagged()).collect(Collectors.<DataType, String, DataType>toMap(t -> t.getTaggedTypeName(), t -> t)));
     }
 }

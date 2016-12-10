@@ -296,7 +296,7 @@ public class Sort extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(TableId srcTableId, @Nullable Table src)
+        public TransformationEditor editNew(TableManager mgr, TableId srcTableId, @Nullable Table src)
         {
             return new Editor(null, srcTableId, src, Collections.emptyList());
         }

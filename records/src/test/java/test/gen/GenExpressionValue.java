@@ -4,7 +4,6 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.time.LocalDateGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.KnownLengthRecordSet;
@@ -25,7 +24,6 @@ import test.TestUtil;
 import test.gen.GenExpressionValue.ExpressionValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -99,7 +97,8 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             @Override
             public Expression number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return termDeep(maxLevels, l(() -> new NumericLiteral(Utility.parseNumber(new GenNumber().generate(r, gs)))),
+                //TODO add units
+                return termDeep(maxLevels, l(() -> new NumericLiteral(Utility.parseNumber(new GenNumber().generate(r, gs)), displayInfo.getUnit())),
                     l());
             }
 
@@ -128,7 +127,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             }
 
             @Override
-            public Expression tagged(List<TagType<DataType>> tags) throws InternalException, UserException
+            public Expression tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 return termDeep(maxLevels, l(), l());
@@ -176,7 +175,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             }
 
             @Override
-            public List<Object> tagged(List<TagType<DataType>> tags) throws InternalException, UserException
+            public List<Object> tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 ArrayList<Object> o;

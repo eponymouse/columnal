@@ -96,7 +96,7 @@ public class ColumnReference extends Expression
             }
 
             @Override
-            public Formula tagged(List<TagType<DataType>> tags) throws InternalException, UserException
+            public Formula tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 throw new UserException("Can't do tags...");
             }

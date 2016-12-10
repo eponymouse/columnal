@@ -8,6 +8,8 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.NumberInfo;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.ExBiConsumer;
@@ -25,22 +27,26 @@ import java.util.Map;
 public class NumericLiteral extends Literal
 {
     private final Number value;
+    private final @Nullable Unit unit;
+    private final DataType type;
 
-    public NumericLiteral(Number value)
+    public NumericLiteral(Number value, @Nullable Unit unit)
     {
         this.value = value;
+        this.unit = unit;
+        this.type = unit == null ? DataType.NUMBER : DataType.number(new NumberInfo(unit, 0));
     }
 
     @Override
     public DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError)
     {
-        return DataType.NUMBER;
+        return type;
     }
 
     @Override
     public List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        return Collections.singletonList(value);
+        return Collections.<Object>singletonList(value);
     }
 
     @Override
@@ -72,12 +78,13 @@ public class NumericLiteral extends Literal
 
         NumericLiteral that = (NumericLiteral) o;
 
+        if (!that.type.equals(type)) return false;
         return Utility.compareNumbers(value, that.value) == 0;
     }
 
     @Override
     public int hashCode()
     {
-        return value.hashCode();
+        return value.hashCode() + 31 * type.hashCode();
     }
 }

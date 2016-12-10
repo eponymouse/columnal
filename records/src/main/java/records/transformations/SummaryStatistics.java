@@ -310,7 +310,7 @@ public class SummaryStatistics extends Transformation
                         }
 
                         @Override
-                        public FunctionInt<RecordSet, Column> tagged(List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag) throws InternalException, UserException
+                        public FunctionInt<RecordSet, Column> tagged(String typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag) throws InternalException, UserException
                         {
                             boolean ignoreNullaryTags = true; //TODO configure through GUI
 
@@ -328,7 +328,7 @@ public class SummaryStatistics extends Transformation
                                     }
                                 };
                             }
-                            return rs -> new CalculatedTaggedColumn(rs, name, tagTypes)
+                            return rs -> new CalculatedTaggedColumn(rs, name, typeName, tagTypes)
                             {
                                 @Override
                                 protected void fillNextCacheChunk() throws UserException, InternalException
@@ -479,7 +479,7 @@ public class SummaryStatistics extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(TableId srcTableId, @Nullable Table src)
+        public TransformationEditor editNew(TableManager mgr, TableId srcTableId, @Nullable Table src)
         {
             return new Editor(null, srcTableId, src, Collections.emptyMap(), Collections.emptyList());
         }
@@ -619,7 +619,7 @@ public class SummaryStatistics extends Transformation
                 }
 
                 @Override
-                public Boolean tagged(List<TagType<DataType>> tags) throws InternalException, UserException
+                public Boolean tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
                 {
                     // For MEAN and SUM, as long as one is numeric, it's potentially valid:
                     for (TagType tagType : tags)
@@ -982,7 +982,7 @@ public class SummaryStatistics extends Transformation
 
                     @Override
                     @OnThread(Tag.Simulation)
-                    public List<Number> tagged(List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                    public List<Number> tagged(String typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
                     {
                         @Nullable DataTypeValue nestedInner = tagTypes.get(g.get(index)).getInner();
                         if (nestedInner != null)

@@ -124,4 +124,12 @@ public class Unit
         else
             return scale.toString() + allUnits;
     }
+
+    public String forDisplay()
+    {
+        if (units.isEmpty() && scale.equals(Rational.ONE))
+            return "";
+        else
+            return toString();
+    }
 }

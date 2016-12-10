@@ -23,9 +23,9 @@ import records.grammar.DataParser.StringContext;
 import records.grammar.DataParser.TaggedContext;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser.NumberContext;
-import records.grammar.FormatParser.TagItemContext;
 import records.grammar.FormatParser.TypeContext;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExConsumer;
@@ -68,14 +68,16 @@ public class DataType
     // Flattened ADT.  kind is the head tag, other bits are null/non-null depending:
     public static enum Kind {NUMBER, TEXT, DATE, BOOLEAN, TAGGED }
     final Kind kind;
+    final @Nullable String taggedTypeName;
     final @Nullable NumberInfo numberInfo;
     final @Nullable List<TagType<DataType>> tagTypes;
 
-    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable List<TagType<DataType>> tagTypes)
+    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable Pair<String, List<TagType<DataType>>> tagInfo)
     {
         this.kind = kind;
         this.numberInfo = numberInfo;
-        this.tagTypes = tagTypes;
+        this.taggedTypeName = tagInfo == null ? null : tagInfo.getFirst();
+        this.tagTypes = tagInfo == null ? null : tagInfo.getSecond();
     }
 
     public static final DataType NUMBER = new DataType(Kind.NUMBER, NumberInfo.DEFAULT, null);
@@ -148,7 +150,7 @@ public class DataType
         R date() throws InternalException, E;
         R bool() throws InternalException, E;
 
-        R tagged(List<TagType<DataType>> tags) throws InternalException, E;
+        R tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, E;
         //R tuple() throws InternalException, E;
 
         //R array() throws InternalException, E;
@@ -174,7 +176,7 @@ public class DataType
         }
 
         @Override
-        public R tagged(List<TagType<DataType>> tags) throws InternalException, UserException
+        public R tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
         {
             throw new InternalException("Unexpected tagged data type");
         }
@@ -207,7 +209,7 @@ public class DataType
             case BOOLEAN:
                 return visitor.bool();
             case TAGGED:
-                return visitor.tagged(tagTypes);
+                return visitor.tagged(taggedTypeName, tagTypes);
             default:
                 throw new InternalException("Missing kind case");
         }
@@ -272,7 +274,8 @@ public class DataType
             @Override
             public String number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return "Number";
+                String unit = displayInfo.getUnit().forDisplay();
+                return "Number" + (unit.isEmpty() ? "" : "{" + unit + "}");
             }
 
             @Override
@@ -282,7 +285,7 @@ public class DataType
             }
 
             @Override
-            public String tagged(List<TagType<DataType>> tags) throws InternalException, UserException
+            public String tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 if (tags.size() == 1)
                 {
@@ -323,9 +326,9 @@ public class DataType
         }
     }
 
-    public static DataType tagged(List<TagType<DataType>> tagTypes)
+    public static DataType tagged(String name, List<TagType<DataType>> tagTypes)
     {
-        return new DataType(Kind.TAGGED, null, tagTypes);
+        return new DataType(Kind.TAGGED, null, new Pair<>(name, tagTypes));
     }
 
 
@@ -385,12 +388,12 @@ public class DataType
     @OnThread(Tag.Any)
     private DataTypeValue copy(GetValue<List<Object>> get, int curIndex) throws UserException, InternalException
     {
-        @Nullable List<TagType<DataTypeValue>> newTagTypes = null;
-        if (this.tagTypes != null)
+        @Nullable Pair<String, List<TagType<DataTypeValue>>> newTagTypes = null;
+        if (this.taggedTypeName != null && this.tagTypes != null)
         {
-            newTagTypes = new ArrayList<>();
+            newTagTypes = new Pair<>(taggedTypeName, new ArrayList<>());
             for (TagType tagType : this.tagTypes)
-                newTagTypes.add(new TagType<>(tagType.getName(), tagType.getInner() == null ? null : tagType.getInner().copy(get, curIndex + 1)));
+                newTagTypes.getSecond().add(new TagType<>(tagType.getName(), tagType.getInner() == null ? null : tagType.getInner().copy(get, curIndex + 1)));
         }
         return new DataTypeValue(kind, numberInfo, newTagTypes,
             (i, prog) -> (Number)get.getWithProgress(i, prog).get(curIndex),
@@ -405,8 +408,13 @@ public class DataType
         return kind == Kind.TAGGED;
     }
 
+    public @Nullable String getTaggedTypeName()
+    {
+        return taggedTypeName;
+    }
 
-    // Returns (true, null) if there's no inner type.  Returns (false, null) if no such constructor.
+
+    // Returns (N, null) if there's no inner type.  Returns (-1, null) if no such constructor.
     // Throws internal exception if not a tagged type
     public Pair<Integer, @Nullable DataType> unwrapTag(String constructor) throws InternalException
     {
@@ -547,7 +555,7 @@ public class DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column tagged(List<TagType<DataType>> tags) throws InternalException, UserException
+            public Column tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 List<List<Object>> values = new ArrayList<>(allData.size());
                 for (List<ItemContext> row : allData)
@@ -557,7 +565,7 @@ public class DataType
                         throw new UserException("Expected tagged value but found: \"" + row.get(columnIndex).getText() + "\"");
                     values.add(loadValue(tags, b));
                 }
-                return new MemoryTaggedColumn(rs, columnId, tags, values);
+                return new MemoryTaggedColumn(rs, columnId, typeName, tags, values);
             }
         });
     }
@@ -623,7 +631,7 @@ public class DataType
                         }
 
                         @Override
-                        public List<Object> tagged(List<TagType<DataType>> tags) throws InternalException, UserException
+                        public List<Object> tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
                         {
                             return loadValue(tags, item.tagged());
                         }
@@ -675,7 +683,7 @@ public class DataType
             }
 
             @Override
-            public UnitType tagged(List<TagType<DataType>> tags) throws InternalException, InternalException
+            public UnitType tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, InternalException
             {
                 b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY).t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
                 for (TagType<DataType> tag : tags)
@@ -692,7 +700,7 @@ public class DataType
     }
 
 
-    public static DataType loadType(UnitManager mgr, TypeContext type) throws InternalException, UserException
+    public static DataType loadType(UnitManager mgr, TypeState typeState, TypeContext type) throws InternalException, UserException
     {
         if (type.BOOLEAN() != null)
             return BOOLEAN;
@@ -706,8 +714,10 @@ public class DataType
             Unit unit = mgr.loadUse(n.UNIT().getText());
             return new DataType(Kind.NUMBER, new NumberInfo(unit, Integer.valueOf(n.DIGITS().getText())), null);
         }
-        else if (type.tagged() != null)
+        else if (type.tagRef() != null)
         {
+            //TODO move this to type loading code (alongside unit loading?)
+            /*
             List<TagType<DataType>> tags = new ArrayList<>();
             for (TagItemContext item : type.tagged().tagItem())
             {
@@ -717,14 +727,31 @@ public class DataType
                     throw new UserException("Duplicate tag names in format: \"" + tagName + "\"");
 
                 if (item.type() != null)
-                    tags.add(new TagType<DataType>(tagName, loadType(mgr, item.type())));
+                    tags.add(new TagType<DataType>(tagName, loadType(mgr, typeState, item.type())));
                 else
                     tags.add(new TagType<DataType>(tagName, null));
             }
 
-            return new DataType(Kind.TAGGED, null, tags);
+            return new DataType.tagged(tags);
+            */
+            DataType taggedType = typeState.findTaggedType(type.tagRef().getText());
+            if (taggedType == null)
+                throw new UserException("Undeclared tagged type: \"" + type.tagRef().getText() + "\"");
+            return taggedType;
         }
         else
             throw new InternalException("Unrecognised case: " + type);
+    }
+
+
+    public boolean hasTag(String tagName) throws UserException, InternalException
+    {
+        return apply(new SpecificDataTypeVisitor<Boolean>() {
+            @Override
+            public Boolean tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            {
+                return tags.stream().anyMatch(tt -> tt.getName().equals(tagName));
+            }
+        });
     }
 }

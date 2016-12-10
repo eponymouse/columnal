@@ -12,6 +12,7 @@ import records.grammar.MainLexer;
 import records.grammar.MainParser.PositionContext;
 import records.gui.TableDisplay;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -27,6 +28,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class Table
 {
+    private final TableManager mgr;
     private final TableId id;
     @OnThread(Tag.FXPlatform)
     private @MonotonicNonNull TableDisplay display;
@@ -36,11 +38,13 @@ public abstract class Table
     // Assigns a new arbitrary ID which is not in use
     protected Table(TableManager mgr)
     {
+        this.mgr = mgr;
         this.id = mgr.getNextFreeId(this);
     }
 
     protected Table(TableManager mgr, @Nullable TableId id)
     {
+        this.mgr = mgr;
         if (id == null)
             this.id = mgr.getNextFreeId(this);
         else
@@ -131,4 +135,17 @@ public abstract class Table
     {
         return display;
     }
+
+
+    protected TypeState getTypeState()
+    {
+        return mgr.getTypeState();
+    }
+
+    @OnThread(Tag.Any)
+    protected TableManager getManager()
+    {
+        return mgr;
+    }
+
 }

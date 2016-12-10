@@ -18,11 +18,11 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
     private final TaggedColumnStorage storage;
 
     @SuppressWarnings("initialization")
-    public <DT extends DataType> CalculatedTaggedColumn(RecordSet recordSet, ColumnId name, List<TagType<DT>> copyTagTypes) throws InternalException, UserException
+    public <DT extends DataType> CalculatedTaggedColumn(RecordSet recordSet, ColumnId name, String typeName, List<TagType<DT>> copyTagTypes) throws InternalException, UserException
     {
         super(recordSet, name);
         
-        this.storage = new TaggedColumnStorage(copyTagTypes);
+        this.storage = new TaggedColumnStorage(typeName, copyTagTypes);
     }
 
     @Override

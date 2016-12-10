@@ -8,6 +8,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
@@ -27,9 +28,10 @@ public class DataTypeValue extends DataType
     private final @Nullable GetValue<Integer> getTag;
 
     // package-visible
-    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable List<TagType<DataTypeValue>> tagTypes, @Nullable GetValue<Number> getNumber, @Nullable GetValue<String> getText, @Nullable GetValue<Temporal> getDate, @Nullable GetValue<Boolean> getBoolean, @Nullable GetValue<Integer> getTag)
+    @SuppressWarnings("unchecked")
+    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable Pair<String, List<TagType<DataTypeValue>>> tagTypes, @Nullable GetValue<Number> getNumber, @Nullable GetValue<String> getText, @Nullable GetValue<Temporal> getDate, @Nullable GetValue<Boolean> getBoolean, @Nullable GetValue<Integer> getTag)
     {
-        super(kind, numberInfo, (List<TagType<DataType>>)(List)tagTypes);
+        super(kind, numberInfo, (Pair<String, List<TagType<DataType>>>)(Pair)tagTypes);
         this.getNumber = getNumber;
         this.getText = getText;
         this.getDate = getDate;
@@ -42,9 +44,9 @@ public class DataTypeValue extends DataType
         return new DataTypeValue(Kind.BOOLEAN, null, null, null, null, null, getValue, null);
     }
 
-    public static DataTypeValue tagged(List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag)
+    public static DataTypeValue tagged(String name, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag)
     {
-        return new DataTypeValue(Kind.TAGGED, null, tagTypes, null, null, null, null, getTag);
+        return new DataTypeValue(Kind.TAGGED, null, new Pair<>(name, tagTypes), null, null, null, null, getTag);
     }
 
     public static DataTypeValue text(GetValue<String> getText)
@@ -113,7 +115,7 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R tagged(List<TagType<DataTypeValue>> tags, GetValue<Integer> g) throws InternalException, UserException
+        public R tagged(String typeName, List<TagType<DataTypeValue>> tags, GetValue<Integer> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected tagged data type");
         }
@@ -139,7 +141,7 @@ public class DataTypeValue extends DataType
         R bool(GetValue<Boolean> g) throws InternalException, E;
         R date(GetValue<Temporal> g) throws InternalException, E;
 
-        R tagged(List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
+        R tagged(String typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
         //R tuple(List<DataType> types) throws InternalException, E;
 
         //R array(DataType type) throws InternalException, E;
@@ -167,7 +169,7 @@ public class DataTypeValue extends DataType
             case BOOLEAN:
                 return visitor.bool(getBoolean);
             case TAGGED:
-                return visitor.tagged((List<TagType<DataTypeValue>>)(List)tagTypes, getTag);
+                return visitor.tagged(taggedTypeName, (List<TagType<DataTypeValue>>)(List)tagTypes, getTag);
             default:
                 throw new InternalException("Missing kind case");
         }
@@ -203,7 +205,7 @@ public class DataTypeValue extends DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public List<Object> tagged(List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public List<Object> tagged(String typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 List<Object> l = new ArrayList<>();
                 Integer tagIndex = g.get(index);
@@ -232,12 +234,12 @@ public class DataTypeValue extends DataType
 
     public DataTypeValue copyReorder(GetValue<Integer> getOriginalIndex) throws UserException, InternalException
     {
-        List<TagType<DataTypeValue>> newTagTypes = null;
-        if (this.tagTypes != null)
+        Pair<String, List<TagType<DataTypeValue>>> newTagTypes = null;
+        if (this.tagTypes != null && this.taggedTypeName != null)
         {
-            newTagTypes = new ArrayList<>();
+            newTagTypes = new Pair<>(taggedTypeName, new ArrayList<>());
             for (TagType t : tagTypes)
-                newTagTypes.add(new TagType<>(t.getName(), t.getInner() == null ? null : ((DataTypeValue)t.getInner()).copyReorder(getOriginalIndex)));
+                newTagTypes.getSecond().add(new TagType<>(t.getName(), t.getInner() == null ? null : ((DataTypeValue)t.getInner()).copyReorder(getOriginalIndex)));
         }
 
 

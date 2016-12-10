@@ -42,6 +42,6 @@ public abstract class TransformationInfo
     public abstract Transformation load(TableManager mgr, TableId tableId, List<TableId> source, String detail) throws InternalException, UserException;
 
     @OnThread(Tag.FXPlatform)
-    public abstract TransformationEditor editNew(TableId srcTableId, @Nullable Table src);
+    public abstract TransformationEditor editNew(TableManager mgr, TableId srcTableId, @Nullable Table src);
 
 }

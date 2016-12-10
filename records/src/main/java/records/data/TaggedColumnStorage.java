@@ -50,7 +50,7 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
     private final DataTypeValue dataType;
 
     @SuppressWarnings("initialization")
-    public <DT extends DataType> TaggedColumnStorage(List<TagType<DT>> copyTagTypes) throws InternalException, UserException
+    public <DT extends DataType> TaggedColumnStorage(String typeName, List<TagType<DT>> copyTagTypes) throws InternalException, UserException
     {
         tagStore = new NumericColumnStorage(copyTagTypes.size());
         innerValueIndex = new NumericColumnStorage();
@@ -94,9 +94,9 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
                     }
 
                     @Override
-                    public Pair<ColumnStorage<?>, DataTypeValue> tagged(List<TagType<DataType>> tags) throws InternalException, UserException
+                    public Pair<ColumnStorage<?>, DataTypeValue> tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
                     {
-                        TaggedColumnStorage storage = new TaggedColumnStorage(tags);
+                        TaggedColumnStorage storage = new TaggedColumnStorage(typeName, tags);
                         // In contrast to simple, we flatten things by returning the inner list
                         // instead of nesting it in another list:
                         return new Pair<>(storage, inner.copy((rowIndex, prog) -> storage.get(innerValueIndex.get(rowIndex).intValue())));
@@ -111,7 +111,7 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
                 valueStores.add(null);
             }
         }
-        dataType = DataTypeValue.tagged(tagTypes, (i, prog) -> {
+        dataType = DataTypeValue.tagged(typeName, tagTypes, (i, prog) -> {
                 return tagStore.getTag(i);
                 });
     }
@@ -193,7 +193,7 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
             }
 
             @Override
-            public UnitType tagged(List<TagType<DataType>> tags) throws InternalException
+            public UnitType tagged(String typeName, List<TagType<DataType>> tags) throws InternalException
             {
                 ColumnStorage storage = valueStores.get(tagIndex);
                 if (storage == null)

@@ -112,7 +112,7 @@ public abstract class Expression
         @Override
         public Expression visitNumericLiteral(NumericLiteralContext ctx)
         {
-            return new NumericLiteral(Utility.parseNumber(ctx.getText()));
+            return new NumericLiteral(Utility.parseNumber(ctx.getText()), null);
         }
 
         @Override

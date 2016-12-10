@@ -20,7 +20,6 @@ import javafx.stage.Window;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Table;
 import records.data.TableId;
@@ -90,7 +89,7 @@ public class EditTransformationDialog
         Utility.addChangeListenerPlatform(selectedTransformation, trans ->
         {
             if (trans != null)
-                editor.set(Optional.of(trans.editNew(srcId, src)));
+                editor.set(Optional.of(trans.editNew(parentView.getManager(), srcId, src)));
             else
                 editor.set(Optional.empty());
         });

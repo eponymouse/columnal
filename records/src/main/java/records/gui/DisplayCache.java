@@ -167,7 +167,7 @@ public class DisplayCache
 
                     @Override
                     @OnThread(Tag.Simulation)
-                    public DisplayValue tagged(List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                    public DisplayValue tagged(String typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
                     {
                         int tag = g.getWithProgress(index, prog);
                         TagType<DataTypeValue> tagType = tagTypes.get(tag);
