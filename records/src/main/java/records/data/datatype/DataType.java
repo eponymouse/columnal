@@ -459,6 +459,13 @@ public class DataType
         return result;
     }
 
+    @Pure
+    public boolean isNumber()
+    {
+        return kind == Kind.NUMBER;
+    }
+
+    @Pure
     public NumberInfo getNumberInfo() throws InternalException
     {
         if (numberInfo != null)

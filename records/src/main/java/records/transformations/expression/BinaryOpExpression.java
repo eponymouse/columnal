@@ -118,7 +118,7 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @Override
-    public Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws UserException, InternalException
+    public @Nullable Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws UserException, InternalException
     {
         // Most binary ops require same type, so this is typical (can always override):
         if (r.nextBoolean())

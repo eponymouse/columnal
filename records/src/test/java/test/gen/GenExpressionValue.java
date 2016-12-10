@@ -21,6 +21,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.unit.Unit;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
@@ -29,6 +30,7 @@ import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.AndExpression;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
+import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NotEqualExpression;
@@ -167,6 +169,23 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                     expressions.add(make(type, Collections.singletonList(add ? diff : diff.negate()), maxLevels - 1));
                     ops.add(add ? Op.ADD : Op.SUBTRACT);
                     return new AddSubtractExpression(expressions, ops);
+                }, () -> {
+                    // A few options; keep units and value in numerator and divide by 1
+                    // Or make random denom, times that by target to get num, and make up crazy units which work
+                    if (r.nextInt(0, 4) == 0)
+                        return new DivideExpression(make(type, targetValue, maxLevels - 1), new NumericLiteral(1, Unit.SCALAR));
+                    else
+                    {
+                        Number denominator;
+                        do
+                        {
+                            denominator = genBD();
+                        } while (denominator.toString().equals("0"));
+                        Number numerator = Utility.multiplyNumbers((Number) targetValue.get(0), denominator);
+                        // TODO vary units
+                        // TODO test division by zero behaviour (test errors generally)
+                        return new DivideExpression(make(type, Collections.singletonList(numerator), maxLevels - 1), make(DataType.NUMBER, Collections.singletonList(denominator), maxLevels - 1));
+                    }
                 }));
             }
 

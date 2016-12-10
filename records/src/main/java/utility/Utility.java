@@ -377,6 +377,54 @@ public class Utility
             return BigInteger.valueOf(number.longValue());
     }
 
+    public static Number multiplyNumbers(Number lhs, Number rhs)
+    {
+        if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
+        {
+            return toBigDecimal(lhs).multiply(toBigDecimal(rhs));
+        }
+        else if (lhs instanceof BigInteger || rhs instanceof BigInteger)
+        {
+            return toBigInteger(lhs).multiply(toBigInteger(rhs));
+        }
+        else
+        {
+            try
+            {
+                return Math.multiplyExact(lhs.longValue(), rhs.longValue());
+            }
+            catch (ArithmeticException e)
+            {
+                return multiplyNumbers(toBigInteger(lhs), toBigInteger(rhs));
+            }
+        }
+    }
+
+    public static Number divideNumbers(Number lhs, Number rhs)
+    {
+        if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
+        {
+            return toBigDecimal(lhs).divide(toBigDecimal(rhs));
+        }
+        else if (lhs instanceof BigInteger || rhs instanceof BigInteger)
+        {
+            BigInteger[] divRem = toBigInteger(lhs).divideAndRemainder(toBigInteger(rhs));
+            if (divRem[1].equals(BigInteger.ZERO))
+                return divRem[0];
+            else
+                return divideNumbers(toBigDecimal(lhs), toBigDecimal(rhs));
+        }
+        else
+        {
+            long lhsLong = lhs.longValue();
+            long rhsLong = rhs.longValue();
+            if (lhsLong % rhsLong == 0)
+                return lhsLong / rhsLong;
+            else
+                return divideNumbers(toBigDecimal(lhs), toBigDecimal(rhs));
+        }
+    }
+
     public static class ReadState
     {
         public long startFrom;
