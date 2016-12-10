@@ -1,8 +1,18 @@
 package records.transformations.expression;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.ColumnId;
+import records.data.RecordSet;
+import records.data.datatype.DataType;
+import records.error.FunctionInt;
+import records.error.InternalException;
+import records.error.UserException;
+import utility.ExBiConsumer;
+import utility.Pair;
 
+import java.util.Random;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -34,6 +44,8 @@ public abstract class BinaryOpExpression extends Expression
     private final Op op;*/
     protected final Expression lhs;
     protected final Expression rhs;
+    protected @Nullable DataType lhsType;
+    protected @Nullable DataType rhsType;
 
     protected BinaryOpExpression(Expression lhs, Expression rhs)
     {
@@ -82,4 +94,40 @@ public abstract class BinaryOpExpression extends Expression
     }
     
     public abstract BinaryOpExpression copy(@Nullable Expression replaceLHS, @Nullable Expression replaceRHS);
+
+    @Override
+    public final @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    {
+        lhsType = lhs.check(data, state, onError);
+        rhsType = rhs.check(data, state, onError);
+        if (lhsType == null || rhsType == null)
+            return null;
+        return checkBinaryOp(data, state, onError);
+    }
+
+    @RequiresNonNull({"lhsType", "rhsType"})
+    protected abstract @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException;
+
+    @Override
+    public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
+    {
+        return Stream.concat(
+            lhs._test_allMutationPoints().map(p -> new Pair<>(p.getFirst(), newLHS -> copy(newLHS, rhs))),
+            rhs._test_allMutationPoints().map(p -> new Pair<>(p.getFirst(), newRHS -> copy(lhs, newRHS)))
+        );
+    }
+
+    @Override
+    public Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws UserException, InternalException
+    {
+        // Most binary ops require same type, so this is typical (can always override):
+        if (r.nextBoolean())
+        {
+            return copy(newExpressionOfDifferentType.apply(lhsType), rhs);
+        }
+        else
+        {
+            return copy(lhs, newExpressionOfDifferentType.apply(rhsType));
+        }
+    }
 }

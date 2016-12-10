@@ -6,6 +6,7 @@ import com.pholser.junit.quickcheck.generator.java.time.LocalDateGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 import records.data.Column;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
@@ -19,6 +20,7 @@ import records.error.UserException;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
+import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
@@ -78,10 +80,9 @@ public class GenExpressionValue extends Generator<ExpressionValue>
         this.columns = new ArrayList<>();
         try
         {
-            DataType type = makeType();
-            List<Object> value = makeValue(type);
-            Expression expression = make(type, value, 4);
-            return new ExpressionValue(type, value, new KnownLengthRecordSet("", columns, 1), expression);
+            DataType type = makeType(r);
+            Pair<List<Object>, Expression> p = makeOfType(type);
+            return new ExpressionValue(type, p.getFirst(), new KnownLengthRecordSet("", this.columns, 1), p.getSecond());
         }
         catch (InternalException | UserException e)
         {
@@ -89,8 +90,18 @@ public class GenExpressionValue extends Generator<ExpressionValue>
         }
     }
 
+    // Only valid after calling generate
+    @NotNull
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
+    public Pair<List<Object>, Expression> makeOfType(DataType type) throws UserException, InternalException
+    {
+        List<Object> value = makeValue(type);
+        Expression expression = make(type, value, 4);
+        return new Pair<>(value, expression);
+    }
+
     @SuppressWarnings("intern")
-    private DataType makeType()
+    public static DataType makeType(SourceOfRandomness r)
     {
         // Leave out dates until we can actually make date values:
         return r.choose(distinctTypes.stream().filter(t -> t != DataType.DATE).collect(Collectors.<DataType>toList()));
@@ -125,9 +136,14 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             {
                 return termDeep(maxLevels, l(() -> new BooleanLiteral(r.nextBoolean())), l(
                     () -> {
-                        DataType t = makeType();
+                        DataType t = makeType(r);
                         List<Object> val = makeValue(t);
                         return new EqualExpression(make(t, val, maxLevels - 1), make(t, val, maxLevels - 1));
+                    },
+                    () -> {
+                        DataType t = makeType(r);
+                        List<Object> val = makeValue(t);
+                        return new NotEqualExpression(make(t, val, maxLevels - 1), make(t, val, maxLevels - 1));
                     }
                 ));
             }
@@ -156,7 +172,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
     }
     
     @FunctionalInterface
-    private static interface ExpressionMaker
+    public static interface ExpressionMaker
     {
         public Expression make() throws InternalException, UserException;
     }

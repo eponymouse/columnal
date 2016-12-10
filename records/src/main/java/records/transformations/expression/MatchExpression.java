@@ -1,6 +1,5 @@
 package records.transformations.expression;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -8,6 +7,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
+import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
@@ -21,6 +21,7 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -479,5 +480,18 @@ public class MatchExpression extends Expression
         int result = expression.hashCode();
         result = 31 * result + clauses.hashCode();
         return result;
+    }
+
+    @Override
+    public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
+    {
+        // TODO allow replacement within clauses
+        return expression._test_allMutationPoints().map(p -> p.replaceSecond(e -> new MatchExpression(e, Utility.<MatchClause, Function<MatchExpression, MatchClause>>mapList(clauses, c -> c::copy))));
+    }
+
+    @Override
+    public Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws InternalException, UserException
+    {
+        throw new UnimplementedException();
     }
 }

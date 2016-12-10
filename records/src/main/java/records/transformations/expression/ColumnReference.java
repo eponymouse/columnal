@@ -12,6 +12,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
+import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.loadsave.OutputBuilder;
@@ -20,6 +21,8 @@ import utility.Pair;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -127,6 +130,19 @@ public class ColumnReference extends Expression
         int result = tableName != null ? tableName.hashCode() : 0;
         result = 31 * result + columnName.hashCode();
         return result;
+    }
+
+    @Override
+    public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
+    {
+        return Stream.empty();
+    }
+
+    @Override
+    public @Nullable Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws InternalException, UserException
+    {
+        // TODO could replace with an invalid column name
+        return null;
     }
 }
 

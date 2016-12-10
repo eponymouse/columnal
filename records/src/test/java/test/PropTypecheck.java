@@ -68,7 +68,10 @@ public class PropTypecheck
     @SuppressWarnings("nullness")
     public void propTypeCheckFail(@From(GenTypecheckFail.class) GenTypecheckFail.TypecheckInfo src) throws InternalException, UserException
     {
-        assertNull(src.expression.check(src.recordSet, TestUtil.typeState(), (e, s) -> {}));
+        for (Expression expression : src.expressionFailures)
+        {
+            assertNull(expression.toString(), expression.check(src.recordSet, TestUtil.typeState(), (e, s) -> {}));
+        }
     }
 
     @Property

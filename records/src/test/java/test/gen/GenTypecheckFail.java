@@ -3,27 +3,29 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import records.data.KnownLengthRecordSet;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
+import test.TestUtil;
+import test.gen.GenExpressionValue.ExpressionValue;
 import test.gen.GenTypecheckFail.TypecheckInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 
-import java.util.Arrays;
-
-import static test.TestUtil.distinctTypes;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 10/12/2016.
  */
 public class GenTypecheckFail extends Generator<TypecheckInfo>
 {
+
+    @SuppressWarnings("initialization")
     public GenTypecheckFail()
     {
         super(TypecheckInfo.class);
@@ -32,35 +34,67 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
     public class TypecheckInfo
     {
         public final RecordSet recordSet;
-        public final Expression expression;
+        public final List<Expression> expressionFailures;
 
-        public TypecheckInfo(RecordSet recordSet, Expression expression)
+        public TypecheckInfo(RecordSet recordSet, List<Expression> expressionFailures)
         {
             this.recordSet = recordSet;
-            this.expression = expression;
+            this.expressionFailures = expressionFailures;
         }
     }
 
 
     @Override
     @OnThread(value = Tag.Simulation,ignoreParent = true)
+    @SuppressWarnings("nullness")
     public TypecheckInfo generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
+        GenExpressionValue gen = new GenExpressionValue();
+        ExpressionValue valid = gen.generate(r, generationStatus);
         try
         {
-            Pair<Boolean, Expression> p = makeExpression(true, r.choose(distinctTypes), r);
-            if (!p.getFirst())
-                throw new RuntimeException("Generated expression will not fail type check!");
-            return new TypecheckInfo(new KnownLengthRecordSet("", Arrays.asList(), 0), p.getSecond());
+            valid.expression.check(valid.recordSet, TestUtil.typeState(), (e, s) ->
+            {
+                throw new RuntimeException(s);
+            });
         }
         catch (InternalException | UserException e)
         {
             throw new RuntimeException(e);
         }
+        List<Expression> failures = valid.expression._test_allMutationPoints().map(p -> {
+            try
+            {
+                @Nullable Expression failedCopy = p.getFirst()._test_typeFailure(r.toJDKRandom(), type -> gen.makeOfType(pickTypeOtherThan(type, r)).getSecond());
+                if (failedCopy == null)
+                    return null;
+                else
+                    return p.getSecond().apply(failedCopy);
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }).filter(p -> p != null).collect(Collectors.toList());
+
+        return new TypecheckInfo(valid.recordSet, failures);
     }
 
-    private Pair<Boolean, Expression> makeExpression(boolean forceFail, DataType type, SourceOfRandomness r)
+    private DataType pickType(SourceOfRandomness r)
     {
-        return new Pair<>(true, new BooleanLiteral(true)); //TODO
+        return GenExpressionValue.makeType(r);
+    }
+
+    @SuppressWarnings("intern")
+    private DataType pickTypeOtherThan(@Nullable DataType type, SourceOfRandomness r)
+    {
+        DataType picked;
+        do
+        {
+            picked = pickType(r);
+        }
+        while (picked == type);
+        return picked;
+
     }
 }

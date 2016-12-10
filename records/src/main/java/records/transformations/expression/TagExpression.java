@@ -7,6 +7,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
+import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
@@ -20,6 +21,8 @@ import utility.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
@@ -30,6 +33,7 @@ public class TagExpression extends Expression
     private final Pair<@Nullable String, String> tagName;
     private final @Nullable Expression inner;
     private int index;
+    private @Nullable DataType innerDerivedType;
 
     public TagExpression(Pair<@Nullable String, String> tagName, @Nullable Expression inner)
     {
@@ -45,7 +49,7 @@ public class TagExpression extends Expression
             return null;
         index = typeAndIndex.tagIndex;
 
-        @Nullable DataType innerDerivedType = inner == null ? null : inner.check(data, state, onError);
+        innerDerivedType = inner == null ? null : inner.check(data, state, onError);
         // We must not pass nulls to checkSame as that counts as failed checking, not optional items
         if ((inner == null && typeAndIndex.innerType == null) || DataType.checkSame(typeAndIndex.innerType, innerDerivedType, err -> onError.accept(this, err)) != null)
         {
@@ -94,5 +98,30 @@ public class TagExpression extends Expression
     public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
     {
         throw new UnimplementedException();
+    }
+
+    @Override
+    public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
+    {
+        return inner == null ? Stream.empty() : inner._test_allMutationPoints().map(p -> p.replaceSecond(e -> new TagExpression(tagName, e)));
+    }
+
+    @Override
+    @OnThread(Tag.Simulation)
+    public Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws InternalException, UserException
+    {
+        // TODO could replace with known invalid tag
+        if (inner == null)
+            // Shouldn't have type; add one:
+            return new TagExpression(tagName, newExpressionOfDifferentType.apply(innerDerivedType));
+        else
+        {
+            if (r.nextBoolean())
+                // Should have type; scrap it:
+                return new TagExpression(tagName, null);
+            else
+                // Should have type, but replace with different:
+                return new TagExpression(tagName, newExpressionOfDifferentType.apply(innerDerivedType));
+        }
     }
 }

@@ -1,5 +1,6 @@
 package records.data.unit;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import records.error.UserException;
 import utility.Utility;
@@ -131,5 +132,25 @@ public class Unit
             return "";
         else
             return toString();
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Unit unit = (Unit) o;
+
+        if (!units.equals(unit.units)) return false;
+        return scale.equals(unit.scale);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = units.hashCode();
+        result = 31 * result + scale.hashCode();
+        return result;
     }
 }

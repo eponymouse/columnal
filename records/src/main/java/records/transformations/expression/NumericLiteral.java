@@ -52,10 +52,15 @@ public class NumericLiteral extends Literal
     @Override
     public String save(boolean topLevel)
     {
+        String num;
         if (value instanceof Double)
-            return String.format("%f", value.doubleValue());
+            num = String.format("%f", value.doubleValue());
         else
-            return value.toString();
+            num =  value.toString();
+        if (unit == null || unit.equals(Unit.SCALAR))
+            return num;
+        else
+            return num + "{" + unit.toString() + "}";
     }
 
     @Override

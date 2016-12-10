@@ -27,6 +27,10 @@ public final class Pair<A, B>
         return second;
     }
 
+    public <C> Pair<A, C> replaceSecond(C replacement)
+    {
+        return new Pair<A, C>(first, replacement);
+    }
 
     @Override
     public boolean equals(@Nullable Object o)

@@ -10,6 +10,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
+import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
@@ -41,6 +42,7 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -227,4 +229,21 @@ public abstract class Expression
     {
         return save(true);
     }
+
+    // This is like a zipper.  It gets a list of all expressions in the tree (i.e. all nodes)
+    // and returns them, along with a function.  If you pass that function a replacement,
+    // it will build you a new copy of the entire expression with that one node replaced.
+    // Used for testing
+    public final Stream<Pair<Expression, Function<Expression, Expression>>> _test_allMutationPoints()
+    {
+        return Stream.concat(Stream.of(new Pair<>(this, e -> e)), _test_childMutationPoints());
+    }
+
+    public abstract Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints();
+
+    // If this item can't make a type failure by itself (e.g. a literal) then returns null
+    // Otherwise, uses the given generator to make a copy of itself which contains a type failure
+    // in this node.  E.g. an equals expression might replace the lhs or rhs with a different type
+    @OnThread(Tag.Simulation)
+    public abstract @Nullable Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws InternalException, UserException;
 }
