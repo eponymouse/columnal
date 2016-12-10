@@ -8,6 +8,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 import records.data.Column;
+import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
@@ -18,12 +19,14 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.ColumnReference;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
+import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenExpressionValue.ExpressionValue;
 import threadchecker.OnThread;
@@ -82,12 +85,19 @@ public class GenExpressionValue extends Generator<ExpressionValue>
         {
             DataType type = makeType(r);
             Pair<List<Object>, Expression> p = makeOfType(type);
-            return new ExpressionValue(type, p.getFirst(), new KnownLengthRecordSet("", this.columns, 1), p.getSecond());
+            return new ExpressionValue(type, p.getFirst(), getRecordSet(), p.getSecond());
         }
         catch (InternalException | UserException e)
         {
             throw new RuntimeException(e);
         }
+    }
+
+    @NotNull
+    @OnThread(Tag.Simulation)
+    public KnownLengthRecordSet getRecordSet() throws InternalException, UserException
+    {
+        return new KnownLengthRecordSet("", this.columns, 1);
     }
 
     // Only valid after calling generate
@@ -114,7 +124,6 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             @Override
             public Expression number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                //TODO add units
                 return termDeep(maxLevels, l(() -> new NumericLiteral(Utility.parseNumber(new GenNumber().generate(r, gs)), displayInfo.getUnit())),
                     l());
             }
@@ -122,7 +131,10 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             @Override
             public Expression text() throws InternalException, UserException
             {
-                return termDeep(maxLevels, l(() -> new StringLiteral((String)targetValue.get(0))), l());
+                return termDeep(maxLevels, l(
+                    () -> columnRef(type),
+                    () -> new StringLiteral((String)targetValue.get(0))
+                ), l());
             }
 
             @Override
@@ -170,7 +182,14 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             }
         });
     }
-    
+
+    private Expression columnRef(DataType type)
+    {
+        ColumnId name = new ColumnId("GEV Col " + columns.size());
+        columns.add(rs -> type.makeImmediateColumn(rs, name, Collections.emptyList(), 0));
+        return new ColumnReference(name);
+    }
+
     @FunctionalInterface
     public static interface ExpressionMaker
     {

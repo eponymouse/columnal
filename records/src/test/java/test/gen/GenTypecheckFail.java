@@ -57,27 +57,28 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
             {
                 throw new RuntimeException(s);
             });
+
+            List<Expression> failures = valid.expression._test_allMutationPoints().map(p -> {
+                try
+                {
+                    @Nullable Expression failedCopy = p.getFirst()._test_typeFailure(r.toJDKRandom(), type -> gen.makeOfType(pickTypeOtherThan(type, r)).getSecond());
+                    if (failedCopy == null)
+                        return null;
+                    else
+                        return p.getSecond().apply(failedCopy);
+                }
+                catch (InternalException | UserException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            }).filter(p -> p != null).collect(Collectors.toList());
+
+            return new TypecheckInfo(gen.getRecordSet(), failures);
         }
         catch (InternalException | UserException e)
         {
             throw new RuntimeException(e);
         }
-        List<Expression> failures = valid.expression._test_allMutationPoints().map(p -> {
-            try
-            {
-                @Nullable Expression failedCopy = p.getFirst()._test_typeFailure(r.toJDKRandom(), type -> gen.makeOfType(pickTypeOtherThan(type, r)).getSecond());
-                if (failedCopy == null)
-                    return null;
-                else
-                    return p.getSecond().apply(failedCopy);
-            }
-            catch (InternalException | UserException e)
-            {
-                throw new RuntimeException(e);
-            }
-        }).filter(p -> p != null).collect(Collectors.toList());
-
-        return new TypecheckInfo(valid.recordSet, failures);
     }
 
     private DataType pickType(SourceOfRandomness r)
