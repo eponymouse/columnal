@@ -409,6 +409,8 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     @NonNull
     private Number getNonBlank(int index) throws InternalException
     {
+        checkRange(index);
+
         // Guessing here to order most likely cases:
         if (bytes != null)
             return bytes[index];
@@ -445,6 +447,8 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     @Pure
     public int getTag(int index) throws InternalException
     {
+        checkRange(index);
+
         // Guessing here to order most likely cases:
         if (bytes != null)
             return bytes[index] >= BYTE_MIN ? numericTag : bytes[index] - Byte.MIN_VALUE;
@@ -457,6 +461,12 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             return (longs[index] >= LONG_MIN || longs[index] == SEE_BIGINT || longs[index] == SEE_BIGDEC) ? numericTag : (int)(longs[index] - (Long.MIN_VALUE + 2));
         }
         throw new InternalException("All arrays null in NumericColumnStorage");
+    }
+
+    private void checkRange(int index) throws InternalException
+    {
+        if (index < 0 || index >= filled)
+            throw new InternalException("Trying to access element " + index + " but only have "+ filled);
     }
 
     public void addTag(int tagIndex) throws InternalException

@@ -25,6 +25,7 @@ import records.grammar.ExpressionParser.MatchClauseContext;
 import records.grammar.ExpressionParser.MatchContext;
 import records.grammar.ExpressionParser.NotEqualExpressionContext;
 import records.grammar.ExpressionParser.NumericLiteralContext;
+import records.grammar.ExpressionParser.OrExpressionContext;
 import records.grammar.ExpressionParser.PatternContext;
 import records.grammar.ExpressionParser.PatternMatchContext;
 import records.grammar.ExpressionParser.StringLiteralContext;
@@ -146,6 +147,12 @@ public abstract class Expression
         public Expression visitAndExpression(AndExpressionContext ctx)
         {
             return new AndExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression));
+        }
+
+        @Override
+        public Expression visitOrExpression(OrExpressionContext ctx)
+        {
+            return new OrExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression));
         }
 
         @Override

@@ -131,6 +131,8 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
     @Override
     public List<Object> get(int index) throws InternalException, UserException
     {
+        if (index < 0 || index >= filled())
+            throw new InternalException("Attempting to access invalid element: " + index + " of " + filled());
         return dataType.getCollapsed(index);
     }
 

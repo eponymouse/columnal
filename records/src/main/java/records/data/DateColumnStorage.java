@@ -37,6 +37,8 @@ public class DateColumnStorage implements ColumnStorage<Temporal>
     @Override
     public Temporal get(int index) throws InternalException
     {
+        if (index < 0 || index >= filled())
+            throw new InternalException("Attempting to access invalid element: " + index + " of " + filled());
         return values.get(index);
     }
 

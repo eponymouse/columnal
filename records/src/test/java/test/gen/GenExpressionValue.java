@@ -10,7 +10,13 @@ import org.jetbrains.annotations.NotNull;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
+import records.data.MemoryBooleanColumn;
+import records.data.MemoryNumericColumn;
+import records.data.MemoryStringColumn;
+import records.data.MemoryTaggedColumn;
+import records.data.MemoryTemporalColumn;
 import records.data.RecordSet;
+import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.NumberInfo;
@@ -25,6 +31,7 @@ import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
+import records.transformations.expression.OrExpression;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
 import test.DummyManager;
@@ -35,6 +42,7 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
+import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -126,8 +134,8 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             public Expression number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 return termDeep(maxLevels, l(
-                    () -> columnRef(type),
-                    () -> new NumericLiteral(Utility.parseNumber(new GenNumber().generate(r, gs)), displayInfo.getUnit())
+                    () -> columnRef(type, targetValue),
+                    () -> new NumericLiteral((Number)targetValue.get(0), displayInfo.getUnit())
                 ), l());
             }
 
@@ -135,7 +143,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             public Expression text() throws InternalException, UserException
             {
                 return termDeep(maxLevels, l(
-                    () -> columnRef(type),
+                    () -> columnRef(type, targetValue),
                     () -> new StringLiteral((String)targetValue.get(0))
                 ), l());
             }
@@ -149,16 +157,35 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             @Override
             public Expression bool() throws InternalException, UserException
             {
-                return termDeep(maxLevels, l(() -> columnRef(type), () -> new BooleanLiteral(r.nextBoolean())), l(
+                boolean target = (Boolean)targetValue.get(0);
+                return termDeep(maxLevels, l(() -> columnRef(type, targetValue), () -> new BooleanLiteral(target)), l(
                     () -> {
                         DataType t = makeType(r);
-                        List<Object> val = makeValue(t);
-                        return new EqualExpression(make(t, val, maxLevels - 1), make(t, val, maxLevels - 1));
+                        List<Object> valA = makeValue(t);
+                        List<Object> valB;
+                        int attempts = 0;
+                        do
+                        {
+                            valB = makeValue(t);
+                            if (attempts++ >= 100)
+                                return new BooleanLiteral(target);
+                        }
+                        while (Utility.compareLists(valA, valB) == 0);
+                        return new EqualExpression(make(t, valA, maxLevels - 1), make(t, target == true ? valA : valB, maxLevels - 1));
                     },
                     () -> {
                         DataType t = makeType(r);
-                        List<Object> val = makeValue(t);
-                        return new NotEqualExpression(make(t, val, maxLevels - 1), make(t, val, maxLevels - 1));
+                        List<Object> valA = makeValue(t);
+                        List<Object> valB;
+                        int attempts = 0;
+                        do
+                        {
+                            valB = makeValue(t);
+                            if (attempts++ >= 100)
+                                return new BooleanLiteral(target);
+                        }
+                        while (Utility.compareLists(valA, valB) == 0);
+                        return new NotEqualExpression(make(t, valA, maxLevels - 1), make(t, target == true ? valB : valA, maxLevels - 1));
                     },
                     () -> {
                         // If target is true, all must be true:
@@ -174,6 +201,21 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                                 exps.add(make(DataType.BOOLEAN, Collections.singletonList(mustBeFalse == i ? false : r.nextBoolean()), maxLevels - 1));
                             return new AndExpression(exps);
                         }
+                    },
+                    () -> {
+                        // If target is false, all must be false:
+                        if ((Boolean)targetValue.get(0) == false)
+                            return new OrExpression(TestUtil.makeList(r, 2, 5, () -> make(DataType.BOOLEAN, Collections.singletonList(false), maxLevels - 1)));
+                            // Otherwise they can take on random values, but one must be false:
+                        else
+                        {
+                            int size = r.nextInt(2, 5);
+                            int mustBeTrue = r.nextInt(0, size - 1);
+                            ArrayList<Expression> exps = new ArrayList<Expression>();
+                            for (int i = 0; i < size; i++)
+                                exps.add(make(DataType.BOOLEAN, Collections.singletonList(mustBeTrue == i ? true : r.nextBoolean()), maxLevels - 1));
+                            return new OrExpression(exps);
+                        }
                     }
                 ));
             }
@@ -184,7 +226,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
-                terminals.add(() -> columnRef(type));
+                terminals.add(() -> columnRef(type, targetValue));
                 for (TagType<DataType> tag : tags)
                 {
                     Pair<@Nullable String, String> name = new Pair<>(typeName, tag.getName());
@@ -202,10 +244,41 @@ public class GenExpressionValue extends Generator<ExpressionValue>
         });
     }
 
-    private Expression columnRef(DataType type)
+    private Expression columnRef(DataType type, List<Object> value)
     {
         ColumnId name = new ColumnId("GEV Col " + columns.size());
-        columns.add(rs -> type.makeImmediateColumn(rs, name, Collections.emptyList(), 0));
+        columns.add(rs -> type.apply(new DataTypeVisitor<Column>()
+        {
+            @Override
+            public Column number(NumberInfo displayInfo) throws InternalException, UserException
+            {
+                return new MemoryNumericColumn(rs, name, new NumericColumnType(displayInfo.getUnit(), displayInfo.getMinimumDP(), false), Collections.singletonList(Utility.toBigDecimal((Number) value.get(0)).toPlainString()));
+            }
+
+            @Override
+            public Column text() throws InternalException, UserException
+            {
+                return new MemoryStringColumn(rs, name, Collections.singletonList((String)value.get(0)));
+            }
+
+            @Override
+            public Column date() throws InternalException, UserException
+            {
+                return new MemoryTemporalColumn(rs, name, Collections.singletonList((Temporal)value.get(0)));
+            }
+
+            @Override
+            public Column bool() throws InternalException, UserException
+            {
+                return new MemoryBooleanColumn(rs, name, Collections.singletonList((Boolean) value.get(0)));
+            }
+
+            @Override
+            public Column tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            {
+                return new MemoryTaggedColumn(rs, name, typeName, tags, Collections.singletonList(value));
+            }
+        }));
         return new ColumnReference(name);
     }
 

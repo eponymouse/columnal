@@ -36,6 +36,8 @@ public class StringColumnStorage implements ColumnStorage<String>
     @Override
     public String get(int index) throws InternalException
     {
+        if (index < 0 || index >= values.size())
+            throw new InternalException("Attempting to access invalid element: " + index + " of " + values.size());
         return values.get(index);
     }
 
