@@ -1,8 +1,15 @@
 package records.transformations.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
+import records.error.UserException;
+import utility.Pair;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -10,7 +17,7 @@ import java.util.stream.Stream;
  */
 public abstract class NaryOpExpression extends Expression
 {
-    private final List<Expression> expressions;
+    protected final List<Expression> expressions;
 
     public NaryOpExpression(List<Expression> expressions)
     {
@@ -22,6 +29,9 @@ public abstract class NaryOpExpression extends Expression
     {
         return expressions.stream().flatMap(Expression::allColumnNames);
     }
+
+    // Will be same length as expressions, if null use existing
+    public abstract NaryOpExpression copy(List<@Nullable Expression> replacements);
 
     @Override
     public String save(boolean topLevel)
@@ -39,4 +49,38 @@ public abstract class NaryOpExpression extends Expression
     }
 
     protected abstract String saveOp(int index);
+
+    @Override
+    public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
+    {
+        return IntStream.range(0, expressions.size()).mapToObj(i ->
+            expressions.get(i)._test_allMutationPoints().map(p -> p.<Function<Expression, Expression>>replaceSecond(newExp -> copy(makeNullList(i, newExp))))).flatMap(s -> s);
+    }
+
+    protected List<@Nullable Expression> makeNullList(int index, Expression newExp)
+    {
+        ArrayList<@Nullable Expression> r = new ArrayList<>();
+        for (int i = 0; i < expressions.size(); i++)
+        {
+            r.add(i == index ? newExp : null);
+        }
+        return r;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        NaryOpExpression that = (NaryOpExpression) o;
+
+        return expressions.equals(that.expressions);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return expressions.hashCode();
+    }
 }

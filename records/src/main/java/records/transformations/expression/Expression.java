@@ -15,6 +15,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
+import records.grammar.ExpressionParser.AndExpressionContext;
 import records.grammar.ExpressionParser.BooleanLiteralContext;
 import records.grammar.ExpressionParser.BracketedCompoundContext;
 import records.grammar.ExpressionParser.BracketedMatchContext;
@@ -139,6 +140,12 @@ public abstract class Expression
         public Expression visitEqualExpression(ExpressionParser.EqualExpressionContext ctx)
         {
             return new EqualExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+        }
+
+        @Override
+        public Expression visitAndExpression(AndExpressionContext ctx)
+        {
+            return new AndExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression));
         }
 
         @Override

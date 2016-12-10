@@ -18,6 +18,7 @@ import records.data.datatype.DataType.TagType;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.AndExpression;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.EqualExpression;
@@ -158,6 +159,21 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                         DataType t = makeType(r);
                         List<Object> val = makeValue(t);
                         return new NotEqualExpression(make(t, val, maxLevels - 1), make(t, val, maxLevels - 1));
+                    },
+                    () -> {
+                        // If target is true, all must be true:
+                        if ((Boolean)targetValue.get(0))
+                            return new AndExpression(TestUtil.makeList(r, 2, 5, () -> make(DataType.BOOLEAN, Collections.singletonList(true), maxLevels - 1)));
+                        // Otherwise they can take on random values, but one must be false:
+                        else
+                        {
+                            int size = r.nextInt(2, 5);
+                            int mustBeFalse = r.nextInt(0, size - 1);
+                            ArrayList<Expression> exps = new ArrayList<Expression>();
+                            for (int i = 0; i < size; i++)
+                                exps.add(make(DataType.BOOLEAN, Collections.singletonList(mustBeFalse == i ? false : r.nextBoolean()), maxLevels - 1));
+                            return new AndExpression(exps);
+                        }
                     }
                 ));
             }

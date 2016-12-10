@@ -6,6 +6,7 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import edu.emory.mathcs.backport.java.util.Collections;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.error.InternalException;
+import records.transformations.expression.AndExpression;
 import records.transformations.expression.BinaryOpExpression;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
@@ -57,6 +58,7 @@ public class GenNonsenseExpression extends Generator<Expression>
             return r.choose(Arrays.<Supplier<Expression>>asList(
                 () -> new NotEqualExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new EqualExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
+                () -> new AndExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new MatchExpression(genDepth(r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1)))
             )).get();
         }

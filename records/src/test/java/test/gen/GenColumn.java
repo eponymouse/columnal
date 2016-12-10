@@ -26,6 +26,7 @@ import records.error.UserException;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExSupplier;
 import utility.Utility;
 
 import java.math.BigDecimal;
@@ -151,7 +152,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
 
     private static List<TagType<DataType>> makeTags(int depth, final SourceOfRandomness sourceOfRandomness, final GenerationStatus generationStatus)
     {
-        return TestUtil.makeList(sourceOfRandomness, 1, 10, new Supplier<TagType<DataType>>()
+        return TestUtil.makeList(sourceOfRandomness, 1, 10, new ExSupplier<TagType<DataType>>()
         {
             Set<String> usedNames = new HashSet<>();
             @Override

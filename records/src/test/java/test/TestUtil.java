@@ -22,6 +22,7 @@ import records.grammar.MainLexer;
 import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExSupplier;
 import utility.Pair;
 import utility.Utility;
 
@@ -120,13 +121,21 @@ public class TestUtil
         return keywords;
     }
 
-    public static <T> List<T> makeList(SourceOfRandomness r, int minSizeIncl, int maxSizeIncl, Supplier<T> makeOne)
+    public static <T> List<T> makeList(SourceOfRandomness r, int minSizeIncl, int maxSizeIncl, ExSupplier<T> makeOne)
     {
-        int size = r.nextInt(minSizeIncl, maxSizeIncl);
-        ArrayList<T> list = new ArrayList<>();
-        for (int i = 0; i < size; i++)
-            list.add(makeOne.get());
-        return list;
+        try
+        {
+            int size = r.nextInt(minSizeIncl, maxSizeIncl);
+            ArrayList<T> list = new ArrayList<>();
+            for (int i = 0; i < size; i++)
+                list.add(makeOne.get());
+            return list;
+        }
+        catch (InternalException | UserException e)
+        {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
     }
 
     public static <K, V> Map<K, V> makeMap(SourceOfRandomness r, int minSizeIncl, int maxSizeIncl, Supplier<K> makeKey, Supplier<V> makeValue)

@@ -17,7 +17,7 @@ import java.util.function.BiConsumer;
  */
 public abstract class TimesExpression extends NaryOpExpression
 {
-    public TimesExpression(List<Expression> expressions)
+    public TimesExpression(List<Expression> expressions) throws UserException
     {
         super(expressions);
     }
