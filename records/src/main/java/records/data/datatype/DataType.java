@@ -126,6 +126,19 @@ public class DataType
         {
             return unit;
         }
+
+        public boolean sameType(@Nullable NumberInfo numberInfo)
+        {
+            if (numberInfo == null)
+                return false;
+            return unit.equals(numberInfo.unit);
+        }
+
+
+        public int hashCodeForType()
+        {
+            return unit.hashCode();
+        }
     }
 
     public static interface DataTypeVisitorEx<R, E extends Throwable>
@@ -315,6 +328,12 @@ public class DataType
         return new DataType(Kind.TAGGED, null, tagTypes);
     }
 
+
+    public static DataType number(NumberInfo numberInfo)
+    {
+        return new DataType(Kind.NUMBER, numberInfo, null);
+    }
+
     public static boolean canFitInOneNumeric(List<? extends TagType> tags) throws InternalException, UserException
     {
         // Can fit in one numeric if there is no inner types,
@@ -406,15 +425,19 @@ public class DataType
         return tags.get(0);
     }
 
+    // Note: this is customised from original template
     @Override
     public boolean equals(@Nullable Object o)
     {
         if (this == o) return true;
+        // Don't check for same class; let us be equal to a DataTypeValue
         if (o == null || !(o instanceof DataType)) return false;
 
         DataType dataType = (DataType) o;
 
         if (kind != dataType.kind) return false;
+        // Don't use equals here, use sameType (weaker, but accurate for type comparison)
+        if (numberInfo != null ? !numberInfo.sameType(dataType.numberInfo) : dataType.numberInfo != null) return false;
         return tagTypes != null ? tagTypes.equals(dataType.tagTypes) : dataType.tagTypes == null;
     }
 
@@ -422,6 +445,8 @@ public class DataType
     public int hashCode()
     {
         int result = kind.hashCode();
+        // Must use specialised hashCode which matches sameType rather than equals
+        result = 31 * result + (numberInfo != null ? numberInfo.hashCodeForType() : 0);
         result = 31 * result + (tagTypes != null ? tagTypes.hashCode() : 0);
         return result;
     }
