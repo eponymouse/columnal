@@ -64,7 +64,7 @@ public class PropTypecheck
         }
     }
 
-    @Property
+    @Property(trials = 1000)
     @SuppressWarnings("nullness")
     public void propTypeCheckFail(@From(GenTypecheckFail.class) GenTypecheckFail.TypecheckInfo src) throws InternalException, UserException
     {
@@ -74,7 +74,7 @@ public class PropTypecheck
         }
     }
 
-    @Property
+    @Property(trials = 1000)
     @SuppressWarnings("nullness")
     public void propTypeCheckSucceed(@From(GenExpressionValue.class) GenExpressionValue.ExpressionValue src) throws InternalException, UserException
     {

@@ -124,8 +124,10 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             @Override
             public Expression number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return termDeep(maxLevels, l(() -> new NumericLiteral(Utility.parseNumber(new GenNumber().generate(r, gs)), displayInfo.getUnit())),
-                    l());
+                return termDeep(maxLevels, l(
+                    () -> columnRef(type),
+                    () -> new NumericLiteral(Utility.parseNumber(new GenNumber().generate(r, gs)), displayInfo.getUnit())
+                ), l());
             }
 
             @Override
@@ -146,7 +148,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             @Override
             public Expression bool() throws InternalException, UserException
             {
-                return termDeep(maxLevels, l(() -> new BooleanLiteral(r.nextBoolean())), l(
+                return termDeep(maxLevels, l(() -> columnRef(type), () -> new BooleanLiteral(r.nextBoolean())), l(
                     () -> {
                         DataType t = makeType(r);
                         List<Object> val = makeValue(t);
@@ -166,6 +168,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
+                terminals.add(() -> columnRef(type));
                 for (TagType<DataType> tag : tags)
                 {
                     Pair<@Nullable String, String> name = new Pair<>(typeName, tag.getName());
@@ -247,7 +250,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
 
     private Expression termDeep(int maxLevels, List<ExpressionMaker> terminals, List<ExpressionMaker> deeper) throws UserException, InternalException
     {
-        if (!terminals.isEmpty() && (maxLevels <= 1 || deeper.isEmpty() || r.nextBoolean()))
+        if (!terminals.isEmpty() && (maxLevels <= 1 || deeper.isEmpty() || r.nextInt(0, 2) == 0))
             return r.choose(terminals).make();
         else
             return r.choose(deeper).make();

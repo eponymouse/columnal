@@ -19,7 +19,9 @@ import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -49,8 +51,15 @@ public abstract class RecordSet
     {
         this.title = title;
         this.columns = new ArrayList<>();
+        Set<ColumnId> colNames = new HashSet<>();
         for (FunctionInt<RecordSet, Column> f : columns)
-            this.columns.add(f.apply(this));
+        {
+            Column newCol = f.apply(this);
+            this.columns.add(newCol);
+            colNames.add(newCol.getName());
+        }
+        if (colNames.size() != columns.size())
+            throw new UserException("Duplicate column names found: " + this.columns.stream().map(c -> c.getName().getOutput()).collect(Collectors.joining(", ")));
     }
 
     @OnThread(Tag.FXPlatform)

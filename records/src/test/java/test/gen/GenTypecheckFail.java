@@ -61,7 +61,11 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
             List<Expression> failures = valid.expression._test_allMutationPoints().map(p -> {
                 try
                 {
-                    @Nullable Expression failedCopy = p.getFirst()._test_typeFailure(r.toJDKRandom(), type -> gen.makeOfType(pickTypeOtherThan(type, r)).getSecond());
+                    @Nullable Expression failedCopy = p.getFirst()._test_typeFailure(r.toJDKRandom(), type -> {
+                        DataType newType = pickTypeOtherThan(type, r);
+                        //System.err.println("Changed old type " + type + " into " + newType + " when replacing " + p.getFirst());
+                        return gen.makeOfType(newType).getSecond();
+                    });
                     if (failedCopy == null)
                         return null;
                     else
@@ -73,10 +77,16 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                 }
             }).filter(p -> p != null).collect(Collectors.toList());
 
+            //for (Expression failure : failures)
+            //{
+            //    System.err.println("Transformed " + valid.expression + " into failure " + failure);
+            //}
+
             return new TypecheckInfo(gen.getRecordSet(), failures);
         }
-        catch (InternalException | UserException e)
+        catch (InternalException | UserException | RuntimeException e)
         {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
     }
@@ -86,7 +96,6 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         return GenExpressionValue.makeType(r);
     }
 
-    @SuppressWarnings("intern")
     private DataType pickTypeOtherThan(@Nullable DataType type, SourceOfRandomness r)
     {
         DataType picked;
@@ -94,7 +103,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         {
             picked = pickType(r);
         }
-        while (picked == type);
+        while (picked.equals(type));
         return picked;
 
     }
