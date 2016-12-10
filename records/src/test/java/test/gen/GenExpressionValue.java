@@ -4,6 +4,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.time.LocalDateGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.KnownLengthRecordSet;
@@ -20,16 +21,19 @@ import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StringLiteral;
+import records.transformations.expression.TagExpression;
 import test.TestUtil;
 import test.gen.GenExpressionValue.ExpressionValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static test.TestUtil.distinctTypes;
 
@@ -85,9 +89,11 @@ public class GenExpressionValue extends Generator<ExpressionValue>
         }
     }
 
+    @SuppressWarnings("intern")
     private DataType makeType()
     {
-        return r.choose(distinctTypes);
+        // Leave out dates until we can actually make date values:
+        return r.choose(distinctTypes.stream().filter(t -> t != DataType.DATE).collect(Collectors.<DataType>toList()));
     }
 
     private Expression make(DataType type, List<Object> targetValue, int maxLevels) throws UserException, InternalException
@@ -130,7 +136,21 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             public Expression tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tagIndex = r.nextInt(0, tags.size() - 1);
-                return termDeep(maxLevels, l(), l());
+                List<ExpressionMaker> terminals = new ArrayList<>();
+                List<ExpressionMaker> nonTerm = new ArrayList<>();
+                for (TagType<DataType> tag : tags)
+                {
+                    Pair<@Nullable String, String> name = new Pair<>(typeName, tag.getName());
+                    final @Nullable DataType inner = tag.getInner();
+                    if (inner == null)
+                        terminals.add(() -> new TagExpression(name, null));
+                    else
+                    {
+                        final @NonNull DataType nonNullInner = inner;
+                        nonTerm.add(() -> new TagExpression(name, make(nonNullInner, makeValue(nonNullInner), maxLevels - 1)));
+                    }
+                }
+                return termDeep(maxLevels, terminals, nonTerm);
             }
         });
     }

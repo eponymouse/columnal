@@ -10,6 +10,8 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.loadsave.OutputBuilder;
+import records.transformations.expression.TypeState.TypeAndTagInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
@@ -27,7 +29,6 @@ public class TagExpression extends Expression
 {
     private final Pair<@Nullable String, String> tagName;
     private final @Nullable Expression inner;
-    private @Nullable DataType type;
     private int index;
 
     public TagExpression(Pair<@Nullable String, String> tagName, @Nullable Expression inner)
@@ -39,21 +40,24 @@ public class TagExpression extends Expression
     @Override
     public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
-        @Nullable Pair<DataType, Integer> typeAndIndex = state.findTaggedType(tagName, err -> onError.accept(this, err));
+        @Nullable TypeAndTagInfo typeAndIndex = state.findTaggedType(tagName, err -> onError.accept(this, err));
         if (typeAndIndex == null)
             return null;
-        index = typeAndIndex.getSecond();
-        type = typeAndIndex.getFirst();
+        index = typeAndIndex.tagIndex;
 
-        @Nullable DataType innerType = inner == null ? null : inner.check(data, state, onError);
-        return DataType.checkSame(type, innerType, err -> onError.accept(this, err));
+        @Nullable DataType innerDerivedType = inner == null ? null : inner.check(data, state, onError);
+        // We must not pass nulls to checkSame as that counts as failed checking, not optional items
+        if ((inner == null && typeAndIndex.innerType == null) || DataType.checkSame(typeAndIndex.innerType, innerDerivedType, err -> onError.accept(this, err)) != null)
+        {
+            return typeAndIndex.wholeType;
+        }
+        else
+            return null;
     }
 
     @Override
     public @OnThread(Tag.Simulation) List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        if (type == null)
-            throw new InternalException("Getting value despite typecheck failure");
         ArrayList<Object> r = new ArrayList<>();
         r.add((Integer)index);
         if (inner != null)
@@ -70,7 +74,20 @@ public class TagExpression extends Expression
     @Override
     public String save(boolean topLevel)
     {
-        return "TODO";
+        String tag;
+        @Nullable String typeName = tagName.getFirst();
+        if (typeName != null)
+        {
+            tag = "\\" + OutputBuilder.quotedIfNecessary(typeName) + "\\" + OutputBuilder.quotedIfNecessary(tagName.getSecond());
+        }
+        else
+        {
+            tag = "\\" + OutputBuilder.quotedIfNecessary(tagName.getSecond());
+        }
+        if (inner == null)
+            return tag;
+        else
+            return tag + ":" + inner.save(false);
     }
 
     @Override

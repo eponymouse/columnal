@@ -4,6 +4,7 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sosy_lab.common.rationals.Rational;
@@ -74,7 +75,12 @@ public class PropTypecheck
     @SuppressWarnings("nullness")
     public void propTypeCheckSucceed(@From(GenExpressionValue.class) GenExpressionValue.ExpressionValue src) throws InternalException, UserException
     {
-        assertEquals(src.expression.toString(), src.type, src.expression.check(src.recordSet, TestUtil.typeState(), (e, s) -> {}));
+        StringBuilder b = new StringBuilder();
+        @Nullable DataType checked = src.expression.check(src.recordSet, TestUtil.typeState(), (e, s) ->
+        {
+            b.append("Err in " + e + ": " + s);
+        });
+        assertEquals(src.expression.toString() + "\n" + b.toString(), src.type, checked);
     }
 
     //#error Have property which generates tables/expressions of given types, and check they don't typecheck

@@ -45,7 +45,9 @@ public class EqualExpression extends BinaryOpExpression
     @Override
     public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
-        return DataType.checkSame(lhs.check(data, state, onError), rhs.check(data, state, onError), err -> onError.accept(this, err));
+        if (DataType.checkSame(lhs.check(data, state, onError), rhs.check(data, state, onError), err -> onError.accept(this, err)) == null)
+            return null;
+        return DataType.BOOLEAN;
     }
 
     @Override

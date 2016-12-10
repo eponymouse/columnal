@@ -85,7 +85,21 @@ public class TypeState
         return tagTypes.get(typeName);
     }
 
-    public @Nullable Pair<DataType, Integer> findTaggedType(Pair<@Nullable String, String> tagName, ExConsumer<String> onError) throws InternalException, UserException
+    public static class TypeAndTagInfo
+    {
+        public final DataType wholeType;
+        public final int tagIndex;
+        public final @Nullable DataType innerType;
+
+        public TypeAndTagInfo(DataType wholeType, int tagIndex, @Nullable DataType innerType)
+        {
+            this.wholeType = wholeType;
+            this.tagIndex = tagIndex;
+            this.innerType = innerType;
+        }
+    }
+
+    public @Nullable TypeAndTagInfo findTaggedType(Pair<@Nullable String, String> tagName, ExConsumer<String> onError) throws InternalException, UserException
     {
         @Nullable String typeName = tagName.getFirst();
         @Nullable DataType type;
@@ -120,13 +134,13 @@ public class TypeState
             type = matches.get(0).getValue();
         }
 
-        int tagIndex = type.unwrapTag(tagName.getSecond()).getFirst();
-        if (tagIndex == -1)
+        Pair<Integer, @Nullable DataType> tagDetail = type.unwrapTag(tagName.getSecond());
+        if (tagDetail.getFirst() == -1)
         {
             onError.accept("Type \"" + typeName + "\" does not have tag: \"" + tagName + "\"");
             return null;
         }
 
-        return new Pair<>(type, tagIndex);
+        return new TypeAndTagInfo(type, tagDetail.getFirst(), tagDetail.getSecond());
     }
 }
