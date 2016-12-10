@@ -265,6 +265,8 @@ public class TestUtil
     static {
         try
         {
+            DataType a = DataType.tagged("A", Arrays.asList(new TagType<DataType>("Single", null)));
+            DataType c = DataType.tagged("C", Arrays.asList(new TagType<DataType>("Blank", null), new TagType<DataType>("Number", DataType.NUMBER)));
             distinctTypes = Arrays.<DataType>asList(
                 DataType.BOOLEAN,
                 DataType.TEXT,
@@ -273,8 +275,11 @@ public class TestUtil
                 DataType.number(new NumberInfo(new Unit(Rational.of(2)), 0)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m"), 0)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("cm"), 0)),
-                DataType.tagged("A", Arrays.asList(new TagType<DataType>("Single", null))),
-                DataType.tagged("B", Arrays.asList(new TagType<DataType>("Single ", null)))
+                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("$ m/s^2"), 0)),
+                a,
+                DataType.tagged("B", Arrays.asList(new TagType<DataType>("Single ", null))),
+                c,
+                DataType.tagged("Nested", Arrays.asList(new TagType<DataType>("A", a), new TagType<DataType>("C", c)))
             );
         }
         catch (UserException | InternalException e)

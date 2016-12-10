@@ -254,21 +254,19 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             @Override
             public Expression tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
-                int tagIndex = r.nextInt(0, tags.size() - 1);
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
-                terminals.add(() -> columnRef(type, targetValue));
-                for (TagType<DataType> tag : tags)
+                TagType<DataType> tag = tags.get((Integer) targetValue.get(0));
+                Pair<@Nullable String, String> name = new Pair<>(typeName, tag.getName());
+                final @Nullable DataType inner = tag.getInner();
+                if (inner == null)
                 {
-                    Pair<@Nullable String, String> name = new Pair<>(typeName, tag.getName());
-                    final @Nullable DataType inner = tag.getInner();
-                    if (inner == null)
-                        terminals.add(() -> new TagExpression(name, null));
-                    else
-                    {
-                        final @NonNull DataType nonNullInner = inner;
-                        nonTerm.add(() -> new TagExpression(name, make(nonNullInner, makeValue(nonNullInner), maxLevels - 1)));
-                    }
+                    terminals.add(() -> new TagExpression(name, null));
+                }
+                else
+                {
+                    final @NonNull DataType nonNullInner = inner;
+                    nonTerm.add(() -> new TagExpression(name, make(nonNullInner, targetValue.subList(1, targetValue.size()), maxLevels - 1)));
                 }
                 return termDeep(maxLevels, terminals, nonTerm);
             }
