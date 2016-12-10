@@ -43,15 +43,18 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
     @Override
     public Boolean get(int index) throws InternalException, UserException
     {
+        if (index < 0 || index >= filled())
+            throw new InternalException("Attempting to access invalid element: " + index + " of " + filled());
         return data.get(index);
     }
 
     @Override
     public void addAll(List<Boolean> items) throws InternalException
     {
-        for (int i = 0; i < items.size(); i++)
+        for (Boolean item : items)
         {
-            data.set(i, items.get(i));
+            data.set(length, item);
+            length += 1;
         }
     }
 
