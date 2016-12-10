@@ -29,9 +29,9 @@ import java.util.stream.Collectors;
  * Generates arbitrary expression which probably won't type check.
  * Useful for testing loading and saving of expressions.
  */
-public class GenExpression extends Generator<Expression>
+public class GenNonsenseExpression extends Generator<Expression>
 {
-    public GenExpression()
+    public GenNonsenseExpression()
     {
         super(Expression.class);
     }

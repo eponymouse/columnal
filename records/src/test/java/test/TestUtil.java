@@ -7,10 +7,15 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.sosy_lab.common.rationals.Rational;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
+import records.data.datatype.DataType;
+import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.DataType.TagType;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
@@ -244,5 +249,27 @@ public class TestUtil
                 columnIds.add(c);
         }
         return columnIds;
+    }
+
+    public static List<DataType> distinctTypes;
+    static {
+        try
+        {
+            distinctTypes = Arrays.<DataType>asList(
+                DataType.BOOLEAN,
+                DataType.TEXT,
+                DataType.DATE,
+                DataType.NUMBER,
+                DataType.number(new NumberInfo(new Unit(Rational.of(2)), 0)),
+                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m"), 0)),
+                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("cm"), 0)),
+                DataType.tagged(Arrays.asList(new TagType<DataType>("Single", null))),
+                DataType.tagged(Arrays.asList(new TagType<DataType>("Single ", null)))
+            );
+        }
+        catch (UserException | InternalException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 }

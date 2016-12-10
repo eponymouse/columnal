@@ -7,7 +7,7 @@ import org.junit.runner.RunWith;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
-import test.gen.GenExpression;
+import test.gen.GenNonsenseExpression;
 
 import static org.junit.Assert.assertEquals;
 
@@ -18,7 +18,7 @@ import static org.junit.Assert.assertEquals;
 public class PropLoadSaveExpression
 {
     @Property
-    public void testLoadSave(@From(GenExpression.class) Expression expression) throws InternalException, UserException
+    public void testLoadSave(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
         String saved = expression.save(true);
         Expression reloaded = Expression.parse(null, saved);
