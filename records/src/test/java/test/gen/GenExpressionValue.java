@@ -24,6 +24,8 @@ import records.data.datatype.DataType.TagType;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.AddSubtractExpression;
+import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.AndExpression;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
@@ -42,6 +44,7 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
+import java.math.BigDecimal;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -136,7 +139,35 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                 return termDeep(maxLevels, l(
                     () -> columnRef(type, targetValue),
                     () -> new NumericLiteral((Number)targetValue.get(0), displayInfo.getUnit())
-                ), l());
+                ), l(() -> {
+                    // We just make up a bunch of numbers, and at the very end we add one more to correct the difference
+                    int numMiddle = r.nextInt(0, 6);
+                    List<Expression> expressions = new ArrayList<>();
+                    List<Op> ops = new ArrayList<>();
+                    BigDecimal curTotal = genBD();
+                    expressions.add(make(type, Collections.singletonList(curTotal), maxLevels - 1));
+                    for (int i = 0; i < numMiddle; i++)
+                    {
+                        BigDecimal next = genBD();
+                        expressions.add(make(type, Collections.singletonList(next), maxLevels - 1));
+                        if (r.nextBoolean())
+                        {
+                            curTotal = curTotal.add(next);
+                            ops.add(Op.ADD);
+                        }
+                        else
+                        {
+                            curTotal = curTotal.subtract(next);
+                            ops.add(Op.SUBTRACT);
+                        }
+                    }
+                    // Now add one more to make the difference:
+                    BigDecimal diff = Utility.toBigDecimal((Number)targetValue.get(0)).subtract(curTotal);
+                    boolean add = r.nextBoolean();
+                    expressions.add(make(type, Collections.singletonList(add ? diff : diff.negate()), maxLevels - 1));
+                    ops.add(add ? Op.ADD : Op.SUBTRACT);
+                    return new AddSubtractExpression(expressions, ops);
+                }));
             }
 
             @Override
@@ -242,6 +273,11 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                 return termDeep(maxLevels, terminals, nonTerm);
             }
         });
+    }
+
+    private BigDecimal genBD()
+    {
+        return new BigDecimal(new GenNumber().generate(r, gs));
     }
 
     private Expression columnRef(DataType type, List<Object> value)

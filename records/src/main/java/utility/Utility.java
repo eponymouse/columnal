@@ -17,6 +17,7 @@ import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.sun.tools.jdi.ArrayTypeImpl;
 import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -333,6 +334,47 @@ public class Utility
     public static Rational parseRational(String text)
     {
         return Rational.ofBigDecimal(new BigDecimal(text));
+    }
+
+    // If !add, subtract
+    public static Number addSubtractNumbers(Number lhs, Number rhs, boolean add)
+    {
+        if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
+        {
+            if (add)
+                return toBigDecimal(lhs).add(toBigDecimal(rhs));
+            else
+                return toBigDecimal(lhs).subtract(toBigDecimal(rhs));
+        }
+        else if (lhs instanceof BigInteger || rhs instanceof BigInteger)
+        {
+            if (add)
+                return toBigInteger(lhs).add(toBigInteger(rhs));
+            else
+                return toBigInteger(lhs).subtract(toBigInteger(rhs));
+        }
+        else
+        {
+            try
+            {
+                if (add)
+                    return Math.addExact(lhs.longValue(), rhs.longValue());
+                else
+                    return Math.subtractExact(lhs.longValue(), rhs.longValue());
+            }
+            catch (ArithmeticException e)
+            {
+                return addSubtractNumbers(toBigInteger(lhs), toBigInteger(rhs), add);
+            }
+        }
+    }
+
+    private static BigInteger toBigInteger(Number number)
+    {
+        if (number instanceof BigInteger)
+            return (BigInteger)number;
+        else
+            return BigInteger.valueOf(number.longValue());
     }
 
     public static class ReadState

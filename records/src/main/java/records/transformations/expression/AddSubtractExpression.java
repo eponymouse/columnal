@@ -15,59 +15,68 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.function.Function;
-import java.util.stream.Stream;
+
+import static records.transformations.expression.AddSubtractExpression.Op.ADD;
 
 /**
  * Created by neil on 10/12/2016.
  */
-public class AndExpression extends NaryOpExpression
+public class AddSubtractExpression extends NaryOpExpression
 {
-    public AndExpression(List<Expression> expressions)
+    public static enum Op { ADD, SUBTRACT };
+    private final List<Op> ops;
+    private @Nullable DataType type;
+
+    public AddSubtractExpression(List<Expression> expressions, List<Op> ops)
     {
         super(expressions);
+        this.ops = ops;
     }
 
     @Override
     public NaryOpExpression copyNoNull(List<Expression> replacements)
     {
-        return new AndExpression(replacements);
+        return new AddSubtractExpression(replacements, ops);
     }
 
     @Override
     protected String saveOp(int index)
     {
-        return "&";
+        return ops.get(index) == ADD ? "+" : "-";
     }
 
     @Override
     public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
+        List<DataType> types = new ArrayList<>();
         for (Expression expression : expressions)
         {
-            DataType type = expression.check(data, state, onError);
-            if (DataType.checkSame(DataType.BOOLEAN, type, s -> onError.accept(expression, s)) == null)
+            @Nullable DataType expType = expression.check(data, state, onError);
+            if (expType == null)
                 return null;
+            types.add(expType);
         }
-        return DataType.BOOLEAN;
+        type = DataType.checkAllSame(types, s -> onError.accept(this, s));
+        return type;
     }
 
     @Override
+    @OnThread(Tag.Simulation)
     public List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        for (Expression expression : expressions)
+        Number n = (Number)expressions.get(0).getValue(rowIndex, state).get(0);
+        for (int i = 1; i < expressions.size(); i++)
         {
-            Boolean b = (Boolean) expression.getValue(rowIndex, state).get(0);
-            if (b == false)
-                return Collections.singletonList(false);
+            n = Utility.addSubtractNumbers(n, (Number)expressions.get(i).getValue(rowIndex, state).get(0), ops.get(i - 1) == ADD);
         }
-        return Collections.singletonList(true);
+        return Collections.singletonList(n);
     }
 
     @Override
@@ -77,10 +86,9 @@ public class AndExpression extends NaryOpExpression
     }
 
     @Override
-    @OnThread(Tag.Simulation)
-    public @Nullable Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws InternalException, UserException
+    public @OnThread(Tag.Simulation) @Nullable Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws InternalException, UserException
     {
         int index = r.nextInt(expressions.size());
-        return copy(makeNullList(index, newExpressionOfDifferentType.apply(DataType.BOOLEAN)));
+        return copy(makeNullList(index, newExpressionOfDifferentType.apply(type)));
     }
 }

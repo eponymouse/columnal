@@ -31,7 +31,18 @@ public abstract class NaryOpExpression extends Expression
     }
 
     // Will be same length as expressions, if null use existing
-    public abstract NaryOpExpression copy(List<@Nullable Expression> replacements);
+    public final NaryOpExpression copy(List<@Nullable Expression> replacements)
+    {
+        List<Expression> newExps = new ArrayList<>();
+        for (int i = 0; i < expressions.size(); i++)
+        {
+            @Nullable Expression newExp = replacements.get(i);
+            newExps.add(newExp != null ? newExp : expressions.get(i));
+        }
+        return copyNoNull(newExps);
+    }
+
+    public abstract NaryOpExpression copyNoNull(List<Expression> replacements);
 
     @Override
     public String save(boolean topLevel)

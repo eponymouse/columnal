@@ -33,15 +33,9 @@ public class OrExpression extends NaryOpExpression
     }
 
     @Override
-    public NaryOpExpression copy(List<@Nullable Expression> replacements)
+    public NaryOpExpression copyNoNull(List<Expression> replacements)
     {
-        List<Expression> newExps = new ArrayList<>();
-        for (int i = 0; i < expressions.size(); i++)
-        {
-            @Nullable Expression newExp = replacements.get(i);
-            newExps.add(newExp != null ? newExp : expressions.get(i));
-        }
-        return new OrExpression(newExps);
+        return new OrExpression(replacements);
     }
 
     @Override
