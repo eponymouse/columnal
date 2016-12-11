@@ -1,4 +1,4 @@
-Generate match expressions for testing values
+Generate match constructors/variables for testing values
 Add power expression (x^n), right-hand side must be constant rational if left-hand side is non-scalar
    (will need constant folding: use getValue but with an EvaluateState that throws a particular exception)
 Add tests for runtime errors (division by zero, incomplete pattern matches, if we allow those)
@@ -7,3 +7,4 @@ Then go on to add functions, such as:
  c(col): gets single value from that column
 Look up Unicode string collations, both for user values (in columns) and things like function names, constructor names
 Implement and test complete load/save, including units and types sections
+Come up with a way to do value tests for numerics which may lose precision (esp equality and matching)

@@ -54,6 +54,12 @@ public class MatchExpression extends Expression
         public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
         {
             List<TypeState> rhsStates = new ArrayList<>();
+            if (patterns.isEmpty())
+            {
+                // Probably a test generation error:
+                onError.accept(MatchExpression.this, "Clause with no patterns");
+                return null;
+            }
             for (Pattern p : patterns)
             {
                 @Nullable TypeState ts = p.check(data, state, onError, srcType);
@@ -158,11 +164,11 @@ public class MatchExpression extends Expression
         }
 
         @Override
-        public @Nullable EvaluateState match(List<Object> value, int next, EvaluateState state) throws InternalException
+        public @Nullable EvaluateState match(int rowIndex, List<Object> value, int next, EvaluateState state) throws InternalException, UserException
         {
             Object val = value.get(next);
             if (val instanceof Integer)
-                return ((Integer)val) == tagIndex ? (subPattern == null ? state : subPattern.match(value, next + 1, state)) : null;
+                return ((Integer)val) == tagIndex ? (subPattern == null ? state : subPattern.match(rowIndex, value, next + 1, state)) : null;
             throw new InternalException("Unexpected type; should be integer for tag index but was " + value.get(next).getClass());
         }
 
@@ -218,9 +224,14 @@ public class MatchExpression extends Expression
         }
 
         @Override
-        public EvaluateState match(List<Object> value, int next, EvaluateState state) throws InternalException
+        @OnThread(Tag.Simulation)
+        public @Nullable EvaluateState match(int rowIndex, List<Object> value, int next, EvaluateState state) throws InternalException, UserException
         {
-            throw new UnimplementedException();
+            List<Object> expected = expression.getValue(rowIndex, state);
+            if (Utility.compareLists(expected, value.subList(next, value.size())) == 0)
+                return state;
+            else
+                return null;
         }
 
         @Override
@@ -269,7 +280,7 @@ public class MatchExpression extends Expression
         }
 
         @Override
-        public EvaluateState match(List<Object> value, int next, EvaluateState state) throws InternalException
+        public EvaluateState match(int rowIndex, List<Object> value, int next, EvaluateState state) throws InternalException
         {
             return state.add(varName, value.subList(next, value.size()));
         }
@@ -303,7 +314,8 @@ public class MatchExpression extends Expression
     {
         @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException;
 
-        @Nullable EvaluateState match(List<Object> value, int next, EvaluateState state) throws InternalException;
+        @OnThread(Tag.Simulation)
+        @Nullable EvaluateState match(int rowIndex, List<Object> value, int next, EvaluateState state) throws InternalException, UserException;
 
         String save();
     }
@@ -338,7 +350,7 @@ public class MatchExpression extends Expression
         @OnThread(Tag.Simulation)
         public @Nullable EvaluateState match(List<Object> value, int rowIndex, EvaluateState state) throws InternalException, UserException
         {
-            @Nullable EvaluateState newState = pattern.match(value, 0, state);
+            @Nullable EvaluateState newState = pattern.match(rowIndex, value, 0, state);
             if (newState == null)
                 return null;
             for (Expression guard : guards)
@@ -489,8 +501,8 @@ public class MatchExpression extends Expression
     }
 
     @Override
-    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws InternalException, UserException
+    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws InternalException, UserException
     {
-        throw new UnimplementedException();
+        return null;
     }
 }

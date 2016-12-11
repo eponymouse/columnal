@@ -34,6 +34,11 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
+import records.transformations.expression.MatchExpression;
+import records.transformations.expression.MatchExpression.MatchClause;
+import records.transformations.expression.MatchExpression.Pattern;
+import records.transformations.expression.MatchExpression.PatternMatch;
+import records.transformations.expression.MatchExpression.PatternMatchExpression;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.OrExpression;
@@ -45,6 +50,7 @@ import test.TestUtil;
 import test.gen.GenExpressionValue.ExpressionValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExSupplier;
 import utility.Pair;
 import utility.Utility;
 
@@ -54,7 +60,10 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static test.TestUtil.distinctTypes;
 
@@ -140,7 +149,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             @Override
             public Expression number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return termDeep(maxLevels, l(
+                return termDeep(maxLevels, type, l(
                     () -> columnRef(type, targetValue),
                     () -> new NumericLiteral((Number)targetValue.get(0), displayInfo.getUnit())
                 ), l(() -> {
@@ -234,7 +243,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             @Override
             public Expression text() throws InternalException, UserException
             {
-                return termDeep(maxLevels, l(
+                return termDeep(maxLevels, type, l(
                     () -> columnRef(type, targetValue),
                     () -> new StringLiteral((String)targetValue.get(0))
                 ), l());
@@ -243,14 +252,14 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             @Override
             public Expression date() throws InternalException, UserException
             {
-                return termDeep(maxLevels, l(), l());
+                return termDeep(maxLevels, type, l(), l());
             }
 
             @Override
             public Expression bool() throws InternalException, UserException
             {
                 boolean target = (Boolean)targetValue.get(0);
-                return termDeep(maxLevels, l(() -> columnRef(type, targetValue), () -> new BooleanLiteral(target)), l(
+                return termDeep(maxLevels, type, l(() -> columnRef(type, targetValue), () -> new BooleanLiteral(target)), l(
                     () -> {
                         DataType t = makeType(r);
                         // Don't do numbers because result isn't exact:
@@ -335,7 +344,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                     final @NonNull DataType nonNullInner = inner;
                     nonTerm.add(() -> new TagExpression(name, make(nonNullInner, targetValue.subList(1, targetValue.size()), maxLevels - 1)));
                 }
-                return termDeep(maxLevels, terminals, nonTerm);
+                return termDeep(maxLevels, type, terminals, nonTerm);
             }
         });
     }
@@ -462,12 +471,83 @@ public class GenExpressionValue extends Generator<ExpressionValue>
         });
     }
 
-    private Expression termDeep(int maxLevels, List<ExpressionMaker> terminals, List<ExpressionMaker> deeper) throws UserException, InternalException
+    private Expression termDeep(int maxLevels, DataType type, List<ExpressionMaker> terminals, List<ExpressionMaker> deeper) throws UserException, InternalException
     {
+        if (maxLevels > 1 && r.nextInt(0, 5) == 0)
+        {
+            return makeMatch(maxLevels - 1, () -> termDeep(maxLevels - 1, type, terminals, deeper), () -> make(type, makeValue(type), maxLevels - 1));
+        }
+
         //TODO generate match expressions here (valid for all types)
         if (!terminals.isEmpty() && (maxLevels <= 1 || deeper.isEmpty() || r.nextInt(0, 2) == 0))
             return r.choose(terminals).make();
         else
             return r.choose(deeper).make();
+    }
+
+    private Expression makeMatch(int maxLevels, ExSupplier<Expression> makeCorrectOutcome, ExSupplier<Expression> makeOtherOutcome) throws InternalException, UserException
+    {
+        DataType t = makeTypeWithoutNumbers(r);
+        List<Object> actual = makeValue(t);
+        // Make a bunch of guards which won't fire:
+        List<Function<MatchExpression, MatchClause>> clauses = new ArrayList<>(TestUtil.makeList(r, 0, 5, (ExSupplier<Optional<Function<MatchExpression, MatchClause>>>)() -> {
+            // Generate a bunch which can't match the item:
+            List<Pattern> patterns = makeNonMatchingPatterns(maxLevels, t, actual);
+            Expression outcome = makeOtherOutcome.get();
+            if (patterns.isEmpty())
+                return Optional.<Function<MatchExpression, MatchClause>>empty();
+            return Optional.<Function<MatchExpression, MatchClause>>of((MatchExpression me) -> me.new MatchClause(patterns, outcome));
+        }).stream().<Function<MatchExpression, MatchClause>>flatMap(o -> o.isPresent() ? Stream.<Function<MatchExpression, MatchClause>>of(o.get()) : Stream.<Function<MatchExpression, MatchClause>>empty()).collect(Collectors.<Function<MatchExpression, MatchClause>>toList()));
+        Expression correctOutcome = makeCorrectOutcome.get();
+        List<Pattern> patterns = new ArrayList<>(makeNonMatchingPatterns(maxLevels, t, actual));
+        // TODO could use variable here, and constructor if applicable
+        patterns.add(r.nextInt(0, patterns.size()), new Pattern(new PatternMatchExpression(make(t, actual, maxLevels - 1)),
+            TestUtil.makeList(r, 0, 3, () -> make(DataType.BOOLEAN, Collections.singletonList(true), maxLevels - 1))
+        ));
+        clauses.add(r.nextInt(0, clauses.size()), me -> me.new MatchClause(patterns, correctOutcome));
+        return new MatchExpression(make(t, actual, maxLevels), clauses);
+    }
+
+    private List<Pattern> makeNonMatchingPatterns(int maxLevels, DataType t, List<Object> actual)
+    {
+        class CantMakeNonMatching extends RuntimeException {}
+        try
+        {
+            return TestUtil.makeList(r, 1, 4, () ->
+            {
+                PatternMatch match = r.choose(Arrays.<ExSupplier<PatternMatch>>asList(
+                    () ->
+                    {
+                        List<Object> nonMatchingValue;
+                        int attempts = 0;
+                        do
+                        {
+                            nonMatchingValue = makeValue(t);
+                            if (attempts++ >= 30)
+                                throw new CantMakeNonMatching();
+                        }
+                        while (Utility.compareLists(nonMatchingValue, actual) == 0);
+                        return new MatchExpression.PatternMatchExpression(make(t, nonMatchingValue, maxLevels - 1));
+                    }
+                    //TODO constructor if applicable, then variable if not top-level (otherwise matches everything!)
+                )).get();
+                return new Pattern(match, TestUtil.makeList(r, 0, 3, () -> make(DataType.BOOLEAN, Collections.singletonList(r.nextBoolean()), maxLevels - 1)));
+            });
+        }
+        catch (CantMakeNonMatching e)
+        {
+            return Collections.emptyList();
+        }
+    }
+
+    private DataType makeTypeWithoutNumbers(SourceOfRandomness r)
+    {
+        DataType t;
+        do
+        {
+            t = makeType(r);
+        }
+        while (t.hasNumber());
+        return t;
     }
 }
