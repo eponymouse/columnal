@@ -16,6 +16,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -70,7 +71,10 @@ public class TimesExpression extends NaryOpExpression
     @Override
     public @OnThread(Tag.Simulation) List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        return Collections.singletonList(0);
+        Number n = (Number) expressions.get(0).getValue(rowIndex, state).get(0);
+        for (int i = 1; i < expressions.size(); i++)
+            n = Utility.multiplyNumbers(n, (Number) expressions.get(i).getValue(rowIndex, state).get(0));
+        return Collections.singletonList(n);
     }
 
     @Override
