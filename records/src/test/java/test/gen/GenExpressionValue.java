@@ -22,6 +22,7 @@ import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.unit.Unit;
+import records.data.unit.UnitManager;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
@@ -182,9 +183,11 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                             denominator = genBD();
                         } while (denominator.toString().equals("0"));
                         Number numerator = Utility.multiplyNumbers((Number) targetValue.get(0), denominator);
-                        // TODO vary units
+                        // Either just use numerator, or make up crazy one
+                        Unit numUnit = r.nextBoolean() ? displayInfo.getUnit() : makeUnit();
+                        Unit denomUnit = calculateRequiredMultiplyUnit(numUnit, displayInfo.getUnit()).reciprocal();
                         // TODO test division by zero behaviour (test errors generally)
-                        return new DivideExpression(make(type, Collections.singletonList(numerator), maxLevels - 1), make(DataType.NUMBER, Collections.singletonList(denominator), maxLevels - 1));
+                        return new DivideExpression(make(DataType.number(new NumberInfo(numUnit, 0)), Collections.singletonList(numerator), maxLevels - 1), make(DataType.number(new NumberInfo(denomUnit, 0)), Collections.singletonList(denominator), maxLevels - 1));
                     }
                 }));
             }
@@ -290,6 +293,30 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                 return termDeep(maxLevels, terminals, nonTerm);
             }
         });
+    }
+
+    // What unit do you have to multiply src by to get dest?
+    private Unit calculateRequiredMultiplyUnit(Unit src, Unit dest)
+    {
+        // So we have src * x = dest
+        // This can be rearranged to x = dest/src
+        return dest.divide(src);
+    }
+
+    private Unit makeUnit() throws InternalException, UserException
+    {
+        UnitManager m = DummyManager.INSTANCE.getUnitManager();
+        return r.choose(Arrays.asList(
+            m.loadUse("m"),
+            m.loadUse("cm"),
+            m.loadUse("inch"),
+            m.loadUse("g"),
+            m.loadUse("kg"),
+            m.loadUse("deg"),
+            m.loadUse("s"),
+            m.loadUse("hour"),
+            m.loadUse("$")
+        ));
     }
 
     private BigDecimal genBD()

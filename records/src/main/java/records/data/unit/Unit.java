@@ -54,13 +54,7 @@ public class Unit
     @SuppressWarnings("nullness")
     public Unit divide(Unit rhs)
     {
-        Unit u = new Unit(scale.times(rhs.scale));
-        u.units.putAll(units);
-        for (Entry<SingleUnit, Integer> rhsUnit : rhs.units.entrySet())
-        {
-            u.units.merge(rhsUnit.getKey(), rhsUnit.getValue(), (l, r) -> (l - r == 0) ? null : l - r);
-        }
-        return u;
+        return times(rhs.reciprocal());
     }
 
 
@@ -152,5 +146,15 @@ public class Unit
         int result = units.hashCode();
         result = 31 * result + scale.hashCode();
         return result;
+    }
+
+    public Unit reciprocal()
+    {
+        Unit u = new Unit(scale.reciprocal());
+        for (Entry<SingleUnit, Integer> entry : units.entrySet())
+        {
+            u.units.put(entry.getKey(), - entry.getValue());
+        }
+        return u;
     }
 }
