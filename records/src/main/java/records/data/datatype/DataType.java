@@ -465,6 +465,13 @@ public class DataType
         return kind == Kind.NUMBER;
     }
 
+    // is number, or has number anywhere inside:
+    @Pure
+    public boolean hasNumber()
+    {
+        return isNumber() || (tagTypes != null && tagTypes.stream().anyMatch(tt -> tt.getInner() != null && tt.getInner().hasNumber()));
+    }
+
     @Pure
     public NumberInfo getNumberInfo() throws InternalException
     {

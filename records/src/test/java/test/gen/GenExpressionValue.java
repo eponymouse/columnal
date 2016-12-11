@@ -182,7 +182,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                         do
                         {
                             denominator = genBD();
-                        } while (denominator.toString().equals("0"));
+                        } while (Utility.compareNumbers(denominator, 0) == 0);
                         Number numerator = Utility.multiplyNumbers((Number) targetValue.get(0), denominator);
                         // Either just use numerator, or make up crazy one
                         Unit numUnit = r.nextBoolean() ? displayInfo.getUnit() : makeUnit();
@@ -253,6 +253,9 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                 return termDeep(maxLevels, l(() -> columnRef(type, targetValue), () -> new BooleanLiteral(target)), l(
                     () -> {
                         DataType t = makeType(r);
+                        // Don't do numbers because result isn't exact:
+                        while (t.hasNumber())
+                            t = makeType(r);
                         List<Object> valA = makeValue(t);
                         List<Object> valB;
                         int attempts = 0;
@@ -267,6 +270,9 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                     },
                     () -> {
                         DataType t = makeType(r);
+                        // Don't do numbers because result isn't exact:
+                        while (t.hasNumber())
+                            t = makeType(r);
                         List<Object> valA = makeValue(t);
                         List<Object> valB;
                         int attempts = 0;

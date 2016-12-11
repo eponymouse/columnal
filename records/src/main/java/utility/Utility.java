@@ -138,6 +138,12 @@ public class Utility
         return new Point2D((bounds.getMinX() + bounds.getMaxX()) * 0.5, (bounds.getMinY() + bounds.getMaxY()) * 0.5);
     }
 
+    @Pure
+    public static int compareLists(List<@NonNull ?> a, List<@NonNull ?> b) throws InternalException
+    {
+        return compareLists(a, b, null);
+    }
+
     /**
      * Used to compare two unpacked values. 
      * 
@@ -157,7 +163,7 @@ public class Utility
      * see that method for more details.
      */
     @Pure
-    public static int compareLists(List<@NonNull ?> a, List<@NonNull ?> b) throws InternalException
+    public static int compareLists(List<@NonNull ?> a, List<@NonNull ?> b, @Nullable BigDecimal epsilon) throws InternalException
     {
         for (int i = 0; i < a.size(); i++)
         {
@@ -167,9 +173,9 @@ public class Utility
             Object bx = b.get(i);
             int cmp;
             if (ax instanceof Number)
-                cmp = compareNumbers(ax, bx);
+                cmp = compareNumbers(ax, bx, epsilon);
             else if (ax instanceof List)
-                cmp = compareLists((List<@NonNull ?>)ax, (List<@NonNull ?>)bx);
+                cmp = compareLists((List<@NonNull ?>)ax, (List<@NonNull ?>)bx, epsilon);
             else if (ax instanceof Comparable)
                 cmp = ((Comparable<Object>)ax).compareTo(bx);
             else
@@ -547,8 +553,13 @@ public class Utility
         }
     }
 
-    // Params passed as Object to avoid double cast
     public static int compareNumbers(final Object a, final Object b)
+    {
+        return compareNumbers(a, b, null);
+    }
+
+    // Params passed as Object to avoid double cast
+    public static int compareNumbers(final Object a, final Object b, @Nullable BigDecimal epsilon)
     {
         if (a instanceof BigDecimal || b instanceof BigDecimal)
         {
@@ -566,7 +577,23 @@ public class Utility
                 db = new BigDecimal((BigInteger)b);
             else
                 db = BigDecimal.valueOf(((Number)b).longValue());
-            return da.compareTo(db);
+            if (epsilon == null)
+                return da.compareTo(db);
+            else
+            {
+                try
+                {
+                    if (da.equals(db) || (!da.equals(BigDecimal.ZERO) && da.subtract(db).abs().divide(da, MathContext.DECIMAL128).subtract(BigDecimal.ONE).compareTo(epsilon) == -1)
+                        || (!db.equals(BigDecimal.ZERO) && da.subtract(db).abs().divide(db, MathContext.DECIMAL128).subtract(BigDecimal.ONE).compareTo(epsilon) == -1))
+                        return 0;
+                    else
+                        return da.compareTo(db);
+                }
+                catch (ArithmeticException e)
+                {
+                    return da.compareTo(db);
+                }
+            }
         }
         else if (a instanceof BigInteger || b instanceof BigInteger)
         {

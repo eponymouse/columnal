@@ -12,6 +12,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -35,9 +36,9 @@ public class PropRunExpression
             });
             List<Object> actualValue = src.expression.getValue(0, new EvaluateState());
             assertTrue("{{{" + src.expression.toString() + "}}} should have been " + toString(src.value) + " but was " + toString(actualValue) + " columns: " + src.recordSet.debugGetVals(0),
-                Utility.compareLists(src.value, actualValue) == 0);
+                Utility.compareLists(src.value, actualValue, new BigDecimal("0.000000001")) == 0);
         }
-        catch (InternalException | UserException e)
+        catch (ArithmeticException | InternalException | UserException e)
         {
             System.err.println(src.expression.toString() + " " + src.recordSet.debugGetVals());
             throw e;
