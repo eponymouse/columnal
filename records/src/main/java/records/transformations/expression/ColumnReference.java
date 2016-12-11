@@ -12,7 +12,6 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.loadsave.OutputBuilder;
@@ -139,7 +138,7 @@ public class ColumnReference extends Expression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws InternalException, UserException
+    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws InternalException, UserException
     {
         // TODO could replace with an invalid column name
         return null;

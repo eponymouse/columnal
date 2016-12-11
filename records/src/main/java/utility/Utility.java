@@ -403,7 +403,7 @@ public class Utility
     {
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
         {
-            return toBigDecimal(lhs).divide(toBigDecimal(rhs));
+            return toBigDecimal(lhs).divide(toBigDecimal(rhs), MathContext.DECIMAL128);
         }
         else if (lhs instanceof BigInteger || rhs instanceof BigInteger)
         {

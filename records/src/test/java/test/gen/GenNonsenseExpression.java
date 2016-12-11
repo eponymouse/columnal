@@ -24,6 +24,7 @@ import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.OrExpression;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
+import records.transformations.expression.TimesExpression;
 import test.TestUtil;
 import utility.Pair;
 import utility.Utility;
@@ -75,6 +76,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> new EqualExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new AndExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new OrExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
+                () -> new TimesExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> !tagAllowed ? genTerminal(r) : new TagExpression(new Pair<@Nullable String, String>(r.nextBoolean() ? null : TestUtil.makeString(r, gs), TestUtil.makeString(r, gs)), genDepth(r, depth + 1, gs)),
                 () ->
                 {

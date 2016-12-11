@@ -71,6 +71,8 @@ public abstract class NaryOpExpression extends Expression
 
     protected List<@Nullable Expression> makeNullList(int index, Expression newExp)
     {
+        if (index < 0 || index >= expressions.size())
+            throw new RuntimeException("makeNullList invalid " + index + " compared to " + expressions.size());
         ArrayList<@Nullable Expression> r = new ArrayList<>();
         for (int i = 0; i < expressions.size(); i++)
         {

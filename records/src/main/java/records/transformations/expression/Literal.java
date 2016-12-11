@@ -2,8 +2,6 @@ package records.transformations.expression;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
-import records.data.datatype.DataType;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.Pair;
@@ -30,7 +28,7 @@ public abstract class Literal extends Expression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws InternalException, UserException
+    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws InternalException, UserException
     {
         return null;
     }

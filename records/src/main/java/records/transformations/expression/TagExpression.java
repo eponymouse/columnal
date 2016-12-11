@@ -7,7 +7,6 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
@@ -107,13 +106,12 @@ public class TagExpression extends Expression
     }
 
     @Override
-    @OnThread(Tag.Simulation)
-    public Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws InternalException, UserException
     {
         // TODO could replace with known invalid tag
         if (inner == null)
             // Shouldn't have type; add one:
-            return new TagExpression(tagName, newExpressionOfDifferentType.apply(innerDerivedType));
+            return new TagExpression(tagName, newExpressionOfDifferentType.getAnyType());
         else
         {
             if (r.nextBoolean())
@@ -121,7 +119,7 @@ public class TagExpression extends Expression
                 return new TagExpression(tagName, null);
             else
                 // Should have type, but replace with different:
-                return new TagExpression(tagName, newExpressionOfDifferentType.apply(innerDerivedType));
+                return new TagExpression(tagName, newExpressionOfDifferentType.getDifferentType(innerDerivedType));
         }
     }
 

@@ -9,7 +9,6 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberInfo;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
@@ -80,10 +79,15 @@ public class DivideExpression extends BinaryOpExpression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws UserException, InternalException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws UserException, InternalException
     {
-        // It needs to be a non-numeric type to fail.
-        // We can't ask for that directly, so just skip it
-        return null;
+        if (r.nextBoolean())
+        {
+            return copy(newExpressionOfDifferentType.getNonNumericType(), rhs);
+        }
+        else
+        {
+            return copy(lhs, newExpressionOfDifferentType.getNonNumericType());
+        }
     }
 }

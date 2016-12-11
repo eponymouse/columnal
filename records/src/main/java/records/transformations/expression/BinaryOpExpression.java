@@ -5,7 +5,6 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.ExBiConsumer;
@@ -118,16 +117,16 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws UserException, InternalException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws UserException, InternalException
     {
         // Most binary ops require same type, so this is typical (can always override):
         if (r.nextBoolean())
         {
-            return copy(newExpressionOfDifferentType.apply(lhsType), rhs);
+            return copy(newExpressionOfDifferentType.getDifferentType(lhsType), rhs);
         }
         else
         {
-            return copy(lhs, newExpressionOfDifferentType.apply(rhsType));
+            return copy(lhs, newExpressionOfDifferentType.getDifferentType(rhsType));
         }
     }
 

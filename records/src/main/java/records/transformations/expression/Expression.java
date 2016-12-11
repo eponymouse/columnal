@@ -11,7 +11,6 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
@@ -34,6 +33,7 @@ import records.grammar.ExpressionParser.PlusMinusExpressionContext;
 import records.grammar.ExpressionParser.StringLiteralContext;
 import records.grammar.ExpressionParser.TableIdContext;
 import records.grammar.ExpressionParser.TagExpressionContext;
+import records.grammar.ExpressionParser.TimesExpressionContext;
 import records.grammar.ExpressionParserBaseVisitor;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.MatchExpression.MatchClause;
@@ -173,6 +173,12 @@ public abstract class Expression
         }
 
         @Override
+        public Expression visitTimesExpression(TimesExpressionContext ctx)
+        {
+            return new TimesExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression));
+        }
+
+        @Override
         public Expression visitTagExpression(TagExpressionContext ctx)
         {
             Pair<@Nullable String, String> constructorName;
@@ -287,11 +293,18 @@ public abstract class Expression
     // If this item can't make a type failure by itself (e.g. a literal) then returns null
     // Otherwise, uses the given generator to make a copy of itself which contains a type failure
     // in this node.  E.g. an equals expression might replace the lhs or rhs with a different type
-    @OnThread(Tag.Simulation)
-    public abstract @Nullable Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws InternalException, UserException;
+    public abstract @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws InternalException, UserException;
 
     @Override
     public abstract boolean equals(@Nullable Object o);
     @Override
     public abstract int hashCode();
+
+    // Only for testing:
+    public static interface _test_TypeVary
+    {
+        public Expression getDifferentType(@Nullable DataType type) throws InternalException, UserException;
+        public Expression getAnyType() throws UserException, InternalException;
+        public Expression getNonNumericType() throws InternalException, UserException;
+    }
 }

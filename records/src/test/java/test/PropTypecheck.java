@@ -24,6 +24,7 @@ import utility.Pair;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -68,9 +69,10 @@ public class PropTypecheck
     @SuppressWarnings("nullness")
     public void propTypeCheckFail(@From(GenTypecheckFail.class) GenTypecheckFail.TypecheckInfo src) throws InternalException, UserException
     {
+
         for (Expression expression : src.expressionFailures)
         {
-            assertNull(expression.toString(), expression.check(src.recordSet, TestUtil.typeState(), (e, s) -> {}));
+            assertNull(src.getDisplay(expression), expression.check(src.recordSet, TestUtil.typeState(), (e, s) -> {}));
         }
     }
 

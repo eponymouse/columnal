@@ -1,0 +1,10 @@
+Add (including units): TimesExpression
+Generate match expressions for testing values
+Add power expression (x^n), right-hand side must be constant rational if left-hand side is non-scalar
+   (will need constant folding: use getValue but with an EvaluateState that throws a particular exception)
+Add tests for runtime errors (division by zero, incomplete pattern matches, if we allow those)
+Then go on to add functions, such as:
+ as{unit}(number); can't be used to-from scalars, only within same units differing by scale
+ c(col): gets single value from that column
+Look up Unicode string collations, both for user values (in columns) and things like function names, constructor names
+Implement and test complete load/save, including units and types sections

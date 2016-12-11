@@ -4,12 +4,14 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Column;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression._test_TypeVary;
 import test.TestUtil;
 import test.gen.GenExpressionValue.ExpressionValue;
 import test.gen.GenTypecheckFail.TypecheckInfo;
@@ -33,13 +35,29 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
 
     public class TypecheckInfo
     {
+        private final Expression original;
         public final RecordSet recordSet;
         public final List<Expression> expressionFailures;
 
-        public TypecheckInfo(RecordSet recordSet, List<Expression> expressionFailures)
+        public TypecheckInfo(Expression original, RecordSet recordSet, List<Expression> expressionFailures)
         {
+            this.original = original;
             this.recordSet = recordSet;
             this.expressionFailures = expressionFailures;
+        }
+
+        public String getDisplay(Expression expression) throws InternalException, UserException
+        {
+            StringBuilder s = new StringBuilder("Expression : " + expression);
+            s.append(" col types: ");
+            @OnThread(Tag.Any) List<Column> columns = recordSet.getColumns();
+            for (int i = 0; i < columns.size(); i++)
+            {
+                Column column = columns.get(i);
+                s.append(i + "|" + column.getType().toString() + "  ");
+            }
+            s.append("(Original: " + original + ")");
+            return s.toString();
         }
     }
 
@@ -53,18 +71,42 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         ExpressionValue valid = gen.generate(r, generationStatus);
         try
         {
-            valid.expression.check(valid.recordSet, TestUtil.typeState(), (e, s) ->
+            if (null == valid.expression.check(valid.recordSet, TestUtil.typeState(), (e, s) ->
             {
                 throw new RuntimeException(s);
-            });
+            })) throw new RuntimeException("Original did not type check: " + valid.expression);
 
             List<Expression> failures = valid.expression._test_allMutationPoints().map(p -> {
                 try
                 {
-                    @Nullable Expression failedCopy = p.getFirst()._test_typeFailure(r.toJDKRandom(), type -> {
-                        DataType newType = pickTypeOtherThan(type, r);
-                        //System.err.println("Changed old type " + type + " into " + newType + " when replacing " + p.getFirst());
-                        return gen.makeOfType(newType).getSecond();
+                    @Nullable Expression failedCopy = p.getFirst()._test_typeFailure(r.toJDKRandom(), new _test_TypeVary()
+                    {
+                        @Override
+                        @OnThread(value = Tag.Simulation, ignoreParent = true)
+                        public Expression getDifferentType(@Nullable DataType type) throws InternalException, UserException
+                        {
+                            if (type == null)
+                                throw new RuntimeException("Getting different type than failure?");
+                            DataType newType = pickTypeOtherThan(type, r);
+                            //System.err.println("Changed old type " + type + " into " + newType + " when replacing " + p.getFirst());
+                            return gen.makeOfType(newType).getSecond();
+                        }
+
+                        @Override
+                        @OnThread(value = Tag.Simulation, ignoreParent = true)
+                        public Expression getAnyType() throws UserException, InternalException
+                        {
+                            return gen.makeOfType(pickType(r)).getSecond();
+                        }
+
+                        @Override
+                        @OnThread(value = Tag.Simulation, ignoreParent = true)
+                        public Expression getNonNumericType() throws InternalException, UserException
+                        {
+                            DataType newType = pickNonNumericType(r);
+                            //System.err.println("Changed old type " + type + " into " + newType + " when replacing " + p.getFirst());
+                            return gen.makeOfType(newType).getSecond();
+                        }
                     });
                     if (failedCopy == null)
                         return null;
@@ -82,7 +124,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
             //    System.err.println("Transformed " + valid.expression + " into failure " + failure);
             //}
 
-            return new TypecheckInfo(gen.getRecordSet(), failures);
+            return new TypecheckInfo(valid.expression, gen.getRecordSet(), failures);
         }
         catch (InternalException | UserException | RuntimeException e)
         {
@@ -104,6 +146,17 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
             picked = pickType(r);
         }
         while (picked.equals(type));
+        return picked;
+    }
+
+    private DataType pickNonNumericType(SourceOfRandomness r)
+    {
+        DataType picked;
+        do
+        {
+            picked = pickType(r);
+        }
+        while (picked.isNumber());
         return picked;
 
     }

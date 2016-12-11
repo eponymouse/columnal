@@ -7,16 +7,12 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.Pair;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -75,10 +71,9 @@ public class OrExpression extends NaryOpExpression
     }
 
     @Override
-    @OnThread(Tag.Simulation)
-    public @Nullable Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws InternalException, UserException
     {
         int index = r.nextInt(expressions.size());
-        return copy(makeNullList(index, newExpressionOfDifferentType.apply(DataType.BOOLEAN)));
+        return copy(makeNullList(index, newExpressionOfDifferentType.getDifferentType(DataType.BOOLEAN)));
     }
 }

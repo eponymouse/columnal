@@ -39,6 +39,7 @@ import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.OrExpression;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
+import records.transformations.expression.TimesExpression;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenExpressionValue.ExpressionValue;
@@ -189,6 +190,44 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                         // TODO test division by zero behaviour (test errors generally)
                         return new DivideExpression(make(DataType.number(new NumberInfo(numUnit, 0)), Collections.singletonList(numerator), maxLevels - 1), make(DataType.number(new NumberInfo(denomUnit, 0)), Collections.singletonList(denominator), maxLevels - 1));
                     }
+                }, () -> {
+                    Number runningTotal = 1;
+                    Unit runningUnit = Unit.SCALAR;
+                    int numExtra = r.nextInt(1, 4);
+                    List<Expression> expressions = new ArrayList<>();
+                    boolean targetZero = Utility.compareNumbers(targetValue.get(0), 0) == 0;
+                    for (int i = 0; i < numExtra; i++)
+                    {
+                        //Only allow zeroes if the target is zero:
+                        Number subVal;
+                        do
+                        {
+                            subVal = genBD();
+                        }
+                        while (subVal.toString().equals("0") && !targetZero);
+                        runningTotal = Utility.multiplyNumbers(runningTotal, subVal);
+                        Unit unit = makeUnit();
+                        runningUnit = runningUnit.times(unit);
+                        expressions.add(make(DataType.number(new NumberInfo(unit, 0)),Collections.singletonList(subVal), maxLevels - 1));
+                    }
+                    Unit lastUnit = calculateRequiredMultiplyUnit(runningUnit, displayInfo.getUnit());
+                    if (targetZero)
+                    {
+                        // If running total already zero, generate what we like, otherwise we must generate a zero:
+                        if (Utility.compareNumbers(runningTotal, 0) == 0)
+                        {
+                            expressions.add(make(DataType.number(new NumberInfo(lastUnit, 0)), Collections.singletonList(genBD()), maxLevels - 1));
+                        }
+                        else
+                        {
+                            expressions.add(make(DataType.number(new NumberInfo(lastUnit, 0)), Collections.singletonList(0), maxLevels - 1));
+                        }
+                    }
+                    else
+                    {
+                        expressions.add(make(DataType.number(new NumberInfo(lastUnit, 0)), Collections.singletonList(Utility.divideNumbers((Number) targetValue.get(0), runningTotal)), maxLevels - 1));
+                    }
+                    return new TimesExpression(expressions);
                 }));
             }
 
@@ -419,6 +458,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
 
     private Expression termDeep(int maxLevels, List<ExpressionMaker> terminals, List<ExpressionMaker> deeper) throws UserException, InternalException
     {
+        //TODO generate match expressions here (valid for all types)
         if (!terminals.isEmpty() && (maxLevels <= 1 || deeper.isEmpty() || r.nextInt(0, 2) == 0))
             return r.choose(terminals).make();
         else
