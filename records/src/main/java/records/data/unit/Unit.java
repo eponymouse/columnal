@@ -5,9 +5,8 @@ import org.sosy_lab.common.rationals.Rational;
 import records.error.UserException;
 import utility.Utility;
 
-import java.util.HashMap;
-import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.StringJoiner;
 import java.util.TreeMap;
 
@@ -156,5 +155,28 @@ public class Unit
             u.units.put(entry.getKey(), - entry.getValue());
         }
         return u;
+    }
+
+    // If this unit can scale to that one, return the multiplier needed to convert
+    // If conversion not possible, return empty.
+    public Optional<Rational> canScaleTo(Unit unit, UnitManager mgr) throws UserException
+    {
+        Unit thisCanon = mgr.canonicalise(this);
+        Unit otherCanon = mgr.canonicalise(unit);
+
+        if (!thisCanon.units.equals(otherCanon.units))
+            return Optional.empty();
+        else
+            return Optional.of(thisCanon.scale.divides(otherCanon.scale));
+    }
+
+    public TreeMap<SingleUnit, Integer> getDetails()
+    {
+        return units;
+    }
+
+    public Rational getScale()
+    {
+        return scale;
     }
 }

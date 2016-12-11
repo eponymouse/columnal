@@ -13,6 +13,8 @@ WS : ( ' ' | '\t' )+ -> skip ;
 OPEN_BRACKET : '(';
 CLOSE_BRACKET : ')';
 
+UNIT : '{' ~'}'* '}';
+
 PLUS_MINUS: [+-];
 TIMES: '*';
 DIVIDE: '/';

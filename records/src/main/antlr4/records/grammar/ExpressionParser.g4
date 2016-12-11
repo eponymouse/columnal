@@ -14,6 +14,11 @@ varRef  : UNQUOTED_IDENT;
 
 terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef;
 
+// Could have units in ops:
+//plusMinusExpression :  expression PLUS_MINUS UNIT? expression (PLUS_MINUS expression)*;
+//timesExpression :  expression TIMES UNIT? expression (TIMES expression)*;
+//divideExpression :  expression DIVIDE UNIT? expression;
+
 plusMinusExpression :  expression (PLUS_MINUS expression)+;
 timesExpression :  expression (TIMES expression)+;
 divideExpression :  expression DIVIDE expression;
@@ -27,6 +32,9 @@ compoundExpression : plusMinusExpression | timesExpression | divideExpression | 
 
 constructor : rawConstructor rawConstructor?;
 tagExpression : constructor (CONS expression)?;
+
+functionName : UNQUOTED_IDENT;
+callExpression : functionName UNIT* OPEN_BRACKET (topLevelExpression | expression (NEXT_PARAM expression)+) CLOSE_BRACKET;
 
 newVariable : NEWVAR UNQUOTED_IDENT;
 constructorName : STRING | UNQUOTED_IDENT;

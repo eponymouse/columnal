@@ -19,6 +19,7 @@ import java.io.InputStream;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * Created by neil on 09/12/2016.
@@ -156,5 +157,27 @@ public class UnitManager
             return Unit.SCALAR;
         else
             return possUnit.getUnit();
+    }
+
+    private Unit canonicalise(SingleUnit original) throws UserException
+    {
+        UnitDeclaration decl = knownUnits.get(original.getName());
+        if (decl == null)
+            throw new UserException("Unknown unit: {" + original.getName() + "}");
+        Unit equiv = decl.getEquivalentTo();
+        if (equiv == null)
+            return decl.getUnit();
+        else
+            return canonicalise(equiv);
+    }
+
+    public Unit canonicalise(Unit original) throws UserException
+    {
+        Unit canon = new Unit(original.getScale());
+        for (Entry<SingleUnit, Integer> entry : original.getDetails().entrySet())
+        {
+            canon = canon.times(canonicalise(entry.getKey()).raisedTo(entry.getValue()));
+        }
+        return canon;
     }
 }

@@ -38,4 +38,9 @@ public class UnitDeclaration
     {
         otherNames.add(newName);
     }
+
+    public @Nullable Unit getEquivalentTo()
+    {
+        return equivalentTo;
+    }
 }
