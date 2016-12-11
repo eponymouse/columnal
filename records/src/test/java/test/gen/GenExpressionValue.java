@@ -20,6 +20,7 @@ import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
@@ -492,30 +493,57 @@ public class GenExpressionValue extends Generator<ExpressionValue>
         // Make a bunch of guards which won't fire:
         List<Function<MatchExpression, MatchClause>> clauses = new ArrayList<>(TestUtil.makeList(r, 0, 5, (ExSupplier<Optional<Function<MatchExpression, MatchClause>>>)() -> {
             // Generate a bunch which can't match the item:
-            List<Pattern> patterns = makeNonMatchingPatterns(maxLevels, t, actual);
+            List<Function<MatchExpression, Pattern>> patterns = makeNonMatchingPatterns(maxLevels, t, actual);
             Expression outcome = makeOtherOutcome.get();
             if (patterns.isEmpty())
                 return Optional.<Function<MatchExpression, MatchClause>>empty();
-            return Optional.<Function<MatchExpression, MatchClause>>of((MatchExpression me) -> me.new MatchClause(patterns, outcome));
+            return Optional.<Function<MatchExpression, MatchClause>>of((MatchExpression me) -> me.new MatchClause(Utility.<Function<MatchExpression, Pattern>, Pattern>mapList(patterns, p -> p.apply(me)), outcome));
         }).stream().<Function<MatchExpression, MatchClause>>flatMap(o -> o.isPresent() ? Stream.<Function<MatchExpression, MatchClause>>of(o.get()) : Stream.<Function<MatchExpression, MatchClause>>empty()).collect(Collectors.<Function<MatchExpression, MatchClause>>toList()));
         Expression correctOutcome = makeCorrectOutcome.get();
-        List<Pattern> patterns = new ArrayList<>(makeNonMatchingPatterns(maxLevels, t, actual));
+        List<Function<MatchExpression, Pattern>> patterns = new ArrayList<>(makeNonMatchingPatterns(maxLevels, t, actual));
         // TODO could use variable here, and constructor if applicable
-        patterns.add(r.nextInt(0, patterns.size()), new Pattern(new PatternMatchExpression(make(t, actual, maxLevels - 1)),
+        patterns.add(r.nextInt(0, patterns.size()), me -> new Pattern(makePatternMatch(me, maxLevels - 1, t, actual),
             TestUtil.makeList(r, 0, 3, () -> make(DataType.BOOLEAN, Collections.singletonList(true), maxLevels - 1))
         ));
-        clauses.add(r.nextInt(0, clauses.size()), me -> me.new MatchClause(patterns, correctOutcome));
+        clauses.add(r.nextInt(0, clauses.size()), me -> me.new MatchClause(Utility.<Function<MatchExpression, Pattern>, Pattern>mapList(patterns, p -> p.apply(me)), correctOutcome));
         return new MatchExpression(make(t, actual, maxLevels), clauses);
     }
 
-    private List<Pattern> makeNonMatchingPatterns(int maxLevels, DataType t, List<Object> actual)
+    @NotNull
+    private PatternMatch makePatternMatch(MatchExpression me, int maxLevels, DataType t, List<Object> actual)
+    {
+        try
+        {
+            if (t.isTagged() && r.nextBoolean())
+            {
+                return t.apply(new SpecificDataTypeVisitor<PatternMatch>()
+                {
+                    @Override
+                    public PatternMatch tagged(String typeName, List<TagType<DataType>> tagTypes) throws InternalException, UserException
+                    {
+                        TagType<DataType> tagType = tagTypes.get((Integer) actual.get(0));
+                        @Nullable DataType inner = tagType.getInner();
+                        return me.new PatternMatchConstructor(tagType.getName(), inner == null ? null : makePatternMatch(me, maxLevels, inner, actual.subList(1, actual.size())));
+                    }
+                });
+
+            }
+            return new PatternMatchExpression(make(t, actual, maxLevels));
+        }
+        catch (InternalException | UserException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private List<Function<MatchExpression, Pattern>> makeNonMatchingPatterns(final int maxLevels, final DataType t, List<Object> actual)
     {
         class CantMakeNonMatching extends RuntimeException {}
         try
         {
-            return TestUtil.makeList(r, 1, 4, () ->
+            return TestUtil.<Function<MatchExpression, Pattern>>makeList(r, 1, 4, () ->
             {
-                PatternMatch match = r.choose(Arrays.<ExSupplier<PatternMatch>>asList(
+                Function<MatchExpression, PatternMatch> match = r.choose(Arrays.<ExSupplier<Function<MatchExpression, PatternMatch>>>asList(
                     () ->
                     {
                         List<Object> nonMatchingValue;
@@ -527,11 +555,13 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                                 throw new CantMakeNonMatching();
                         }
                         while (Utility.compareLists(nonMatchingValue, actual) == 0);
-                        return new MatchExpression.PatternMatchExpression(make(t, nonMatchingValue, maxLevels - 1));
+                        List<Object> nonMatchingValueFinal = nonMatchingValue;
+                        return (Function<MatchExpression, PatternMatch>)((MatchExpression me) -> makePatternMatch(me, maxLevels - 1, t, nonMatchingValueFinal));
                     }
                     //TODO constructor if applicable, then variable if not top-level (otherwise matches everything!)
                 )).get();
-                return new Pattern(match, TestUtil.makeList(r, 0, 3, () -> make(DataType.BOOLEAN, Collections.singletonList(r.nextBoolean()), maxLevels - 1)));
+                List<Expression> guards = TestUtil.makeList(r, 0, 3, () -> make(DataType.BOOLEAN, Collections.singletonList(r.nextBoolean()), maxLevels - 1));
+                return (Function<MatchExpression, Pattern>)((MatchExpression me) -> new Pattern(match.apply(me), guards));
             });
         }
         catch (CantMakeNonMatching e)

@@ -1,4 +1,4 @@
-Generate match constructors/variables for testing values
+Generate match variables for testing values (but not at top-level for non-matching)
 Add power expression (x^n), right-hand side must be constant rational if left-hand side is non-scalar
    (will need constant folding: use getValue but with an EvaluateState that throws a particular exception)
 Add tests for runtime errors (division by zero, incomplete pattern matches, if we allow those)
