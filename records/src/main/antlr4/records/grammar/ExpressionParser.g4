@@ -25,9 +25,13 @@ andExpression :  expression (AND expression)+;
 orExpression :  expression (OR expression)+;
 compoundExpression : plusMinusExpression | timesExpression | divideExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression;
 
+constructor : rawConstructor rawConstructor?;
+tagExpression : constructor (CONS expression)?;
+
 variable : NEWVAR UNQUOTED_IDENT;
-constructor : CONSTRUCTOR (STRING | UNQUOTED_IDENT);
-patternMatch : constructor (CONS patternMatch)? | variable | expression;
+constructorName : STRING | UNQUOTED_IDENT;
+rawConstructor : CONSTRUCTOR constructorName;
+patternMatch : rawConstructor (CONS patternMatch)? | variable | expressionNoTag;
 pattern : patternMatch (AND expression)*;
 
 matchClause : pattern (DELIM pattern)* MAPSTO expression;
@@ -35,5 +39,7 @@ match : expression MATCH matchClause (DELIM matchClause)*;
 
 bracketedCompound : OPEN_BRACKET compoundExpression CLOSE_BRACKET;
 bracketedMatch : OPEN_BRACKET match CLOSE_BRACKET;
-expression : bracketedCompound | terminal | bracketedMatch;
+expressionNoTag : bracketedCompound | terminal | bracketedMatch;
+// tagExpression doesn't need brackets because the constructor means it's identifiable from its left token
+expression : expressionNoTag | tagExpression;
 topLevelExpression : compoundExpression | match | expression /* includes terminal */;

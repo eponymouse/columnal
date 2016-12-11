@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import edu.emory.mathcs.backport.java.util.Collections;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.error.UserException;
@@ -93,5 +94,10 @@ public abstract class NaryOpExpression extends Expression
     public int hashCode()
     {
         return expressions.hashCode();
+    }
+
+    public List<Expression> getChildren()
+    {
+        return Collections.unmodifiableList(expressions);
     }
 }

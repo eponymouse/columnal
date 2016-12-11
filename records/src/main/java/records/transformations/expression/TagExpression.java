@@ -124,4 +124,29 @@ public class TagExpression extends Expression
                 return new TagExpression(tagName, newExpressionOfDifferentType.apply(innerDerivedType));
         }
     }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TagExpression that = (TagExpression) o;
+
+        if (!tagName.equals(that.tagName)) return false;
+        return inner != null ? inner.equals(that.inner) : that.inner == null;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = tagName.hashCode();
+        result = 31 * result + (inner != null ? inner.hashCode() : 0);
+        return result;
+    }
+
+    public @Nullable Expression getInner()
+    {
+        return inner;
+    }
 }

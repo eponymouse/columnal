@@ -22,7 +22,7 @@ public class PropLoadSaveExpression
     {
         String saved = expression.save(true);
         Expression reloaded = Expression.parse(null, saved);
-        assertEquals(expression, reloaded);
+        assertEquals("Saved version: " + saved, expression, reloaded);
         String resaved = reloaded.save(true);
         assertEquals(saved, resaved);
         

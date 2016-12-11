@@ -130,4 +130,14 @@ public abstract class BinaryOpExpression extends Expression
             return copy(lhs, newExpressionOfDifferentType.apply(rhsType));
         }
     }
+
+    public Expression getLHS()
+    {
+        return lhs;
+    }
+
+    public Expression getRHS()
+    {
+        return rhs;
+    }
 }

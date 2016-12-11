@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -20,6 +21,7 @@ import records.grammar.ExpressionParser.BooleanLiteralContext;
 import records.grammar.ExpressionParser.BracketedCompoundContext;
 import records.grammar.ExpressionParser.BracketedMatchContext;
 import records.grammar.ExpressionParser.ColumnRefContext;
+import records.grammar.ExpressionParser.DivideExpressionContext;
 import records.grammar.ExpressionParser.ExpressionContext;
 import records.grammar.ExpressionParser.MatchClauseContext;
 import records.grammar.ExpressionParser.MatchContext;
@@ -28,9 +30,12 @@ import records.grammar.ExpressionParser.NumericLiteralContext;
 import records.grammar.ExpressionParser.OrExpressionContext;
 import records.grammar.ExpressionParser.PatternContext;
 import records.grammar.ExpressionParser.PatternMatchContext;
+import records.grammar.ExpressionParser.PlusMinusExpressionContext;
 import records.grammar.ExpressionParser.StringLiteralContext;
 import records.grammar.ExpressionParser.TableIdContext;
+import records.grammar.ExpressionParser.TagExpressionContext;
 import records.grammar.ExpressionParserBaseVisitor;
+import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.MatchExpression.PatternMatch;
@@ -156,6 +161,30 @@ public abstract class Expression
         }
 
         @Override
+        public Expression visitDivideExpression(DivideExpressionContext ctx)
+        {
+            return new DivideExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
+        }
+
+        @Override
+        public Expression visitPlusMinusExpression(PlusMinusExpressionContext ctx)
+        {
+            return new AddSubtractExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), Utility.<TerminalNode, Op>mapList(ctx.PLUS_MINUS(), op -> op.getText().equals("+") ? Op.ADD : Op.SUBTRACT));
+        }
+
+        @Override
+        public Expression visitTagExpression(TagExpressionContext ctx)
+        {
+            Pair<@Nullable String, String> constructorName;
+            if (ctx.constructor().rawConstructor().size() == 1)
+                constructorName = new Pair<@Nullable String, String>(null, ctx.constructor().rawConstructor(0).constructorName().getText());
+            else
+                constructorName = new Pair<@Nullable String, String>(ctx.constructor().rawConstructor(0).constructorName().getText(), ctx.constructor().rawConstructor(1).constructorName().getText());
+
+            return new TagExpression(constructorName, visitExpression(ctx.expression()));
+        }
+
+        @Override
         public Expression visitBracketedCompound(BracketedCompoundContext ctx)
         {
             return visitCompoundExpression(ctx.compoundExpression());
@@ -206,18 +235,18 @@ public abstract class Expression
 
         private PatternMatch processPatternMatch(MatchExpression me, PatternMatchContext ctx) throws InternalException
         {
-            if (ctx.constructor() != null)
+            if (ctx.rawConstructor() != null)
             {
                 PatternMatchContext subPattern = ctx.patternMatch();
-                return me.new PatternMatchConstructor(ctx.constructor().getText().substring(1), subPattern == null ? null : processPatternMatch(me, subPattern));
+                return me.new PatternMatchConstructor(ctx.rawConstructor().constructorName().getText(), subPattern == null ? null : processPatternMatch(me, subPattern));
             }
             else if (ctx.variable() != null)
             {
                 return me.new PatternMatchVariable(ctx.variable().getText().substring(1));
             }
-            else if (ctx.expression() != null)
+            else if (ctx.expressionNoTag() != null)
             {
-                return new PatternMatchExpression(visitExpression(ctx.expression()));
+                return new PatternMatchExpression(visitExpressionNoTag(ctx.expressionNoTag()));
             }
             throw new RuntimeException("Unknown case in processPatternMatch");
         }
@@ -260,4 +289,9 @@ public abstract class Expression
     // in this node.  E.g. an equals expression might replace the lhs or rhs with a different type
     @OnThread(Tag.Simulation)
     public abstract @Nullable Expression _test_typeFailure(Random r, FunctionInt<@Nullable DataType, Expression> newExpressionOfDifferentType) throws InternalException, UserException;
+
+    @Override
+    public abstract boolean equals(@Nullable Object o);
+    @Override
+    public abstract int hashCode();
 }

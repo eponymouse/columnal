@@ -2,22 +2,30 @@ package test.gen;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
+import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import edu.emory.mathcs.backport.java.util.Collections;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
+import records.transformations.expression.AddSubtractExpression;
+import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.AndExpression;
 import records.transformations.expression.BinaryOpExpression;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
+import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.MatchExpression;
+import records.transformations.expression.NaryOpExpression;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.OrExpression;
 import records.transformations.expression.StringLiteral;
+import records.transformations.expression.TagExpression;
 import test.TestUtil;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -26,6 +34,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Generates arbitrary expression which probably won't type check.
@@ -47,6 +56,11 @@ public class GenNonsenseExpression extends Generator<Expression>
 
     private Expression genDepth(SourceOfRandomness r, int depth, GenerationStatus gs)
     {
+        return genDepth(true, r, depth, gs);
+    }
+
+    private Expression genDepth(boolean tagAllowed, SourceOfRandomness r, int depth, GenerationStatus gs)
+    {
         // Make terminals more likely as we get further down:
         if (r.nextInt(0, 3 - depth) == 0)
         {
@@ -61,7 +75,14 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> new EqualExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new AndExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new OrExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
-                () -> new MatchExpression(genDepth(r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1)))
+                () -> !tagAllowed ? genTerminal(r) : new TagExpression(new Pair<@Nullable String, String>(r.nextBoolean() ? null : TestUtil.makeString(r, gs), TestUtil.makeString(r, gs)), genDepth(r, depth + 1, gs)),
+                () ->
+                {
+                    List<Expression> expressions = TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
+                    return new AddSubtractExpression(expressions, TestUtil.makeList(expressions.size() - 1, (Generator<Op>)(Generator<?>)new EnumGenerator(Op.class), r, gs));
+                },
+                () -> new DivideExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
+                () -> new MatchExpression(genDepth(false, r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1)))
             )).get();
         }
     }
@@ -89,7 +110,7 @@ public class GenNonsenseExpression extends Generator<Expression>
     private MatchExpression.PatternMatch genPatternMatch(MatchExpression e, SourceOfRandomness r, GenerationStatus gs, int depth)
     {
         return r.choose(Arrays.<Supplier<MatchExpression.PatternMatch>>asList(
-            () -> new MatchExpression.PatternMatchExpression(genDepth(r, depth, gs)),
+            () -> new MatchExpression.PatternMatchExpression(genDepth(false, r, depth, gs)),
             () -> {
                 try
                 {
@@ -111,10 +132,13 @@ public class GenNonsenseExpression extends Generator<Expression>
         alt.add(genTerminal(random));
         if (larger instanceof BinaryOpExpression)
         {
-            alt.add(((BinaryOpExpression)larger).copy(null, genTerminal(random)));
-            alt.add(((BinaryOpExpression)larger).copy(genTerminal(random), null));
+            BinaryOpExpression e = (BinaryOpExpression) larger;
+            alt.add(e.copy(null, genTerminal(random)));
+            alt.add(e.copy(genTerminal(random), null));
+            alt.add(e.getLHS());
+            alt.add(e.getRHS());
         }
-        if (larger instanceof MatchExpression)
+        else if (larger instanceof MatchExpression)
         {
             MatchExpression e = (MatchExpression)larger;
             alt.add(e.getExpression());
@@ -125,7 +149,25 @@ public class GenNonsenseExpression extends Generator<Expression>
                 return (MatchExpression ne) -> ne.new MatchClause(Utility.<MatchExpression.Pattern, MatchExpression.Pattern>mapList(c.getPatterns(), p -> shrinkPattern(random, p, ne)), random.choose(doShrink(random, c.getOutcome())));
             }).collect(Collectors.<Function<MatchExpression, MatchExpression.MatchClause>>toList())));
         }
-        //TODO n-ary
+        else if (larger instanceof NaryOpExpression)
+        {
+            NaryOpExpression e = (NaryOpExpression)larger;
+            int size = e.getChildren().size();
+            for (int i = 0; i < size; i++)
+            {
+                int iFinal = i;
+                // TODO make copy with one less:
+                //if (size > 2)
+                    //alt.add(e.copy));
+                alt.add(e.getChildren().get(i));
+            }
+        }
+        else if (larger instanceof TagExpression)
+        {
+            @Nullable Expression inner = ((TagExpression) larger).getInner();
+            if (inner != null)
+                alt.add(inner);
+        }
         return alt;
     }
 

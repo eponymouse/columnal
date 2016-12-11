@@ -154,7 +154,7 @@ public class DataTypeValue extends DataType
     }
     
 
-    @SuppressWarnings("nullness")
+    @SuppressWarnings({"nullness", "unchecked"})
     @OnThread(Tag.Simulation)
     public final <R, E extends Throwable> R applyGet(DataTypeVisitorGetEx<R, E> visitor) throws InternalException, E
     {
