@@ -1,14 +1,10 @@
 package records.transformations.expression;
 
-import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
-import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Consumer;
 
 /**
  * Created by neil on 29/11/2016.
@@ -36,5 +32,13 @@ public class EvaluateState
         }
         copy.put(varName, value);
         return new EvaluateState(copy);
+    }
+
+    public List<Object> get(String varName) throws InternalException
+    {
+        List<Object> value = variables.get(varName);
+        if (value == null)
+            throw new InternalException("Trying to access undeclared variable: \"" + varName + "\"");
+        return value;
     }
 }

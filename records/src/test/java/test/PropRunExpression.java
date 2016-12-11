@@ -32,7 +32,7 @@ public class PropRunExpression
         {
             src.expression.check(src.recordSet, TestUtil.typeState(), (e, s) ->
             {
-                throw new RuntimeException(s);
+                throw new InternalException(s);
             });
             List<Object> actualValue = src.expression.getValue(0, new EvaluateState());
             assertTrue("{{{" + src.expression.toString() + "}}} should have been " + toString(src.value) + " but was " + toString(actualValue) + " columns: " + src.recordSet.debugGetVals(0),

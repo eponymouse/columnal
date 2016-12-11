@@ -19,6 +19,7 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
+import records.loadsave.OutputBuilder;
 import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -296,5 +297,16 @@ public class TestUtil
     public static TypeState typeState()
     {
         return new TypeState(distinctTypes.stream().filter(p -> p.isTagged()).collect(Collectors.<DataType, String, DataType>toMap(t -> t.getTaggedTypeName(), t -> t)));
+    }
+
+    public static String generateVarName(SourceOfRandomness r)
+    {
+        String s;
+        do
+        {
+            s = generateIdent(r);
+        }
+        while (!Utility.validUnquoted(s));
+        return s;
     }
 }

@@ -34,6 +34,7 @@ import records.grammar.ExpressionParser.StringLiteralContext;
 import records.grammar.ExpressionParser.TableIdContext;
 import records.grammar.ExpressionParser.TagExpressionContext;
 import records.grammar.ExpressionParser.TimesExpressionContext;
+import records.grammar.ExpressionParser.VarRefContext;
 import records.grammar.ExpressionParserBaseVisitor;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.MatchExpression.MatchClause;
@@ -202,6 +203,13 @@ public abstract class Expression
             return visitMatch(ctx.match());
         }
 
+        @Override
+        public Expression visitVarRef(VarRefContext ctx)
+        {
+            return new VarExpression(ctx.getText());
+        }
+
+
         /*
         @Override
         public Expression visitBinaryOpExpression(BinaryOpExpressionContext ctx)
@@ -246,9 +254,9 @@ public abstract class Expression
                 PatternMatchContext subPattern = ctx.patternMatch();
                 return me.new PatternMatchConstructor(ctx.rawConstructor().constructorName().getText(), subPattern == null ? null : processPatternMatch(me, subPattern));
             }
-            else if (ctx.variable() != null)
+            else if (ctx.newVariable() != null)
             {
-                return me.new PatternMatchVariable(ctx.variable().getText().substring(1));
+                return me.new PatternMatchVariable(ctx.newVariable().getText().substring(1));
             }
             else if (ctx.expressionNoTag() != null)
             {

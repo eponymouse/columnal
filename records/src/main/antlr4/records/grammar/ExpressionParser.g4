@@ -28,10 +28,10 @@ compoundExpression : plusMinusExpression | timesExpression | divideExpression | 
 constructor : rawConstructor rawConstructor?;
 tagExpression : constructor (CONS expression)?;
 
-variable : NEWVAR UNQUOTED_IDENT;
+newVariable : NEWVAR UNQUOTED_IDENT;
 constructorName : STRING | UNQUOTED_IDENT;
 rawConstructor : CONSTRUCTOR constructorName;
-patternMatch : rawConstructor (CONS patternMatch)? | variable | expressionNoTag;
+patternMatch : rawConstructor (CONS patternMatch)? | newVariable | expressionNoTag;
 pattern : patternMatch (AND expression)*;
 
 matchClause : pattern (DELIM pattern)* MAPSTO expression;

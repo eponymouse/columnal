@@ -25,6 +25,7 @@ import records.transformations.expression.OrExpression;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
 import records.transformations.expression.TimesExpression;
+import records.transformations.expression.VarExpression;
 import test.TestUtil;
 import utility.Pair;
 import utility.Utility;
@@ -95,7 +96,8 @@ public class GenNonsenseExpression extends Generator<Expression>
             new NumericLiteral(r.nextBigInteger(160), null), // TODO gen unit
             new BooleanLiteral(r.nextBoolean()),
             new StringLiteral(TestUtil.generateColumnId(r).getOutput()),
-            new ColumnReference(TestUtil.generateColumnId(r))
+            new ColumnReference(TestUtil.generateColumnId(r)),
+            new VarExpression(TestUtil.generateVarName(r))
         ));
     }
 
@@ -113,16 +115,7 @@ public class GenNonsenseExpression extends Generator<Expression>
     {
         return r.choose(Arrays.<Supplier<MatchExpression.PatternMatch>>asList(
             () -> new MatchExpression.PatternMatchExpression(genDepth(false, r, depth, gs)),
-            () -> {
-                try
-                {
-                    return e.new PatternMatchVariable(TestUtil.makeUnquotedIdent(r, gs));
-                }
-                catch (InternalException ex)
-                {
-                    throw new RuntimeException(ex);
-                }
-            },
+            () -> e.new PatternMatchVariable(TestUtil.makeUnquotedIdent(r, gs)),
             () -> e.new PatternMatchConstructor(TestUtil.makeString(r, gs), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1))
         )).get();
     }

@@ -11,12 +11,16 @@ import utility.ExConsumer;
 import utility.Pair;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -24,43 +28,51 @@ import java.util.stream.Collectors;
  */
 public class TypeState
 {
-    private final HashMap<String, DataType> variables;
-    private final HashMap<String, DataType> tagTypes;
+    // If variable is in there but > size 1, means it is known but cannot be used because it has multiple types in different guards
+    private final Map<String, Set<DataType>> variables;
+    private final Map<String, DataType> tagTypes;
 
     public TypeState(Map<String, DataType> tagTypes)
     {
         this(new HashMap<>(), new HashMap<>(tagTypes));
     }
 
-    private TypeState(HashMap<String, DataType> variables, HashMap<String, DataType> tagTypes)
+    private TypeState(Map<String, Set<DataType>> variables, Map<String, DataType> tagTypes)
     {
-        this.variables = variables;
-        this.tagTypes = tagTypes;
+        this.variables = Collections.unmodifiableMap(variables);
+        this.tagTypes = Collections.unmodifiableMap(tagTypes);
     }
 
     public @Nullable TypeState add(String varName, DataType type, ExConsumer<String> error) throws InternalException, UserException
     {
-        HashMap<String, DataType> copy = new HashMap<>(variables);
+        HashMap<String, Set<DataType>> copy = new HashMap<>(variables);
         if (copy.containsKey(varName))
         {
             error.accept("Duplicate variable name: " + varName);
             return null;
         }
-        copy.put(varName, type);
-        return new TypeState(copy);
+        copy.put(varName, Collections.singleton(type));
+        return new TypeState(copy, tagTypes);
     }
 
-    public static @Nullable TypeState checkAllSame(List<TypeState> typeStates, ExConsumer<String> onError) throws InternalException, UserException
+    // Merges a set of type states from different pattern guards
+    public static TypeState intersect(List<TypeState> typeStates) throws InternalException, UserException
     {
-        HashSet<TypeState> noDups = new HashSet<>(typeStates);
-        if (noDups.size() == 1)
-            return noDups.iterator().next();
-        Iterator<TypeState> iterator = noDups.iterator();
-        TypeState a = iterator.next();
-        TypeState b = iterator.next();
-        MapDifference<String, DataType> diff = Maps.difference(a.variables, b.variables);
-        onError.accept("Differing variables, such as: " + diff.entriesDiffering().entrySet().stream().map(e -> e.getKey() + ": " + e.getValue().leftValue() + " vs " + e.getValue().rightValue()).collect(Collectors.joining(" and ")));
-        return null;
+        Map<String, Set<DataType>> mergedVars = new HashMap<>(typeStates.get(0).variables);
+        for (int i = 1; i < typeStates.size(); i++)
+        {
+            for (Entry<String, Set<DataType>> entry : typeStates.get(i).variables.entrySet())
+            {
+                // If it's present in both sets, only keep if same type, otherwise mask:
+                mergedVars.merge(entry.getKey(), entry.getValue(), (a, b) -> {
+                    HashSet<DataType> merged = new HashSet<DataType>();
+                    merged.addAll(a);
+                    merged.addAll(b);
+                    return merged;
+                });
+            }
+        }
+        return new TypeState(mergedVars, typeStates.get(0).tagTypes);
     }
 
     @Override
@@ -83,6 +95,13 @@ public class TypeState
     public @Nullable DataType findTaggedType(String typeName)
     {
         return tagTypes.get(typeName);
+    }
+
+    // If it's null, it's totally unknown
+    // If it's > size 1, it should count as masked because it has different types in different guards
+    public @Nullable Set<DataType> findVarType(String varName)
+    {
+        return variables.get(varName);
     }
 
     public static class TypeAndTagInfo

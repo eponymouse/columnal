@@ -46,11 +46,13 @@ import records.transformations.expression.OrExpression;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
 import records.transformations.expression.TimesExpression;
+import records.transformations.expression.VarExpression;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenExpressionValue.ExpressionValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.ExSupplier;
 import utility.Pair;
 import utility.Utility;
@@ -99,6 +101,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
     private SourceOfRandomness r;
     private GenerationStatus gs;
     private List<FunctionInt<RecordSet, Column>> columns;
+    private int nextVar = 0;
 
     @Override
     @OnThread(value = Tag.Simulation, ignoreParent = true)
@@ -501,34 +504,48 @@ public class GenExpressionValue extends Generator<ExpressionValue>
         }).stream().<Function<MatchExpression, MatchClause>>flatMap(o -> o.isPresent() ? Stream.<Function<MatchExpression, MatchClause>>of(o.get()) : Stream.<Function<MatchExpression, MatchClause>>empty()).collect(Collectors.<Function<MatchExpression, MatchClause>>toList()));
         Expression correctOutcome = makeCorrectOutcome.get();
         List<Function<MatchExpression, Pattern>> patterns = new ArrayList<>(makeNonMatchingPatterns(maxLevels, t, actual));
-        // TODO could use variable here, and constructor if applicable
-        patterns.add(r.nextInt(0, patterns.size()), me -> new Pattern(makePatternMatch(me, maxLevels - 1, t, actual),
-            TestUtil.makeList(r, 0, 3, () -> make(DataType.BOOLEAN, Collections.singletonList(true), maxLevels - 1))
-        ));
+        Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> match = makePatternMatch(maxLevels - 1, t, actual);
+        patterns.add(r.nextInt(0, patterns.size()), me -> {
+            List<Expression> guards = new ArrayList<>(TestUtil.makeList(r, 0, 3, () -> make(DataType.BOOLEAN, Collections.singletonList(true), maxLevels - 1)));
+            Expression extraGuard = match.getSecond();
+            if (extraGuard != null)
+                guards.add(r.nextInt(0, guards.size()), extraGuard);
+            return new Pattern(match.getFirst().apply(me), guards);
+        });
         clauses.add(r.nextInt(0, clauses.size()), me -> me.new MatchClause(Utility.<Function<MatchExpression, Pattern>, Pattern>mapList(patterns, p -> p.apply(me)), correctOutcome));
         return new MatchExpression(make(t, actual, maxLevels), clauses);
     }
 
+    // Pattern and an optional guard
     @NotNull
-    private PatternMatch makePatternMatch(MatchExpression me, int maxLevels, DataType t, List<Object> actual)
+    private Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> makePatternMatch(int maxLevels, DataType t, List<Object> actual)
     {
         try
         {
             if (t.isTagged() && r.nextBoolean())
             {
-                return t.apply(new SpecificDataTypeVisitor<PatternMatch>()
+                return t.apply(new SpecificDataTypeVisitor<Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression>>()
                 {
                     @Override
-                    public PatternMatch tagged(String typeName, List<TagType<DataType>> tagTypes) throws InternalException, UserException
+                    public Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> tagged(String typeName, List<TagType<DataType>> tagTypes) throws InternalException, UserException
                     {
                         TagType<DataType> tagType = tagTypes.get((Integer) actual.get(0));
                         @Nullable DataType inner = tagType.getInner();
-                        return me.new PatternMatchConstructor(tagType.getName(), inner == null ? null : makePatternMatch(me, maxLevels, inner, actual.subList(1, actual.size())));
+                        if (inner == null)
+                            return new Pair<>(me -> me.new PatternMatchConstructor(tagType.getName(), null), null);
+                        Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> subPattern = makePatternMatch(maxLevels, inner, actual.subList(1, actual.size()));
+                        return new Pair<>(me -> me.new PatternMatchConstructor(tagType.getName(), subPattern.getFirst().apply(me)), subPattern.getSecond());
                     }
                 });
 
             }
-            return new PatternMatchExpression(make(t, actual, maxLevels));
+            else if (r.nextBoolean()) // Do equals but using variable + guard
+            {
+                String varName = "var" + nextVar++;
+                return new Pair<>(me -> me.new PatternMatchVariable(varName), new EqualExpression(new VarExpression(varName), make(t, actual, maxLevels)));
+            }
+            Expression expression = make(t, actual, maxLevels);
+            return new Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression>(me -> new PatternMatchExpression(expression), null);
         }
         catch (InternalException | UserException e)
         {
@@ -543,7 +560,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
         {
             return TestUtil.<Function<MatchExpression, Pattern>>makeList(r, 1, 4, () ->
             {
-                Function<MatchExpression, PatternMatch> match = r.choose(Arrays.<ExSupplier<Function<MatchExpression, PatternMatch>>>asList(
+                Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> match = r.choose(Arrays.<ExSupplier<Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression>>>asList(
                     () ->
                     {
                         List<Object> nonMatchingValue;
@@ -556,12 +573,14 @@ public class GenExpressionValue extends Generator<ExpressionValue>
                         }
                         while (Utility.compareLists(nonMatchingValue, actual) == 0);
                         List<Object> nonMatchingValueFinal = nonMatchingValue;
-                        return (Function<MatchExpression, PatternMatch>)((MatchExpression me) -> makePatternMatch(me, maxLevels - 1, t, nonMatchingValueFinal));
+                        return makePatternMatch(maxLevels - 1, t, nonMatchingValueFinal);
                     }
-                    //TODO constructor if applicable, then variable if not top-level (otherwise matches everything!)
                 )).get();
                 List<Expression> guards = TestUtil.makeList(r, 0, 3, () -> make(DataType.BOOLEAN, Collections.singletonList(r.nextBoolean()), maxLevels - 1));
-                return (Function<MatchExpression, Pattern>)((MatchExpression me) -> new Pattern(match.apply(me), guards));
+                Expression extraGuard = match.getSecond();
+                if (extraGuard != null)
+                    guards.add(r.nextInt(0, guards.size()), extraGuard);
+                return (Function<MatchExpression, Pattern>)((MatchExpression me) -> new Pattern(match.getFirst().apply(me), guards));
             });
         }
         catch (CantMakeNonMatching e)

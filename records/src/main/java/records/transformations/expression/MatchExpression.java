@@ -14,6 +14,7 @@ import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
+import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -67,9 +68,7 @@ public class MatchExpression extends Expression
                     return null;
                 rhsStates.add(ts);
             }
-            TypeState rhsState = TypeState.checkAllSame(rhsStates, err -> onError.accept(MatchExpression.this, err));
-            if (rhsState == null)
-                return null;
+            TypeState rhsState = TypeState.intersect(rhsStates);
             return outcome.check(data, rhsState, onError);
         }
 
@@ -263,13 +262,9 @@ public class MatchExpression extends Expression
     {
         private final String varName;
 
-        public PatternMatchVariable(String varName) throws InternalException
+        public PatternMatchVariable(String varName)
         {
             this.varName = varName;
-            if (!Utility.validUnquoted(varName))
-            {
-                throw new InternalException("Invalid variable name: \"" + varName + "\"");
-            }
         }
 
         @Override
