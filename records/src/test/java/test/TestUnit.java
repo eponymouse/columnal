@@ -131,7 +131,7 @@ public class TestUnit
     }
 
     @Test
-    public void testAs() throws UserException, InternalException
+    public void testAs() throws Throwable
     {
         test("3.2808399", "foot", "1", "m");
         test("3.2808399", "foot", "100", "cm");
@@ -146,23 +146,43 @@ public class TestUnit
 
         //TODO add failure tests, like converting scalar to/from units, or unrelated units, or m/s to m/s^2 etc
     }
-    private void test(String expected, String destUnit, String src, String srcUnit) throws InternalException, UserException
+    @Test
+    public void testAsFail()
+    {
+        assertThrows(UserException.class, () -> test_("1", "m", "1", "s"));
+        assertThrows(UserException.class, () -> test_("1", "mm", "1", "s"));
+        assertThrows(UserException.class, () -> test_("1", "m", "1", "m/s"));
+        assertThrows(UserException.class, () -> test_("1", "1", "1", "m/s"));
+        assertThrows(UserException.class, () -> test_("1", "1", "1", "m"));
+        assertThrows(UserException.class, () -> test_("1", "m", "1", "1"));
+    }
+
+    private void test(String expected, String destUnit, String src, String srcUnit) throws Throwable
     {
         test_(expected, destUnit, src, srcUnit);
         test_(src, srcUnit, expected, destUnit);
     }
 
     @SuppressWarnings("nullness")
-    private void test_(String expected, String destUnit, String src, String srcUnit) throws InternalException, UserException
+    private void test_(String expected, String destUnit, String src, String srcUnit) throws InternalException, UserException, Throwable
     {
-        @Nullable Pair<FunctionInstance, DataType> instance = new AsType().typeCheck(Collections.singletonList(mgr.loadUse(destUnit)), Collections.singletonList(DataType.number(new NumberInfo(mgr.loadUse(srcUnit), 0))), s ->
+        try
         {
-            throw new RuntimeException(s);
-        }, mgr);
-        assertNotNull(instance);
-        Object num = instance.getFirst().getValue(0, Collections.singletonList(Collections.singletonList((Object)d(src)))).get(0);
-        assertThat(num, numberMatch(d(expected)));
-
+            @Nullable Pair<FunctionInstance, DataType> instance = new AsType().typeCheck(Collections.singletonList(mgr.loadUse(destUnit)), Collections.singletonList(DataType.number(new NumberInfo(mgr.loadUse(srcUnit), 0))), s ->
+            {
+                throw new RuntimeException(new UserException(s));
+            }, mgr);
+            assertNotNull(instance);
+            Object num = instance.getFirst().getValue(0, Collections.singletonList(Collections.singletonList((Object) d(src)))).get(0);
+            assertThat(num, numberMatch(d(expected)));
+        }
+        catch (RuntimeException e)
+        {
+            if (e.getCause() != null)
+                throw e.getCause();
+            else
+                throw e;
+        }
     }
 
     private Matcher<Object> numberMatch(BigDecimal n)
