@@ -7,6 +7,7 @@ import org.hamcrest.CustomMatcher;
 import org.hamcrest.Matcher;
 import org.junit.Before;
 import org.junit.Test;
+import org.sosy_lab.common.rationals.Rational;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.unit.SingleUnit;
@@ -63,6 +64,8 @@ public class TestUnit
     public void parse() throws InternalException, UserException
     {
         SingleUnit m = mgr.getDeclared("m");
+        SingleUnit g = mgr.getDeclared("g");
+        SingleUnit l = mgr.getDeclared("l");
         SingleUnit s = mgr.getDeclared("s");
         assertEquals(Unit._test_make(m, 1), mgr.loadUse("m"));
         assertEquals(Unit._test_make(m, 2), mgr.loadUse("m^2"));
@@ -75,6 +78,7 @@ public class TestUnit
         assertEquals(Unit._test_make(m, 3), mgr.loadUse("m m^2"));
 
         assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("m/s^2"));
+        assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("(m/s^2)"));
         assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("m s^-2"));
         assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("(m/s)/s"));
         assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("m/(s s)"));
@@ -82,22 +86,49 @@ public class TestUnit
         assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("m*(s^-2)"));
         assertEquals(Unit._test_make(m, 2, s, -2), mgr.loadUse("m*(m/s^2)"));
 
-        //TODO keep adding parser test, including test that invalid units don't parse (e.g. m/s/s)
+        assertEquals(Unit._test_make(m, 1, s, -2, l, 1, g, -3), mgr.loadUse("(m l)/(g^3 s^2)"));
+        assertEquals(Unit._test_make(m, 1, s, -2, l, 1, g, -3), mgr.loadUse("((m l)/(g^3 s)) / s"));
+        assertEquals(Unit._test_make(m, 1, s, -2, l, 1, g, -3), mgr.loadUse("((m l)/(g^3*s))/s"));
+        assertEquals(Unit._test_make(m, 1, s, -2, l, -1, g, -3), mgr.loadUse("m/(g^3 l s^2)"));
+        assertEquals(Unit._test_make(m, 1, s, -2, l, -1, g, -3), mgr.loadUse("m/(g l g s g s)"));
+        assertEquals(Unit._test_make(m, 1, s, -2, l, -1, g, -3), mgr.loadUse("m/(g l g^2*s s)"));
     }
 
+    @Test
+    public void testCanon() throws InternalException, UserException
+    {
+        SingleUnit m = mgr.getDeclared("m");
+        SingleUnit g = mgr.getDeclared("g");
+        SingleUnit l = mgr.getDeclared("l");
+        SingleUnit s = mgr.getDeclared("s");
+        assertEquals(new Pair<>(Rational.of("1"), Unit._test_make(m, 1)), mgr.canonicalise(mgr.loadUse("m")));
+        assertEquals(new Pair<>(Rational.of("1/100"), Unit._test_make(m, 1)), mgr.canonicalise(mgr.loadUse("cm")));
+        assertEquals(new Pair<>(Rational.of("1/10000"), Unit._test_make(m, 2)), mgr.canonicalise(mgr.loadUse("cm^2")));
+        assertEquals(new Pair<>(Rational.of("1/1000"), Unit._test_make(m, 1)), mgr.canonicalise(mgr.loadUse("mm")));
+        assertEquals(new Pair<>(Rational.of("1/1000000"), Unit._test_make(m, 2)), mgr.canonicalise(mgr.loadUse("mm^2")));
+        assertEquals(new Pair<>(Rational.of("1/100"), Unit._test_make(m, 1)), mgr.canonicalise(mgr.loadUse("cm")));
+        assertEquals(new Pair<>(Rational.of("254/10000"), Unit._test_make(m, 1)), mgr.canonicalise(mgr.loadUse("inch")));
+        assertEquals(new Pair<>(Rational.of("254/36000000"), Unit._test_make(m, 1, s, -1)), mgr.canonicalise(mgr.loadUse("inch/hour")));
+        assertEquals(new Pair<>(Rational.of("100"), Unit._test_make()), mgr.canonicalise(mgr.loadUse("m/cm")));
+        assertEquals(new Pair<>(Rational.of("1/100"), Unit._test_make()), mgr.canonicalise(mgr.loadUse("cm/m")));
+        assertEquals(new Pair<>(Rational.of("1"), Unit._test_make(m ,1)), mgr.canonicalise(mgr.loadUse("m^3/(m^2)")));
+    }
+
+    @Test
     public void parseFail()
     {
         // This is both parse failures and unknown unit failures
         assertThrows(UserException.class, () -> mgr.loadUse("###"));
         // Need space inbetween to be valid:
         assertThrows(UserException.class, () -> mgr.loadUse("$$"));
-        assertThrows(UserException.class, () -> mgr.loadUse("mm"));
+        assertThrows(UserException.class, () -> mgr.loadUse("ss"));
         assertThrows(UserException.class, () -> mgr.loadUse("m/s/"));
         assertThrows(UserException.class, () -> mgr.loadUse("m/s/s"));
+        assertThrows(UserException.class, () -> mgr.loadUse("m l/(g^3 s) / s"));
+        assertThrows(UserException.class, () -> mgr.loadUse("m^0.5"));
+        assertThrows(UserException.class, () -> mgr.loadUse("m^0"));
+        assertThrows(UserException.class, () -> mgr.loadUse("m^-0.5"));
     }
-
-    //TODO test canonicalise explicitly
-
 
     @Test
     public void testAs() throws UserException, InternalException
@@ -111,7 +142,7 @@ public class TestUnit
         test("45645.2419", "mile/hour^2", "5.6681247", "m/(s*s)");
         test("817684.876315", "inch^3/min", "223.32424", "l/s");
         test("817684.876315", "inch^3/min", "223324.24", "ml/s");
-        test("817684.876315", "inch*inch*inch/min", "223.32424", "l s^-1");
+        test("817684.876315", "(inch*inch*inch)/min", "223.32424", "l s^-1");
 
         //TODO add failure tests, like converting scalar to/from units, or unrelated units, or m/s to m/s^2 etc
     }

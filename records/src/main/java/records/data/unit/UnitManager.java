@@ -10,6 +10,7 @@ import records.grammar.UnitParser.AliasDeclarationContext;
 import records.grammar.UnitParser.DeclarationContext;
 import records.grammar.UnitParser.DisplayContext;
 import records.grammar.UnitParser.SingleContext;
+import records.grammar.UnitParser.UnbracketedUnitContext;
 import records.grammar.UnitParser.UnitContext;
 import records.grammar.UnitParser.UnitDeclarationContext;
 import utility.Pair;
@@ -106,24 +107,32 @@ public class UnitManager
             text = text.substring(1, text.length() - 1);
         if (text.isEmpty())
             return Unit.SCALAR;
-        UnitContext ctx = Utility.parseAsOne(text, UnitLexer::new, UnitParser::new, p -> p.unit());
-        return loadUnit(ctx);
+        UnbracketedUnitContext ctx = Utility.parseAsOne(text, UnitLexer::new, UnitParser::new, p -> p.unitUse().unbracketedUnit());
+        return loadUnbracketedUnit(ctx);
     }
 
-    private Unit loadUnit(UnitContext ctx) throws UserException
+    private Unit loadUnbracketedUnit(UnbracketedUnitContext ctx) throws UserException
     {
         Iterator<UnitContext> units = ctx.unit().iterator();
-        Unit lhs = ctx.single() != null ? loadSingle(ctx.single()) : loadUnit(units.next());
-        if (units.hasNext())
+        Unit lhs = loadUnit(units.next());
+        while (units.hasNext())
         {
             Unit rhs = loadUnit(units.next());
             if (ctx.DIVIDE() != null)
-                return lhs.divide(rhs);
+                lhs = lhs.divide(rhs);
             else
-                return lhs.times(rhs);
+                lhs =  lhs.times(rhs);
         }
+
+        return lhs;
+    }
+
+    private Unit loadUnit(UnitContext unit) throws UserException
+    {
+        if (unit.single() != null)
+            return loadSingle(unit.single());
         else
-            return lhs;
+            return loadUnbracketedUnit(unit.unbracketedUnit());
     }
 
     private Unit loadSingle(SingleContext singleOrScaleContext) throws UserException

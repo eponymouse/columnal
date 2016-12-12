@@ -5,7 +5,10 @@ options { tokenVocab = UnitLexer; }
 singleUnit : IDENT;
 scale : NUMBER (POWER NUMBER)?;
 single : singleUnit (POWER NUMBER)?;
-unit : (single | OPEN_BRACKET unit CLOSE_BRACKET) (WS? unit | WS? DIVIDE WS? unit | WS? TIMES WS? unit)?;
+unbracketedUnit : unit ((WS? DIVIDE WS? unit) | (WS? unit | WS? TIMES WS? unit)+)?;
+unit : single | OPEN_BRACKET unbracketedUnit CLOSE_BRACKET;
+
+unitUse : unbracketedUnit EOF;
 
 aliasDeclaration : ALIAS WS singleUnit WS? EQUALS WS? singleUnit NEWLINE;
 
