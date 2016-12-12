@@ -21,11 +21,11 @@ import utility.Utility;
 
 import java.math.BigDecimal;
 import java.util.Collections;
-import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertThrows;
 
 /**
  * Created by neil on 11/12/2016.
@@ -33,14 +33,74 @@ import static org.junit.Assert.assertThat;
 @SuppressWarnings("initialization")
 public class TestUnit
 {
-    private @NonNull UnitManager m;
+    private @NonNull UnitManager mgr;
     @Before
     public void init() throws UserException, InternalException
     {
-        m = new UnitManager();
+        mgr = new UnitManager();
     }
 
-    //TODO add parser test, including test that invalid units don't parse (e.g. m/s/s)
+    @Test
+    public void unitToString() throws InternalException
+    {
+        SingleUnit m = mgr.getDeclared("m");
+        SingleUnit s = mgr.getDeclared("s");
+        SingleUnit d = mgr.getDeclared("$");
+        assertEquals("m", Unit._test_make(1, m, 1).toString());
+        assertEquals("m^-1", Unit._test_make(1, m, -1).toString());
+        assertEquals("3m", Unit._test_make(3, m, 1).toString());
+        assertEquals("3m^-1", Unit._test_make(3, m, -1).toString());
+        assertEquals("3s^-1", Unit._test_make(3, s, -1).toString());
+        assertEquals("3m/s", Unit._test_make(3, m, 1, s, -1).toString());
+        assertEquals("3m/s^2", Unit._test_make(3, m, 1, s, -2).toString());
+
+        assertEquals("m/($ s^2)", Unit._test_make(3, m, 1, d, -1, s, -2).toString());
+    }
+
+    @Test
+    public void parse() throws InternalException, UserException
+    {
+        SingleUnit m = mgr.getDeclared("m");
+        SingleUnit s = mgr.getDeclared("s");
+        assertEquals(Unit._test_make(1, m, 1), mgr.loadUse("m"));
+        assertEquals(Unit._test_make(2, m, 1), mgr.loadUse("2m"));
+        assertEquals(Unit._test_make(1, m, 2), mgr.loadUse("m^2"));
+        assertEquals(Unit._test_make(1, m, 2), mgr.loadUse("m m"));
+        assertEquals(Unit._test_make(1, m, 2), mgr.loadUse("m*m"));
+        assertEquals(Unit._test_make(1, m, 3), mgr.loadUse("m^3"));
+        assertEquals(Unit._test_make(1, m, 3), mgr.loadUse("m m*m"));
+        assertEquals(Unit._test_make(1, m, 3), mgr.loadUse("m*m m"));
+        assertEquals(Unit._test_make(1, m, 3), mgr.loadUse("m^2 m"));
+        assertEquals(Unit._test_make(1, m, 3), mgr.loadUse("m m^2"));
+
+        assertEquals(Unit._test_make(1000, m, 3), mgr.loadUse("1000 m^2 m"));
+        assertEquals(Unit._test_make(1000, m, 3), mgr.loadUse("10^3 m^2 m"));
+        assertEquals(Unit._test_make(1000, m, 3), mgr.loadUse("10^2 m^2 10 m"));
+
+        assertEquals(Unit._test_make(1, m, 1, s, -2), mgr.loadUse("m/s^2"));
+        assertEquals(Unit._test_make(1, m, 1, s, -2), mgr.loadUse("m s^-2"));
+        assertEquals(Unit._test_make(1, m, 1, s, -2), mgr.loadUse("(m/s)/s"));
+        assertEquals(Unit._test_make(1, m, 1, s, -2), mgr.loadUse("m/(s s)"));
+        assertEquals(Unit._test_make(1, m, 1, s, -2), mgr.loadUse("m/(s^2)"));
+        assertEquals(Unit._test_make(1, m, 1, s, -2), mgr.loadUse("m*(s^-2)"));
+        assertEquals(Unit._test_make(1, m, 1, s, -2), mgr.loadUse("m*(1/s^2)"));
+
+        //TODO keep adding parser test, including test that invalid units don't parse (e.g. m/s/s)
+    }
+
+    public void parseFail()
+    {
+        // This is both parse failures and unknown unit failures
+        assertThrows(UserException.class, () -> mgr.loadUse("###"));
+        // Need space inbetween to be valid:
+        assertThrows(UserException.class, () -> mgr.loadUse("$$"));
+        assertThrows(UserException.class, () -> mgr.loadUse("mm"));
+        assertThrows(UserException.class, () -> mgr.loadUse("m/s/"));
+        assertThrows(UserException.class, () -> mgr.loadUse("m/s/s"));
+    }
+
+    //TODO test canonicalise explicitly
+
 
     @Test
     public void testAs() throws UserException, InternalException
@@ -66,10 +126,10 @@ public class TestUnit
     @SuppressWarnings("nullness")
     private void test_(String expected, String destUnit, String src, String srcUnit) throws InternalException, UserException
     {
-        @Nullable Pair<FunctionInstance, DataType> instance = new AsType().typeCheck(Collections.singletonList(m.loadUse(destUnit)), Collections.singletonList(DataType.number(new NumberInfo(m.loadUse(srcUnit), 0))), s ->
+        @Nullable Pair<FunctionInstance, DataType> instance = new AsType().typeCheck(Collections.singletonList(mgr.loadUse(destUnit)), Collections.singletonList(DataType.number(new NumberInfo(mgr.loadUse(srcUnit), 0))), s ->
         {
             throw new RuntimeException(s);
-        }, m);
+        }, mgr);
         assertNotNull(instance);
         Object num = instance.getFirst().getValue(0, Collections.singletonList(Collections.singletonList((Object)d(src)))).get(0);
         assertThat(num, numberMatch(d(expected)));

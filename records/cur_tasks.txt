@@ -1,6 +1,8 @@
+Add forward tests for expressions (which thus can handle numerics) and rename current to backwards
 Then go on to add functions, such as:
  as{unit}(number); can't be used to-from scalars, only within same units differing by scale
  c(col): gets single value from that column
+Allow double dollar as an anonymous variable name in matches
 Add tests for runtime errors (division by zero, incomplete pattern matches, if we allow those)
 Look up Unicode string collations, both for user values (in columns) and things like function names, constructor names
 Implement and test complete load/save, including units and types sections

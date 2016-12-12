@@ -179,4 +179,25 @@ public class Unit
     {
         return scale;
     }
+
+    public static Unit _test_make(Object scale, Object... params)
+    {
+        Unit u;
+        if (scale instanceof String)
+            u = new Unit(Rational.of((String)scale));
+        else if (scale instanceof Number)
+            u = new Unit(Rational.of(((Number)scale).longValue()));
+        else
+            throw new RuntimeException("Invalid type for scale: " + scale.getClass());
+        for (int i = 0; i < params.length; i += 2)
+        {
+            SingleUnit unit = (SingleUnit)params[i];
+            if (u.units.containsKey(unit))
+            {
+                throw new RuntimeException("Duplicate unit: " + unit);
+            }
+            u.units.put(unit, (Integer)params[i+1]);
+        }
+        return u;
+    }
 }

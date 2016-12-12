@@ -180,4 +180,12 @@ public class UnitManager
         }
         return canon;
     }
+
+    public SingleUnit getDeclared(String m) throws InternalException
+    {
+        UnitDeclaration unitDeclaration = knownUnits.get(m);
+        if (unitDeclaration == null)
+            throw new InternalException("Unknown unit: " + m);
+        return unitDeclaration.getDefined();
+    }
 }
