@@ -322,15 +322,15 @@ public class Utility
 
     public static Rational rationalToPower(Rational original, int power)
     {
-        Rational r = original;
         if (power < 0)
         {
-            r = r.reciprocal();
+            original = original.reciprocal();
             power = -power;
         }
+        Rational r = original;
         while (power > 1)
         {
-            r = r.times(r);
+            r = r.times(original);
             power -= 1;
         }
         return r;
