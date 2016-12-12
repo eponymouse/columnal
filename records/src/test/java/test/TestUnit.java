@@ -44,6 +44,8 @@ public class TestUnit
     public void unitToString() throws InternalException
     {
         SingleUnit m = mgr.getDeclared("m");
+        SingleUnit g = mgr.getDeclared("g");
+        SingleUnit l = mgr.getDeclared("l");
         SingleUnit s = mgr.getDeclared("s");
         SingleUnit d = mgr.getDeclared("$");
         assertEquals("m", Unit._test_make(m, 1).toString());
@@ -51,7 +53,9 @@ public class TestUnit
         assertEquals("s^-1", Unit._test_make(s, -1).toString());
         assertEquals("m/s", Unit._test_make(m, 1, s, -1).toString());
         assertEquals("m/s^2", Unit._test_make(m, 1, s, -2).toString());
-
+        assertEquals("m/(g^3 s^2)", Unit._test_make(m, 1, s, -2, g, -3).toString());
+        assertEquals("m/(g^3 l s^2)", Unit._test_make(m, 1, s, -2, l, -1, g, -3).toString());
+        assertEquals("(l m)/(g^3 s^2)", Unit._test_make(m, 1, s, -2, l, 1, g, -3).toString());
         assertEquals("m/(USD s^2)", Unit._test_make(m, 1, d, -1, s, -2).toString());
     }
 

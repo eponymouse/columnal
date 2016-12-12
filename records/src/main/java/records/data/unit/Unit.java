@@ -87,7 +87,7 @@ public class Unit
             }
         });
         int neg = units.size() - pos[0];
-        String allUnits = top.toString();
+        String allUnits = pos[0] > 1 ? "(" + top.toString() + ")" : top.toString();
         if (neg > 0)
         {
             StringJoiner bottom = new StringJoiner(" ");
