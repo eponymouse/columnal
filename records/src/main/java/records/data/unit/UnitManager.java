@@ -1,7 +1,7 @@
 package records.data.unit;
 
-import de.uni_freiburg.informatik.ultimate.logic.Rational;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.sosy_lab.common.rationals.Rational;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.UnitLexer;
@@ -9,14 +9,16 @@ import records.grammar.UnitParser;
 import records.grammar.UnitParser.AliasDeclarationContext;
 import records.grammar.UnitParser.DeclarationContext;
 import records.grammar.UnitParser.DisplayContext;
-import records.grammar.UnitParser.SingleOrScaleContext;
+import records.grammar.UnitParser.SingleContext;
 import records.grammar.UnitParser.UnitContext;
 import records.grammar.UnitParser.UnitDeclarationContext;
+import utility.Pair;
 import utility.Utility;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -74,7 +76,7 @@ public class UnitManager
         String description = decl.STRING() != null ? decl.STRING().getText() : "";
         String suffix = "";
         String prefix = "";
-        @Nullable Unit equiv = null;
+        @Nullable Pair<Rational, Unit> equiv = null;
         for (DisplayContext displayContext : decl.display())
         {
             if (displayContext.PREFIX() != null)
@@ -84,7 +86,16 @@ public class UnitManager
         }
         if (decl.unit() != null)
         {
-            equiv = loadUnit(decl.unit());
+            Rational scale;
+            if (decl.scale() == null)
+                scale = Rational.ONE;
+            else
+            {
+                scale = Utility.parseRational(decl.scale().NUMBER(0).getText());
+                if (decl.scale().NUMBER().size() > 1)
+                    scale = Utility.rationalToPower(scale, Integer.parseInt(decl.scale().NUMBER(1).toString()));
+            }
+            equiv = new Pair<>(scale, loadUnit(decl.unit()));
         }
         return new UnitDeclaration(new SingleUnit(defined, description, prefix, suffix), equiv);
     }
@@ -101,13 +112,11 @@ public class UnitManager
 
     private Unit loadUnit(UnitContext ctx) throws UserException
     {
-        // Dig through brackets:
-        while (ctx.singleOrScale() == null)
-            ctx = ctx.unit();
-        Unit lhs = loadSingle(ctx.singleOrScale());
-        if (ctx.unit() != null)
+        Iterator<UnitContext> units = ctx.unit().iterator();
+        Unit lhs = ctx.single() != null ? loadSingle(ctx.single()) : loadUnit(units.next());
+        if (units.hasNext())
         {
-            Unit rhs = loadUnit(ctx.unit());
+            Unit rhs = loadUnit(units.next());
             if (ctx.DIVIDE() != null)
                 return lhs.divide(rhs);
             else
@@ -117,7 +126,7 @@ public class UnitManager
             return lhs;
     }
 
-    private Unit loadSingle(SingleOrScaleContext singleOrScaleContext) throws UserException
+    private Unit loadSingle(SingleContext singleOrScaleContext) throws UserException
     {
         Unit base;
         if (singleOrScaleContext.singleUnit() != null)
@@ -126,12 +135,7 @@ public class UnitManager
             if (lookedUp == null)
                 throw new UserException("Unknown unit: \"" + singleOrScaleContext.singleUnit().getText() + "\"");
             base = lookedUp.getUnit();
-        }
-        else if (singleOrScaleContext.scale() != null)
-        {
-            base = new Unit(Utility.parseRational(singleOrScaleContext.scale().getText()));
-        }
-        else
+        }else
             throw new UserException("Error parsing unit: \"" + singleOrScaleContext.getText() + "\"");
 
         if (singleOrScaleContext.NUMBER() != null)
@@ -159,26 +163,34 @@ public class UnitManager
             return possUnit.getUnit();
     }
 
-    private Unit canonicalise(SingleUnit original) throws UserException
+    private Pair<Rational, Unit> canonicalise(SingleUnit original) throws UserException
     {
         UnitDeclaration decl = knownUnits.get(original.getName());
         if (decl == null)
             throw new UserException("Unknown unit: {" + original.getName() + "}");
-        Unit equiv = decl.getEquivalentTo();
+        @Nullable Pair<Rational, Unit> equiv = decl.getEquivalentTo();
         if (equiv == null)
-            return decl.getUnit();
+            return new Pair<>(Rational.ONE, decl.getUnit());
         else
             return canonicalise(equiv);
     }
 
-    public Unit canonicalise(Unit original) throws UserException
+    public Pair<Rational, Unit> canonicalise(Unit original) throws UserException
     {
-        Unit canon = new Unit(original.getScale());
-        for (Entry<SingleUnit, Integer> entry : original.getDetails().entrySet())
+        return canonicalise(new Pair<>(Rational.ONE, original));
+    }
+
+    private Pair<Rational, Unit> canonicalise(Pair<Rational, Unit> original) throws UserException
+    {
+        Rational accumScale = original.getFirst();
+        Unit accumUnit = Unit.SCALAR;
+        for (Entry<SingleUnit, Integer> entry : original.getSecond().getDetails().entrySet())
         {
-            canon = canon.times(canonicalise(entry.getKey()).raisedTo(entry.getValue()));
+            Pair<Rational, Unit> canonicalised = canonicalise(entry.getKey());
+            accumScale = accumScale.times(Utility.rationalToPower(canonicalised.getFirst(), entry.getValue()));
+            accumUnit = accumUnit.times(canonicalised.getSecond().raisedTo(entry.getValue()));
         }
-        return canon;
+        return new Pair<>(accumScale, accumUnit);
     }
 
     public SingleUnit getDeclared(String m) throws InternalException

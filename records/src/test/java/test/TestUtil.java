@@ -273,7 +273,6 @@ public class TestUtil
                 DataType.TEXT,
                 DataType.DATE,
                 DataType.NUMBER,
-                DataType.number(new NumberInfo(new Unit(Rational.of(2)), 0)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m"), 0)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("cm"), 0)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("$ m/s^2"), 0)),

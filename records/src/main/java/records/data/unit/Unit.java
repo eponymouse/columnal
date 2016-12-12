@@ -3,6 +3,7 @@ package records.data.unit;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import records.error.UserException;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.Map.Entry;
@@ -15,33 +16,24 @@ import java.util.TreeMap;
  */
 public class Unit
 {
-    // 1 if empty.  Maps single unit to power (can be negative, can't be zero)
+    // scalar if empty.  Maps single unit to power (can be negative, can't be zero)
     private final TreeMap<SingleUnit, Integer> units = new TreeMap<>();
-    private final Rational scale;
 
     public Unit(SingleUnit singleUnit)
     {
         units.put(singleUnit, 1);
-        scale = Rational.ONE;
-    }
-
-    public Unit(Rational scale)
-    {
-        this.scale = scale;
     }
 
     private Unit()
     {
-        scale = Rational.ONE;
     }
 
     public static Unit SCALAR = new Unit();
 
-
     @SuppressWarnings("nullness")
     public Unit times(Unit rhs)
     {
-        Unit u = new Unit(scale.times(rhs.scale));
+        Unit u = new Unit();
         u.units.putAll(units);
         for (Entry<SingleUnit, Integer> rhsUnit : rhs.units.entrySet())
         {
@@ -61,7 +53,7 @@ public class Unit
     {
         if (power == 0)
             throw new UserException("Invalid raise to power zero");
-        Unit u = new Unit(Utility.rationalToPower(scale, power));
+        Unit u = new Unit();
         u.units.putAll(units);
         u.units.replaceAll((s, origPower) -> origPower * power);
         return u;
@@ -69,7 +61,7 @@ public class Unit
 
     public String getDisplayPrefix()
     {
-        if (scale.equals(Rational.ONE) && units.size() == 1)
+        if (units.size() == 1)
         {
             Entry<SingleUnit, Integer> only = units.entrySet().iterator().next();
             if (only.getValue() == 1)
@@ -117,15 +109,15 @@ public class Unit
                 allUnits += "/" + bottom;
 
         }
-        if (!allUnits.isEmpty() && scale.equals(Rational.ONE))
+        if (!allUnits.isEmpty())
             return allUnits;
         else
-            return scale.toString() + allUnits;
+            return "1";
     }
 
     public String forDisplay()
     {
-        if (units.isEmpty() && scale.equals(Rational.ONE))
+        if (units.isEmpty())
             return "";
         else
             return toString();
@@ -139,21 +131,18 @@ public class Unit
 
         Unit unit = (Unit) o;
 
-        if (!units.equals(unit.units)) return false;
-        return scale.equals(unit.scale);
+        return units.equals(unit.units);
     }
 
     @Override
     public int hashCode()
     {
-        int result = units.hashCode();
-        result = 31 * result + scale.hashCode();
-        return result;
+        return units.hashCode();
     }
 
     public Unit reciprocal()
     {
-        Unit u = new Unit(scale.reciprocal());
+        Unit u = new Unit();
         for (Entry<SingleUnit, Integer> entry : units.entrySet())
         {
             u.units.put(entry.getKey(), - entry.getValue());
@@ -165,13 +154,13 @@ public class Unit
     // If conversion not possible, return empty.
     public Optional<Rational> canScaleTo(Unit unit, UnitManager mgr) throws UserException
     {
-        Unit thisCanon = mgr.canonicalise(this);
-        Unit otherCanon = mgr.canonicalise(unit);
+        Pair<Rational, Unit> thisCanon = mgr.canonicalise(this);
+        Pair<Rational, Unit> otherCanon = mgr.canonicalise(unit);
 
-        if (!thisCanon.units.equals(otherCanon.units))
+        if (!thisCanon.getSecond().units.equals(otherCanon.getSecond().units))
             return Optional.empty();
         else
-            return Optional.of(thisCanon.scale.divides(otherCanon.scale));
+            return Optional.of(thisCanon.getFirst().divides(otherCanon.getFirst()));
     }
 
     public TreeMap<SingleUnit, Integer> getDetails()
@@ -179,20 +168,9 @@ public class Unit
         return units;
     }
 
-    public Rational getScale()
+    public static Unit _test_make(Object... params)
     {
-        return scale;
-    }
-
-    public static Unit _test_make(Object scale, Object... params)
-    {
-        Unit u;
-        if (scale instanceof String)
-            u = new Unit(Rational.of((String)scale));
-        else if (scale instanceof Number)
-            u = new Unit(Rational.of(((Number)scale).longValue()));
-        else
-            throw new RuntimeException("Invalid type for scale: " + scale.getClass());
+        Unit u = new Unit();
         for (int i = 0; i < params.length; i += 2)
         {
             SingleUnit unit = (SingleUnit)params[i];

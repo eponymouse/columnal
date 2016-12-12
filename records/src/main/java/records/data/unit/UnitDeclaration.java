@@ -1,8 +1,10 @@
 package records.data.unit;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.sosy_lab.common.rationals.Rational;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
+import utility.Pair;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,10 +16,10 @@ public class UnitDeclaration
 {
     private final SingleUnit definedUnit;
     private final List<String> otherNames = new ArrayList<>();
-    private final @Nullable Unit equivalentTo;
+    private final @Nullable Pair<Rational, Unit> equivalentTo;
     private final Unit cachedSingleUnit;
 
-    public UnitDeclaration(SingleUnit definedUnit, @Nullable Unit equivalentTo)
+    public UnitDeclaration(SingleUnit definedUnit, @Nullable Pair<Rational, Unit> equivalentTo)
     {
         this.definedUnit = definedUnit;
         this.equivalentTo = equivalentTo;
@@ -39,7 +41,7 @@ public class UnitDeclaration
         otherNames.add(newName);
     }
 
-    public @Nullable Unit getEquivalentTo()
+    public @Nullable Pair<Rational, Unit> getEquivalentTo()
     {
         return equivalentTo;
     }
