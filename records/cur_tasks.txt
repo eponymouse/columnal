@@ -9,3 +9,4 @@ Implement and test complete load/save, including units and types sections
 Come up with a way to do value tests for numerics which may lose precision (esp equality and matching)
 Add power expression (x^n), right-hand side must be constant rational if left-hand side is non-scalar
    (will need constant folding: use getValue but with an EvaluateState that throws a particular exception)
+Intern the strings

@@ -54,7 +54,7 @@ public class TestUnit
         assertEquals("3m/s", Unit._test_make(3, m, 1, s, -1).toString());
         assertEquals("3m/s^2", Unit._test_make(3, m, 1, s, -2).toString());
 
-        assertEquals("m/($ s^2)", Unit._test_make(3, m, 1, d, -1, s, -2).toString());
+        assertEquals("m/($ s^2)", Unit._test_make(1, m, 1, d, -1, s, -2).toString());
     }
 
     @Test

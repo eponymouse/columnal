@@ -100,14 +100,18 @@ public class Unit
         {
             StringJoiner bottom = new StringJoiner(" ");
 
+            boolean showAsNegative = allUnits.isEmpty();
+
             units.forEach((u, p) ->
             {
-                if (p < 0)
+                if (p < -1 || (p == -1 && showAsNegative))
+                    bottom.add(u.getName() + "^" + (showAsNegative ? p : -p));
+                else if (p == -1)
                     bottom.add(u.getName());
-                if (p < -1)
-                    bottom.add(u.getName() + "^" + (-p));
             });
-            if (neg > 1)
+            if (allUnits.isEmpty())
+                allUnits = bottom.toString();
+            else if (neg > 1)
                 allUnits += "/(" + bottom + ")";
             else
                 allUnits += "/" + bottom;
