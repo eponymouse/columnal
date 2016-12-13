@@ -14,6 +14,7 @@ import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
@@ -296,7 +297,14 @@ public class TestUtil
     @SuppressWarnings("nullness")
     public static TypeState typeState()
     {
-        return new TypeState(distinctTypes.stream().filter(p -> p.isTagged()).collect(Collectors.<DataType, String, DataType>toMap(t -> t.getTaggedTypeName(), t -> t)));
+        try
+        {
+            return new TypeState(distinctTypes.stream().filter(p -> p.isTagged()).collect(Collectors.<DataType, String, DataType>toMap(t -> t.getTaggedTypeName(), t -> t)), new UnitManager());
+        }
+        catch (InternalException | UserException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     public static String generateVarName(SourceOfRandomness r)

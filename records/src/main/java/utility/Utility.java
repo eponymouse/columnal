@@ -439,14 +439,14 @@ public class Utility
             double rhsd = rhs.doubleValue();
             if (lhsd < 0 && rhsd != Math.floor(rhsd))
             {
-                throw new UserException("Attempting to raise negative number to non-integral power");
+                throw new UserException("Attempting to raise negative number (" + lhsd + ") to non-integral power (" + rhsd + ")");
             }
 
             double result = Math.pow(lhsd, rhsd);
             if (Double.isFinite(result))
                 return BigDecimal.valueOf(result);
             else
-                throw new UserException("Cannot store result of calculation: " + result);
+                throw new UserException("Cannot store result of calculation " + lhsd + "^" + rhsd + ": " + result);
         }
         else // Integer power, we can use big decimal:
         {
@@ -469,6 +469,14 @@ public class Utility
             return withBigInt.apply((BigInteger) num);
         else
             return withLong.apply(((Number)num).longValue());
+    }
+
+    public static boolean isIntegral(Object o)
+    {
+        // From http://stackoverflow.com/a/12748321/412908
+        return withNumber(o, x -> true, x -> true, bd -> {
+            return bd.signum() == 0 || bd.scale() <= 0 || bd.stripTrailingZeros().scale() <= 0;
+        });
     }
 
     public static class ReadState

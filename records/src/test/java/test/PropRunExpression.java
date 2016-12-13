@@ -2,6 +2,7 @@ package test;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.error.InternalException;
@@ -37,7 +38,7 @@ public class PropRunExpression
                 throw new InternalException(s);
             });
             List<Object> actualValue = src.expression.getValue(0, new EvaluateState());
-            assertTrue("{{{" + src.expression.toString() + "}}} should have been " + toString(src.value) + " but was " + toString(actualValue) + " columns: " + src.recordSet.debugGetVals(0),
+            assertTrue("{{{" + src.expression.toString() + "}}} should have been " + toString(src.value) + " but was " + toString(actualValue) + " columns: " + src.recordSet.getColumnIds().stream().map(Object::toString).collect(Collectors.joining(", ")) + " " + src.recordSet.debugGetVals(0),
                 Utility.compareLists(src.value, actualValue, new BigDecimal("0.000000001")) == 0);
         }
         catch (ArithmeticException | InternalException | UserException e)

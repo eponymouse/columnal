@@ -6,10 +6,13 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.Expression;
+import records.transformations.expression.Expression._test_TypeVary;
 import utility.ExConsumer;
 import utility.Pair;
 
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by neil on 11/12/2016.
@@ -29,4 +32,7 @@ public abstract class FunctionDefinition
     {
         return name;
     }
+
+    // For testing: give a parameter list that should fail typechecking
+    public abstract List<Expression> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws UserException, InternalException;
 }

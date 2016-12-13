@@ -4,7 +4,7 @@ options { tokenVocab = ExpressionLexer; }
 
 tableId : (STRING | UNQUOTED_IDENT);
 columnId : (STRING | UNQUOTED_IDENT);
-columnRef : tableId? COLREF columnId;
+columnRef : (COLREF tableId)? COLREF columnId;
 
 numericLiteral : NUMBER;
 stringLiteral : STRING;

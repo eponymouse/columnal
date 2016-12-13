@@ -8,6 +8,8 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.Expression;
+import records.transformations.expression.Expression._test_TypeVary;
 import utility.ExConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -17,6 +19,7 @@ import java.math.MathContext;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 
 /**
  * Created by neil on 11/12/2016.
@@ -52,6 +55,13 @@ public class AsType extends FunctionDefinition
         }
 
         return new Pair<>(new Instance(multiplier.get()), DataType.number(new NumberInfo(units.get(0), 0)));
+    }
+
+    @Override
+    public List<Expression> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws UserException, InternalException
+    {
+        // TODO also return units which can't convert
+        return Collections.singletonList(newExpressionOfDifferentType.getNonNumericType());
     }
 
     private static class Instance extends FunctionInstance

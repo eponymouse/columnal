@@ -2,11 +2,15 @@ package records.transformations.expression;
 
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.loadsave.OutputBuilder;
+import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionList;
 import utility.ExConsumer;
 import utility.Pair;
 
@@ -21,26 +25,31 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * Created by neil on 29/11/2016.
+ * The state used while type-checking expressions
  */
 public class TypeState
 {
     // If variable is in there but > size 1, means it is known but cannot be used because it has multiple types in different guards
     private final Map<String, Set<DataType>> variables;
     private final Map<String, DataType> tagTypes;
+    private final Map<String, FunctionDefinition> functions;
+    private final UnitManager unitManager;
 
-    public TypeState(Map<String, DataType> tagTypes)
+    public TypeState(Map<String, DataType> tagTypes, UnitManager unitManager)
     {
-        this(new HashMap<>(), new HashMap<>(tagTypes));
+        this(new HashMap<>(), new HashMap<>(tagTypes), unitManager);
     }
 
-    private TypeState(Map<String, Set<DataType>> variables, Map<String, DataType> tagTypes)
+    private TypeState(Map<String, Set<DataType>> variables, Map<String, DataType> tagTypes, UnitManager unitManager)
     {
         this.variables = Collections.unmodifiableMap(variables);
         this.tagTypes = Collections.unmodifiableMap(tagTypes);
+        this.functions = FunctionList.FUNCTIONS.stream().collect(Collectors.<@NonNull FunctionDefinition, @NonNull String, @NonNull FunctionDefinition>toMap(FunctionDefinition::getName, Function.<FunctionDefinition>identity()));
+        this.unitManager = unitManager;
     }
 
     public @Nullable TypeState add(String varName, DataType type, ExConsumer<String> error) throws InternalException, UserException
@@ -52,7 +61,7 @@ public class TypeState
             return null;
         }
         copy.put(varName, Collections.singleton(type));
-        return new TypeState(copy, tagTypes);
+        return new TypeState(copy, tagTypes, unitManager);
     }
 
     // Merges a set of type states from different pattern guards
@@ -72,7 +81,7 @@ public class TypeState
                 });
             }
         }
-        return new TypeState(mergedVars, typeStates.get(0).tagTypes);
+        return new TypeState(mergedVars, typeStates.get(0).tagTypes, typeStates.get(0).unitManager);
     }
 
     @Override
@@ -102,6 +111,11 @@ public class TypeState
     public @Nullable Set<DataType> findVarType(String varName)
     {
         return variables.get(varName);
+    }
+
+    public Optional<FunctionDefinition> findFunction(String name)
+    {
+        return Optional.ofNullable(functions.get(name));
     }
 
     public static class TypeAndTagInfo
@@ -161,5 +175,10 @@ public class TypeState
         }
 
         return new TypeAndTagInfo(type, tagDetail.getFirst(), tagDetail.getSecond());
+    }
+
+    public UnitManager getUnitManager()
+    {
+        return unitManager;
     }
 }

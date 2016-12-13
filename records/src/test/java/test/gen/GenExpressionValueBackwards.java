@@ -56,6 +56,7 @@ import utility.Pair;
 import utility.Utility;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -101,7 +102,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         this.columns = new ArrayList<>();
         try
         {
-            DataType type = makeType(r);
+            DataType type = makeTypeWithoutNumbers(r);
             Pair<List<Object>, Expression> p = makeOfType(type);
             return new ExpressionValue(type, p.getFirst(), getRecordSet(), p.getSecond());
         }
@@ -158,12 +159,12 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                         expressions.add(make(type, Collections.singletonList(next), maxLevels - 1));
                         if (r.nextBoolean())
                         {
-                            curTotal = curTotal.add(next);
+                            curTotal = curTotal.add(next, MathContext.DECIMAL128);
                             ops.add(Op.ADD);
                         }
                         else
                         {
-                            curTotal = curTotal.subtract(next);
+                            curTotal = curTotal.subtract(next, MathContext.DECIMAL128);
                             ops.add(Op.SUBTRACT);
                         }
                     }
@@ -254,10 +255,8 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                 boolean target = (Boolean)targetValue.get(0);
                 return termDeep(maxLevels, type, l(() -> columnRef(type, targetValue), () -> new BooleanLiteral(target)), l(
                     () -> {
-                        DataType t = makeType(r);
                         // Don't do numbers because result isn't exact:
-                        while (t.hasNumber())
-                            t = makeType(r);
+                        DataType t = makeTypeWithoutNumbers(r);
                         List<Object> valA = makeValue(t);
                         List<Object> valB;
                         int attempts = 0;

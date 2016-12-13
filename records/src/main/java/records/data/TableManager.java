@@ -77,6 +77,6 @@ public class TableManager
     public TypeState getTypeState()
     {
         // TODO keep track of known types
-        return new TypeState(new HashMap<>());
+        return new TypeState(new HashMap<>(), unitManager);
     }
 }

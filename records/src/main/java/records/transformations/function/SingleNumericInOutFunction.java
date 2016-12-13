@@ -6,10 +6,14 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.Expression;
+import records.transformations.expression.Expression._test_TypeVary;
 import utility.ExConsumer;
 import utility.Pair;
 
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Base class for functions which take a single numeric input,
@@ -40,4 +44,10 @@ abstract class SingleNumericInOutFunction extends FunctionDefinition
     }
 
     protected abstract FunctionInstance makeInstance();
+
+    @Override
+    public List<Expression> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws UserException, InternalException
+    {
+        return Collections.singletonList(newExpressionOfDifferentType.getNonNumericType());
+    }
 }

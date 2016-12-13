@@ -30,6 +30,7 @@ import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.AndExpression;
 import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
@@ -49,6 +50,7 @@ import utility.Pair;
 import utility.Utility;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -144,7 +146,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                         expressions.add(pair.getSecond());
                         // First one we count as add, because we're adding to the zero running total:
                         boolean opIsAdd = i == 0 || r.nextBoolean();
-                        curTotal = Utility.addSubtractNumbers((Number) pair.getFirst().get(0), curTotal, opIsAdd);
+                        curTotal = Utility.addSubtractNumbers(curTotal, (Number) pair.getFirst().get(0), opIsAdd);
                         if (i > 0)
                             ops.add(opIsAdd ? Op.ADD : Op.SUBTRACT);
                     }
@@ -168,7 +170,24 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                         // Can have any power if it's scalar:
                         Pair<List<Object>, Expression> lhs = make(type, maxLevels - 1);
                         Pair<List<Object>, Expression> rhs = make(type, maxLevels - 1);
-                        for (int attempts = 0; attempts < 20; attempts++)
+
+                        // Except you can't raise a negative to a non-integer power.  So check for that:
+                        if (Utility.compareNumbers(lhs.getFirst().get(0), 0) < 0 && !Utility.isIntegral(rhs.getFirst().get(0)))
+                        {
+                            // Two fixes: apply abs to LHS, or round to RHS.  Latter only suitable if power low
+                            //if (r.nextBoolean() || Utility.compareNumbers(rhs.getFirst().get(0), 10) > 0)
+                            //{
+                                // Apply abs to LHS:
+                                lhs = new Pair<>(Collections.singletonList(Utility.withNumber(lhs.getFirst().get(0), Math::abs, BigInteger::abs, BigDecimal::abs)), new CallExpression("abs", lhs.getSecond()));
+                            //}
+                            //else
+                            //{
+                                // Apply round to RHS:
+                                //rhs = new Pair<>(Collections.singletonList(Utility.withNumber(rhs.getFirst().get(0), x -> x, x -> x, d -> d.setScale(0, BigDecimal.ROUND_UP))), new CallExpression("round", rhs.getSecond()));
+                            //}
+                        }
+
+                        for (int attempts = 0; attempts < 50; attempts++)
                         {
                             try
                             {
@@ -178,7 +197,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                             catch (UserException e)
                             {
                                 // Probably trying raising too high, cut it down and go again:
-                                rhs = new Pair<List<Object>, Expression>(Collections.singletonList(Utility.toBigDecimal((Number) rhs.getFirst().get(0)).divide(BigDecimal.valueOf(10))), new DivideExpression(rhs.getSecond(), new NumericLiteral(20, null)));
+                                rhs = new Pair<List<Object>, Expression>(Collections.singletonList(Utility.toBigDecimal((Number) rhs.getFirst().get(0)).divide(BigDecimal.valueOf(20))), new DivideExpression(rhs.getSecond(), new NumericLiteral(20, null)));
                             }
                         }
                         // Give up trying to raise, just return LHS:
@@ -211,6 +230,12 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                             int raiseTo = r.nextInt(2, 5);
                             Unit lhsUnit = displayInfo.getUnit().raisedTo(raiseTo);
                             Pair<List<Object>, Expression> lhs = make(DataType.number(new NumberInfo(lhsUnit, 0)), maxLevels - 1);
+                            // You can't raise a negative to a non-integer power.  So check for that:
+                            if (Utility.compareNumbers(lhs.getFirst().get(0), 0) < 0)
+                            {
+                                // Apply abs to LHS:
+                                lhs = new Pair<>(Collections.singletonList(Utility.withNumber(lhs.getFirst().get(0), Math::abs, BigInteger::abs, BigDecimal::abs)), new CallExpression("abs", lhs.getSecond()));
+                            }
                             return new Pair<>(Collections.singletonList(Utility.raiseNumber((Number) lhs.getFirst().get(0), 1.0/powers.get(0))), new RaiseExpression(lhs.getSecond(), new DivideExpression(new NumericLiteral(1, null), new NumericLiteral(raiseTo, null))));
                         }
                     }
