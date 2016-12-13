@@ -78,7 +78,7 @@ public class DivideExpression extends BinaryOpExpression
     public Optional<Rational> constantFold()
     {
         Optional<Rational> l = lhs.constantFold();
-        Optional<Rational> r = lhs.constantFold();
+        Optional<Rational> r = rhs.constantFold();
         if (l.isPresent() && r.isPresent())
             return Optional.of(l.get().divides(r.get()));
         else
