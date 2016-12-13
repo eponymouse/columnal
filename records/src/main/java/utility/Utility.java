@@ -430,18 +430,35 @@ public class Utility
         }
     }
 
-    public static Number raiseNumber(Number lhs, Number rhs)
+    public static Number raiseNumber(Number lhs, Number rhs) throws UserException
     {
         if (rhs instanceof BigDecimal || rhs instanceof BigInteger || rhs.longValue() != (long)rhs.intValue())
         {
             // We must use doubles, nothing else supported:
             double lhsd = lhs.doubleValue();
             double rhsd = rhs.doubleValue();
-            System.err.println("Doing: " + lhsd + " ^ " + rhsd);
-            return BigDecimal.valueOf(Math.pow(lhsd, rhsd));
+            if (lhsd < 0 && rhsd != Math.floor(rhsd))
+            {
+                throw new UserException("Attempting to raise negative number to non-integral power");
+            }
+
+            double result = Math.pow(lhsd, rhsd);
+            if (Double.isFinite(result))
+                return BigDecimal.valueOf(result);
+            else
+                throw new UserException("Cannot store result of calculation: " + result);
         }
         else // Integer power, we can use big decimal:
-            return toBigDecimal(lhs).pow(rhs.intValue(), MathContext.DECIMAL128);
+        {
+            try
+            {
+                return toBigDecimal(lhs).pow(rhs.intValue(), MathContext.DECIMAL128);
+            }
+            catch (ArithmeticException e)
+            {
+                throw new UserException("Cannot store result of calculation: " + e.getLocalizedMessage());
+            }
+        }
     }
 
     public static class ReadState
