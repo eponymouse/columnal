@@ -9,11 +9,9 @@ import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
 import test.TestUtil;
-import test.gen.GenExpressionValue.ExpressionValue;
 import test.gen.GenTypecheckFail.TypecheckInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -67,7 +65,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
     @SuppressWarnings("nullness")
     public TypecheckInfo generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
-        GenExpressionValue gen = new GenExpressionValue();
+        GenExpressionValueBackwards gen = new GenExpressionValueBackwards();
         ExpressionValue valid = gen.generate(r, generationStatus);
         try
         {
@@ -135,7 +133,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
 
     private DataType pickType(SourceOfRandomness r)
     {
-        return GenExpressionValue.makeType(r);
+        return GenExpressionValueBackwards.makeType(r);
     }
 
     private DataType pickTypeOtherThan(@Nullable DataType type, SourceOfRandomness r)

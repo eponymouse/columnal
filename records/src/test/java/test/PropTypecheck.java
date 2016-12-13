@@ -7,24 +7,16 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.Test;
 import org.junit.runner.RunWith;
-import org.sosy_lab.common.rationals.Rational;
-import records.data.RecordSet;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.NumberInfo;
-import records.data.datatype.DataType.TagType;
-import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
-import records.transformations.expression.TypeState;
-import test.gen.GenExpressionValue;
+import test.gen.ExpressionValue;
+import test.gen.GenExpressionValueBackwards;
+import test.gen.GenExpressionValueForwards;
 import test.gen.GenTypecheckFail;
-import utility.Pair;
 
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -78,7 +70,7 @@ public class PropTypecheck
 
     @Property(trials = 1000)
     @SuppressWarnings("nullness")
-    public void propTypeCheckSucceed(@From(GenExpressionValue.class) GenExpressionValue.ExpressionValue src) throws InternalException, UserException
+    public void propTypeCheckSucceed(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {
         StringBuilder b = new StringBuilder();
         @Nullable DataType checked = src.expression.check(src.recordSet, TestUtil.typeState(), (e, s) ->

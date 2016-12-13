@@ -49,10 +49,8 @@ import records.transformations.expression.TimesExpression;
 import records.transformations.expression.VarExpression;
 import test.DummyManager;
 import test.TestUtil;
-import test.gen.GenExpressionValue.ExpressionValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExFunction;
 import utility.ExSupplier;
 import utility.Pair;
 import utility.Utility;
@@ -71,28 +69,15 @@ import java.util.stream.Stream;
 import static test.TestUtil.distinctTypes;
 
 /**
- * Created by neil on 10/12/2016.
+ * Generates expressions and resulting values by working forwards.
+ * At each step, we generate an expression and then work out what its
+ * value will be.  This allows us to test numeric expressions because
+ * we can track its exact expected value, accounting for lost precision.
  */
-public class GenExpressionValue extends Generator<ExpressionValue>
+public class GenExpressionValueForwards extends Generator<ExpressionValue>
 {
-    public static class ExpressionValue
-    {
-        public final DataType type;
-        public final List<Object> value;
-        public final RecordSet recordSet;
-        public final Expression expression;
-
-        public ExpressionValue(DataType type, List<Object> value, RecordSet recordSet, Expression expression)
-        {
-            this.type = type;
-            this.value = value;
-            this.recordSet = recordSet;
-            this.expression = expression;
-        }
-    }
-
     @SuppressWarnings("initialization")
-    public GenExpressionValue()
+    public GenExpressionValueForwards()
     {
         super(ExpressionValue.class);
     }
@@ -134,9 +119,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public Pair<List<Object>, Expression> makeOfType(DataType type) throws UserException, InternalException
     {
-        List<Object> value = makeValue(type);
-        Expression expression = make(type, value, 4);
-        return new Pair<>(value, expression);
+        return make(type, 4);
     }
 
     @SuppressWarnings("intern")
@@ -146,207 +129,142 @@ public class GenExpressionValue extends Generator<ExpressionValue>
         return r.choose(distinctTypes.stream().filter(t -> t != DataType.DATE).collect(Collectors.<DataType>toList()));
     }
 
-    private Expression make(DataType type, List<Object> targetValue, int maxLevels) throws UserException, InternalException
+    private Pair<List<Object>, Expression> make(DataType type, int maxLevels) throws UserException, InternalException
     {
-        return type.apply(new DataTypeVisitor<Expression>()
+        return type.apply(new DataTypeVisitor<Pair<List<Object>, Expression>>()
         {
             @Override
-            public Expression number(NumberInfo displayInfo) throws InternalException, UserException
+            public Pair<List<Object>, Expression> number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 return termDeep(maxLevels, type, l(
-                    () -> columnRef(type, targetValue),
-                    () -> new NumericLiteral((Number)targetValue.get(0), displayInfo.getUnit())
+                    () -> columnRef(type),
+                    () ->
+                    {
+                        Number number = TestUtil.generateNumber(r, gs);
+                        return new Pair<>(Collections.singletonList(number), new NumericLiteral(number, displayInfo.getUnit()));
+                    }
                 ), l(() -> {
-                    // We just make up a bunch of numbers, and at the very end we add one more to correct the difference
-                    int numMiddle = r.nextInt(0, 6);
+                    int numArgs = r.nextInt(2, 6);
                     List<Expression> expressions = new ArrayList<>();
                     List<Op> ops = new ArrayList<>();
-                    BigDecimal curTotal = genBD();
-                    expressions.add(make(type, Collections.singletonList(curTotal), maxLevels - 1));
-                    for (int i = 0; i < numMiddle; i++)
+                    Number curTotal = 0;
+                    for (int i = 0; i < numArgs; i++)
                     {
-                        BigDecimal next = genBD();
-                        expressions.add(make(type, Collections.singletonList(next), maxLevels - 1));
-                        if (r.nextBoolean())
-                        {
-                            curTotal = curTotal.add(next);
-                            ops.add(Op.ADD);
-                        }
-                        else
-                        {
-                            curTotal = curTotal.subtract(next);
-                            ops.add(Op.SUBTRACT);
-                        }
+                        Pair<List<Object>, Expression> pair = make(type, maxLevels - 1);
+                        expressions.add(pair.getSecond());
+                        // First one we count as add, because we're adding to the zero running total:
+                        boolean opIsAdd = i == 0 || r.nextBoolean();
+                        curTotal = Utility.addSubtractNumbers((Number) pair.getFirst().get(0), curTotal, opIsAdd);
+                        if (i > 0)
+                            ops.add(opIsAdd ? Op.ADD : Op.SUBTRACT);
                     }
-                    // Now add one more to make the difference:
-                    BigDecimal diff = Utility.toBigDecimal((Number)targetValue.get(0)).subtract(curTotal);
-                    boolean add = r.nextBoolean();
-                    expressions.add(make(type, Collections.singletonList(add ? diff : diff.negate()), maxLevels - 1));
-                    ops.add(add ? Op.ADD : Op.SUBTRACT);
-                    return new AddSubtractExpression(expressions, ops);
+                    return new Pair<List<Object>, Expression>(Collections.singletonList(curTotal), new AddSubtractExpression(expressions, ops));
                 }, () -> {
-                    // A few options; keep units and value in numerator and divide by 1
-                    // Or make random denom, times that by target to get num, and make up crazy units which work
-                    if (r.nextInt(0, 4) == 0)
-                        return new DivideExpression(make(type, targetValue, maxLevels - 1), new NumericLiteral(1, Unit.SCALAR));
-                    else
+                    // Either just use numerator, or make up crazy one
+                    Unit numUnit = r.nextBoolean() ? displayInfo.getUnit() : makeUnit();
+                    Unit denomUnit = calculateRequiredMultiplyUnit(numUnit, displayInfo.getUnit()).reciprocal();
+                    Pair<List<Object>, Expression> numerator = make(DataType.number(new NumberInfo(numUnit, 0)), maxLevels - 1);
+                    Pair<List<Object>, Expression> denominator;
+                    do
                     {
-                        Number denominator;
-                        do
-                        {
-                            denominator = genBD();
-                        } while (Utility.compareNumbers(denominator, 0) == 0);
-                        Number numerator = Utility.multiplyNumbers((Number) targetValue.get(0), denominator);
-                        // Either just use numerator, or make up crazy one
-                        Unit numUnit = r.nextBoolean() ? displayInfo.getUnit() : makeUnit();
-                        Unit denomUnit = calculateRequiredMultiplyUnit(numUnit, displayInfo.getUnit()).reciprocal();
-                        // TODO test division by zero behaviour (test errors generally)
-                        return new DivideExpression(make(DataType.number(new NumberInfo(numUnit, 0)), Collections.singletonList(numerator), maxLevels - 1), make(DataType.number(new NumberInfo(denomUnit, 0)), Collections.singletonList(denominator), maxLevels - 1));
+                        denominator = make(DataType.number(new NumberInfo(denomUnit, 0)), maxLevels - 1);
                     }
+                    while (Utility.compareNumbers(denominator.getFirst().get(0), 0) == 0);
+                    return new Pair<List<Object>, Expression>(Collections.singletonList(Utility.divideNumbers((Number)numerator.getFirst().get(0), (Number)denominator.getFirst().get(0))),new DivideExpression(numerator.getSecond(), denominator.getSecond()));
                 }, () -> {
                     Number runningTotal = 1;
                     Unit runningUnit = Unit.SCALAR;
-                    int numExtra = r.nextInt(1, 4);
+                    int numArgs = r.nextInt(2, 6);
                     List<Expression> expressions = new ArrayList<>();
-                    boolean targetZero = Utility.compareNumbers(targetValue.get(0), 0) == 0;
-                    for (int i = 0; i < numExtra; i++)
+                    for (int i = 0; i < numArgs; i++)
                     {
-                        //Only allow zeroes if the target is zero:
-                        Number subVal;
-                        do
-                        {
-                            subVal = genBD();
-                        }
-                        while (subVal.toString().equals("0") && !targetZero);
-                        runningTotal = Utility.multiplyNumbers(runningTotal, subVal);
-                        Unit unit = makeUnit();
+                        Unit unit = i == numArgs - 1 ? calculateRequiredMultiplyUnit(runningUnit, displayInfo.getUnit()) : makeUnit();
                         runningUnit = runningUnit.times(unit);
-                        expressions.add(make(DataType.number(new NumberInfo(unit, 0)),Collections.singletonList(subVal), maxLevels - 1));
+                        Pair<List<Object>, Expression> pair = make(DataType.number(new NumberInfo(unit, 0)), maxLevels - 1);
+                        runningTotal = Utility.multiplyNumbers(runningTotal, (Number)pair.getFirst().get(0));
+                        expressions.add(pair.getSecond());
                     }
-                    Unit lastUnit = calculateRequiredMultiplyUnit(runningUnit, displayInfo.getUnit());
-                    if (targetZero)
-                    {
-                        // If running total already zero, generate what we like, otherwise we must generate a zero:
-                        if (Utility.compareNumbers(runningTotal, 0) == 0)
-                        {
-                            expressions.add(make(DataType.number(new NumberInfo(lastUnit, 0)), Collections.singletonList(genBD()), maxLevels - 1));
-                        }
-                        else
-                        {
-                            expressions.add(make(DataType.number(new NumberInfo(lastUnit, 0)), Collections.singletonList(0), maxLevels - 1));
-                        }
-                    }
-                    else
-                    {
-                        expressions.add(make(DataType.number(new NumberInfo(lastUnit, 0)), Collections.singletonList(Utility.divideNumbers((Number) targetValue.get(0), runningTotal)), maxLevels - 1));
-                    }
-                    return new TimesExpression(expressions);
+                    return new Pair<>(Collections.singletonList(runningTotal), new TimesExpression(expressions));
                 }));
             }
 
             @Override
-            public Expression text() throws InternalException, UserException
+            public Pair<List<Object>, Expression> text() throws InternalException, UserException
             {
                 return termDeep(maxLevels, type, l(
-                    () -> columnRef(type, targetValue),
-                    () -> new StringLiteral((String)targetValue.get(0))
+                    () -> columnRef(type),
+                    () ->
+                    {
+                        String value = TestUtil.makeString(r, gs);
+                        return new Pair<>(Collections.singletonList(value), new StringLiteral(value));
+                    }
                 ), l());
             }
 
             @Override
-            public Expression date() throws InternalException, UserException
+            public Pair<List<Object>, Expression> date() throws InternalException, UserException
             {
                 return termDeep(maxLevels, type, l(), l());
             }
 
             @Override
-            public Expression bool() throws InternalException, UserException
+            public Pair<List<Object>, Expression> bool() throws InternalException, UserException
             {
-                boolean target = (Boolean)targetValue.get(0);
-                return termDeep(maxLevels, type, l(() -> columnRef(type, targetValue), () -> new BooleanLiteral(target)), l(
+                return termDeep(maxLevels, type, l(() -> columnRef(type), () ->
+                {
+                    boolean value = r.nextBoolean();
+                    return new Pair<List<Object>, Expression>(Collections.singletonList(value), new BooleanLiteral(value));
+                }), l(
                     () -> {
                         DataType t = makeType(r);
-                        // Don't do numbers because result isn't exact:
-                        while (t.hasNumber())
-                            t = makeType(r);
-                        List<Object> valA = makeValue(t);
-                        List<Object> valB;
-                        int attempts = 0;
-                        do
-                        {
-                            valB = makeValue(t);
-                            if (attempts++ >= 100)
-                                return new BooleanLiteral(target);
-                        }
-                        while (Utility.compareLists(valA, valB) == 0);
-                        return new EqualExpression(make(t, valA, maxLevels - 1), make(t, target == true ? valA : valB, maxLevels - 1));
-                    },
-                    () -> {
-                        DataType t = makeType(r);
-                        // Don't do numbers because result isn't exact:
-                        while (t.hasNumber())
-                            t = makeType(r);
-                        List<Object> valA = makeValue(t);
-                        List<Object> valB;
-                        int attempts = 0;
-                        do
-                        {
-                            valB = makeValue(t);
-                            if (attempts++ >= 100)
-                                return new BooleanLiteral(target);
-                        }
-                        while (Utility.compareLists(valA, valB) == 0);
-                        return new NotEqualExpression(make(t, valA, maxLevels - 1), make(t, target == true ? valB : valA, maxLevels - 1));
-                    },
-                    () -> {
-                        // If target is true, all must be true:
-                        if ((Boolean)targetValue.get(0))
-                            return new AndExpression(TestUtil.makeList(r, 2, 5, () -> make(DataType.BOOLEAN, Collections.singletonList(true), maxLevels - 1)));
-                        // Otherwise they can take on random values, but one must be false:
+
+                        Pair<List<Object>, Expression> lhs = make(t, maxLevels - 1);
+                        Pair<List<Object>, Expression> rhs = make(t, maxLevels - 1);
+                        if (r.nextBoolean())
+                            return new Pair<List<Object>, Expression>(Collections.singletonList(Utility.compareLists(lhs.getFirst(), rhs.getFirst()) == 0), new EqualExpression(lhs.getSecond(), rhs.getSecond()));
                         else
-                        {
-                            int size = r.nextInt(2, 5);
-                            int mustBeFalse = r.nextInt(0, size - 1);
-                            ArrayList<Expression> exps = new ArrayList<Expression>();
-                            for (int i = 0; i < size; i++)
-                                exps.add(make(DataType.BOOLEAN, Collections.singletonList(mustBeFalse == i ? false : r.nextBoolean()), maxLevels - 1));
-                            return new AndExpression(exps);
-                        }
+                            return new Pair<List<Object>, Expression>(Collections.singletonList(Utility.compareLists(lhs.getFirst(), rhs.getFirst()) != 0), new NotEqualExpression(lhs.getSecond(), rhs.getSecond()));
                     },
                     () -> {
-                        // If target is false, all must be false:
-                        if ((Boolean)targetValue.get(0) == false)
-                            return new OrExpression(TestUtil.makeList(r, 2, 5, () -> make(DataType.BOOLEAN, Collections.singletonList(false), maxLevels - 1)));
-                            // Otherwise they can take on random values, but one must be false:
-                        else
+                        int size = r.nextInt(2, 5);
+                        boolean and = r.nextBoolean();
+                        boolean value = and ? true : false;
+                        ArrayList<Expression> exps = new ArrayList<Expression>();
+                        for (int i = 0; i < size; i++)
                         {
-                            int size = r.nextInt(2, 5);
-                            int mustBeTrue = r.nextInt(0, size - 1);
-                            ArrayList<Expression> exps = new ArrayList<Expression>();
-                            for (int i = 0; i < size; i++)
-                                exps.add(make(DataType.BOOLEAN, Collections.singletonList(mustBeTrue == i ? true : r.nextBoolean()), maxLevels - 1));
-                            return new OrExpression(exps);
+                            Pair<List<Object>, Expression> pair = make(DataType.BOOLEAN, maxLevels - 1);
+                            if (and)
+                                value &= (Boolean)pair.getFirst().get(0);
+                            else
+                                value |= (Boolean)pair.getFirst().get(0);
+                            exps.add(pair.getSecond());
                         }
+                        return new Pair<List<Object>, Expression>(Collections.singletonList(value), and ? new AndExpression(exps) : new OrExpression(exps));
                     }
                 ));
             }
 
             @Override
-            public Expression tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Pair<List<Object>, Expression> tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
-                TagType<DataType> tag = tags.get((Integer) targetValue.get(0));
+                int tagIndex = r.nextInt(0, tags.size() - 1);
+                TagType<DataType> tag = tags.get(tagIndex);
                 Pair<@Nullable String, String> name = new Pair<>(typeName, tag.getName());
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {
-                    terminals.add(() -> new TagExpression(name, null));
+                    terminals.add(() -> new Pair<>(Collections.singletonList(tagIndex), new TagExpression(name, null)));
                 }
                 else
                 {
                     final @NonNull DataType nonNullInner = inner;
-                    nonTerm.add(() -> new TagExpression(name, make(nonNullInner, targetValue.subList(1, targetValue.size()), maxLevels - 1)));
+                    nonTerm.add(() ->
+                    {
+                        Pair<List<Object>, Expression> innerVal = make(nonNullInner, maxLevels - 1);
+                        return new Pair<>(Utility.consList(tagIndex, innerVal.getFirst()), new TagExpression(name, innerVal.getSecond()));
+                    });
                 }
                 return termDeep(maxLevels, type, terminals, nonTerm);
             }
@@ -382,48 +300,57 @@ public class GenExpressionValue extends Generator<ExpressionValue>
         return new BigDecimal(new GenNumber().generate(r, gs));
     }
 
-    private Expression columnRef(DataType type, List<Object> value)
+    private Pair<List<Object>, Expression> columnRef(DataType type) throws UserException, InternalException
     {
         ColumnId name = new ColumnId("GEV Col " + columns.size());
-        columns.add(rs -> type.apply(new DataTypeVisitor<Column>()
+        Pair<List<Object>, FunctionInt<RecordSet, Column>> pair = type.apply(new DataTypeVisitor<Pair<List<Object>, FunctionInt<RecordSet, Column>>>()
         {
             @Override
-            public Column number(NumberInfo displayInfo) throws InternalException, UserException
+            public Pair<List<Object>, FunctionInt<RecordSet, Column>> number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return new MemoryNumericColumn(rs, name, new NumericColumnType(displayInfo.getUnit(), displayInfo.getMinimumDP(), false), Collections.singletonList(Utility.toBigDecimal((Number) value.get(0)).toPlainString()));
+                Number value = TestUtil.generateNumber(r, gs);
+                return new Pair<>(Collections.singletonList(value), rs -> new MemoryNumericColumn(rs, name, new NumericColumnType(displayInfo.getUnit(), displayInfo.getMinimumDP(), false), Collections.singletonList(Utility.toBigDecimal(value).toPlainString())));
             }
 
             @Override
-            public Column text() throws InternalException, UserException
+            public Pair<List<Object>, FunctionInt<RecordSet, Column>> text() throws InternalException, UserException
             {
-                return new MemoryStringColumn(rs, name, Collections.singletonList((String)value.get(0)));
+                String value = TestUtil.makeString(r, gs);
+                return new Pair<>(Collections.singletonList(value), rs -> new MemoryStringColumn(rs, name, Collections.singletonList(value)));
             }
 
             @Override
-            public Column date() throws InternalException, UserException
+            public Pair<List<Object>, FunctionInt<RecordSet, Column>> date() throws InternalException, UserException
             {
-                return new MemoryTemporalColumn(rs, name, Collections.singletonList((Temporal)value.get(0)));
+                Temporal value = new LocalDateGenerator().generate(r, gs);
+                return new Pair<>(Collections.singletonList(value), rs -> new MemoryTemporalColumn(rs, name, Collections.singletonList((Temporal) value)));
             }
 
             @Override
-            public Column bool() throws InternalException, UserException
+            public Pair<List<Object>, FunctionInt<RecordSet, Column>> bool() throws InternalException, UserException
             {
-                return new MemoryBooleanColumn(rs, name, Collections.singletonList((Boolean) value.get(0)));
+                boolean value = r.nextBoolean();
+                return new Pair<>(Collections.singletonList(value), rs -> new MemoryBooleanColumn(rs, name, Collections.singletonList((Boolean) value)));
             }
 
             @Override
-            public Column tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Pair<List<Object>, FunctionInt<RecordSet, Column>> tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return new MemoryTaggedColumn(rs, name, typeName, tags, Collections.singletonList(value));
+                int tagIndex = r.nextInt(0, tags.size() - 1);
+                @Nullable DataType inner = tags.get(tagIndex).getInner();
+                List<Object> rest = inner == null ? Collections.emptyList() : make(inner, 1).getFirst();
+                List<Object> value = Utility.consList(1, rest);
+                return new Pair<>(value, rs -> new MemoryTaggedColumn(rs, name, typeName, tags, Collections.singletonList(value)));
             }
-        }));
-        return new ColumnReference(name);
+        });
+        columns.add(pair.getSecond());
+        return pair.replaceSecond(new ColumnReference(name));
     }
 
     @FunctionalInterface
     public static interface ExpressionMaker
     {
-        public Expression make() throws InternalException, UserException;
+        public Pair<List<Object>, Expression> make() throws InternalException, UserException;
     }
 
     private List<ExpressionMaker> l(ExpressionMaker... suppliers)
@@ -431,56 +358,14 @@ public class GenExpressionValue extends Generator<ExpressionValue>
         return Arrays.asList(suppliers);
     }
 
-    private List<Object> makeValue(DataType t) throws UserException, InternalException
+    private Pair<List<Object>, Expression> termDeep(int maxLevels, DataType type, List<ExpressionMaker> terminals, List<ExpressionMaker> deeper) throws UserException, InternalException
     {
-        return t.apply(new DataTypeVisitor<List<Object>>()
-        {
-            @Override
-            public List<Object> number(NumberInfo displayInfo) throws InternalException, UserException
-            {
-                return Collections.singletonList(Utility.parseNumber(new GenNumber().generate(r, gs)));
-            }
-
-            @Override
-            public List<Object> text() throws InternalException, UserException
-            {
-                return Collections.singletonList(TestUtil.makeString(r, gs));
-            }
-
-            @Override
-            public List<Object> date() throws InternalException, UserException
-            {
-                return Collections.singletonList(new LocalDateGenerator().generate(r, gs));
-            }
-
-            @Override
-            public List<Object> bool() throws InternalException, UserException
-            {
-                return Collections.singletonList(r.nextBoolean());
-            }
-
-            @Override
-            public List<Object> tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
-            {
-                int tagIndex = r.nextInt(0, tags.size() - 1);
-                ArrayList<Object> o;
-                @Nullable DataType inner = tags.get(tagIndex).getInner();
-                if (inner != null)
-                    o = new ArrayList<>(makeValue(inner));
-                else
-                    o = new ArrayList<>();
-                o.add(0, tagIndex);
-                return o;
-            }
-        });
-    }
-
-    private Expression termDeep(int maxLevels, DataType type, List<ExpressionMaker> terminals, List<ExpressionMaker> deeper) throws UserException, InternalException
-    {
+        /*
         if (maxLevels > 1 && r.nextInt(0, 5) == 0)
         {
-            return makeMatch(maxLevels - 1, () -> termDeep(maxLevels - 1, type, terminals, deeper), () -> make(type, makeValue(type), maxLevels - 1));
+            return makeMatch(maxLevels - 1, () -> termDeep(maxLevels - 1, type, terminals, deeper), () -> make(type, maxLevels - 1));
         }
+        */
 
         //TODO generate match expressions here (valid for all types)
         if (!terminals.isEmpty() && (maxLevels <= 1 || deeper.isEmpty() || r.nextInt(0, 2) == 0))
@@ -488,7 +373,7 @@ public class GenExpressionValue extends Generator<ExpressionValue>
         else
             return r.choose(deeper).make();
     }
-
+/*
     private Expression makeMatch(int maxLevels, ExSupplier<Expression> makeCorrectOutcome, ExSupplier<Expression> makeOtherOutcome) throws InternalException, UserException
     {
         DataType t = makeTypeWithoutNumbers(r);
@@ -588,15 +473,5 @@ public class GenExpressionValue extends Generator<ExpressionValue>
             return Collections.emptyList();
         }
     }
-
-    private DataType makeTypeWithoutNumbers(SourceOfRandomness r)
-    {
-        DataType t;
-        do
-        {
-            t = makeType(r);
-        }
-        while (t.hasNumber());
-        return t;
-    }
+    */
 }

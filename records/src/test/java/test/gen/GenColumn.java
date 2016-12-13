@@ -207,7 +207,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                         @Override
                         public List<Object> number(NumberInfo displayInfo) throws InternalException, UserException
                         {
-                            return Collections.singletonList(Utility.parseNumber(new GenNumber().generate(r, generationStatus)));
+                            return Collections.singletonList(TestUtil.generateNumber(r, generationStatus));
                         }
 
                         @Override

@@ -7,7 +7,9 @@ import org.junit.runner.RunWith;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.EvaluateState;
-import test.gen.GenExpressionValue;
+import test.gen.ExpressionValue;
+import test.gen.GenExpressionValueBackwards;
+import test.gen.GenExpressionValueForwards;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -26,7 +28,7 @@ public class PropRunExpression
 {
     @Property(trials = 1000)
     @OnThread(Tag.Simulation)
-    public void propRunExpression(@From(GenExpressionValue.class) GenExpressionValue.ExpressionValue src) throws InternalException, UserException
+    public void propRunExpression(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {
         try
         {

@@ -7,7 +7,6 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.sosy_lab.common.rationals.Rational;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -15,12 +14,11 @@ import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
-import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
-import records.loadsave.OutputBuilder;
 import records.transformations.expression.TypeState;
+import test.gen.GenNumber;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExSupplier;
@@ -275,7 +273,7 @@ public class TestUtil
                 DataType.NUMBER,
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m"), 0)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("cm"), 0)),
-                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("$ m/s^2"), 0)),
+                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("($ m)/s^2"), 0)),
                 a,
                 DataType.tagged("B", Arrays.asList(new TagType<DataType>("Single ", null))),
                 c,
@@ -307,5 +305,10 @@ public class TestUtil
         }
         while (!Utility.validUnquoted(s));
         return s;
+    }
+
+    public static Number generateNumber(SourceOfRandomness r, GenerationStatus gs)
+    {
+        return Utility.parseNumber(new GenNumber().generate(r, gs));
     }
 }
