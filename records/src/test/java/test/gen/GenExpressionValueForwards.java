@@ -180,8 +180,21 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                         // Can have any power if it's scalar:
                         Pair<List<Object>, Expression> lhs = make(type, maxLevels - 1);
                         Pair<List<Object>, Expression> rhs = make(type, maxLevels - 1);
-                        Number value = Utility.raiseNumber((Number) lhs.getFirst().get(0), (Number) rhs.getFirst().get(0));
-                        return new Pair<>(Collections.singletonList(value), new RaiseExpression(lhs.getSecond(), rhs.getSecond()));
+                        for (int attempts = 0; attempts < 20; attempts++)
+                        {
+                            try
+                            {
+                                Number value = Utility.raiseNumber((Number) lhs.getFirst().get(0), (Number) rhs.getFirst().get(0));
+                                return new Pair<>(Collections.singletonList(value), new RaiseExpression(lhs.getSecond(), rhs.getSecond()));
+                            }
+                            catch (UserException e)
+                            {
+                                // Probably trying raising too high, cut it down and go again:
+                                rhs = new Pair<List<Object>, Expression>(Collections.singletonList(Utility.toBigDecimal((Number) rhs.getFirst().get(0)).divide(BigDecimal.valueOf(10))), new DivideExpression(rhs.getSecond(), new NumericLiteral(20, null)));
+                            }
+                        }
+                        // Give up trying to raise, just return LHS:
+                        return lhs;
                     }
                     else
                     {
