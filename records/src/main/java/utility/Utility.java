@@ -347,9 +347,9 @@ public class Utility
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
         {
             if (add)
-                return toBigDecimal(lhs).add(toBigDecimal(rhs));
+                return toBigDecimal(lhs).add(toBigDecimal(rhs), MathContext.DECIMAL128);
             else
-                return toBigDecimal(lhs).subtract(toBigDecimal(rhs));
+                return toBigDecimal(lhs).subtract(toBigDecimal(rhs), MathContext.DECIMAL128);
         }
         else if (lhs instanceof BigInteger || rhs instanceof BigInteger)
         {
@@ -386,7 +386,7 @@ public class Utility
     {
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
         {
-            return toBigDecimal(lhs).multiply(toBigDecimal(rhs));
+            return toBigDecimal(lhs).multiply(toBigDecimal(rhs), MathContext.DECIMAL128);
         }
         else if (lhs instanceof BigInteger || rhs instanceof BigInteger)
         {
@@ -459,6 +459,16 @@ public class Utility
                 throw new UserException("Cannot store result of calculation: " + e.getLocalizedMessage());
             }
         }
+    }
+
+    public static <T> T withNumber(Object num, Function<Long, T> withLong, Function<BigInteger, T> withBigInt, Function<BigDecimal, T> withBigDecimal)
+    {
+        if (num instanceof BigDecimal)
+            return withBigDecimal.apply((BigDecimal) num);
+        else if (num instanceof BigInteger)
+            return withBigInt.apply((BigInteger) num);
+        else
+            return withLong.apply(((Number)num).longValue());
     }
 
     public static class ReadState
