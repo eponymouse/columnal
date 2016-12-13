@@ -272,6 +272,8 @@ public class TestUtil
                 DataType.DATE,
                 DataType.NUMBER,
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m"), 0)),
+                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m^2"), 0)),
+                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m^3/s^3"), 0)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("cm"), 0)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("($ m)/s^2"), 0)),
                 a,

@@ -8,3 +8,4 @@ Implement and test complete load/save, including units and types sections
 Add power expression (x^n), right-hand side must be constant rational if left-hand side is non-scalar
    (will need constant folding: use getValue but with an EvaluateState that throws a particular exception)
 Intern the strings
+Explicitly test core functions like multiplyNumbers, compareLists

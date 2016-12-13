@@ -430,6 +430,20 @@ public class Utility
         }
     }
 
+    public static Number raiseNumber(Number lhs, Number rhs)
+    {
+        if (rhs instanceof BigDecimal || rhs instanceof BigInteger || rhs.longValue() != (long)rhs.intValue())
+        {
+            // We must use doubles, nothing else supported:
+            double lhsd = lhs.doubleValue();
+            double rhsd = rhs.doubleValue();
+            System.err.println("Doing: " + lhsd + " ^ " + rhsd);
+            return BigDecimal.valueOf(Math.pow(lhsd, rhsd));
+        }
+        else // Integer power, we can use big decimal:
+            return toBigDecimal(lhs).pow(rhs.intValue(), MathContext.DECIMAL128);
+    }
+
     public static class ReadState
     {
         public long startFrom;

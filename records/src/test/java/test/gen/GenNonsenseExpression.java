@@ -23,6 +23,7 @@ import records.transformations.expression.NaryOpExpression;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.OrExpression;
+import records.transformations.expression.RaiseExpression;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
 import records.transformations.expression.TimesExpression;
@@ -86,6 +87,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                     return new AddSubtractExpression(expressions, TestUtil.makeList(expressions.size() - 1, (Generator<Op>)(Generator<?>)new EnumGenerator(Op.class), r, gs));
                 },
                 () -> new DivideExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
+                () -> new RaiseExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 //() -> new CallExpression(TestUtil.generateVarName(r), TestUtil.makeList(r, 0, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new MatchExpression(genDepth(false, r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1)))
             )).get();

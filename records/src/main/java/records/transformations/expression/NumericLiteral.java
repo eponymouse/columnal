@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import edu.emory.mathcs.backport.java.util.Collections;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
@@ -20,6 +21,7 @@ import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 /**
  * Created by neil on 25/11/2016.
@@ -41,6 +43,17 @@ public class NumericLiteral extends Literal
     public DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError)
     {
         return type;
+    }
+
+    @Override
+    public Optional<Rational> constantFold()
+    {
+        if (value instanceof BigDecimal)
+            return Optional.of(Rational.ofBigDecimal((BigDecimal) value));
+        else if (value instanceof BigInteger)
+            return Optional.of(Rational.ofBigInteger((BigInteger) value));
+        else
+            return Optional.of(Rational.of(value.longValue()));
     }
 
     @Override

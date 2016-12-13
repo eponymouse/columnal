@@ -22,13 +22,14 @@ terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef;
 plusMinusExpression :  expression (PLUS_MINUS expression)+;
 timesExpression :  expression (TIMES expression)+;
 divideExpression :  expression DIVIDE expression;
+raisedExpression : expression RAISEDTO expression;
 equalExpression :  expression EQUALITY expression;
 notEqualExpression :  expression NON_EQUALITY expression;
 lessThanExpression :  expression (LESS_THAN expression)+;
 greaterThanExpression :  expression (GREATER_THAN expression)+;
 andExpression :  expression (AND expression)+;
 orExpression :  expression (OR expression)+;
-compoundExpression : plusMinusExpression | timesExpression | divideExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression;
+compoundExpression : plusMinusExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression;
 
 constructor : rawConstructor rawConstructor?;
 tagExpression : constructor (CONS expression)?;

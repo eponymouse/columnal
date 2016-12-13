@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
@@ -20,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 
 import static records.transformations.expression.AddSubtractExpression.Op.ADD;
@@ -43,6 +45,23 @@ public class AddSubtractExpression extends NaryOpExpression
     public NaryOpExpression copyNoNull(List<Expression> replacements)
     {
         return new AddSubtractExpression(replacements, ops);
+    }
+
+    @Override
+    public Optional<Rational> constantFold()
+    {
+        Rational running = Rational.ZERO;
+        for (int i = 0; i < expressions.size(); i++)
+        {
+            Optional<Rational> r = expressions.get(i).constantFold();
+            if (r.isPresent())
+            {
+                running = i == 0 || ops.get(i) == Op.ADD ? running.plus(r.get()) : running.minus(r.get());
+            }
+            else
+                return Optional.empty();
+        }
+        return Optional.of(running);
     }
 
     @Override

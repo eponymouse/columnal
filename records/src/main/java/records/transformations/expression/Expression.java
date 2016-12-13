@@ -4,6 +4,8 @@ import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
+import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.Column.ProgressListener;
@@ -30,6 +32,7 @@ import records.grammar.ExpressionParser.OrExpressionContext;
 import records.grammar.ExpressionParser.PatternContext;
 import records.grammar.ExpressionParser.PatternMatchContext;
 import records.grammar.ExpressionParser.PlusMinusExpressionContext;
+import records.grammar.ExpressionParser.RaisedExpressionContext;
 import records.grammar.ExpressionParser.StringLiteralContext;
 import records.grammar.ExpressionParser.TableIdContext;
 import records.grammar.ExpressionParser.TagExpressionContext;
@@ -50,6 +53,7 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -108,6 +112,12 @@ public abstract class Expression
 
     public abstract Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException;
 
+    @Pure
+    public Optional<Rational> constantFold()
+    {
+        return Optional.empty();
+    }
+
     private static class CompileExpression extends ExpressionParserBaseVisitor<Expression>
     {
         @Override
@@ -159,6 +169,12 @@ public abstract class Expression
         public Expression visitOrExpression(OrExpressionContext ctx)
         {
             return new OrExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression));
+        }
+
+        @Override
+        public Expression visitRaisedExpression(RaisedExpressionContext ctx)
+        {
+            return new RaiseExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)));
         }
 
         @Override

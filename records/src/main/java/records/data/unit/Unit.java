@@ -59,6 +59,20 @@ public class Unit
         return u;
     }
 
+    public Unit rootedBy(int root) throws UserException
+    {
+        Unit u = new Unit();
+        for (Entry<SingleUnit, Integer> entry : units.entrySet())
+        {
+            if (entry.getValue() % root != 0)
+            {
+                throw new UserException("Cannot root unit " + entry.getKey() + "^" + entry.getValue() + " by " + root);
+            }
+            u.units.put(entry.getKey(), entry.getValue() / root);
+        }
+        return u;
+    }
+
     public String getDisplayPrefix()
     {
         if (units.size() == 1)
@@ -182,4 +196,5 @@ public class Unit
         }
         return u;
     }
+
 }

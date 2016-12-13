@@ -43,6 +43,7 @@ import records.transformations.expression.MatchExpression.PatternMatchExpression
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.OrExpression;
+import records.transformations.expression.RaiseExpression;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
 import records.transformations.expression.TimesExpression;
@@ -60,6 +61,7 @@ import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -171,7 +173,48 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                     }
                     while (Utility.compareNumbers(denominator.getFirst().get(0), 0) == 0);
                     return new Pair<List<Object>, Expression>(Collections.singletonList(Utility.divideNumbers((Number)numerator.getFirst().get(0), (Number)denominator.getFirst().get(0))),new DivideExpression(numerator.getSecond(), denominator.getSecond()));
-                }, () -> {
+                }, () ->
+                {
+                    if (displayInfo.getUnit().equals(Unit.SCALAR))
+                    {
+                        // Can have any power if it's scalar:
+                        Pair<List<Object>, Expression> lhs = make(type, maxLevels - 1);
+                        Pair<List<Object>, Expression> rhs = make(type, maxLevels - 1);
+                        Number value = Utility.raiseNumber((Number) lhs.getFirst().get(0), (Number) rhs.getFirst().get(0));
+                        return new Pair<>(Collections.singletonList(value), new RaiseExpression(lhs.getSecond(), rhs.getSecond()));
+                    }
+                    else
+                    {
+                        // A unit is involved so we need to do things differently.
+                        // Essentially there's three options:
+                        //  - The unit can be reached by positive integer power (rare!)
+                        //  - We just use 1 as the power
+                        //  - We use the current unit to a power, and root it
+                        List<Integer> powers = displayInfo.getUnit().getDetails().values().stream().map(Math::abs).distinct().collect(Collectors.<Integer>toList());
+                        if (powers.size() == 1 && powers.get(0) != 1 && r.nextInt(0, 2) != 0)
+                        {
+                            // Positive integer power possible; go go go!
+                            Unit lhsUnit = displayInfo.getUnit().rootedBy(powers.get(0));
+                            Pair<List<Object>, Expression> lhs = make(DataType.number(new NumberInfo(lhsUnit, 0)), maxLevels - 1);
+                            return new Pair<>(Collections.singletonList(Utility.raiseNumber((Number) lhs.getFirst().get(0), powers.get(0))), new RaiseExpression(lhs.getSecond(), new NumericLiteral(powers.get(0), null)));
+                        }
+                        else if (r.nextBoolean())
+                        {
+                            // Just use 1 as power:
+                            Pair<List<Object>, Expression> lhs = make(type, maxLevels - 1);
+                            return lhs.replaceSecond(new RaiseExpression(lhs.getSecond(), new NumericLiteral(1, null)));
+                        }
+                        else
+                        {
+                            // Make up a power, then root it:
+                            int raiseTo = r.nextInt(2, 5);
+                            Unit lhsUnit = displayInfo.getUnit().raisedTo(raiseTo);
+                            Pair<List<Object>, Expression> lhs = make(DataType.number(new NumberInfo(lhsUnit, 0)), maxLevels - 1);
+                            return new Pair<>(Collections.singletonList(Utility.raiseNumber((Number) lhs.getFirst().get(0), 1.0/powers.get(0))), new RaiseExpression(lhs.getSecond(), new DivideExpression(new NumericLiteral(1, null), new NumericLiteral(raiseTo, null))));
+                        }
+                    }
+                },
+                () -> {
                     Number runningTotal = 1;
                     Unit runningUnit = Unit.SCALAR;
                     int numArgs = r.nextInt(2, 6);

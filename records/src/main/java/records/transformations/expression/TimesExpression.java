@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
@@ -22,6 +23,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 
 /**
@@ -38,6 +40,21 @@ public class TimesExpression extends NaryOpExpression
     public NaryOpExpression copyNoNull(List<Expression> replacements)
     {
         return new TimesExpression(replacements);
+    }
+
+    @Override
+    public Optional<Rational> constantFold()
+    {
+        Rational running = Rational.ONE;
+        for (Expression expression : expressions)
+        {
+            Optional<Rational> r = expression.constantFold();
+            if (r.isPresent())
+                running = running.times(r.get());
+            else
+                return Optional.empty();
+        }
+        return Optional.of(running);
     }
 
     @Override
