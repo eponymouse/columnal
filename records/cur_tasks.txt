@@ -1,3 +1,5 @@
+Make genNumber generate awkward numbers (MIN_BYTE, etc)
+
 Then go on to add functions, such as:
  upper, lower, startswith
  c(col): gets single value from that column

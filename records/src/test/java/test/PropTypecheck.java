@@ -2,6 +2,7 @@ package test;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -17,6 +18,7 @@ import test.gen.GenExpressionValueForwards;
 import test.gen.GenTypecheckFail;
 
 import java.util.Collections;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
@@ -77,7 +79,10 @@ public class PropTypecheck
         {
             b.append("Err in " + e + ": " + s);
         });
-        assertEquals(src.expression.toString() + "\n" + b.toString(), src.type, checked);
+        assertEquals(src.expression.toString() + "\n" + b.toString() + "\nCol types: " + src.recordSet.getColumns().stream().map(c -> {try
+    {
+        return c.getType().toString();
+    } catch (InternalException | UserException e) { throw new RuntimeException(e); }}).collect(Collectors.joining(", ")), src.type, checked);
     }
 
     //#error Have property which generates tables/expressions of given types, and check they don't typecheck

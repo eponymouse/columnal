@@ -19,6 +19,7 @@ import records.error.UserException;
 import records.grammar.MainLexer;
 import records.transformations.expression.TypeState;
 import test.gen.GenNumber;
+import test.gen.GenNumberAsString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExSupplier;
@@ -311,6 +312,6 @@ public class TestUtil
 
     public static Number generateNumber(SourceOfRandomness r, GenerationStatus gs)
     {
-        return Utility.parseNumber(new GenNumber().generate(r, gs));
+        return new GenNumber().generate(r, gs);
     }
 }

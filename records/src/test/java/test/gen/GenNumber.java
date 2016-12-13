@@ -3,32 +3,39 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import utility.Utility;
+
+import java.math.BigInteger;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Created by neil on 09/12/2016.
+ * Created by neil on 13/12/2016.
  */
-public class GenNumber extends Generator<String>
+public class GenNumber extends Generator<Number>
 {
     public GenNumber()
     {
-        super(String.class);
+        super(Number.class);
     }
 
     @Override
-    public String generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+    public Number generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        boolean includeFractional = sourceOfRandomness.nextBoolean();
-        int maxBits = sourceOfRandomness.nextInt(6, 80);
-        if (includeFractional && sourceOfRandomness.nextBoolean())
+        Number n = Utility.parseNumber(new GenNumberAsString().generate(sourceOfRandomness, generationStatus));
+        List<Number> rets = new ArrayList<>();
+        rets.add(n);
+        if (n.doubleValue() == (double)n.intValue())
         {
-            // I don't think it matters here whether we come up with
-            // double or big decimal; will be stored in big decimal either way.
-            return String.format("%f", sourceOfRandomness.nextDouble());
+            // If it fits in smaller, we may randomly choose to use smaller:
+            rets.add(BigInteger.valueOf(n.intValue()));
+            if ((long) n.intValue() == n.longValue())
+                rets.add(n.intValue());
+            if ((long) n.shortValue() == n.longValue())
+                rets.add(n.shortValue());
+            if ((long) n.byteValue() == n.longValue())
+                rets.add(n.byteValue());
         }
-        else
-        {
-            // We geometrically distribute by uniformly distributing number of bits:
-            return sourceOfRandomness.nextBigInteger(sourceOfRandomness.nextInt(1, maxBits)).toString();
-        }
+        return sourceOfRandomness.choose(rets);
     }
 }

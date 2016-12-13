@@ -7,6 +7,5 @@ import java.util.List;
  */
 public abstract class FunctionInstance
 {
-
     public abstract List<Object> getValue(int rowIndex, List<List<Object>> params);
 }

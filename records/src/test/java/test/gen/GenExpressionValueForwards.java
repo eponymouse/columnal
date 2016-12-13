@@ -20,7 +20,6 @@ import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.NumberInfo;
-import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
@@ -35,11 +34,6 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
-import records.transformations.expression.MatchExpression;
-import records.transformations.expression.MatchExpression.MatchClause;
-import records.transformations.expression.MatchExpression.Pattern;
-import records.transformations.expression.MatchExpression.PatternMatch;
-import records.transformations.expression.MatchExpression.PatternMatchExpression;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.OrExpression;
@@ -47,12 +41,10 @@ import records.transformations.expression.RaiseExpression;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
 import records.transformations.expression.TimesExpression;
-import records.transformations.expression.VarExpression;
 import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExSupplier;
 import utility.Pair;
 import utility.Utility;
 
@@ -61,12 +53,8 @@ import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static test.TestUtil.distinctTypes;
 
@@ -353,7 +341,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
 
     private BigDecimal genBD()
     {
-        return new BigDecimal(new GenNumber().generate(r, gs));
+        return new BigDecimal(new GenNumberAsString().generate(r, gs));
     }
 
     private Pair<List<Object>, Expression> columnRef(DataType type) throws UserException, InternalException

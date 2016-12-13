@@ -368,7 +368,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
 
     private BigDecimal genBD()
     {
-        return new BigDecimal(new GenNumber().generate(r, gs));
+        return new BigDecimal(new GenNumberAsString().generate(r, gs));
     }
 
     private Expression columnRef(DataType type, List<Object> value)

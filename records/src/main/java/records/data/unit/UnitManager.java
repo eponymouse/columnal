@@ -1,5 +1,6 @@
 package records.data.unit;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import records.error.InternalException;
@@ -23,6 +24,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 09/12/2016.
@@ -105,7 +107,7 @@ public class UnitManager
     {
         if (text.startsWith("{") && text.endsWith("}"))
             text = text.substring(1, text.length() - 1);
-        if (text.isEmpty())
+        if (text.isEmpty() || text.equals("1"))
             return Unit.SCALAR;
         UnbracketedUnitContext ctx = Utility.parseAsOne(text, UnitLexer::new, UnitParser::new, p -> p.unitUse().unbracketedUnit());
         return loadUnbracketedUnit(ctx);
@@ -208,5 +210,10 @@ public class UnitManager
         if (unitDeclaration == null)
             throw new InternalException("Unknown unit: " + m);
         return unitDeclaration.getDefined();
+    }
+
+    public List<SingleUnit> getAllDeclared()
+    {
+        return knownUnits.values().stream().map(d -> d.getDefined()).collect(Collectors.<@NonNull SingleUnit>toList());
     }
 }
