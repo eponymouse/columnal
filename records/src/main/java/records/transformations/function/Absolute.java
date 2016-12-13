@@ -36,7 +36,12 @@ public class Absolute extends SingleNumericInOutFunction
             @Override
             public List<Object> getValue(int rowIndex, List<List<Object>> params)
             {
-                return Collections.singletonList(Utility.<Number>withNumber(params.get(0).get(0), Math::abs, BigInteger::abs, BigDecimal::abs));
+                return Collections.singletonList(Utility.<Number>withNumber(params.get(0).get(0), l -> {
+                    if (l == Long.MIN_VALUE)
+                        return BigInteger.valueOf(l).negate();
+                    else
+                        return Math.abs(l);
+                }, BigInteger::abs, BigDecimal::abs));
             }
         };
     }

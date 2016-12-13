@@ -4,6 +4,9 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 
+import java.math.BigInteger;
+import java.util.Arrays;
+
 /**
  * Created by neil on 09/12/2016.
  */
@@ -17,6 +20,20 @@ public class GenNumberAsString extends Generator<String>
     @Override
     public String generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
+        if (sourceOfRandomness.nextBoolean())
+        {
+            // Use awkward numbers:
+            return sourceOfRandomness.choose(Arrays.<Number>asList(
+                0, 1, -1,
+                Byte.MIN_VALUE, Byte.MIN_VALUE + 1, Byte.MAX_VALUE,
+                Short.MIN_VALUE, Short.MIN_VALUE + 1, Short.MAX_VALUE,
+                Integer.MIN_VALUE, Integer.MIN_VALUE + 1, Integer.MAX_VALUE,
+                (long)Integer.MIN_VALUE - 1L, (long)Integer.MAX_VALUE + 1L,
+                Long.MIN_VALUE, Long.MIN_VALUE + 1, Long.MAX_VALUE,
+                BigInteger.valueOf(Long.MIN_VALUE).subtract(BigInteger.ONE),
+                BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE)
+            )).toString();
+        }
         boolean includeFractional = sourceOfRandomness.nextBoolean();
         int maxBits = sourceOfRandomness.nextInt(6, 80);
         if (includeFractional && sourceOfRandomness.nextBoolean())
