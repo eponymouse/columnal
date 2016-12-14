@@ -89,7 +89,7 @@ public class DataType
     public static final DataType TEXT = new DataType(Kind.TEXT, null, null, null);
     public static final DataType DATE = DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY));
 
-    private static DataType date(DateTimeInfo dateTimeInfo)
+    public static DataType date(DateTimeInfo dateTimeInfo)
     {
         return new DataType(Kind.DATETIME, null, dateTimeInfo, null);
     }
@@ -471,6 +471,18 @@ public class DataType
     public boolean isNumber()
     {
         return kind == Kind.NUMBER;
+    }
+
+    @Pure
+    public boolean isText()
+    {
+        return kind == Kind.TEXT;
+    }
+
+    @Pure
+    public boolean isDateTime()
+    {
+        return kind == Kind.DATETIME;
     }
 
     // is number, or has number anywhere inside:

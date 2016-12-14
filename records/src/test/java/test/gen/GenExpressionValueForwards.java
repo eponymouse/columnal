@@ -180,7 +180,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                             //if (r.nextBoolean() || Utility.compareNumbers(rhs.getFirst().get(0), 10) > 0)
                             //{
                                 // Apply abs to LHS:
-                                lhs = new Pair<>(Collections.singletonList(Utility.withNumber(lhs.getFirst().get(0), l -> l.longValue() == Long.MIN_VALUE ? BigInteger.valueOf(l).abs() : Math.abs(l), BigInteger::abs, BigDecimal::abs)), new CallExpression("abs", lhs.getSecond()));
+                                lhs = new Pair<>(Collections.singletonList(Utility.withNumber(lhs.getFirst().get(0), l -> safeAbs(l), BigInteger::abs, BigDecimal::abs)), new CallExpression("abs", lhs.getSecond()));
                             //}
                             //else
                             //{
@@ -207,38 +207,46 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                     }
                     else
                     {
-                        // A unit is involved so we need to do things differently.
-                        // Essentially there's three options:
-                        //  - The unit can be reached by positive integer power (rare!)
-                        //  - We just use 1 as the power
-                        //  - We use the current unit to a power, and root it
-                        List<Integer> powers = displayInfo.getUnit().getDetails().values().stream().map(Math::abs).distinct().collect(Collectors.<Integer>toList());
-                        if (powers.size() == 1 && powers.get(0) != 1 && r.nextInt(0, 2) != 0)
+                        try
                         {
-                            // Positive integer power possible; go go go!
-                            Unit lhsUnit = displayInfo.getUnit().rootedBy(powers.get(0));
-                            Pair<List<Object>, Expression> lhs = make(DataType.number(new NumberInfo(lhsUnit, 0)), maxLevels - 1);
-                            return new Pair<>(Collections.singletonList(Utility.raiseNumber((Number) lhs.getFirst().get(0), powers.get(0))), new RaiseExpression(lhs.getSecond(), new NumericLiteral(powers.get(0), null)));
-                        }
-                        else if (r.nextBoolean())
-                        {
-                            // Just use 1 as power:
-                            Pair<List<Object>, Expression> lhs = make(type, maxLevels - 1);
-                            return lhs.replaceSecond(new RaiseExpression(lhs.getSecond(), new NumericLiteral(1, null)));
-                        }
-                        else
-                        {
-                            // Make up a power, then root it:
-                            int raiseTo = r.nextInt(2, 5);
-                            Unit lhsUnit = displayInfo.getUnit().raisedTo(raiseTo);
-                            Pair<List<Object>, Expression> lhs = make(DataType.number(new NumberInfo(lhsUnit, 0)), maxLevels - 1);
-                            // You can't raise a negative to a non-integer power.  So check for that:
-                            if (Utility.compareNumbers(lhs.getFirst().get(0), 0) < 0)
+                            // A unit is involved so we need to do things differently.
+                            // Essentially there's three options:
+                            //  - The unit can be reached by positive integer power (rare!)
+                            //  - We just use 1 as the power
+                            //  - We use the current unit to a power, and root it
+                            List<Integer> powers = displayInfo.getUnit().getDetails().values().stream().map(Math::abs).distinct().collect(Collectors.<Integer>toList());
+                            if (powers.size() == 1 && powers.get(0) != 1 && r.nextInt(0, 2) != 0)
                             {
-                                // Apply abs to LHS:
-                                lhs = new Pair<>(Collections.singletonList(Utility.withNumber(lhs.getFirst().get(0), Math::abs, BigInteger::abs, BigDecimal::abs)), new CallExpression("abs", lhs.getSecond()));
+                                // Positive integer power possible; go go go!
+                                Unit lhsUnit = displayInfo.getUnit().rootedBy(powers.get(0));
+                                Pair<List<Object>, Expression> lhs = make(DataType.number(new NumberInfo(lhsUnit, 0)), maxLevels - 1);
+                                return new Pair<>(Collections.singletonList(Utility.raiseNumber((Number) lhs.getFirst().get(0), powers.get(0))), new RaiseExpression(lhs.getSecond(), new NumericLiteral(powers.get(0), null)));
                             }
-                            return new Pair<>(Collections.singletonList(Utility.raiseNumber((Number) lhs.getFirst().get(0), 1.0/powers.get(0))), new RaiseExpression(lhs.getSecond(), new DivideExpression(new NumericLiteral(1, null), new NumericLiteral(raiseTo, null))));
+                            else if (r.nextBoolean())
+                            {
+                                // Just use 1 as power:
+                                Pair<List<Object>, Expression> lhs = make(type, maxLevels - 1);
+                                return lhs.replaceSecond(new RaiseExpression(lhs.getSecond(), new NumericLiteral(1, null)));
+                            }
+                            else
+                            {
+                                // Make up a power, then root it:
+                                int raiseTo = r.nextInt(2, 5);
+                                Unit lhsUnit = displayInfo.getUnit().raisedTo(raiseTo);
+                                Pair<List<Object>, Expression> lhs = make(DataType.number(new NumberInfo(lhsUnit, 0)), maxLevels - 1);
+                                // You can't raise a negative to a non-integer power.  So check for that:
+                                if (Utility.compareNumbers(lhs.getFirst().get(0), 0) < 0)
+                                {
+                                    // Apply abs to LHS:
+                                    lhs = new Pair<>(Collections.singletonList(Utility.withNumber(lhs.getFirst().get(0), l -> safeAbs(l), BigInteger::abs, BigDecimal::abs)), new CallExpression("abs", lhs.getSecond()));
+                                }
+                                return new Pair<>(Collections.singletonList(Utility.raiseNumber((Number) lhs.getFirst().get(0), BigDecimal.valueOf(1.0 / raiseTo))), new RaiseExpression(lhs.getSecond(), new DivideExpression(new NumericLiteral(1, null), new NumericLiteral(raiseTo, null))));
+                            }
+                        }
+                        catch (UserException e)
+                        {
+                            // Might have tried to raise a big decimal too large, in which case forget it:
+                            return make(DataType.number(displayInfo), maxLevels - 1);
                         }
                     }
                 },
@@ -340,6 +348,11 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                 return termDeep(maxLevels, type, terminals, nonTerm);
             }
         });
+    }
+
+    private Number safeAbs(Long l)
+    {
+        return l.longValue() == Long.MIN_VALUE ? BigInteger.valueOf(l).abs() : Math.abs(l);
     }
 
     // What unit do you have to multiply src by to get dest?

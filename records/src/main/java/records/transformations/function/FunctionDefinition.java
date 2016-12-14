@@ -33,6 +33,6 @@ public abstract class FunctionDefinition
         return name;
     }
 
-    // For testing: give a parameter list that should fail typechecking
-    public abstract List<Expression> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws UserException, InternalException;
+    // For testing: give a unit list and parameter list that should fail typechecking
+    public abstract Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws UserException, InternalException;
 }

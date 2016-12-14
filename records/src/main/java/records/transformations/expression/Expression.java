@@ -56,6 +56,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -330,5 +331,7 @@ public abstract class Expression
         public Expression getDifferentType(@Nullable DataType type) throws InternalException, UserException;
         public Expression getAnyType() throws UserException, InternalException;
         public Expression getNonNumericType() throws InternalException, UserException;
+
+        public Expression getType(Predicate<DataType> mustMatch) throws InternalException, UserException;
     }
 }

@@ -27,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(JUnitQuickcheck.class)
 public class PropRunExpression
 {
-    @Property(trials = 1000)
+    @Property(trials = 10000)
     @OnThread(Tag.Simulation)
     public void propRunExpression(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {

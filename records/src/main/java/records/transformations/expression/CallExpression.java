@@ -128,7 +128,8 @@ public class CallExpression extends Expression
     {
         if (definition == null)
             throw new InternalException("Calling _test_typeFailure after type check failure");
-        return new CallExpression(functionName, units, definition._test_typeFailure(r, newExpressionOfDifferentType));
+        Pair<List<Unit>, List<Expression>> badParams = definition._test_typeFailure(r, newExpressionOfDifferentType);
+        return new CallExpression(functionName, badParams.getFirst(), badParams.getSecond());
     }
 
     @Override

@@ -34,10 +34,12 @@ abstract class SingleNumericInOutFunction extends FunctionDefinition
         if (!units.isEmpty())
         {
             onError.accept("Function \"" + getName() + "\" does not accept unit parameter");
+            return null;
         }
         if (params.size() != 1 || !params.get(0).isNumber())
         {
             onError.accept("Function \"" + getName() + "\" takes exactly one parameter of numeric type");
+            return null;
         }
 
         return new Pair<>(makeInstance(), params.get(0));
@@ -46,8 +48,9 @@ abstract class SingleNumericInOutFunction extends FunctionDefinition
     protected abstract FunctionInstance makeInstance();
 
     @Override
-    public List<Expression> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws UserException, InternalException
+    public Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws UserException, InternalException
     {
-        return Collections.singletonList(newExpressionOfDifferentType.getNonNumericType());
+        //TODO randomly pick from a few other options (e.g. zero param, 2 param, units)
+        return new Pair<>(Collections.emptyList(), Collections.singletonList(newExpressionOfDifferentType.getNonNumericType()));
     }
 }
