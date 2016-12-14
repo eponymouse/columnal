@@ -58,6 +58,7 @@ import utility.Pair;
 import utility.Utility;
 
 import java.math.BigDecimal;
+import java.math.BigInteger;
 import java.math.MathContext;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
@@ -70,6 +71,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static test.TestUtil.distinctTypes;
+import static test.TestUtil.generateNumber;
 
 /**
  * Generates expressions and resulting values by working backwards.
@@ -104,7 +106,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         this.columns = new ArrayList<>();
         try
         {
-            DataType type = makeTypeWithoutNumbers(r);
+            DataType type = makeType(r);
             Pair<List<Object>, Expression> p = makeOfType(type);
             return new ExpressionValue(type, p.getFirst(), getRecordSet(), p.getSecond());
         }
@@ -145,6 +147,8 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             @Override
             public Expression number(NumberInfo displayInfo) throws InternalException, UserException
             {
+                // We only do integers because beyond that the result isn't guaranteed, which
+                // could cause failures in things like equal expressions.
                 return termDeep(maxLevels, type, l(
                     () -> columnRef(type, targetValue),
                     () -> new NumericLiteral((Number)targetValue.get(0), displayInfo.getUnit())
@@ -153,25 +157,25 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                     int numMiddle = r.nextInt(0, 6);
                     List<Expression> expressions = new ArrayList<>();
                     List<Op> ops = new ArrayList<>();
-                    BigDecimal curTotal = genBD();
+                    BigInteger curTotal = genInt();
                     expressions.add(make(type, Collections.singletonList(curTotal), maxLevels - 1));
                     for (int i = 0; i < numMiddle; i++)
                     {
-                        BigDecimal next = genBD();
+                        BigInteger next = genInt();
                         expressions.add(make(type, Collections.singletonList(next), maxLevels - 1));
                         if (r.nextBoolean())
                         {
-                            curTotal = curTotal.add(next, MathContext.DECIMAL128);
+                            curTotal = curTotal.add(next);
                             ops.add(Op.ADD);
                         }
                         else
                         {
-                            curTotal = curTotal.subtract(next, MathContext.DECIMAL128);
+                            curTotal = curTotal.subtract(next);
                             ops.add(Op.SUBTRACT);
                         }
                     }
                     // Now add one more to make the difference:
-                    BigDecimal diff = Utility.toBigDecimal((Number)targetValue.get(0)).subtract(curTotal);
+                    BigInteger diff = ((BigInteger)targetValue.get(0)).subtract(curTotal);
                     boolean add = r.nextBoolean();
                     expressions.add(make(type, Collections.singletonList(add ? diff : diff.negate()), maxLevels - 1));
                     ops.add(add ? Op.ADD : Op.SUBTRACT);
@@ -183,11 +187,12 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                         return new DivideExpression(make(type, targetValue, maxLevels - 1), new NumericLiteral(1, Unit.SCALAR));
                     else
                     {
-                        Number denominator;
+                        BigInteger denominator;
                         do
                         {
-                            denominator = genBD();
-                        } while (Utility.compareNumbers(denominator, 0) == 0);
+                            denominator = genInt();
+                        }
+                        while (Utility.compareNumbers(denominator, 0) == 0);
                         Number numerator = Utility.multiplyNumbers((Number) targetValue.get(0), denominator);
                         // Either just use numerator, or make up crazy one
                         Unit numUnit = r.nextBoolean() ? displayInfo.getUnit() : makeUnit();
@@ -195,44 +200,6 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                         // TODO test division by zero behaviour (test errors generally)
                         return new DivideExpression(make(DataType.number(new NumberInfo(numUnit, 0)), Collections.singletonList(numerator), maxLevels - 1), make(DataType.number(new NumberInfo(denomUnit, 0)), Collections.singletonList(denominator), maxLevels - 1));
                     }
-                }, () -> {
-                    Number runningTotal = 1;
-                    Unit runningUnit = Unit.SCALAR;
-                    int numExtra = r.nextInt(1, 4);
-                    List<Expression> expressions = new ArrayList<>();
-                    boolean targetZero = Utility.compareNumbers(targetValue.get(0), 0) == 0;
-                    for (int i = 0; i < numExtra; i++)
-                    {
-                        //Only allow zeroes if the target is zero:
-                        Number subVal;
-                        do
-                        {
-                            subVal = genBD();
-                        }
-                        while (subVal.toString().equals("0") && !targetZero);
-                        runningTotal = Utility.multiplyNumbers(runningTotal, subVal);
-                        Unit unit = makeUnit();
-                        runningUnit = runningUnit.times(unit);
-                        expressions.add(make(DataType.number(new NumberInfo(unit, 0)),Collections.singletonList(subVal), maxLevels - 1));
-                    }
-                    Unit lastUnit = calculateRequiredMultiplyUnit(runningUnit, displayInfo.getUnit());
-                    if (targetZero)
-                    {
-                        // If running total already zero, generate what we like, otherwise we must generate a zero:
-                        if (Utility.compareNumbers(runningTotal, 0) == 0)
-                        {
-                            expressions.add(make(DataType.number(new NumberInfo(lastUnit, 0)), Collections.singletonList(genBD()), maxLevels - 1));
-                        }
-                        else
-                        {
-                            expressions.add(make(DataType.number(new NumberInfo(lastUnit, 0)), Collections.singletonList(0), maxLevels - 1));
-                        }
-                    }
-                    else
-                    {
-                        expressions.add(make(DataType.number(new NumberInfo(lastUnit, 0)), Collections.singletonList(Utility.divideNumbers((Number) targetValue.get(0), runningTotal)), maxLevels - 1));
-                    }
-                    return new TimesExpression(expressions);
                 }));
             }
 
@@ -257,8 +224,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                 boolean target = (Boolean)targetValue.get(0);
                 return termDeep(maxLevels, type, l(() -> columnRef(type, targetValue), () -> new BooleanLiteral(target)), l(
                     () -> {
-                        // Don't do numbers because result isn't exact:
-                        DataType t = makeTypeWithoutNumbers(r);
+                        DataType t = makeType(r);
                         List<Object> valA = makeValue(t);
                         List<Object> valB;
                         int attempts = 0;
@@ -273,9 +239,6 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                     },
                     () -> {
                         DataType t = makeType(r);
-                        // Don't do numbers because result isn't exact:
-                        while (t.hasNumber())
-                            t = makeType(r);
                         List<Object> valA = makeValue(t);
                         List<Object> valB;
                         int attempts = 0;
@@ -367,9 +330,15 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         ));
     }
 
-    private BigDecimal genBD()
+    private BigInteger genInt()
     {
-        return new BigDecimal(new GenNumberAsString().generate(r, gs));
+        Number n;
+        do
+        {
+            n = generateNumber(r, gs);
+        }
+        while (n instanceof BigDecimal);
+        return n instanceof BigInteger ? (BigInteger)n : BigInteger.valueOf(n.longValue());
     }
 
     private Expression columnRef(DataType type, List<Object> value)
@@ -428,7 +397,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             @Override
             public List<Object> number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return Collections.singletonList(TestUtil.generateNumber(r, gs));
+                return Collections.singletonList(genInt());
             }
 
             @Override
@@ -481,7 +450,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
 
     private Expression makeMatch(int maxLevels, ExSupplier<Expression> makeCorrectOutcome, ExSupplier<Expression> makeOtherOutcome) throws InternalException, UserException
     {
-        DataType t = makeTypeWithoutNumbers(r);
+        DataType t = makeType(r);
         List<Object> actual = makeValue(t);
         // Make a bunch of guards which won't fire:
         List<Function<MatchExpression, MatchClause>> clauses = new ArrayList<>(TestUtil.makeList(r, 0, 5, (ExSupplier<Optional<Function<MatchExpression, MatchClause>>>)() -> {
@@ -577,16 +546,5 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         {
             return Collections.emptyList();
         }
-    }
-
-    private DataType makeTypeWithoutNumbers(SourceOfRandomness r)
-    {
-        DataType t;
-        do
-        {
-            t = makeType(r);
-        }
-        while (t.hasNumber());
-        return t;
     }
 }

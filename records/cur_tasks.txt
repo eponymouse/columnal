@@ -1,4 +1,3 @@
-Make backwards expression test generate numbers again, but only integers.
 Add functions, such as:
  string<->date and date arithmetic (then add expression date tests)
  floor, ceil,
