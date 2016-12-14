@@ -180,7 +180,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                             //if (r.nextBoolean() || Utility.compareNumbers(rhs.getFirst().get(0), 10) > 0)
                             //{
                                 // Apply abs to LHS:
-                                lhs = new Pair<>(Collections.singletonList(Utility.withNumber(lhs.getFirst().get(0), Math::abs, BigInteger::abs, BigDecimal::abs)), new CallExpression("abs", lhs.getSecond()));
+                                lhs = new Pair<>(Collections.singletonList(Utility.withNumber(lhs.getFirst().get(0), l -> l.longValue() == Long.MIN_VALUE ? BigInteger.valueOf(l).abs() : Math.abs(l), BigInteger::abs, BigDecimal::abs)), new CallExpression("abs", lhs.getSecond()));
                             //}
                             //else
                             //{
