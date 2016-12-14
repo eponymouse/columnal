@@ -29,9 +29,9 @@ public class DataTypeValue extends DataType
 
     // package-visible
     @SuppressWarnings("unchecked")
-    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable Pair<String, List<TagType<DataTypeValue>>> tagTypes, @Nullable GetValue<Number> getNumber, @Nullable GetValue<String> getText, @Nullable GetValue<Temporal> getDate, @Nullable GetValue<Boolean> getBoolean, @Nullable GetValue<Integer> getTag)
+    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<String, List<TagType<DataTypeValue>>> tagTypes, @Nullable GetValue<Number> getNumber, @Nullable GetValue<String> getText, @Nullable GetValue<Temporal> getDate, @Nullable GetValue<Boolean> getBoolean, @Nullable GetValue<Integer> getTag)
     {
-        super(kind, numberInfo, (Pair<String, List<TagType<DataType>>>)(Pair)tagTypes);
+        super(kind, numberInfo, dateTimeInfo, (Pair<String, List<TagType<DataType>>>)(Pair)tagTypes);
         this.getNumber = getNumber;
         this.getText = getText;
         this.getDate = getDate;
@@ -41,27 +41,27 @@ public class DataTypeValue extends DataType
 
     public static DataTypeValue bool(GetValue<Boolean> getValue)
     {
-        return new DataTypeValue(Kind.BOOLEAN, null, null, null, null, null, getValue, null);
+        return new DataTypeValue(Kind.BOOLEAN, null, null, null, null, null, null, getValue, null);
     }
 
     public static DataTypeValue tagged(String name, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag)
     {
-        return new DataTypeValue(Kind.TAGGED, null, new Pair<>(name, tagTypes), null, null, null, null, getTag);
+        return new DataTypeValue(Kind.TAGGED, null, null, new Pair<>(name, tagTypes), null, null, null, null, getTag);
     }
 
     public static DataTypeValue text(GetValue<String> getText)
     {
-        return new DataTypeValue(Kind.TEXT, null, null, null, getText, null, null, null);
+        return new DataTypeValue(Kind.TEXT, null, null, null, null, getText, null, null, null);
     }
 
-    public static DataTypeValue date(GetValue<Temporal> getDate)
+    public static DataTypeValue date(DateTimeInfo dateTimeInfo, GetValue<Temporal> getDate)
     {
-        return new DataTypeValue(Kind.DATE, null, null, null, null, getDate, null, null);
+        return new DataTypeValue(Kind.DATETIME, null, dateTimeInfo, null, null, null, getDate, null, null);
     }
 
     public static DataTypeValue number(NumberInfo numberInfo, GetValue<Number> getNumber)
     {
-        return new DataTypeValue(Kind.NUMBER, numberInfo, null, getNumber, null, null, null, null);
+        return new DataTypeValue(Kind.NUMBER, numberInfo, null, null, getNumber, null, null, null, null);
     }
 
     public static class SpecificDataTypeVisitorGet<R> implements DataTypeVisitorGet<R>
@@ -127,7 +127,7 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R date(GetValue<Temporal> g) throws InternalException, UserException
+        public R date(DateTimeInfo dateTimeInfo, GetValue<Temporal> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected date type");
         }
@@ -139,7 +139,7 @@ public class DataTypeValue extends DataType
         R number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, E;
         R text(GetValue<String> g) throws InternalException, E;
         R bool(GetValue<Boolean> g) throws InternalException, E;
-        R date(GetValue<Temporal> g) throws InternalException, E;
+        R date(DateTimeInfo dateTimeInfo, GetValue<Temporal> g) throws InternalException, E;
 
         R tagged(String typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
         //R tuple(List<DataType> types) throws InternalException, E;
@@ -164,8 +164,8 @@ public class DataTypeValue extends DataType
                 return visitor.number(getNumber, numberInfo);
             case TEXT:
                 return visitor.text(getText);
-            case DATE:
-                return visitor.date(getDate);
+            case DATETIME:
+                return visitor.date(dateTimeInfo, getDate);
             case BOOLEAN:
                 return visitor.bool(getBoolean);
             case TAGGED:
@@ -225,7 +225,7 @@ public class DataTypeValue extends DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public List<Object> date(GetValue<Temporal> g) throws InternalException, UserException
+            public List<Object> date(DateTimeInfo dateTimeInfo, GetValue<Temporal> g) throws InternalException, UserException
             {
                 return Collections.singletonList(g.get(index));
             }
@@ -243,7 +243,7 @@ public class DataTypeValue extends DataType
         }
 
 
-        return new DataTypeValue(kind, numberInfo, newTagTypes,
+        return new DataTypeValue(kind, numberInfo, dateTimeInfo, newTagTypes,
             reOrder(getOriginalIndex, getNumber),
             reOrder(getOriginalIndex, getText),
             reOrder(getOriginalIndex, getDate),

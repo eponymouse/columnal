@@ -12,8 +12,15 @@ UNIT ml "millilitre" = 10^-3 l
 
 
 UNIT s "Seconds"
+UNIT ms "Milliseconds" = 10^-3 s
+UNIT ns "Nanoseconds" = 10^-9 s
 UNIT min "Minutes" = 60s
 UNIT hour "Hours" = 60min
+UNIT day "Days" = 24hour
+UNIT week "Weeks" = 7day
+// Deliberately no conversion from months and years to the other types
+UNIT month "Months"
+UNIT year "Years" = 12month
 
 UNIT g "Grams"
 UNIT kg "Kilograms" = 1000g

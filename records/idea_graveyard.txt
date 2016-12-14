@@ -1,0 +1,12 @@
+Could add idea of absolute units (with | symbol at start):
+ - Cannot add two absolute together
+ - Abs + rel gives abs, rel + rel gives rel
+ - Abs minus abs is rel, abs minus rel is abs, rel minus abs is error, rel minus rel is rel
+ - Abs times anything disallowed, rel times rel is rel^2
+ - Abs divide anything disallowed
+ - Can you have an absolute composite unit or only absolute single unit?
+However, this gets awkward. So few units have absolute or relative.  Are angle-degrees an absolute or a relative unit?
+Temperature can have the distinction, but not distance
+Years can, and months, but not really days.  Hours can, but should use time really
+Coordinates can, but it gets fiddly to perform certain expressions.
+Overall, not worth the extra effort and confusion.

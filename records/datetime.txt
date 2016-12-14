@@ -1,0 +1,39 @@
+A full range of date/time types might be:
+  - Year
+  - Month [Enum]
+  - Day
+  - Year&Month
+  - Date (Year&Month&Day)
+  - DayOfWeek
+  - TimeOfDay (Hour&Minute&Second&Nanosecond)
+  - TimeZoned (TimeOfDay&Timezone)
+  - TimeDuration (Nanoseconds)
+  - DateDifference (Years&Months&Days)
+  - DateTime (Date&TimeOfDay)
+  - DateTimeZoned (DateTime&Timezone), where time zone may be offset or named time zone
+
+These types can just be a number with a unit:
+  - Year
+  - Month (then have constants for month names)
+  - Day
+  - DayOfWeek (then have constants for month names) - OPTIONAL
+  - TimeDuration
+
+These should be special:
+  - Date (Year&Month&Day)
+  - Year&Month
+  - TimeOfDay
+  - DateDifference (OPTIONAL, maybe omit to begin with)
+  - DateTime
+  - DateTimeZoned
+
+This can all form into one datetime type, which can be:
+  - Date:
+    - YMD
+    - YM
+  - Time:
+    - HMinS
+    - HMinSZ
+  - Datetime:
+    - YMBHMinS
+    - YMBHMinSZ

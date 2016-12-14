@@ -19,6 +19,8 @@ import records.data.RecordSet;
 import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.unit.Unit;
@@ -271,7 +273,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public Pair<List<Object>, Expression> date() throws InternalException, UserException
+            public Pair<List<Object>, Expression> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 return termDeep(maxLevels, type, l(), l());
             }
@@ -389,10 +391,10 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public Pair<List<Object>, FunctionInt<RecordSet, Column>> date() throws InternalException, UserException
+            public Pair<List<Object>, FunctionInt<RecordSet, Column>> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 Temporal value = new LocalDateGenerator().generate(r, gs);
-                return new Pair<>(Collections.singletonList(value), rs -> new MemoryTemporalColumn(rs, name, Collections.singletonList((Temporal) value)));
+                return new Pair<>(Collections.singletonList(value), rs -> new MemoryTemporalColumn(rs, name, new DateTimeInfo(DateTimeType.YEARMONTHDAY), Collections.singletonList((Temporal) value)));
             }
 
             @Override

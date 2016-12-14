@@ -18,6 +18,8 @@ import records.data.RecordSet;
 import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.unit.Unit;
@@ -27,7 +29,6 @@ import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExSupplier;
-import utility.Utility;
 
 import java.math.BigDecimal;
 import java.time.temporal.Temporal;
@@ -93,7 +94,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                 try
                 {
                     LocalDateGenerator gen = new LocalDateGenerator();
-                    return new MemoryTemporalColumn(rs, nextCol.get(), TestUtil.<Temporal>makeList(len, gen, sourceOfRandomness, generationStatus));
+                    return new MemoryTemporalColumn(rs, nextCol.get(), new DateTimeInfo(DateTimeType.YEARMONTHDAY), TestUtil.<Temporal>makeList(len, gen, sourceOfRandomness, generationStatus));
                 }
                 catch (InternalException e)
                 {
@@ -217,7 +218,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                         }
 
                         @Override
-                        public List<Object> date() throws InternalException, UserException
+                        public List<Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                         {
                             return Collections.singletonList(new LocalDateGenerator().generate(r, generationStatus));
                         }

@@ -7,6 +7,7 @@ import java.util.List;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
@@ -88,9 +89,9 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
                     }
 
                     @Override
-                    public Pair<ColumnStorage<?>, DataTypeValue> date() throws InternalException, UserException
+                    public Pair<ColumnStorage<?>, DataTypeValue> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                     {
-                        return simple(new DateColumnStorage());
+                        return simple(new DateColumnStorage(dateTimeInfo));
                     }
 
                     @Override
@@ -183,7 +184,7 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
             }
 
             @Override
-            public UnitType date() throws InternalException
+            public UnitType date(DateTimeInfo dateTimeInfo) throws InternalException
             {
                 return storeSimple();
             }

@@ -11,6 +11,7 @@ import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
 import records.data.RecordSet;
 import records.data.columntype.NumericColumnType;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
@@ -66,25 +67,32 @@ import java.util.stream.Collectors;
 public class DataType
 {
     // Flattened ADT.  kind is the head tag, other bits are null/non-null depending:
-    public static enum Kind {NUMBER, TEXT, DATE, BOOLEAN, TAGGED }
+    public static enum Kind {NUMBER, TEXT, DATETIME, BOOLEAN, TAGGED }
     final Kind kind;
     final @Nullable String taggedTypeName;
     final @Nullable NumberInfo numberInfo;
+    final @Nullable DateTimeInfo dateTimeInfo;
     final @Nullable List<TagType<DataType>> tagTypes;
 
-    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable Pair<String, List<TagType<DataType>>> tagInfo)
+    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<String, List<TagType<DataType>>> tagInfo)
     {
         this.kind = kind;
         this.numberInfo = numberInfo;
+        this.dateTimeInfo = dateTimeInfo;
         this.taggedTypeName = tagInfo == null ? null : tagInfo.getFirst();
         this.tagTypes = tagInfo == null ? null : tagInfo.getSecond();
     }
 
-    public static final DataType NUMBER = new DataType(Kind.NUMBER, NumberInfo.DEFAULT, null);
+    public static final DataType NUMBER = DataType.number(NumberInfo.DEFAULT);
     public static final DataType INTEGER = NUMBER;
-    public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null);
-    public static final DataType TEXT = new DataType(Kind.TEXT, null, null);
-    public static final DataType DATE = new DataType(Kind.DATE, null, null);
+    public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null, null);
+    public static final DataType TEXT = new DataType(Kind.TEXT, null, null, null);
+    public static final DataType DATE = DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY));
+
+    private static DataType date(DateTimeInfo dateTimeInfo)
+    {
+        return new DataType(Kind.DATETIME, null, dateTimeInfo, null);
+    }
 
     public static class NumberInfo
     {
@@ -147,7 +155,7 @@ public class DataType
     {
         R number(NumberInfo displayInfo) throws InternalException, E;
         R text() throws InternalException, E;
-        R date() throws InternalException, E;
+        R date(DateTimeInfo dateTimeInfo) throws InternalException, E;
         R bool() throws InternalException, E;
 
         R tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, E;
@@ -188,7 +196,7 @@ public class DataType
         }
 
         @Override
-        public R date() throws InternalException, UserException
+        public R date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
         {
             throw new InternalException("Unexpected date type");
         }
@@ -204,8 +212,8 @@ public class DataType
                 return visitor.number(numberInfo);
             case TEXT:
                 return visitor.text();
-            case DATE:
-                return visitor.date();
+            case DATETIME:
+                return visitor.date(dateTimeInfo);
             case BOOLEAN:
                 return visitor.bool();
             case TAGGED:
@@ -300,7 +308,7 @@ public class DataType
             }
 
             @Override
-            public String date() throws InternalException, UserException
+            public String date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 return "Date";
             }
@@ -328,13 +336,13 @@ public class DataType
 
     public static DataType tagged(String name, List<TagType<DataType>> tagTypes)
     {
-        return new DataType(Kind.TAGGED, null, new Pair<>(name, tagTypes));
+        return new DataType(Kind.TAGGED, null, null, new Pair<>(name, tagTypes));
     }
 
 
     public static DataType number(NumberInfo numberInfo)
     {
-        return new DataType(Kind.NUMBER, numberInfo, null);
+        return new DataType(Kind.NUMBER, numberInfo, null, null);
     }
 
     public static boolean canFitInOneNumeric(List<? extends TagType> tags) throws InternalException, UserException
@@ -395,7 +403,7 @@ public class DataType
             for (TagType tagType : this.tagTypes)
                 newTagTypes.getSecond().add(new TagType<>(tagType.getName(), tagType.getInner() == null ? null : tagType.getInner().copy(get, curIndex + 1)));
         }
-        return new DataTypeValue(kind, numberInfo, newTagTypes,
+        return new DataTypeValue(kind, numberInfo, dateTimeInfo, newTagTypes,
             (i, prog) -> (Number)get.getWithProgress(i, prog).get(curIndex),
             (i, prog) -> (String)get.getWithProgress(i, prog).get(curIndex),
             (i, prog) -> (Temporal) get.getWithProgress(i, prog).get(curIndex),
@@ -480,6 +488,16 @@ public class DataType
         else
             throw new InternalException("Requesting numeric display info for non-numeric type: " + this);
     }
+
+    @Pure
+    public DateTimeInfo getDateTimeInfo() throws InternalException
+    {
+        if (dateTimeInfo != null)
+            return dateTimeInfo;
+        else
+            throw new InternalException("Requesting date/time info for non-date/time type: " + this);
+    }
+
     public static <T extends DataType> @Nullable T checkSame(@Nullable T a, @Nullable T b, ExConsumer<String> onError) throws UserException, InternalException
     {
         ArrayList<T> ts = new ArrayList<T>();
@@ -539,7 +557,7 @@ public class DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column date() throws InternalException, UserException
+            public Column date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 List<Temporal> values = new ArrayList<>(allData.size());
                 for (List<ItemContext> row : allData)
@@ -549,7 +567,7 @@ public class DataType
                         throw new UserException("Expected quoted date value but found: \"" + row.get(columnIndex).getText() + "\"");
                     values.add(LocalDate.parse(c.getText()));
                 }
-                return new MemoryTemporalColumn(rs, columnId, values);
+                return new MemoryTemporalColumn(rs, columnId, dateTimeInfo, values);
             }
 
             @Override
@@ -620,7 +638,7 @@ public class DataType
                         }
 
                         @Override
-                        public List<Object> date() throws InternalException, UserException
+                        public List<Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                         {
                             StringContext string = item.string();
                             if (string == null)
@@ -683,7 +701,7 @@ public class DataType
             }
 
             @Override
-            public UnitType date() throws InternalException, InternalException
+            public UnitType date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
             {
                 b.t(FormatLexer.DATE, FormatLexer.VOCABULARY);
                 return UnitType.UNIT;
@@ -726,7 +744,7 @@ public class DataType
         {
             NumberContext n = type.number();
             Unit unit = mgr.loadUse(n.UNIT().getText());
-            return new DataType(Kind.NUMBER, new NumberInfo(unit, Integer.valueOf(n.DIGITS().getText())), null);
+            return DataType.number(new NumberInfo(unit, Integer.valueOf(n.DIGITS().getText())));
         }
         else if (type.tagRef() != null)
         {
@@ -767,5 +785,20 @@ public class DataType
                 return tags.stream().anyMatch(tt -> tt.getName().equals(tagName));
             }
         });
+    }
+
+    public static class DateTimeInfo
+    {
+        public static enum DateTimeType
+        {
+            YEARMONTHDAY, YEARMONTH, TIMEOFDAY, TIMEOFDAYZONED, DATETIME, DATETIMEZONED;
+        }
+
+        private final DateTimeType type;
+
+        public DateTimeInfo(DateTimeType type)
+        {
+            this.type = type;
+        }
     }
 }

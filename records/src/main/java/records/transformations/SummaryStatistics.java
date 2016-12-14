@@ -29,6 +29,7 @@ import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
@@ -202,7 +203,7 @@ public class SummaryStatistics extends Transformation
                     columns.add(srcCol.getType().applyGet(new DataTypeVisitorGet<FunctionInt<RecordSet, Column>>()
                     {
                         @Override
-                        public FunctionInt<RecordSet, Column> date(GetValue<Temporal> g) throws InternalException, UserException
+                        public FunctionInt<RecordSet, Column> date(DateTimeInfo dateTimeInfo, GetValue<Temporal> g) throws InternalException, UserException
                         {
                             throw new UnimplementedException();
                         }
@@ -632,7 +633,7 @@ public class SummaryStatistics extends Transformation
                 }
 
                 @Override
-                public Boolean date() throws InternalException, UserException
+                public Boolean date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                 {
                     switch (summaryType)
                     {
@@ -975,7 +976,7 @@ public class SummaryStatistics extends Transformation
                     }
 
                     @Override
-                    public List<Number> date(GetValue<Temporal> g) throws InternalException, UserException
+                    public List<Number> date(DateTimeInfo dateTimeInfo, GetValue<Temporal> g) throws InternalException, UserException
                     {
                         return Collections.emptyList();
                     }

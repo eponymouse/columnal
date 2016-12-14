@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.Vocabulary;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.TableId;
+import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
@@ -188,7 +189,7 @@ public class OutputBuilder
                 }
 
                 @Override
-                public String date(GetValue<Temporal> g) throws InternalException, UserException
+                public String date(DateTimeInfo dateTimeInfo, GetValue<Temporal> g) throws InternalException, UserException
                 {
                     return quoted(g.get(index).toString());
                 }

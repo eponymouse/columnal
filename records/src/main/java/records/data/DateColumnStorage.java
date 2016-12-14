@@ -2,6 +2,7 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import threadchecker.OnThread;
@@ -19,13 +20,16 @@ public class DateColumnStorage implements ColumnStorage<Temporal>
 {
     private final ArrayList<Temporal> values;
     private final DumbObjectPool<Temporal> pool = new DumbObjectPool<>(Temporal.class, 1000);
+    @OnThread(Tag.Any)
+    private final DateTimeInfo dateTimeInfo;
     @MonotonicNonNull
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private DataTypeValue dataType;
 
-    public DateColumnStorage()
+    public DateColumnStorage(DateTimeInfo dateTimeInfo)
     {
         values = new ArrayList<>();
+        this.dateTimeInfo = dateTimeInfo;
     }
 
     @Override
@@ -65,7 +69,7 @@ public class DateColumnStorage implements ColumnStorage<Temporal>
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.date((i, prog) -> get(i));
+            dataType = DataTypeValue.date(dateTimeInfo, (i, prog) -> get(i));
         }
         return dataType;
     }

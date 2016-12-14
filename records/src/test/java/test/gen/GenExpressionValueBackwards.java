@@ -19,6 +19,8 @@ import records.data.RecordSet;
 import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
@@ -244,7 +246,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public Expression date() throws InternalException, UserException
+            public Expression date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 return termDeep(maxLevels, type, l(), l());
             }
@@ -388,9 +390,9 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public Column date() throws InternalException, UserException
+            public Column date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return new MemoryTemporalColumn(rs, name, Collections.singletonList((Temporal)value.get(0)));
+                return new MemoryTemporalColumn(rs, name, new DateTimeInfo(DateTimeType.YEARMONTHDAY), Collections.singletonList((Temporal)value.get(0)));
             }
 
             @Override
@@ -436,7 +438,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public List<Object> date() throws InternalException, UserException
+            public List<Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 return Collections.singletonList(new LocalDateGenerator().generate(r, gs));
             }

@@ -81,7 +81,7 @@ public class HTMLImport
                 }
                 else if (columnInfo.type.isDate())
                 {
-                    columns.add(rs -> new MemoryTemporalColumn(rs, columnInfo.title, Utility.<String, Temporal>mapList(slice, s -> ((CleanDateColumnType)columnInfo.type).parse(s))));
+                    columns.add(rs -> new MemoryTemporalColumn(rs, columnInfo.title, ((CleanDateColumnType)columnInfo.type).getDateTimeInfo(), Utility.<String, Temporal>mapList(slice, s -> ((CleanDateColumnType)columnInfo.type).parse(s))));
                 }
                 else if (!columnInfo.type.isBlank())
                 {

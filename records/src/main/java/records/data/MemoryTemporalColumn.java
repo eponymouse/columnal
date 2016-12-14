@@ -1,6 +1,7 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -18,11 +19,11 @@ public class MemoryTemporalColumn extends Column
     private final ColumnId title;
     private final DateColumnStorage storage;
 
-    public MemoryTemporalColumn(RecordSet rs, ColumnId title, List<Temporal> list) throws InternalException
+    public MemoryTemporalColumn(RecordSet rs, ColumnId title, DateTimeInfo dateTimeInfo, List<Temporal> list) throws InternalException
     {
         super(rs);
         this.title = title;
-        this.storage = new DateColumnStorage();
+        this.storage = new DateColumnStorage(dateTimeInfo);
         this.storage.addAll(list);
     }
 
@@ -43,6 +44,6 @@ public class MemoryTemporalColumn extends Column
     @Override
     public Column shrink(RecordSet rs, int shrunkLength) throws InternalException
     {
-        return new MemoryTemporalColumn(rs, title, storage.getShrunk(shrunkLength));
+        return new MemoryTemporalColumn(rs, title, getType().getDateTimeInfo(), storage.getShrunk(shrunkLength));
     }
 }

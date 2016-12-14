@@ -2,6 +2,8 @@ package records.data.columntype;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
@@ -103,4 +105,8 @@ public class CleanDateColumnType extends ColumnType
         return getDateTimeFormatter().parse(s, query);
     }
 
+    public DateTimeInfo getDateTimeInfo()
+    {
+        return new DateTimeInfo(DateTimeType.YEARMONTHDAY);
+    }
 }

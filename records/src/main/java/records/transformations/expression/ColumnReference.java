@@ -10,6 +10,7 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
@@ -92,7 +93,7 @@ public class ColumnReference extends Expression
             }
 
             @Override
-            public Formula date() throws InternalException, UserException
+            public Formula date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 throw new UserException("Can't do dates...");
             }

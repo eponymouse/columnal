@@ -9,6 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
@@ -192,7 +193,7 @@ public class DisplayCache
                     }
 
                     @Override
-                    public DisplayValue date(GetValue<Temporal> g) throws InternalException, UserException
+                    public DisplayValue date(DateTimeInfo dateTimeInfo, GetValue<Temporal> g) throws InternalException, UserException
                     {
                         return new DisplayValue(g.getWithProgress(index, prog));
                     }

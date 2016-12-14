@@ -2,6 +2,7 @@ package records.data.datatype;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
@@ -45,7 +46,7 @@ public class DataTypeUtility
             }
 
             @Override
-            public List<Object> date() throws InternalException, UserException
+            public List<Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 return Collections.singletonList(LocalDate.ofEpochDay(index));
             }
@@ -129,7 +130,7 @@ public class DataTypeUtility
             }
 
             @Override
-            public DisplayValue date() throws InternalException, UserException
+            public DisplayValue date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 return new DisplayValue((Temporal) objects.get(index));
             }

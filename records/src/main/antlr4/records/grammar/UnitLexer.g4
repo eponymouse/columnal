@@ -25,3 +25,5 @@ SUFFIX : 'SUFFIX';
 ALIAS : 'ALIAS';
 
 IDENT : ~[0-9 \t\r\n^*/@()={}[\]]+;
+
+COMMENT : '//' ~[\r\n]* NEWLINE -> skip;
