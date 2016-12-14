@@ -432,7 +432,7 @@ public class Utility
 
     public static Number raiseNumber(Number lhs, Number rhs) throws UserException
     {
-        if (rhs instanceof BigDecimal || rhs instanceof BigInteger || rhs.longValue() != (long)rhs.intValue())
+        if (rhs instanceof BigDecimal || (rhs instanceof BigInteger && !rhs.equals(BigInteger.valueOf(((BigInteger)rhs).intValue()))) || rhs.longValue() != (long)rhs.intValue())
         {
             // We must use doubles, nothing else supported:
             double lhsd = lhs.doubleValue();
@@ -456,7 +456,7 @@ public class Utility
             }
             catch (ArithmeticException e)
             {
-                throw new UserException("Cannot store result of calculation: " + e.getLocalizedMessage());
+                throw new UserException("Cannot store result of calculation: " + e.getLocalizedMessage() + " " + lhs + "^" + rhs);
             }
         }
     }
