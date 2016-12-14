@@ -17,6 +17,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -65,7 +66,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
     @SuppressWarnings("nullness")
     public TypecheckInfo generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
-        GenExpressionValueBackwards gen = new GenExpressionValueBackwards();
+        GenExpressionValueForwards gen = new GenExpressionValueForwards();
         ExpressionValue valid = gen.generate(r, generationStatus);
         try
         {
@@ -104,6 +105,19 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                             DataType newType = pickNonNumericType(r);
                             //System.err.println("Changed old type " + type + " into " + newType + " when replacing " + p.getFirst());
                             return gen.makeOfType(newType).getSecond();
+                        }
+
+                        @Override
+                        @OnThread(value = Tag.Simulation, ignoreParent = true)
+                        public Expression getType(Predicate<DataType> mustMatch) throws InternalException, UserException
+                        {
+                            for (int i = 0; i < 100; i++)
+                            {
+                                DataType newType = pickType(r);
+                                if (mustMatch.test(newType))
+                                    return gen.makeOfType(newType).getSecond();
+                            }
+                            throw new RuntimeException("Type predicate too hard to satisfy");
                         }
                     });
                     if (failedCopy == null)
