@@ -33,7 +33,7 @@ public class NotEqualExpression extends BinaryOpExpression
     @Override
     protected String saveOp()
     {
-        return "!";
+        return "/=";
     }
 
     @Override
