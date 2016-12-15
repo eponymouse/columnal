@@ -93,8 +93,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
             (len, rs) -> {
                 try
                 {
-                    LocalDateGenerator gen = new LocalDateGenerator();
-                    return new MemoryTemporalColumn(rs, nextCol.get(), new DateTimeInfo(DateTimeType.YEARMONTHDAY), TestUtil.<Temporal>makeList(len, gen, sourceOfRandomness, generationStatus));
+                    return new MemoryTemporalColumn(rs, nextCol.get(), new DateTimeInfo(DateTimeType.YEARMONTHDAY), TestUtil.<Temporal>makeList(sourceOfRandomness, len, len, () -> TestUtil.generateDate(sourceOfRandomness, generationStatus)));
                 }
                 catch (InternalException e)
                 {
@@ -220,7 +219,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                         @Override
                         public List<Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                         {
-                            return Collections.singletonList(new LocalDateGenerator().generate(r, generationStatus));
+                            return Collections.singletonList(TestUtil.generateDate(r, generationStatus));
                         }
 
                         @Override

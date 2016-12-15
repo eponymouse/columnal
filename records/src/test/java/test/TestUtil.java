@@ -27,6 +27,7 @@ import utility.ExSupplier;
 import utility.Pair;
 import utility.Utility;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -321,5 +322,13 @@ public class TestUtil
     public static Number generateNumber(SourceOfRandomness r, GenerationStatus gs)
     {
         return new GenNumber().generate(r, gs);
+    }
+
+    private static LocalDate MIN_DATE = LocalDate.of(1, 1, 1);
+    private static LocalDate MAX_DATE = LocalDate.of(9999, 12, 31);
+
+    public static LocalDate generateDate(SourceOfRandomness r, GenerationStatus gs)
+    {
+        return LocalDate.ofEpochDay(r.nextLong(MIN_DATE.toEpochDay(), MAX_DATE.toEpochDay()));
     }
 }

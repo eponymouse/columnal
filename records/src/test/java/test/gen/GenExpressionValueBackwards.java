@@ -409,7 +409,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             @Override
             public List<Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return Collections.singletonList(new LocalDateGenerator().generate(r, gs));
+                return Collections.singletonList(TestUtil.generateDate(r, gs));
             }
 
             @Override

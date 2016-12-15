@@ -33,6 +33,17 @@ public abstract class FunctionDefinition
         return name;
     }
 
+    // Returns the type of the parameter if there's only one
+    protected @Nullable DataType checkSingleParam(List<DataType> params, ExConsumer<String> onError) throws InternalException, UserException
+    {
+        if (params.size() != 1)
+        {
+            onError.accept("Function takes one parameter, but has been given " + params.size());
+            return null;
+        }
+        return params.get(0);
+    }
+
     // For testing: give a unit list and parameter list that should fail typechecking
     public abstract Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws UserException, InternalException;
 }

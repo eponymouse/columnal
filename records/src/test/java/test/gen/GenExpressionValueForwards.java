@@ -406,7 +406,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
             @Override
             public Pair<List<Object>, FunctionInt<RecordSet, Column>> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                Temporal value = new LocalDateGenerator().generate(r, gs);
+                Temporal value = TestUtil.generateDate(r, gs);
                 return new Pair<>(Collections.singletonList(value), rs -> new MemoryTemporalColumn(rs, name, new DateTimeInfo(DateTimeType.YEARMONTHDAY), Collections.singletonList((Temporal) value)));
             }
 

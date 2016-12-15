@@ -36,13 +36,16 @@ abstract class SingleNumericInOutFunction extends FunctionDefinition
             onError.accept("Function \"" + getName() + "\" does not accept unit parameter");
             return null;
         }
-        if (params.size() != 1 || !params.get(0).isNumber())
+        @Nullable DataType paramType = checkSingleParam(params, onError);
+        if (paramType == null)
+            return null;
+        if (!paramType.isNumber())
         {
-            onError.accept("Function \"" + getName() + "\" takes exactly one parameter of numeric type");
+            onError.accept("Function \"" + getName() + "\" requires a parameter of numeric type");
             return null;
         }
 
-        return new Pair<>(makeInstance(), params.get(0));
+        return new Pair<>(makeInstance(), paramType);
     }
 
     protected abstract FunctionInstance makeInstance();

@@ -812,5 +812,18 @@ public class DataType
         {
             this.type = type;
         }
+
+        public boolean hasYearMonthDay()
+        {
+            switch (type)
+            {
+                case YEARMONTHDAY:
+                case DATETIME:
+                case DATETIMEZONED:
+                    return true;
+                default:
+                    return false;
+            }
+        }
     }
 }
