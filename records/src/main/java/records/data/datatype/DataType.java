@@ -310,7 +310,22 @@ public class DataType
             @Override
             public String date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return "Date";
+                switch (dateTimeInfo.type)
+                {
+                    case YEARMONTHDAY:
+                        return "DateYMD";
+                    case YEARMONTH:
+                        return "DateYM";
+                    case TIMEOFDAY:
+                        return "Time";
+                    case TIMEOFDAYZONED:
+                        return "TimeZ";
+                    case DATETIME:
+                        return "DateTime";
+                    case DATETIMEZONED:
+                        return "DateTimeZ";
+                }
+                throw new InternalException("Unknown date type: " + dateTimeInfo.type);
             }
 
             @Override
@@ -454,6 +469,7 @@ public class DataType
         if (kind != dataType.kind) return false;
         // Don't use equals here, use sameType (weaker, but accurate for type comparison)
         if (numberInfo != null ? !numberInfo.sameType(dataType.numberInfo) : dataType.numberInfo != null) return false;
+        if (dateTimeInfo != null ? !dateTimeInfo.sameType(dataType.dateTimeInfo) : dateTimeInfo != null) return false;
         return tagTypes != null ? tagTypes.equals(dataType.tagTypes) : dataType.tagTypes == null;
     }
 
@@ -463,6 +479,7 @@ public class DataType
         int result = kind.hashCode();
         // Must use specialised hashCode which matches sameType rather than equals
         result = 31 * result + (numberInfo != null ? numberInfo.hashCodeForType() : 0);
+        result = 31 * result + (dateTimeInfo != null ? dateTimeInfo.hashCodeForType() : 0);
         result = 31 * result + (tagTypes != null ? tagTypes.hashCode() : 0);
         return result;
     }
@@ -824,6 +841,21 @@ public class DataType
                 default:
                     return false;
             }
+        }
+
+        public DateTimeType getType()
+        {
+            return type;
+        }
+
+        public boolean sameType(@Nullable DateTimeInfo dateTimeInfo)
+        {
+            return dateTimeInfo != null && type == dateTimeInfo.type;
+        }
+
+        public int hashCodeForType()
+        {
+            return type.hashCode();
         }
     }
 }
