@@ -66,7 +66,7 @@ public class StringToDate extends FunctionDefinition
         return new Pair<>(Collections.emptyList(), Collections.singletonList(newExpressionOfDifferentType.getType(t -> {
             try
             {
-                return !t.isText() && (!t.isDateTime() || t.getDateTimeInfo().hasYearMonthDay());
+                return !t.isText() && (!t.isDateTime() || !t.getDateTimeInfo().hasYearMonthDay());
             }
             catch (InternalException e)
             {

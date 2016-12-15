@@ -2,7 +2,6 @@ package test.gen;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
-import com.pholser.junit.quickcheck.generator.java.time.LocalDateGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -33,6 +32,7 @@ import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.AndExpression;
 import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
@@ -49,6 +49,7 @@ import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
 import records.transformations.expression.TimesExpression;
 import records.transformations.expression.VarExpression;
+import records.transformations.function.StringToDate;
 import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
@@ -133,11 +134,9 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         return new Pair<>(value, expression);
     }
 
-    @SuppressWarnings("intern")
     public static DataType makeType(SourceOfRandomness r)
     {
-        // Leave out dates until we can actually make date values:
-        return r.choose(distinctTypes.stream().filter(t -> t != DataType.DATE).collect(Collectors.<DataType>toList()));
+        return r.choose(distinctTypes);
     }
 
     private Expression make(DataType type, List<Object> targetValue, int maxLevels) throws UserException, InternalException
@@ -215,7 +214,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             @Override
             public Expression date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return termDeep(maxLevels, type, l(), l());
+                return termDeep(maxLevels, type, l(() -> new CallExpression("date", new StringLiteral(targetValue.get(0).toString()))), l());
             }
 
             @Override

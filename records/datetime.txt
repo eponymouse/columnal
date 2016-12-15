@@ -37,3 +37,11 @@ This can all form into one datetime type, which can be:
   - Datetime:
     - YMBHMinS
     - YMBHMinSZ
+
+We can allow arithmetic on these:
+
+  (Date|DateTime +- year|month...)
+  (Date|DateTime +- day...)  [but not mix of day with year or month because ambiguous]
+  (Time|DateTime +- hour|min|sec...)
+
+Difference calculations must use function

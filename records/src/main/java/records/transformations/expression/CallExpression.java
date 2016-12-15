@@ -62,7 +62,7 @@ public class CallExpression extends Expression
     {
         @Nullable FunctionDefinition def = state.findFunction(functionName).orElse(null);
         if (def == null)
-            throw new UserException("Unknown function: " + data);
+            throw new UserException("Unknown function: " + functionName);
         this.definition = def;
         List<DataType> paramTypes = new ArrayList<>();
         for (Expression param : params)

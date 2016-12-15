@@ -11,6 +11,7 @@ public class FunctionList
     public static List<FunctionDefinition> FUNCTIONS = Arrays.asList(
         new Absolute(),
         new AsType(),
-        new Round()
+        new Round(),
+        new StringToDate()
     );
 }

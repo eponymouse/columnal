@@ -2,7 +2,6 @@ package test.gen;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
-import com.pholser.junit.quickcheck.generator.java.time.LocalDateGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -53,6 +52,7 @@ import utility.Utility;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.time.LocalDate;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -116,11 +116,9 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
         return make(type, 4);
     }
 
-    @SuppressWarnings("intern")
     public static DataType makeType(SourceOfRandomness r)
     {
-        // Leave out dates until we can actually make date values:
-        return r.choose(distinctTypes.stream().filter(t -> t != DataType.DATE).collect(Collectors.<DataType>toList()));
+        return r.choose(distinctTypes);
     }
 
     private Pair<List<Object>, Expression> make(DataType type, int maxLevels) throws UserException, InternalException
@@ -283,7 +281,11 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
             @Override
             public Pair<List<Object>, Expression> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return termDeep(maxLevels, type, l(), l());
+                return termDeep(maxLevels, type, l(() ->
+                {
+                    LocalDate date = TestUtil.generateDate(r, gs);
+                    return new Pair<>(Collections.singletonList(date), new CallExpression("date", new StringLiteral(date.toString())));
+                }), l());
             }
 
             @Override
@@ -452,7 +454,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
         */
 
         //TODO generate match expressions here (valid for all types)
-        if (!terminals.isEmpty() && (maxLevels <= 1 || deeper.isEmpty() || r.nextInt(0, 2) == 0))
+        if (deeper.isEmpty() || (!terminals.isEmpty() && (maxLevels <= 1 || deeper.isEmpty() || r.nextInt(0, 2) == 0)))
             return r.choose(terminals).make();
         else
             return r.choose(deeper).make();
