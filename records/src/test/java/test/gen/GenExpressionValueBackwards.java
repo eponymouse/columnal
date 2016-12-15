@@ -214,7 +214,24 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             @Override
             public Expression date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return termDeep(maxLevels, type, l(() -> new CallExpression("date", new StringLiteral(targetValue.get(0).toString()))), l());
+                return termDeep(maxLevels, type, l((ExpressionMaker)() -> {
+                    switch (dateTimeInfo.getType())
+                    {
+                        case YEARMONTHDAY:
+                            return new CallExpression("date", new StringLiteral(targetValue.get(0).toString()));
+                        case YEARMONTH:
+                            return new CallExpression("dateym", new StringLiteral(targetValue.get(0).toString()));
+                        case TIMEOFDAY:
+                            return new CallExpression("time", new StringLiteral(targetValue.get(0).toString()));
+                        case TIMEOFDAYZONED:
+                            return new CallExpression("timez", new StringLiteral(targetValue.get(0).toString()));
+                        case DATETIME:
+                            return new CallExpression("datetime", new StringLiteral(targetValue.get(0).toString()));
+                        case DATETIMEZONED:
+                            return new CallExpression("datetimez", new StringLiteral(targetValue.get(0).toString()));
+                    }
+                    throw new RuntimeException("No date generator for " + dateTimeInfo.getType());
+                }), l());
             }
 
             @Override

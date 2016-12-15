@@ -37,6 +37,7 @@ This can all form into one datetime type, which can be:
   - Datetime:
     - YMBHMinS
     - YMBHMinSZ
+Remember: the exact one of these is known upfront statically during type-check
 
 We can allow arithmetic on these:
 
@@ -45,3 +46,23 @@ We can allow arithmetic on these:
   (Time|DateTime +- hour|min|sec...)
 
 Difference calculations must use function
+
+
+So, functions needed:
+  date() - converts string|datetime to date
+  dateym() - converts string|datetime to date with only year and month
+  time() - converts string|datetime to time (no zone)
+  timez() - converts string|datetime to time (with zone)
+  datetime() - converts string to datetime (no zone)
+  datetimez() - converts string to datetime (with zone)
+  setzone() - converts datetime to datetimezoned, or time to timezoned
+  year() - gets year from date|datetime
+  month() - gets month from date|datetime
+  dayofmonth() - gets dayofmonth from date|datetime
+  hour() - gets hour from time|datetime
+  minute() - gets hour from time|datetime
+  second() - gets hour from time|datetime
+  zone() - gets timezone (as string) from time|datetime
+  formatdatetime() - formats date|time|datetime into string
+  daydiff() - gets number of days between two dates (not datetimes)
+  seconddiff() - gets number of seconds between two datetimes (both with zone or both not), or two times (both with zone or both not)

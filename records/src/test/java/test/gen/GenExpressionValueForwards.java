@@ -281,10 +281,15 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
             @Override
             public Pair<List<Object>, Expression> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return termDeep(maxLevels, type, l(() ->
+                return termDeep(maxLevels, type, l((ExpressionMaker)() ->
                 {
-                    LocalDate date = TestUtil.generateDate(r, gs);
-                    return new Pair<>(Collections.singletonList(date), new CallExpression("date", new StringLiteral(date.toString())));
+                    switch (dateTimeInfo.getType())
+                    {
+                        case YEARMONTHDAY:
+                            LocalDate date = TestUtil.generateDate(r, gs);
+                            return new Pair<>(Collections.singletonList(date), new CallExpression("date", new StringLiteral(date.toString())));
+                    }
+                    throw new RuntimeException("No date generator for " + dateTimeInfo.getType());
                 }), l());
             }
 

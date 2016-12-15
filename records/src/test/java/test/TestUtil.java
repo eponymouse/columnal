@@ -12,6 +12,8 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.unit.UnitManager;
@@ -272,7 +274,12 @@ public class TestUtil
             distinctTypes = Arrays.<DataType>asList(
                 DataType.BOOLEAN,
                 DataType.TEXT,
-                DataType.DATE,
+                DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
+                DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)),
+                DataType.date(new DateTimeInfo(DateTimeType.DATETIME)),
+                DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)),
+                DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)),
+                DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)),
                 DataType.NUMBER,
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m"), 0)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m^2"), 0)),
