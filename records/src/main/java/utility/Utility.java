@@ -423,7 +423,8 @@ public class Utility
         {
             long lhsLong = lhs.longValue();
             long rhsLong = rhs.longValue();
-            if (lhsLong % rhsLong == 0)
+            // Exact division possible:
+            if (lhsLong % rhsLong == 0 && (lhsLong != Long.MIN_VALUE || rhsLong != -1))
                 return lhsLong / rhsLong;
             else
                 return divideNumbers(toBigDecimal(lhs), toBigDecimal(rhs));
