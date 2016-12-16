@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
+import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.ExBiConsumer;
@@ -117,7 +118,7 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @Override
-    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws UserException, InternalException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {
         // Most binary ops require same type, so this is typical (can always override):
         if (r.nextBoolean())

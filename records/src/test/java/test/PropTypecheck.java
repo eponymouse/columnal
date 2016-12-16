@@ -59,7 +59,7 @@ public class PropTypecheck
         }
     }
 
-    @Property(trials = 10000)
+    @Property(trials = 2000)
     @SuppressWarnings("nullness")
     public void propTypeCheckFail(@From(GenTypecheckFail.class) GenTypecheckFail.TypecheckInfo src) throws InternalException, UserException
     {

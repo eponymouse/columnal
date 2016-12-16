@@ -58,7 +58,7 @@ public class AsType extends FunctionDefinition
     }
 
     @Override
-    public Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws UserException, InternalException
+    public Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {
         // TODO also return units which can convert
         return new Pair<>(Collections.emptyList(), Collections.singletonList(newExpressionOfDifferentType.getNonNumericType()));

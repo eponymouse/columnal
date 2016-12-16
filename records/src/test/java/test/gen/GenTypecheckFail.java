@@ -11,11 +11,15 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
+import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenTypecheckFail.TypecheckInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
+import utility.Utility;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -119,7 +123,27 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                             }
                             throw new RuntimeException("Type predicate too hard to satisfy");
                         }
-                    });
+
+                        @Override
+                        @OnThread(value = Tag.Simulation, ignoreParent = true)
+                        public List<Expression> getTypes(int amount, ExFunction<List<DataType>, Boolean> mustMatch) throws InternalException, UserException
+                        {
+                            for (int i = 0; i < 100; i++)
+                            {
+                                List<DataType> types = new ArrayList<>();
+                                for (int j = 0; j < amount; j++)
+                                    types.add(pickType(r));
+                                if (mustMatch.apply(types))
+                                {
+                                    List<Expression> expressions = new ArrayList<>();
+                                    for (int j = 0; j < amount; j++)
+                                        expressions.add(gen.makeOfType(types.get(j)).getSecond());
+                                    return expressions;
+                                }
+                            }
+                            throw new RuntimeException("Type predicate too hard to satisfy");
+                        }
+                    }, DummyManager.INSTANCE.getUnitManager());
                     if (failedCopy == null)
                         return null;
                     else

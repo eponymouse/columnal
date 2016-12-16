@@ -8,6 +8,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
+import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
@@ -104,7 +105,7 @@ public class AddSubtractExpression extends NaryOpExpression
     }
 
     @Override
-    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         int index = r.nextInt(expressions.size());
         return copy(makeNullList(index, newExpressionOfDifferentType.getDifferentType(type)));

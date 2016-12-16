@@ -13,6 +13,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
+import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
@@ -47,6 +48,7 @@ import records.transformations.expression.MatchExpression.PatternMatchExpression
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
+import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -318,7 +320,7 @@ public abstract class Expression
     // If this item can't make a type failure by itself (e.g. a literal) then returns null
     // Otherwise, uses the given generator to make a copy of itself which contains a type failure
     // in this node.  E.g. an equals expression might replace the lhs or rhs with a different type
-    public abstract @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws InternalException, UserException;
+    public abstract @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException;
 
     @Override
     public abstract boolean equals(@Nullable Object o);
@@ -333,5 +335,6 @@ public abstract class Expression
         public Expression getNonNumericType() throws InternalException, UserException;
 
         public Expression getType(Predicate<DataType> mustMatch) throws InternalException, UserException;
+        public List<Expression> getTypes(int amount, ExFunction<List<DataType>, Boolean> mustMatch) throws InternalException, UserException;
     }
 }

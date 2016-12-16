@@ -6,11 +6,15 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.Expression;
+import records.transformations.expression.Expression._test_TypeVary;
 import utility.ExConsumer;
 import utility.Pair;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
@@ -52,4 +56,15 @@ public abstract class SimplyTypedFunctionDefinition extends FunctionDefinition
     }
 
     protected abstract List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException;
+
+    @Override
+    public Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
+    {
+        if (r.nextInt(10) == 0)
+            return new Pair<>(Collections.singletonList(Unit.SCALAR), Collections.emptyList());
+        int paramAmount = r.nextInt(5);
+        return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.getTypes(paramAmount, types ->
+            !getOverloads(unitManager).stream().anyMatch(ft -> ft.matches(types))
+        ));
+    }
 }

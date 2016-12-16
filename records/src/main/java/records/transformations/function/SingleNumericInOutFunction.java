@@ -51,7 +51,7 @@ abstract class SingleNumericInOutFunction extends FunctionDefinition
     protected abstract FunctionInstance makeInstance();
 
     @Override
-    public Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws UserException, InternalException
+    public Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {
         //TODO randomly pick from a few other options (e.g. zero param, 2 param, units)
         return new Pair<>(Collections.emptyList(), Collections.singletonList(newExpressionOfDifferentType.getNonNumericType()));

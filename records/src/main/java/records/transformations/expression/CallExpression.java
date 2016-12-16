@@ -1,7 +1,6 @@
 package records.transformations.expression;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -10,6 +9,7 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.unit.Unit;
+import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
@@ -19,7 +19,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.Pair;
-import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -124,11 +123,11 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws InternalException, UserException
+    public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         if (definition == null)
             throw new InternalException("Calling _test_typeFailure after type check failure");
-        Pair<List<Unit>, List<Expression>> badParams = definition._test_typeFailure(r, newExpressionOfDifferentType);
+        Pair<List<Unit>, List<Expression>> badParams = definition._test_typeFailure(r, newExpressionOfDifferentType, unitManager);
         return new CallExpression(functionName, badParams.getFirst(), badParams.getSecond());
     }
 

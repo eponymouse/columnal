@@ -104,25 +104,6 @@ public abstract class ToTemporalFunction extends SimplyTypedFunctionDefinition
         return Arrays.asList(args);
     }
 
-    @Override
-    public Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws UserException, InternalException
-    {
-        throw new UnimplementedException();
-        //TODO
-        //TODO test giving units
-        /*
-        return new Pair<>(Collections.emptyList(), Collections.singletonList(newExpressionOfDifferentType.getType(t -> {
-            try
-            {
-                return !t.isText() && (!t.isDateTime() || checkTemporalParam(t.getDateTimeInfo(), s -> {}));
-            }
-            catch (InternalException | UserException e)
-            {
-                return false;
-            }
-        })));*/
-    }
-
     List<FunctionType> fromString()
     {
         return Arrays.asList(
