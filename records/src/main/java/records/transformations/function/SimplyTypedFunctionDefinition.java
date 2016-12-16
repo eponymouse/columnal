@@ -42,11 +42,11 @@ public abstract class SimplyTypedFunctionDefinition extends FunctionDefinition
 
         if (possibilities.size() == 0)
         {
-            onError.accept("Function cannot accept parameters of types (" + params.stream().map(t -> t.toString()).collect(Collectors.joining(", ")) + ")");
+            onError.accept("Function " + getName() + " cannot accept parameters of types (" + params.stream().map(t -> t.toString()).collect(Collectors.joining(", ")) + ")");
             return null;
         }
         if (possibilities.size() > 1)
-            throw new InternalException("Function has multiple possible overloads for types (" + params.stream().map(t -> t.toString()).collect(Collectors.joining(", ")) + ")");
+            throw new InternalException("Function " + getName() + " has multiple possible overloads for types (" + params.stream().map(t -> t.toString()).collect(Collectors.joining(", ")) + ")");
 
         return possibilities.get(0).getFunctionAndReturnType();
     }

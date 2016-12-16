@@ -41,7 +41,7 @@ public class PropRunExpression
             assertTrue("{{{" + src.expression.toString() + "}}} should have been " + toString(src.value) + " but was " + toString(actualValue) + " columns: " + src.recordSet.getColumnIds().stream().map(Object::toString).collect(Collectors.joining(", ")) + " " + src.recordSet.debugGetVals(0),
                 Utility.compareLists(src.value, actualValue, new BigDecimal("0.000000001")) == 0);
         }
-        catch (ArithmeticException | InternalException | UserException e)
+        catch (ArithmeticException | InternalException | UserException | ClassCastException e)
         {
             System.err.println(src.expression.toString() + " " + src.recordSet.debugGetVals());
             throw e;

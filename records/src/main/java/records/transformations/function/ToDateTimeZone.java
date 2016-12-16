@@ -81,7 +81,7 @@ public class ToDateTimeZone extends ToTemporalFunction
     @Override
     Temporal fromTemporal(TemporalAccessor temporalAccessor)
     {
-        return ZonedDateTime.from(temporalAccessor);
+        return ZonedDateTime.from(temporalAccessor).withFixedOffsetZone();
     }
 
     private class D_TZ extends TaglessFunctionInstance
@@ -90,7 +90,7 @@ public class ToDateTimeZone extends ToTemporalFunction
         public Object getSimpleValue(int rowIndex, List<Object> simpleParams) throws UserException, InternalException
         {
             OffsetTime t = (OffsetTime)simpleParams.get(1);
-            return ZonedDateTime.of((LocalDate)simpleParams.get(0), t.toLocalTime(), t.getOffset());
+            return ZonedDateTime.of((LocalDate)simpleParams.get(0), t.toLocalTime(), t.getOffset()).withFixedOffsetZone();
         }
     }
 
@@ -99,7 +99,7 @@ public class ToDateTimeZone extends ToTemporalFunction
         @Override
         public Object getSimpleValue(int rowIndex, List<Object> simpleParams) throws UserException, InternalException
         {
-            return ZonedDateTime.of((LocalDateTime)simpleParams.get(0), ZoneId.of((String)simpleParams.get(1)));
+            return ZonedDateTime.of((LocalDateTime)simpleParams.get(0), ZoneId.of((String)simpleParams.get(1))).withFixedOffsetZone();
         }
     }
 
@@ -108,7 +108,7 @@ public class ToDateTimeZone extends ToTemporalFunction
         @Override
         public Object getSimpleValue(int rowIndex, List<Object> simpleParams) throws UserException, InternalException
         {
-            return ZonedDateTime.of(LocalDateTime.of((LocalDate) simpleParams.get(0), (LocalTime)simpleParams.get(1)), ZoneId.of((String) simpleParams.get(2)));
+            return ZonedDateTime.of(LocalDateTime.of((LocalDate) simpleParams.get(0), (LocalTime)simpleParams.get(1)), ZoneId.of((String) simpleParams.get(2))).withFixedOffsetZone();
         }
     }
 }

@@ -24,6 +24,7 @@ import records.error.UserException;
 import records.grammar.MainLexer;
 import records.transformations.expression.TypeState;
 import test.gen.GenNumber;
+import test.gen.GenZoneId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExSupplier;
@@ -33,6 +34,8 @@ import utility.Utility;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -355,6 +358,21 @@ public class TestUtil
 
     public static ZonedDateTime generateDateTimeZoned(SourceOfRandomness r, GenerationStatus gs)
     {
-        return ZonedDateTime.of(generateDateTime(r, gs), new ZoneIdGenerator().generate(r, gs));
+        return ZonedDateTime.of(generateDateTime(r, gs), generateZone(r, gs));
+    }
+
+    public static ZoneId generateZone(SourceOfRandomness r, GenerationStatus gs)
+    {
+        return new GenZoneId().generate(r, gs);
+    }
+
+    public static ZoneOffset generateZoneOffset(SourceOfRandomness r, GenerationStatus gs)
+    {
+        return ZoneOffset.ofTotalSeconds(r.nextInt(-12*60*60, 12*60*60));
+    }
+
+    public static String generateZoneString(SourceOfRandomness r, GenerationStatus gs)
+    {
+        return generateZone(r, gs).toString();
     }
 }

@@ -45,6 +45,7 @@ import records.transformations.expression.TagExpression;
 import records.transformations.expression.TimesExpression;
 import test.DummyManager;
 import test.TestUtil;
+import test.gen.GenExpressionValueBackwards.ExpressionMaker;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -57,8 +58,11 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -68,10 +72,16 @@ import java.util.stream.Collectors;
 import static test.TestUtil.distinctTypes;
 
 /**
- * Generates expressions and resulting values by working forwards.
+ * Generates expressions and resulting values by working the value forwards.
  * At each step, we generate an expression and then work out what its
  * value will be.  This allows us to test numeric expressions because
  * we can track its exact expected value, accounting for lost precision.
+ * Types still go backwards.  i.e. we first decide we want say a year-month.
+ * Then we decide to make one using the year-month function from two integers.
+ * Then we generate the integers, say two literals, then feed those values back
+ * down the tree to see what year-month value we end up with.
+ * In contrast, going backwards we would start with the year-month value we want,
+ * then generate the integer values to match.
  */
 public class GenExpressionValueForwards extends Generator<ExpressionValue>
 {
@@ -286,7 +296,78 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
             @Override
             public Pair<List<Object>, Expression> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return termDeep(maxLevels, type, l((ExpressionMaker)() ->
+                List<ExpressionMaker> deep = new ArrayList<>();
+                // We don't use the from-integer versions here with deeper expressions because we can't
+                // guarantee the values are in range, so we'd likely get an error.
+                // Instead we use the narrowing versions or the ones that compose valid values:
+                switch(dateTimeInfo.getType())
+                {
+                    case YEARMONTHDAY:
+                        deep.add(() -> {
+                            Pair<List<Object>, Expression> dateTime = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            return new Pair<>(Collections.singletonList(LocalDate.from((TemporalAccessor) dateTime.getFirst().get(0))), new CallExpression("date", dateTime.getSecond()));
+                        });
+                        deep.add(() -> {
+                            Pair<List<Object>, Expression> dateTime = make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), maxLevels - 1);
+                            YearMonth yearMonth = YearMonth.from((TemporalAccessor) dateTime.getFirst().get(0));
+                            int day = r.nextInt(1, 28);
+                            return new Pair<>(Collections.singletonList(LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), day)), new CallExpression("date", dateTime.getSecond(), new NumericLiteral(day, getUnit("day"))));
+                        });
+                        break;
+                    case YEARMONTH:
+                        deep.add(() -> {
+                            Pair<List<Object>, Expression> dateTime = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.YEARMONTHDAY, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            return new Pair<>(Collections.singletonList(YearMonth.from((TemporalAccessor) dateTime.getFirst().get(0))), new CallExpression("dateym", dateTime.getSecond()));
+                        });
+                        break;
+                    case TIMEOFDAY:
+                        deep.add(() -> {
+                            Pair<List<Object>, Expression> dateTime = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAYZONED, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            return new Pair<>(Collections.singletonList(LocalTime.from((TemporalAccessor) dateTime.getFirst().get(0))), new CallExpression("time", dateTime.getSecond()));
+                        });
+                        break;
+                    case TIMEOFDAYZONED:
+                        deep.add(() -> {
+                            Pair<List<Object>, Expression> dateTime = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            return new Pair<>(Collections.singletonList(OffsetTime.from((TemporalAccessor) dateTime.getFirst().get(0))), new CallExpression("timez", dateTime.getSecond()));
+                        });
+                        deep.add(() -> {
+                            Pair<List<Object>, Expression> dateTime = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
+                            ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
+                            return new Pair<>(Collections.singletonList(OffsetTime.of((LocalTime)dateTime.getFirst().get(0), zone)), new CallExpression("timez", dateTime.getSecond(), new StringLiteral(zone.toString())));
+                        });
+                        break;
+                    case DATETIME:
+                        // down cast:
+                        deep.add(() -> {
+                            Pair<List<Object>, Expression> dateTime = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            return new Pair<>(Collections.singletonList(LocalDateTime.from((TemporalAccessor) dateTime.getFirst().get(0))), new CallExpression("datetime", dateTime.getSecond()));
+                        });
+                        // date + time:
+                        deep.add(() -> {
+                            Pair<List<Object>, Expression> date = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
+                            Pair<List<Object>, Expression> time = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
+                            return new Pair<>(Collections.singletonList(LocalDateTime.of((LocalDate) date.getFirst().get(0), (LocalTime) time.getFirst().get(0))), new CallExpression("datetime", date.getSecond(), time.getSecond()));
+                        });
+                        break;
+                    case DATETIMEZONED:
+                        // datetime + zone:
+                        deep.add(() -> {
+                            Pair<List<Object>, Expression> dateTime = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIME)))), maxLevels - 1);
+                            ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
+                            return new Pair<>(Collections.singletonList(ZonedDateTime.of((LocalDateTime)dateTime.getFirst().get(0), zone).withFixedOffsetZone()), new CallExpression("datetimez", dateTime.getSecond(), new StringLiteral(zone.toString())));
+                        });
+                        // date+time+zone:
+                        deep.add(() -> {
+                            Pair<List<Object>, Expression> date = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
+                            Pair<List<Object>, Expression> time = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
+                            ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
+                            return new Pair<>(Collections.singletonList(ZonedDateTime.of((LocalDate)date.getFirst().get(0), (LocalTime) time.getFirst().get(0), zone).withFixedOffsetZone()), new CallExpression("datetimez", date.getSecond(), time.getSecond(), new StringLiteral(zone.toString())));
+                        });
+                        break;
+                }
+                List<ExpressionMaker> shallow = new ArrayList<>();
+                shallow.add((ExpressionMaker)() ->
                 {
                     switch (dateTimeInfo.getType())
                     {
@@ -307,11 +388,51 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                             return new Pair<>(Collections.singletonList(dateTime), new CallExpression("datetime", new StringLiteral(dateTime.toString())));
                         case DATETIMEZONED:
                             ZonedDateTime zonedDateTime = TestUtil.generateDateTimeZoned(r, gs);
-                            return new Pair<>(Collections.singletonList(zonedDateTime), new CallExpression("datetimez", new StringLiteral(zonedDateTime.toString())));
+                            return new Pair<>(Collections.singletonList(zonedDateTime.withFixedOffsetZone()), new CallExpression("datetimez", new StringLiteral(zonedDateTime.toString())));
 
                     }
                     throw new RuntimeException("No date generator for " + dateTimeInfo.getType());
-                }), l()); //TODO use the composite versions of functions like datetime (where you pass a date and a time)
+                });
+
+                switch (dateTimeInfo.getType())
+                {
+                    case YEARMONTHDAY:
+                        shallow.add(() -> {
+                            int year = r.nextInt(1, 9999);
+                            int month = r.nextInt(1, 12);
+                            int day = r.nextInt(1, 28);
+                            return new Pair<>(Collections.singletonList(LocalDate.of(year, month, day)), new CallExpression("date",
+                                new NumericLiteral(year, getUnit("year")),
+                                new NumericLiteral(month, getUnit("month")),
+                                new NumericLiteral(day, getUnit("day"))
+                            ));
+                        });
+                        break;
+                    case YEARMONTH:
+                        shallow.add(() -> {
+                            int year = r.nextInt(1, 9999);
+                            int month = r.nextInt(1, 12);
+                            return new Pair<>(Collections.singletonList(YearMonth.of(year, month)), new CallExpression("dateym",
+                                new NumericLiteral(year, getUnit("year")),
+                                new NumericLiteral(month, getUnit("month"))
+                            ));
+                        });
+                        break;
+                    case TIMEOFDAY:
+                        shallow.add(() -> {
+                            int hour = r.nextInt(0, 23);
+                            int minute = r.nextInt(0, 59);
+                            int second = r.nextInt(0, 59);
+                            int nano = r.nextInt(0, 999999999);
+                            return new Pair<>(Collections.singletonList(LocalTime.of(hour, minute, second, nano)), new CallExpression("time",
+                                new NumericLiteral(hour, getUnit("hour")),
+                                new NumericLiteral(minute, getUnit("min")),
+                                new NumericLiteral(BigDecimal.valueOf(nano).divide(BigDecimal.valueOf(1_000_000_000)).add(BigDecimal.valueOf(second)), getUnit("s"))
+                            ));
+                        });
+                }
+
+                return termDeep(maxLevels, type, shallow, deep);
             }
 
             @Override
@@ -389,6 +510,12 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
         // So we have src * x = dest
         // This can be rearranged to x = dest/src
         return dest.divide(src);
+    }
+
+    private Unit getUnit(String name) throws InternalException, UserException
+    {
+        UnitManager m = DummyManager.INSTANCE.getUnitManager();
+        return m.loadUse(name);
     }
 
     private Unit makeUnit() throws InternalException, UserException

@@ -184,7 +184,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                         }
                     }
                     // Now add one more to make the difference:
-                    BigInteger diff = ((BigInteger)targetValue.get(0)).subtract(curTotal);
+                    BigInteger diff = (targetValue.get(0) instanceof BigInteger ? (BigInteger)targetValue.get(0) : BigInteger.valueOf(((Number)targetValue.get(0)).longValue())).subtract(curTotal);
                     boolean add = r.nextBoolean();
                     expressions.add(make(type, Collections.singletonList(add ? diff : diff.negate()), maxLevels - 1));
                     ops.add(add ? Op.ADD : Op.SUBTRACT);
@@ -230,25 +230,96 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                 switch (dateTimeInfo.getType())
                 {
                     case YEARMONTHDAY:
-                        DateTimeType dateTimeType = r.choose(Arrays.asList(DateTimeType.DATETIME, DateTimeType.DATETIMEZONED, DateTimeType.YEARMONTHDAY));
+                    {
+                        DateTimeType dateTimeType = r.choose(Arrays.asList(DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
                         DataType t = DataType.date(new DateTimeInfo(dateTimeType));
                         deep.add(() -> new CallExpression("date", make(t, Collections.singletonList(makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue.get(0))), maxLevels - 1)));
+                        LocalDate target = (LocalDate) targetValue.get(0);
+                        deep.add(() -> new CallExpression("date",
+                            make(DataType.number(new NumberInfo(getUnit("year"), 0)), Collections.singletonList(target.getYear()), maxLevels - 1),
+                            make(DataType.number(new NumberInfo(getUnit("month"), 0)), Collections.singletonList(target.getMonthValue()), maxLevels - 1),
+                            make(DataType.number(new NumberInfo(getUnit("day"), 0)), Collections.singletonList(target.getDayOfMonth()), maxLevels - 1)
+                        ));
+                        deep.add(() -> new CallExpression("date",
+                            make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), Collections.singletonList(YearMonth.of(target.getYear(), target.getMonth())), maxLevels - 1),
+                            make(DataType.number(new NumberInfo(getUnit("day"), 0)), Collections.singletonList(target.getDayOfMonth()), maxLevels - 1)
+                        ));
+                    }
                         break;
                     case YEARMONTH:
+                    {
+                        DateTimeType dateTimeType = r.choose(Arrays.asList(DateTimeType.YEARMONTHDAY, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
+                        DataType t = DataType.date(new DateTimeInfo(dateTimeType));
+                        deep.add(() -> new CallExpression("dateym", make(t, Collections.singletonList(makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue.get(0))), maxLevels - 1)));
+                        YearMonth target = (YearMonth) targetValue.get(0);
+                        deep.add(() -> new CallExpression("dateym",
+                            make(DataType.number(new NumberInfo(getUnit("year"), 0)), Collections.singletonList(target.getYear()), maxLevels - 1),
+                            make(DataType.number(new NumberInfo(getUnit("month"), 0)), Collections.singletonList(target.getMonthValue()), maxLevels - 1)
+                        ));
+                    }
                         break;
                     case TIMEOFDAY:
+                    {
+                        DateTimeType dateTimeType = r.choose(Arrays.asList(DateTimeType.TIMEOFDAYZONED, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
+                        DataType t = DataType.date(new DateTimeInfo(dateTimeType));
+                        deep.add(() -> new CallExpression("time", make(t, Collections.singletonList(makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue.get(0))), maxLevels - 1)));
+                        LocalTime target = (LocalTime) targetValue.get(0);
+                        deep.add(() -> new CallExpression("time",
+                            make(DataType.number(new NumberInfo(getUnit("hour"), 0)), Collections.singletonList(target.getHour()), maxLevels - 1),
+                            make(DataType.number(new NumberInfo(getUnit("min"), 0)), Collections.singletonList(target.getMinute()), maxLevels - 1),
+                            // We only generate integers in this class, so generate nanos then divide:
+                            new DivideExpression(make(DataType.number(new NumberInfo(getUnit("s"), 0)), Collections.singletonList((long)target.getSecond() * 1_000_000_000L + target.getNano()), maxLevels - 1), new NumericLiteral(1_000_000_000L, null))
+                        ));
+                    }
                         break;
                     case TIMEOFDAYZONED:
+                    {
+                        DateTimeType dateTimeType = r.choose(Arrays.asList(DateTimeType.DATETIMEZONED));
+                        DataType t = DataType.date(new DateTimeInfo(dateTimeType));
+                        deep.add(() -> new CallExpression("timez", make(t, Collections.singletonList(makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue.get(0))), maxLevels - 1)));
+                        OffsetTime target = (OffsetTime) targetValue.get(0);
+                        deep.add(() -> new CallExpression("timez",
+                            make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), Collections.singletonList(target.toLocalTime()), maxLevels - 1),
+                            make(DataType.TEXT, Collections.singletonList(target.getOffset().toString()), maxLevels - 1)
+                        ));
+                    }
                         break;
                     case DATETIME:
+                    {
+                        LocalDateTime target = (LocalDateTime) targetValue.get(0);
+                        //date+time+zone:
+                        deep.add(() -> new CallExpression("datetime",
+                            make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), Collections.singletonList(target.toLocalDate()), maxLevels - 1),
+                            make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), Collections.singletonList(target.toLocalTime()), maxLevels - 1)
+                        ));
+                    }
                         break;
                     case DATETIMEZONED:
+                    {
+                        ZonedDateTime target = (ZonedDateTime) targetValue.get(0);
+                        //datetime+zone
+                        deep.add(() -> new CallExpression("datetimez",
+                            make(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), Collections.singletonList(target.toLocalDateTime()), maxLevels - 1),
+                            make(DataType.TEXT, Collections.singletonList(target.getOffset().toString()), maxLevels - 1)
+                        ));
+                        //date + time&zone
+                        deep.add(() -> new CallExpression("datetimez",
+                            make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), Collections.singletonList(target.toLocalDate()), maxLevels - 1),
+                            make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)), Collections.singletonList(target.toOffsetDateTime().toOffsetTime()), maxLevels - 1)
+                        ));
+                        //date+time+zone:
+                        deep.add(() -> new CallExpression("datetimez",
+                            make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), Collections.singletonList(target.toLocalDate()), maxLevels - 1),
+                            make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), Collections.singletonList(target.toLocalTime()), maxLevels - 1),
+                            make(DataType.TEXT, Collections.singletonList(target.getOffset().toString()), maxLevels - 1)
+                        ));
+                    }
                         break;
                 }
 
                 return termDeep(maxLevels, type, l((ExpressionMaker)() -> {
                     return new CallExpression(getCreator(dateTimeInfo.getType()), new StringLiteral(targetValue.get(0).toString()));
-                }), l());
+                }), deep);
             }
 
             @Override
@@ -360,6 +431,9 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
     }
 
     // Makes a value which, when the right fields are extracted, will give the value target
+    // That is, you pass a type which is "bigger" than the intended (e.g. datetimezone)
+    // and a target value (e.g. a timezoned), and it will make a datetimezone
+    // value which you can downcast to your target value.
     private Temporal makeTemporalToMatch(DateTimeType type, TemporalAccessor target)
     {
         Function<TemporalField, Integer> tf = field -> {
@@ -367,8 +441,22 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                 return target.get(field);
             if (field.equals(ChronoField.YEAR))
                 return r.nextInt(1, 9999);
+            if (field.equals(ChronoField.MONTH_OF_YEAR))
+                return r.nextInt(1, 12);
+            if (field.equals(ChronoField.DAY_OF_MONTH))
+                return r.nextInt(1, 28);
+            if (field.equals(ChronoField.HOUR_OF_DAY))
+                return r.nextInt(0, 23);
+            if (field.equals(ChronoField.MINUTE_OF_HOUR))
+                return r.nextInt(0, 59);
+            if (field.equals(ChronoField.SECOND_OF_MINUTE))
+                return r.nextInt(0, 59);
+            if (field.equals(ChronoField.NANO_OF_SECOND))
+                return r.nextInt(0, 999999999);
+            if (field.equals(ChronoField.OFFSET_SECONDS))
+                return r.nextInt(-12*60*60, 12*60*60);
 
-            throw new RuntimeException("Unknown temporal field: " + field);
+            throw new RuntimeException("Unknown temporal field: " + field + " on type " + target);
         };
 
         switch (type)
@@ -387,7 +475,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                 if (target instanceof ZonedDateTime)
                     return (ZonedDateTime)target; //Preserves zone name properly; this is the only type that can have a named zone
                 else
-                    return ZonedDateTime.of(tf.apply(ChronoField.YEAR), tf.apply(ChronoField.MONTH_OF_YEAR), tf.apply(ChronoField.DAY_OF_MONTH), tf.apply(ChronoField.HOUR_OF_DAY), tf.apply(ChronoField.MINUTE_OF_HOUR), tf.apply(ChronoField.SECOND_OF_MINUTE), tf.apply(ChronoField.NANO_OF_SECOND), ZoneId.ofOffset("", ZoneOffset.ofTotalSeconds(tf.apply(ChronoField.OFFSET_SECONDS))));
+                    return ZonedDateTime.of(tf.apply(ChronoField.YEAR), tf.apply(ChronoField.MONTH_OF_YEAR), tf.apply(ChronoField.DAY_OF_MONTH), tf.apply(ChronoField.HOUR_OF_DAY), tf.apply(ChronoField.MINUTE_OF_HOUR), tf.apply(ChronoField.SECOND_OF_MINUTE), tf.apply(ChronoField.NANO_OF_SECOND), ZoneId.ofOffset("", ZoneOffset.ofTotalSeconds(tf.apply(ChronoField.OFFSET_SECONDS)))).withFixedOffsetZone();
         }
         throw new RuntimeException("Cannot match " + type);
     }
@@ -414,6 +502,12 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             m.loadUse("hour"),
             m.loadUse("$")
         ));
+    }
+
+    private Unit getUnit(String name) throws InternalException, UserException
+    {
+        UnitManager m = DummyManager.INSTANCE.getUnitManager();
+        return m.loadUse(name);
     }
 
     private BigInteger genInt()
@@ -513,7 +607,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                             r.nextBoolean() ?
                                 new GenZoneId().generate(r, gs) :
                                 ZoneId.ofOffset("", new ZoneOffsetGenerator().generate(r, gs))
-                        ));
+                        ).withFixedOffsetZone());
                     default:
                         throw new InternalException("Unknown date type: " + dateTimeInfo.getType());
                 }
