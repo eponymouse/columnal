@@ -8,6 +8,7 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
+import records.error.UnimplementedException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
@@ -36,9 +37,9 @@ import java.util.stream.Collectors;
 /**
  * Created by neil on 15/12/2016.
  */
-public abstract class StringToTemporalFunction extends FunctionDefinition
+public abstract class ToTemporalFunction extends SimplyTypedFunctionDefinition
 {
-    public StringToTemporalFunction(String name)
+    public ToTemporalFunction(String name)
     {
         super(name);
     }
@@ -104,48 +105,12 @@ public abstract class StringToTemporalFunction extends FunctionDefinition
     }
 
     @Override
-    public final @Nullable Pair<FunctionInstance, DataType> typeCheck(List<Unit> units, List<DataType> params, ExConsumer<String> onError, UnitManager mgr) throws InternalException, UserException
-    {
-        // Must be either temporal, or string + string
-        if (params.size() == 0 || params.size() > 2)
-        {
-            onError.accept("Must supply either 1 or 2 parameters");
-            return null;
-        }
-        if (params.size() == 1 && params.get(0).isDateTime())
-        {
-            DataType t = params.get(0);
-            if (!t.isDateTime() || !checkTemporalParam(t.getDateTimeInfo(), onError))
-                return null;
-            return new Pair<>(new FromTemporalInstance(), DataType.date(getResultType()));
-        }
-        else
-        {
-            return checkTwoParam(params, onError);
-        }
-
-    }
-
-    @Nullable
-    Pair<FunctionInstance, DataType> checkTwoParam(List<DataType> params, ExConsumer<String> onError) throws UserException, InternalException
-    {
-        if (!params.stream().allMatch(DataType::isText))
-        {
-            onError.accept("Parameters must be text (source string to convert, and a format string)");
-            return null;
-        }
-        return new Pair<>(new FromStringInstance(), DataType.date(getResultType()));
-    }
-
-    // Return true if fine, false if not
-    abstract boolean checkTemporalParam(DateTimeInfo srcTemporalType, ExConsumer<String> onError) throws InternalException, UserException;
-
-    abstract DateTimeInfo getResultType();
-
-    @Override
     public Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType) throws UserException, InternalException
     {
+        throw new UnimplementedException();
+        //TODO
         //TODO test giving units
+        /*
         return new Pair<>(Collections.emptyList(), Collections.singletonList(newExpressionOfDifferentType.getType(t -> {
             try
             {
@@ -155,20 +120,30 @@ public abstract class StringToTemporalFunction extends FunctionDefinition
             {
                 return false;
             }
-        })));
+        })));*/
     }
+
+    List<FunctionType> fromString()
+    {
+        return Arrays.asList(
+            new FunctionType(FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT),
+            new FunctionType(FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT, DataType.TEXT)
+        );
+    }
+
+    abstract DateTimeInfo getResultType();
 
     static enum F {FRAC_SEC_OPT, SEC_OPT, MIN, HOUR, HOUR12, AMPM, DAY, MONTH_TEXT, MONTH_NUM, YEAR2, YEAR4 }
 
-    private class FromStringInstance extends FunctionInstance
+    private class FromStringInstance extends TaglessFunctionInstance
     {
         private ArrayList<Pair<List<DateTimeFormatter>, Integer>> usedFormats = new ArrayList<>();
         private ArrayList<List<DateTimeFormatter>> unusedFormats = new ArrayList<>(getFormats());
 
         @Override
-        public List<Object> getValue(int rowIndex, List<List<Object>> params) throws UserException
+        public Object getSimpleValue(int rowIndex, List<Object> params) throws UserException
         {
-            String src = (String) params.get(0).get(0);
+            String src = (String) params.get(0);
 
             for (int i = 0; i < usedFormats.size(); i++)
             {
@@ -181,7 +156,7 @@ public abstract class StringToTemporalFunction extends FunctionDefinition
                     // We only need to sort if we passed the one before us (equal is still fine):
                     if (i > 0 && usedFormats.get(i).getSecond() < usedFormats.get(i - 1).getSecond())
                         Collections.sort(usedFormats, Comparator.comparing(Pair::getSecond));
-                    return Collections.singletonList(possibilities.get(0).getSecond());
+                    return possibilities.get(0).getSecond();
                 }
                 else if (possibilities.size() > 1)
                 {
@@ -200,7 +175,7 @@ public abstract class StringToTemporalFunction extends FunctionDefinition
                     iterator.remove();
                     // No need to sort; frequency 1 will always be at end of list:
                     usedFormats.add(new Pair<>(formats, 1));
-                    return Collections.singletonList(possibilities.get(0).getSecond());
+                    return possibilities.get(0).getSecond();
                 }
                 else if (possibilities.size() > 1)
                 {
@@ -208,7 +183,7 @@ public abstract class StringToTemporalFunction extends FunctionDefinition
                 }
             }
 
-            throw new UserException("Could not parse date/time: \"" + src + "\"");
+            throw new UserException("Function " + getName() + " could not parse date/time: \"" + src + "\"");
         }
 
         @NotNull
@@ -219,7 +194,7 @@ public abstract class StringToTemporalFunction extends FunctionDefinition
             {
                 try
                 {
-                    possibilities.add(new Pair<>(dateTimeFormatter, dateTimeFormatter.parse(src, StringToTemporalFunction.this::fromTemporal)));
+                    possibilities.add(new Pair<>(dateTimeFormatter, dateTimeFormatter.parse(src, ToTemporalFunction.this::fromTemporal)));
                 }
                 catch (DateTimeParseException e)
                 {
@@ -233,14 +208,14 @@ public abstract class StringToTemporalFunction extends FunctionDefinition
     // If two formats may be mistaken for each other, put them in the same inner list:
     protected abstract List<List<@NonNull DateTimeFormatter>> getFormats();
 
-    private class FromTemporalInstance extends FunctionInstance
+    class FromTemporalInstance extends TaglessFunctionInstance
     {
         @Override
-        public List<Object> getValue(int rowIndex, List<List<Object>> params) throws UserException
+        public Object getSimpleValue(int rowIndex, List<Object> params) throws UserException
         {
             try
             {
-                return Collections.singletonList(fromTemporal((TemporalAccessor) params.get(0).get(0)));
+                return fromTemporal((TemporalAccessor) params.get(0));
             }
             catch (DateTimeException e)
             {

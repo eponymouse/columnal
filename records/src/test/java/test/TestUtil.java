@@ -4,6 +4,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
 import com.pholser.junit.quickcheck.generator.java.time.LocalTimeGenerator;
+import com.pholser.junit.quickcheck.generator.java.time.ZoneIdGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;
@@ -32,6 +33,7 @@ import utility.Utility;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -349,5 +351,10 @@ public class TestUtil
     public static LocalDateTime generateDateTime(SourceOfRandomness r, GenerationStatus gs)
     {
         return LocalDateTime.of(generateDate(r, gs), generateTime(r, gs));
+    }
+
+    public static ZonedDateTime generateDateTimeZoned(SourceOfRandomness r, GenerationStatus gs)
+    {
+        return ZonedDateTime.of(generateDateTime(r, gs), new ZoneIdGenerator().generate(r, gs));
     }
 }

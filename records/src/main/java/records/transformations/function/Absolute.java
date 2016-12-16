@@ -31,17 +31,17 @@ public class Absolute extends SingleNumericInOutFunction
     @Override
     protected FunctionInstance makeInstance()
     {
-        return new FunctionInstance()
+        return new TaglessFunctionInstance()
         {
             @Override
-            public List<Object> getValue(int rowIndex, List<List<Object>> params)
+            public Object getSimpleValue(int rowIndex, List<Object> params) throws UserException, InternalException
             {
-                return Collections.singletonList(Utility.<Number>withNumber(params.get(0).get(0), l -> {
+                return Utility.<Number>withNumber(params.get(0), l -> {
                     if (l == Long.MIN_VALUE)
                         return BigInteger.valueOf(l).negate();
                     else
                         return Math.abs(l);
-                }, BigInteger::abs, BigDecimal::abs));
+                }, BigInteger::abs, BigDecimal::abs);
             }
         };
     }

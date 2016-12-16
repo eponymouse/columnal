@@ -89,11 +89,11 @@ public abstract class RecordSet
                             Utility.addStyleClass(container, "number-display");
                             Text prefix = new Text(item.getUnit().getDisplayPrefix());
                             Utility.addStyleClass(prefix, "number-display-prefix");
-                            String integerPart = Utility.getIntegerPart(n);
+                            String integerPart = Utility.getIntegerPart(n).toString();
                             integerPart = integerPart.replace("-", "\u2012");
                             Text whole = new Text(integerPart);
                             Utility.addStyleClass(whole, "number-display-int");
-                            String fracPart = Utility.getFracPart(n);
+                            String fracPart = Utility.getFracPartAsString(n);
                             while (fracPart.length() < item.getMinimumDecimalPlaces())
                                 fracPart += "0";
                             Text frac = new Text(fracPart.isEmpty() ? "" : ("." + fracPart));

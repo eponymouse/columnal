@@ -34,7 +34,7 @@ public abstract class FunctionDefinition
     }
 
     // Returns the type of the parameter if there's only one
-    protected @Nullable DataType checkSingleParam(List<DataType> params, ExConsumer<String> onError) throws InternalException, UserException
+    protected static @Nullable DataType checkSingleParam(List<DataType> params, ExConsumer<String> onError) throws InternalException, UserException
     {
         if (params.size() != 1)
         {

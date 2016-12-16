@@ -55,6 +55,9 @@ import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.OffsetTime;
+import java.time.YearMonth;
+import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -290,12 +293,21 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                         case YEARMONTHDAY:
                             LocalDate date = TestUtil.generateDate(r, gs);
                             return new Pair<>(Collections.singletonList(date), new CallExpression("date", new StringLiteral(date.toString())));
+                        case YEARMONTH:
+                            YearMonth ym = YearMonth.from(TestUtil.generateDate(r, gs));
+                            return new Pair<>(Collections.singletonList(ym), new CallExpression("dateym", new StringLiteral(ym.toString())));
                         case TIMEOFDAY:
                             LocalTime time = TestUtil.generateTime(r, gs);
                             return new Pair<>(Collections.singletonList(time), new CallExpression("time", new StringLiteral(time.toString())));
+                        case TIMEOFDAYZONED:
+                            OffsetTime timez = OffsetTime.from(TestUtil.generateDateTimeZoned(r, gs));
+                            return new Pair<>(Collections.singletonList(timez), new CallExpression("timez", new StringLiteral(timez.toString())));
                         case DATETIME:
-                            LocalDateTime t = TestUtil.generateDateTime(r, gs);
-                            return new Pair<>(Collections.singletonList(t), new CallExpression("datetime", new StringLiteral(t.toString())));
+                            LocalDateTime dateTime = TestUtil.generateDateTime(r, gs);
+                            return new Pair<>(Collections.singletonList(dateTime), new CallExpression("datetime", new StringLiteral(dateTime.toString())));
+                        case DATETIMEZONED:
+                            ZonedDateTime zonedDateTime = TestUtil.generateDateTimeZoned(r, gs);
+                            return new Pair<>(Collections.singletonList(zonedDateTime), new CallExpression("datetimez", new StringLiteral(zonedDateTime.toString())));
 
                     }
                     throw new RuntimeException("No date generator for " + dateTimeInfo.getType());

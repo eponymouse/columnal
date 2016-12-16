@@ -49,9 +49,7 @@ import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.OrExpression;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
-import records.transformations.expression.TimesExpression;
 import records.transformations.expression.VarExpression;
-import records.transformations.function.StringToDate;
 import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
@@ -62,12 +60,18 @@ import utility.Utility;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
-import java.math.MathContext;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalField;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -220,23 +224,30 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             @Override
             public Expression date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
+                List<ExpressionMaker> deep = new ArrayList<ExpressionMaker>();
+                deep.add(() -> new CallExpression(getCreator(dateTimeInfo.getType()), make(DataType.TEXT, Collections.singletonList(targetValue.get(0).toString()), maxLevels - 1)));
+
+                switch (dateTimeInfo.getType())
+                {
+                    case YEARMONTHDAY:
+                        DateTimeType dateTimeType = r.choose(Arrays.asList(DateTimeType.DATETIME, DateTimeType.DATETIMEZONED, DateTimeType.YEARMONTHDAY));
+                        DataType t = DataType.date(new DateTimeInfo(dateTimeType));
+                        deep.add(() -> new CallExpression("date", make(t, Collections.singletonList(makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue.get(0))), maxLevels - 1)));
+                        break;
+                    case YEARMONTH:
+                        break;
+                    case TIMEOFDAY:
+                        break;
+                    case TIMEOFDAYZONED:
+                        break;
+                    case DATETIME:
+                        break;
+                    case DATETIMEZONED:
+                        break;
+                }
+
                 return termDeep(maxLevels, type, l((ExpressionMaker)() -> {
-                    switch (dateTimeInfo.getType())
-                    {
-                        case YEARMONTHDAY:
-                            return new CallExpression("date", new StringLiteral(targetValue.get(0).toString()));
-                        case YEARMONTH:
-                            return new CallExpression("dateym", new StringLiteral(targetValue.get(0).toString()));
-                        case TIMEOFDAY:
-                            return new CallExpression("time", new StringLiteral(targetValue.get(0).toString()));
-                        case TIMEOFDAYZONED:
-                            return new CallExpression("timez", new StringLiteral(targetValue.get(0).toString()));
-                        case DATETIME:
-                            return new CallExpression("datetime", new StringLiteral(targetValue.get(0).toString()));
-                        case DATETIMEZONED:
-                            return new CallExpression("datetimez", new StringLiteral(targetValue.get(0).toString()));
-                    }
-                    throw new RuntimeException("No date generator for " + dateTimeInfo.getType());
+                    return new CallExpression(getCreator(dateTimeInfo.getType()), new StringLiteral(targetValue.get(0).toString()));
                 }), l());
             }
 
@@ -326,6 +337,59 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                 return termDeep(maxLevels, type, terminals, nonTerm);
             }
         });
+    }
+    
+    private String getCreator(DateTimeType t)
+    {
+        switch (t)
+        {
+            case YEARMONTHDAY:
+                return "date";
+            case YEARMONTH:
+                return "dateym";
+            case TIMEOFDAY:
+                return "time";
+            case TIMEOFDAYZONED:
+                return "timez";
+            case DATETIME:
+                return "datetime";
+            case DATETIMEZONED:
+                return "datetimez";
+        }
+        throw new RuntimeException("Unknown date type: " + t);
+    }
+
+    // Makes a value which, when the right fields are extracted, will give the value target
+    private Temporal makeTemporalToMatch(DateTimeType type, TemporalAccessor target)
+    {
+        Function<TemporalField, Integer> tf = field -> {
+            if (target.isSupported(field))
+                return target.get(field);
+            if (field.equals(ChronoField.YEAR))
+                return r.nextInt(1, 9999);
+
+            throw new RuntimeException("Unknown temporal field: " + field);
+        };
+
+        switch (type)
+        {
+            case YEARMONTHDAY:
+                return LocalDate.of(tf.apply(ChronoField.YEAR), tf.apply(ChronoField.MONTH_OF_YEAR), tf.apply(ChronoField.DAY_OF_MONTH));
+            case YEARMONTH:
+                return YearMonth.of(tf.apply(ChronoField.YEAR), tf.apply(ChronoField.MONTH_OF_YEAR));
+            case TIMEOFDAY:
+                return LocalTime.of(tf.apply(ChronoField.HOUR_OF_DAY), tf.apply(ChronoField.MINUTE_OF_HOUR), tf.apply(ChronoField.SECOND_OF_MINUTE), tf.apply(ChronoField.NANO_OF_SECOND));
+            case TIMEOFDAYZONED:
+                return OffsetTime.of(tf.apply(ChronoField.HOUR_OF_DAY), tf.apply(ChronoField.MINUTE_OF_HOUR), tf.apply(ChronoField.SECOND_OF_MINUTE), tf.apply(ChronoField.NANO_OF_SECOND), ZoneOffset.ofTotalSeconds(tf.apply(ChronoField.OFFSET_SECONDS)));
+            case DATETIME:
+                return LocalDateTime.of(tf.apply(ChronoField.YEAR), tf.apply(ChronoField.MONTH_OF_YEAR), tf.apply(ChronoField.DAY_OF_MONTH), tf.apply(ChronoField.HOUR_OF_DAY), tf.apply(ChronoField.MINUTE_OF_HOUR), tf.apply(ChronoField.SECOND_OF_MINUTE), tf.apply(ChronoField.NANO_OF_SECOND));
+            case DATETIMEZONED:
+                if (target instanceof ZonedDateTime)
+                    return (ZonedDateTime)target; //Preserves zone name properly; this is the only type that can have a named zone
+                else
+                    return ZonedDateTime.of(tf.apply(ChronoField.YEAR), tf.apply(ChronoField.MONTH_OF_YEAR), tf.apply(ChronoField.DAY_OF_MONTH), tf.apply(ChronoField.HOUR_OF_DAY), tf.apply(ChronoField.MINUTE_OF_HOUR), tf.apply(ChronoField.SECOND_OF_MINUTE), tf.apply(ChronoField.NANO_OF_SECOND), ZoneId.ofOffset("", ZoneOffset.ofTotalSeconds(tf.apply(ChronoField.OFFSET_SECONDS))));
+        }
+        throw new RuntimeException("Cannot match " + type);
     }
 
     // What unit do you have to multiply src by to get dest?
@@ -447,7 +511,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                         // Can be geographical or pure offset:
                         return Collections.singletonList(ZonedDateTime.of(TestUtil.generateDateTime(r, gs),
                             r.nextBoolean() ?
-                                new ZoneIdGenerator().generate(r, gs) :
+                                new GenZoneId().generate(r, gs) :
                                 ZoneId.ofOffset("", new ZoneOffsetGenerator().generate(r, gs))
                         ));
                     default:

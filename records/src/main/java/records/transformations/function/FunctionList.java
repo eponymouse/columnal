@@ -12,9 +12,11 @@ public class FunctionList
         new Absolute(),
         new AsType(),
         new Round(),
-        new StringToDate(),
-        new StringToDateTime(),
-        new StringToTime()
-
+        new ToDate(),
+        new ToDateTime(),
+        new ToDateTimeZone(),
+        new ToTime(),
+        new ToTimeAndZone(),
+        new ToYearMonth()
     );
 }

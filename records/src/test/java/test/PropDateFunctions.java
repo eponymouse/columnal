@@ -11,22 +11,26 @@ import org.junit.runner.RunWith;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.data.datatype.DataType.NumberInfo;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionInstance;
-import records.transformations.function.StringToDate;
-import records.transformations.function.StringToDateTime;
-import records.transformations.function.StringToTime;
+import records.transformations.function.ToDate;
+import records.transformations.function.ToDateTime;
+import records.transformations.function.ToDateTimeZone;
+import records.transformations.function.ToTime;
 import test.gen.GenDate;
+import test.gen.GenZoneId;
 import utility.Pair;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -58,10 +62,6 @@ public class PropDateFunctions
         Object o = strToDate(src.toString());
         assertEquals(LocalDate.class, o.getClass());
         assertEquals(src, o);
-        // Test with date input:
-        o = runFunction1(src, DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), new StringToDate());
-        assertEquals(LocalDate.class, o.getClass());
-        assertEquals(src, o);
     }
 
     @Property
@@ -71,9 +71,25 @@ public class PropDateFunctions
         Object o = strToTime(src.toString());
         assertEquals(LocalTime.class, o.getClass());
         assertEquals(src, o);
-        // Test with date input:
-        o = runFunction1(src, DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), new StringToTime());
-        assertEquals(LocalTime.class, o.getClass());
+    }
+
+    @Property
+    public void testStringToDateTime(@From(GenDate.class) LocalDate date, LocalTime time) throws Throwable
+    {
+        LocalDateTime src = LocalDateTime.of(date, time);
+        // Test with string input:
+        Object o = runFunction1(src.toString(), DataType.TEXT, new ToDateTime());
+        assertEquals(LocalDateTime.class, o.getClass());
+        assertEquals(src, o);
+    }
+
+    @Property
+    public void testStringToDateTimeZone(@From(GenDate.class) LocalDate date, LocalTime time, @From(GenZoneId.class) ZoneId zone) throws Throwable
+    {
+        ZonedDateTime src = ZonedDateTime.of(date, time, zone);
+        // Test with string input:
+        Object o = runFunction1(src.toLocalDateTime().toString() + " " + zone.toString(), DataType.TEXT, new ToDateTimeZone());
+        assertEquals(ZonedDateTime.class, o.getClass());
         assertEquals(src, o);
     }
 
@@ -124,6 +140,10 @@ public class PropDateFunctions
             for (Pair<LocalDate, String> date : dates)
             {
                 checkDateTime(LocalDateTime.of(date.getFirst(), time.getFirst()), date.getSecond() + " " + time.getSecond());
+                for (String zone : Arrays.asList("UTC", " UTC", "+00:00", "+05:30", "-03:00", "UTC-07:00", "America/New_York", " Europe/London"))
+                {
+                    checkDateTimeZone(ZonedDateTime.of(date.getFirst(), time.getFirst(), ZoneId.of(zone.trim())), date.getSecond() + " " + time.getSecond() + zone);
+                }
             }
         }
     }
@@ -142,17 +162,22 @@ public class PropDateFunctions
 
     private void checkDateTime(LocalDateTime of, String src) throws Throwable
     {
-        assertEquals(of, runFunction1(src, DataType.TEXT, new StringToDateTime()));
+        assertEquals(of, runFunction1(src, DataType.TEXT, new ToDateTime()));
+    }
+
+    private void checkDateTimeZone(ZonedDateTime of, String src) throws Throwable
+    {
+        assertEquals(of, runFunction1(src, DataType.TEXT, new ToDateTimeZone()));
     }
 
     private Object strToTime(String src) throws Throwable
     {
-        return runFunction1(src, DataType.TEXT, new StringToTime());
+        return runFunction1(src, DataType.TEXT, new ToTime());
     }
 
     private Object strToDate(String src) throws Throwable
     {
-        return runFunction1(src, DataType.TEXT, new StringToDate());
+        return runFunction1(src, DataType.TEXT, new ToDate());
     }
 
     // Tests single numeric input, numeric output function

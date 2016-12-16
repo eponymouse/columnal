@@ -1,5 +1,7 @@
 package records.transformations.function;
 
+import records.error.InternalException;
+import records.error.UserException;
 import utility.Utility;
 
 import java.math.BigDecimal;
@@ -22,12 +24,12 @@ public class Round extends SingleNumericInOutFunction
     @Override
     protected FunctionInstance makeInstance()
     {
-        return new FunctionInstance()
+        return new TaglessFunctionInstance()
         {
             @Override
-            public List<Object> getValue(int rowIndex, List<List<Object>> params)
+            public Object getSimpleValue(int rowIndex, List<Object> params) throws UserException, InternalException
             {
-                return Collections.singletonList(Utility.<Number>withNumber(params.get(0).get(0), x -> x, x -> x, d -> d.setScale(0, RoundingMode.HALF_EVEN)));
+                return Utility.<Number>withNumber(params.get(0), x -> x, x -> x, d -> d.setScale(0, RoundingMode.HALF_EVEN));
             }
         };
     }

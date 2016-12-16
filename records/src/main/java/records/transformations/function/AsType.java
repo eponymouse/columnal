@@ -64,7 +64,7 @@ public class AsType extends FunctionDefinition
         return new Pair<>(Collections.emptyList(), Collections.singletonList(newExpressionOfDifferentType.getNonNumericType()));
     }
 
-    private static class Instance extends FunctionInstance
+    private static class Instance extends TaglessFunctionInstance
     {
         private final @Nullable BigDecimal scaleBD;
         private final long scaleInt;
@@ -84,9 +84,9 @@ public class AsType extends FunctionDefinition
         }
 
         @Override
-        public List<Object> getValue(int rowIndex, List<List<Object>> params)
+        public Object getSimpleValue(int rowIndex, List<Object> params)
         {
-            return Collections.singletonList(Utility.multiplyNumbers((Number)params.get(0).get(0), scaleBD != null ? scaleBD : scaleInt));
+            return Utility.multiplyNumbers((Number)params.get(0), scaleBD != null ? scaleBD : scaleInt);
         }
     }
 }

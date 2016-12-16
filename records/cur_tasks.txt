@@ -9,7 +9,7 @@ Add functions, such as:
  c(col): gets single value from that column
 Add tests for date formats and date functions
 Allow double dollar as an anonymous variable name in matches
-Add tests for runtime errors (division by zero, incomplete pattern matches, if we allow those)
+Add tests for runtime errors (division by zero, invalid dates, incomplete pattern matches, if we allow those)
 Look up Unicode string collations, both for user values (in columns) and things like function names, constructor names
 Implement and test complete load/save, including units and types sections
 Intern the strings

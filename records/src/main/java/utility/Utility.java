@@ -190,7 +190,8 @@ public class Utility
             return -1; // B must have been longer
     }
 
-    public static String getFracPart(Number number)
+    // Gets the fractional part as a String
+    public static String getFracPartAsString(Number number)
     {
         if (number instanceof BigDecimal)
         {
@@ -203,14 +204,28 @@ public class Utility
             return "";
     }
 
-    public static String getIntegerPart(Number number)
+    // getFracPar(5.06, 3), will give 60.
+    public static Number getFracPart(Number number, int bottomDigit)
     {
         if (number instanceof BigDecimal)
         {
-            return ((BigDecimal)number).toBigInteger().toString();
+            // From http://stackoverflow.com/a/30761234/412908
+            BigDecimal bd = ((BigDecimal)number).stripTrailingZeros();
+            return bd.remainder(BigDecimal.ONE).movePointRight(bottomDigit).abs().toBigInteger();
+
         }
         else
-            return number.toString();
+            return 0;
+    }
+
+    public static Number getIntegerPart(Number number)
+    {
+        if (number instanceof BigDecimal)
+        {
+            return ((BigDecimal)number).toBigInteger();
+        }
+        else
+            return number;
     }
 
     public static BigDecimal toBigDecimal(Number n)
@@ -462,7 +477,7 @@ public class Utility
         }
     }
 
-    public static <T> T withNumber(Object num, Function<Long, T> withLong, Function<BigInteger, T> withBigInt, Function<BigDecimal, T> withBigDecimal)
+    public static <T> T withNumber(Object num, ExFunction<Long, T> withLong, ExFunction<BigInteger, T> withBigInt, ExFunction<BigDecimal, T> withBigDecimal) throws InternalException, UserException
     {
         if (num instanceof BigDecimal)
             return withBigDecimal.apply((BigDecimal) num);
@@ -472,11 +487,38 @@ public class Utility
             return withLong.apply(((Number)num).longValue());
     }
 
-    public static boolean isIntegral(Object o)
+    public static boolean isIntegral(Object o) throws UserException, InternalException
     {
         // From http://stackoverflow.com/a/12748321/412908
         return withNumber(o, x -> true, x -> true, bd -> {
             return bd.signum() == 0 || bd.scale() <= 0 || bd.stripTrailingZeros().scale() <= 0;
+        });
+    }
+
+    public static int requireInteger(Object o) throws UserException, InternalException
+    {
+        return withNumber(o, l -> {
+            if (l.longValue() != l.intValue())
+                throw new UserException("Number too large: " + l);
+            return l.intValue();
+        }, bi -> {
+            try
+            {
+                return bi.intValueExact();
+            }
+            catch (ArithmeticException e)
+            {
+                throw new UserException("Number too large: " + bi);
+            }
+        }, bd -> {
+            try
+            {
+                return bd.intValueExact();
+            }
+            catch (ArithmeticException e)
+            {
+                throw new UserException("Number not an integer or too large: " + bd);
+            }
         });
     }
 
