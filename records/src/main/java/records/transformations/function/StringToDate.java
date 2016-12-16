@@ -1,7 +1,6 @@
 package records.transformations.function;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import records.data.columntype.CleanDateColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -10,11 +9,17 @@ import records.error.UserException;
 import utility.ExConsumer;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+
+import static records.transformations.function.StringToTemporalFunction.F.DAY;
+import static records.transformations.function.StringToTemporalFunction.F.MONTH_NUM;
+import static records.transformations.function.StringToTemporalFunction.F.MONTH_TEXT;
+import static records.transformations.function.StringToTemporalFunction.F.YEAR2;
+import static records.transformations.function.StringToTemporalFunction.F.YEAR4;
 
 /**
  * Created by neil on 14/12/2016.
@@ -26,44 +31,25 @@ public class StringToDate extends StringToTemporalFunction
         super("date");
     }
 
-    public static List<List<String>> formats = Arrays.asList(
-        l("dd/MMM/yyyy"),
-        l("dd-MMM-yyyy"),
-        l("dd MMM yyyy"),
-        l("d/MMM/yyyy"),
-        l("d-MMM-yyyy"),
-        l("d MMM yyyy"),
-        l("MMM d yyyy"),
-        l("MMM dd yyyy"),
-        l("yyyy-MMM-dd"),
-        l("yyyy-MM-dd"),
-        l("yyyy-MM-d"),
-        l("yyyy-M-dd"),
-        l("yyyy-M-d"),
-        l("d/M/yyyy", "M/d/yyyy"),
-        l("dd/M/yyyy", "MM/d/yyyy"),
-        l("d/MM/yyyy", "M/dd/yyyy"),
-        l("dd/MM/yyyy", "MM/dd/yyyy"),
-        l("d/M/yy", "M/d/yy"),
-        l("dd/M/yy", "MM/d/yy"),
-        l("d/MM/yy", "M/dd/yy"),
-        l("dd/MM/yy", "MM/dd/yy"),
-        
-        l("d.M.yyyy", "M.d.yyyy"),
-        l("dd.M.yyyy", "MM.d.yyyy"),
-        l("d.MM.yyyy", "M.dd.yyyy"),
-        l("dd.MM.yyyy", "MM.dd.yyyy"),
-        l("d.M.yy", "M.d.yy"),
-        l("dd.M.yy", "MM.d.yy"),
-        l("d.MM.yy", "M.dd.yy"),
-        l("dd.MM.yy", "MM.dd.yy")
-    );
-    // TODO make a test that ambiguous ones are, and others aren't
+    public static List<List<DateTimeFormatter>> formats = Arrays.asList(
+        l(m("/", DAY, MONTH_TEXT, YEAR4)), // dd/MMM/yyyy
+        l(m("-", DAY, MONTH_TEXT, YEAR4)), // dd-MMM-yyyy
+        l(m(" ", DAY, MONTH_TEXT, YEAR4)), // dd MMM yyyy
 
-    private static List<String> l(String... args)
-    {
-        return Arrays.asList(args);
-    }
+        l(m(" ", MONTH_TEXT, DAY, YEAR4)), // MMM dd yyyy
+
+        l(m("-", YEAR4, MONTH_TEXT, DAY)), // yyyy-MMM-dd
+
+        l(m("-", YEAR4, MONTH_NUM, DAY)), // yyyy-MM-dd
+
+        l(m("/", DAY, MONTH_NUM, YEAR4), m("/", MONTH_NUM, DAY, YEAR4)), // dd/MM/yyyy or MM/dd/yyyy
+        l(m("-", DAY, MONTH_NUM, YEAR4), m("-", MONTH_NUM, DAY, YEAR4)), // dd-MM-yyyy or MM-dd-yyyy
+        l(m(".", DAY, MONTH_NUM, YEAR4), m(".", MONTH_NUM, DAY, YEAR4)), // dd.MM.yyyy or MM.dd.yyyy
+
+        l(m("/", DAY, MONTH_NUM, YEAR2), m("/", MONTH_NUM, DAY, YEAR2)), // dd/MM/yyyy or MM/dd/yyyy
+        l(m("-", DAY, MONTH_NUM, YEAR2), m("-", MONTH_NUM, DAY, YEAR2)), // dd-MM-yyyy or MM-dd-yyyy
+        l(m(".", DAY, MONTH_NUM, YEAR2), m(".", MONTH_NUM, DAY, YEAR2)) // dd.MM.yyyy or MM.dd.yyyy
+    );
 
     @Override
     boolean checkTemporalParam(DateTimeInfo srcTemporalType, ExConsumer<String> onError) throws InternalException, UserException
@@ -83,7 +69,7 @@ public class StringToDate extends StringToTemporalFunction
     }
 
     @Override
-    protected List<List<@NonNull String>> getFormats()
+    protected List<List<@NonNull DateTimeFormatter>> getFormats()
     {
         return formats;
     }

@@ -76,10 +76,21 @@ public class PropDateFunctions
         assertEquals(LocalTime.of(21, 2, 34), runFunction1("21:02:34", DataType.TEXT, new StringToTime()));
         assertThrows(UserException.class, () -> runFunction1("21:02:3", DataType.TEXT, new StringToTime()));
         assertEquals(LocalTime.of(21, 2, 34, 0), runFunction1("21:02:34.0", DataType.TEXT, new StringToTime()));
-        assertEquals(LocalTime.of(21, 2, 34, 0), runFunction1("21:02:34.000", DataType.TEXT, new StringToTime()));
+        assertEquals(LocalTime.of(21, 2, 34, 20_000_000), runFunction1("21:02:34.020", DataType.TEXT, new StringToTime()));
+        assertEquals(LocalTime.of(21, 2, 34, 3_000_000), runFunction1("21:02:34.003", DataType.TEXT, new StringToTime()));
         assertEquals(LocalTime.of(21, 2, 34, 100_000), runFunction1("21:02:34.0001", DataType.TEXT, new StringToTime()));
         assertEquals(LocalTime.of(21, 2, 34, 7), runFunction1("21:02:34.000000007", DataType.TEXT, new StringToTime()));
-        assertEquals(LocalTime.of(21, 2, 34, 0), runFunction1("21:02:34.0000000007", DataType.TEXT, new StringToTime()));
+        assertThrows(UserException.class, () -> runFunction1("21:02:34.0000000007", DataType.TEXT, new StringToTime()));
+
+        assertEquals(LocalTime.of(1, 2), runFunction1("1:02AM", DataType.TEXT, new StringToTime()));
+        assertEquals(LocalTime.of(11, 59), runFunction1("11:59AM", DataType.TEXT, new StringToTime()));
+        assertEquals(LocalTime.of(0, 2), runFunction1("12:02AM", DataType.TEXT, new StringToTime()));
+        assertEquals(LocalTime.of(12, 2), runFunction1("12:02PM", DataType.TEXT, new StringToTime()));
+        assertEquals(LocalTime.of(0, 2), runFunction1("12:02 AM", DataType.TEXT, new StringToTime()));
+        assertEquals(LocalTime.of(12, 2), runFunction1("12:02 PM", DataType.TEXT, new StringToTime()));
+        assertEquals(LocalTime.of(3, 2, 34), runFunction1("3:02:34 AM", DataType.TEXT, new StringToTime()));
+        assertEquals(LocalTime.of(15, 2, 34), runFunction1("3:02:34 PM", DataType.TEXT, new StringToTime()));
+        assertThrows(UserException.class, () -> runFunction1("20:06 PM", DataType.TEXT, new StringToTime()));
     }
 
     // Tests single numeric input, numeric output function

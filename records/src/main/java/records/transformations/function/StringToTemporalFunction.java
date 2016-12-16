@@ -13,15 +13,19 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
 import utility.ExConsumer;
 import utility.Pair;
-import utility.Utility;
 
 import java.time.DateTimeException;
-import java.time.LocalDate;
+import java.time.Year;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.format.SignStyle;
+import java.time.format.TextStyle;
+import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
@@ -37,6 +41,60 @@ public abstract class StringToTemporalFunction extends FunctionDefinition
     public StringToTemporalFunction(String name)
     {
         super(name);
+    }
+
+    static DateTimeFormatter m(String sep, F... items)
+    {
+        DateTimeFormatterBuilder b = new DateTimeFormatterBuilder();
+        for (int i = 0; i < items.length; i++)
+        {
+            if (i != 0 && items[i] != F.FRAC_SEC_OPT && items[i] != F.AMPM)
+                b.appendLiteral(sep);
+            switch (items[i])
+            {
+                case FRAC_SEC_OPT:
+                    // From http://stackoverflow.com/questions/30090710/java-8-datetimeformatter-parsing-for-optional-fractional-seconds-of-varying-sign
+                    b.appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true);
+                    break;
+                case SEC:
+                    b.appendValue(ChronoField.SECOND_OF_MINUTE, 2, 2, SignStyle.NEVER);
+                    break;
+                case MIN:
+                    b.appendValue(ChronoField.MINUTE_OF_HOUR, 2, 2, SignStyle.NEVER);
+                    break;
+                case HOUR:
+                    b.appendValue(ChronoField.HOUR_OF_DAY, 1, 2, SignStyle.NEVER);
+                    break;
+                case HOUR12:
+                    b.appendValue(ChronoField.CLOCK_HOUR_OF_AMPM, 1, 2, SignStyle.NEVER);
+                    break;
+                case AMPM:
+                    b.optionalStart().appendLiteral(" ").optionalEnd().appendText(ChronoField.AMPM_OF_DAY);
+                    break;
+                case DAY:
+                    b.appendValue(ChronoField.DAY_OF_MONTH, 1, 2, SignStyle.NEVER);
+                    break;
+                case MONTH_TEXT:
+                    b.appendText(ChronoField.MONTH_OF_YEAR, TextStyle.SHORT);
+                    break;
+                case MONTH_NUM:
+                    b.appendValue(ChronoField.MONTH_OF_YEAR, 1, 2, SignStyle.NEVER);
+                    break;
+                case YEAR2:
+                    // From http://stackoverflow.com/questions/29490893/parsing-string-to-local-date-doesnt-use-desired-century
+                    b.appendValueReduced(ChronoField.YEAR, 2, 2, Year.now().getValue() - 80);
+                    break;
+                case YEAR4:
+                    b.appendValue(ChronoField.YEAR, 4, 4, SignStyle.NEVER);
+                    break;
+            }
+        }
+        return b.toFormatter();
+    }
+
+    static List<DateTimeFormatter> l(DateTimeFormatter... args)
+    {
+        return Arrays.asList(args);
     }
 
     @Override
@@ -88,10 +146,12 @@ public abstract class StringToTemporalFunction extends FunctionDefinition
         })));
     }
 
+    static enum F {FRAC_SEC_OPT, SEC, MIN, HOUR, HOUR12, AMPM, DAY, MONTH_TEXT, MONTH_NUM, YEAR2, YEAR4 }
+
     private class FromStringInstance extends FunctionInstance
     {
         private ArrayList<Pair<List<DateTimeFormatter>, Integer>> usedFormats = new ArrayList<>();
-        private ArrayList<List<DateTimeFormatter>> unusedFormats = new ArrayList<>(getFormats().stream().<List<DateTimeFormatter>>map(fs -> Utility.mapList(fs, DateTimeFormatter::ofPattern)).collect(Collectors.<List<DateTimeFormatter>>toList()));
+        private ArrayList<List<DateTimeFormatter>> unusedFormats = new ArrayList<>(getFormats());
 
         @Override
         public List<Object> getValue(int rowIndex, List<List<Object>> params) throws UserException
@@ -159,7 +219,7 @@ public abstract class StringToTemporalFunction extends FunctionDefinition
     }
 
     // If two formats may be mistaken for each other, put them in the same inner list:
-    protected abstract List<List<@NonNull String>> getFormats();
+    protected abstract List<List<@NonNull DateTimeFormatter>> getFormats();
 
     private class FromTemporalInstance extends FunctionInstance
     {
