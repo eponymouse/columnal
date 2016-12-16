@@ -21,7 +21,7 @@ import static records.transformations.function.StringToTemporalFunction.F.FRAC_S
 import static records.transformations.function.StringToTemporalFunction.F.HOUR;
 import static records.transformations.function.StringToTemporalFunction.F.HOUR12;
 import static records.transformations.function.StringToTemporalFunction.F.MIN;
-import static records.transformations.function.StringToTemporalFunction.F.SEC;
+import static records.transformations.function.StringToTemporalFunction.F.SEC_OPT;
 
 
 /**
@@ -35,10 +35,8 @@ public class StringToTime extends StringToTemporalFunction
     }
 
     public static List<List<DateTimeFormatter>> formats = Arrays.asList(
-        l(m(":", HOUR, MIN)), // HH:mm
-        l(m(":", HOUR, MIN, SEC, FRAC_SEC_OPT)), // HH:mm:ss.S  (FRAC_SEC_OPT is optional so no need to list without)
-        l(m(":", HOUR12, MIN, AMPM)), // hh:mm PM
-        l(m(":", HOUR12, MIN, SEC, FRAC_SEC_OPT, AMPM)) // hh:mm:ss.S PM
+        l(m(":", HOUR, MIN, SEC_OPT, FRAC_SEC_OPT)), // HH:mm[:ss[.S]]
+        l(m(":", HOUR12, MIN, SEC_OPT, FRAC_SEC_OPT, AMPM)) // hh:mm[:ss[.S]] PM
     );
 
     @Override

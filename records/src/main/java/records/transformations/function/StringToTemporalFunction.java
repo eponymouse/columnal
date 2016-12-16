@@ -48,18 +48,19 @@ public abstract class StringToTemporalFunction extends FunctionDefinition
         DateTimeFormatterBuilder b = new DateTimeFormatterBuilder();
         for (int i = 0; i < items.length; i++)
         {
-            if (i != 0 && items[i] != F.FRAC_SEC_OPT && items[i] != F.AMPM)
-                b.appendLiteral(sep);
             switch (items[i])
             {
                 case FRAC_SEC_OPT:
                     // From http://stackoverflow.com/questions/30090710/java-8-datetimeformatter-parsing-for-optional-fractional-seconds-of-varying-sign
                     b.appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true);
                     break;
-                case SEC:
-                    b.appendValue(ChronoField.SECOND_OF_MINUTE, 2, 2, SignStyle.NEVER);
+                case SEC_OPT:
+                    b.optionalStart();
+                    if (i != 0) b.appendLiteral(sep);
+                    b.appendValue(ChronoField.SECOND_OF_MINUTE, 2, 2, SignStyle.NEVER).optionalEnd();
                     break;
                 case MIN:
+                    if (i != 0) b.appendLiteral(sep);
                     b.appendValue(ChronoField.MINUTE_OF_HOUR, 2, 2, SignStyle.NEVER);
                     break;
                 case HOUR:
@@ -72,19 +73,24 @@ public abstract class StringToTemporalFunction extends FunctionDefinition
                     b.optionalStart().appendLiteral(" ").optionalEnd().appendText(ChronoField.AMPM_OF_DAY);
                     break;
                 case DAY:
+                    if (i != 0) b.appendLiteral(sep);
                     b.appendValue(ChronoField.DAY_OF_MONTH, 1, 2, SignStyle.NEVER);
                     break;
                 case MONTH_TEXT:
+                    if (i != 0) b.appendLiteral(sep);
                     b.appendText(ChronoField.MONTH_OF_YEAR, TextStyle.SHORT);
                     break;
                 case MONTH_NUM:
+                    if (i != 0) b.appendLiteral(sep);
                     b.appendValue(ChronoField.MONTH_OF_YEAR, 1, 2, SignStyle.NEVER);
                     break;
                 case YEAR2:
+                    if (i != 0) b.appendLiteral(sep);
                     // From http://stackoverflow.com/questions/29490893/parsing-string-to-local-date-doesnt-use-desired-century
                     b.appendValueReduced(ChronoField.YEAR, 2, 2, Year.now().getValue() - 80);
                     break;
                 case YEAR4:
+                    if (i != 0) b.appendLiteral(sep);
                     b.appendValue(ChronoField.YEAR, 4, 4, SignStyle.NEVER);
                     break;
             }
@@ -146,7 +152,7 @@ public abstract class StringToTemporalFunction extends FunctionDefinition
         })));
     }
 
-    static enum F {FRAC_SEC_OPT, SEC, MIN, HOUR, HOUR12, AMPM, DAY, MONTH_TEXT, MONTH_NUM, YEAR2, YEAR4 }
+    static enum F {FRAC_SEC_OPT, SEC_OPT, MIN, HOUR, HOUR12, AMPM, DAY, MONTH_TEXT, MONTH_NUM, YEAR2, YEAR4 }
 
     private class FromStringInstance extends FunctionInstance
     {
