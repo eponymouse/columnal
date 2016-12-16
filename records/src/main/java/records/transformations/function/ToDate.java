@@ -114,7 +114,7 @@ public class ToDate extends ToTemporalFunction
         public Object getSimpleValue(int rowIndex, List<Object> simpleParams) throws UserException, InternalException
         {
             int year = Utility.requireInteger(simpleParams.get(0));
-            int month = Utility.requireInteger(simpleParams.get(0));
+            int month = Utility.requireInteger(simpleParams.get(1));
             int day = Utility.requireInteger(simpleParams.get(2));
             try
             {
