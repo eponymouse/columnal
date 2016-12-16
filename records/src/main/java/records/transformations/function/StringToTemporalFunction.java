@@ -121,14 +121,20 @@ public abstract class StringToTemporalFunction extends FunctionDefinition
         }
         else
         {
-            if (!params.stream().allMatch(DataType::isText))
-            {
-                onError.accept("Parameters must be text (source string to convert, and a format string)");
-                return null;
-            }
-            return new Pair<>(new FromStringInstance(), DataType.date(getResultType()));
+            return checkTwoParam(params, onError);
         }
 
+    }
+
+    @Nullable
+    Pair<FunctionInstance, DataType> checkTwoParam(List<DataType> params, ExConsumer<String> onError) throws UserException, InternalException
+    {
+        if (!params.stream().allMatch(DataType::isText))
+        {
+            onError.accept("Parameters must be text (source string to convert, and a format string)");
+            return null;
+        }
+        return new Pair<>(new FromStringInstance(), DataType.date(getResultType()));
     }
 
     // Return true if fine, false if not

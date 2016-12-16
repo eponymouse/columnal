@@ -12,6 +12,9 @@ public class FunctionList
         new Absolute(),
         new AsType(),
         new Round(),
-        new StringToDate()
+        new StringToDate(),
+        new StringToDateTime(),
+        new StringToTime()
+
     );
 }

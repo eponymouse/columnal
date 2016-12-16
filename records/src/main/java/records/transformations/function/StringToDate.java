@@ -31,7 +31,7 @@ public class StringToDate extends StringToTemporalFunction
         super("date");
     }
 
-    public static List<List<DateTimeFormatter>> formats = Arrays.asList(
+    public static List<List<DateTimeFormatter>> FORMATS = Arrays.asList(
         l(m("/", DAY, MONTH_TEXT, YEAR4)), // dd/MMM/yyyy
         l(m("-", DAY, MONTH_TEXT, YEAR4)), // dd-MMM-yyyy
         l(m(" ", DAY, MONTH_TEXT, YEAR4)), // dd MMM yyyy
@@ -71,7 +71,7 @@ public class StringToDate extends StringToTemporalFunction
     @Override
     protected List<List<@NonNull DateTimeFormatter>> getFormats()
     {
-        return formats;
+        return FORMATS;
     }
 
     @Override

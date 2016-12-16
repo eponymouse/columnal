@@ -7,6 +7,7 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.ExConsumer;
+import utility.Utility;
 
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
@@ -34,9 +35,9 @@ public class StringToTime extends StringToTemporalFunction
         super("time");
     }
 
-    public static List<List<DateTimeFormatter>> formats = Arrays.asList(
-        l(m(":", HOUR, MIN, SEC_OPT, FRAC_SEC_OPT)), // HH:mm[:ss[.S]]
-        l(m(":", HOUR12, MIN, SEC_OPT, FRAC_SEC_OPT, AMPM)) // hh:mm[:ss[.S]] PM
+    public static List<DateTimeFormatter> FORMATS = Arrays.asList(
+        m(":", HOUR, MIN, SEC_OPT, FRAC_SEC_OPT), // HH:mm[:ss[.S]]
+        m(":", HOUR12, MIN, SEC_OPT, FRAC_SEC_OPT, AMPM) // hh:mm[:ss[.S]] PM
     );
 
     @Override
@@ -54,7 +55,7 @@ public class StringToTime extends StringToTemporalFunction
     @Override
     protected List<List<@NonNull DateTimeFormatter>> getFormats()
     {
-        return formats;
+        return Utility.<DateTimeFormatter, List<@NonNull DateTimeFormatter>>mapList(FORMATS, f -> Collections.singletonList(f));
     }
 
     @NotNull

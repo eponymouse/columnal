@@ -858,6 +858,19 @@ public class DataType
             }
         }
 
+
+        public boolean hasZone()
+        {
+            switch (type)
+            {
+                case TIMEOFDAYZONED:
+                case DATETIMEZONED:
+                    return true;
+                default:
+                    return false;
+            }
+        }
+
         public DateTimeType getType()
         {
             return type;
