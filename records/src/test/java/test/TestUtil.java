@@ -3,6 +3,7 @@ package test;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
+import com.pholser.junit.quickcheck.generator.java.time.LocalTimeGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;
@@ -22,7 +23,6 @@ import records.error.UserException;
 import records.grammar.MainLexer;
 import records.transformations.expression.TypeState;
 import test.gen.GenNumber;
-import test.gen.GenNumberAsString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExSupplier;
@@ -30,6 +30,8 @@ import utility.Pair;
 import utility.Utility;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -337,5 +339,15 @@ public class TestUtil
     public static LocalDate generateDate(SourceOfRandomness r, GenerationStatus gs)
     {
         return LocalDate.ofEpochDay(r.nextLong(MIN_DATE.toEpochDay(), MAX_DATE.toEpochDay()));
+    }
+
+    public static LocalTime generateTime(SourceOfRandomness r, GenerationStatus gs)
+    {
+        return new LocalTimeGenerator().generate(r, gs);
+    }
+
+    public static LocalDateTime generateDateTime(SourceOfRandomness r, GenerationStatus gs)
+    {
+        return LocalDateTime.of(generateDate(r, gs), generateTime(r, gs));
     }
 }

@@ -53,6 +53,8 @@ import utility.Utility;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -288,9 +290,16 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                         case YEARMONTHDAY:
                             LocalDate date = TestUtil.generateDate(r, gs);
                             return new Pair<>(Collections.singletonList(date), new CallExpression("date", new StringLiteral(date.toString())));
+                        case TIMEOFDAY:
+                            LocalTime time = TestUtil.generateTime(r, gs);
+                            return new Pair<>(Collections.singletonList(time), new CallExpression("time", new StringLiteral(time.toString())));
+                        case DATETIME:
+                            LocalDateTime t = TestUtil.generateDateTime(r, gs);
+                            return new Pair<>(Collections.singletonList(t), new CallExpression("datetime", new StringLiteral(t.toString())));
+
                     }
                     throw new RuntimeException("No date generator for " + dateTimeInfo.getType());
-                }), l());
+                }), l()); //TODO use the composite versions of functions like datetime (where you pass a date and a time)
             }
 
             @Override

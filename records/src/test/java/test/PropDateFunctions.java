@@ -89,6 +89,7 @@ public class PropDateFunctions
         checkDate(LocalDate.of(2013, 12, 13), "13/12/13");
         checkDate(LocalDate.of(2012, 12, 13), "13/12/12");
         assertThrows(UserException.class, () -> strToDate("12/12/12"));
+        checkDate(LocalDate.of(9345, 8, 6), "9345-08-06");
 
         assertThrows(UserException.class, () -> strToTime("1:2"));
         checkTime(LocalTime.of(1, 2), "1:02");

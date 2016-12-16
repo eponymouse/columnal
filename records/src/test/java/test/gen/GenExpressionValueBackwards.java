@@ -2,6 +2,8 @@ package test.gen;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
+import com.pholser.junit.quickcheck.generator.java.time.ZoneIdGenerator;
+import com.pholser.junit.quickcheck.generator.java.time.ZoneOffsetGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -61,6 +63,10 @@ import utility.Utility;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
+import java.time.OffsetTime;
+import java.time.YearMonth;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -425,7 +431,29 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             @Override
             public List<Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return Collections.singletonList(TestUtil.generateDate(r, gs));
+                switch (dateTimeInfo.getType())
+                {
+                    case YEARMONTHDAY:
+                        return Collections.singletonList(TestUtil.generateDate(r, gs));
+                    case YEARMONTH:
+                        return Collections.singletonList(YearMonth.of(r.nextInt(1, 9999), r.nextInt(1, 12)));
+                    case TIMEOFDAY:
+                        return Collections.singletonList(TestUtil.generateTime(r, gs));
+                    case TIMEOFDAYZONED:
+                        return Collections.singletonList(OffsetTime.of(TestUtil.generateTime(r, gs), new ZoneOffsetGenerator().generate(r, gs)));
+                    case DATETIME:
+                        return Collections.singletonList(TestUtil.generateDateTime(r, gs));
+                    case DATETIMEZONED:
+                        // Can be geographical or pure offset:
+                        return Collections.singletonList(ZonedDateTime.of(TestUtil.generateDateTime(r, gs),
+                            r.nextBoolean() ?
+                                new ZoneIdGenerator().generate(r, gs) :
+                                ZoneId.ofOffset("", new ZoneOffsetGenerator().generate(r, gs))
+                        ));
+                    default:
+                        throw new InternalException("Unknown date type: " + dateTimeInfo.getType());
+                }
+
             }
 
             @Override
