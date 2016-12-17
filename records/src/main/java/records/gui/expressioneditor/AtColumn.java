@@ -58,6 +58,22 @@ public class AtColumn extends ExpressionNode
         return nodes;
     }
 
+    @Override
+    public void deleteOneFromEnd()
+    {
+        if (textField.getText().isEmpty())
+            parent.replace(this, null);
+        else
+            textField.setText(textField.getText().substring(0, textField.getText().length() - 1));
+    }
+
+    @Override
+    public void deleteOneFromBegin()
+    {
+        // Delete the @, in effect:
+        parent.replace(this, new GeneralEntry(textField.getText(), parent));
+    }
+
     public ExpressionNode focusWhenShown()
     {
         Utility.onNonNull(textField.sceneProperty(), scene -> {textField.requestFocus();});

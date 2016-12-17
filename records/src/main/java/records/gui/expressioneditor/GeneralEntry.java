@@ -1,23 +1,15 @@
 package records.gui.expressioneditor;
 
-import com.sun.javafx.scene.control.behavior.TextFieldBehavior;
-import com.sun.javafx.scene.control.skin.TextFieldSkin;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.paint.Color;
-import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.controlsfx.control.textfield.AutoCompletionBinding.ISuggestionRequest;
-import org.controlsfx.control.textfield.TextFields;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
-import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.AutoComplete.Completion;
@@ -33,8 +25,6 @@ import utility.UnitType;
 import utility.Utility;
 
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -63,8 +53,9 @@ public class GeneralEntry extends ExpressionNode
                 int operator = getText().indexOf("/");
                 if (operator != -1)
                 {
-                    Pair<ExpressionNode, ExpressionNode> split = splitAt(operator);
-                    //parent.replace(GeneralEntry.this, new DivideExpressionNode(split.getFirst(), split.getSecond()));
+                    Pair<String, String> split = splitAt(operator);
+                    parent.addToRight(GeneralEntry.this, new Operator("/", parent), new GeneralEntry(split.getSecond(), parent).focusWhenShown());
+                    setText(split.getFirst());
                 }
                 if (getText().startsWith("@"))
                 {
@@ -72,21 +63,57 @@ public class GeneralEntry extends ExpressionNode
                     parent.replace(GeneralEntry.this, new AtColumn(getText().substring(1), parent).focusWhenShown());
                 }
             }
+
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public boolean deletePreviousChar()
+            {
+                if (getCaretPosition() == 0 && getAnchor() == 0)
+                    parent.deleteOneLeftOf(GeneralEntry.this);
+                return super.deletePreviousChar();
+            }
+
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public boolean deleteNextChar()
+            {
+                if (getCaretPosition() == getText().length() && getAnchor() == getText().length())
+                    parent.deleteOneRightOf(GeneralEntry.this);
+                return super.deletePreviousChar();
+            }
         };
         this.nodes = FXCollections.observableArrayList(textField);
         this.autoComplete = new AutoComplete(textField, this::getSuggestions);
     }
 
-    @OnThread(Tag.FX)
-    private static Pair<ExpressionNode, ExpressionNode> splitAt(int index)
+    private Pair<String, String> splitAt(int index)
     {
-        throw new RuntimeException("TODO");
+        return new Pair<>(textField.getText().substring(0, index), textField.getText().substring(index + 1));
     }
 
     @Override
     public ObservableList<Node> nodes()
     {
         return nodes;
+    }
+
+    @Override
+    public void deleteOneFromEnd()
+    {
+        int textLen = textField.getText().length();
+        if (textLen > 0)
+            textField.replaceText(textLen - 1, textLen, "");
+        if (textField.getText().isEmpty())
+            parent.replace(this, null);
+    }
+
+    @Override
+    public void deleteOneFromBegin()
+    {
+        if (textField.getText().length() > 0)
+            textField.replaceText(0, 1, "");
+        if (textField.getText().isEmpty())
+            parent.replace(this, null);
     }
 
     private List<Completion> getSuggestions(String text) throws UserException, InternalException

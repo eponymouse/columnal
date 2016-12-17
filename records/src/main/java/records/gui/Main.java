@@ -28,6 +28,8 @@ import utility.Workers;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.util.Collections;
 
 /**
@@ -39,6 +41,18 @@ public class Main extends Application
     @OnThread(value = Tag.FXPlatform,ignoreParent = true)
     public void start(final Stage primaryStage) throws Exception
     {
+        ClassLoader cl = ClassLoader.getSystemClassLoader();
+
+        if (cl != null)
+        {
+            URL[] urls = ((URLClassLoader) cl).getURLs();
+
+            for (URL url : urls)
+            {
+                System.out.println(url.getFile());
+            }
+        }
+
         View v = new View();
         Menu menu = new Menu("Data");
         MenuItem importItem = new MenuItem("Text");

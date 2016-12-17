@@ -1,12 +1,14 @@
 package records.gui.expressioneditor;
 
+import javafx.collections.ListChangeListener;
 import javafx.scene.Node;
 import javafx.scene.layout.FlowPane;
+import org.checkerframework.checker.interning.qual.UnknownInterned;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import records.data.ColumnId;
 import records.data.Table;
 import records.data.datatype.DataType;
-import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
 import utility.Utility;
@@ -17,38 +19,67 @@ import java.util.List;
 /**
  * Created by neil on 17/12/2016.
  */
-public class ExpressionEditor implements ExpressionParent
+public class ExpressionEditor extends Consecutive
 {
     private final FlowPane container;
     private final @Nullable DataType type;
     private final @Nullable Table srcTable;
-    private ExpressionNode root;
 
     @SuppressWarnings("initialization")
     public ExpressionEditor(@Nullable Expression startingValue, @Nullable Table srcTable, @Nullable DataType type)
     {
+        super(Collections.emptyList(), new ExpressionParent() {
+
+            @Override
+            public void replace(ExpressionNode oldNode, ExpressionNode newNode)
+            {
+            }
+
+            @Override
+            public void addToRight(ExpressionNode rightOf, ExpressionNode... newNode)
+            {
+            }
+
+            @Override
+            public @Nullable DataType getType(ExpressionNode child)
+            {
+                return type;
+            }
+
+            @Override
+            public List<ColumnId> getAvailableColumns()
+            {
+                return Collections.emptyList();
+            }
+
+            @Override
+            public void deleteOneLeftOf(ExpressionNode child)
+            {
+
+            }
+
+            @Override
+            public void deleteOneRightOf(ExpressionNode child)
+            {
+
+            }
+        });
+        addToRight(null, new GeneralEntry("", this));
         this.container = new FlowPane();
+        container.getStyleClass().add("expression-editor");
+        Utility.ensureFontLoaded("NotoSans-Regular.ttf");
+        container.getStylesheets().add(Utility.getStylesheet("expression-editor.css"));
         this.srcTable = srcTable;
-        this.root = new GeneralEntry("", this);
         this.type = type;
-        container.getChildren().setAll(root.nodes());
+        container.getChildren().setAll(nodes());
+        nodes().addListener((ListChangeListener<? super @UnknownInterned @UnknownKeyFor Node>) c -> {
+            container.getChildren().setAll(nodes());
+        });
     }
 
     public Node getContainer()
     {
         return container;
-    }
-
-    @Override
-    @SuppressWarnings("intern")
-    public void replace(ExpressionNode oldNode, ExpressionNode newNode)
-    {
-        if (oldNode == root)
-        {
-            root = newNode;
-            container.getChildren().setAll(root.nodes());
-        }
-        // else log internal issue
     }
 
     @Override

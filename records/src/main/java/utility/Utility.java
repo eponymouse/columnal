@@ -4,16 +4,22 @@ import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.math.MathContext;
+import java.net.MalformedURLException;
+import java.net.URISyntaxException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -32,6 +38,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ListView;
 import javafx.scene.control.cell.TextFieldListCell;
+import javafx.scene.text.Font;
 import javafx.util.*;
 import org.antlr.v4.runtime.ANTLRErrorStrategy;
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -62,6 +69,8 @@ import threadchecker.Tag;
  */
 public class Utility
 {
+    private static final Set<String> loadedFonts = new HashSet<>();
+
     public static <T, R> List<@NonNull R> mapList(List<@NonNull T> list, Function<@NonNull T, @NonNull R> func)
     {
         ArrayList<@NonNull R> r = new ArrayList<>(list.size());
@@ -543,6 +552,39 @@ public class Utility
                 consumer.consume(newValue);
             }
         });
+    }
+
+    @SuppressWarnings("nullness")
+    public static String getStylesheet(String stylesheetName)
+    {
+        try
+        {
+            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+            URL resource = classLoader.getResource(stylesheetName);
+            return resource.toString();
+        }
+        catch (NullPointerException e)
+        {
+            log(e);
+            return "";
+        }
+    }
+
+    @SuppressWarnings("nullness")
+    public static void ensureFontLoaded(String fontFileName)
+    {
+        if (!loadedFonts.contains(fontFileName))
+        {
+            try (InputStream fis = ClassLoader.getSystemClassLoader().getResourceAsStream(fontFileName))
+            {
+                Font.loadFont(fis, 10);
+                loadedFonts.add(fontFileName);
+            }
+            catch (IOException | NullPointerException e)
+            {
+                log(e);
+            }
+        }
     }
 
     public static class ReadState
