@@ -91,4 +91,10 @@ public class Consecutive extends ExpressionNode implements ExpressionParent
         return parent.getAvailableColumns();
     }
 
+    @Override
+    public List<String> getAvailableVariables()
+    {
+        return parent.getAvailableVariables();
+    }
+
 }

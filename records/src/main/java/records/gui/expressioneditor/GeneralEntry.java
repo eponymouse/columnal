@@ -62,6 +62,7 @@ public class GeneralEntry extends ExpressionNode
         super(parent);
         this.textField = new TextField(content);
         textField.getStyleClass().add("entry-field");
+        Utility.sizeToFit(textField);
         typeLabel = new Label();
         typeLabel.getStyleClass().add("entry-type");
         container = new VBox(typeLabel, textField);

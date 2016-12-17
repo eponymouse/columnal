@@ -20,4 +20,6 @@ public interface ExpressionParent
     @Nullable DataType getType(ExpressionNode child);
 
     List<ColumnId> getAvailableColumns();
+
+    List<String> getAvailableVariables();
 }

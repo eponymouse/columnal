@@ -49,6 +49,23 @@ public class ExpressionEditor extends Consecutive
             @Override
             public List<ColumnId> getAvailableColumns()
             {
+                if (srcTable == null)
+                    return Collections.emptyList();
+                try
+                {
+                    return srcTable.getData().getColumnIds();
+                }
+                catch (UserException e)
+                {
+                    Utility.log(e);
+                    return Collections.emptyList();
+                }
+            }
+
+            @Override
+            public List<String> getAvailableVariables()
+            {
+                // No variables from outside the expression:
                 return Collections.emptyList();
             }
         });
@@ -76,19 +93,4 @@ public class ExpressionEditor extends Consecutive
         return type;
     }
 
-    @Override
-    public List<ColumnId> getAvailableColumns()
-    {
-        if (srcTable == null)
-            return Collections.emptyList();
-        try
-        {
-            return srcTable.getData().getColumnIds();
-        }
-        catch (UserException e)
-        {
-            Utility.log(e);
-            return Collections.emptyList();
-        }
-    }
 }

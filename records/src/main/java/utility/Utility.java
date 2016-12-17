@@ -24,6 +24,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javafx.application.Platform;
+import javafx.beans.binding.DoubleBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -37,8 +38,11 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ListView;
+import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldListCell;
+import javafx.scene.layout.Region;
 import javafx.scene.text.Font;
+import javafx.scene.text.Text;
 import javafx.util.*;
 import org.antlr.v4.runtime.ANTLRErrorStrategy;
 import org.antlr.v4.runtime.ANTLRInputStream;
@@ -597,6 +601,34 @@ public class Utility
         {
             log(e);
         }
+    }
+
+    @OnThread(Tag.FX)
+    public static void sizeToFit(TextField tf)
+    {
+        // Partly taken from http://stackoverflow.com/a/25643696/412908:
+        // Set Max and Min Width to PREF_SIZE so that the TextField is always PREF
+        tf.setMinWidth(Region.USE_PREF_SIZE);
+        tf.setMaxWidth(Region.USE_PREF_SIZE);
+        tf.prefWidthProperty().bind(new DoubleBinding()
+        {
+            {
+                super.bind(tf.textProperty());
+                super.bind(tf.promptTextProperty());
+                super.bind(tf.fontProperty());
+            }
+            @Override
+            protected double computeValue()
+            {
+                Text text = new Text(tf.getText());
+                text.setFont(tf.getFont()); // Set the same font, so the size is the same
+                double width = text.getLayoutBounds().getWidth() // This big is the Text in the TextField
+                    //+ tf.getPadding().getLeft() + tf.getPadding().getRight() // Add the padding of the TextField
+                    + tf.getInsets().getLeft() + + tf.getInsets().getRight()
+                    + 5d; // Add some spacing
+                return Math.max(20, width);
+            }
+        });
     }
 
     public static class ReadState
