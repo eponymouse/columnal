@@ -25,26 +25,4 @@ public class Operator extends ExpressionNode
     {
         return nodes;
     }
-
-    @Override
-    public void deleteOneFromEnd()
-    {
-        content.setText(content.getText().substring(0, content.getText().length() - 1));
-        if (content.getText().isEmpty())
-            parent.replace(this, null);
-    }
-
-    @Override
-    public void deleteOneFromBegin()
-    {
-        content.setText(content.getText().substring(1));
-        if (content.getText().isEmpty())
-            parent.replace(this, null);
-    }
-
-    @Override
-    public boolean focusEnd()
-    {
-        return false;
-    }
 }

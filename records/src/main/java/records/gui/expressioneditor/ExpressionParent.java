@@ -20,9 +20,4 @@ public interface ExpressionParent
     @Nullable DataType getType(ExpressionNode child);
 
     List<ColumnId> getAvailableColumns();
-
-    void deleteOneLeftOf(ExpressionNode child);
-    void deleteOneRightOf(ExpressionNode child);
-
-    void focusBefore(ExpressionNode child);
 }

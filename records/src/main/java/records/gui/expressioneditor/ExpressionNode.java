@@ -18,9 +18,4 @@ public abstract class ExpressionNode
 
     @Pure
     public abstract ObservableList<Node> nodes();
-
-    public abstract void deleteOneFromEnd();
-    public abstract void deleteOneFromBegin();
-
-    public abstract boolean focusEnd();
 }

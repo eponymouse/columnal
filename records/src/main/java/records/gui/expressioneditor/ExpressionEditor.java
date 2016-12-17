@@ -51,24 +51,6 @@ public class ExpressionEditor extends Consecutive
             {
                 return Collections.emptyList();
             }
-
-            @Override
-            public void deleteOneLeftOf(ExpressionNode child)
-            {
-
-            }
-
-            @Override
-            public void deleteOneRightOf(ExpressionNode child)
-            {
-
-            }
-
-            @Override
-            public void focusBefore(ExpressionNode child)
-            {
-
-            }
         });
         addToRight(null, new GeneralEntry("", this));
         this.container = new FlowPane();

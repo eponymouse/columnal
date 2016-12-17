@@ -1,10 +1,17 @@
 package records.gui.expressioneditor;
 
+import com.sun.org.apache.xpath.internal.compiler.PsuedoNames;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.css.PseudoClass;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -14,7 +21,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.FunctionCompletion;
-import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
@@ -36,7 +42,17 @@ import java.util.List;
  */
 public class GeneralEntry extends ExpressionNode
 {
+
+    private final VBox container;
+
+    public static enum Status
+    {
+        COLUMN_REFERENCE, TAG, LITERAL /*number or bool, not string */, VARIABLE, FUNCTION, UNFINISHED;
+    }
+
     private final TextField textField;
+    private final Label typeLabel;
+    private ObjectProperty<Status> status = new SimpleObjectProperty<>(Status.UNFINISHED);
     private final ObservableList<Node> nodes;
     private final AutoComplete autoComplete;
 
@@ -44,62 +60,77 @@ public class GeneralEntry extends ExpressionNode
     public GeneralEntry(String content, ExpressionParent parent)
     {
         super(parent);
-        this.textField = new TextField(content) {
-            @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            public void replaceText(int start, int end, String text)
-            {
-                super.replaceText(start, end, text);
-                int operator = getText().indexOf("/");
-                if (operator != -1)
-                {
-                    Pair<String, String> split = splitAt(operator);
-                    parent.addToRight(GeneralEntry.this, new Operator("/", parent), new GeneralEntry(split.getSecond(), parent).focusWhenShown());
-                    setText(split.getFirst());
-                }
-                if (getText().startsWith("@"))
-                {
-                    // Turn into column reference
-                    parent.replace(GeneralEntry.this, new AtColumn(getText().substring(1), parent).focusWhenShown());
-                }
-            }
-
-            @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            public boolean deletePreviousChar()
-            {
-                if (getCaretPosition() == 0 && getAnchor() == 0)
-                    parent.deleteOneLeftOf(GeneralEntry.this);
-                return super.deletePreviousChar();
-            }
-
-            @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            public boolean deleteNextChar()
-            {
-                if (getCaretPosition() == getText().length() && getAnchor() == getText().length())
-                    parent.deleteOneRightOf(GeneralEntry.this);
-                return super.deletePreviousChar();
-            }
-
-            @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            public void backward()
-            {
-                if (getCaretPosition() == 0)
-                    parent.focusBefore(GeneralEntry.this);
-                super.backward();
-            }
-        };
-        this.nodes = FXCollections.observableArrayList(textField);
+        this.textField = new TextField(content);
+        textField.getStyleClass().add("entry-field");
+        typeLabel = new Label();
+        typeLabel.getStyleClass().add("entry-type");
+        container = new VBox(typeLabel, textField);
+        container.getStyleClass().add("entry");
+        this.nodes = FXCollections.observableArrayList(container);
         this.autoComplete = new AutoComplete(textField, this::getSuggestions, c -> {
+            textField.setText(c.getCompletedText());
+            status.setValue(c.getType());
             parent.addToRight(this, new GeneralEntry("", parent).focusWhenShown());
         });
+
+        Utility.addChangeListenerPlatformNN(status, s -> {
+            for (Status possibleStatus : Status.values())
+            {
+                container.pseudoClassStateChanged(getPseudoClass(possibleStatus), possibleStatus == s);
+            }
+            typeLabel.setText(getTypeLabel(s));
+        });
+        Utility.addChangeListenerPlatformNN(textField.textProperty(), t -> {
+            textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), t.isEmpty());
+        });
+        textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), textField.getText().isEmpty());
     }
 
-    private Pair<String, String> splitAt(int index)
+    private String getTypeLabel(Status s)
     {
-        return new Pair<>(textField.getText().substring(0, index), textField.getText().substring(index + 1));
+        switch (s)
+        {
+            case COLUMN_REFERENCE:
+                return "column";
+            case TAG:
+                return "tag";
+            case LITERAL:
+                return "";
+            case VARIABLE:
+                return "variable";
+            case FUNCTION:
+                return "call";
+            case UNFINISHED:
+                return "error";
+        }
+        return "";
+    }
+
+    private PseudoClass getPseudoClass(Status s)
+    {
+        String pseudoClass;
+        switch (s)
+        {
+            case COLUMN_REFERENCE:
+                pseudoClass = "ps-column";
+                break;
+            case TAG:
+                pseudoClass = "ps-tag";
+                break;
+            case LITERAL:
+                pseudoClass = "ps-literal";
+                break;
+            case VARIABLE:
+                pseudoClass = "ps-variable";
+                break;
+            case FUNCTION:
+                pseudoClass = "ps-function";
+                break;
+            default:
+                pseudoClass = "ps-unfinished";
+                break;
+        }
+        return PseudoClass.getPseudoClass(pseudoClass);
     }
 
     @Override
@@ -108,39 +139,19 @@ public class GeneralEntry extends ExpressionNode
         return nodes;
     }
 
-    @Override
-    public void deleteOneFromEnd()
-    {
-        int textLen = textField.getText().length();
-        if (textLen > 0)
-            textField.replaceText(textLen - 1, textLen, "");
-        if (textField.getText().isEmpty())
-            parent.replace(this, null);
-    }
-
-    @Override
-    public void deleteOneFromBegin()
-    {
-        if (textField.getText().length() > 0)
-            textField.replaceText(0, 1, "");
-        if (textField.getText().isEmpty())
-            parent.replace(this, null);
-    }
-
-    @Override
-    public boolean focusEnd()
-    {
-        textField.positionCaret(textField.getText().length());
-        textField.requestFocus();
-        return true;
-    }
-
     private List<Completion> getSuggestions(String text) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
-
-        r.add(new KeyShortcutCompletion("@", "Column Value"));
-
+        addAllFunctions(r);
+        r.add(new SimpleCompletion("true", Status.LITERAL));
+        r.add(new SimpleCompletion("false", Status.LITERAL));
+        for (ColumnId columnId : parent.getAvailableColumns())
+        {
+            r.add(new SimpleCompletion(columnId.getRaw(), Status.COLUMN_REFERENCE));
+        }
+        // TODO: use type to prioritise, but not to filter (might always be followed by
+        //   ? to do pattern match)
+        /*
         @Nullable DataType t = parent.getType(this);
         if (t != null)
         {
@@ -170,9 +181,7 @@ public class GeneralEntry extends ExpressionNode
                 {
                     // It's common they might want to follow with <, =, etc, so
                     // we show all completions:
-                    addAllFunctions(r);
-                    r.add(new SimpleCompletion("true"));
-                    r.add(new SimpleCompletion("false"));
+
                     return UnitType.UNIT;
                 }
 
@@ -183,6 +192,7 @@ public class GeneralEntry extends ExpressionNode
                 }
             });
         }
+        */
         r.removeIf(c -> !c.shouldShow(text));
         return r;
     }

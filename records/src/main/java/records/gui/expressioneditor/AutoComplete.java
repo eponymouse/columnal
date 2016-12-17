@@ -9,9 +9,11 @@ import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.MouseButton;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.GeneralEntry.Status;
 import records.transformations.function.FunctionDefinition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -42,6 +44,12 @@ public class AutoComplete extends PopupControl
 
         completions.setCellFactory(lv -> {
             return new CompleteCell();
+        });
+        completions.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY)
+            {
+                onSelect.consume(completions.getSelectionModel().getSelectedItem());
+            }
         });
 
         setSkin(new Skin<AutoComplete>()
@@ -106,7 +114,6 @@ public class AutoComplete extends PopupControl
                 if (selectedItem != null)
                 {
                     e.consume();
-                    this.textField.setText(selectedItem.getCompletedText());
                     onSelect.consume(selectedItem);
                 }
             }
@@ -157,15 +164,18 @@ public class AutoComplete extends PopupControl
         abstract Pair<@Nullable Node, String> getDisplay();
         abstract boolean shouldShow(String input);
         abstract String getCompletedText();
+        abstract Status getType();
     }
 
     public static class SimpleCompletion extends Completion
     {
         private final String text;
+        private final Status type;
 
-        public SimpleCompletion(String text)
+        public SimpleCompletion(String text, Status type)
         {
             this.text = text;
+            this.type = type;
         }
 
         @Override
@@ -185,8 +195,14 @@ public class AutoComplete extends PopupControl
         {
             return text;
         }
-    }
 
+        @Override
+        Status getType()
+        {
+            return type;
+        }
+    }
+/*
     public static class KeyShortcutCompletion extends Completion
     {
         private final String shortcut;
@@ -216,7 +232,7 @@ public class AutoComplete extends PopupControl
             return shortcut;
         }
     }
-
+*/
     public static class FunctionCompletion extends Completion
     {
         private final FunctionDefinition function;
@@ -242,6 +258,12 @@ public class AutoComplete extends PopupControl
         String getCompletedText()
         {
             return function.getName();
+        }
+
+        @Override
+        Status getType()
+        {
+            return Status.FUNCTION;
         }
     }
 

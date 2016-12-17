@@ -41,29 +41,6 @@ public class Consecutive extends ExpressionNode implements ExpressionParent
     }
 
     @Override
-    public void deleteOneFromEnd()
-    {
-        // Ignore, I think (or, fold this one into outer one?)
-    }
-
-    @Override
-    public void deleteOneFromBegin()
-    {
-        // Ignore, I think (or, fold this one into outer one?)
-    }
-
-    @Override
-    public boolean focusEnd()
-    {
-        for (int i = children.size() - 1; i >= 0; i--)
-        {
-            if (children.get(i).focusEnd())
-                return true;
-        }
-        return false;
-    }
-
-    @Override
     public void replace(ExpressionNode oldNode, @Nullable ExpressionNode newNode)
     {
         int index = getChildIndex(oldNode);
@@ -114,33 +91,4 @@ public class Consecutive extends ExpressionNode implements ExpressionParent
         return parent.getAvailableColumns();
     }
 
-    @Override
-    public void deleteOneLeftOf(ExpressionNode child)
-    {
-        int index = getChildIndex(child);
-        if (index > 0)
-            children.get(index - 1).deleteOneFromEnd();
-    }
-
-    @Override
-    public void deleteOneRightOf(ExpressionNode child)
-    {
-        int index = getChildIndex(child);
-        if (index != -1 && index != children.size() - 1)
-            children.get(index + 1).deleteOneFromBegin();
-    }
-
-    @Override
-    public void focusBefore(ExpressionNode child)
-    {
-        int index = getChildIndex(child);
-        if (index != -1 && index > 0)
-        {
-            for (int i = index - 1; i >= 0; i--)
-            {
-                if (children.get(i).focusEnd())
-                    break;
-            }
-        }
-    }
 }
