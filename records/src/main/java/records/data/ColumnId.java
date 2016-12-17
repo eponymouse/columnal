@@ -45,4 +45,9 @@ public class ColumnId
     {
         return columnId;
     }
+
+    public String getRaw()
+    {
+        return columnId;
+    }
 }

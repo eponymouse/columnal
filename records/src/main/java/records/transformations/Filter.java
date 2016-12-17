@@ -45,6 +45,7 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayValue;
+import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
@@ -408,7 +409,7 @@ public class Filter extends Transformation
             }
 
             Node example = createExplanation(srcHeaderAndData, destHeaderAndData, "Filter examines each row separately.  It evaluates the given expression for that row.  If the expression is true, the row is kept; if it's false, the row is removed.  For example, if you have a column called price, and you write\n@price >= 100\nas your expression then only rows where the price is 100 or higher will be kept.");
-            return new VBox(rawField, example);
+            return new VBox(rawField, new ExpressionEditor(null, src, DataType.BOOLEAN).getContainer(), example);
         }
 
         @Override

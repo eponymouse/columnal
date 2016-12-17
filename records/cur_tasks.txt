@@ -1,5 +1,5 @@
 Add functions, such as:
- string<->date and date arithmetic (then add expression date tests)
+ remaining date/time functions and date arithmetic
  floor, ceil,
  log10,log,ln,
  round.to.dp,
@@ -7,7 +7,10 @@ Add functions, such as:
  upper, lower, startswith,
  modulo
  c(col): gets single value from that column
-Add tests for date formats and date functions
+++ for string concat?
+Rework summary to use functions for summaries, and let such functions
+  take whole columns as args.  Need way to distinguish current row column value
+  (@ColName) from whole column (!ColName ?).  Do expression editor?
 Allow double dollar as an anonymous variable name in matches
 Add tests for runtime errors (division by zero, invalid dates, incomplete pattern matches, if we allow those)
 Look up Unicode string collations, both for user values (in columns) and things like function names, constructor names

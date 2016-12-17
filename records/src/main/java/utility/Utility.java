@@ -18,12 +18,15 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.css.Styleable;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
@@ -522,6 +525,26 @@ public class Utility
         });
     }
 
+    public static void log(Exception e)
+    {
+        e.printStackTrace(); // TODO
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static <T> void onNonNull(ReadOnlyObjectProperty<T> property, FXPlatformConsumer<T> consumer)
+    {
+        property.addListener(new ChangeListener<T>()
+        {
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<? extends T> observable, T oldValue, T newValue)
+            {
+                property.removeListener(this);
+                consumer.consume(newValue);
+            }
+        });
+    }
+
     public static class ReadState
     {
         public long startFrom;
@@ -778,6 +801,23 @@ public class Utility
     @OnThread(Tag.FXPlatform)
     @SuppressWarnings("nullness")
     public static <T> void addChangeListenerPlatform(ObservableValue<T> property, FXPlatformConsumer<@Nullable T> listener)
+    {
+        // Defeat thread checker:
+        property.addListener(new ChangeListener<T>()
+        {
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<? extends T> a, T b, T newVal)
+            {
+                listener.consume(newVal);
+            }
+        });
+    }
+
+    @OnThread(Tag.FXPlatform)
+    @SuppressWarnings("nullness")
+    // NN = Not Null
+    public static <T> void addChangeListenerPlatformNN(ObservableValue<T> property, FXPlatformConsumer<@NonNull T> listener)
     {
         // Defeat thread checker:
         property.addListener(new ChangeListener<T>()
