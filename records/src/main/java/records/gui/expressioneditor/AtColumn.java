@@ -44,7 +44,9 @@ public class AtColumn extends ExpressionNode
             }
         };
         this.nodes = FXCollections.observableArrayList(new Label("@"), textField);
-        this.autoComplete = new AutoComplete(textField, this::calculateSuggestions);
+        this.autoComplete = new AutoComplete(textField, this::calculateSuggestions, c -> {
+            parent.addToRight(this, new GeneralEntry("", parent).focusWhenShown());
+        });
     }
 
     private List<Completion> calculateSuggestions(String text)
@@ -78,5 +80,13 @@ public class AtColumn extends ExpressionNode
     {
         Utility.onNonNull(textField.sceneProperty(), scene -> {textField.requestFocus();});
         return this;
+    }
+
+    @Override
+    public boolean focusEnd()
+    {
+        textField.positionCaret(textField.getText().length());
+        textField.requestFocus();
+        return true;
     }
 }

@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import javafx.scene.control.TextField;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.datatype.DataType;
@@ -22,4 +23,6 @@ public interface ExpressionParent
 
     void deleteOneLeftOf(ExpressionNode child);
     void deleteOneRightOf(ExpressionNode child);
+
+    void focusBefore(ExpressionNode child);
 }

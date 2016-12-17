@@ -63,6 +63,12 @@ public class ExpressionEditor extends Consecutive
             {
 
             }
+
+            @Override
+            public void focusBefore(ExpressionNode child)
+            {
+
+            }
         });
         addToRight(null, new GeneralEntry("", this));
         this.container = new FlowPane();

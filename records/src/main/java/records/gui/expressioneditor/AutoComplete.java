@@ -16,6 +16,8 @@ import records.transformations.function.FunctionDefinition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
+import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 
@@ -32,7 +34,7 @@ public class AutoComplete extends PopupControl
     private final ListView<Completion> completions;
 
     @SuppressWarnings("initialization")
-    public AutoComplete(TextField textField, ExFunction<String, List<Completion>> calculateCompletions)
+    public AutoComplete(TextField textField, ExFunction<String, List<Completion>> calculateCompletions, FXPlatformConsumer<Completion> onSelect)
     {
         this.textField = textField;
         this.completions = new ListView<>();
@@ -85,10 +87,28 @@ public class AutoComplete extends PopupControl
             updatePosition(); // Just in case
             updateCompletions(calculateCompletions, text);
         });
-        textField.addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
+        setHideOnEscape(true);
+        setAutoFix(true);
+        addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
             if (e.getCode() == KeyCode.ESCAPE)
             {
                 hide();
+                e.consume();
+            }
+            if ((e.getCode() == KeyCode.UP || e.getCode() == KeyCode.PAGE_UP) && completions.getSelectionModel().getSelectedIndex() <= 0)
+            {
+                completions.getSelectionModel().clearSelection();
+                e.consume();
+            }
+            if (e.getCode() == KeyCode.ENTER || e.getCode() == KeyCode.TAB)
+            {
+                Completion selectedItem = completions.getSelectionModel().getSelectedItem();
+                if (selectedItem != null)
+                {
+                    e.consume();
+                    this.textField.setText(selectedItem.getCompletedText());
+                    onSelect.consume(selectedItem);
+                }
             }
         });
     }
@@ -136,6 +156,7 @@ public class AutoComplete extends PopupControl
         @OnThread(Tag.FXPlatform)
         abstract Pair<@Nullable Node, String> getDisplay();
         abstract boolean shouldShow(String input);
+        abstract String getCompletedText();
     }
 
     public static class SimpleCompletion extends Completion
@@ -157,6 +178,12 @@ public class AutoComplete extends PopupControl
         boolean shouldShow(String input)
         {
             return text.startsWith(input);
+        }
+
+        @Override
+        String getCompletedText()
+        {
+            return text;
         }
     }
 
@@ -182,6 +209,12 @@ public class AutoComplete extends PopupControl
         {
             return input.isEmpty();
         }
+
+        @Override
+        String getCompletedText()
+        {
+            return shortcut;
+        }
     }
 
     public static class FunctionCompletion extends Completion
@@ -203,6 +236,12 @@ public class AutoComplete extends PopupControl
         boolean shouldShow(String input)
         {
             return function.getName().startsWith(input);
+        }
+
+        @Override
+        String getCompletedText()
+        {
+            return function.getName();
         }
     }
 

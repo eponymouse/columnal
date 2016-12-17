@@ -587,6 +587,18 @@ public class Utility
         }
     }
 
+    public static void logStackTrace(String s)
+    {
+        try
+        {
+            throw new Exception(s);
+        }
+        catch (Exception e)
+        {
+            log(e);
+        }
+    }
+
     public static class ReadState
     {
         public long startFrom;

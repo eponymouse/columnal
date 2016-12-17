@@ -81,9 +81,20 @@ public class GeneralEntry extends ExpressionNode
                     parent.deleteOneRightOf(GeneralEntry.this);
                 return super.deletePreviousChar();
             }
+
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void backward()
+            {
+                if (getCaretPosition() == 0)
+                    parent.focusBefore(GeneralEntry.this);
+                super.backward();
+            }
         };
         this.nodes = FXCollections.observableArrayList(textField);
-        this.autoComplete = new AutoComplete(textField, this::getSuggestions);
+        this.autoComplete = new AutoComplete(textField, this::getSuggestions, c -> {
+            parent.addToRight(this, new GeneralEntry("", parent).focusWhenShown());
+        });
     }
 
     private Pair<String, String> splitAt(int index)
@@ -114,6 +125,14 @@ public class GeneralEntry extends ExpressionNode
             textField.replaceText(0, 1, "");
         if (textField.getText().isEmpty())
             parent.replace(this, null);
+    }
+
+    @Override
+    public boolean focusEnd()
+    {
+        textField.positionCaret(textField.getText().length());
+        textField.requestFocus();
+        return true;
     }
 
     private List<Completion> getSuggestions(String text) throws UserException, InternalException

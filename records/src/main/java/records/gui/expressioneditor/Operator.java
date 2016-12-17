@@ -41,4 +41,10 @@ public class Operator extends ExpressionNode
         if (content.getText().isEmpty())
             parent.replace(this, null);
     }
+
+    @Override
+    public boolean focusEnd()
+    {
+        return false;
+    }
 }

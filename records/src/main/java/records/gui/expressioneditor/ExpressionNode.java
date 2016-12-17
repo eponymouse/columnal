@@ -21,4 +21,6 @@ public abstract class ExpressionNode
 
     public abstract void deleteOneFromEnd();
     public abstract void deleteOneFromBegin();
+
+    public abstract boolean focusEnd();
 }

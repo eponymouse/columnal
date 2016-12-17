@@ -9,6 +9,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import records.data.ColumnId;
 import records.data.datatype.DataType;
+import utility.Utility;
 
 import java.util.Arrays;
 import java.util.List;
@@ -52,11 +53,23 @@ public class Consecutive extends ExpressionNode implements ExpressionParent
     }
 
     @Override
+    public boolean focusEnd()
+    {
+        for (int i = children.size() - 1; i >= 0; i--)
+        {
+            if (children.get(i).focusEnd())
+                return true;
+        }
+        return false;
+    }
+
+    @Override
     public void replace(ExpressionNode oldNode, @Nullable ExpressionNode newNode)
     {
-        int index = children.indexOf(oldNode);
+        int index = getChildIndex(oldNode);
         if (index != -1)
         {
+            Utility.logStackTrace("Removing " + oldNode + " from " + this);
             if (newNode != null)
                 children.set(index, newNode);
             else
@@ -68,16 +81,25 @@ public class Consecutive extends ExpressionNode implements ExpressionParent
     @Override
     public void addToRight(@Nullable ExpressionNode rightOf, ExpressionNode... add)
     {
+        //Utility.logStackTrace("Adding " + add[0] + " to " + this);
         if (rightOf == null)
         {
             children.addAll(add);
         }
         else
         {
-            int index = children.indexOf(rightOf);
+            int index = getChildIndex(rightOf);
             if (index != -1)
                 children.addAll(index + 1, Arrays.asList(add));
         }
+    }
+
+    private int getChildIndex(@Nullable ExpressionNode rightOf)
+    {
+        int index = children.indexOf(rightOf);
+        if (index == -1)
+            Utility.logStackTrace("Asked for index but " + rightOf + " not a child of parent " + this);
+        return index;
     }
 
     @Override
@@ -95,7 +117,7 @@ public class Consecutive extends ExpressionNode implements ExpressionParent
     @Override
     public void deleteOneLeftOf(ExpressionNode child)
     {
-        int index = children.indexOf(child);
+        int index = getChildIndex(child);
         if (index > 0)
             children.get(index - 1).deleteOneFromEnd();
     }
@@ -103,8 +125,22 @@ public class Consecutive extends ExpressionNode implements ExpressionParent
     @Override
     public void deleteOneRightOf(ExpressionNode child)
     {
-        int index = children.indexOf(child);
+        int index = getChildIndex(child);
         if (index != -1 && index != children.size() - 1)
             children.get(index + 1).deleteOneFromBegin();
+    }
+
+    @Override
+    public void focusBefore(ExpressionNode child)
+    {
+        int index = getChildIndex(child);
+        if (index != -1 && index > 0)
+        {
+            for (int i = index - 1; i >= 0; i--)
+            {
+                if (children.get(i).focusEnd())
+                    break;
+            }
+        }
     }
 }
