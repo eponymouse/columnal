@@ -41,6 +41,7 @@ public class Main extends Application
     @OnThread(value = Tag.FXPlatform,ignoreParent = true)
     public void start(final Stage primaryStage) throws Exception
     {
+        /*
         ClassLoader cl = ClassLoader.getSystemClassLoader();
 
         if (cl != null)
@@ -52,6 +53,7 @@ public class Main extends Application
                 System.out.println(url.getFile());
             }
         }
+        */
 
         View v = new View();
         Menu menu = new Menu("Data");
@@ -121,7 +123,7 @@ public class Main extends Application
 
         BorderPane root = new BorderPane(new ScrollPane(v), new MenuBar(menu), null, null, null);
         Scene scene = new Scene(root);
-        scene.getStylesheets().add("file:records/css/mainview.css");
+        scene.getStylesheets().add(Utility.getStylesheet("mainview.css"));
         primaryStage.setScene(scene);
         primaryStage.setWidth(1000);
         primaryStage.setHeight(800);
