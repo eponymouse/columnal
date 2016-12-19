@@ -11,8 +11,16 @@ import records.data.ColumnId;
 import records.data.datatype.DataType;
 import utility.Utility;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.IdentityHashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -21,17 +29,67 @@ import java.util.stream.Collectors;
 public class Consecutive extends ExpressionNode implements ExpressionParent
 {
     private final ObservableList<Node> nodes;
+    // The boolean value is only used during updateListeners, will be true other times
+    private final IdentityHashMap<ExpressionNode, Boolean> listeningTo = new IdentityHashMap<>();
+    private final ListChangeListener<Node> childrenNodeListener;
     private final ObservableList<ExpressionNode> children;
+    private final Node prefixNode;
+    private final Node suffixNode;
+    private final @Nullable ExpressionParent parent;
 
-    public Consecutive(List<ExpressionNode> initial, ExpressionParent parent)
+    @SuppressWarnings("initialization")
+    public Consecutive(List<Function<ExpressionParent, ExpressionNode>> initial, ExpressionParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode)
     {
-        super(parent);
+        this.parent = parent;
         nodes = FXCollections.observableArrayList();
         children = FXCollections.observableArrayList();
+        this.prefixNode = prefixNode;
+        this.suffixNode = suffixNode;
+        this.childrenNodeListener = c -> {
+            updateNodes();
+        };
         children.addListener((ListChangeListener<? super @UnknownInterned @UnknownKeyFor ExpressionNode>) c -> {
-            nodes.setAll(children.stream().flatMap(e -> e.nodes().stream()).collect(Collectors.<Node>toList()));
+            updateNodes();
+            updateListeners();
         });
-        children.setAll(initial);
+        children.setAll(Utility.<Function<ExpressionParent, ExpressionNode>, ExpressionNode>mapList(initial, f -> f.apply(this)));
+        if (!(children.get(children.size() - 1) instanceof OperatorEntry))
+            children.add(new OperatorEntry("", this));
+    }
+
+    private void updateListeners()
+    {
+        // Make them all as old (false)
+        listeningTo.replaceAll((e, b) -> false);
+        // Merge new ones:
+        for (ExpressionNode child : children)
+        {
+            // No need to listen again if already present as we're already listening
+            if (listeningTo.get(child) == null)
+                child.nodes().addListener(childrenNodeListener);
+            listeningTo.put(child, true);
+        }
+        // Stop listening to old:
+        for (Iterator<Entry<ExpressionNode, Boolean>> iterator = listeningTo.entrySet().iterator(); iterator.hasNext(); )
+        {
+            Entry<ExpressionNode, Boolean> e = iterator.next();
+            if (e.getValue() == false)
+            {
+                e.getKey().nodes().removeListener(childrenNodeListener);
+                iterator.remove();
+            }
+        }
+
+    }
+
+    private void updateNodes()
+    {
+        List<Node> childrenNodes = new ArrayList<Node>(children.stream().flatMap(e -> e.nodes().stream()).collect(Collectors.<Node>toList()));
+        if (this.prefixNode != null)
+            childrenNodes.add(0, this.prefixNode);
+        if (this.suffixNode != null)
+            childrenNodes.add(this.suffixNode);
+        nodes.setAll(childrenNodes);
     }
 
     @Override
@@ -41,12 +99,19 @@ public class Consecutive extends ExpressionNode implements ExpressionParent
     }
 
     @Override
+    public void focus()
+    {
+        children.get(0).focus();
+    }
+
+    @Override
     public void replace(ExpressionNode oldNode, @Nullable ExpressionNode newNode)
     {
         int index = getChildIndex(oldNode);
+        System.err.println("Replacing " + oldNode + " with " + newNode + " index " + index);
         if (index != -1)
         {
-            Utility.logStackTrace("Removing " + oldNode + " from " + this);
+            //Utility.logStackTrace("Removing " + oldNode + " from " + this);
             if (newNode != null)
                 children.set(index, newNode);
             else
@@ -88,13 +153,41 @@ public class Consecutive extends ExpressionNode implements ExpressionParent
     @Override
     public List<ColumnId> getAvailableColumns()
     {
-        return parent.getAvailableColumns();
+        if (parent != null)
+            return parent.getAvailableColumns();
+        else
+            return Collections.emptyList();
     }
 
     @Override
     public List<String> getAvailableVariables()
     {
-        return parent.getAvailableVariables();
+        if (parent != null)
+            return parent.getAvailableVariables();
+        else
+            return Collections.emptyList();
     }
 
+    @Override
+    public boolean isTopLevel()
+    {
+        return false;
+    }
+
+    @Override
+    public void focusRightOfSelf()
+    {
+        if (parent != null)
+            parent.focusRightOf(this);
+    }
+
+    @Override
+    public void focusRightOf(ExpressionNode child)
+    {
+        int index = getChildIndex(child);
+        if (index < children.size() - 1)
+            children.get(index + 1).focus();
+        else
+            focusRightOfSelf();
+    }
 }

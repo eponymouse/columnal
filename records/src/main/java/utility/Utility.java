@@ -604,7 +604,7 @@ public class Utility
     }
 
     @OnThread(Tag.FX)
-    public static void sizeToFit(TextField tf)
+    public static void sizeToFit(TextField tf, @Nullable Double minSizeFocused, @Nullable Double minSizeUnfocused)
     {
         // Partly taken from http://stackoverflow.com/a/25643696/412908:
         // Set Max and Min Width to PREF_SIZE so that the TextField is always PREF
@@ -616,6 +616,7 @@ public class Utility
                 super.bind(tf.textProperty());
                 super.bind(tf.promptTextProperty());
                 super.bind(tf.fontProperty());
+                super.bind(tf.focusedProperty());
             }
             @Override
             protected double computeValue()
@@ -626,7 +627,7 @@ public class Utility
                     //+ tf.getPadding().getLeft() + tf.getPadding().getRight() // Add the padding of the TextField
                     + tf.getInsets().getLeft() + + tf.getInsets().getRight()
                     + 5d; // Add some spacing
-                return Math.max(20, width);
+                return Math.max(tf.isFocused() ? (minSizeFocused == null ? 20 : minSizeFocused) : (minSizeUnfocused == null ? 20 : minSizeUnfocused), width);
             }
         });
     }
@@ -957,5 +958,12 @@ public class Utility
 
             errors.add(sourceName+"line "+line+":"+charPositionInLine+" "+msg);
         }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static void runAfter(FXPlatformRunnable r)
+    {
+        // Defeat thread-checker:
+        ((Runnable)(() -> Platform.runLater(r::run))).run();
     }
 }

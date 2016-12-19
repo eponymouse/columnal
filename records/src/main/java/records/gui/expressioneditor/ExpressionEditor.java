@@ -28,48 +28,7 @@ public class ExpressionEditor extends Consecutive
     @SuppressWarnings("initialization")
     public ExpressionEditor(@Nullable Expression startingValue, @Nullable Table srcTable, @Nullable DataType type)
     {
-        super(Collections.emptyList(), new ExpressionParent() {
-
-            @Override
-            public void replace(ExpressionNode oldNode, ExpressionNode newNode)
-            {
-            }
-
-            @Override
-            public void addToRight(ExpressionNode rightOf, ExpressionNode... newNode)
-            {
-            }
-
-            @Override
-            public @Nullable DataType getType(ExpressionNode child)
-            {
-                return type;
-            }
-
-            @Override
-            public List<ColumnId> getAvailableColumns()
-            {
-                if (srcTable == null)
-                    return Collections.emptyList();
-                try
-                {
-                    return srcTable.getData().getColumnIds();
-                }
-                catch (UserException e)
-                {
-                    Utility.log(e);
-                    return Collections.emptyList();
-                }
-            }
-
-            @Override
-            public List<String> getAvailableVariables()
-            {
-                // No variables from outside the expression:
-                return Collections.emptyList();
-            }
-        });
-        addToRight(null, new GeneralEntry("", this));
+        super(Collections.singletonList(e -> new GeneralEntry("", e)), null, null, null);
         this.container = new FlowPane();
         container.getStyleClass().add("expression-editor");
         Utility.ensureFontLoaded("NotoSans-Regular.ttf");
@@ -93,4 +52,32 @@ public class ExpressionEditor extends Consecutive
         return type;
     }
 
+    @Override
+    public List<ColumnId> getAvailableColumns()
+    {
+        if (srcTable == null)
+            return Collections.emptyList();
+        try
+        {
+            return srcTable.getData().getColumnIds();
+        }
+        catch (UserException e)
+        {
+            Utility.log(e);
+            return Collections.emptyList();
+        }
+    }
+
+    @Override
+    public List<String> getAvailableVariables()
+    {
+        // No variables from outside the expression:
+        return Collections.emptyList();
+    }
+
+    @Override
+    public boolean isTopLevel()
+    {
+        return true;
+    }
 }

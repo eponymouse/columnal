@@ -22,4 +22,12 @@ public interface ExpressionParent
     List<ColumnId> getAvailableColumns();
 
     List<String> getAvailableVariables();
+
+    boolean isTopLevel();
+
+    // Focuses to the right of this expression (i.e. after the closing bracket)
+    void focusRightOfSelf();
+
+    // Focus the child to the right of the given child:
+    void focusRightOf(ExpressionNode child);
 }

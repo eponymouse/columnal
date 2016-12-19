@@ -1,0 +1,21 @@
+Adjacent items is never valid.  Always item-operator-item, etc
+
+Tags w/ inner and function calls are one item with args (like Stride brackets, but the function call/tag is glued to the opening bracket)
+
+No special characters to distinguish any of them, all done in auto complete
+
+String literal as in Stride, press quote to enter, backspace at end to turn back into ordinary
+
+Special all & only functions for column references, available in auto complete like:
+   Card  -- Only available from this table
+   Card  [all]
+   Const.Foo [all]
+   Const.Foo  [only]  -- Only available if known to be size 1, and from another table.
+
+Add operator for String concat?  ++ is awkward I think, maybe ~
+
+Comma is just an operator
+
+When operators are mixed, offer quick fix to bracket one way or the other
+
+TODO: think about pattern matches

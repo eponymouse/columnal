@@ -9,13 +9,8 @@ import org.checkerframework.dataflow.qual.Pure;
  */
 public abstract class ExpressionNode
 {
-    protected final ExpressionParent parent;
-
-    public ExpressionNode(ExpressionParent parent)
-    {
-        this.parent = parent;
-    }
-
     @Pure
     public abstract ObservableList<Node> nodes();
+
+    public abstract void focus();
 }

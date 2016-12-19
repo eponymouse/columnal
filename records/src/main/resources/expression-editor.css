@@ -1,6 +1,10 @@
 .expression-editor {
     -fx-font-family: "Noto Sans";
     -fx-font-size: 12pt;
+
+    -fx-alignment: baseline-left;
+    -fx-row-valignment: baseline;
+    -fx-vgap: 1px;
 }
 .entry-type {
     -fx-font-size: 8pt;
@@ -23,12 +27,13 @@
     -fx-background-color: skyblue;
     -fx-background-radius: 0;
 }
-.entry-field {
+.entry-field, .operator-field {
     -fx-background-insets: 0;
     -fx-background-color: transparent;
     -fx-border-width: 1;
     -fx-border-color: transparent;
 }
-.entry-field:ps-empty, .entry-field:hover, .entry-field:focused {
+.entry-field:ps-empty, .entry-field:hover, .entry-field:focused,
+  .operator-field:hover, .operator-field:focused{
     -fx-border-color: grey;
 }

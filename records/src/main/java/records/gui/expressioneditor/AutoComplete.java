@@ -13,17 +13,17 @@ import javafx.scene.input.MouseButton;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.GeneralEntry.Status;
-import records.transformations.function.FunctionDefinition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
+import utility.FXPlatformBiConsumer;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Created by neil on 17/12/2016.
@@ -35,8 +35,22 @@ public class AutoComplete extends PopupControl
     private final ExFunction<String, List<Completion>> calculateCompletions;
     private final ListView<Completion> completions;
 
+    /**
+     *
+     * @param textField
+     * @param calculateCompletions
+     * @param onSelect The completion to enact, and any characters left-over which
+     *                 should be carried into the next slot.
+     * @param inNextAlphabet The alphabet of a slot is the set of characters *usually*
+     *                       featured.  E.g. for operators it's any characters that
+     *                       feature in an operator. For general entry it's the inverse
+     *                       of operators.  This predicate checks if the character is in
+     *                       the alphabet of the following slot.  If it is, and there's
+     *                       no available completions with this character then we pick
+     *                       the top one and move to next slot.
+     */
     @SuppressWarnings("initialization")
-    public AutoComplete(TextField textField, ExFunction<String, List<Completion>> calculateCompletions, FXPlatformConsumer<Completion> onSelect)
+    public AutoComplete(TextField textField, ExFunction<String, List<Completion>> calculateCompletions, FXPlatformBiConsumer<Completion, String> onSelect, Predicate<Character> inNextAlphabet)
     {
         this.textField = textField;
         this.completions = new ListView<>();
@@ -48,7 +62,7 @@ public class AutoComplete extends PopupControl
         completions.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY)
             {
-                onSelect.consume(completions.getSelectionModel().getSelectedItem());
+                onSelect.consume(completions.getSelectionModel().getSelectedItem(), "");
             }
         });
 
@@ -86,14 +100,59 @@ public class AutoComplete extends PopupControl
                 hide();
         });
 
+        // TODO listen to scene's position in window, and window's position
         Utility.addChangeListenerPlatformNN(textField.localToSceneTransformProperty(), t -> updatePosition());
         Utility.addChangeListenerPlatformNN(textField.layoutXProperty(), t -> updatePosition());
         Utility.addChangeListenerPlatformNN(textField.layoutYProperty(), t -> updatePosition());
         Utility.addChangeListenerPlatformNN(textField.heightProperty(), t -> updatePosition());
 
         Utility.addChangeListenerPlatformNN(textField.textProperty(), text -> {
+            text = text.trim();
             updatePosition(); // Just in case
-            updateCompletions(calculateCompletions, text);
+            List<Completion> available = updateCompletions(calculateCompletions, text);
+            if (text.length() >= 2 && inNextAlphabet.test(text.charAt(text.length() - 1)))
+            {
+                char last = text.charAt(text.length() - 1);
+                String withoutLast = text.substring(0, text.length() - 1);
+                List<Completion> completionsWithoutLast = null;
+                try
+                {
+                    completionsWithoutLast = calculateCompletions.apply(withoutLast);
+
+                    if (withoutLast != null && !available.stream().anyMatch(c -> c.getDisplay(withoutLast).getSecond().contains("" + last)))
+                    {
+                        // No completions feature the character and it is in the following alphabet, so
+                        // complete the top one and move character to next slot
+                        onSelect.consume(completionsWithoutLast.get(0), "" + last);
+                        return;
+                    }
+                }
+                catch (UserException | InternalException e)
+                {
+                    Utility.log(e);
+                }
+            }
+            for (Completion completion : available)
+            {
+                if (completion.completesOnExactly(text))
+                {
+                    onSelect.consume(completion, "");
+                    hide();
+                    break;
+                }
+                else if (completion.getDisplay(text).getSecond().equals(text))
+                {
+                    // Select it, at least:
+                    completions.getSelectionModel().select(completion);
+                }
+            }
+            //TODO if they type an operator or non-operator char, and there is
+            // no completion containing such a char, finish with current and move
+            // to next (e.g. user types "true&"; as long as there's no current completion
+            // involving "&", take it as an operator and move to next slot (which
+            // may also complete if that's the only operator featuring that char)
+            // while selecting the best (top) selection for current, or leave as error if none
+
         });
         setHideOnEscape(true);
         setAutoFix(true);
@@ -114,13 +173,14 @@ public class AutoComplete extends PopupControl
                 if (selectedItem != null)
                 {
                     e.consume();
-                    onSelect.consume(selectedItem);
+                    onSelect.consume(selectedItem, "");
+                    hide();
                 }
             }
         });
     }
 
-    private void updateCompletions(ExFunction<String, List<Completion>> calculateCompletions, String text)
+    private List<Completion> updateCompletions(ExFunction<String, List<Completion>> calculateCompletions, String text)
     {
         try
         {
@@ -131,6 +191,7 @@ public class AutoComplete extends PopupControl
             Utility.log(e);
             this.completions.getItems().clear();
         }
+        return this.completions.getItems();
     }
 
     @OnThread(Tag.FXPlatform)
@@ -160,110 +221,48 @@ public class AutoComplete extends PopupControl
 
     public abstract static class Completion
     {
-        @OnThread(Tag.FXPlatform)
-        abstract Pair<@Nullable Node, String> getDisplay();
+        abstract Pair<@Nullable Node, String> getDisplay(String currentText);
         abstract boolean shouldShow(String input);
-        abstract String getCompletedText();
-        abstract Status getType();
-    }
-
-    public static class SimpleCompletion extends Completion
-    {
-        private final String text;
-        private final Status type;
-
-        public SimpleCompletion(String text, Status type)
+        public boolean completesOnExactly(String input)
         {
-            this.text = text;
-            this.type = type;
-        }
-
-        @Override
-        Pair<@Nullable Node, String> getDisplay()
-        {
-            return new Pair<>(null, text);
-        }
-
-        @Override
-        boolean shouldShow(String input)
-        {
-            return text.startsWith(input);
-        }
-
-        @Override
-        String getCompletedText()
-        {
-            return text;
-        }
-
-        @Override
-        Status getType()
-        {
-            return type;
+            return false;
         }
     }
-/*
+
+
+
     public static class KeyShortcutCompletion extends Completion
     {
-        private final String shortcut;
+        private final Character[] shortcuts;
         private final String title;
 
-        public KeyShortcutCompletion(String shortcut, String title)
+        public KeyShortcutCompletion(String title, Character... shortcuts)
         {
-            this.shortcut = shortcut;
+            this.shortcuts = shortcuts;
             this.title = title;
         }
 
         @Override
-        Pair<@Nullable Node, String> getDisplay()
+        Pair<@Nullable Node, String> getDisplay(String currentText)
         {
-            return new Pair<>(new Label(" " + shortcut + " "), title);
+            return new Pair<>(new Label(" " + shortcuts[0] + " "), title);
         }
 
         @Override
         boolean shouldShow(String input)
         {
-            return input.isEmpty();
+            return input.isEmpty() || Arrays.stream(shortcuts).anyMatch(c -> input.equals(c.toString()));
         }
 
         @Override
-        String getCompletedText()
+        public boolean completesOnExactly(String input)
         {
-            return shortcut;
-        }
-    }
-*/
-    public static class FunctionCompletion extends Completion
-    {
-        private final FunctionDefinition function;
-
-        public FunctionCompletion(FunctionDefinition function)
-        {
-            this.function = function;
-        }
-
-        @Override
-        Pair<@Nullable Node, String> getDisplay()
-        {
-            return new Pair<>(null, function.getName());
-        }
-
-        @Override
-        boolean shouldShow(String input)
-        {
-            return function.getName().startsWith(input);
-        }
-
-        @Override
-        String getCompletedText()
-        {
-            return function.getName();
-        }
-
-        @Override
-        Status getType()
-        {
-            return Status.FUNCTION;
+            for (Character shortcut : shortcuts)
+            {
+                if (input.equals(shortcut.toString()))
+                    return true;
+            }
+            return false;
         }
     }
 
@@ -280,7 +279,7 @@ public class AutoComplete extends PopupControl
             }
             else
             {
-                Pair<@Nullable Node, String> p = item.getDisplay();
+                Pair<@Nullable Node, String> p = item.getDisplay(textField.getText());
                 setGraphic(p.getFirst());
                 setText(p.getSecond());
             }

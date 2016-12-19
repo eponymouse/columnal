@@ -1,6 +1,5 @@
 package records.gui.expressioneditor;
 
-import com.sun.org.apache.xpath.internal.compiler.PsuedoNames;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
@@ -12,25 +11,24 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
-import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitor;
-import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.NumberInfo;
-import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.ExpressionLexer;
+import records.grammar.ExpressionParser;
 import records.gui.expressioneditor.AutoComplete.Completion;
-import records.gui.expressioneditor.AutoComplete.FunctionCompletion;
-import records.gui.expressioneditor.AutoComplete.SimpleCompletion;
+import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.UnitType;
 import utility.Utility;
 
+import java.io.ByteArrayInputStream;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -40,9 +38,8 @@ import java.util.List;
  *   - Function name (until later transformed to function call)
  *   - Variable reference.
  */
-public class GeneralEntry extends ExpressionNode
+public class GeneralEntry extends LeafNode
 {
-
     private final VBox container;
 
     public static enum Status
@@ -62,17 +59,40 @@ public class GeneralEntry extends ExpressionNode
         super(parent);
         this.textField = new TextField(content);
         textField.getStyleClass().add("entry-field");
-        Utility.sizeToFit(textField);
+        Utility.sizeToFit(textField, null, null);
         typeLabel = new Label();
         typeLabel.getStyleClass().add("entry-type");
-        container = new VBox(typeLabel, textField);
+        container = new VBox(typeLabel, textField) {
+            @Override
+            @OnThread(Tag.FX)
+            public double getBaselineOffset()
+            {
+                return typeLabel.getHeight() + getSpacing() + textField.getBaselineOffset();
+            }
+        };
         container.getStyleClass().add("entry");
         this.nodes = FXCollections.observableArrayList(container);
-        this.autoComplete = new AutoComplete(textField, this::getSuggestions, c -> {
-            textField.setText(c.getCompletedText());
-            status.setValue(c.getType());
-            parent.addToRight(this, new GeneralEntry("", parent).focusWhenShown());
-        });
+        this.autoComplete = new AutoComplete(textField, this::getSuggestions, (c, rest) -> {
+            if (c instanceof KeyShortcutCompletion)
+            {
+                parent.replace(this, new Consecutive(Collections.singletonList(e -> new GeneralEntry("", e).focusWhenShown()), parent, new Label("("), new Label(")")));
+            }
+            else if (c instanceof FunctionCompletion) // Must come before general due to inheritance
+            {
+                // What to do with rest != "" here? Don't allow? Skip to after args?
+                FunctionCompletion fc = (FunctionCompletion)c;
+                parent.replace(this, new FunctionNode(fc.function.getName(), parent).focusWhenShown());
+            }
+            else if (c instanceof GeneralCompletion)
+            {
+                GeneralCompletion gc = (GeneralCompletion) c;
+                textField.setText(gc.getCompletedText());
+                status.setValue(gc.getType());
+                parent.addToRight(this, new OperatorEntry(rest, parent).focusWhenShown());
+            }
+            else
+                Utility.logStackTrace("Unsupported completion: " + c.getClass());
+        }, OperatorEntry::isOperatorAlphabet);
 
         Utility.addChangeListenerPlatformNN(status, s -> {
             for (Status possibleStatus : Status.values())
@@ -143,6 +163,8 @@ public class GeneralEntry extends ExpressionNode
     private List<Completion> getSuggestions(String text) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
+        r.add(new KeyShortcutCompletion("Bracketed expressions", '('));
+        r.add(new NumericLiteralCompletion());
         addAllFunctions(r);
         r.add(new SimpleCompletion("true", Status.LITERAL));
         r.add(new SimpleCompletion("false", Status.LITERAL));
@@ -210,5 +232,124 @@ public class GeneralEntry extends ExpressionNode
     {
         Utility.onNonNull(textField.sceneProperty(), scene -> textField.requestFocus());
         return this;
+    }
+
+    private static abstract class GeneralCompletion extends Completion
+    {
+        abstract String getCompletedText();
+        abstract Status getType();
+    }
+
+    private static class SimpleCompletion extends GeneralCompletion
+    {
+        private final String text;
+        private final Status type;
+
+        public SimpleCompletion(String text, Status type)
+        {
+            this.text = text;
+            this.type = type;
+        }
+
+        @Override
+        Pair<@Nullable Node, String> getDisplay(String currentText)
+        {
+            return new Pair<>(null, text);
+        }
+
+        @Override
+        boolean shouldShow(String input)
+        {
+            return text.startsWith(input);
+        }
+
+        @Override
+        String getCompletedText()
+        {
+            return text;
+        }
+
+        Status getType()
+        {
+            return type;
+        }
+    }
+
+
+    public static class FunctionCompletion extends GeneralCompletion
+    {
+        private final FunctionDefinition function;
+
+        public FunctionCompletion(FunctionDefinition function)
+        {
+            this.function = function;
+        }
+
+        @Override
+        Pair<@Nullable Node, String> getDisplay(String currentText)
+        {
+            return new Pair<>(null, function.getName());
+        }
+
+        @Override
+        boolean shouldShow(String input)
+        {
+            return function.getName().startsWith(input);
+        }
+
+        @Override
+        String getCompletedText()
+        {
+            return function.getName();
+        }
+
+        Status getType()
+        {
+            return Status.FUNCTION;
+        }
+    }
+
+    private static class NumericLiteralCompletion extends GeneralCompletion
+    {
+        private String value = "";
+
+        @Override
+        Pair<@Nullable Node, String> getDisplay(String currentText)
+        {
+            this.value = currentText.trim();
+            return new Pair<>(null, value);
+        }
+
+        @Override
+        boolean shouldShow(String input)
+        {
+            try
+            {
+                return Utility.parseAsOne(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)), ExpressionLexer::new, ExpressionParser::new, p -> p.numericLiteral())
+                    != null;
+            }
+            catch (InternalException | UserException | IOException e)
+            {
+                return false;
+            }
+        }
+
+        @Override
+        String getCompletedText()
+        {
+            return value;
+        }
+
+        @Override
+        Status getType()
+        {
+            return Status.LITERAL;
+        }
+    }
+
+    @Override
+    public void focus()
+    {
+        textField.requestFocus();
     }
 }
