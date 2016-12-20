@@ -3,11 +3,11 @@ package records.gui.expressioneditor;
 /**
  * Created by neil on 19/12/2016.
  */
-public abstract class LeafNode extends ExpressionNode
+public abstract class LeafNode implements ExpressionNode
 {
-    protected final ExpressionParent parent;
+    protected final Consecutive parent;
 
-    public LeafNode(ExpressionParent parent)
+    public LeafNode(Consecutive parent)
     {
         this.parent = parent;
     }

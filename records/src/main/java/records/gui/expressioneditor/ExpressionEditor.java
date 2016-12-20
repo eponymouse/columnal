@@ -28,7 +28,7 @@ public class ExpressionEditor extends Consecutive
     @SuppressWarnings("initialization")
     public ExpressionEditor(@Nullable Expression startingValue, @Nullable Table srcTable, @Nullable DataType type)
     {
-        super(Collections.singletonList(e -> new GeneralEntry("", e)), null, null, null);
+        super(null, null, null);
         this.container = new FlowPane();
         container.getStyleClass().add("expression-editor");
         Utility.ensureFontLoaded("NotoSans-Regular.ttf");
@@ -39,6 +39,7 @@ public class ExpressionEditor extends Consecutive
         nodes().addListener((ListChangeListener<? super @UnknownInterned @UnknownKeyFor Node>) c -> {
             container.getChildren().setAll(nodes());
         });
+        //Utility.onNonNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
     }
 
     public Node getContainer()
@@ -69,7 +70,7 @@ public class ExpressionEditor extends Consecutive
     }
 
     @Override
-    public List<String> getAvailableVariables()
+    public List<String> getAvailableVariables(ExpressionNode child)
     {
         // No variables from outside the expression:
         return Collections.emptyList();

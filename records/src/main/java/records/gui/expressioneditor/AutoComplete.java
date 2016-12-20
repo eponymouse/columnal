@@ -110,6 +110,12 @@ public class AutoComplete extends PopupControl
             text = text.trim();
             updatePosition(); // Just in case
             List<Completion> available = updateCompletions(calculateCompletions, text);
+            // If they type an operator or non-operator char, and there is
+            // no completion containing such a char, finish with current and move
+            // to next (e.g. user types "true&"; as long as there's no current completion
+            // involving "&", take it as an operator and move to next slot (which
+            // may also complete if that's the only operator featuring that char)
+            // while selecting the best (top) selection for current, or leave as error if none
             if (text.length() >= 2 && inNextAlphabet.test(text.charAt(text.length() - 1)))
             {
                 char last = text.charAt(text.length() - 1);
@@ -146,12 +152,11 @@ public class AutoComplete extends PopupControl
                     completions.getSelectionModel().select(completion);
                 }
             }
-            //TODO if they type an operator or non-operator char, and there is
-            // no completion containing such a char, finish with current and move
-            // to next (e.g. user types "true&"; as long as there's no current completion
-            // involving "&", take it as an operator and move to next slot (which
-            // may also complete if that's the only operator featuring that char)
-            // while selecting the best (top) selection for current, or leave as error if none
+
+            if (!text.isEmpty() && !completions.getItems().isEmpty() && completions.getSelectionModel().isEmpty())
+            {
+                completions.getSelectionModel().select(0);
+            }
 
         });
         setHideOnEscape(true);

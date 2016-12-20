@@ -7,8 +7,11 @@ import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
+import records.transformations.expression.Expression;
+import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 
@@ -30,11 +33,11 @@ public class OperatorEntry extends LeafNode
     private final static Set<Integer> ALPHABET = OPERATORS.stream().flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
     @SuppressWarnings("initialization")
-    public OperatorEntry(String content, ExpressionParent parent)
+    public OperatorEntry(String content, Consecutive parent)
     {
         super(parent);
-        this.textField = new TextField();
-        Utility.sizeToFit(textField, 20.0, 5.0);
+        this.textField = new LeaveableTextField(this, parent);
+        Utility.sizeToFit(textField, 5.0, 5.0);
         textField.getStyleClass().add("operator-field");
         this.nodes = FXCollections.observableArrayList(this.textField);
 
@@ -42,11 +45,11 @@ public class OperatorEntry extends LeafNode
             if (c instanceof SimpleCompletion)
             {
                 textField.setText(((SimpleCompletion) c).operator);
-                parent.addToRight(this, new GeneralEntry(rest, parent).focusWhenShown());
+                parent.addOperandToRight(this, new GeneralEntry(rest, parent).focusWhenShown());
             }
             else if (c instanceof KeyShortcutCompletion)
             {
-                parent.focusRightOfSelf();
+                parent.focusRightOf(this);
                 textField.setText("");
             }
         }, c -> !isOperatorAlphabet(c));
@@ -85,6 +88,19 @@ public class OperatorEntry extends LeafNode
         return ALPHABET.contains((Integer)(int)(char)character);
     }
 
+    // Returns false if it wasn't blank
+    public boolean fromBlankTo(String s)
+    {
+        if (textField.getText().trim().isEmpty())
+        {
+            textField.setText(s);
+            focus(Focus.RIGHT);
+            return true;
+        }
+        else
+            return false;
+    }
+
     private class SimpleCompletion extends Completion
     {
         private final String operator;
@@ -115,8 +131,9 @@ public class OperatorEntry extends LeafNode
     }
 
     @Override
-    public void focus()
+    public void focus(Focus side)
     {
         textField.requestFocus();
+        textField.positionCaret(side == Focus.LEFT ? 0 : textField.getLength());
     }
 }

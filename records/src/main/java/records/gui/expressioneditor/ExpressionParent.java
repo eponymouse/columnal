@@ -1,6 +1,5 @@
 package records.gui.expressioneditor;
 
-import javafx.scene.control.TextField;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.datatype.DataType;
@@ -12,22 +11,15 @@ import java.util.List;
  */
 public interface ExpressionParent
 {
-    void replace(ExpressionNode oldNode, @Nullable ExpressionNode newNode);
-
-    // If null, add to end
-    void addToRight(@Nullable ExpressionNode rightOf, ExpressionNode... newNode);
-
     @Nullable DataType getType(ExpressionNode child);
 
     List<ColumnId> getAvailableColumns();
 
-    List<String> getAvailableVariables();
+    List<String> getAvailableVariables(ExpressionNode child);
 
     boolean isTopLevel();
 
-    // Focuses to the right of this expression (i.e. after the closing bracket)
-    void focusRightOfSelf();
-
     // Focus the child to the right of the given child:
     void focusRightOf(ExpressionNode child);
+    void focusLeftOf(ExpressionNode child);
 }

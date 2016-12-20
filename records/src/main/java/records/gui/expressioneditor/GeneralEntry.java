@@ -9,18 +9,28 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
+import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
+import records.grammar.ExpressionParser.BooleanLiteralContext;
+import records.grammar.ExpressionParser.NumericLiteralContext;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
+import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.ColumnReference;
+import records.transformations.expression.Expression;
+import records.transformations.expression.NumericLiteral;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
+import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 
@@ -30,6 +40,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Anything which fits in a normal text field without special prefix:
@@ -38,9 +49,12 @@ import java.util.List;
  *   - Function name (until later transformed to function call)
  *   - Variable reference.
  */
-public class GeneralEntry extends LeafNode
+public class GeneralEntry extends LeafNode implements OperandNode
 {
     private final VBox container;
+    private final @Interned KeyShortcutCompletion bracketCompletion;
+    private final @Interned KeyShortcutCompletion patternMatchCompletion;
+    private boolean completing; // Set to true while updating field with auto completion
 
     public static enum Status
     {
@@ -54,10 +68,13 @@ public class GeneralEntry extends LeafNode
     private final AutoComplete autoComplete;
 
     @SuppressWarnings("initialization")
-    public GeneralEntry(String content, ExpressionParent parent)
+    public GeneralEntry(String content, Consecutive parent)
     {
         super(parent);
-        this.textField = new TextField(content);
+        bracketCompletion = new @Interned KeyShortcutCompletion("Bracketed expressions", '(');
+        patternMatchCompletion = new @Interned KeyShortcutCompletion("Pattern match", '?');
+        this.textField = new LeaveableTextField(this, parent);
+        textField.setText(content);
         textField.getStyleClass().add("entry-field");
         Utility.sizeToFit(textField, null, null);
         typeLabel = new Label();
@@ -75,7 +92,11 @@ public class GeneralEntry extends LeafNode
         this.autoComplete = new AutoComplete(textField, this::getSuggestions, (c, rest) -> {
             if (c instanceof KeyShortcutCompletion)
             {
-                parent.replace(this, new Consecutive(Collections.singletonList(e -> new GeneralEntry("", e).focusWhenShown()), parent, new Label("("), new Label(")")));
+                @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
+                if (ksc == bracketCompletion)
+                    parent.replace(this, new Bracketed(Collections.<Function<Consecutive, OperandNode>>singletonList(e -> new GeneralEntry("", e).focusWhenShown()), parent, new Label("("), new Label(")")));
+                else if (ksc == patternMatchCompletion)
+                    parent.replace(this, new PatternMatchNode(parent).focusWhenShown());
             }
             else if (c instanceof FunctionCompletion) // Must come before general due to inheritance
             {
@@ -86,9 +107,11 @@ public class GeneralEntry extends LeafNode
             else if (c instanceof GeneralCompletion)
             {
                 GeneralCompletion gc = (GeneralCompletion) c;
+                completing = true;
                 textField.setText(gc.getCompletedText());
                 status.setValue(gc.getType());
-                parent.addToRight(this, new OperatorEntry(rest, parent).focusWhenShown());
+                completing = false;
+                parent.setOperatorToRight(this, rest);
             }
             else
                 Utility.logStackTrace("Unsupported completion: " + c.getClass());
@@ -102,6 +125,8 @@ public class GeneralEntry extends LeafNode
             typeLabel.setText(getTypeLabel(s));
         });
         Utility.addChangeListenerPlatformNN(textField.textProperty(), t -> {
+            if (!completing)
+                status.set(Status.UNFINISHED);
             textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), t.isEmpty());
         });
         textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), textField.getText().isEmpty());
@@ -163,7 +188,8 @@ public class GeneralEntry extends LeafNode
     private List<Completion> getSuggestions(String text) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
-        r.add(new KeyShortcutCompletion("Bracketed expressions", '('));
+        r.add(bracketCompletion);
+        r.add(patternMatchCompletion);
         r.add(new NumericLiteralCompletion());
         addAllFunctions(r);
         r.add(new SimpleCompletion("true", Status.LITERAL));
@@ -228,7 +254,7 @@ public class GeneralEntry extends LeafNode
         }
     }
 
-    public ExpressionNode focusWhenShown()
+    public GeneralEntry focusWhenShown()
     {
         Utility.onNonNull(textField.sceneProperty(), scene -> textField.requestFocus());
         return this;
@@ -325,10 +351,10 @@ public class GeneralEntry extends LeafNode
         {
             try
             {
-                return Utility.parseAsOne(new ByteArrayInputStream(input.getBytes(StandardCharsets.UTF_8)), ExpressionLexer::new, ExpressionParser::new, p -> p.numericLiteral())
+                return Utility.parseAsOne(input, ExpressionLexer::new, ExpressionParser::new, p -> p.numericLiteral())
                     != null;
             }
-            catch (InternalException | UserException | IOException e)
+            catch (InternalException | UserException e)
             {
                 return false;
             }
@@ -348,8 +374,59 @@ public class GeneralEntry extends LeafNode
     }
 
     @Override
-    public void focus()
+    public void focus(Focus side)
     {
         textField.requestFocus();
+        textField.positionCaret(side == Focus.LEFT ? 0 : textField.getLength());
+    }
+
+    @Override
+    public @Nullable DataType inferType()
+    {
+        return null;
+    }
+
+    @Override
+    public ExpressionNode prompt(String prompt)
+    {
+        textField.setPromptText(prompt);
+        return this;
+    }
+
+    @Override
+    public @Nullable Expression toExpression(FXPlatformConsumer<Object> onError)
+    {
+        if (status.get() == Status.COLUMN_REFERENCE)
+        {
+            return new ColumnReference(new ColumnId(textField.getText()));
+        }
+        else if (status.get() == Status.LITERAL)
+        {
+            NumericLiteralContext number = parseOrNull(ExpressionParser::numericLiteral);
+            if (number != null)
+            {
+                //TODO support units
+                return new NumericLiteral(Utility.parseNumber(number.getText()), null);
+            }
+            BooleanLiteralContext bool = parseOrNull(ExpressionParser::booleanLiteral);
+            if (bool != null)
+            {
+                return new BooleanLiteral(bool.getText().equals("true"));
+            }
+        }
+        // Unfinished:
+        return null;
+    }
+
+    private <T> @Nullable T parseOrNull(ExFunction<ExpressionParser, T> parse)
+    {
+        try
+        {
+            return Utility.parseAsOne(textField.getText().trim(), ExpressionLexer::new, ExpressionParser::new, parse);
+        }
+        catch (InternalException | UserException e)
+        {
+            return null;
+        }
     }
 }

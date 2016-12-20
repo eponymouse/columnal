@@ -622,6 +622,8 @@ public class Utility
             protected double computeValue()
             {
                 Text text = new Text(tf.getText());
+                if (text.getText().isEmpty() && !tf.getPromptText().isEmpty())
+                    text.setText(tf.getPromptText());
                 text.setFont(tf.getFont()); // Set the same font, so the size is the same
                 double width = text.getLayoutBounds().getWidth() // This big is the Text in the TextField
                     //+ tf.getPadding().getLeft() + tf.getPadding().getRight() // Add the padding of the TextField

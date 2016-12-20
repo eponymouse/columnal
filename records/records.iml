@@ -65,5 +65,14 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="module-library">
+      <library name="Maven: com.fxexperience:scenic-view:8.7.0">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/scenicView.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
   </component>
 </module>
