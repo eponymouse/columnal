@@ -8,6 +8,7 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -17,6 +18,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
 import utility.FXPlatformBiConsumer;
+import utility.FXPlatformBiFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -39,8 +41,9 @@ public class AutoComplete extends PopupControl
      *
      * @param textField
      * @param calculateCompletions
-     * @param onSelect The completion to enact, and any characters left-over which
-     *                 should be carried into the next slot.
+     * @param onSelect The action to take when a completion is selected.
+     *                 Should not set the text
+     *                 for the text field, but instead return the new text to be set.
      * @param inNextAlphabet The alphabet of a slot is the set of characters *usually*
      *                       featured.  E.g. for operators it's any characters that
      *                       feature in an operator. For general entry it's the inverse
@@ -50,7 +53,7 @@ public class AutoComplete extends PopupControl
      *                       the top one and move to next slot.
      */
     @SuppressWarnings("initialization")
-    public AutoComplete(TextField textField, ExFunction<String, List<Completion>> calculateCompletions, FXPlatformBiConsumer<Completion, String> onSelect, Predicate<Character> inNextAlphabet)
+    public AutoComplete(TextField textField, ExFunction<String, List<Completion>> calculateCompletions, CompletionListener onSelect, Predicate<Character> inNextAlphabet)
     {
         this.textField = textField;
         this.completions = new ListView<>();
@@ -62,7 +65,7 @@ public class AutoComplete extends PopupControl
         completions.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY)
             {
-                onSelect.consume(completions.getSelectionModel().getSelectedItem(), "");
+                textField.setText(onSelect.doubleClick(textField.getText(), completions.getSelectionModel().getSelectedItem()));
             }
         });
 
@@ -94,10 +97,14 @@ public class AutoComplete extends PopupControl
             {
                 Pair<Double, Double> pos = calculatePosition();
                 updateCompletions(calculateCompletions, textField.getText());
-                show(textField, pos.getFirst(), pos.getSecond());
+                if (!isShowing())
+                    show(textField, pos.getFirst(), pos.getSecond());
             }
             else
-                hide();
+            {
+                if (isShowing())
+                    hide();
+            }
         });
 
         // TODO listen to scene's position in window, and window's position
@@ -106,7 +113,12 @@ public class AutoComplete extends PopupControl
         Utility.addChangeListenerPlatformNN(textField.layoutYProperty(), t -> updatePosition());
         Utility.addChangeListenerPlatformNN(textField.heightProperty(), t -> updatePosition());
 
-        Utility.addChangeListenerPlatformNN(textField.textProperty(), text -> {
+        textField.setTextFormatter(new TextFormatter<String>(change -> {
+            // We're not interested in changes in just the selection:
+            if (!change.isContentChange())
+                return change;
+            String text = change.getControlNewText();
+
             text = text.trim();
             updatePosition(); // Just in case
             List<Completion> available = updateCompletions(calculateCompletions, text);
@@ -129,8 +141,9 @@ public class AutoComplete extends PopupControl
                     {
                         // No completions feature the character and it is in the following alphabet, so
                         // complete the top one and move character to next slot
-                        onSelect.consume(completionsWithoutLast.get(0), "" + last);
-                        return;
+                        change.setText(onSelect.nonAlphabetCharacter(withoutLast, completionsWithoutLast.get(0), "" + last));
+                        change.setRange(0, textField.getLength());
+                        return change;
                     }
                 }
                 catch (UserException | InternalException e)
@@ -140,11 +153,12 @@ public class AutoComplete extends PopupControl
             }
             for (Completion completion : available)
             {
-                if (completion.completesOnExactly(text))
+                if (completion.completesOnExactly(text, available.size() == 1))
                 {
-                    onSelect.consume(completion, "");
+                    change.setText(onSelect.exactCompletion(text, completion));
+                    change.setRange(0, textField.getLength());
                     hide();
-                    break;
+                    return change;
                 }
                 else if (completion.getDisplay(text).getSecond().equals(text))
                 {
@@ -157,8 +171,8 @@ public class AutoComplete extends PopupControl
             {
                 completions.getSelectionModel().select(0);
             }
-
-        });
+            return change;
+        }));
         setHideOnEscape(true);
         setAutoFix(true);
         addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
@@ -178,7 +192,7 @@ public class AutoComplete extends PopupControl
                 if (selectedItem != null)
                 {
                     e.consume();
-                    onSelect.consume(selectedItem, "");
+                    textField.setText(onSelect.keyboardSelect(textField.getText(), selectedItem));
                     hide();
                 }
             }
@@ -228,7 +242,7 @@ public class AutoComplete extends PopupControl
     {
         abstract Pair<@Nullable Node, String> getDisplay(String currentText);
         abstract boolean shouldShow(String input);
-        public boolean completesOnExactly(String input)
+        public boolean completesOnExactly(String input, boolean onlyAvailableCompletion)
         {
             return false;
         }
@@ -260,7 +274,7 @@ public class AutoComplete extends PopupControl
         }
 
         @Override
-        public boolean completesOnExactly(String input)
+        public boolean completesOnExactly(String input, boolean onlyAvailable)
         {
             for (Character shortcut : shortcuts)
             {
@@ -290,5 +304,24 @@ public class AutoComplete extends PopupControl
             }
             super.updateItem(item, empty);
         }
+    }
+
+    public static interface CompletionListener
+    {
+        // Item was double-clicked in the list
+        // Returns the new text for the textfield
+        String doubleClick(String currentText, Completion selectedItem);
+
+        // Moving on because non alphabet character entered
+        // Returns the new text for the textfield
+        String nonAlphabetCharacter(String textBefore, Completion selectedItem, String textAfter);
+
+        // Enter or Tab used to select
+        // Returns the new text for the textfield
+        String keyboardSelect(String currentText, Completion selectedItem);
+
+        // Selected because completesOnExactly returned true
+        // Returns the new text for the textfield
+        String exactCompletion(String currentText, Completion selectedItem);
     }
 }

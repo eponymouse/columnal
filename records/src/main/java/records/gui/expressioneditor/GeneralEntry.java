@@ -20,6 +20,7 @@ import records.grammar.ExpressionParser;
 import records.grammar.ExpressionParser.BooleanLiteralContext;
 import records.grammar.ExpressionParser.NumericLiteralContext;
 import records.gui.expressioneditor.AutoComplete.Completion;
+import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
@@ -89,32 +90,65 @@ public class GeneralEntry extends LeafNode implements OperandNode
         };
         container.getStyleClass().add("entry");
         this.nodes = FXCollections.observableArrayList(container);
-        this.autoComplete = new AutoComplete(textField, this::getSuggestions, (c, rest) -> {
-            if (c instanceof KeyShortcutCompletion)
+        this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener()
+        {
+            @Override
+            public String doubleClick(String currentText, Completion selectedItem)
             {
-                @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
-                if (ksc == bracketCompletion)
-                    parent.replace(this, new Bracketed(Collections.<Function<Consecutive, OperandNode>>singletonList(e -> new GeneralEntry("", e).focusWhenShown()), parent, new Label("("), new Label(")")));
-                else if (ksc == patternMatchCompletion)
-                    parent.replace(this, new PatternMatchNode(parent).focusWhenShown());
+                return selected(currentText, selectedItem, "");
             }
-            else if (c instanceof FunctionCompletion) // Must come before general due to inheritance
+
+            @Override
+            public String nonAlphabetCharacter(String textBefore, Completion selectedItem, String textAfter)
             {
-                // What to do with rest != "" here? Don't allow? Skip to after args?
-                FunctionCompletion fc = (FunctionCompletion)c;
-                parent.replace(this, new FunctionNode(fc.function.getName(), parent).focusWhenShown());
+                return selected(textBefore, selectedItem, textAfter);
             }
-            else if (c instanceof GeneralCompletion)
+
+            @Override
+            public String keyboardSelect(String currentText, Completion selectedItem)
             {
-                GeneralCompletion gc = (GeneralCompletion) c;
-                completing = true;
-                textField.setText(gc.getCompletedText());
-                status.setValue(gc.getType());
-                completing = false;
-                parent.setOperatorToRight(this, rest);
+                return selected(currentText, selectedItem, "");
             }
-            else
-                Utility.logStackTrace("Unsupported completion: " + c.getClass());
+
+            @Override
+            public String exactCompletion(String currentText, Completion selectedItem)
+            {
+                return selected(currentText, selectedItem, "");
+            }
+
+            private String selected(String currentText, Completion c, String rest)
+            {
+                if (c instanceof KeyShortcutCompletion)
+                {
+                    @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
+                    if (ksc == bracketCompletion)
+                        parent.replace(GeneralEntry.this, new Bracketed(Collections.<Function<Consecutive, OperandNode>>singletonList(e -> new GeneralEntry("", e).focusWhenShown()), parent, new Label("("), new Label(")")));
+                    else if (ksc == patternMatchCompletion)
+                        parent.replace(GeneralEntry.this, new PatternMatchNode(parent).focusWhenShown());
+                }
+                else if (c instanceof FunctionCompletion) // Must come before general due to inheritance
+                {
+                    // What to do with rest != "" here? Don't allow? Skip to after args?
+                    FunctionCompletion fc = (FunctionCompletion)c;
+                    parent.replace(GeneralEntry.this, new FunctionNode(fc.function.getName(), parent).focusWhenShown());
+                }
+                else if (c instanceof GeneralCompletion)
+                {
+                    GeneralCompletion gc = (GeneralCompletion) c;
+                    completing = true;
+                    parent.setOperatorToRight(GeneralEntry.this, rest);
+                    status.setValue(gc.getType());
+                    if (gc instanceof FunctionCompletion)
+                        return ((FunctionCompletion)gc).getCompletedText();
+                    else if (gc instanceof SimpleCompletion)
+                        return ((SimpleCompletion)gc).getCompletedText();
+                    else // Numeric literal:
+                        return currentText;
+                }
+                else
+                    Utility.logStackTrace("Unsupported completion: " + c.getClass());
+                return textField.getText();
+            }
         }, OperatorEntry::isOperatorAlphabet);
 
         Utility.addChangeListenerPlatformNN(status, s -> {
@@ -126,7 +160,11 @@ public class GeneralEntry extends LeafNode implements OperandNode
         });
         Utility.addChangeListenerPlatformNN(textField.textProperty(), t -> {
             if (!completing)
+            {
                 status.set(Status.UNFINISHED);
+            }
+            else
+                completing = false;
             textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), t.isEmpty());
         });
         textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), textField.getText().isEmpty());
@@ -256,13 +294,12 @@ public class GeneralEntry extends LeafNode implements OperandNode
 
     public GeneralEntry focusWhenShown()
     {
-        Utility.onNonNull(textField.sceneProperty(), scene -> textField.requestFocus());
+        Utility.onNonNull(textField.sceneProperty(), scene -> focus(Focus.RIGHT));
         return this;
     }
 
     private static abstract class GeneralCompletion extends Completion
     {
-        abstract String getCompletedText();
         abstract Status getType();
     }
 
@@ -289,7 +326,6 @@ public class GeneralEntry extends LeafNode implements OperandNode
             return text.startsWith(input);
         }
 
-        @Override
         String getCompletedText()
         {
             return text;
@@ -323,12 +359,12 @@ public class GeneralEntry extends LeafNode implements OperandNode
             return function.getName().startsWith(input);
         }
 
-        @Override
         String getCompletedText()
         {
             return function.getName();
         }
 
+        @Override
         Status getType()
         {
             return Status.FUNCTION;
@@ -337,13 +373,10 @@ public class GeneralEntry extends LeafNode implements OperandNode
 
     private static class NumericLiteralCompletion extends GeneralCompletion
     {
-        private String value = "";
-
         @Override
         Pair<@Nullable Node, String> getDisplay(String currentText)
         {
-            this.value = currentText.trim();
-            return new Pair<>(null, value);
+            return new Pair<>(null, currentText.trim());
         }
 
         @Override
@@ -358,12 +391,6 @@ public class GeneralEntry extends LeafNode implements OperandNode
             {
                 return false;
             }
-        }
-
-        @Override
-        String getCompletedText()
-        {
-            return value;
         }
 
         @Override

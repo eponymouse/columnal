@@ -169,7 +169,7 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
                 // Add new operator and new operand:
                 // Everything is keyed on operands size, so must add operator first:
                 operators.add(index, new OperatorEntry(operator, this));
-                operands.add(index+1, new GeneralEntry("", this));
+                operands.add(index+1, new GeneralEntry("", this).focusWhenShown());
             }
         }
     }

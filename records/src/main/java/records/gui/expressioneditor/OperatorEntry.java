@@ -9,6 +9,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.gui.expressioneditor.AutoComplete.Completion;
+import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
@@ -41,16 +42,45 @@ public class OperatorEntry extends LeafNode
         textField.getStyleClass().add("operator-field");
         this.nodes = FXCollections.observableArrayList(this.textField);
 
-        this.autoComplete = new AutoComplete(textField, this::getCompletions, (c, rest) -> {
-            if (c instanceof SimpleCompletion)
+        this.autoComplete = new AutoComplete(textField, this::getCompletions, new CompletionListener()
+        {
+            @Override
+            public String doubleClick(String currentText, Completion selectedItem)
             {
-                textField.setText(((SimpleCompletion) c).operator);
-                parent.addOperandToRight(this, new GeneralEntry(rest, parent).focusWhenShown());
+                return selected(currentText, selectedItem, "");
             }
-            else if (c instanceof KeyShortcutCompletion)
+
+            @Override
+            public String nonAlphabetCharacter(String textBefore, Completion selectedItem, String textAfter)
             {
-                parent.focusRightOf(this);
-                textField.setText("");
+                return selected(textBefore, selectedItem, textAfter);
+            }
+
+            @Override
+            public String keyboardSelect(String currentText, Completion selectedItem)
+            {
+                return selected(currentText, selectedItem, "");
+            }
+
+            @Override
+            public String exactCompletion(String currentText, Completion selectedItem)
+            {
+                return selected(currentText, selectedItem, "");
+            }
+
+            private String selected(String currentText, Completion c, String rest)
+            {
+                if (c instanceof SimpleCompletion)
+                {
+                    parent.addOperandToRight(OperatorEntry.this, new GeneralEntry(rest, parent).focusWhenShown());
+                    return ((SimpleCompletion) c).operator;
+                }
+                else if (c instanceof KeyShortcutCompletion)
+                {
+                    parent.focusRightOf(OperatorEntry.this);
+                    return "";
+                }
+                return textField.getText();
             }
         }, c -> !isOperatorAlphabet(c));
 
@@ -68,6 +98,7 @@ public class OperatorEntry extends LeafNode
         {
             r.add(new SimpleCompletion(operator));
         }
+        r.removeIf(c -> !c.shouldShow(s));
         return r;
     }
 
@@ -79,7 +110,7 @@ public class OperatorEntry extends LeafNode
 
     public ExpressionNode focusWhenShown()
     {
-        Utility.onNonNull(textField.sceneProperty(), scene -> textField.requestFocus());
+        Utility.onNonNull(textField.sceneProperty(), scene -> focus(Focus.RIGHT));
         return this;
     }
 
@@ -93,8 +124,12 @@ public class OperatorEntry extends LeafNode
     {
         if (textField.getText().trim().isEmpty())
         {
+            // We request focus before so that we can be overruled by setText's listeners:
+            textField.requestFocus();
             textField.setText(s);
-            focus(Focus.RIGHT);
+            // We position caret after because length will have changed
+            // Will have no effect if we've lost focus:
+            textField.positionCaret(textField.getLength());
             return true;
         }
         else
@@ -123,10 +158,9 @@ public class OperatorEntry extends LeafNode
         }
 
         @Override
-        public boolean completesOnExactly(String input)
+        public boolean completesOnExactly(String input, boolean isOnlyCompletion)
         {
-            // TODO but not if there's another longer operator which also fits
-            return input.equals(operator);
+            return input.equals(operator) && isOnlyCompletion;
         }
     }
 
