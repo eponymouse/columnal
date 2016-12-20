@@ -26,6 +26,7 @@ import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
+import records.transformations.expression.StringLiteral;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
@@ -54,6 +55,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
 {
     private final VBox container;
     private final @Interned KeyShortcutCompletion bracketCompletion;
+    private final @Interned KeyShortcutCompletion stringCompletion;
     private final @Interned KeyShortcutCompletion patternMatchCompletion;
     private boolean completing; // Set to true while updating field with auto completion
 
@@ -73,6 +75,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
     {
         super(parent);
         bracketCompletion = new @Interned KeyShortcutCompletion("Bracketed expressions", '(');
+        stringCompletion = new @Interned KeyShortcutCompletion("Text", '\"');
         patternMatchCompletion = new @Interned KeyShortcutCompletion("Pattern match", '?');
         this.textField = new LeaveableTextField(this, parent);
         textField.setText(content);
@@ -123,6 +126,8 @@ public class GeneralEntry extends LeafNode implements OperandNode
                     @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
                     if (ksc == bracketCompletion)
                         parent.replace(GeneralEntry.this, new Bracketed(Collections.<Function<Consecutive, OperandNode>>singletonList(e -> new GeneralEntry("", e).focusWhenShown()), parent, new Label("("), new Label(")")));
+                    else if (ksc == stringCompletion)
+                        parent.replace(GeneralEntry.this, new StringLiteralNode(parent).focusWhenShown());
                     else if (ksc == patternMatchCompletion)
                         parent.replace(GeneralEntry.this, new PatternMatchNode(parent).focusWhenShown());
                 }
@@ -227,6 +232,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
     {
         ArrayList<Completion> r = new ArrayList<>();
         r.add(bracketCompletion);
+        r.add(stringCompletion);
         r.add(patternMatchCompletion);
         r.add(new NumericLiteralCompletion());
         addAllFunctions(r);

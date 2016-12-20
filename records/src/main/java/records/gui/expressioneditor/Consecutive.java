@@ -10,9 +10,15 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import records.data.ColumnId;
 import records.data.datatype.DataType;
+import records.grammar.ExpressionParser.PlusMinusExpressionContext;
+import records.transformations.expression.AddSubtractExpression;
+import records.transformations.expression.AddSubtractExpression.Op;
+import records.transformations.expression.DivideExpression;
+import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.PatternMatch;
+import records.transformations.expression.TimesExpression;
 import utility.FXPlatformConsumer;
 import utility.Utility;
 
@@ -277,9 +283,48 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
         return this;
     }
 
+    private @Nullable List<String> getOperators()
+    {
+        // If last operator not blank then can't be valid expression:
+        if (!operators.get(operators.size() - 1).get().isEmpty())
+            return null;
+        // Knock off the last operator:
+        return Utility.<OperatorEntry, String>mapList(operators.subList(0, operators.size() - 1), op -> op.get());
+    }
+
     public @Nullable Expression toExpression(FXPlatformConsumer<Object> onError)
     {
-        return null; //TODO
+        List<Expression> operandExps = new ArrayList<>();
+        this.operands.forEach(n -> {
+            Expression e = n.toExpression(onError);
+            if (e != null)
+                operandExps.add(e);
+        });
+        if (this.operands.size() != operandExps.size())
+            return null;
+        @Nullable List<String> ops = getOperators();
+        if (ops == null)
+            return null;
+        if (ops.stream().allMatch(op -> op.equals("+") || op.equals("-")))
+        {
+            return new AddSubtractExpression(operandExps, Utility.<String, Op>mapList(ops, op -> op.equals("+") ? Op.ADD : Op.SUBTRACT));
+        }
+        else if (ops.stream().allMatch(op -> op.equals("*")))
+        {
+            return new TimesExpression(operandExps);
+        }
+        else if (ops.stream().allMatch(op -> op.equals("/")))
+        {
+            if (operandExps.size() == 2)
+                return new DivideExpression(operandExps.get(0), operandExps.get(1));
+        }
+        else if (ops.stream().allMatch(op -> op.equals("=")))
+        {
+            if (operandExps.size() == 2)
+                return new EqualExpression(operandExps.get(0), operandExps.get(1));
+        }
+
+        return null; //TODO record errors, suggest fixes
     }
 
     public @Nullable DataType inferType()

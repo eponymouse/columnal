@@ -30,7 +30,7 @@ public class OperatorEntry extends LeafNode
     private final TextField textField;
     private final ObservableList<Node> nodes;
     private final AutoComplete autoComplete;
-    private final static List<String> OPERATORS = Arrays.asList("=", "/=", "+", "-", "*", "/", "&", "|", "<", "<=", ">", ">=", "?", "^");
+    private final static List<String> OPERATORS = Arrays.asList("=", "/=", "+", "-", "*", "/", "&", "|", "<", "<=", ">", ">=", "?", "^", ",");
     private final static Set<Integer> ALPHABET = OPERATORS.stream().flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
     @SuppressWarnings("initialization")
@@ -162,6 +162,11 @@ public class OperatorEntry extends LeafNode
         {
             return input.equals(operator) && isOnlyCompletion;
         }
+    }
+
+    public String get()
+    {
+        return textField.getText();
     }
 
     @Override
