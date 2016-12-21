@@ -7,7 +7,7 @@ Add functions, such as:
  upper, lower, startswith,
  modulo
  c(col): gets single value from that column
-++ for string concat?
+++ for string concat?  Or maybe ~ ?
 Rework summary to use functions for summaries, and let such functions
   take whole columns as args.  Need way to distinguish current row column value
   (@ColName) from whole column (!ColName ?).  Do expression editor?

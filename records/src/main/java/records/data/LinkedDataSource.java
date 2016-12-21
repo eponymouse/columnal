@@ -35,14 +35,14 @@ public class LinkedDataSource extends DataSource
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void save(@Nullable File destination, FXPlatformConsumer<String> then)
+    public @OnThread(Tag.FXPlatform) void save(@Nullable File destination, Saver then)
     {
         //dataSourceLinkHeader : DATA tableId LINKED importType filePath NEWLINE;
         OutputBuilder b = new OutputBuilder();
         b.t(MainLexer.DATA).id(getId()).t(MainLexer.LINKED).t(this.typeToken);
         b.path(destination == null ? this.path.toPath() : destination.toPath().relativize(this.path.toPath()));
         b.nl();
-        then.consume(b.toString());
+        then.saveTable(b.toString());
     }
 
 }

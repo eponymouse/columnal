@@ -16,6 +16,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
 import records.data.Table;
+import records.data.Table.BlankSaver;
+import records.data.Table.FullSaver;
+import records.data.Table.Saver;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
@@ -60,9 +63,8 @@ public class View extends Pane
     // Does not write to that destination, just uses it for relative paths
     public void save(@Nullable File destination, FXPlatformConsumer<String> then)
     {
-        class Fetcher implements FXPlatformConsumer<String>
+        class Fetcher extends FullSaver
         {
-            private final List<String> all = new ArrayList<>();
             private final Iterator<Table> it;
 
             public Fetcher(List<Table> allTables)
@@ -71,9 +73,9 @@ public class View extends Pane
             }
 
             @Override
-            public @OnThread(Tag.FXPlatform) void consume(String s)
+            public @OnThread(Tag.FXPlatform) void saveTable(String s)
             {
-                all.add(s);
+                super.saveTable(s);
                 getNext();
             }
 
@@ -85,7 +87,7 @@ public class View extends Pane
                     it.next().save(destination, this);
                 }
                 else
-                    then.consume(all.stream().collect(Collectors.joining("\n\n")));
+                    then.consume(getCompleteFile());
             }
         };
         new Fetcher(getAllTables()).getNext();
@@ -279,12 +281,18 @@ public class View extends Pane
             {
                 // Add job:
                 toSave.incrementAndGet();
-                removeAndSerialise(linearised.get(i), script -> {
-                    reRun.add(script);
-                    if (toSave.decrementAndGet() == 0)
+                removeAndSerialise(linearised.get(i), new BlankSaver()
+                {
+                    // Ignore types and units because they are all already loaded
+                    @Override
+                    public @OnThread(Tag.FXPlatform) void saveTable(String script)
                     {
-                        // Saved all of them
-                        savedToReRun.complete(reRun);
+                        reRun.add(script);
+                        if (toSave.decrementAndGet() == 0)
+                        {
+                            // Saved all of them
+                            savedToReRun.complete(reRun);
+                        }
                     }
                 });
             }
@@ -297,7 +305,7 @@ public class View extends Pane
         synchronized (this)
         {
             if (replaceTableId != null)
-                removeAndSerialise(replaceTableId, s -> {});
+                removeAndSerialise(replaceTableId, new BlankSaver());
         }
         addTransformation(transformation);
 
@@ -318,7 +326,7 @@ public class View extends Pane
         }
     }
 
-    private void removeAndSerialise(TableId tableId, FXPlatformConsumer<String> then)
+    private void removeAndSerialise(TableId tableId, Saver then)
     {
         Table removed = null;
         synchronized (this)

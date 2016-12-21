@@ -7,6 +7,7 @@ import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import org.junit.runner.RunWith;
 import records.data.Table;
+import records.data.Table.FullSaver;
 import records.data.TableManager;
 import records.data.Transformation;
 import records.error.InternalException;
@@ -18,6 +19,7 @@ import test.gen.GenSummaryStats;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationSupplier;
+import utility.Utility;
 
 import javax.swing.SwingUtilities;
 import java.lang.reflect.InvocationTargetException;
@@ -33,7 +35,7 @@ import static org.junit.Assert.assertEquals;
 public class PropLoadSaveTransformation
 {
     @Property(trials = 1000)
-    @OnThread(value = Tag.Simulation,ignoreParent = true)
+    @OnThread(value = Tag.FXPlatform,ignoreParent = true)
     public void testTransformation(@From(GenSort.class) @From(GenSummaryStats.class) @From(GenFilter.class) Transformation original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         String saved = save(original);
@@ -41,9 +43,9 @@ public class PropLoadSaveTransformation
         {
             //Assume users destroy leading whitespace:
             String savedMangled = saved.replaceAll("\n +", "\n");
-            Table loaded = TransformationManager.getInstance().loadOne(DummyManager.INSTANCE, savedMangled);
+            Table loaded = DummyManager.INSTANCE.loadAll(savedMangled).get(0);
             String savedAgain = save(loaded);
-            Table loadedAgain = TransformationManager.getInstance().loadOne(DummyManager.INSTANCE, savedAgain);
+            Table loadedAgain = DummyManager.INSTANCE.loadAll(savedAgain).get(0);
 
 
             assertEquals(saved, savedAgain);
@@ -58,14 +60,24 @@ public class PropLoadSaveTransformation
         }
     }
 
+    @OnThread(Tag.FXPlatform)
     private static String save(Table original) throws ExecutionException, InterruptedException, InvocationTargetException
     {
+        // This thread is only pretend running on FXPlatform, but sets off some
+        // code which actually runs on the fx platform thread:
         CompletableFuture<String> f = new CompletableFuture<>();
         SwingUtilities.invokeAndWait(() -> new JFXPanel());
-        Platform.runLater(() -> {
+        Utility.runAfter(() -> {
             try
             {
-                original.save(null, s -> f.complete(s));
+                original.save(null, new FullSaver() {
+                    @Override
+                    public @OnThread(Tag.FXPlatform) void saveTable(String tableSrc)
+                    {
+                        super.saveTable(tableSrc);
+                        f.complete(getCompleteFile());
+                    }
+                });
             }
             catch (Throwable t)
             {

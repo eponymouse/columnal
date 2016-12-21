@@ -2,10 +2,8 @@ package records.data;
 
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
-import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.UserException;
 import records.grammar.MainLexer;
@@ -15,13 +13,12 @@ import records.loadsave.OutputBuilder;
 import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
 
 import javax.validation.constraints.NotNull;
 import java.io.File;
-import java.util.HashSet;
-import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 09/11/2016.
@@ -64,8 +61,81 @@ public abstract class Table
     @OnThread(Tag.Any)
     public abstract RecordSet getData() throws UserException;
 
+    public static interface Saver
+    {
+        @OnThread(Tag.FXPlatform)
+        public void saveTable(String tableSrc);
+
+        @OnThread(Tag.FXPlatform)
+        public void saveUnit(String unitSrc);
+
+        @OnThread(Tag.FXPlatform)
+        public void saveType(String typeSrc);
+    }
+
     @OnThread(Tag.FXPlatform)
-    public abstract void save(@Nullable File destination, FXPlatformConsumer<String> then);
+    public static class BlankSaver implements Saver
+    {
+        @Override
+        public @OnThread(Tag.FXPlatform) void saveTable(String tableSrc)
+        {
+        }
+
+        @Override
+        @OnThread(Tag.FXPlatform)
+        public void saveUnit(String unitSrc)
+        {
+        }
+
+        @Override
+        @OnThread(Tag.FXPlatform)
+        public void saveType(String typeSrc)
+        {
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static class FullSaver implements Saver
+    {
+        private final List<String> units = new ArrayList<>();
+        private final List<String> types = new ArrayList<>();
+        private final List<String> tables = new ArrayList<>();
+
+        @Override
+        public @OnThread(Tag.FXPlatform) void saveTable(String tableSrc)
+        {
+            tables.add(tableSrc);
+        }
+
+        @Override
+        @OnThread(Tag.FXPlatform)
+        public void saveUnit(String unitSrc)
+        {
+            units.add(unitSrc.endsWith("\n") ? unitSrc : unitSrc + "\n");
+        }
+
+        @Override
+        @OnThread(Tag.FXPlatform)
+        public void saveType(String typeSrc)
+        {
+            types.add(typeSrc.endsWith("\n") ? typeSrc : typeSrc + "\n");
+        }
+
+        @OnThread(Tag.FXPlatform)
+        public String getCompleteFile()
+        {
+            return "VERSION 1\n\nUNITS @BEGIN\n"
+                + units.stream().collect(Collectors.joining())
+                + "@END UNITS\n\nTYPES @BEGIN\n"
+                + types.stream().collect(Collectors.joining())
+                + "@END TYPES\n"
+                + tables.stream().collect(Collectors.joining("\n"))
+                + "\n";
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public abstract void save(@Nullable File destination, Saver then);
 
     @OnThread(Tag.FXPlatform)
     public void setDisplay(TableDisplay display)

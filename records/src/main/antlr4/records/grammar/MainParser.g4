@@ -31,4 +31,7 @@ position : POSITION item item item item NEWLINE;
 
 table : (dataSource | transformation) position END tableId NEWLINE;
 
-file : VERSION item NEWLINE blank+ (table blank*)+;
+units : UNITS detail UNITS;
+types : TYPES detail TYPES;
+
+file : VERSION item NEWLINE blank* units blank* types blank* (table blank*)+;

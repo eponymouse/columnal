@@ -48,14 +48,15 @@ public class TransformationManager
         );
     }
 
+    // Not static because it needs to access the list of registered transformations
     @OnThread(Tag.Simulation)
     public Transformation loadOne(TableManager mgr, String source) throws InternalException, UserException
     {
-        return Utility.parseAsOne(source, MainLexer::new, MainParser::new, parser -> load(mgr, parser.table()));
+        return Utility.parseAsOne(source, MainLexer::new, MainParser::new, parser -> loadOne(mgr, parser.table()));
     }
 
     @OnThread(Tag.Simulation)
-    private Transformation load(TableManager mgr, TableContext table) throws UserException, InternalException
+    public Transformation loadOne(TableManager mgr, TableContext table) throws UserException, InternalException
     {
         try
         {

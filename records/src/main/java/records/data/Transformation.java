@@ -34,7 +34,7 @@ public abstract class Transformation extends Table
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public final void save(@Nullable File destination, FXPlatformConsumer<String> then)
+    public final void save(@Nullable File destination, Saver then)
     {
         OutputBuilder b = new OutputBuilder();
         // transformation : TRANSFORMATION tableId transformationName NEWLINE transformationDetail+;
@@ -46,7 +46,7 @@ public abstract class Transformation extends Table
         b.inner(() -> saveDetail(destination));
         savePosition(b);
         b.end().id(getId()).nl();
-        then.consume(b.toString());
+        then.saveTable(b.toString());
     }
 
     // The name as used when saving:

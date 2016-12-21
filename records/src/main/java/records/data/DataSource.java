@@ -43,10 +43,10 @@ public abstract class DataSource extends Table
 
     public static Table loadOne(TableManager manager, String src) throws UserException, InternalException
     {
-        return Utility.parseAsOne(src, MainLexer::new, MainParser::new, parser -> load(manager, parser.table()));
+        return Utility.parseAsOne(src, MainLexer::new, MainParser::new, parser -> loadOne(manager, parser.table()));
     }
 
-    private static Table load(TableManager manager, TableContext table) throws UserException, InternalException
+    public static Table loadOne(TableManager manager, TableContext table) throws UserException, InternalException
     {
         DataSourceContext dataSource = table.dataSource();
         if (dataSource == null)

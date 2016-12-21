@@ -5,9 +5,17 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.MainLexer;
+import records.grammar.MainParser;
+import records.grammar.MainParser.FileContext;
+import records.grammar.MainParser.TableContext;
+import records.transformations.TransformationManager;
 import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
+import utility.Workers;
+import utility.Workers.Worker;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -16,6 +24,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -78,5 +88,66 @@ public class TableManager
     {
         // TODO keep track of known types
         return new TypeState(new HashMap<>(), unitManager);
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public List<Table> loadAll(String completeSrc) throws UserException, InternalException
+    {
+        FileContext file = Utility.parseAsOne(completeSrc, MainLexer::new, MainParser::new, p -> p.file());
+        // TODO load units, types
+        List<Table> loaded = new ArrayList<>();
+        List<Exception> exceptions = new ArrayList<>();
+        CompletableFuture<Object> allDone = new CompletableFuture<>();
+        int total = file.table().size();
+        for (TableContext tableContext : file.table())
+        {
+            // No race hazards here because worker thread will serialise:
+            if (tableContext.dataSource() != null)
+            {
+                Workers.onWorkerThread("Loading table", () -> {
+                    try
+                    {
+                        loaded.add(DataSource.loadOne(this, tableContext));
+                    }
+                    catch (InternalException | UserException e)
+                    {
+                        exceptions.add(e);
+                    }
+                    if (loaded.size() + exceptions.size() == total)
+                        allDone.complete(new Object());
+                });
+            }
+            else if (tableContext.transformation() != null)
+            {
+                Workers.onWorkerThread("Loading table", () -> {
+                    try
+                    {
+                        loaded.add(TransformationManager.getInstance().loadOne(this, tableContext));
+                    }
+                    catch (InternalException | UserException e)
+                    {
+                        exceptions.add(e);
+                    }
+                    if (loaded.size() + exceptions.size() == total)
+                        allDone.complete(new Object());
+                });
+            }
+        }
+        try
+        {
+            allDone.get();
+        } catch (InterruptedException | ExecutionException e)
+        {
+            Utility.log(e);
+        }
+
+        if (exceptions.isEmpty())
+            return loaded;
+        else if (exceptions.get(0) instanceof UserException)
+            throw (UserException)exceptions.get(0);
+        else if (exceptions.get(0) instanceof InternalException)
+            throw (InternalException) exceptions.get(0);
+        else
+            throw new InternalException("Unrecognised exception", exceptions.get(0));
     }
 }

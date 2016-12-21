@@ -40,7 +40,7 @@ public class ImmediateDataSource extends DataSource
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void save(@Nullable File destination, FXPlatformConsumer<String> then)
+    public @OnThread(Tag.FXPlatform) void save(@Nullable File destination, Saver then)
     {
         //dataSourceImmedate : DATA tableId BEGIN NEWLINE;
         //immediateDataLine : ITEM+ NEWLINE;
@@ -72,7 +72,7 @@ public class ImmediateDataSource extends DataSource
                 b.end().t(MainLexer.VALUES).nl();
                 savePosition(b);
                 b.end().id(getId()).nl();
-                then.consume(b.toString());
+                then.saveTable(b.toString());
             });
         });
     }
