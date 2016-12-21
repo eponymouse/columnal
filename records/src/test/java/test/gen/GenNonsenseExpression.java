@@ -4,7 +4,6 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import edu.emory.mathcs.backport.java.util.Collections;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.TypeId;
@@ -29,6 +28,7 @@ import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
 import records.transformations.expression.TimesExpression;
 import records.transformations.expression.VarExpression;
+import test.DummyManager;
 import test.TestUtil;
 import utility.Pair;
 import utility.Utility;
@@ -81,7 +81,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> new AndExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new OrExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new TimesExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
-                () -> !tagAllowed ? genTerminal(r) : new TagExpression(new Pair<TypeId, String>(new TypeId(TestUtil.makeString(r, gs)), TestUtil.makeString(r, gs)), genDepth(r, depth + 1, gs)),
+                () -> !tagAllowed ? genTerminal(r) : TagExpression._testMake(TestUtil.makeString(r, gs), TestUtil.makeString(r, gs), genDepth(r, depth + 1, gs)),
                 () ->
                 {
                     List<Expression> expressions = TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));

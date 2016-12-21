@@ -25,6 +25,7 @@ import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -129,7 +130,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                             }
                         };
                     }
-                    return new MemoryNumericColumn(rs, nextCol.get(), new NumericColumnType(Unit.SCALAR, 0, false), TestUtil.<String>makeList(len, gen, sourceOfRandomness, generationStatus));
+                    return new MemoryNumericColumn(rs, nextCol.get(), new NumberInfo(Unit.SCALAR, 0), TestUtil.<String>makeList(len, gen, sourceOfRandomness, generationStatus).stream());
                 }
                 catch (InternalException | UserException e)
                 {
@@ -140,7 +141,8 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                 try
                 {
                     List<TagType<DataType>> tags = makeTags(0, sourceOfRandomness, generationStatus);
-                    return new MemoryTaggedColumn(rs, nextCol.get(), new TypeId(TestUtil.makeString(sourceOfRandomness, generationStatus)), tags, TestUtil.makeList(len, new TagDataGenerator(tags), sourceOfRandomness, generationStatus));
+                    DataType type = DummyManager.INSTANCE.getTypeManager().registerTaggedType(TestUtil.makeString(sourceOfRandomness, generationStatus), tags);
+                    return new MemoryTaggedColumn(rs, nextCol.get(), type.getTaggedTypeName(), tags, TestUtil.makeList(len, new TagDataGenerator(tags), sourceOfRandomness, generationStatus));
                 }
                 catch (InternalException | UserException e)
                 {
@@ -171,7 +173,17 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                     () -> DataType.NUMBER,
                     () -> DataType.BOOLEAN,
                     () -> DataType.DATE,
-                    () -> depth < 3 ? DataType.tagged(new TypeId(TestUtil.makeString(sourceOfRandomness, generationStatus)), makeTags(depth + 1, sourceOfRandomness, generationStatus)) : null
+                    () ->
+                    {
+                        try
+                        {
+                            return depth < 3 ? DummyManager.INSTANCE.getTypeManager().registerTaggedType(TestUtil.makeString(sourceOfRandomness, generationStatus), makeTags(depth + 1, sourceOfRandomness, generationStatus)) : null;
+                        }
+                        catch (InternalException e)
+                        {
+                            throw new RuntimeException(e);
+                        }
+                    }
                 )).get());
             }
         });

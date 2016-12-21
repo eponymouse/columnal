@@ -1,6 +1,5 @@
 package records.transformations.expression;
 
-import edu.emory.mathcs.backport.java.util.Collections;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
@@ -19,6 +18,7 @@ import utility.Utility;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;

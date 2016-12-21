@@ -397,7 +397,7 @@ public class Filter extends Transformation
                 try
                 {
                     if (text != null)
-                        updateExample(Expression.parse(null, text));
+                        updateExample(Expression.parse(null, text, mgr.getTypeManager()));
                 }
                 catch (Exception e)
                 {
@@ -445,7 +445,7 @@ public class Filter extends Transformation
             if (expr.isEmpty())
                 expr = "true";
             String exprFinal = expr;
-            return () -> new Filter(mgr, thisTableId, srcTableId, Expression.parse(null, exprFinal));
+            return () -> new Filter(mgr, thisTableId, srcTableId, Expression.parse(null, exprFinal, mgr.getTypeManager()));
         }
 
         @Override
@@ -471,7 +471,7 @@ public class Filter extends Transformation
         @Override
         public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, TableId tableId, TableId srcTableId, String detail) throws InternalException, UserException
         {
-            return new Filter(mgr, tableId, srcTableId, Expression.parse(PREFIX, detail));
+            return new Filter(mgr, tableId, srcTableId, Expression.parse(PREFIX, detail, mgr.getTypeManager()));
         }
 
         @Override

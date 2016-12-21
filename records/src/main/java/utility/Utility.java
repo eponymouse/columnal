@@ -17,11 +17,13 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
@@ -65,6 +67,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.BasicLexer;
 import records.gui.DisplayValue;
+import records.transformations.function.TaglessFunctionInstance;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -632,6 +635,11 @@ public class Utility
                 return Math.max(tf.isFocused() ? (minSizeFocused == null ? 20 : minSizeFocused) : (minSizeUnfocused == null ? 20 : minSizeUnfocused), width);
             }
         });
+    }
+
+    public static <T> Iterable<T> iterableStream(Stream<T> values)
+    {
+        return values::iterator;
     }
 
     public static class ReadState

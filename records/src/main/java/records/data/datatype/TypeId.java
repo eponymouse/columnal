@@ -12,7 +12,8 @@ public class TypeId
 {
     String typeId;
 
-    public TypeId(String typeId)
+    // package-visible
+    TypeId(String typeId)
     {
         this.typeId = typeId;
     }
@@ -49,5 +50,10 @@ public class TypeId
     public String getRaw()
     {
         return typeId;
+    }
+
+    public static TypeId _testMake(String typeName)
+    {
+        return new TypeId(typeName);
     }
 }

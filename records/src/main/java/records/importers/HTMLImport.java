@@ -15,6 +15,7 @@ import records.data.TableManager;
 import records.data.MemoryTemporalColumn;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
+import records.data.datatype.DataType.NumberInfo;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
@@ -73,7 +74,9 @@ public class HTMLImport
                 List<String> slice = Utility.sliceSkipBlankRows(vals, format.headerRows, iFinal);
                 if (columnInfo.type.isNumeric())
                 {
-                    columns.add(rs -> new MemoryNumericColumn(rs, columnInfo.title, ((NumericColumnType)columnInfo.type), slice));
+                    //TODO remove prefix
+                    // TODO treat maybe blank as a tagged type
+                    columns.add(rs -> new MemoryNumericColumn(rs, columnInfo.title, new NumberInfo(((NumericColumnType)columnInfo.type).unit, ((NumericColumnType)columnInfo.type).minDP), slice.stream()));
                 }
                 else if (columnInfo.type.isText())
                 {

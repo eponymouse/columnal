@@ -67,6 +67,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static test.TestUtil.distinctTypes;
 
@@ -547,7 +548,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
             public Pair<List<Object>, FunctionInt<RecordSet, Column>> number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 Number value = TestUtil.generateNumber(r, gs);
-                return new Pair<>(Collections.singletonList(value), rs -> new MemoryNumericColumn(rs, name, new NumericColumnType(displayInfo.getUnit(), displayInfo.getMinimumDP(), false), Collections.singletonList(Utility.toBigDecimal(value).toPlainString())));
+                return new Pair<>(Collections.singletonList(value), rs -> new MemoryNumericColumn(rs, name, new NumberInfo(displayInfo.getUnit(), displayInfo.getMinimumDP()), Stream.of(Utility.toBigDecimal(value).toPlainString())));
             }
 
             @Override

@@ -14,6 +14,7 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -91,7 +92,7 @@ public abstract class Expression
 
     public abstract String save(boolean topLevel);
 
-    public static Expression parse(@Nullable String keyword, String src) throws UserException, InternalException
+    public static Expression parse(@Nullable String keyword, String src, TypeManager typeManager) throws UserException, InternalException
     {
         if (keyword != null)
         {
@@ -105,7 +106,7 @@ public abstract class Expression
         {
             return Utility.parseAsOne(src.replace("\r", "").replace("\n", ""), ExpressionLexer::new, ExpressionParser::new, p ->
             {
-                return new CompileExpression().visit(p.topLevelExpression());
+                return new CompileExpression(typeManager).visit(p.topLevelExpression());
             });
         }
         catch (RuntimeException e)
@@ -124,6 +125,13 @@ public abstract class Expression
 
     private static class CompileExpression extends ExpressionParserBaseVisitor<Expression>
     {
+        private final TypeManager typeManager;
+
+        public CompileExpression(TypeManager typeManager)
+        {
+            this.typeManager = typeManager;
+        }
+
         @Override
         public Expression visitColumnRef(ColumnRefContext ctx)
         {
@@ -202,10 +210,22 @@ public abstract class Expression
         @Override
         public Expression visitTagExpression(TagExpressionContext ctx)
         {
-            Pair<TypeId, String> constructorName;
-            constructorName = new Pair<TypeId, String>(new TypeId(ctx.constructor().rawConstructor(0).constructorName().getText()), ctx.constructor().rawConstructor(1).constructorName().getText());
+            String constructorName = ctx.constructor().rawConstructor(1).constructorName().getText();
 
-            return new TagExpression(constructorName, visitExpression(ctx.expression()));
+            String typeName = ctx.constructor().rawConstructor(0).constructorName().getText();
+            DataType type = typeManager.lookupType(typeName);
+
+            if (type == null)
+                throw new RuntimeException("Unknown tagged type found in expression: " + typeName);
+
+            try
+            {
+                return new TagExpression(new Pair<>(type.getTaggedTypeName(), constructorName), visitExpression(ctx.expression()));
+            }
+            catch (InternalException e)
+            {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override

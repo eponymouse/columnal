@@ -38,7 +38,7 @@ public class TestLoadSaveExpression
         );
         assertEquals(
             new ColumnReference(new ColumnId("Card")),
-            Expression.parse(null, "@\"Card\"")
+            Expression.parse(null, "@\"Card\"", DummyManager.INSTANCE.getTypeManager())
         );
     }
     @Test
@@ -50,7 +50,7 @@ public class TestLoadSaveExpression
         );
         assertEquals(
             new NotEqualExpression(new ColumnReference(new ColumnId("Card")), new StringLiteral("xxx")),
-            Expression.parse(null, "@\"Card\" /= \"xxx\"")
+            Expression.parse(null, "@\"Card\" /= \"xxx\"", DummyManager.INSTANCE.getTypeManager())
         );
         assertBothWays(
             new NotEqualExpression(new ColumnReference(new ColumnId("Card")), new StringLiteral("xxx")),
@@ -87,7 +87,7 @@ public class TestLoadSaveExpression
 
     private static void assertBothWays(Expression expression, String src) throws InternalException, UserException
     {
-        assertEquals(expression, Expression.parse(null, src));
+        assertEquals(expression, Expression.parse(null, src, DummyManager.INSTANCE.getTypeManager()));
         assertEquals(src, expression.save(true));
     }
 }

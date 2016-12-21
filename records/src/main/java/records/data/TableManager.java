@@ -2,6 +2,7 @@ package records.data;
 
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -37,10 +38,12 @@ public class TableManager
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private final Map<TableId, List<Table>> usedIds = new HashMap<>();
     private final UnitManager unitManager;
+    private final TypeManager typeManager;
 
     public TableManager() throws UserException, InternalException
     {
         this.unitManager = new UnitManager();;
+        this.typeManager = new TypeManager();
     }
 
     public synchronized @Nullable Table getSingleTableOrNull(TableId tableId)
@@ -86,8 +89,7 @@ public class TableManager
 
     public TypeState getTypeState()
     {
-        // TODO keep track of known types
-        return new TypeState(new HashMap<>(), unitManager);
+        return new TypeState(typeManager.getKnownTypes(), unitManager);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -149,5 +151,10 @@ public class TableManager
             throw (InternalException) exceptions.get(0);
         else
             throw new InternalException("Unrecognised exception", exceptions.get(0));
+    }
+
+    public TypeManager getTypeManager()
+    {
+        return typeManager;
     }
 }

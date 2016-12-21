@@ -9,9 +9,11 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 31/10/2016.
@@ -20,25 +22,15 @@ public class MemoryNumericColumn extends Column
 {
     private final ColumnId title;
     private final NumericColumnStorage storage;
-    private final boolean mayBeBlank;
 
-    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumericColumnType type, List<String> values) throws InternalException, UserException
+    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, Stream<String> values) throws InternalException, UserException
     {
         super(rs);
-        mayBeBlank = type.mayBeBlank;
-        storage = new NumericColumnStorage(mayBeBlank ? 2 : 0, mayBeBlank ? 1 : -1, new NumberInfo(type.unit, type.minDP));
+        storage = new NumericColumnStorage(numberInfo);
         this.title = title;
-        for (String value : values)
+        for (String value : Utility.iterableStream(values))
         {
-            // Add it if it can't be blank, or if isn't blank
-            if (!mayBeBlank || !value.isEmpty())
-            {
-                String s = value;
-                storage.addRead(type.removePrefix(s));
-            } else
-            {
-                storage.addTag(0);
-            }
+            storage.addRead(value);
         }
     }
 
@@ -52,16 +44,12 @@ public class MemoryNumericColumn extends Column
     @OnThread(Tag.Any)
     public DataTypeValue getType()
     {
-        if (!mayBeBlank)
-            return storage.getType();
-
-        return DataTypeValue.tagged(new TypeId("Number?"), Arrays.asList(new TagType<>("Blank", null), new TagType<>("Number", storage.getType())),
-            (i, prog) -> storage.getTag(i));
+        return storage.getType();
     }
 
     @Override
     public Column shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        return new MemoryNumericColumn(rs, title, new NumericColumnType(storage.getDisplayInfo().getUnit(), storage.getDisplayInfo().getMinimumDP(), mayBeBlank), storage.getShrunk(shrunkLength));
+        return new MemoryNumericColumn(rs, title, storage.getDisplayInfo(), storage.getShrunk(shrunkLength).stream());
     }
 }

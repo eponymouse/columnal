@@ -1,12 +1,12 @@
 package records.transformations.expression;
 
-import edu.emory.mathcs.backport.java.util.Collections;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.error.UserException;
 import utility.Pair;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;

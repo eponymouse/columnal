@@ -149,4 +149,9 @@ public class TagExpression extends Expression
     {
         return inner;
     }
+
+    public static Expression _testMake(String typeName, String tagName, Expression inner)
+    {
+        return new TagExpression(new Pair<>(TypeId._testMake(typeName), tagName), inner);
+    }
 }

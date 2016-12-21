@@ -21,7 +21,7 @@ public class PropLoadSaveExpression
     public void testLoadSave(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
         String saved = expression.save(true);
-        Expression reloaded = Expression.parse(null, saved);
+        Expression reloaded = Expression.parse(null, saved, DummyManager.INSTANCE.getTypeManager());
         assertEquals("Saved version: " + saved, expression, reloaded);
         String resaved = reloaded.save(true);
         assertEquals(saved, resaved);

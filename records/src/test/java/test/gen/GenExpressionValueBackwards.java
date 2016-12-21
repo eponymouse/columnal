@@ -529,7 +529,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             @Override
             public Column number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return new MemoryNumericColumn(rs, name, new NumericColumnType(displayInfo.getUnit(), displayInfo.getMinimumDP(), false), Collections.singletonList(Utility.toBigDecimal((Number) value.get(0)).toPlainString()));
+                return new MemoryNumericColumn(rs, name, new NumberInfo(displayInfo.getUnit(), displayInfo.getMinimumDP()), Stream.of(Utility.toBigDecimal((Number) value.get(0)).toPlainString()));
             }
 
             @Override

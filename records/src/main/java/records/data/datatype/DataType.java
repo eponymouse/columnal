@@ -10,7 +10,6 @@ import records.data.MemoryStringColumn;
 import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
 import records.data.RecordSet;
-import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.unit.Unit;
@@ -74,6 +73,7 @@ public class DataType
     final @Nullable DateTimeInfo dateTimeInfo;
     final @Nullable List<TagType<DataType>> tagTypes;
 
+    // package-visible
     DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataType>>> tagInfo)
     {
         this.kind = kind;
@@ -349,7 +349,8 @@ public class DataType
         }
     }
 
-    public static DataType tagged(TypeId name, List<TagType<DataType>> tagTypes)
+    // package-visible
+    static DataType tagged(TypeId name, List<TagType<DataType>> tagTypes)
     {
         return new DataType(Kind.TAGGED, null, null, new Pair<>(name, tagTypes));
     }
@@ -431,9 +432,18 @@ public class DataType
         return kind == Kind.TAGGED;
     }
 
-    public @Nullable TypeId getTaggedTypeName()
+    public TypeId getTaggedTypeName() throws InternalException
     {
-        return taggedTypeName;
+        if (taggedTypeName != null)
+            return taggedTypeName;
+        throw new InternalException("Trying to get tag type name of non-tag type: " + this);
+    }
+
+    public List<TagType<DataType>> getTagTypes() throws InternalException
+    {
+        if (tagTypes != null)
+            return tagTypes;
+        throw new InternalException("Trying to get tag types of non-tag type: " + this);
     }
 
 
@@ -566,7 +576,7 @@ public class DataType
                         throw new UserException("Expected string value but found: \"" + row.get(columnIndex).getText() + "\"");
                     column.add(number.getText());
                 }
-                return new MemoryNumericColumn(rs, columnId, new NumericColumnType(displayInfo.getUnit(), displayInfo.getMinimumDP(), false), column);
+                return new MemoryNumericColumn(rs, columnId, displayInfo, column.stream());
             }
 
             @Override
