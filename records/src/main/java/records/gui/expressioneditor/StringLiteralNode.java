@@ -7,9 +7,14 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.gui.expressioneditor.AutoComplete.Completion;
+import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.Utility;
+
+import java.util.Collections;
 
 /**
  * Created by neil on 20/12/2016.
@@ -17,6 +22,7 @@ import utility.Utility;
 public class StringLiteralNode extends LeafNode implements OperandNode
 {
     private final TextField textField;
+    private final AutoComplete autoComplete;
     private ObservableList<Node> nodes;
 
     @SuppressWarnings("initialization")
@@ -25,6 +31,35 @@ public class StringLiteralNode extends LeafNode implements OperandNode
         super(parent);
         textField = new LeaveableTextField(this, parent);
         nodes = FXCollections.observableArrayList(new Label("\u201C"), textField, new Label("\u201D"));
+        // We need a completion so you can leave the field using tab/enter
+        // Otherwise only right-arrow will get you out
+        Completion currentCompletion = new Completion()
+        {
+            @Override
+            Pair<Node, String> getDisplay(String currentText)
+            {
+                return new Pair<>(null, currentText);
+            }
+
+            @Override
+            boolean shouldShow(String input)
+            {
+                return true;
+            }
+        };
+        this.autoComplete = new AutoComplete(textField, s ->
+        {
+            return Collections.singletonList(currentCompletion);
+        }, new SimpleCompletionListener()
+        {
+            @Override
+            protected String selected(String currentText, Completion c, String rest)
+            {
+                return currentText;
+            }
+        }, c -> false);
+
+        Utility.addChangeListenerPlatformNN(textField.textProperty(), text -> parent.changed(this));
     }
 
     @Override

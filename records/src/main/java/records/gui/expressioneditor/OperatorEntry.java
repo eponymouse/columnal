@@ -11,6 +11,7 @@ import records.data.datatype.DataType;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
+import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -42,33 +43,10 @@ public class OperatorEntry extends LeafNode
         textField.getStyleClass().add("operator-field");
         this.nodes = FXCollections.observableArrayList(this.textField);
 
-        this.autoComplete = new AutoComplete(textField, this::getCompletions, new CompletionListener()
+        this.autoComplete = new AutoComplete(textField, this::getCompletions, new SimpleCompletionListener()
         {
             @Override
-            public String doubleClick(String currentText, Completion selectedItem)
-            {
-                return selected(currentText, selectedItem, "");
-            }
-
-            @Override
-            public String nonAlphabetCharacter(String textBefore, Completion selectedItem, String textAfter)
-            {
-                return selected(textBefore, selectedItem, textAfter);
-            }
-
-            @Override
-            public String keyboardSelect(String currentText, Completion selectedItem)
-            {
-                return selected(currentText, selectedItem, "");
-            }
-
-            @Override
-            public String exactCompletion(String currentText, Completion selectedItem)
-            {
-                return selected(currentText, selectedItem, "");
-            }
-
-            private String selected(String currentText, Completion c, String rest)
+            protected String selected(String currentText, Completion c, String rest)
             {
                 if (c instanceof SimpleCompletion)
                 {
@@ -83,6 +61,10 @@ public class OperatorEntry extends LeafNode
                 return textField.getText();
             }
         }, c -> !isOperatorAlphabet(c));
+
+        Utility.addChangeListenerPlatformNN(textField.textProperty(), text ->{
+            parent.changed(OperatorEntry.this);
+        });
 
         // Do this after auto-complete is set up and we are set as part of parent,
         // in case it finishes a completion:

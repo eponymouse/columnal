@@ -22,6 +22,7 @@ import records.grammar.ExpressionParser.NumericLiteralContext;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
+import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.Expression;
@@ -93,33 +94,10 @@ public class GeneralEntry extends LeafNode implements OperandNode
         };
         container.getStyleClass().add("entry");
         this.nodes = FXCollections.observableArrayList(container);
-        this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener()
+        this.autoComplete = new AutoComplete(textField, this::getSuggestions, new SimpleCompletionListener()
         {
             @Override
-            public String doubleClick(String currentText, Completion selectedItem)
-            {
-                return selected(currentText, selectedItem, "");
-            }
-
-            @Override
-            public String nonAlphabetCharacter(String textBefore, Completion selectedItem, String textAfter)
-            {
-                return selected(textBefore, selectedItem, textAfter);
-            }
-
-            @Override
-            public String keyboardSelect(String currentText, Completion selectedItem)
-            {
-                return selected(currentText, selectedItem, "");
-            }
-
-            @Override
-            public String exactCompletion(String currentText, Completion selectedItem)
-            {
-                return selected(currentText, selectedItem, "");
-            }
-
-            private String selected(String currentText, Completion c, String rest)
+            protected String selected(String currentText, Completion c, String rest)
             {
                 if (c instanceof KeyShortcutCompletion)
                 {
@@ -171,6 +149,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
             else
                 completing = false;
             textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), t.isEmpty());
+            parent.changed(GeneralEntry.this);
         });
         textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), textField.getText().isEmpty());
     }

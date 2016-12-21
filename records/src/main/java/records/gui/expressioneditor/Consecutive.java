@@ -96,6 +96,14 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
                 iterator.remove();
             }
         }
+
+        selfChanged();
+    }
+
+    protected void selfChanged()
+    {
+        if (parent != null)
+            parent.changed(this);
     }
 
     private void updateNodes()
@@ -220,6 +228,12 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
     }
 
     @Override
+    public void changed(ExpressionNode child)
+    {
+        selfChanged();
+    }
+
+    @Override
     public void focusRightOf(ExpressionNode child)
     {
         if (child instanceof OperandNode && operands.contains(child))
@@ -305,6 +319,11 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
         @Nullable List<String> ops = getOperators();
         if (ops == null)
             return null;
+        if (ops.isEmpty())
+        {
+            // Only one operand:
+            return operandExps.get(0);
+        }
         if (ops.stream().allMatch(op -> op.equals("+") || op.equals("-")))
         {
             return new AddSubtractExpression(operandExps, Utility.<String, Op>mapList(ops, op -> op.equals("+") ? Op.ADD : Op.SUBTRACT));

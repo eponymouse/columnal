@@ -82,6 +82,7 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
             }
         }
 
+        parent.changed(this);
     }
 
 
@@ -110,6 +111,12 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
     public boolean isTopLevel()
     {
         return false;
+    }
+
+    @Override
+    public void changed(ExpressionNode child)
+    {
+        parent.changed(this);
     }
 
     @Override

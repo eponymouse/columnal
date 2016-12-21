@@ -14,6 +14,7 @@ import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.Utility;
 
 import java.util.Collections;
 import java.util.List;
@@ -48,6 +49,10 @@ public class FunctionNode implements ExpressionParent, OperandNode
         VBox vBox = new VBox(typeLabel, functionName);
         vBox.getStyleClass().add("function");
         arguments = new Consecutive(this, new HBox(vBox, new Label("(")), new Label(")"));
+
+        Utility.addChangeListenerPlatformNN(functionName.textProperty(), text -> {
+            parent.changed(this);
+        });
 
         functionName.setText(funcName);
     }
@@ -125,6 +130,12 @@ public class FunctionNode implements ExpressionParent, OperandNode
     public boolean isTopLevel()
     {
         return false;
+    }
+
+    @Override
+    public void changed(ExpressionNode child)
+    {
+        parent.changed(this);
     }
 
     @Override

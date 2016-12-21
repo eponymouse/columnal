@@ -94,6 +94,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
             }
         }
 
+        parent.changed(this);
     }
 
     private void updateNodes()
@@ -187,6 +188,12 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
     public boolean isTopLevel()
     {
         return false;
+    }
+
+    @Override
+    public void changed(ExpressionNode child)
+    {
+        parent.changed(this);
     }
 
     @Override

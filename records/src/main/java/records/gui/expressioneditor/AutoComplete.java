@@ -324,4 +324,33 @@ public class AutoComplete extends PopupControl
         // Returns the new text for the textfield
         String exactCompletion(String currentText, Completion selectedItem);
     }
+
+    public static abstract class SimpleCompletionListener implements CompletionListener
+    {
+        @Override
+        public String doubleClick(String currentText, Completion selectedItem)
+        {
+            return selected(currentText, selectedItem, "");
+        }
+
+        @Override
+        public String nonAlphabetCharacter(String textBefore, Completion selectedItem, String textAfter)
+        {
+            return selected(textBefore, selectedItem, textAfter);
+        }
+
+        @Override
+        public String keyboardSelect(String currentText, Completion selectedItem)
+        {
+            return selected(currentText, selectedItem, "");
+        }
+
+        @Override
+        public String exactCompletion(String currentText, Completion selectedItem)
+        {
+            return selected(currentText, selectedItem, "");
+        }
+
+        protected abstract String selected(String currentText, Completion c, String rest);
+    }
 }

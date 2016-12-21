@@ -305,6 +305,7 @@ public class Filter extends Transformation
                             {
                                 System.out.println("Variable " + var.getKey() + " = " + show(evaluated));
                                 srcHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(Utility.toDisplayValue(show(evaluated)))));
+                                destHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(Utility.toDisplayValue(show(evaluated)))));
                             }
                         }
                     }
@@ -325,7 +326,12 @@ public class Filter extends Transformation
                         Model model = prover.getModel();
                         for (Entry<Pair<@Nullable TableId, ColumnId>, Formula> var : vars.entrySet())
                         {
-                            System.out.println("Variable " + var.getKey() + " = " + show(model.evaluate(var.getValue())));
+                            Object evaluated = model.evaluate(var.getValue());
+                            if (evaluated != null)
+                            {
+                                System.out.println("Variable " + var.getKey() + " = " + show(model.evaluate(var.getValue())));
+                                srcHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(Utility.toDisplayValue(show(evaluated)))));
+                            }
                         }
                     }
                 }
@@ -409,7 +415,21 @@ public class Filter extends Transformation
             }
 
             Node example = createExplanation(srcHeaderAndData, destHeaderAndData, "Filter examines each row separately.  It evaluates the given expression for that row.  If the expression is true, the row is kept; if it's false, the row is removed.  For example, if you have a column called price, and you write\n@price >= 100\nas your expression then only rows where the price is 100 or higher will be kept.");
-            return new VBox(rawField, new ExpressionEditor(null, src, DataType.BOOLEAN).getContainer(), example);
+            FXPlatformConsumer<@Nullable Expression> updater = expression -> {
+                if (expression != null)
+                {
+                    try
+                    {
+                        updateExample(expression);
+                    }
+                    catch (InternalException | UserException e)
+                    {
+                        // Never mind, don't update
+                        reportError.consume(e);
+                    }
+                }
+            };
+            return new VBox(rawField, new ExpressionEditor(null, src, DataType.BOOLEAN, updater).getContainer(), example);
         }
 
         @Override

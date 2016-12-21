@@ -11,6 +11,7 @@ import records.data.Table;
 import records.data.datatype.DataType;
 import records.error.UserException;
 import records.transformations.expression.Expression;
+import utility.FXPlatformConsumer;
 import utility.Utility;
 
 import java.util.Collections;
@@ -24,9 +25,10 @@ public class ExpressionEditor extends Consecutive
     private final FlowPane container;
     private final @Nullable DataType type;
     private final @Nullable Table srcTable;
+    private final FXPlatformConsumer<@Nullable Expression> onChange;
 
     @SuppressWarnings("initialization")
-    public ExpressionEditor(@Nullable Expression startingValue, @Nullable Table srcTable, @Nullable DataType type)
+    public ExpressionEditor(@Nullable Expression startingValue, @Nullable Table srcTable, @Nullable DataType type, FXPlatformConsumer<@Nullable Expression> onChange)
     {
         super(null, null, null);
         this.container = new FlowPane();
@@ -39,6 +41,7 @@ public class ExpressionEditor extends Consecutive
         nodes().addListener((ListChangeListener<? super @UnknownInterned @UnknownKeyFor Node>) c -> {
             container.getChildren().setAll(nodes());
         });
+        this.onChange = onChange;
         //Utility.onNonNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
     }
 
@@ -80,5 +83,13 @@ public class ExpressionEditor extends Consecutive
     public boolean isTopLevel()
     {
         return true;
+    }
+
+    @Override
+    protected void selfChanged()
+    {
+        // Can be null during initialisation
+        if (onChange != null)
+            onChange.consume(toExpression(err -> {}));
     }
 }

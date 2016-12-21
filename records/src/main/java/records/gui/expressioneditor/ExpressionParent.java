@@ -19,6 +19,8 @@ public interface ExpressionParent
 
     boolean isTopLevel();
 
+    void changed(ExpressionNode child);
+
     // Focus the child to the right of the given child:
     void focusRightOf(ExpressionNode child);
     void focusLeftOf(ExpressionNode child);
