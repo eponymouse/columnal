@@ -4,7 +4,6 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.lang.BooleanGenerator;
 import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
-import com.pholser.junit.quickcheck.generator.java.time.LocalDateGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
@@ -22,6 +21,7 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
@@ -140,7 +140,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                 try
                 {
                     List<TagType<DataType>> tags = makeTags(0, sourceOfRandomness, generationStatus);
-                    return new MemoryTaggedColumn(rs, nextCol.get(), TestUtil.makeString(sourceOfRandomness, generationStatus), tags, TestUtil.makeList(len, new TagDataGenerator(tags), sourceOfRandomness, generationStatus));
+                    return new MemoryTaggedColumn(rs, nextCol.get(), new TypeId(TestUtil.makeString(sourceOfRandomness, generationStatus)), tags, TestUtil.makeList(len, new TagDataGenerator(tags), sourceOfRandomness, generationStatus));
                 }
                 catch (InternalException | UserException e)
                 {
@@ -171,7 +171,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                     () -> DataType.NUMBER,
                     () -> DataType.BOOLEAN,
                     () -> DataType.DATE,
-                    () -> depth < 3 ? DataType.tagged(TestUtil.makeString(sourceOfRandomness, generationStatus), makeTags(depth + 1, sourceOfRandomness, generationStatus)) : null
+                    () -> depth < 3 ? DataType.tagged(new TypeId(TestUtil.makeString(sourceOfRandomness, generationStatus)), makeTags(depth + 1, sourceOfRandomness, generationStatus)) : null
                 )).get());
             }
         });
@@ -229,7 +229,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                         }
 
                         @Override
-                        public List<Object> tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+                        public List<Object> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
                         {
                             return new TagDataGenerator(tags).generate(r, generationStatus);
                         }

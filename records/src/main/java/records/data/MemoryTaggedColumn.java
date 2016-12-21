@@ -4,6 +4,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -18,9 +19,9 @@ public class MemoryTaggedColumn extends Column
 {
     private final ColumnId title;
     private final TaggedColumnStorage storage;
-    private String typeName;
+    private final TypeId typeName;
 
-    public MemoryTaggedColumn(RecordSet rs, ColumnId title, String typeName, List<TagType<DataType>> tags, List<List<Object>> list) throws InternalException, UserException
+    public MemoryTaggedColumn(RecordSet rs, ColumnId title, TypeId typeName, List<TagType<DataType>> tags, List<List<Object>> list) throws InternalException, UserException
     {
         super(rs);
         this.title = title;
@@ -49,7 +50,7 @@ public class MemoryTaggedColumn extends Column
         List<TagType<DataType>> tags = getType().apply(new SpecificDataTypeVisitor<List<TagType<DataType>>>()
         {
             @Override
-            public List<TagType<DataType>> tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public List<TagType<DataType>> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return tags;
             }

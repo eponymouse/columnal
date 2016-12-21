@@ -11,6 +11,7 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -51,7 +52,7 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
     private final DataTypeValue dataType;
 
     @SuppressWarnings("initialization")
-    public <DT extends DataType> TaggedColumnStorage(String typeName, List<TagType<DT>> copyTagTypes) throws InternalException, UserException
+    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, List<TagType<DT>> copyTagTypes) throws InternalException, UserException
     {
         tagStore = new NumericColumnStorage(copyTagTypes.size());
         innerValueIndex = new NumericColumnStorage();
@@ -95,7 +96,7 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
                     }
 
                     @Override
-                    public Pair<ColumnStorage<?>, DataTypeValue> tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+                    public Pair<ColumnStorage<?>, DataTypeValue> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
                     {
                         TaggedColumnStorage storage = new TaggedColumnStorage(typeName, tags);
                         // In contrast to simple, we flatten things by returning the inner list
@@ -196,7 +197,7 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
             }
 
             @Override
-            public UnitType tagged(String typeName, List<TagType<DataType>> tags) throws InternalException
+            public UnitType tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException
             {
                 ColumnStorage storage = valueStores.get(tagIndex);
                 if (storage == null)

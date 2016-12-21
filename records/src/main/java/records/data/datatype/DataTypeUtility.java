@@ -52,7 +52,7 @@ public class DataTypeUtility
             }
 
             @Override
-            public List<Object> tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public List<Object> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tag = index % tags.size();
                 @Nullable DataType inner = tags.get(tag).getInner();
@@ -136,7 +136,7 @@ public class DataTypeUtility
             }
 
             @Override
-            public DisplayValue tagged(String typeName, List<TagType<DataType>> tagTypes) throws InternalException, UserException
+            public DisplayValue tagged(TypeId typeName, List<TagType<DataType>> tagTypes) throws InternalException, UserException
             {
                 int tag = (Integer)objects.get(index++);
                 TagType tagType = tagTypes.get(tag);

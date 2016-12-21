@@ -2,7 +2,6 @@ package test.gen;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
-import com.pholser.junit.quickcheck.generator.java.time.ZoneIdGenerator;
 import com.pholser.junit.quickcheck.generator.java.time.ZoneOffsetGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -25,6 +24,7 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.FunctionInt;
@@ -389,12 +389,12 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public Expression tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Expression tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
                 TagType<DataType> tag = tags.get((Integer) targetValue.get(0));
-                Pair<@Nullable String, String> name = new Pair<>(typeName, tag.getName());
+                Pair<TypeId, String> name = new Pair<>(typeName, tag.getName());
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {
@@ -551,7 +551,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public Column tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Column tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return new MemoryTaggedColumn(rs, name, typeName, tags, Collections.singletonList(value));
             }
@@ -621,7 +621,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public List<Object> tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public List<Object> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 ArrayList<Object> o;
@@ -688,7 +688,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                 return t.apply(new SpecificDataTypeVisitor<Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression>>()
                 {
                     @Override
-                    public Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> tagged(String typeName, List<TagType<DataType>> tagTypes) throws InternalException, UserException
+                    public Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> tagged(TypeId typeName, List<TagType<DataType>> tagTypes) throws InternalException, UserException
                     {
                         TagType<DataType> tagType = tagTypes.get((Integer) actual.get(0));
                         @Nullable DataType inner = tagType.getInner();

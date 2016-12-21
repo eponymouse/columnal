@@ -15,6 +15,7 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.data.datatype.DataTypeValue.GetValue;
+import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -168,7 +169,7 @@ public class DisplayCache
 
                     @Override
                     @OnThread(Tag.Simulation)
-                    public DisplayValue tagged(String typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                    public DisplayValue tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
                     {
                         int tag = g.getWithProgress(index, prog);
                         TagType<DataTypeValue> tagType = tagTypes.get(tag);

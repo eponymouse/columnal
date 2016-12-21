@@ -69,12 +69,12 @@ public class DataType
     // Flattened ADT.  kind is the head tag, other bits are null/non-null depending:
     public static enum Kind {NUMBER, TEXT, DATETIME, BOOLEAN, TAGGED }
     final Kind kind;
-    final @Nullable String taggedTypeName;
+    final @Nullable TypeId taggedTypeName;
     final @Nullable NumberInfo numberInfo;
     final @Nullable DateTimeInfo dateTimeInfo;
     final @Nullable List<TagType<DataType>> tagTypes;
 
-    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<String, List<TagType<DataType>>> tagInfo)
+    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataType>>> tagInfo)
     {
         this.kind = kind;
         this.numberInfo = numberInfo;
@@ -158,7 +158,7 @@ public class DataType
         R date(DateTimeInfo dateTimeInfo) throws InternalException, E;
         R bool() throws InternalException, E;
 
-        R tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, E;
+        R tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, E;
         //R tuple() throws InternalException, E;
 
         //R array() throws InternalException, E;
@@ -184,7 +184,7 @@ public class DataType
         }
 
         @Override
-        public R tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+        public R tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
         {
             throw new InternalException("Unexpected tagged data type");
         }
@@ -293,7 +293,7 @@ public class DataType
             }
 
             @Override
-            public String tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public String tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 if (tags.size() == 1)
                 {
@@ -349,7 +349,7 @@ public class DataType
         }
     }
 
-    public static DataType tagged(String name, List<TagType<DataType>> tagTypes)
+    public static DataType tagged(TypeId name, List<TagType<DataType>> tagTypes)
     {
         return new DataType(Kind.TAGGED, null, null, new Pair<>(name, tagTypes));
     }
@@ -411,7 +411,7 @@ public class DataType
     @OnThread(Tag.Any)
     private DataTypeValue copy(GetValue<List<Object>> get, int curIndex) throws UserException, InternalException
     {
-        @Nullable Pair<String, List<TagType<DataTypeValue>>> newTagTypes = null;
+        @Nullable Pair<TypeId, List<TagType<DataTypeValue>>> newTagTypes = null;
         if (this.taggedTypeName != null && this.tagTypes != null)
         {
             newTagTypes = new Pair<>(taggedTypeName, new ArrayList<>());
@@ -431,7 +431,7 @@ public class DataType
         return kind == Kind.TAGGED;
     }
 
-    public @Nullable String getTaggedTypeName()
+    public @Nullable TypeId getTaggedTypeName()
     {
         return taggedTypeName;
     }
@@ -616,7 +616,7 @@ public class DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Column tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 List<List<Object>> values = new ArrayList<>(allData.size());
                 for (List<ItemContext> row : allData)
@@ -692,7 +692,7 @@ public class DataType
                         }
 
                         @Override
-                        public List<Object> tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+                        public List<Object> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
                         {
                             return loadValue(tags, item.tagged());
                         }
@@ -744,7 +744,7 @@ public class DataType
             }
 
             @Override
-            public UnitType tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, InternalException
+            public UnitType tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, InternalException
             {
                 b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY).t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
                 for (TagType<DataType> tag : tags)
@@ -809,7 +809,7 @@ public class DataType
     {
         return apply(new SpecificDataTypeVisitor<Boolean>() {
             @Override
-            public Boolean tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Boolean tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return tags.stream().anyMatch(tt -> tt.getName().equals(tagName));
             }

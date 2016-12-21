@@ -4,6 +4,7 @@ import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -54,7 +55,7 @@ public class MemoryNumericColumn extends Column
         if (!mayBeBlank)
             return storage.getType();
 
-        return DataTypeValue.tagged("_BlankOrNumber", Arrays.asList(new TagType<>("Blank", null), new TagType<>("Number", storage.getType())),
+        return DataTypeValue.tagged(new TypeId("Number?"), Arrays.asList(new TagType<>("Blank", null), new TagType<>("Number", storage.getType())),
             (i, prog) -> storage.getTag(i));
     }
 

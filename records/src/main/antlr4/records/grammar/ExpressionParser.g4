@@ -31,7 +31,7 @@ andExpression :  expression (AND expression)+;
 orExpression :  expression (OR expression)+;
 compoundExpression : plusMinusExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression;
 
-constructor : rawConstructor rawConstructor?;
+constructor : rawConstructor rawConstructor;
 tagExpression : constructor (CONS expression)?;
 
 functionName : UNQUOTED_IDENT;

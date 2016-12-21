@@ -13,6 +13,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -201,11 +202,8 @@ public abstract class Expression
         @Override
         public Expression visitTagExpression(TagExpressionContext ctx)
         {
-            Pair<@Nullable String, String> constructorName;
-            if (ctx.constructor().rawConstructor().size() == 1)
-                constructorName = new Pair<@Nullable String, String>(null, ctx.constructor().rawConstructor(0).constructorName().getText());
-            else
-                constructorName = new Pair<@Nullable String, String>(ctx.constructor().rawConstructor(0).constructorName().getText(), ctx.constructor().rawConstructor(1).constructorName().getText());
+            Pair<TypeId, String> constructorName;
+            constructorName = new Pair<TypeId, String>(new TypeId(ctx.constructor().rawConstructor(0).constructorName().getText()), ctx.constructor().rawConstructor(1).constructorName().getText());
 
             return new TagExpression(constructorName, visitExpression(ctx.expression()));
         }

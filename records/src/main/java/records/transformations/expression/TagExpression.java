@@ -7,6 +7,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
@@ -30,12 +31,12 @@ import java.util.stream.Stream;
  */
 public class TagExpression extends Expression
 {
-    private final Pair<@Nullable String, String> tagName;
+    private final Pair<TypeId, String> tagName;
     private final @Nullable Expression inner;
     private int index;
     private @Nullable DataType innerDerivedType;
 
-    public TagExpression(Pair<@Nullable String, String> tagName, @Nullable Expression inner)
+    public TagExpression(Pair<TypeId, String> tagName, @Nullable Expression inner)
     {
         this.tagName = tagName;
         this.inner = inner;
@@ -79,7 +80,7 @@ public class TagExpression extends Expression
     public String save(boolean topLevel)
     {
         String tag;
-        @Nullable String typeName = tagName.getFirst();
+        @Nullable String typeName = tagName.getFirst().getRaw();
         if (typeName != null)
         {
             tag = "\\" + OutputBuilder.quotedIfNecessary(typeName) + "\\" + OutputBuilder.quotedIfNecessary(tagName.getSecond());

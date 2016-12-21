@@ -13,6 +13,7 @@ import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.TypeId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -100,7 +101,7 @@ public class ColumnReference extends Expression
             }
 
             @Override
-            public Formula tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Formula tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 throw new UserException("Can't do tags...");
             }

@@ -3,6 +3,7 @@ package records.data;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -18,7 +19,7 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
     private final TaggedColumnStorage storage;
 
     @SuppressWarnings("initialization")
-    public <DT extends DataType> CalculatedTaggedColumn(RecordSet recordSet, ColumnId name, String typeName, List<TagType<DT>> copyTagTypes) throws InternalException, UserException
+    public <DT extends DataType> CalculatedTaggedColumn(RecordSet recordSet, ColumnId name, TypeId typeName, List<TagType<DT>> copyTagTypes) throws InternalException, UserException
     {
         super(recordSet, name);
         

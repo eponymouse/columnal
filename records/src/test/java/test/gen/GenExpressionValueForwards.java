@@ -22,6 +22,7 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.FunctionInt;
@@ -45,7 +46,6 @@ import records.transformations.expression.TagExpression;
 import records.transformations.expression.TimesExpression;
 import test.DummyManager;
 import test.TestUtil;
-import test.gen.GenExpressionValueBackwards.ExpressionMaker;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -58,7 +58,6 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.YearMonth;
-import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.temporal.Temporal;
@@ -473,13 +472,13 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public Pair<List<Object>, Expression> tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Pair<List<Object>, Expression> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 TagType<DataType> tag = tags.get(tagIndex);
-                Pair<@Nullable String, String> name = new Pair<>(typeName, tag.getName());
+                Pair<TypeId, String> name = new Pair<>(typeName, tag.getName());
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {
@@ -573,7 +572,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public Pair<List<Object>, FunctionInt<RecordSet, Column>> tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Pair<List<Object>, FunctionInt<RecordSet, Column>> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 @Nullable DataType inner = tags.get(tagIndex).getInner();

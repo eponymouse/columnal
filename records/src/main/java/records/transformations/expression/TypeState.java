@@ -5,6 +5,7 @@ import com.google.common.collect.Maps;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -35,16 +36,16 @@ public class TypeState
 {
     // If variable is in there but > size 1, means it is known but cannot be used because it has multiple types in different guards
     private final Map<String, Set<DataType>> variables;
-    private final Map<String, DataType> tagTypes;
+    private final Map<TypeId, DataType> tagTypes;
     private final Map<String, FunctionDefinition> functions;
     private final UnitManager unitManager;
 
-    public TypeState(Map<String, DataType> tagTypes, UnitManager unitManager)
+    public TypeState(Map<TypeId, DataType> tagTypes, UnitManager unitManager)
     {
         this(new HashMap<>(), new HashMap<>(tagTypes), unitManager);
     }
 
-    private TypeState(Map<String, Set<DataType>> variables, Map<String, DataType> tagTypes, UnitManager unitManager)
+    private TypeState(Map<String, Set<DataType>> variables, Map<TypeId, DataType> tagTypes, UnitManager unitManager)
     {
         this.variables = Collections.unmodifiableMap(variables);
         this.tagTypes = Collections.unmodifiableMap(tagTypes);
@@ -132,9 +133,9 @@ public class TypeState
         }
     }
 
-    public @Nullable TypeAndTagInfo findTaggedType(Pair<@Nullable String, String> tagName, ExConsumer<String> onError) throws InternalException, UserException
+    public @Nullable TypeAndTagInfo findTaggedType(Pair<TypeId, String> tagName, ExConsumer<String> onError) throws InternalException, UserException
     {
-        @Nullable String typeName = tagName.getFirst();
+        TypeId typeName = tagName.getFirst();
         @Nullable DataType type;
         if (typeName != null)
         {
@@ -148,8 +149,8 @@ public class TypeState
         else
         {
             // Try to infer.
-            List<Entry<String, DataType>> matches = new ArrayList<>();
-            for (Entry<String, DataType> entry : tagTypes.entrySet())
+            List<Entry<TypeId, DataType>> matches = new ArrayList<>();
+            for (Entry<TypeId, DataType> entry : tagTypes.entrySet())
             {
                 if (entry.getValue().hasTag(tagName.getSecond()))
                     matches.add(entry);
@@ -161,7 +162,7 @@ public class TypeState
             }
             else if (matches.size() > 1)
             {
-                onError.accept("Multiple types match tag: \"" + tagName + "\" (" + matches.stream().map(Entry::getKey).collect(Collectors.joining(", ")) + ").  To select type, qualify the tag, e.g. \\" + OutputBuilder.quotedIfNecessary(matches.get(0).getKey()) + "\\" + OutputBuilder.quotedIfNecessary(tagName.getSecond()));
+                onError.accept("Multiple types match tag: \"" + tagName + "\" (" + matches.stream().map(Entry::getKey).map(Object::toString).collect(Collectors.joining(", ")) + ").  To select type, qualify the tag, e.g. \\" + OutputBuilder.quotedIfNecessary(matches.get(0).getKey().getRaw()) + "\\" + OutputBuilder.quotedIfNecessary(tagName.getSecond()));
                 return null;
             }
             type = matches.get(0).getValue();

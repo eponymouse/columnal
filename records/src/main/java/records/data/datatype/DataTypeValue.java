@@ -29,9 +29,9 @@ public class DataTypeValue extends DataType
 
     // package-visible
     @SuppressWarnings("unchecked")
-    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<String, List<TagType<DataTypeValue>>> tagTypes, @Nullable GetValue<Number> getNumber, @Nullable GetValue<String> getText, @Nullable GetValue<Temporal> getDate, @Nullable GetValue<Boolean> getBoolean, @Nullable GetValue<Integer> getTag)
+    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataTypeValue>>> tagTypes, @Nullable GetValue<Number> getNumber, @Nullable GetValue<String> getText, @Nullable GetValue<Temporal> getDate, @Nullable GetValue<Boolean> getBoolean, @Nullable GetValue<Integer> getTag)
     {
-        super(kind, numberInfo, dateTimeInfo, (Pair<String, List<TagType<DataType>>>)(Pair)tagTypes);
+        super(kind, numberInfo, dateTimeInfo, (Pair<TypeId, List<TagType<DataType>>>)(Pair)tagTypes);
         this.getNumber = getNumber;
         this.getText = getText;
         this.getDate = getDate;
@@ -44,7 +44,7 @@ public class DataTypeValue extends DataType
         return new DataTypeValue(Kind.BOOLEAN, null, null, null, null, null, null, getValue, null);
     }
 
-    public static DataTypeValue tagged(String name, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag)
+    public static DataTypeValue tagged(TypeId name, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag)
     {
         return new DataTypeValue(Kind.TAGGED, null, null, new Pair<>(name, tagTypes), null, null, null, null, getTag);
     }
@@ -115,7 +115,7 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R tagged(String typeName, List<TagType<DataTypeValue>> tags, GetValue<Integer> g) throws InternalException, UserException
+        public R tagged(TypeId typeName, List<TagType<DataTypeValue>> tags, GetValue<Integer> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected tagged data type");
         }
@@ -141,7 +141,7 @@ public class DataTypeValue extends DataType
         R bool(GetValue<Boolean> g) throws InternalException, E;
         R date(DateTimeInfo dateTimeInfo, GetValue<Temporal> g) throws InternalException, E;
 
-        R tagged(String typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
+        R tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
         //R tuple(List<DataType> types) throws InternalException, E;
 
         //R array(DataType type) throws InternalException, E;
@@ -205,7 +205,7 @@ public class DataTypeValue extends DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public List<Object> tagged(String typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public List<Object> tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 List<Object> l = new ArrayList<>();
                 Integer tagIndex = g.get(index);
@@ -234,7 +234,7 @@ public class DataTypeValue extends DataType
 
     public DataTypeValue copyReorder(GetValue<Integer> getOriginalIndex) throws UserException, InternalException
     {
-        Pair<String, List<TagType<DataTypeValue>>> newTagTypes = null;
+        Pair<TypeId, List<TagType<DataTypeValue>>> newTagTypes = null;
         if (this.tagTypes != null && this.taggedTypeName != null)
         {
             newTagTypes = new Pair<>(taggedTypeName, new ArrayList<>());

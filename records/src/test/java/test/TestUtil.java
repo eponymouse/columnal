@@ -18,6 +18,7 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.TypeId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -276,8 +277,8 @@ public class TestUtil
     static {
         try
         {
-            DataType a = DataType.tagged("A", Arrays.asList(new TagType<DataType>("Single", null)));
-            DataType c = DataType.tagged("C", Arrays.asList(new TagType<DataType>("Blank", null), new TagType<DataType>("Number", DataType.NUMBER)));
+            DataType a = DataType.tagged(new TypeId("A"), Arrays.asList(new TagType<DataType>("Single", null)));
+            DataType c = DataType.tagged(new TypeId("C"), Arrays.asList(new TagType<DataType>("Blank", null), new TagType<DataType>("Number", DataType.NUMBER)));
             distinctTypes = Arrays.<DataType>asList(
                 DataType.BOOLEAN,
                 DataType.TEXT,
@@ -294,9 +295,9 @@ public class TestUtil
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("cm"), 0)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("($ m)/s^2"), 0)),
                 a,
-                DataType.tagged("B", Arrays.asList(new TagType<DataType>("Single ", null))),
+                DataType.tagged(new TypeId("B"), Arrays.asList(new TagType<DataType>("Single ", null))),
                 c,
-                DataType.tagged("Nested", Arrays.asList(new TagType<DataType>("A", a), new TagType<DataType>("C", c)))
+                DataType.tagged(new TypeId("Nested"), Arrays.asList(new TagType<DataType>("A", a), new TagType<DataType>("C", c)))
             );
         }
         catch (UserException | InternalException e)
@@ -314,7 +315,7 @@ public class TestUtil
     {
         try
         {
-            return new TypeState(distinctTypes.stream().filter(p -> p.isTagged()).collect(Collectors.<DataType, String, DataType>toMap(t -> t.getTaggedTypeName(), t -> t)), new UnitManager());
+            return new TypeState(distinctTypes.stream().filter(p -> p.isTagged()).collect(Collectors.<DataType, TypeId, DataType>toMap(t -> t.getTaggedTypeName(), t -> t)), new UnitManager());
         }
         catch (InternalException | UserException e)
         {

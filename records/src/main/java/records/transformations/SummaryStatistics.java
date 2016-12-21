@@ -35,6 +35,7 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.data.datatype.DataTypeValue.GetValue;
+import records.data.datatype.TypeId;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UnimplementedException;
@@ -311,7 +312,7 @@ public class SummaryStatistics extends Transformation
                         }
 
                         @Override
-                        public FunctionInt<RecordSet, Column> tagged(String typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag) throws InternalException, UserException
+                        public FunctionInt<RecordSet, Column> tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag) throws InternalException, UserException
                         {
                             boolean ignoreNullaryTags = true; //TODO configure through GUI
 
@@ -620,7 +621,7 @@ public class SummaryStatistics extends Transformation
                 }
 
                 @Override
-                public Boolean tagged(String typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+                public Boolean tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
                 {
                     // For MEAN and SUM, as long as one is numeric, it's potentially valid:
                     for (TagType tagType : tags)
@@ -983,7 +984,7 @@ public class SummaryStatistics extends Transformation
 
                     @Override
                     @OnThread(Tag.Simulation)
-                    public List<Number> tagged(String typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                    public List<Number> tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
                     {
                         @Nullable DataTypeValue nestedInner = tagTypes.get(g.get(index)).getInner();
                         if (nestedInner != null)
