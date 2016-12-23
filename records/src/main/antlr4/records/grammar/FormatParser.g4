@@ -12,3 +12,7 @@ tagItem : constructor (CONS type)?;
 
 columnName : STRING;
 column : COLUMN columnName type NEWLINE;
+
+typeName : STRING;
+typeDecl : TYPE typeName taggedDecl NEWLINE;
+typeDecls : NEWLINE* (typeDecl NEWLINE*)*;

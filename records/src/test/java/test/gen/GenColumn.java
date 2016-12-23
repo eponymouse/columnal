@@ -14,6 +14,7 @@ import records.data.MemoryStringColumn;
 import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
 import records.data.RecordSet;
+import records.data.TableManager;
 import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
@@ -47,6 +48,7 @@ import java.util.function.Supplier;
  */
 public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
 {
+    private final TableManager mgr;
     private Supplier<ColumnId> nextCol = new Supplier<ColumnId>() {
         int nextId = 0;
         @Override
@@ -56,9 +58,10 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
         }
     };
 
-    public GenColumn()
+    public GenColumn(TableManager mgr)
     {
         super((Class<BiFunction<Integer, RecordSet, Column>>)(Class<?>)BiFunction.class);
+        this.mgr = mgr;
     }
 
     @Override
@@ -141,7 +144,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                 try
                 {
                     List<TagType<DataType>> tags = makeTags(0, sourceOfRandomness, generationStatus);
-                    DataType type = DummyManager.INSTANCE.getTypeManager().registerTaggedType(TestUtil.makeString(sourceOfRandomness, generationStatus), tags);
+                    DataType type = mgr.getTypeManager().registerTaggedType(TestUtil.makeNonEmptyString(sourceOfRandomness, generationStatus), tags);
                     return new MemoryTaggedColumn(rs, nextCol.get(), type.getTaggedTypeName(), tags, TestUtil.makeList(len, new TagDataGenerator(tags), sourceOfRandomness, generationStatus));
                 }
                 catch (InternalException | UserException e)
@@ -152,7 +155,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
         ));
     }
 
-    private static List<TagType<DataType>> makeTags(int depth, final SourceOfRandomness sourceOfRandomness, final GenerationStatus generationStatus)
+    private List<TagType<DataType>> makeTags(int depth, final SourceOfRandomness sourceOfRandomness, final GenerationStatus generationStatus)
     {
         return TestUtil.makeList(sourceOfRandomness, 1, 10, new ExSupplier<TagType<DataType>>()
         {
@@ -177,7 +180,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                     {
                         try
                         {
-                            return depth < 3 ? DummyManager.INSTANCE.getTypeManager().registerTaggedType(TestUtil.makeString(sourceOfRandomness, generationStatus), makeTags(depth + 1, sourceOfRandomness, generationStatus)) : null;
+                            return depth < 3 ? mgr.getTypeManager().registerTaggedType(TestUtil.makeString(sourceOfRandomness, generationStatus), makeTags(depth + 1, sourceOfRandomness, generationStatus)) : null;
                         }
                         catch (InternalException e)
                         {

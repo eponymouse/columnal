@@ -2,6 +2,8 @@ package records.data;
 
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Table.FullSaver;
+import records.data.Table.Saver;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -16,18 +18,16 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 import utility.Workers;
-import utility.Workers.Worker;
 
+import java.io.File;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by neil on 14/11/2016.
@@ -43,7 +43,7 @@ public class TableManager
     public TableManager() throws UserException, InternalException
     {
         this.unitManager = new UnitManager();;
-        this.typeManager = new TypeManager();
+        this.typeManager = new TypeManager(unitManager);
     }
 
     public synchronized @Nullable Table getSingleTableOrNull(TableId tableId)
@@ -89,14 +89,15 @@ public class TableManager
 
     public TypeState getTypeState()
     {
-        return new TypeState(typeManager.getKnownTypes(), unitManager);
+        return new TypeState(unitManager, typeManager);
     }
 
     @OnThread(Tag.FXPlatform)
     public List<Table> loadAll(String completeSrc) throws UserException, InternalException
     {
         FileContext file = Utility.parseAsOne(completeSrc, MainLexer::new, MainParser::new, p -> p.file());
-        // TODO load units, types
+        // TODO load units
+        typeManager.loadTypeDecls(file.types());
         List<Table> loaded = new ArrayList<>();
         List<Exception> exceptions = new ArrayList<>();
         CompletableFuture<Object> allDone = new CompletableFuture<>();
@@ -146,9 +147,9 @@ public class TableManager
         if (exceptions.isEmpty())
             return loaded;
         else if (exceptions.get(0) instanceof UserException)
-            throw (UserException)exceptions.get(0);
+            throw new UserException("Loading problem", exceptions.get(0));
         else if (exceptions.get(0) instanceof InternalException)
-            throw (InternalException) exceptions.get(0);
+            throw new InternalException("Loading problem", exceptions.get(0));
         else
             throw new InternalException("Unrecognised exception", exceptions.get(0));
     }
@@ -156,5 +157,28 @@ public class TableManager
     public TypeManager getTypeManager()
     {
         return typeManager;
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public void save(@Nullable File destination, Saver saver) throws InternalException, UserException
+    {
+        // TODO save units
+        typeManager.save(saver);
+        List<List<Table>> values = new ArrayList<>();
+        // Deep copy:
+        synchronized (this)
+        {
+            for (List<Table> tables : usedIds.values())
+            {
+                values.add(new ArrayList<>(tables));
+            }
+        }
+        for (List<Table> tables : values)
+        {
+            for (Table table : tables)
+            {
+                table.save(destination, saver);
+            }
+        }
     }
 }

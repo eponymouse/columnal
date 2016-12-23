@@ -84,6 +84,13 @@ public class OutputBuilder
         return id(id.getOutput());
     }
 
+    @OnThread(Tag.Any)
+    public synchronized OutputBuilder quote(TypeId id)
+    {
+        cur().add(quoted(id.getOutput()));
+        return this;
+    }
+
     // Outputs a column identifier, quoted if necessary
     @OnThread(Tag.Any)
     public synchronized OutputBuilder quote(ColumnId id)
@@ -150,7 +157,7 @@ public class OutputBuilder
     {
         String finished = lines.stream().map(line -> line.stream().collect(Collectors.joining(" ")) + "\n").collect(Collectors.joining());
         if (curLine != null)
-            finished += curLine;
+            finished += curLine.stream().collect(Collectors.joining(" "));
         return finished;
     }
 

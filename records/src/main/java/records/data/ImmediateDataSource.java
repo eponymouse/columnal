@@ -53,7 +53,7 @@ public class ImmediateDataSource extends DataSource
             for (Column c : data.getColumns())
             {
                 b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).quote(c.getName());
-                c.getType().save(b).nl();
+                c.getType().save(b, false).nl();
             }
         });
         b.end().t(MainLexer.FORMAT).nl();

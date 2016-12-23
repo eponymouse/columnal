@@ -5,9 +5,11 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.TableId;
 import records.error.InternalException;
+import records.error.UserException;
 import records.transformations.Filter;
 import test.DummyManager;
 import test.TestUtil;
+import test.TestUtil.Transformation_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -15,23 +17,24 @@ import utility.Pair;
 /**
  * Created by neil on 27/11/2016.
  */
-public class GenFilter extends Generator<Filter>
+public class GenFilter extends Generator<Transformation_Mgr>
 {
     public GenFilter()
     {
-        super(Filter.class);
+        super(Transformation_Mgr.class);
     }
 
     @Override
     @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public Filter generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+    public Transformation_Mgr generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
         try
         {
-            return new Filter(DummyManager.INSTANCE, ids.getFirst(), ids.getSecond(), gen().make(GenNonsenseExpression.class).generate(sourceOfRandomness, generationStatus));
+            DummyManager mgr = new DummyManager();
+            return new Transformation_Mgr(mgr, new Filter(mgr, ids.getFirst(), ids.getSecond(), gen().make(GenNonsenseExpression.class).generate(sourceOfRandomness, generationStatus)));
         }
-        catch (InternalException e)
+        catch (InternalException | UserException e)
         {
             throw new RuntimeException(e);
         }

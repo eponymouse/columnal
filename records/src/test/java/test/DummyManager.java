@@ -26,7 +26,7 @@ public class DummyManager extends TableManager
         }
     }
 
-    private DummyManager() throws InternalException, UserException
+    public DummyManager() throws InternalException, UserException
     {
         super();
     };

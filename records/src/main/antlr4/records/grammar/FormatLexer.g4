@@ -17,6 +17,7 @@ NUMBER : 'NUMBER';
 TEXT : 'TEXT';
 DATE : 'DATETIME';
 TAGGED : 'TAGGED';
+TYPE : 'TYPE';
 
 WS : ( ' ' | '\t' )+ -> skip;
 

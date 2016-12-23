@@ -11,8 +11,8 @@ import records.data.Table;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.Sort;
+import test.gen.GenImmediateData;
 import test.gen.GenRandom;
-import test.gen.GenTable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -33,13 +33,13 @@ public class PropRunTransformation
 {
     @Property
     @OnThread(Tag.Simulation)
-    public void testSort(@From(GenTable.class) Table srcTable, @From(GenRandom.class) Random r) throws UserException, InternalException
+    public void testSort(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr srcTable, @From(GenRandom.class) Random r) throws UserException, InternalException
     {
         // Pick an arbitrary column and sort by it
-        RecordSet src = srcTable.getData();
+        RecordSet src = srcTable.data.getData();
         Column sortBy = src.getColumns().get(r.nextInt(src.getColumns().size()));
 
-        Sort sort = new Sort(DummyManager.INSTANCE, null, srcTable.getId(), Collections.singletonList(sortBy.getName()));
+        Sort sort = new Sort(DummyManager.INSTANCE, null, srcTable.data.getId(), Collections.singletonList(sortBy.getName()));
 
         // TODO sort by multiple columns, too
 

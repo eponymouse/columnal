@@ -1,11 +1,10 @@
 package records.transformations.expression;
 
-import com.google.common.collect.MapDifference;
-import com.google.common.collect.Maps;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -16,11 +15,9 @@ import utility.ExConsumer;
 import utility.Pair;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -36,19 +33,19 @@ public class TypeState
 {
     // If variable is in there but > size 1, means it is known but cannot be used because it has multiple types in different guards
     private final Map<String, Set<DataType>> variables;
-    private final Map<TypeId, DataType> tagTypes;
     private final Map<String, FunctionDefinition> functions;
+    private final TypeManager typeManager;
     private final UnitManager unitManager;
 
-    public TypeState(Map<TypeId, DataType> tagTypes, UnitManager unitManager)
+    public TypeState(UnitManager unitManager, TypeManager typeManager)
     {
-        this(new HashMap<>(), new HashMap<>(tagTypes), unitManager);
+        this(new HashMap<>(), typeManager, unitManager);
     }
 
-    private TypeState(Map<String, Set<DataType>> variables, Map<TypeId, DataType> tagTypes, UnitManager unitManager)
+    private TypeState(Map<String, Set<DataType>> variables, TypeManager typeManager, UnitManager unitManager)
     {
         this.variables = Collections.unmodifiableMap(variables);
-        this.tagTypes = Collections.unmodifiableMap(tagTypes);
+        this.typeManager = typeManager;
         this.functions = FunctionList.FUNCTIONS.stream().collect(Collectors.<@NonNull FunctionDefinition, @NonNull String, @NonNull FunctionDefinition>toMap(FunctionDefinition::getName, Function.<FunctionDefinition>identity()));
         this.unitManager = unitManager;
     }
@@ -62,7 +59,7 @@ public class TypeState
             return null;
         }
         copy.put(varName, Collections.singleton(type));
-        return new TypeState(copy, tagTypes, unitManager);
+        return new TypeState(copy, typeManager, unitManager);
     }
 
     // Merges a set of type states from different pattern guards
@@ -82,7 +79,7 @@ public class TypeState
                 });
             }
         }
-        return new TypeState(mergedVars, typeStates.get(0).tagTypes, typeStates.get(0).unitManager);
+        return new TypeState(mergedVars, typeStates.get(0).typeManager, typeStates.get(0).unitManager);
     }
 
     @Override
@@ -100,11 +97,6 @@ public class TypeState
     public int hashCode()
     {
         return variables.hashCode();
-    }
-
-    public @Nullable DataType findTaggedType(String typeName)
-    {
-        return tagTypes.get(typeName);
     }
 
     // If it's null, it's totally unknown
@@ -137,35 +129,11 @@ public class TypeState
     {
         TypeId typeName = tagName.getFirst();
         @Nullable DataType type;
-        if (typeName != null)
+        type = typeManager.lookupType(typeName);
+        if (type == null)
         {
-            type = tagTypes.get(typeName);
-            if (type == null)
-            {
-                onError.accept("Could not find tagged type: \"" + typeName + "\"");
-                return null;
-            }
-        }
-        else
-        {
-            // Try to infer.
-            List<Entry<TypeId, DataType>> matches = new ArrayList<>();
-            for (Entry<TypeId, DataType> entry : tagTypes.entrySet())
-            {
-                if (entry.getValue().hasTag(tagName.getSecond()))
-                    matches.add(entry);
-            }
-            if (matches.size() == 0)
-            {
-                onError.accept("Could not find type for tag: \"" + tagName + "\"");
-                return null;
-            }
-            else if (matches.size() > 1)
-            {
-                onError.accept("Multiple types match tag: \"" + tagName + "\" (" + matches.stream().map(Entry::getKey).map(Object::toString).collect(Collectors.joining(", ")) + ").  To select type, qualify the tag, e.g. \\" + OutputBuilder.quotedIfNecessary(matches.get(0).getKey().getRaw()) + "\\" + OutputBuilder.quotedIfNecessary(tagName.getSecond()));
-                return null;
-            }
-            type = matches.get(0).getValue();
+            onError.accept("Could not find tagged type: \"" + typeName + "\"");
+            return null;
         }
 
         Pair<Integer, @Nullable DataType> tagDetail = type.unwrapTag(tagName.getSecond());

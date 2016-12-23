@@ -13,7 +13,6 @@ import records.data.RecordSet;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.unit.Unit;
-import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.DataParser;
@@ -22,10 +21,7 @@ import records.grammar.DataParser.ItemContext;
 import records.grammar.DataParser.StringContext;
 import records.grammar.DataParser.TaggedContext;
 import records.grammar.FormatLexer;
-import records.grammar.FormatParser.NumberContext;
-import records.grammar.FormatParser.TypeContext;
 import records.loadsave.OutputBuilder;
-import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExConsumer;
@@ -718,8 +714,9 @@ public class DataType
 
     }
 
+    // If topLevelDeclaration is false, save a reference (matters for tagged types)
     @OnThread(Tag.FXPlatform)
-    public OutputBuilder save(OutputBuilder b) throws InternalException
+    public OutputBuilder save(OutputBuilder b, boolean topLevelDeclaration) throws InternalException
     {
         apply(new DataTypeVisitorEx<UnitType, InternalException>()
         {
@@ -754,66 +751,30 @@ public class DataType
             }
 
             @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
             public UnitType tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, InternalException
             {
-                b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY).t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
-                for (TagType<DataType> tag : tags)
+                b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
+                if (topLevelDeclaration)
                 {
-                    b.kw("\\" + b.quotedIfNecessary(tag.getName()) + (tag.getInner() != null ? ":" : ""));
-                    if (tag.getInner() != null)
-                        tag.getInner().apply(this);
+                    b.t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
+                    for (TagType<DataType> tag : tags)
+                    {
+                        b.kw("\\" + b.quotedIfNecessary(tag.getName()) + (tag.getInner() != null ? ":" : ""));
+                        if (tag.getInner() != null)
+                            tag.getInner().save(b, false);
+                    }
+                    b.t(FormatLexer.CLOSE_BRACKET, FormatLexer.VOCABULARY);
                 }
-                b.t(FormatLexer.CLOSE_BRACKET, FormatLexer.VOCABULARY);
+                else
+                {
+                    b.quote(typeName);
+                }
                 return UnitType.UNIT;
             }
         });
         return b;
     }
-
-
-    public static DataType loadType(UnitManager mgr, TypeState typeState, TypeContext type) throws InternalException, UserException
-    {
-        if (type.BOOLEAN() != null)
-            return BOOLEAN;
-        else if (type.TEXT() != null)
-            return TEXT;
-        else if (type.DATE() != null)
-            return DATE;
-        else if (type.number() != null)
-        {
-            NumberContext n = type.number();
-            Unit unit = mgr.loadUse(n.UNIT().getText());
-            return DataType.number(new NumberInfo(unit, Integer.valueOf(n.DIGITS().getText())));
-        }
-        else if (type.tagRef() != null)
-        {
-            //TODO move this to type loading code (alongside unit loading?)
-            /*
-            List<TagType<DataType>> tags = new ArrayList<>();
-            for (TagItemContext item : type.tagged().tagItem())
-            {
-                String tagName = item.constructor().getText();
-
-                if (tags.stream().anyMatch(t -> t.getName().equals(tagName)))
-                    throw new UserException("Duplicate tag names in format: \"" + tagName + "\"");
-
-                if (item.type() != null)
-                    tags.add(new TagType<DataType>(tagName, loadType(mgr, typeState, item.type())));
-                else
-                    tags.add(new TagType<DataType>(tagName, null));
-            }
-
-            return new DataType.tagged(tags);
-            */
-            DataType taggedType = typeState.findTaggedType(type.tagRef().getText());
-            if (taggedType == null)
-                throw new UserException("Undeclared tagged type: \"" + type.tagRef().getText() + "\"");
-            return taggedType;
-        }
-        else
-            throw new InternalException("Unrecognised case: " + type);
-    }
-
 
     public boolean hasTag(String tagName) throws UserException, InternalException
     {

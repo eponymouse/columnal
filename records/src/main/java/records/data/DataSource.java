@@ -3,6 +3,7 @@ package records.data;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.FunctionInt;
 import records.error.InternalException;
@@ -57,7 +58,7 @@ public abstract class DataSource extends Table
         if (dataSource.dataSourceImmediate() != null)
         {
             DataSourceImmediateContext immed = dataSource.dataSourceImmediate();
-            List<Pair<ColumnId, DataType>> format = loadFormat(manager.getUnitManager(), manager.getTypeState(), immed.dataFormat());
+            List<Pair<ColumnId, DataType>> format = loadFormat(manager.getTypeManager(), immed.dataFormat());
             List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
 
             List<List<ItemContext>> dataRows = loadData(immed.detail());
@@ -93,7 +94,7 @@ public abstract class DataSource extends Table
         return rows;
     }
 
-    private static List<Pair<ColumnId, DataType>> loadFormat(UnitManager mgr, TypeState typeState, DataFormatContext dataFormatContext) throws UserException, InternalException
+    private static List<Pair<ColumnId, DataType>> loadFormat(TypeManager typeManager, DataFormatContext dataFormatContext) throws UserException, InternalException
     {
         List<Pair<ColumnId, DataType>> r = new ArrayList<>();
         for (TerminalNode line : dataFormatContext.detail().DETAIL_LINE())
@@ -110,7 +111,7 @@ public abstract class DataSource extends Table
                 TypeContext type = column.type();
                 if (type == null)
                     throw new UserException("Null type on line \"" + line.getText() + "\" name: " + name + " type: " + type.getText());
-                r.add(new Pair<>(name, DataType.loadType(mgr, typeState, type)));
+                r.add(new Pair<>(name, typeManager.loadTypeUse(type)));
                 return 0;
             });
         }

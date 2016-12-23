@@ -16,6 +16,7 @@ import records.transformations.TransformationManager;
 import test.gen.GenFilter;
 import test.gen.GenSort;
 import test.gen.GenSummaryStats;
+import test.gen.GenTableManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationSupplier;
@@ -36,20 +37,20 @@ public class PropLoadSaveTransformation
 {
     @Property(trials = 1000)
     @OnThread(value = Tag.FXPlatform,ignoreParent = true)
-    public void testTransformation(@From(GenSort.class) @From(GenSummaryStats.class) @From(GenFilter.class) Transformation original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
+    public void testTransformation(@From(GenTableManager.class) TableManager mgr1, @From(GenTableManager.class) TableManager mgr2, @From(GenSort.class) @From(GenSummaryStats.class) @From(GenFilter.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
-        String saved = save(original);
+        String saved = save(original.mgr);
         try
         {
             //Assume users destroy leading whitespace:
             String savedMangled = saved.replaceAll("\n +", "\n");
-            Table loaded = DummyManager.INSTANCE.loadAll(savedMangled).get(0);
-            String savedAgain = save(loaded);
-            Table loadedAgain = DummyManager.INSTANCE.loadAll(savedAgain).get(0);
+            Table loaded = mgr1.loadAll(savedMangled).get(0);
+            String savedAgain = save(mgr1);
+            Table loadedAgain = mgr2.loadAll(savedAgain).get(0);
 
 
             assertEquals(saved, savedAgain);
-            assertEquals(original, loaded);
+            assertEquals(original.transformation, loaded);
             assertEquals(loaded, loadedAgain);
         }
         catch (Throwable t)
@@ -61,7 +62,7 @@ public class PropLoadSaveTransformation
     }
 
     @OnThread(Tag.FXPlatform)
-    private static String save(Table original) throws ExecutionException, InterruptedException, InvocationTargetException
+    private static String save(TableManager original) throws ExecutionException, InterruptedException, InvocationTargetException
     {
         // This thread is only pretend running on FXPlatform, but sets off some
         // code which actually runs on the fx platform thread:
@@ -89,14 +90,13 @@ public class PropLoadSaveTransformation
 
     @Property
     @OnThread(value = Tag.Simulation,ignoreParent = true)
-    public void testNoOpEdit(@From(GenSort.class) @From(GenSummaryStats.class) @From(GenFilter.class) Transformation original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
+    public void testNoOpEdit(@From(GenSort.class) @From(GenSummaryStats.class) @From(GenFilter.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
-        TableManager mgr = new TableManager();
         SwingUtilities.invokeAndWait(() -> new JFXPanel());
         CompletableFuture<SimulationSupplier<Transformation>> f = new CompletableFuture<>();
         Platform.runLater(() -> {
-            f.complete(original.edit().getTransformation(mgr));
+            f.complete(original.transformation.edit().getTransformation(original.mgr));
         });
-        assertEquals(f.get().get(), original);
+        assertEquals(f.get().get(), original.transformation);
     }
 }

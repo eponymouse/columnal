@@ -4,7 +4,6 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
 import com.pholser.junit.quickcheck.generator.java.time.LocalTimeGenerator;
-import com.pholser.junit.quickcheck.generator.java.time.ZoneIdGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;
@@ -13,12 +12,14 @@ import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
+import records.data.TableManager;
+import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
-import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -250,6 +251,17 @@ public class TestUtil
             return generateIdent(r);
     }
 
+    public static String makeNonEmptyString(SourceOfRandomness r, GenerationStatus gs)
+    {
+        String s;
+        do
+        {
+            s = makeString(r, gs);
+        }
+        while (s.isEmpty());
+        return s;
+    }
+
     public static String makeUnquotedIdent(SourceOfRandomness r, GenerationStatus gs)
     {
         String s;
@@ -315,17 +327,19 @@ public class TestUtil
     {
         try
         {
-            return new TypeState(distinctTypes.stream().filter(p -> p.isTagged()).collect(Collectors.<DataType, TypeId, DataType>toMap(t ->
-            {
+            UnitManager unitManager = new UnitManager();
+            TypeManager typeManager = new TypeManager(unitManager);
+            distinctTypes.stream().filter(p -> p.isTagged()).forEach(t -> {
                 try
                 {
-                    return t.getTaggedTypeName();
+                    typeManager.registerTaggedType(t.getTaggedTypeName().getRaw(), t.getTagTypes());
                 }
                 catch (InternalException e)
                 {
                     throw new RuntimeException(e);
                 }
-            }, t -> t)), new UnitManager());
+            });
+            return new TypeState(unitManager, typeManager);
         }
         catch (InternalException | UserException e)
         {
@@ -385,5 +399,17 @@ public class TestUtil
     public static String generateZoneString(SourceOfRandomness r, GenerationStatus gs)
     {
         return generateZone(r, gs).toString();
+    }
+
+    public static class Transformation_Mgr
+    {
+        public final TableManager mgr;
+        public final Transformation transformation;
+
+        public Transformation_Mgr(TableManager mgr, Transformation transformation)
+        {
+            this.mgr = mgr;
+            this.transformation = transformation;
+        }
     }
 }

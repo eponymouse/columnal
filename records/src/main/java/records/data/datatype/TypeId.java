@@ -10,7 +10,7 @@ import threadchecker.Tag;
 @OnThread(Tag.Any)
 public class TypeId
 {
-    String typeId;
+    private final String typeId;
 
     // package-visible
     TypeId(String typeId)
