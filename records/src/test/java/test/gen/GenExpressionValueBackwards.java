@@ -394,7 +394,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
                 TagType<DataType> tag = tags.get((Integer) targetValue.get(0));
-                Pair<TypeId, String> name = new Pair<>(typeName, tag.getName());
+                Pair<String, String> name = new Pair<>(typeName.getRaw(), tag.getName());
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {

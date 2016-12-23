@@ -125,9 +125,9 @@ public class TypeState
         }
     }
 
-    public @Nullable TypeAndTagInfo findTaggedType(Pair<TypeId, String> tagName, ExConsumer<String> onError) throws InternalException, UserException
+    public @Nullable TypeAndTagInfo findTaggedType(Pair<String, String> tagName, ExConsumer<String> onError) throws InternalException, UserException
     {
-        TypeId typeName = tagName.getFirst();
+        String typeName = tagName.getFirst();
         @Nullable DataType type;
         type = typeManager.lookupType(typeName);
         if (type == null)

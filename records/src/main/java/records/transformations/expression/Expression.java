@@ -213,19 +213,8 @@ public abstract class Expression
             String constructorName = ctx.constructor().rawConstructor(1).constructorName().getText();
 
             String typeName = ctx.constructor().rawConstructor(0).constructorName().getText();
-            DataType type = typeManager.lookupType(typeName);
 
-            if (type == null)
-                throw new RuntimeException("Unknown tagged type found in expression: " + typeName);
-
-            try
-            {
-                return new TagExpression(new Pair<>(type.getTaggedTypeName(), constructorName), visitExpression(ctx.expression()));
-            }
-            catch (InternalException e)
-            {
-                throw new RuntimeException(e);
-            }
+            return new TagExpression(new Pair<>(typeName, constructorName), visitExpression(ctx.expression()));
         }
 
         @Override

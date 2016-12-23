@@ -51,9 +51,4 @@ public class TypeId
     {
         return typeId;
     }
-
-    public static TypeId _testMake(String typeName)
-    {
-        return new TypeId(typeName);
-    }
 }

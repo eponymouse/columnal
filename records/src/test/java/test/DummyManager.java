@@ -12,6 +12,7 @@ import records.error.UserException;
  */
 public class DummyManager extends TableManager
 {
+    // TODO eliminate the use of this; too hacky
     public static final DummyManager INSTANCE;
 
     static

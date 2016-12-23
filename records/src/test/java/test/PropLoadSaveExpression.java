@@ -4,6 +4,8 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
+import records.data.datatype.TypeManager;
+import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
@@ -21,7 +23,8 @@ public class PropLoadSaveExpression
     public void testLoadSave(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
         String saved = expression.save(true);
-        Expression reloaded = Expression.parse(null, saved, DummyManager.INSTANCE.getTypeManager());
+        // Use same manage to load so that types are preserved:
+        Expression reloaded = Expression.parse(null, saved, new TypeManager(new UnitManager()));
         assertEquals("Saved version: " + saved, expression, reloaded);
         String resaved = reloaded.save(true);
         assertEquals(saved, resaved);

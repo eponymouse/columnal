@@ -479,7 +479,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 TagType<DataType> tag = tags.get(tagIndex);
-                Pair<TypeId, String> name = new Pair<>(typeName, tag.getName());
+                Pair<String, String> name = new Pair<>(typeName.getRaw(), tag.getName());
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {

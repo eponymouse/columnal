@@ -31,12 +31,12 @@ import java.util.stream.Stream;
  */
 public class TagExpression extends Expression
 {
-    private final Pair<TypeId, String> tagName;
+    private final Pair<String, String> tagName;
     private final @Nullable Expression inner;
     private int index;
     private @Nullable DataType innerDerivedType;
 
-    public TagExpression(Pair<TypeId, String> tagName, @Nullable Expression inner)
+    public TagExpression(Pair<String, String> tagName, @Nullable Expression inner)
     {
         this.tagName = tagName;
         this.inner = inner;
@@ -80,7 +80,7 @@ public class TagExpression extends Expression
     public String save(boolean topLevel)
     {
         String tag;
-        @Nullable String typeName = tagName.getFirst().getRaw();
+        @Nullable String typeName = tagName.getFirst();
         if (typeName != null)
         {
             tag = "\\" + OutputBuilder.quotedIfNecessary(typeName) + "\\" + OutputBuilder.quotedIfNecessary(tagName.getSecond());
@@ -152,6 +152,6 @@ public class TagExpression extends Expression
 
     public static Expression _testMake(String typeName, String tagName, Expression inner)
     {
-        return new TagExpression(new Pair<>(TypeId._testMake(typeName), tagName), inner);
+        return new TagExpression(new Pair<>(typeName, tagName), inner);
     }
 }

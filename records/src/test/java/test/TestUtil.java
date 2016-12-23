@@ -24,6 +24,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
+import records.transformations.expression.Expression;
 import records.transformations.expression.TypeState;
 import test.gen.GenNumber;
 import test.gen.GenZoneId;
@@ -410,6 +411,18 @@ public class TestUtil
         {
             this.mgr = mgr;
             this.transformation = transformation;
+        }
+    }
+
+    public static class Expression_Mgr
+    {
+        public final TableManager mgr;
+        public final Expression expression;
+
+        public Expression_Mgr(TableManager mgr, Expression expression)
+        {
+            this.mgr = mgr;
+            this.expression = expression;
         }
     }
 }
