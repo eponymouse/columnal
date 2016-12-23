@@ -88,7 +88,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                 columns.add(rs -> column.shrink(rs, shrunkLength));
             }
             //Could also remove arbitrary column(s)
-            return Collections.singletonList(new ImmediateData_Mgr(mgr, new ImmediateDataSource(DummyManager.INSTANCE, new KnownLengthRecordSet(larger.data.getData().getTitle(), columns, shrunkLength))));
+            return Collections.singletonList(new ImmediateData_Mgr(mgr, new ImmediateDataSource(mgr, new KnownLengthRecordSet(larger.data.getData().getTitle(), columns, shrunkLength))));
         }
         catch (Exception e)
         {

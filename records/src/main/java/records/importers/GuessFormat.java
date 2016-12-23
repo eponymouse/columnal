@@ -251,9 +251,10 @@ public class GuessFormat
             else if (!possibleDateFormats.isEmpty())
                 columnTypes.add(new CleanDateColumnType(possibleDateFormats.get(0).formatString, possibleDateFormats.get(0).destQuery));
             else if (allNumeric)
-                columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, false));
-            else if (allNumericOrBlank)
-                columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, true));
+                columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP));
+            // TODO
+            //else if (allNumericOrBlank)
+                //columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, true));
             else
                 columnTypes.add(new TextColumnType());
             // Go backwards to find column titles:

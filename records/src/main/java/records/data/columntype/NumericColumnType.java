@@ -9,14 +9,12 @@ import records.data.unit.Unit;
 public class NumericColumnType extends ColumnType
 {
     public final Unit unit;
-    public final boolean mayBeBlank;
     public final int minDP;
 
-    public NumericColumnType(Unit unit, int minDP, boolean mayBeBlank)
+    public NumericColumnType(Unit unit, int minDP)
     {
         this.unit = unit;
         this.minDP = minDP;
-        this.mayBeBlank = mayBeBlank;
     }
 
     @Override
@@ -58,7 +56,6 @@ public class NumericColumnType extends ColumnType
     {
         return "NumericColumnType{" +
             "unit=" + unit +
-            ", mayBeBlank=" + mayBeBlank +
             ", minDP=" + minDP +
             '}';
     }

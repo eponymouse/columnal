@@ -76,7 +76,11 @@ public class HTMLImport
                 {
                     //TODO remove prefix
                     // TODO treat maybe blank as a tagged type
-                    columns.add(rs -> new MemoryNumericColumn(rs, columnInfo.title, new NumberInfo(((NumericColumnType)columnInfo.type).unit, ((NumericColumnType)columnInfo.type).minDP), slice.stream()));
+                    columns.add(rs ->
+                    {
+                        NumericColumnType numericColumnType = (NumericColumnType) columnInfo.type;
+                        return new MemoryNumericColumn(rs, columnInfo.title, new NumberInfo(numericColumnType.unit, numericColumnType.minDP), slice.stream().map(numericColumnType::removePrefix));
+                    });
                 }
                 else if (columnInfo.type.isText())
                 {

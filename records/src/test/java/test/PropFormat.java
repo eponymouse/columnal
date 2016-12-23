@@ -44,10 +44,11 @@ public class PropFormat
                 if (c.type.isNumeric())
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) c.type;
-                    if (numericColumnType.mayBeBlank && row > 0 && (row == 10 || rnd.nextBoolean())) // Make sure to put at least one blank in, but don't put blank at top
-                    {
-                        line.append("");
-                    } else
+                    // TODO
+                    //if (numericColumnType.mayBeBlank && row > 0 && (row == 10 || rnd.nextBoolean())) // Make sure to put at least one blank in, but don't put blank at top
+                    //{
+                        //line.append("");
+                    //} else
                     {
                         line.append(numericColumnType.unit.getDisplayPrefix()).append(String.format(format.separator == ',' ? "%d" : "%,d", rnd.nextLong()));
                         if (numericColumnType.minDP > 0)
