@@ -467,9 +467,11 @@ public class Utility
 
     public static Number raiseNumber(Number lhs, Number rhs) throws UserException
     {
-        if ((rhs instanceof BigDecimal && !rhs.equals(BigDecimal.valueOf(((BigDecimal)rhs).intValue())))
+        // It must fit in an int and not be massive/tiny:
+        if (((rhs instanceof BigDecimal && !rhs.equals(BigDecimal.valueOf(((BigDecimal)rhs).intValue())))
             || (rhs instanceof BigInteger && !rhs.equals(BigInteger.valueOf(((BigInteger)rhs).intValue())))
             || rhs.longValue() != (long)rhs.intValue())
+            || Math.abs(rhs.intValue()) >= 1000)
         {
             // We must use doubles, nothing else supported:
             double lhsd = lhs.doubleValue();
