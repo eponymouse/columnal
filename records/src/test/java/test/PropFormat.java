@@ -3,16 +3,27 @@ package test;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.apache.commons.io.FileUtils;
 import org.junit.runner.RunWith;
+import records.data.DataSource;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
+import records.error.InternalException;
+import records.error.UserException;
 import records.importers.GuessFormat;
 import records.importers.ColumnInfo;
 import records.importers.TextFormat;
+import records.importers.TextImport;
 import test.gen.GenFormat;
+import test.gen.GenFormattedData;
 import test.gen.GenRandom;
+import threadchecker.OnThread;
+import threadchecker.Tag;
+import utility.Utility;
 
+import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -27,55 +38,23 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class PropFormat
 {
-
     @Property
-    public void testGuessFormat(@From(GenFormat.class) TextFormat format, @From(GenRandom.class) Random rnd) throws IOException
+    @OnThread(Tag.Simulation)
+    public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException
     {
-        List<String> fileContent = new ArrayList<>();
-        fileContent.add(format.columnTypes.stream().map(c -> c.title.getOutput()).collect(Collectors.joining("" + format.separator)));
-        for (int row = 0; row < 100; row++)
+        assertEquals("Failure with content: " + formatAndData.content.stream().collect(Collectors.joining("\n")), formatAndData.format, GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), formatAndData.content));
+        File tempFile = File.createTempFile("test", "txt");
+        tempFile.deleteOnExit();
+        FileUtils.writeStringToFile(tempFile, formatAndData.content.stream().collect(Collectors.joining("\n")), Charset.forName("UTF-8"));
+        DataSource ds = TextImport.importTextFile(new DummyManager(), tempFile);
+        assertEquals("Right column length", formatAndData.loadedContent.size(), ds.getData().getLength());
+        for (int i = 0; i < formatAndData.loadedContent.size(); i++)
         {
-            StringBuilder line = new StringBuilder();
-            List<ColumnInfo> columnTypes = format.columnTypes;
-            for (int i = 0; i < columnTypes.size(); i++)
+            assertEquals("Right row length", formatAndData.loadedContent.get(i).size(), ds.getData().getColumns().size());
+            for (int c = 0; c < ds.getData().getColumns().size(); c++)
             {
-                ColumnInfo c = columnTypes.get(i);
-                // TODO add random spaces, randomise content using generators
-                if (c.type.isNumeric())
-                {
-                    NumericColumnType numericColumnType = (NumericColumnType) c.type;
-                    // TODO
-                    //if (numericColumnType.mayBeBlank && row > 0 && (row == 10 || rnd.nextBoolean())) // Make sure to put at least one blank in, but don't put blank at top
-                    //{
-                        //line.append("");
-                    //} else
-                    {
-                        line.append(numericColumnType.unit.getDisplayPrefix()).append(String.format(format.separator == ',' ? "%d" : "%,d", rnd.nextLong()));
-                        if (numericColumnType.minDP > 0)
-                        {
-                            line.append("." + String.format("%0" + numericColumnType.minDP + "d", Math.abs(rnd.nextInt())).substring(0, numericColumnType.minDP));
-                        }
-                    }
-                } else if (c.type.isText())
-                    line.append("s");
-                else if (c.type.isDate())
-                {
-                    int year = 1900 + rnd.nextInt(199);
-                    int month = 1 + rnd.nextInt(12);
-                    int day = 1 + rnd.nextInt(28);
-                    LocalDate date = LocalDate.of(year, month, day);
-                    line.append(date.format(((CleanDateColumnType) c.type).getDateTimeFormatter()));
-                } else if (!c.type.isBlank())
-                    throw new UnsupportedOperationException("Missing case for column columntype? " + c.type.getClass());
-                if (i < columnTypes.size() - 1)
-                    line.append(format.separator);
+                assertEquals(0, Utility.compareLists(formatAndData.loadedContent.get(i).get(c), ds.getData().getColumns().get(c).getType().getCollapsed(i)));
             }
-
-            String lineString = line.toString();
-            // Don't add all-blank rows because they weren't intentional and it can screw up guess:
-            if (!lineString.replace("" + format.separator, "").isEmpty())
-                fileContent.add(lineString);
         }
-        assertEquals("Failure with content: " + fileContent.stream().collect(Collectors.joining("\n")), format, GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), fileContent));
     }
 }

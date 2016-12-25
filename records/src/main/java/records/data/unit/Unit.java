@@ -84,6 +84,17 @@ public class Unit
         return "";
     }
 
+    public String getDisplaySuffix()
+    {
+        if (units.size() == 1)
+        {
+            Entry<SingleUnit, Integer> only = units.entrySet().iterator().next();
+            if (only.getValue() == 1)
+                return only.getKey().getSuffix();
+        }
+        return "";
+    }
+
     @Override
     public String toString()
     {
@@ -196,5 +207,4 @@ public class Unit
         }
         return u;
     }
-
 }
