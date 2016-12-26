@@ -42,15 +42,17 @@ public class PropFormat
     @OnThread(Tag.Simulation)
     public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException
     {
-        assertEquals("Failure with content: " + formatAndData.content.stream().collect(Collectors.joining("\n")), formatAndData.format, GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), formatAndData.content));
+        String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
+        String format = formatAndData.format.toString();
+        assertEquals("Failure with content: " + content, formatAndData.format, GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), formatAndData.content));
         File tempFile = File.createTempFile("test", "txt");
         tempFile.deleteOnExit();
-        FileUtils.writeStringToFile(tempFile, formatAndData.content.stream().collect(Collectors.joining("\n")), Charset.forName("UTF-8"));
+        FileUtils.writeStringToFile(tempFile, content, Charset.forName("UTF-8"));
         DataSource ds = TextImport.importTextFile(new DummyManager(), tempFile);
         assertEquals("Right column length", formatAndData.loadedContent.size(), ds.getData().getLength());
         for (int i = 0; i < formatAndData.loadedContent.size(); i++)
         {
-            assertEquals("Right row length", formatAndData.loadedContent.get(i).size(), ds.getData().getColumns().size());
+            assertEquals("Right row length " + content + " " + format, ds.getData().getColumns().size(), formatAndData.loadedContent.get(i).size());
             for (int c = 0; c < ds.getData().getColumns().size(); c++)
             {
                 assertEquals(0, Utility.compareLists(formatAndData.loadedContent.get(i).get(c), ds.getData().getColumns().get(c).getType().getCollapsed(i)));

@@ -5,8 +5,10 @@ import records.data.DataSource;
 import records.data.LinkedDataSource;
 import records.data.RecordSet;
 import records.data.TableManager;
+import records.data.TextFileDateColumn;
 import records.data.TextFileNumericColumn;
 import records.data.TextFileStringColumn;
+import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
 import records.error.FetchException;
 import records.error.FunctionInt;
@@ -54,6 +56,8 @@ public class TextImport
                     columns.add(rs -> new TextFileNumericColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal, (NumericColumnType)columnInfo.type));
                 else if (columnInfo.type.isText())
                     columns.add(rs -> new TextFileStringColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal));
+                else if (columnInfo.type.isDate())
+                    columns.add(rs -> new TextFileDateColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal, ((CleanDateColumnType)columnInfo.type).getDateTimeInfo()));
                 // If it's blank, should we add any column?
                 // Maybe if it has title?                }
             }
