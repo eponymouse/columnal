@@ -53,6 +53,7 @@ public class GenFormattedData extends Generator<FormatAndData>
             List<ColumnInfo> columnTypes = format.columnTypes;
             for (int i = 0; i < columnTypes.size(); i++)
             {
+                // TODO generate X-or-blank column types
                 ColumnInfo c = columnTypes.get(i);
                 // TODO add random spaces, randomise content using generators
                 if (c.type.isNumeric())

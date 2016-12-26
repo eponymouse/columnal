@@ -112,7 +112,7 @@ public class GuessFormat
                 if (sep.getValue().doubleValue() == 0.0)
                 {
                     // Spot on!  Read first line after headers to get column count
-                    int columnCount = initial.get(headerRows).split(sep.getKey()).length;
+                    int columnCount = initial.get(headerRows).split(sep.getKey(), -1).length;
 
                     List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> Arrays.asList(s.split(sep.getKey(), -1)));
 
@@ -193,7 +193,8 @@ public class GuessFormat
                         {
                             // Take off prefix and continue as is:
                             val = val.substring(commonPrefix.length()).trim();
-                        } else if (!commonPrefix.isEmpty())
+                        }
+                        else if (!commonPrefix.isEmpty() && !Character.isDigit(val.codePointAt(0)))
                         {
                             // We thought we had a prefix, but we haven't found it here, so give up:
                             commonPrefix = "";
