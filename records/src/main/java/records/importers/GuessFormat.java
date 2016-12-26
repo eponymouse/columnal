@@ -188,13 +188,14 @@ public class GuessFormat
                                     break;
                             }
                         }
+                        int first;
                         // Not an else; if we just picked commonPrefix, we should find it here:
                         if (!commonPrefix.isEmpty() && val.startsWith(commonPrefix))
                         {
                             // Take off prefix and continue as is:
                             val = val.substring(commonPrefix.length()).trim();
                         }
-                        else if (!commonPrefix.isEmpty() && !Character.isDigit(val.codePointAt(0)))
+                        else if (!commonPrefix.isEmpty() && !Character.isDigit(first = val.codePointAt(0)) && first != '+' && first != '-')
                         {
                             // We thought we had a prefix, but we haven't found it here, so give up:
                             commonPrefix = "";
