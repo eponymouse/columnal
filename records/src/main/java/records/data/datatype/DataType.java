@@ -30,10 +30,16 @@ import utility.UnitType;
 import utility.Utility;
 
 import java.time.LocalDate;
+import java.time.OffsetTime;
+import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
+import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -594,7 +600,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public Column date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                List<Temporal> values = new ArrayList<>(allData.size());
+                List<TemporalAccessor> values = new ArrayList<>(allData.size());
                 for (List<ItemContext> row : allData)
                 {
                     StringContext c = row.get(columnIndex).string();
@@ -791,7 +797,18 @@ public class DataType
     {
         public static enum DateTimeType
         {
-            YEARMONTHDAY, YEARMONTH, TIMEOFDAY, TIMEOFDAYZONED, DATETIME, DATETIMEZONED;
+            /** LocalDate */
+            YEARMONTHDAY,
+            /** YearMonth */
+            YEARMONTH,
+            /** LocalTime */
+            TIMEOFDAY,
+            /** OffsetTime */
+            TIMEOFDAYZONED,
+            /** LocalDateTime */
+            DATETIME,
+            /** ZonedDateTime */
+            DATETIMEZONED;
         }
 
         private final DateTimeType type;
@@ -855,6 +872,48 @@ public class DataType
         public int hashCodeForType()
         {
             return type.hashCode();
+        }
+
+
+        public Comparator<TemporalAccessor> getComparator() throws InternalException
+        {
+            switch (type)
+            {
+                case YEARMONTHDAY:
+                    return Comparator.comparing((TemporalAccessor t) -> t.get(ChronoField.YEAR))
+                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MONTH_OF_YEAR))
+                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.DAY_OF_MONTH));
+                case YEARMONTH:
+                    return Comparator.comparing((TemporalAccessor t) -> t.get(ChronoField.YEAR))
+                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MONTH_OF_YEAR));
+                case TIMEOFDAY:
+                    return Comparator.comparing((TemporalAccessor t) -> t.get(ChronoField.HOUR_OF_DAY))
+                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MINUTE_OF_HOUR))
+                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.SECOND_OF_MINUTE));
+                case TIMEOFDAYZONED:
+                    return Comparator.comparing((TemporalAccessor t) -> OffsetTime.from(t).withOffsetSameInstant(ZoneOffset.UTC),
+                        Comparator.comparing((TemporalAccessor t) -> t.get(ChronoField.HOUR_OF_DAY))
+                            .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MINUTE_OF_HOUR))
+                            .thenComparing((TemporalAccessor t) -> t.get(ChronoField.SECOND_OF_MINUTE))
+                    );
+                case DATETIME:
+                    return Comparator.comparing((TemporalAccessor t) -> t.get(ChronoField.YEAR))
+                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MONTH_OF_YEAR))
+                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.DAY_OF_MONTH))
+                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.HOUR_OF_DAY))
+                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MINUTE_OF_HOUR))
+                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.SECOND_OF_MINUTE));
+                case DATETIMEZONED:
+                    return Comparator.comparing((TemporalAccessor t) -> ZonedDateTime.from(t).withZoneSameInstant(ZoneOffset.UTC),
+                        Comparator.comparing((TemporalAccessor t) -> t.get(ChronoField.YEAR))
+                            .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MONTH_OF_YEAR))
+                            .thenComparing((TemporalAccessor t) -> t.get(ChronoField.DAY_OF_MONTH))
+                            .thenComparing((TemporalAccessor t) -> t.get(ChronoField.HOUR_OF_DAY))
+                            .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MINUTE_OF_HOUR))
+                            .thenComparing((TemporalAccessor t) -> t.get(ChronoField.SECOND_OF_MINUTE))
+                    );
+            }
+            throw new InternalException("Unknown date type: " + type);
         }
     }
 }

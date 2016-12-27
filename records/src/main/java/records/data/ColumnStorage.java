@@ -1,8 +1,11 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 import java.util.Collections;
 import java.util.List;
@@ -20,4 +23,6 @@ public interface ColumnStorage<T>
     }
     public void addAll(List<T> items) throws InternalException;
 
+    @OnThread(Tag.Any)
+    public abstract DataTypeValue getType();
 }

@@ -9,6 +9,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.util.List;
 
 /**
@@ -19,7 +20,7 @@ public class MemoryTemporalColumn extends Column
     private final ColumnId title;
     private final DateColumnStorage storage;
 
-    public MemoryTemporalColumn(RecordSet rs, ColumnId title, DateTimeInfo dateTimeInfo, List<Temporal> list) throws InternalException
+    public MemoryTemporalColumn(RecordSet rs, ColumnId title, DateTimeInfo dateTimeInfo, List<TemporalAccessor> list) throws InternalException
     {
         super(rs);
         this.title = title;

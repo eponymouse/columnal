@@ -1,77 +1,53 @@
 package records.data;
 
+import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataTypeValue;
-import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
 
-import java.io.EOFException;
 import java.io.File;
-import java.io.IOException;
 import java.util.ArrayList;
+import java.util.function.UnaryOperator;
 
 /**
  * Created by neil on 20/10/2016.
  */
-public class TextFileNumericColumn extends TextFileColumn
+public class TextFileNumericColumn extends TextFileColumn<Number>
 {
-    private final NumericColumnStorage loadedValues;
+    @OnThread(Tag.Any)
+    private final NumberInfo  numberInfo;
+    private final @Nullable UnaryOperator<String> processString;
 
-    public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, ColumnId columnName, int columnIndex, NumericColumnType type) throws InternalException, UserException
+    public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, ColumnId columnName, int columnIndex, NumberInfo numberInfo, @Nullable UnaryOperator<String> processString) throws InternalException, UserException
     {
-        super(recordSet, textFile, fileStartPosition, sep, columnName, columnIndex);
-        loadedValues = new NumericColumnStorage(new NumberInfo(type.unit, type.minDP));
-    }
-
-    private Number getWithProgress(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
-    {
-        try
-        {
-            // TODO share loading across columns?  Maybe have boolean indicating whether to do so;
-            // true if user scrolled in table, false if we are performing a calculation
-            while (index >= loadedValues.filled())
-            {
-                double startedAt = loadedValues.filled();
-                ArrayList<String> next = new ArrayList<>();
-                lastFilePosition = Utility.readColumnChunk(textFile, lastFilePosition, sep, columnIndex, next);
-                if (!lastFilePosition.isEOF())
-                {
-                    for (String s : next)
-                    {
-                        loadedValues.addRead(s);
-                    }
-                    if (progressListener != null)
-                        progressListener.progressUpdate(((double)loadedValues.filled() - startedAt) / ((double)index - startedAt));
-                }
-                else
-                    throw new FetchException("Error reading line: " + loadedValues.filled(), new EOFException());
-                // TODO handle case where file changed outside.
-            }
-
-            return getObject(index);
-        }
-        catch (IOException e)
-        {
-            throw new FetchException("Error reading " + textFile, e);
-        }
-    }
-
-    @SuppressWarnings("nullness")
-    private Number getObject(int index) throws InternalException
-    {
-        return loadedValues.get(index);
+        super(recordSet, textFile, fileStartPosition, sep, columnName, columnIndex, new NumericColumnStorage(numberInfo));
+        this.numberInfo = numberInfo;
+        this.processString = processString;
     }
 
     @Override
     @OnThread(Tag.Any)
-    public DataTypeValue getType()
+    protected DataTypeValue makeDataType() throws InternalException, UserException
     {
-        return loadedValues.getType();
+        return DataTypeValue.number(numberInfo, (i, prog) -> {
+            fillUpTo(i);
+            return storage.get(i);
+        });
+    }
+
+    @Override
+    protected void addValues(ArrayList<String> values) throws InternalException, UserException
+    {
+        for (String value : values)
+        {
+            String processed = value;
+            if (processString != null)
+                processed = processString.apply(processed);
+            ((NumericColumnStorage)storage).addRead(processed);
+        }
     }
 }

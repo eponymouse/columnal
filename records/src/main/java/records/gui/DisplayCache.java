@@ -24,6 +24,7 @@ import utility.Workers;
 import utility.Workers.Worker;
 
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -194,7 +195,7 @@ public class DisplayCache
                     }
 
                     @Override
-                    public DisplayValue date(DateTimeInfo dateTimeInfo, GetValue<Temporal> g) throws InternalException, UserException
+                    public DisplayValue date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
                     {
                         return new DisplayValue(g.getWithProgress(index, prog));
                     }

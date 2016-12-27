@@ -21,6 +21,7 @@ import utility.Utility;
 
 import java.nio.file.Path;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -197,7 +198,7 @@ public class OutputBuilder
                 }
 
                 @Override
-                public String date(DateTimeInfo dateTimeInfo, GetValue<Temporal> g) throws InternalException, UserException
+                public String date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
                 {
                     return quoted(g.get(index).toString());
                 }

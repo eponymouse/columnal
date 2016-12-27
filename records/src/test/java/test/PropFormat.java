@@ -55,7 +55,9 @@ public class PropFormat
             assertEquals("Right row length " + content + " " + format, ds.getData().getColumns().size(), formatAndData.loadedContent.get(i).size());
             for (int c = 0; c < ds.getData().getColumns().size(); c++)
             {
-                assertEquals(0, Utility.compareLists(formatAndData.loadedContent.get(i).get(c), ds.getData().getColumns().get(c).getType().getCollapsed(i)));
+                List<Object> expected = formatAndData.loadedContent.get(i).get(c);
+                List<Object> loaded = ds.getData().getColumns().get(c).getType().getCollapsed(i);
+                assertEquals("Expected: " + expected + " was " + loaded, 0, Utility.compareLists(expected, loaded));
             }
         }
     }

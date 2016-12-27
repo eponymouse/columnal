@@ -13,7 +13,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class TestCompleteStringPool
 {
-    private DumbObjectPool<String> pool = new DumbObjectPool<>(String.class, 100);
+    private DumbObjectPool<String> pool = new DumbObjectPool<>(String.class, 100, null);
 
     @Property
     public void sameContent(String s)

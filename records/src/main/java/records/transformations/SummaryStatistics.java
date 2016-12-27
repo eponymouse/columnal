@@ -58,6 +58,7 @@ import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.math.BigDecimal;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -204,7 +205,7 @@ public class SummaryStatistics extends Transformation
                     columns.add(srcCol.getType().applyGet(new DataTypeVisitorGet<FunctionInt<RecordSet, Column>>()
                     {
                         @Override
-                        public FunctionInt<RecordSet, Column> date(DateTimeInfo dateTimeInfo, GetValue<Temporal> g) throws InternalException, UserException
+                        public FunctionInt<RecordSet, Column> date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
                         {
                             throw new UnimplementedException();
                         }
@@ -977,7 +978,7 @@ public class SummaryStatistics extends Transformation
                     }
 
                     @Override
-                    public List<Number> date(DateTimeInfo dateTimeInfo, GetValue<Temporal> g) throws InternalException, UserException
+                    public List<Number> date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
                     {
                         return Collections.emptyList();
                     }

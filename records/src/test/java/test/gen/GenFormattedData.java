@@ -10,6 +10,7 @@ import records.importers.TextFormat;
 import test.TestUtil;
 import test.gen.GenFormattedData.FormatAndData;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,12 +65,16 @@ public class GenFormattedData extends Generator<FormatAndData>
                     NumericColumnType numericColumnType = (NumericColumnType) c.type;
                     line.append(r.nextBoolean() ? "" : numericColumnType.unit.getDisplayPrefix());
                     long value = r.nextLong();
-                    data.add(Collections.<Object>singletonList((Long)value));
+
                     line.append(String.format(format.separator == ',' ? "%d" : "%,d", value));
                     if (numericColumnType.minDP > 0)
                     {
-                        line.append("." + String.format("%0" + numericColumnType.minDP + "d", Math.abs(r.nextInt())).substring(0, numericColumnType.minDP));
+                        String decimalDigs = String.format("%0" + numericColumnType.minDP + "d", Math.abs(r.nextInt())).substring(0, numericColumnType.minDP);
+                        line.append("." + decimalDigs);
+                        data.add(Collections.<Object>singletonList(new BigDecimal(Long.toString(value) + "." + decimalDigs)));
                     }
+                    else
+                        data.add(Collections.<Object>singletonList((Long)value));
                     line.append(r.nextBoolean() ? "" : numericColumnType.unit.getDisplaySuffix());
                 }
                 else if (c.type.isText())

@@ -7,6 +7,7 @@ import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -25,16 +26,18 @@ import java.util.Map;
 public class DumbObjectPool<T>
 {
     private final Class<T> cls;
+    private final @Nullable Comparator<T> comparator;
     private @Nullable T @NonNull [] pool;
     private int used = 0;
     private final int limit;
 
     @SuppressWarnings("unchecked")
-    public DumbObjectPool(Class<T> cls, int limit)
+    public DumbObjectPool(Class<T> cls, int limit, @Nullable Comparator<T> comparator)
     {
         this.cls = cls;
-        pool = (T[])Array.newInstance(cls, 4);
+        this.pool = (T[])Array.newInstance(cls, 4);
         this.limit = limit;
+        this.comparator = comparator;
     }
 
     /**
@@ -42,10 +45,10 @@ public class DumbObjectPool<T>
      * @param s
      * @return
      */
-    @SuppressWarnings("unchecked")
+    @SuppressWarnings({"unchecked", "nullness"})
     public T pool(T s)
     {
-        int index = Arrays.binarySearch((Object[])pool, 0, used, s);
+        int index = Arrays.binarySearch(pool, 0, used, s, comparator);
         if (index >= 0 && pool[index] != null && pool[index].equals(s))
             return pool[index];
         // Change to insertion point:

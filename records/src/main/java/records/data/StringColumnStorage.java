@@ -17,7 +17,7 @@ import java.util.List;
 public class StringColumnStorage implements ColumnStorage<String>
 {
     private final ArrayList<String> values;
-    private final DumbObjectPool<String> pool = new DumbObjectPool<>(String.class, 1000);
+    private final DumbObjectPool<String> pool = new DumbObjectPool<>(String.class, 1000, null);
     @MonotonicNonNull
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private DataTypeValue dataType;

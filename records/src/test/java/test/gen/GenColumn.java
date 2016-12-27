@@ -34,6 +34,7 @@ import utility.ExSupplier;
 
 import java.math.BigDecimal;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -97,7 +98,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
             (len, rs) -> {
                 try
                 {
-                    return new MemoryTemporalColumn(rs, nextCol.get(), new DateTimeInfo(DateTimeType.YEARMONTHDAY), TestUtil.<Temporal>makeList(sourceOfRandomness, len, len, () -> TestUtil.generateDate(sourceOfRandomness, generationStatus)));
+                    return new MemoryTemporalColumn(rs, nextCol.get(), new DateTimeInfo(DateTimeType.YEARMONTHDAY), TestUtil.<TemporalAccessor>makeList(sourceOfRandomness, len, len, () -> TestUtil.generateDate(sourceOfRandomness, generationStatus)));
                 }
                 catch (InternalException e)
                 {

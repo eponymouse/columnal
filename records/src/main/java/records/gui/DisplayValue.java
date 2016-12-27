@@ -8,6 +8,7 @@ import records.data.unit.Unit;
 import threadchecker.OnThread;
 
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.util.Optional;
 
 /**
@@ -43,7 +44,7 @@ public class DisplayValue
         this(val, false);
     }
 
-    public DisplayValue(Temporal temporal)
+    public DisplayValue(TemporalAccessor temporal)
     {
         this(temporal.toString());
     }

@@ -26,6 +26,7 @@ import utility.Utility;
 import java.io.File;
 import java.io.IOException;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -88,7 +89,7 @@ public class HTMLImport
                 }
                 else if (columnInfo.type.isDate())
                 {
-                    columns.add(rs -> new MemoryTemporalColumn(rs, columnInfo.title, ((CleanDateColumnType)columnInfo.type).getDateTimeInfo(), Utility.<String, Temporal>mapList(slice, s -> ((CleanDateColumnType)columnInfo.type).parse(s))));
+                    columns.add(rs -> new MemoryTemporalColumn(rs, columnInfo.title, ((CleanDateColumnType)columnInfo.type).getDateTimeInfo(), Utility.<String, TemporalAccessor>mapList(slice, s -> ((CleanDateColumnType)columnInfo.type).parse(s))));
                 }
                 else if (!columnInfo.type.isBlank())
                 {

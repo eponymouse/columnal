@@ -119,7 +119,7 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
     }
 
     @OnThread(Tag.Any)
-    public DataTypeValue getType() throws InternalException
+    public DataTypeValue getType()
     {
         return dataType;
     }

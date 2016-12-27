@@ -10,6 +10,7 @@ import records.data.TextFileNumericColumn;
 import records.data.TextFileStringColumn;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
+import records.data.datatype.DataType.NumberInfo;
 import records.error.FetchException;
 import records.error.FunctionInt;
 import records.error.InternalException;
@@ -25,8 +26,6 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.function.Consumer;
-import java.util.function.Function;
 
 /**
  * Created by neil on 31/10/2016.
@@ -53,11 +52,23 @@ public class TextImport
                 ColumnInfo columnInfo = format.columnTypes.get(i);
                 int iFinal = i;
                 if (columnInfo.type.isNumeric())
-                    columns.add(rs -> new TextFileNumericColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal, (NumericColumnType)columnInfo.type));
+                {
+                    columns.add(rs ->
+                    {
+                        NumericColumnType numericColumnType = (NumericColumnType) columnInfo.type;
+                        return new TextFileNumericColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal, new NumberInfo(numericColumnType.unit, numericColumnType.minDP), numericColumnType::removePrefix);
+                    });
+                }
                 else if (columnInfo.type.isText())
                     columns.add(rs -> new TextFileStringColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal));
                 else if (columnInfo.type.isDate())
-                    columns.add(rs -> new TextFileDateColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal, ((CleanDateColumnType)columnInfo.type).getDateTimeInfo()));
+                {
+                    columns.add(rs ->
+                    {
+                        CleanDateColumnType dateColumnType = (CleanDateColumnType) columnInfo.type;
+                        return new TextFileDateColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
+                    });
+                }
                 // If it's blank, should we add any column?
                 // Maybe if it has title?                }
             }

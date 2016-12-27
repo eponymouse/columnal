@@ -62,7 +62,7 @@ public class GenFormat extends Generator<TextFormat>
             ColumnType type = sourceOfRandomness.choose(Arrays.asList(
                 ColumnType.BLANK,
                 new TextColumnType(),
-                new NumericColumnType(sourceOfRandomness.nextBoolean() ? Unit.SCALAR : sourceOfRandomness.choose(currencies), sourceOfRandomness.nextInt(0, 6)),
+                new NumericColumnType(sourceOfRandomness.nextBoolean() ? Unit.SCALAR : sourceOfRandomness.choose(currencies), sourceOfRandomness.nextInt(0, 6), null),
                 new CleanDateColumnType(sourceOfRandomness.choose(dateFormats), LocalDate::from)));
                 //TODO tag?, boolean
             // Don't end with blank:

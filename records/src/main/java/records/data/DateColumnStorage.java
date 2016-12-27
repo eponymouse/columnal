@@ -10,25 +10,27 @@ import threadchecker.Tag;
 import utility.DumbObjectPool;
 
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Created by neil on 04/11/2016.
  */
-public class DateColumnStorage implements ColumnStorage<Temporal>
+public class DateColumnStorage implements ColumnStorage<TemporalAccessor>
 {
-    private final ArrayList<Temporal> values;
-    private final DumbObjectPool<Temporal> pool = new DumbObjectPool<>(Temporal.class, 1000);
+    private final ArrayList<TemporalAccessor> values;
+    private final DumbObjectPool<TemporalAccessor> pool;
     @OnThread(Tag.Any)
     private final DateTimeInfo dateTimeInfo;
     @MonotonicNonNull
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private DataTypeValue dataType;
 
-    public DateColumnStorage(DateTimeInfo dateTimeInfo)
+    public DateColumnStorage(DateTimeInfo dateTimeInfo) throws InternalException
     {
-        values = new ArrayList<>();
+        this.values = new ArrayList<>();
+        this.pool = new DumbObjectPool<>(TemporalAccessor.class, 1000, dateTimeInfo.getComparator());
         this.dateTimeInfo = dateTimeInfo;
     }
 
@@ -39,7 +41,7 @@ public class DateColumnStorage implements ColumnStorage<Temporal>
     }
 
     @Override
-    public Temporal get(int index) throws InternalException
+    public TemporalAccessor get(int index) throws InternalException
     {
         if (index < 0 || index >= filled())
             throw new InternalException("Attempting to access invalid element: " + index + " of " + filled());
@@ -47,10 +49,10 @@ public class DateColumnStorage implements ColumnStorage<Temporal>
     }
 
     @Override
-    public void addAll(List<Temporal> items) throws InternalException
+    public void addAll(List<TemporalAccessor> items) throws InternalException
     {
         this.values.ensureCapacity(this.values.size() + items.size());
-        for (Temporal t : items)
+        for (TemporalAccessor t : items)
         {
             this.values.add(pool.pool(t));
         }
@@ -74,7 +76,7 @@ public class DateColumnStorage implements ColumnStorage<Temporal>
         return dataType;
     }
 
-    public List<Temporal> getShrunk(int shrunkLength)
+    public List<TemporalAccessor> getShrunk(int shrunkLength)
     {
         return values.subList(0, shrunkLength);
     }

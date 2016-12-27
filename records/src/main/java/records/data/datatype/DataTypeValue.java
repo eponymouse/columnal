@@ -11,6 +11,7 @@ import threadchecker.Tag;
 import utility.Pair;
 
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -23,13 +24,13 @@ public class DataTypeValue extends DataType
 {
     private final @Nullable GetValue<Number> getNumber;
     private final @Nullable GetValue<String> getText;
-    private final @Nullable GetValue<Temporal> getDate;
+    private final @Nullable GetValue<TemporalAccessor> getDate;
     private final @Nullable GetValue<Boolean> getBoolean;
     private final @Nullable GetValue<Integer> getTag;
 
     // package-visible
     @SuppressWarnings("unchecked")
-    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataTypeValue>>> tagTypes, @Nullable GetValue<Number> getNumber, @Nullable GetValue<String> getText, @Nullable GetValue<Temporal> getDate, @Nullable GetValue<Boolean> getBoolean, @Nullable GetValue<Integer> getTag)
+    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataTypeValue>>> tagTypes, @Nullable GetValue<Number> getNumber, @Nullable GetValue<String> getText, @Nullable GetValue<TemporalAccessor> getDate, @Nullable GetValue<Boolean> getBoolean, @Nullable GetValue<Integer> getTag)
     {
         super(kind, numberInfo, dateTimeInfo, (Pair<TypeId, List<TagType<DataType>>>)(Pair)tagTypes);
         this.getNumber = getNumber;
@@ -54,7 +55,7 @@ public class DataTypeValue extends DataType
         return new DataTypeValue(Kind.TEXT, null, null, null, null, getText, null, null, null);
     }
 
-    public static DataTypeValue date(DateTimeInfo dateTimeInfo, GetValue<Temporal> getDate)
+    public static DataTypeValue date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> getDate)
     {
         return new DataTypeValue(Kind.DATETIME, null, dateTimeInfo, null, null, null, getDate, null, null);
     }
@@ -127,7 +128,7 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R date(DateTimeInfo dateTimeInfo, GetValue<Temporal> g) throws InternalException, UserException
+        public R date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected date type");
         }
@@ -139,7 +140,7 @@ public class DataTypeValue extends DataType
         R number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, E;
         R text(GetValue<String> g) throws InternalException, E;
         R bool(GetValue<Boolean> g) throws InternalException, E;
-        R date(DateTimeInfo dateTimeInfo, GetValue<Temporal> g) throws InternalException, E;
+        R date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, E;
 
         R tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
         //R tuple(List<DataType> types) throws InternalException, E;
@@ -225,7 +226,7 @@ public class DataTypeValue extends DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public List<Object> date(DateTimeInfo dateTimeInfo, GetValue<Temporal> g) throws InternalException, UserException
+            public List<Object> date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
             {
                 return Collections.singletonList(g.get(index));
             }

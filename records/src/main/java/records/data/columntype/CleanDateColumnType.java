@@ -109,4 +109,9 @@ public class CleanDateColumnType extends ColumnType
     {
         return new DateTimeInfo(DateTimeType.YEARMONTHDAY);
     }
+
+    public TemporalQuery<? extends Temporal> getQuery()
+    {
+        return query;
+    }
 }

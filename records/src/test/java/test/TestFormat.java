@@ -23,7 +23,7 @@ import static org.junit.Assert.assertEquals;
  */
 public class TestFormat
 {
-    private static final ColumnType NUM = new NumericColumnType(Unit.SCALAR, 0);
+    private static final ColumnType NUM = new NumericColumnType(Unit.SCALAR, 0, null);
     private static final ColumnType TEXT = new TextColumnType();
     
     private static ColumnInfo col(ColumnType type, String name)
@@ -85,7 +85,7 @@ public class TestFormat
     {
         try
         {
-            return new NumericColumnType(DummyManager.INSTANCE.getUnitManager().loadUse(unit), 0);
+            return new NumericColumnType(DummyManager.INSTANCE.getUnitManager().loadUse(unit), 0, null);
         }
         catch (InternalException | UserException e)
         {

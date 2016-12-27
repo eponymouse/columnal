@@ -3,8 +3,10 @@ package records.data;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
 import records.error.FetchException;
+import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -22,73 +24,26 @@ import java.util.Optional;
 /**
  * Created by neil on 20/10/2016.
  */
-public class TextFileStringColumn extends TextFileColumn
+public class TextFileStringColumn extends TextFileColumn<String>
 {
-    private String[] loadedValues = new String[0];
-    private final DumbObjectPool<String> pool = new DumbObjectPool<>(String.class, 1000);
-    @MonotonicNonNull
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private DataTypeValue dataType;
-
     public TextFileStringColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, ColumnId columnName, int columnIndex)
     {
-        super(recordSet, textFile, initialFilePosition, sep, columnName, columnIndex);
-    }
-
-    private String getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException
-    {
-        try
-        {
-            // TODO share loading across columns?  Maybe have boolean indicating whether to do so;
-            // true if user scrolled in table, false if we are performing a calculation
-            while (index >= loadedValues.length)
-            {
-                ArrayList<String> next = new ArrayList<>();
-                lastFilePosition = Utility.readColumnChunk(textFile, lastFilePosition, sep, columnIndex, next);
-                if (!lastFilePosition.isEOF())
-                {
-                    int prevSize = loadedValues.length;
-                    // Yes they do become null, but they won't be null
-                    // after we've finished the loop:
-                    @SuppressWarnings("nullness")
-                    String[] newLoadedValues = Arrays.copyOf(loadedValues, prevSize + next.size());
-                    for (int i = 0; i < next.size(); i++)
-                    {
-                        newLoadedValues[prevSize + i] = pool.pool(next.get(i));
-                    }
-                    loadedValues = newLoadedValues;
-                    if (progressListener != null)
-                        progressListener.progressUpdate((double)loadedValues.length / index);
-                }
-                else
-                    throw new FetchException("Error reading line", new EOFException());
-                // TODO handle case where file changed outside.
-            }
-
-            return loadedValues[index];
-        }
-        catch (IOException e)
-        {
-            throw new FetchException("Error reading " + textFile, e);
-        }
+        super(recordSet, textFile, initialFilePosition, sep, columnName, columnIndex, new StringColumnStorage());
     }
 
     @Override
     @OnThread(Tag.Any)
-    public synchronized DataTypeValue getType()
+    protected DataTypeValue makeDataType()
     {
-        if (dataType == null)
-        {
-            dataType = DataTypeValue.text(this::getWithProgress);
-        }
-        return dataType;
+        return DataTypeValue.text((i, prog) -> {
+            fillUpTo(i);
+            return storage.get(i);
+        });
     }
 
     @Override
-    public Optional<List<@NonNull ? extends Object>> fastDistinct() throws UserException
+    protected void addValues(ArrayList<String> values) throws InternalException
     {
-        //indexValid(0);
-        //return (loadedValues.size() < rowCount || pool.isFull()) ? Optional.<List<@NonNull ? extends Object>>empty() : Optional.<List<@NonNull ? extends Object>>of(pool.get());
-        return Optional.empty();
+        storage.addAll(values);
     }
 }

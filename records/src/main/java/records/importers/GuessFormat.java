@@ -1,5 +1,6 @@
 package records.importers;
 
+import org.apache.commons.lang.StringUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.ColumnId;
 import records.data.columntype.CleanDateColumnType;
@@ -253,7 +254,9 @@ public class GuessFormat
             else if (!possibleDateFormats.isEmpty())
                 columnTypes.add(new CleanDateColumnType(possibleDateFormats.get(0).formatString, possibleDateFormats.get(0).destQuery));
             else if (allNumeric)
-                columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP));
+            {
+                columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, commonPrefix));
+            }
             // TODO
             //else if (allNumericOrBlank)
                 //columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, true));

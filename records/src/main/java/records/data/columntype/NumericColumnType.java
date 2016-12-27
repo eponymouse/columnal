@@ -1,5 +1,6 @@
 package records.data.columntype;
 
+import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.Unit;
 
@@ -10,11 +11,13 @@ public class NumericColumnType extends ColumnType
 {
     public final Unit unit;
     public final int minDP;
+    private final @Nullable String commonPrefix;
 
-    public NumericColumnType(Unit unit, int minDP)
+    public NumericColumnType(Unit unit, int minDP, @Nullable String commonPrefix)
     {
         this.unit = unit;
         this.minDP = minDP;
+        this.commonPrefix = commonPrefix;
     }
 
     @Override
@@ -25,8 +28,11 @@ public class NumericColumnType extends ColumnType
 
     public String removePrefix(String val)
     {
-        if (val.startsWith(unit.getDisplayPrefix()))
-            return val.substring(unit.getDisplayPrefix().length()).trim();
+        val = val.trim();
+        if (commonPrefix != null)
+            return StringUtils.removeStart(val, commonPrefix).trim();
+        else if (val.startsWith(unit.getDisplayPrefix()))
+            return StringUtils.removeStart(val, unit.getDisplayPrefix()).trim();
         else
             return val.trim();
     }
@@ -58,5 +64,15 @@ public class NumericColumnType extends ColumnType
             "unit=" + unit +
             ", minDP=" + minDP +
             '}';
+    }
+
+    public String getPrefixToRemove()
+    {
+        return unit.getDisplayPrefix();
+    }
+
+    public String getSuffixToRemove()
+    {
+        return unit.getDisplaySuffix();
     }
 }
