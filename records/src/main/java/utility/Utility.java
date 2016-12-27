@@ -681,8 +681,15 @@ public class Utility
             is.skip(state.startFrom);
             int readChars = is.read(buf);
             state.eof = readChars <= 0;
-            if (!state.eof)
+            // If we reach EOF but there's content left to process,
+            // inject a fake trailing newline to try to finish file correctly:
+            if (!state.eof || state.currentEntry != null)
             {
+                if (state.eof)
+                {
+                    buf[0] = '\n';
+                    readChars = 1;
+                }
                 int startCurEntry = 0; // within buf at least, not counting previous leftover
                 for (int i = 0; i < readChars; i++)
                 {
