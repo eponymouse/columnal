@@ -9,14 +9,12 @@ import java.time.temporal.TemporalQuery;
  */
 class DateFormat
 {
-    public final String formatString;
     public final DateTimeFormatter formatter;
     public final TemporalQuery<? extends Temporal> destQuery;
 
-    public DateFormat(String formatString, TemporalQuery<? extends Temporal> destQuery)
+    public DateFormat(DateTimeFormatter dateTimeFormatter, TemporalQuery<? extends Temporal> destQuery)
     {
-        this.formatString = formatString;
-        this.formatter = DateTimeFormatter.ofPattern(formatString);
+        this.formatter = dateTimeFormatter;
         this.destQuery = destQuery;
     }
 }

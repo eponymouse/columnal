@@ -100,23 +100,21 @@ public class Utility
     // From http://stackoverflow.com/questions/453018/number-of-lines-in-a-file-in-java
     public static int countLines(File filename) throws IOException
     {
-        InputStream is = new BufferedInputStream(new FileInputStream(filename));
-        try {
-            byte[] c = new byte[65536];
+        try (InputStream is = new BufferedInputStream(new FileInputStream(filename)))
+        {
+            byte[] c = new byte[1048576];
             int count = 1;
-            int readChars = 0;
+            int readChars;
             boolean empty = true;
             boolean lastWasNewline = false;
-            while ((readChars = is.read(c)) != -1) {
+            while ((readChars = is.read(c)) > 0) {
                 empty = false;
                 for (int i = 0; i < readChars; ++i) {
                     if (c[i] == '\n') {
-                        ++count;
-                        lastWasNewline = true;
+                        count += 1;
                     }
-                    else
-                        lastWasNewline = false;
                 }
+                lastWasNewline = c[readChars - 1] == '\n';
             }
             // Nothing at all; zero lines
             if (empty)
@@ -127,8 +125,6 @@ public class Utility
             else
             // Some content with newlines; ignore blank extra line if \n is very end of file:
                 return count - (lastWasNewline ? 1 : 0);
-        } finally {
-            is.close();
         }
     }
 
@@ -685,8 +681,9 @@ public class Utility
             // inject a fake trailing newline to try to finish file correctly:
             if (!state.eof || state.currentEntry != null)
             {
-                if (state.eof)
+                if (state.eof) // currentEntry must be non-null so ignore EOF for now:
                 {
+                    state.eof = false;
                     buf[0] = '\n';
                     readChars = 1;
                 }
@@ -751,28 +748,30 @@ public class Utility
 
     public static ReadState skipFirstNRows(File src, final int headerRows) throws IOException
     {
+        if (headerRows == 0)
+            return new ReadState(0);
         try (InputStream is = new BufferedInputStream(new FileInputStream(src)))
         {
             int seen = 0;
             long pos = 0;
-            byte[] buf = new byte[65536];
+            byte[] buf = new byte[1048576];
             int readChars;
-            while ((readChars = is.read(buf)) != -1)
+            while ((readChars = is.read(buf)) > 0)
             {
                 for (int i = 0; i < readChars; i++)
                 {
-                    pos += 1;
                     if (buf[i] == '\n')
                     {
                         seen += 1;
                         if (seen == headerRows)
                         {
-                            return new ReadState(pos);
+                            return new ReadState(pos + i + 1);
                         }
                     }
                 }
+                pos += readChars;
             }
-            throw new EOFException("File does not contain specified number of header rows");
+            throw new EOFException("File \"" + src.getAbsolutePath() + "\" does not contain specified number of header rows: " + headerRows);
         }
     }
 

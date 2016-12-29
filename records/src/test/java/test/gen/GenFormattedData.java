@@ -79,18 +79,24 @@ public class GenFormattedData extends Generator<FormatAndData>
                 }
                 else if (c.type.isText())
                 {
-                    String str = TestUtil.makeString(r, generationStatus);
+                    String str = TestUtil.makeString(r, generationStatus).replace("\n", "");
                     data.add(Collections.singletonList(str));
                     line.append(str);
                 }
                 else if (c.type.isDate())
                 {
-                    int year = 1900 + r.nextInt(199);
+                    CleanDateColumnType dateColumnType = (CleanDateColumnType) c.type;
+                    int year;
+                    if (dateColumnType.isShortYear())
+                        year = 1950 + r.nextInt(84); // Might need to adjust this in 2030
+                    else
+                        year = 1900 + r.nextInt(199);
                     int month = 1 + r.nextInt(12);
                     int day = 1 + r.nextInt(28);
                     LocalDate date = LocalDate.of(year, month, day);
                     data.add(Collections.singletonList(date));
-                    line.append(date.format(((CleanDateColumnType) c.type).getDateTimeFormatter()));
+
+                    line.append(date.format(dateColumnType.getDateTimeFormatter()));
                 }
                 else if (c.type.isBlank())
                 {
@@ -110,6 +116,9 @@ public class GenFormattedData extends Generator<FormatAndData>
                 intendedContent.add(data);
             }
         }
+
+        if (r.nextBoolean())
+            fileContent.add(""); // Add trailing newline
 
         return new FormatAndData(format, fileContent, intendedContent);
     }

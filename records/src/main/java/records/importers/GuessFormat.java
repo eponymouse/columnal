@@ -8,10 +8,12 @@ import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
 import records.data.columntype.TextColumnType;
 import records.data.unit.UnitManager;
+import records.transformations.function.ToDate;
 import utility.Utility;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,6 +26,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 20/10/2016.
@@ -95,7 +98,13 @@ public class GuessFormat
                 {
                     List<Integer> counts = new ArrayList<>(initial.size() - headerRows);
                     for (int i = headerRows; i < initial.size(); i++)
-                        counts.add(Utility.countIn(sep, initial.get(i)));
+                    {
+                        if (!initial.get(i).isEmpty())
+                        {
+                            counts.add(Utility.countIn(sep, initial.get(i)));
+                        }
+                    }
+
                     if (counts.stream().allMatch(c -> c.intValue() == 0))
                     {
                         // None found; so rubbish we shouldn't record
@@ -158,7 +167,7 @@ public class GuessFormat
             // Only false if we find content which is not parseable as a number:
             boolean allNumericOrBlank = true;
             boolean allBlank = true;
-            List<DateFormat> possibleDateFormats = new ArrayList<>(Utility.mapList(CleanDateColumnType.DATE_FORMATS, (formatString) -> new DateFormat(formatString, LocalDate::from)));
+            List<DateFormat> possibleDateFormats = new ArrayList<>(ToDate.FORMATS.stream().<DateTimeFormatter>flatMap(List::stream).map(formatter -> new DateFormat(formatter, LocalDate::from)).collect(Collectors.<DateFormat>toList()));
             String commonPrefix = "";
             List<Integer> decimalPlaces = new ArrayList<>();
             for (int rowIndex = headerRows; rowIndex < initialVals.size(); rowIndex++)
@@ -252,7 +261,7 @@ public class GuessFormat
             if (allBlank)
                 columnTypes.add(ColumnType.BLANK);
             else if (!possibleDateFormats.isEmpty())
-                columnTypes.add(new CleanDateColumnType(possibleDateFormats.get(0).formatString, possibleDateFormats.get(0).destQuery));
+                columnTypes.add(new CleanDateColumnType(possibleDateFormats.get(0).formatter, possibleDateFormats.get(0).destQuery));
             else if (allNumeric)
             {
                 columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, commonPrefix));

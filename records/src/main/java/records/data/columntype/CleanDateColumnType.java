@@ -5,7 +5,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 
+import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalQuery;
 import java.util.ArrayList;
@@ -17,51 +19,13 @@ import java.util.List;
  */
 public class CleanDateColumnType extends ColumnType
 {
-    public static List<@NonNull String> DATE_FORMATS = new ArrayList<>();
-
-    @FunctionalInterface
-    private interface DateAssembler
-    {
-        public @Nullable String assemble(String y, String d, String m, String sep);
-    }
-    static {
-        List<String> years = Arrays.asList("yyyy", "yy");
-        List<String> months = Arrays.asList("MMM", "MM", "M");
-        List<String> days = Arrays.asList("dd", "d");
-        List<String> seps = Arrays.asList("/", "-", " ", ".");
-        List<DateAssembler> assemblers = Arrays.asList(
-            (y,d,m,x) -> y.equals("yyyy") ? y + x + m + x + d : null, // YMD; ISO style; only allowed if year is four digits
-            (y,d,m,x) -> d + x + m + x + y, // DMY; most countries
-            (y,d,m,x) -> m + x + d + x + y // MDY; US style.
-        );
-
-        //I make this a lot of different formats!
-        for (String y : years)
-            for (String d : days)
-                for (String m : months)
-                    for (String x : seps)
-                        for (DateAssembler asm : assemblers)
-                        {
-                            String fmt = asm.assemble(y, d, m, x);
-                            if (fmt != null)
-                                DATE_FORMATS.add(fmt);
-                        }
-        // We allow no dividers, but only in the case where four digit years, and two digit days and months are used:
-        for (DateAssembler asm : assemblers)
-        {
-            String fmt = asm.assemble("yyyy", "MM", "dd", "");
-            if (fmt != null)
-                DATE_FORMATS.add(fmt);
-        }
-    }
-
     // As passed to DateTimeFormatter.ofPattern
-    private final String formatString;
+    private final DateTimeFormatter formatter;
     private final TemporalQuery<? extends Temporal> query;
 
-    public CleanDateColumnType(String formatString, TemporalQuery<? extends Temporal> query)
+    public CleanDateColumnType(DateTimeFormatter formatter, TemporalQuery<? extends Temporal> query)
     {
-        this.formatString = formatString;
+        this.formatter = formatter;
         this.query = query;
     }
 
@@ -79,25 +43,31 @@ public class CleanDateColumnType extends ColumnType
 
         CleanDateColumnType that = (CleanDateColumnType) o;
 
-        return formatString.equals(that.formatString);
+        return formatter.equals(that.formatter);
 
     }
 
     @Override
     public int hashCode()
     {
-        return formatString.hashCode();
+        return formatter.hashCode();
+    }
+
+    // Is the year two digits?
+    public boolean isShortYear()
+    {
+        return formatter.parse(formatter.format(LocalDate.of(1850, 1, 1))).get(ChronoField.YEAR) != 1850;
     }
 
     @Override
     public String toString()
     {
-        return "CleanDate \"" + formatString + "\"";
+        return "CleanDate \"" + formatter + "\"";
     }
 
     public DateTimeFormatter getDateTimeFormatter()
     {
-        return DateTimeFormatter.ofPattern(formatString);
+        return formatter;
     }
 
     public Temporal parse(@NonNull String s)

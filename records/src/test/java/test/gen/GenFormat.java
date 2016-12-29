@@ -13,12 +13,15 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.importers.ColumnInfo;
 import records.importers.TextFormat;
+import records.transformations.function.ToDate;
 import test.DummyManager;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 29/10/2016.
@@ -41,7 +44,6 @@ public class GenFormat extends Generator<TextFormat>
             throw new RuntimeException(e);
         }
     }
-    public static List<String> dateFormats = CleanDateColumnType.DATE_FORMATS;
 
     public GenFormat()
     {
@@ -49,6 +51,7 @@ public class GenFormat extends Generator<TextFormat>
     }
 
     @Override
+    @SuppressWarnings("initialization")
     public TextFormat generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         char sep = sourceOfRandomness.choose(seps);
@@ -59,6 +62,7 @@ public class GenFormat extends Generator<TextFormat>
         int columnCount = sourceOfRandomness.nextInt(2, 40);
         for (int i = 0; i < columnCount; i++)
         {
+            List<DateTimeFormatter> dateFormats = ToDate.FORMATS.stream().flatMap(List::stream).collect(Collectors.toList());
             ColumnType type = sourceOfRandomness.choose(Arrays.asList(
                 ColumnType.BLANK,
                 new TextColumnType(),
