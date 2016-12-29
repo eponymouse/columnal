@@ -32,9 +32,9 @@
     <orderEntry type="library" name="Maven: org.jsoup:jsoup:1.10.1" level="project" />
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.5" level="project" />
     <orderEntry type="library" name="Maven: org.apache.commons:commons-lang3:3.0" level="project" />
+    <orderEntry type="library" name="Maven: com.google.guava:guava:20.0" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:java-smt:1.0.1" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:common:0.3000-38-gcdb252b" level="project" />
-    <orderEntry type="library" name="Maven: com.google.guava:guava:19.0" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:smtinterpol:comp:2.1-255-gcdd5908" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:smtinterpol:sources:2.1-255-gcdd5908" level="project" />
     <orderEntry type="library" name="Maven: one.util:streamex:0.6.3" level="project" />

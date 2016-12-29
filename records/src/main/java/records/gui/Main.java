@@ -67,10 +67,10 @@ public class Main extends Application
                 {
                     try
                     {
-                        DataSource rs = TextImport.importTextFile(v.getManager(), chosen);
-                        Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.addSource(rs)));
+                        TextImport.importTextFile(v.getManager(), chosen, rs ->
+                            Utility.alertOnErrorFX_(() -> v.addSource(rs)));
                     }
-                    catch (IOException | InternalException | UserException ex)
+                    catch (InternalException | UserException | IOException ex)
                     {
                         ex.printStackTrace();
                         Platform.runLater(() -> new Alert(AlertType.ERROR, ex.getMessage() == null ? "" : ex.getMessage(), ButtonType.OK).showAndWait());

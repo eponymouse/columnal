@@ -2,6 +2,7 @@ package test;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.RunWith;
@@ -40,7 +41,7 @@ public class PropFormat
 {
     @Property
     @OnThread(Tag.Simulation)
-    public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException
+    public void testGuessFormat(@When(seed=1470586810730684462L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException
     {
         String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
         String format = formatAndData.format.toString();
@@ -48,7 +49,8 @@ public class PropFormat
         File tempFile = File.createTempFile("test", "txt");
         tempFile.deleteOnExit();
         FileUtils.writeStringToFile(tempFile, content, Charset.forName("UTF-8"));
-        DataSource ds = TextImport.importTextFile(new DummyManager(), tempFile);
+        DataSource ds = TextImport._test_importTextFile(new DummyManager(), tempFile);
+        // TODO test choicepoint
         assertEquals("Right column length", formatAndData.loadedContent.size(), ds.getData().getLength());
         for (int i = 0; i < formatAndData.loadedContent.size(); i++)
         {
@@ -57,7 +59,7 @@ public class PropFormat
             {
                 List<Object> expected = formatAndData.loadedContent.get(i).get(c);
                 List<Object> loaded = ds.getData().getColumns().get(c).getType().getCollapsed(i);
-                assertEquals("Expected: " + expected + " was " + loaded, 0, Utility.compareLists(expected, loaded));
+                assertEquals("Column " + c + " expected: " + expected + " was " + loaded + " from row " + formatAndData.content.get(i + 1), 0, Utility.compareLists(expected, loaded));
             }
         }
     }

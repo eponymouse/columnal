@@ -16,6 +16,7 @@ import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -738,7 +739,7 @@ public class Utility
         return total;
     }
 
-    public static double variance(List<? extends Number> src)
+    public static double variance(Collection<? extends Number> src)
     {
         if (src.isEmpty())
             return 0;

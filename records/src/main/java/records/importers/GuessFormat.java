@@ -1,6 +1,8 @@
 package records.importers;
 
-import org.apache.commons.lang.StringUtils;
+import com.google.common.collect.HashMultiset;
+import com.google.common.collect.Multiset;
+import com.google.common.collect.Multisets;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.ColumnId;
 import records.data.columntype.CleanDateColumnType;
@@ -8,6 +10,8 @@ import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
 import records.data.columntype.TextColumnType;
 import records.data.unit.UnitManager;
+import records.error.UserException;
+import records.importers.ChoicePoint.Choice;
 import records.transformations.function.ToDate;
 import utility.Utility;
 
@@ -18,7 +22,6 @@ import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -26,6 +29,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.TreeMap;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -72,7 +76,7 @@ public class GuessFormat
         }
     }
 
-    public static class GuessException extends Exception
+    public static class GuessException extends UserException
     {
         public GuessException(String message)
         {
@@ -80,78 +84,81 @@ public class GuessFormat
         }
     }
 
-    public static TextFormat guessTextFormat(UnitManager mgr, List<String> initial)
+    private static class HeaderRowChoice extends Choice
     {
-        try
+        private final int numHeaderRows;
+
+        private HeaderRowChoice(int numHeaderRows)
         {
-            // All-text formats, indexed by number of header rows:
-            final TreeMap<Integer, TextFormat> allText = new TreeMap<>();
-            // We advance the number of header rows until everything makes sense:
-            for (int headerRows = 0; headerRows < Math.min(MAX_HEADER_ROWS, initial.size() - 1); headerRows++)
-            {
+            this.numHeaderRows = numHeaderRows;
+        }
+    }
 
-                Map<String, Double> sepScores = new HashMap<>();
-                // Guess the separator:
-                // Earlier in this list is most preferred:
-                List<String> seps = Arrays.asList(";", ",", "\t", ":", " ");
-                for (String sep : seps)
+    private static class SeparatorChoice extends Choice
+    {
+        private final String separator;
+
+        private SeparatorChoice(String separator)
+        {
+            this.separator = separator;
+        }
+    }
+
+    private static class ColumnCountChoice extends Choice
+    {
+        private final int columnCount;
+
+        private ColumnCountChoice(int columnCount)
+        {
+            this.columnCount = columnCount;
+        }
+    }
+
+    private static SeparatorChoice sep(String separator)
+    {
+        return new SeparatorChoice(separator);
+    }
+
+    public static ChoicePoint<TextFormat> guessTextFormat(UnitManager mgr, List<String> initial)
+    {
+        List<Choice> headerRowChoices = new ArrayList<>();
+        for (int headerRows = 0; headerRows < Math.min(MAX_HEADER_ROWS, initial.size() - 1); headerRows++)
+        {
+            headerRowChoices.add(new HeaderRowChoice(headerRows));
+        }
+
+        return ChoicePoint.choose((HeaderRowChoice hrc) -> {
+            int headerRows = hrc.numHeaderRows;
+            return ChoicePoint.choose((SeparatorChoice sep) -> {
+                Multiset<Integer> counts = HashMultiset.create();
+                for (int i = headerRows; i < initial.size(); i++)
                 {
-                    List<Integer> counts = new ArrayList<>(initial.size() - headerRows);
-                    for (int i = headerRows; i < initial.size(); i++)
+                    if (!initial.get(i).isEmpty())
                     {
-                        if (!initial.get(i).isEmpty())
-                        {
-                            counts.add(Utility.countIn(sep, initial.get(i)));
-                        }
-                    }
-
-                    if (counts.stream().allMatch(c -> c.intValue() == 0))
-                    {
-                        // None found; so rubbish we shouldn't record
-                    } else
-                    {
-                        sepScores.put(sep, Utility.variance(counts));
+                        counts.add(Utility.countIn(sep.separator, initial.get(i)));
                     }
                 }
 
-                if (sepScores.isEmpty())
-                    continue;
-
-                Entry<String, Double> sep = sepScores.entrySet().stream().min(Comparator.<Entry<String, Double>, Double>comparing(e -> e.getValue()).thenComparing(e -> seps.indexOf(e.getKey()))).get();
-
-                if (sep.getValue().doubleValue() == 0.0)
+                double score;
+                if (counts.stream().allMatch(c -> c.intValue() == 0))
                 {
-                    // Spot on!  Read first line after headers to get column count
-                    int columnCount = initial.get(headerRows).split(sep.getKey(), -1).length;
-
-                    List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> Arrays.asList(s.split(sep.getKey(), -1)));
-
-                    //List<Function<RecordSet, Column>> columns = new ArrayList<>();
-                    Format format = guessBodyFormat(mgr, columnCount, headerRows, initialVals);
-                    TextFormat textFormat = new TextFormat(format, sep.getKey().charAt(0));
-                    // If they are all text record this as feasible but keep going in case we get better
-                    // result with more header rows:
-                    if (format.columnTypes.stream().allMatch(c -> c.type.isText() || c.type.isBlank()))
-                        allText.put(headerRows, textFormat);
-                    else // Not all just text; go with it:
-                        return textFormat;
-
+                    // None found; totally rubbish:
+                    score = -Double.MAX_VALUE;
+                } else
+                {
+                    // Higher is better choice so negate:
+                    score = -Utility.variance(counts);
                 }
-            }
-            Entry<Integer, TextFormat> firstAllText = allText.firstEntry();
-            if (firstAllText != null)
-                return firstAllText.getValue();
-            else
-                throw new GuessException("Couldn't guess column separator");
-        }
-        catch (GuessException e)
-        {
-            // Always valid backup: a single text column, no header
-            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), new ColumnId("Content")))), (char)-1);
-            String msg = e.getLocalizedMessage();
-            fmt.recordProblem(msg == null ? "Unknown" : msg);
-            return fmt;
-        }
+                List<ColumnCountChoice> viableColumnCounts = Multisets.copyHighestCountFirst(counts).entrySet().stream().limit(10).<@NonNull ColumnCountChoice>map(e -> new ColumnCountChoice(e.getElement())).collect(Collectors.<@NonNull ColumnCountChoice>toList());
+
+                return ChoicePoint.choose((ColumnCountChoice cc) -> {
+                    List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> Arrays.asList(s.split(sep.separator, -1)));
+                    Format format = guessBodyFormat(mgr, cc.columnCount, headerRows, initialVals);
+                    TextFormat textFormat = new TextFormat(format, sep.separator.charAt(0));
+                    return ChoicePoint.<TextFormat>success(textFormat);
+                }, viableColumnCounts.toArray(new ColumnCountChoice[0]));
+            }, sep(";"), sep(","), sep("\t"), sep(":"), sep(" "));
+        }, headerRowChoices.toArray(new HeaderRowChoice[0]));
     }
 
     private static Format guessBodyFormat(UnitManager mgr, int columnCount, int headerRows, @NonNull List<@NonNull List<@NonNull String>> initialVals) throws GuessException
@@ -290,5 +297,11 @@ public class GuessFormat
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
             columns.add(new ColumnInfo(columnTypes.get(columnIndex), new ColumnId(headerRow.isPresent() ? headerRow.get().get(columnIndex) : ("C" + (columnIndex + 1)))));
         return new Format(headerRows, columns);
+    }
+
+    public static void guessTextFormatGUI_Then(UnitManager mgr, List<String> initial, Consumer<TextFormat> then)
+    {
+        ChoicePoint<TextFormat> choicePoints = guessTextFormat(mgr, initial);
+        // TODO show GUI, apply then
     }
 }
