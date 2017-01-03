@@ -54,10 +54,20 @@ public class TextImport
         });
     }
 
-    public static ChoicePoint<TextFormat> _test_importTextFile(TableManager mgr, File textFile) throws IOException, InternalException, UserException
+    @OnThread(Tag.Simulation)
+    public static ChoicePoint<DataSource> _test_importTextFile(TableManager mgr, File textFile) throws IOException, InternalException, UserException
     {
         List<String> initial = getInitial(textFile);
-        return GuessFormat.guessTextFormat(mgr.getUnitManager(), initial);
+        return GuessFormat.guessTextFormat(mgr.getUnitManager(), initial).then(format -> {
+            try
+            {
+                return makeDataSource(mgr, textFile, format);
+            }
+            catch (IOException e)
+            {
+                throw new UserException("IO exception", e);
+            }
+        });
     }
 
     @OnThread(Tag.Simulation)

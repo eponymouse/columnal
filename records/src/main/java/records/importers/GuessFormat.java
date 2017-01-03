@@ -4,6 +4,7 @@ import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.ColumnType;
@@ -84,33 +85,98 @@ public class GuessFormat
         }
     }
 
-    private static class HeaderRowChoice extends Choice
+    // public for testing
+    public static class HeaderRowChoice extends Choice
     {
         private final int numHeaderRows;
 
-        private HeaderRowChoice(int numHeaderRows)
+        // public for testing
+        public HeaderRowChoice(int numHeaderRows)
         {
             this.numHeaderRows = numHeaderRows;
         }
-    }
 
-    private static class SeparatorChoice extends Choice
-    {
-        private final String separator;
-
-        private SeparatorChoice(String separator)
+        @Override
+        public boolean equals(@Nullable Object o)
         {
-            this.separator = separator;
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            HeaderRowChoice that = (HeaderRowChoice) o;
+
+            return numHeaderRows == that.numHeaderRows;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return numHeaderRows;
         }
     }
 
-    private static class ColumnCountChoice extends Choice
+    // public for testing
+    public static class SeparatorChoice extends Choice
+    {
+        private final String separator;
+
+        // public for testing
+        public SeparatorChoice(String separator)
+        {
+            this.separator = separator;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            SeparatorChoice that = (SeparatorChoice) o;
+
+            return separator.equals(that.separator);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return separator.hashCode();
+        }
+    }
+
+    // public for testing
+    public static class ColumnCountChoice extends Choice
     {
         private final int columnCount;
 
-        private ColumnCountChoice(int columnCount)
+        // public for testing
+        public ColumnCountChoice(int columnCount)
         {
             this.columnCount = columnCount;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            ColumnCountChoice that = (ColumnCountChoice) o;
+
+            return columnCount == that.columnCount;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return columnCount;
+        }
+
+        @Override
+        public String toString()
+        {
+            return "ColumnCountChoice{" +
+                "columnCount=" + columnCount +
+                '}';
         }
     }
 
@@ -135,7 +201,8 @@ public class GuessFormat
                 {
                     if (!initial.get(i).isEmpty())
                     {
-                        counts.add(Utility.countIn(sep.separator, initial.get(i)));
+                        // Column count is one higher than separator count:
+                        counts.add(1 + Utility.countIn(sep.separator, initial.get(i)));
                     }
                 }
 
@@ -189,7 +256,7 @@ public class GuessFormat
                 }
                 else
                 {
-                    String val = row.get(columnIndex).trim();
+                    String val = columnIndex < row.size() ? row.get(columnIndex).trim() : "";
                     if (!val.isEmpty())
                     {
                         allBlank = false;

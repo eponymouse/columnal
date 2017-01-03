@@ -68,6 +68,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.BasicLexer;
 import records.gui.DisplayValue;
+import records.importers.ChoicePoint.Choice;
 import records.transformations.function.TaglessFunctionInstance;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -641,6 +642,11 @@ public class Utility
     public static <T> Iterable<T> iterableStream(Stream<T> values)
     {
         return values::iterator;
+    }
+
+    public static <T> String listToString(List<@NonNull T> options)
+    {
+        return "[" + options.stream().map(Object::toString).collect(Collectors.joining(", ")) + "]";
     }
 
     public static class ReadState
