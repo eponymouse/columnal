@@ -7,6 +7,7 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.RunWith;
 import records.data.DataSource;
+import records.data.TextFileColumn;
 import records.error.InternalException;
 import records.error.UserException;
 import records.importers.ChoicePoint;
@@ -38,8 +39,7 @@ public class PropFormat
 {
     @Property
     @OnThread(Tag.Simulation)
-    // TODO remove the @When!
-    public void testGuessFormat(@When(seed=1470586810730684462L) @From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException
+    public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException
     {
         String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
         String format = formatAndData.format.toString();
@@ -57,7 +57,7 @@ public class PropFormat
         assertEquals("Right column length", formatAndData.loadedContent.size(), ds.getData().getLength());
         for (int i = 0; i < formatAndData.loadedContent.size(); i++)
         {
-            assertEquals("Right row length " + content + " " + format, ds.getData().getColumns().size(), formatAndData.loadedContent.get(i).size());
+            assertEquals("Right row length for row " + i + " (+" + formatAndData.format.headerRows + "):\n" + formatAndData.content.get(i + formatAndData.format.headerRows) + "\n" + format + "\n" + Utility.listToString(formatAndData.loadedContent.get(i)) + " guessed: " + "", ds.getData().getColumns().size(), formatAndData.loadedContent.get(i).size());
             for (int c = 0; c < ds.getData().getColumns().size(); c++)
             {
                 List<Object> expected = formatAndData.loadedContent.get(i).get(c);

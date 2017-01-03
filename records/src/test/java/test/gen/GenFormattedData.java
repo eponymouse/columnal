@@ -79,7 +79,9 @@ public class GenFormattedData extends Generator<FormatAndData>
                 }
                 else if (c.type.isText())
                 {
-                    String str = TestUtil.makeString(r, generationStatus).replace("\n", "");
+                    String str = TestUtil.makeString(r, generationStatus).replace("\n", "").replace("\r", "");
+                    // TODO quote separators instead of removing them:
+                    str = str.replace("" + format.separator, "");
                     data.add(Collections.singletonList(str));
                     line.append(str);
                 }
