@@ -56,7 +56,7 @@ public abstract class TextFileColumn<T> extends Column
                     addValues(next);
                 }
                 else
-                    throw new FetchException("Error reading line of " + textFile.getAbsolutePath() + " got " + storage.filled() + " searching for " + rowIndex, new EOFException());
+                    throw new FetchException("Error reading line of " + textFile.getAbsolutePath() + " got " + storage.filled() + " lines searching for# " + (1 + rowIndex), new EOFException());
             }
         }
         catch (IOException e)

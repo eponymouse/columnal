@@ -13,6 +13,7 @@ import records.data.columntype.TextColumnType;
 import records.data.unit.UnitManager;
 import records.error.UserException;
 import records.importers.ChoicePoint.Choice;
+import records.importers.ChoicePoint.Quality;
 import records.transformations.function.ToDate;
 import utility.Utility;
 
@@ -193,9 +194,9 @@ public class GuessFormat
             headerRowChoices.add(new HeaderRowChoice(headerRows));
         }
 
-        return ChoicePoint.choose((HeaderRowChoice hrc) -> {
+        return ChoicePoint.choose(Quality.PROMISING, 0, (HeaderRowChoice hrc) -> {
             int headerRows = hrc.numHeaderRows;
-            return ChoicePoint.choose((SeparatorChoice sep) -> {
+            return ChoicePoint.choose(Quality.PROMISING, 0, (SeparatorChoice sep) -> {
                 Multiset<Integer> counts = HashMultiset.create();
                 for (int i = headerRows; i < initial.size(); i++)
                 {
@@ -207,18 +208,21 @@ public class GuessFormat
                 }
 
                 double score;
+                Quality quality;
                 if (counts.stream().allMatch(c -> c.intValue() == 0))
                 {
                     // None found; totally rubbish:
                     score = -Double.MAX_VALUE;
+                    quality = Quality.FALLBACK;
                 } else
                 {
                     // Higher is better choice so negate:
                     score = -Utility.variance(counts);
+                    quality = Quality.PROMISING;
                 }
                 List<ColumnCountChoice> viableColumnCounts = Multisets.copyHighestCountFirst(counts).entrySet().stream().limit(10).<@NonNull ColumnCountChoice>map(e -> new ColumnCountChoice(e.getElement())).collect(Collectors.<@NonNull ColumnCountChoice>toList());
 
-                return ChoicePoint.choose((ColumnCountChoice cc) -> {
+                return ChoicePoint.choose(quality, score, (ColumnCountChoice cc) -> {
                     List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> Arrays.asList(s.split(sep.separator, -1)));
                     Format format = guessBodyFormat(mgr, cc.columnCount, headerRows, initialVals);
                     TextFormat textFormat = new TextFormat(format, sep.separator.charAt(0));

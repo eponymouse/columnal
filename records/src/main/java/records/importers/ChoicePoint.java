@@ -1,5 +1,8 @@
 package records.importers;
 
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
@@ -14,12 +17,21 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.ExecutionException;
 
 /**
  * Poor man's list monad.
  */
 public class ChoicePoint<R>
 {
+    public static enum Quality
+    {
+        // Good candidate, can stop at this one if searching for best
+        PROMISING,
+        // Poor candidate, search others if looking for best.
+        FALLBACK;
+    }
+
     public static abstract class Choice {
         // hashCode and equals must be overriden in children:
         @Override
@@ -31,26 +43,50 @@ public class ChoicePoint<R>
 
     // If none, end of the road (either successful or failure, depending on exception/vakye)
     private final List<Choice> options;
+    private final Quality quality;
     private final double score;
     private final @Nullable Exception exception;
     private final @Nullable R value;
     // If we take current choice, what's the next choice point?
-    private final Map<Choice, ChoicePoint<R>> calculated;
+    private final LoadingCache<Choice, ChoicePoint<R>> calculated;
 
-    private <C extends Choice> ChoicePoint(List<C> options, double score, @Nullable Exception exception, @Nullable R value, Map<C, ChoicePoint<R>> calculated)
+    private <C extends Choice> ChoicePoint(List<C> options, Quality quality, double score, @Nullable Exception exception, @Nullable R value, final @Nullable ExFunction<C, ChoicePoint<R>> calculate)
     {
         this.options = new ArrayList<>(options);
+        this.quality = quality;
         this.score = score;
         this.exception = exception;
         this.value = value;
-        this.calculated = new HashMap<>(calculated);
+        if (calculate != null)
+        {
+            final @Nullable ExFunction<C, ChoicePoint<R>> calculateFinal = calculate;
+            LoadingCache<Choice, ChoicePoint<R>> calc = CacheBuilder.<Choice, ChoicePoint<R>>newBuilder().maximumSize(20).build(new CacheLoader<Choice, ChoicePoint<R>>()
+            {
+                @Override
+                public ChoicePoint<R> load(Choice c) throws Exception
+                {
+                    return calculateFinal.apply((C)c);
+                }
+            });
+            this.calculated = calc;
+        }
+        else
+            this.calculated = CacheBuilder.newBuilder().build(new CacheLoader<Choice, ChoicePoint<R>>()
+            {
+                @Override
+                public ChoicePoint<R> load(Choice choice) throws Exception
+                {
+                    return failure(new InternalException("Calculating with no options"));
+                }
+            });
     }
 
-    public static <C extends Choice, R> ChoicePoint<R> choose(ExFunction<C, ChoicePoint<R>> hereOnwards, C... choices)
+    public static <C extends Choice, R> ChoicePoint<R> choose(Quality quality, double score, ExFunction<C, ChoicePoint<R>> hereOnwards, C... choices)
     {
         List<C> allOptions = new ArrayList<>();
         allOptions.addAll(Arrays.<C>asList(choices));
         Map<C, ChoicePoint<R>> calc = new HashMap<>();
+        /*
         for (C choice : choices)
         {
             ChoicePoint<R> next;
@@ -68,7 +104,8 @@ public class ChoicePoint<R>
             }
             calc.put(choice, next);
         }
-        return new <C>ChoicePoint<R>(allOptions, 0, null, null, calc);
+        */
+        return new <C>ChoicePoint<R>(allOptions, quality, score, null, null, hereOnwards);
     }
 
     /*
@@ -80,16 +117,16 @@ public class ChoicePoint<R>
         return new <C>ChoicePoint<R>(allOptions, Double.MAX_VALUE, null, null, Collections.<C, ChoicePoint<R>>singletonMap(chosen, result));
     }
     */
-
+    /*
     public static <R> ChoicePoint<R> possibility(R value, double score)
     {
         return new <Choice>ChoicePoint<R>(Collections.<Choice>emptyList(), score, null, value, Collections.<Choice, ChoicePoint<R>>emptyMap());
-    }
 
+    }*/
 
     public static <R> ChoicePoint<R> success(R value)
     {
-        return new <Choice>ChoicePoint<R>(Collections.<Choice>emptyList(), Double.MAX_VALUE, null, value, Collections.<Choice, ChoicePoint<R>>emptyMap());
+        return new <Choice>ChoicePoint<R>(Collections.<Choice>emptyList(), Quality.PROMISING, Double.MAX_VALUE, null, value, null);
     }
 
     public static <R> ChoicePoint<R> run(ExSupplier<@NonNull R> supplier)
@@ -107,7 +144,7 @@ public class ChoicePoint<R>
 
     public static <R> ChoicePoint<R> failure(Exception e)
     {
-        return new <Choice>ChoicePoint<R>(Collections.<Choice>emptyList(), -Double.MAX_VALUE, e, null, Collections.<Choice, ChoicePoint<R>>emptyMap());
+        return new <Choice>ChoicePoint<R>(Collections.<Choice>emptyList(), Quality.FALLBACK, -Double.MAX_VALUE, e, null, null);
     }
 
     public <S> ChoicePoint<S> then(ExFunction<R, @NonNull S> then)
@@ -120,16 +157,22 @@ public class ChoicePoint<R>
                 return ChoicePoint.<S>run(() -> then.apply(valueFinal));
             }
             else
-                return new <Choice>ChoicePoint<S>(Collections.<Choice>emptyList(), score, exception, null, Collections.<Choice, ChoicePoint<S>>emptyMap());
+                return new <Choice>ChoicePoint<S>(Collections.<Choice>emptyList(), quality, score, exception, null, null);
         }
         else
         {
             // Not a leaf; need to copy and go deeper:
-            HashMap<Choice, ChoicePoint<S>> calcCopy = new HashMap<>();
-            calculated.forEach((c, p) -> {
-                calcCopy.put(c, p.then(then));
+            // Options is non-empty so exception and value not null:
+            return new <Choice>ChoicePoint<S>(options, quality, score, null, null, (ExFunction<Choice, ChoicePoint<S>>) choice -> {
+                try
+                {
+                    return calculated.get(choice).then(then);
+                }
+                catch (ExecutionException e)
+                {
+                    throw new InternalException("Execution issue", e);
+                }
             });
-            return new <Choice>ChoicePoint<S>(options, score, null, null, calcCopy);
         }
     }
 
@@ -158,8 +201,13 @@ public class ChoicePoint<R>
     {
         if (!options.contains(choice))
             throw new InternalException("Picking unavailable choice: " + choice + " from: " + Utility.listToString(options));
-        if (!calculated.containsKey(choice))
-            throw new InternalException("Picking uncalculated choice: " + choice);
-        return calculated.get(choice);
+        try
+        {
+            return calculated.get(choice);
+        }
+        catch (ExecutionException e)
+        {
+            throw new InternalException("Error picking choice", e);
+        }
     }
 }
