@@ -10,7 +10,11 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.importers.GuessFormat;
 import records.importers.ColumnInfo;
+import records.importers.GuessFormat.ColumnCountChoice;
+import records.importers.GuessFormat.HeaderRowChoice;
+import records.importers.GuessFormat.SeparatorChoice;
 import records.importers.TextFormat;
+import test.TestUtil.ChoicePick;
 import utility.Utility;
 
 import java.util.Arrays;
@@ -32,7 +36,7 @@ public class TestFormat
     }
     
     @Test
-    public void testFormat()
+    public void testFormat() throws UserException, InternalException
     {
         assertFormatCR(new TextFormat(1, c(col(NUM, "A"), col(NUM, "B")), ','),
             "A,B", "0,0", "1,1", "2,2");
@@ -51,7 +55,7 @@ public class TestFormat
         //#error TODO add support for date columns
     }
     @Test
-    public void testCurrency()
+    public void testCurrency() throws InternalException, UserException
     {
         assertFormat(new TextFormat(0, c(col(NUM("$"), "C1"), col(TEXT, "C2")), ','),
             "$0, A", "$1, Whatever", "$2, C");
@@ -61,7 +65,7 @@ public class TestFormat
             "A0, A", "A1, Whatever", "A2, C");
     }
 
-    private static void assertFormatCR(TextFormat fmt, String... lines)
+    private static void assertFormatCR(TextFormat fmt, String... lines) throws InternalException, UserException
     {
         assertFormat(fmt, lines);
         for (char sep : ";\t :".toCharArray())
@@ -71,9 +75,14 @@ public class TestFormat
         }
     }
 
-    private static void assertFormat(TextFormat fmt, String... lines)
+    private static void assertFormat(TextFormat fmt, String... lines) throws UserException, InternalException
     {
-        assertEquals(fmt, GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), java.util.Arrays.asList(lines)));
+        ChoicePick[] picks = new ChoicePick[] {
+            new ChoicePick<HeaderRowChoice>(HeaderRowChoice.class, new HeaderRowChoice(fmt.headerRows)),
+            new ChoicePick<SeparatorChoice>(SeparatorChoice.class, new SeparatorChoice("" + fmt.separator)),
+            new ChoicePick<ColumnCountChoice>(ColumnCountChoice.class, new ColumnCountChoice(fmt.columnTypes.size()))
+        };
+        assertEquals(fmt, TestUtil.pick(GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), java.util.Arrays.asList(lines)), picks));
     }
 
     private static List<ColumnInfo> c(ColumnInfo... ts)

@@ -24,6 +24,8 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
+import records.importers.ChoicePoint;
+import records.importers.ChoicePoint.Choice;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TypeState;
 import test.gen.GenNumber;
@@ -400,6 +402,38 @@ public class TestUtil
     public static String generateZoneString(SourceOfRandomness r, GenerationStatus gs)
     {
         return generateZone(r, gs).toString();
+    }
+
+    public static class ChoicePick<C extends Choice>
+    {
+        private final Class<C> theClass;
+        private final C choice;
+
+        ChoicePick(Class<C> theClass, C choice)
+        {
+            this.theClass = theClass;
+            this.choice = choice;
+        }
+    }
+
+    public static <R> R pick(ChoicePoint<R> choicePoint, ChoicePick... picks) throws InternalException, UserException
+    {
+        Class<?> choicePointClass = choicePoint._test_getChoiceClass();
+        if (choicePointClass == null)
+        {
+            return choicePoint.get();
+        }
+        else
+        {
+            for (ChoicePick pick : picks)
+            {
+                if (pick.theClass.equals(choicePointClass))
+                {
+                    return TestUtil.<R>pick(choicePoint.select(pick.choice), picks);
+                }
+            }
+            throw new RuntimeException("No suitable choice for class: " + choicePointClass);
+        }
     }
 
     public static class Transformation_Mgr
