@@ -61,13 +61,9 @@ public class TagExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        ArrayList<Object> r = new ArrayList<>();
-        r.add((Integer)index);
-        if (inner != null)
-            r.addAll(inner.getValue(rowIndex, state));
-        return r;
+        return new Pair<Integer, @Nullable Object>(index, inner == null ? null : inner.getValue(rowIndex, state));
     }
 
     @Override

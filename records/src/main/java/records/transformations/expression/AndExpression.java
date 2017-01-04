@@ -58,7 +58,7 @@ public class AndExpression extends NaryOpExpression
     {
         for (Expression expression : expressions)
         {
-            Boolean b = (Boolean) expression.getValue(rowIndex, state).get(0);
+            Boolean b = (Boolean) expression.getValue(rowIndex, state);
             if (b == false)
                 return Collections.singletonList(false);
         }

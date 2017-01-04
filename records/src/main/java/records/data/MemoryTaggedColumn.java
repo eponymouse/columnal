@@ -1,5 +1,6 @@
 package records.data;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
@@ -9,6 +10,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 
 import java.util.List;
 
@@ -21,7 +23,7 @@ public class MemoryTaggedColumn extends Column
     private final TaggedColumnStorage storage;
     private final TypeId typeName;
 
-    public MemoryTaggedColumn(RecordSet rs, ColumnId title, TypeId typeName, List<TagType<DataType>> tags, List<List<Object>> list) throws InternalException, UserException
+    public MemoryTaggedColumn(RecordSet rs, ColumnId title, TypeId typeName, List<TagType<DataType>> tags, List<Pair<Integer, @Nullable Object>> list) throws InternalException
     {
         super(rs);
         this.title = title;
@@ -45,7 +47,7 @@ public class MemoryTaggedColumn extends Column
     }
 
     @Override
-    public Column shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
+    public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
         List<TagType<DataType>> tags = getType().apply(new SpecificDataTypeVisitor<List<TagType<DataType>>>()
         {

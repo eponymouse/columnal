@@ -41,7 +41,7 @@ public class MemoryStringColumn extends Column
     }
 
     @Override
-    public Column shrink(RecordSet rs, int shrunkLength) throws InternalException
+    public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException
     {
         return new MemoryStringColumn(rs, title, storage.getShrunk(shrunkLength));
     }

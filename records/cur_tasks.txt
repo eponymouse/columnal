@@ -20,3 +20,5 @@ Look up Unicode string collations, both for user values (in columns) and things 
 Implement and test complete load/save, including units and types sections
 Intern the strings (i.e. for translation)
 Explicitly test core functions like multiplyNumbers, compareLists
+Finish GUI for import choices
+Allow quoting of columns (and escaping?) in input files

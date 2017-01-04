@@ -1,15 +1,14 @@
 package records.data;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeId;
 import records.error.InternalException;
@@ -22,7 +21,7 @@ import utility.UnitType;
 /**
  * Created by neil on 05/11/2016.
  */
-public class TaggedColumnStorage implements ColumnStorage<List<Object>>
+public class TaggedColumnStorage implements ColumnStorage<Pair<Integer, @Nullable Object>>
 {
     // This stores the tag index as a tag, not a number.
     private final NumericColumnStorage tagStore;
@@ -52,7 +51,7 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
     private final DataTypeValue dataType;
 
     @SuppressWarnings("initialization")
-    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, List<TagType<DT>> copyTagTypes) throws InternalException, UserException
+    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, List<TagType<DT>> copyTagTypes) throws InternalException
     {
         tagStore = new NumericColumnStorage(copyTagTypes.size());
         innerValueIndex = new NumericColumnStorage();
@@ -64,48 +63,9 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
             DataType inner = tagType.getInner();
             if (inner != null)
             {
-                Pair<ColumnStorage<?>, DataTypeValue> result = inner.apply(new DataTypeVisitor<Pair<ColumnStorage<?>, DataTypeValue>>()
-                {
-                    private Pair<ColumnStorage<?>, DataTypeValue> simple(ColumnStorage<?> storage) throws InternalException, UserException
-                    {
-                        return new Pair<>(storage, inner.copy((rowIndex, prog) -> Collections.singletonList(storage.get(innerValueIndex.get(rowIndex).intValue()))));
-                    }
-
-                    @Override
-                    public Pair<ColumnStorage<?>, DataTypeValue> number(NumberInfo displayInfo) throws InternalException, UserException
-                    {
-                        return simple(new NumericColumnStorage(displayInfo));
-                    }
-
-                    @Override
-                    public Pair<ColumnStorage<?>, DataTypeValue> bool() throws InternalException, UserException
-                    {
-                        return simple(new BooleanColumnStorage());
-                    }
-
-                    @Override
-                    public Pair<ColumnStorage<?>, DataTypeValue> text() throws InternalException, UserException
-                    {
-                        return simple(new StringColumnStorage());
-                    }
-
-                    @Override
-                    public Pair<ColumnStorage<?>, DataTypeValue> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
-                    {
-                        return simple(new DateColumnStorage(dateTimeInfo));
-                    }
-
-                    @Override
-                    public Pair<ColumnStorage<?>, DataTypeValue> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
-                    {
-                        TaggedColumnStorage storage = new TaggedColumnStorage(typeName, tags);
-                        // In contrast to simple, we flatten things by returning the inner list
-                        // instead of nesting it in another list:
-                        return new Pair<>(storage, inner.copy((rowIndex, prog) -> storage.get(innerValueIndex.get(rowIndex).intValue())));
-                    }
-                });
-                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), result.getSecond()));
-                valueStores.add(result.getFirst());
+                ColumnStorage<?> result = DataTypeUtility.makeColumnStorage(inner);
+                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), result.getType()));
+                valueStores.add(result);
             }
             else
             {
@@ -131,26 +91,23 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
     }
 
     @Override
-    public List<Object> get(int index) throws InternalException, UserException
+    public Pair<Integer, @Nullable Object> get(int index) throws InternalException, UserException
     {
         if (index < 0 || index >= filled())
             throw new InternalException("Attempting to access invalid element: " + index + " of " + filled());
-        return dataType.getCollapsed(index);
+        return (Pair<Integer, @Nullable Object>) dataType.getCollapsed(index);
     }
 
-    public void addAll(List<List<Object>> values) throws InternalException
+    public void addAll(List<Pair<Integer, @Nullable Object>> values) throws InternalException
     {
-        for (List<Object> v : values)
+        for (Pair<Integer, @Nullable Object> v : values)
             addUnpacked(v);
     }
 
-    protected void addUnpacked(List<Object> values) throws InternalException
+    protected void addUnpacked(Pair<Integer, @Nullable Object> value) throws InternalException
     {
         //Walk the tag structure, adding to store depending on tag:
-        Object tag = values.get(0);
-        if (!(tag instanceof Integer))
-            throw new InternalException("Tag not integer: " + tag.getClass());
-        int tagIndex = (Integer) tag;
+        int tagIndex = value.getFirst();
         tagStore.addTag(tagIndex);
 
         @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();
@@ -159,59 +116,16 @@ public class TaggedColumnStorage implements ColumnStorage<List<Object>>
             innerValueIndex.add(-1);
             return;
         }
-        inner.apply(new DataType.DataTypeVisitorEx<UnitType, InternalException>()
-        {
-            @Override
-            public UnitType number(NumberInfo displayInfo) throws InternalException
-            {
-                return storeSimple();
-            }
-
-            @SuppressWarnings("unchecked")
-            private UnitType storeSimple() throws InternalException
-            {
-                ColumnStorage storage = valueStores.get(tagIndex);
-                if (storage == null)
-                    throw new InternalException("Value but no store for tag " + tagIndex);
-                innerValueIndex.add(storage.filled());
-                storage.add(values.get(1));
-                return UnitType.UNIT;
-            }
-
-            @Override
-            public UnitType text() throws InternalException
-            {
-                return storeSimple();
-            }
-
-            @Override
-            public UnitType date(DateTimeInfo dateTimeInfo) throws InternalException
-            {
-                return storeSimple();
-            }
-
-            @Override
-            public UnitType bool() throws InternalException
-            {
-                return storeSimple();
-            }
-
-            @Override
-            public UnitType tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException
-            {
-                ColumnStorage storage = valueStores.get(tagIndex);
-                if (storage == null)
-                    throw new InternalException("Value but no store for tag " + tagIndex);
-                innerValueIndex.add(storage.filled());
-                storage.add(values.subList(1, values.size()));
-                return UnitType.UNIT;
-            }
-        });
+        ColumnStorage storage = valueStores.get(tagIndex);
+        if (storage == null)
+            throw new InternalException("Value but no store for tag " + tagIndex);
+        innerValueIndex.add(storage.filled());
+        storage.add(value.getSecond());
     }
 
-    public List<List<Object>> getShrunk(int shrunkLength) throws UserException, InternalException
+    public List<Pair<Integer, @Nullable Object>> getShrunk(int shrunkLength) throws UserException, InternalException
     {
-        List<List<Object>> s = new ArrayList<>();
+        List<Pair<Integer, @Nullable Object>> s = new ArrayList<>();
         for (int i = 0; i < shrunkLength; i++)
         {
             s.add(get(i));

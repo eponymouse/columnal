@@ -1,5 +1,6 @@
 package records.data;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
@@ -8,6 +9,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 
 import java.util.List;
 
@@ -19,7 +21,7 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
     private final TaggedColumnStorage storage;
 
     @SuppressWarnings("initialization")
-    public <DT extends DataType> CalculatedTaggedColumn(RecordSet recordSet, ColumnId name, TypeId typeName, List<TagType<DT>> copyTagTypes) throws InternalException, UserException
+    public <DT extends DataType> CalculatedTaggedColumn(RecordSet recordSet, ColumnId name, TypeId typeName, List<TagType<DT>> copyTagTypes) throws InternalException
     {
         super(recordSet, name);
         
@@ -39,14 +41,14 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
         return storage.filled();
     }
 
-    public void addAllUnpacked(List<List<Object>> values) throws UserException, InternalException
+    public void addAllUnpacked(List<Object> values) throws UserException, InternalException
     {
-        for (List<Object> v : values)
+        for (Object v : values)
             addUnpacked(v);
     }
 
-    protected void addUnpacked(List<Object> values) throws UserException, InternalException
+    protected void addUnpacked(Object value) throws UserException, InternalException
     {
-        storage.addUnpacked(values);
+        storage.addUnpacked((Pair<Integer, @Nullable Object>)value);
     }
 }

@@ -197,7 +197,7 @@ public class Sort extends Transformation
         for (int dest = destStart; dest <= target; dest++)
         {
             int lowestIndex = 0;
-            @Nullable List<List<Object>> lowest = null;
+            @Nullable List<Object> lowest = null;
             int pointerToLowestIndex = -1;
             int prevSrc = 0;
             if (stillToOrder == null)
@@ -205,7 +205,7 @@ public class Sort extends Transformation
             for (int src = stillToOrder[prevSrc]; src != -1; src = stillToOrder[src])
             {
                 // src is in stillToOrder terms, which is one more than original indexes
-                List<List<Object>> cur = getItem(src - 1);
+                List<Object> cur = getItem(src - 1);
                 if (lowest == null || Utility.compareLists(cur, lowest) < 0)
                 {
                     lowest = cur;
@@ -235,11 +235,11 @@ public class Sort extends Transformation
     }
 
     @Pure
-    private List<List<Object>> getItem(int srcIndex) throws UserException, InternalException
+    private List<Object> getItem(int srcIndex) throws UserException, InternalException
     {
         if (sortBy == null)
             throw new UserException(sortByError);
-        List<List<Object>> r = new ArrayList<>();
+        List<Object> r = new ArrayList<>();
         for (Column c : sortBy)
             r.add(c.getType().getCollapsed(srcIndex));
         return r;

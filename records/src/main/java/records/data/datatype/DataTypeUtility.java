@@ -1,13 +1,22 @@
 package records.data.datatype;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.BooleanColumnStorage;
+import records.data.ColumnStorage;
+import records.data.DateColumnStorage;
+import records.data.NestedColumnStorage;
+import records.data.NumericColumnStorage;
+import records.data.StringColumnStorage;
+import records.data.TaggedColumnStorage;
 import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayValue;
+import utility.Pair;
 import utility.Utility;
 
 import java.time.LocalDate;
@@ -152,6 +161,54 @@ public class DataTypeUtility
                 {
                     return new DisplayValue(tagType.getName() + (inner == null ? "" : (" " + inner.apply(this))));
                 }
+            }
+        });
+    }
+
+    public static ColumnStorage<?> makeColumnStorage(final DataType inner) throws InternalException
+    {
+        return inner.apply(new DataTypeVisitorEx<ColumnStorage<?>, InternalException>()
+        {
+            @Override
+            public ColumnStorage<?> number(NumberInfo displayInfo) throws InternalException
+            {
+                return new NumericColumnStorage(displayInfo);
+            }
+
+            @Override
+            public ColumnStorage<?> bool() throws InternalException
+            {
+                return new BooleanColumnStorage();
+            }
+
+            @Override
+            public ColumnStorage<?> text() throws InternalException
+            {
+                return new StringColumnStorage();
+            }
+
+            @Override
+            public ColumnStorage<?> date(DateTimeInfo dateTimeInfo) throws InternalException
+            {
+                return new DateColumnStorage(dateTimeInfo);
+            }
+
+            @Override
+            public ColumnStorage<?> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException
+            {
+                return new TaggedColumnStorage(typeName, tags);
+            }
+
+            @Override
+            public ColumnStorage<?> tuple(List<DataType> innerTypes) throws InternalException
+            {
+                return new NestedColumnStorage(innerTypes);
+            }
+
+            @Override
+            public ColumnStorage<?> array(DataType inner) throws InternalException
+            {
+                return new NestedColumnStorage(inner);
             }
         });
     }

@@ -38,6 +38,12 @@ public class OutputBuilder
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private @Nullable ArrayList<String> curLine = null;
 
+    @OnThread(Tag.Any)
+    public OutputBuilder()
+    {
+
+    }
+
     // Gets the current line, making a new one if needed
     @OnThread(Tag.Any)
     private synchronized ArrayList<String> cur()
@@ -166,43 +172,75 @@ public class OutputBuilder
     @OnThread(Tag.Simulation)
     public synchronized void data(DataTypeValue type, int index) throws UserException, InternalException
     {
-            cur().add(type.applyGet(new DataTypeVisitorGet<String>()
+        cur().add(type.applyGet(new DataTypeVisitorGet<String>()
+        {
+            @Override
+            public String number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
-                @Override
-                public String number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
-                {
-                    return g.get(index).toString();
-                }
+                return g.get(index).toString();
+            }
 
-                @Override
-                public String text(GetValue<String> g) throws InternalException, UserException
-                {
-                    return quoted(g.get(index));
-                }
+            @Override
+            public String text(GetValue<String> g) throws InternalException, UserException
+            {
+                return quoted(g.get(index));
+            }
 
-                @Override
-                public String tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
-                {
-                    TagType<DataTypeValue> t = tagTypes.get(g.get(index));
-                    @Nullable DataTypeValue inner = t.getInner();
-                    if (inner == null)
-                        return "\\" + quotedIfNecessary(t.getName());
-                    else
-                        return "\\" + quotedIfNecessary(t.getName()) + ":" + inner.applyGet(this);
-                }
+            @Override
+            public String tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            {
+                TagType<DataTypeValue> t = tagTypes.get(g.get(index));
+                @Nullable DataTypeValue inner = t.getInner();
+                if (inner == null)
+                    return "\\" + quotedIfNecessary(t.getName());
+                else
+                    return "\\" + quotedIfNecessary(t.getName()) + ":" + inner.applyGet(this);
+            }
 
-                @Override
-                public String bool(GetValue<Boolean> g) throws InternalException, UserException
-                {
-                    return g.get(index).toString();
-                }
+            @Override
+            public String bool(GetValue<Boolean> g) throws InternalException, UserException
+            {
+                return g.get(index).toString();
+            }
 
-                @Override
-                public String date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+            @Override
+            public String date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+            {
+                return quoted(g.get(index).toString());
+            }
+
+            @Override
+            public String tuple(List<DataTypeValue> types) throws InternalException, UserException
+            {
+                OutputBuilder b = new OutputBuilder();
+                b.raw("(");
+                boolean first = true;
+                for (DataTypeValue dataTypeValue : types)
                 {
-                    return quoted(g.get(index).toString());
+                    if (!first)
+                        b.raw(",");
+                    first = false;
+                    b.data(dataTypeValue, index);
                 }
-            }));
+                b.raw(")");
+                return b.toString();
+            }
+
+            @Override
+            public String array(int size, DataTypeValue type) throws InternalException, UserException
+            {
+                OutputBuilder b = new OutputBuilder();
+                b.raw("[");
+                for (int i = 0; i < size; i++)
+                {
+                    if (i > 0)
+                        b.raw(",");
+                    b.data(type, i);
+                }
+                b.raw("]");
+                return b.toString();
+            }
+        }));
     }
 
     // Don't forget, this will get an extra space added to it as spacing

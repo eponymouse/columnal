@@ -126,7 +126,7 @@ public abstract class Column
     }
 
     // For testing: return copy of column with length trimmed to shrunkLength
-    public Column shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
+    public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
         throw new RuntimeException("Unshrinkable!");
     }

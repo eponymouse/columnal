@@ -48,7 +48,7 @@ public class MemoryNumericColumn extends Column
     }
 
     @Override
-    public Column shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
+    public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
         return new MemoryNumericColumn(rs, title, storage.getDisplayInfo(), storage.getShrunk(shrunkLength).stream());
     }

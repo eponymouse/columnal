@@ -72,7 +72,7 @@ public class DivideExpression extends BinaryOpExpression
     @OnThread(Tag.Simulation)
     public List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        return Collections.singletonList(Utility.divideNumbers((Number)lhs.getValue(rowIndex, state).get(0), (Number)rhs.getValue(rowIndex, state).get(0)));
+        return Collections.singletonList(Utility.divideNumbers((Number)lhs.getValue(rowIndex, state), (Number)rhs.getValue(rowIndex, state)));
     }
 
     @Override

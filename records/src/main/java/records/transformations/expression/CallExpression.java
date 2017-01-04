@@ -79,12 +79,12 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         if (instance == null)
             throw new InternalException("Calling function which didn't typecheck");
 
-        List<List<Object>> actuals = new ArrayList<>();
+        List<Object> actuals = new ArrayList<>();
         for (Expression param : params)
         {
             actuals.add(param.getValue(rowIndex, state));

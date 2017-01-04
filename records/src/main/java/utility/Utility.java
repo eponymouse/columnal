@@ -88,6 +88,14 @@ public class Utility
         return r;
     }
 
+    public static <T, R> List<@NonNull R> mapListEx(List<@NonNull T> list, ExFunction<@NonNull T, @NonNull R> func) throws InternalException, UserException
+    {
+        ArrayList<@NonNull R> r = new ArrayList<>(list.size());
+        for (T t : list)
+            r.add(func.apply(t));
+        return r;
+    }
+
     public static <T, R> @NonNull R @NonNull [] mapArray(Class<R> cls, @NonNull T @NonNull [] src, Function<@NonNull T, @NonNull R> func)
     {
         @SuppressWarnings("unchecked")
@@ -188,15 +196,7 @@ public class Utility
                 return 1; // A was larger
             Object ax = a.get(i);
             Object bx = b.get(i);
-            int cmp;
-            if (ax instanceof Number)
-                cmp = compareNumbers(ax, bx, epsilon);
-            else if (ax instanceof List)
-                cmp = compareLists((List<@NonNull ?>)ax, (List<@NonNull ?>)bx, epsilon);
-            else if (ax instanceof Comparable)
-                cmp = ((Comparable<Object>)ax).compareTo(bx);
-            else
-                throw new InternalException("Uncomparable types: " + a.getClass() + " " + b.getClass());
+            int cmp = compareValues(ax, bx, epsilon);
             if (cmp != 0)
                 return cmp;
 
@@ -205,6 +205,25 @@ public class Utility
             return 0; // Same
         else
             return -1; // B must have been longer
+    }
+
+    public static int compareValues(Object ax, Object bx) throws InternalException
+    {
+        return compareValues(ax, bx, null);
+    }
+
+    private static int compareValues(Object ax, Object bx, @Nullable BigDecimal epsilon) throws InternalException
+    {
+        int cmp;
+        if (ax instanceof Number)
+            cmp = compareNumbers(ax, bx, epsilon);
+        else if (ax instanceof List)
+            cmp = compareLists((List<@NonNull ?>)ax, (List<@NonNull ?>)bx, epsilon);
+        else if (ax instanceof Comparable)
+            cmp = ((Comparable<Object>)ax).compareTo(bx);
+        else
+            throw new InternalException("Uncomparable types: " + ax.getClass() + " " + bx.getClass());
+        return cmp;
     }
 
     // Gets the fractional part as a String

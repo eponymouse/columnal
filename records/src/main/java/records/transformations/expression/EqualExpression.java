@@ -51,11 +51,11 @@ public class EqualExpression extends BinaryOpExpression
     }
 
     @Override
-    public List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        List<Object> lhsVal = lhs.getValue(rowIndex, state);
-        List<Object> rhsVal = rhs.getValue(rowIndex, state);
-        return Collections.singletonList(0 == Utility.compareLists(lhsVal, rhsVal));
+        Object lhsVal = lhs.getValue(rowIndex, state);
+        Object rhsVal = rhs.getValue(rowIndex, state);
+        return 0 == Utility.compareValues(lhsVal, rhsVal);
     }
 
     @Override

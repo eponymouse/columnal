@@ -1,27 +1,26 @@
 package records.data;
 
+import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
-import java.time.temporal.Temporal;
 import java.util.List;
 
 /**
- * Created by neil on 30/11/2016.
+ * Created by neil on 31/10/2016.
  */
-public class MemoryBooleanColumn extends Column
+public class MemoryTupleColumn extends Column
 {
     private final ColumnId title;
-    private final BooleanColumnStorage storage;
+    private final NestedColumnStorage storage;
 
-    public MemoryBooleanColumn(RecordSet rs, ColumnId title, List<Boolean> list) throws InternalException
+    public MemoryTupleColumn(RecordSet recordSet, ColumnId title, List<DataType> dataTypes) throws InternalException
     {
-        super(rs);
+        super(recordSet);
         this.title = title;
-        this.storage = new BooleanColumnStorage();
-        this.storage.addAll(list);
+        this.storage = new NestedColumnStorage(dataTypes);
     }
 
     @Override
@@ -41,6 +40,6 @@ public class MemoryBooleanColumn extends Column
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException
     {
-        return new MemoryBooleanColumn(rs, title, storage.getShrunk(shrunkLength));
+        return new MemoryTupleColumn(rs, title, storage.getShrunk(shrunkLength));
     }
 }

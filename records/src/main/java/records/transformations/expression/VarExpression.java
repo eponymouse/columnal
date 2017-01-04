@@ -54,7 +54,7 @@ public class VarExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         return state.get(varName);
     }

@@ -224,6 +224,22 @@ public class TypeManager
                     }
                     return UnitType.UNIT;
                 }
+
+                @Override
+                public UnitType tuple(List<DataType> inner) throws InternalException, UserException
+                {
+                    for (DataType type : inner)
+                    {
+                        type.apply(this);
+                    }
+                    return UnitType.UNIT;
+                }
+
+                @Override
+                public UnitType array(DataType inner) throws InternalException, UserException
+                {
+                    return inner.apply(this);
+                }
             });
         }
 

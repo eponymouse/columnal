@@ -74,7 +74,7 @@ public class MatchExpression extends Expression
 
         //Returns null if no match
         @OnThread(Tag.Simulation)
-        public @Nullable EvaluateState matches(List<Object> value, EvaluateState state, int rowIndex) throws UserException, InternalException
+        public @Nullable EvaluateState matches(Object value, EvaluateState state, int rowIndex) throws UserException, InternalException
         {
             for (Pattern p : patterns)
             {
@@ -163,12 +163,11 @@ public class MatchExpression extends Expression
         }
 
         @Override
-        public @Nullable EvaluateState match(int rowIndex, List<Object> value, int next, EvaluateState state) throws InternalException, UserException
+        public @Nullable EvaluateState match(int rowIndex, Object val, EvaluateState state) throws InternalException, UserException
         {
-            Object val = value.get(next);
-            if (val instanceof Integer)
-                return ((Integer)val) == tagIndex ? (subPattern == null ? state : subPattern.match(rowIndex, value, next + 1, state)) : null;
-            throw new InternalException("Unexpected type; should be integer for tag index but was " + value.get(next).getClass());
+            if (val instanceof Pair && ((Pair)val).getFirst() instanceof Integer)
+                return ((Integer)((Pair<Integer, @Nullable Object>)val).getFirst()) == tagIndex ? (subPattern == null ? state : subPattern.match(rowIndex, ((Pair)val).getSecond(), state)) : null;
+            throw new InternalException("Unexpected type; should be integer for tag index but was " + val.getClass());
         }
 
         @Override
@@ -224,10 +223,10 @@ public class MatchExpression extends Expression
 
         @Override
         @OnThread(Tag.Simulation)
-        public @Nullable EvaluateState match(int rowIndex, List<Object> value, int next, EvaluateState state) throws InternalException, UserException
+        public @Nullable EvaluateState match(int rowIndex, Object value, EvaluateState state) throws InternalException, UserException
         {
-            List<Object> expected = expression.getValue(rowIndex, state);
-            if (Utility.compareLists(expected, value.subList(next, value.size())) == 0)
+            Object expected = expression.getValue(rowIndex, state);
+            if (Utility.compareValues(expected, value) == 0)
                 return state;
             else
                 return null;
@@ -275,9 +274,9 @@ public class MatchExpression extends Expression
         }
 
         @Override
-        public EvaluateState match(int rowIndex, List<Object> value, int next, EvaluateState state) throws InternalException
+        public EvaluateState match(int rowIndex, Object value, EvaluateState state) throws InternalException
         {
-            return state.add(varName, value.subList(next, value.size()));
+            return state.add(varName, value);
         }
 
         @Override
@@ -310,7 +309,7 @@ public class MatchExpression extends Expression
         @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException;
 
         @OnThread(Tag.Simulation)
-        @Nullable EvaluateState match(int rowIndex, List<Object> value, int next, EvaluateState state) throws InternalException, UserException;
+        @Nullable EvaluateState match(int rowIndex, Object value, EvaluateState state) throws InternalException, UserException;
 
         String save();
     }
@@ -343,9 +342,9 @@ public class MatchExpression extends Expression
         }
 
         @OnThread(Tag.Simulation)
-        public @Nullable EvaluateState match(List<Object> value, int rowIndex, EvaluateState state) throws InternalException, UserException
+        public @Nullable EvaluateState match(Object value, int rowIndex, EvaluateState state) throws InternalException, UserException
         {
-            @Nullable EvaluateState newState = pattern.match(rowIndex, value, 0, state);
+            @Nullable EvaluateState newState = pattern.match(rowIndex, value, state);
             if (newState == null)
                 return null;
             for (Expression guard : guards)
@@ -409,10 +408,10 @@ public class MatchExpression extends Expression
     }
 
     @Override
-    public List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         // It's type checked so can just copy first clause:
-        List<Object> value = expression.getValue(rowIndex, state);
+        Object value = expression.getValue(rowIndex, state);
         for (MatchClause clause : clauses)
         {
             EvaluateState newState = clause.matches(value, state, rowIndex);

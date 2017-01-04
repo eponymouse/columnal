@@ -55,7 +55,7 @@ public class ColumnReference extends Expression
     }
 
     @Override
-    public List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         if (column == null)
             throw new InternalException("Attempting to fetch value despite type check failure");
@@ -104,6 +104,18 @@ public class ColumnReference extends Expression
             public Formula tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 throw new UserException("Can't do tags...");
+            }
+
+            @Override
+            public Formula tuple(List<DataType> inner) throws InternalException, UserException
+            {
+                throw new UserException("Can't do tuples...");
+            }
+
+            @Override
+            public Formula array(DataType inner) throws InternalException, UserException
+            {
+                throw new UserException("Can't do arrays...");
             }
 
             @Override

@@ -73,7 +73,7 @@ public abstract class Expression
     @OnThread(Tag.Simulation)
     public boolean getBoolean(int rowIndex, EvaluateState state, @Nullable ProgressListener prog) throws UserException, InternalException
     {
-        Object val = getValue(rowIndex, state).get(0);
+        Object val = getValue(rowIndex, state);
         if (val instanceof Boolean)
             return (Boolean) val;
         else
@@ -85,7 +85,7 @@ public abstract class Expression
     public abstract @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException;
 
     @OnThread(Tag.Simulation)
-    public abstract List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException;
+    public abstract Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException;
 
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnId> allColumnNames();

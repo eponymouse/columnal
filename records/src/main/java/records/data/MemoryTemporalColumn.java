@@ -43,7 +43,7 @@ public class MemoryTemporalColumn extends Column
     }
 
     @Override
-    public Column shrink(RecordSet rs, int shrunkLength) throws InternalException
+    public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException
     {
         return new MemoryTemporalColumn(rs, title, getType().getDateTimeInfo(), storage.getShrunk(shrunkLength));
     }

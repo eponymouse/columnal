@@ -9,6 +9,7 @@ import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
 import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
+import records.data.MemoryTupleColumn;
 import records.data.RecordSet;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeValue.GetValue;
@@ -68,32 +69,48 @@ import java.util.stream.Collectors;
 public class DataType
 {
     // Flattened ADT.  kind is the head tag, other bits are null/non-null depending:
-    public static enum Kind {NUMBER, TEXT, DATETIME, BOOLEAN, TAGGED }
+    public static enum Kind {NUMBER, TEXT, DATETIME, BOOLEAN, TAGGED, TUPLE, ARRAY }
     final Kind kind;
-    final @Nullable TypeId taggedTypeName;
+    // For NUMBER:
     final @Nullable NumberInfo numberInfo;
+    // for DATETIME:
     final @Nullable DateTimeInfo dateTimeInfo;
+    // For TAGGED:
+    final @Nullable TypeId taggedTypeName;
     final @Nullable List<TagType<DataType>> tagTypes;
+    // For TUPLE (2+) and ARRAY (1):
+    final @Nullable List<DataType> memberType;
 
     // package-visible
-    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataType>>> tagInfo)
+    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataType>>> tagInfo, @Nullable List<DataType> memberType)
     {
         this.kind = kind;
         this.numberInfo = numberInfo;
         this.dateTimeInfo = dateTimeInfo;
         this.taggedTypeName = tagInfo == null ? null : tagInfo.getFirst();
         this.tagTypes = tagInfo == null ? null : tagInfo.getSecond();
+        this.memberType = memberType;
     }
 
     public static final DataType NUMBER = DataType.number(NumberInfo.DEFAULT);
     public static final DataType INTEGER = NUMBER;
-    public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null, null);
-    public static final DataType TEXT = new DataType(Kind.TEXT, null, null, null);
+    public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null, null, null);
+    public static final DataType TEXT = new DataType(Kind.TEXT, null, null, null, null);
     public static final DataType DATE = DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY));
+
+    public static DataType array(DataType inner)
+    {
+        return new DataType(Kind.ARRAY, null, null, null, Collections.singletonList(inner));
+    }
+
+    public static DataType tuple(List<DataType> inner)
+    {
+        return new DataType(Kind.TUPLE, null, null, null, new ArrayList<>(inner));
+    }
 
     public static DataType date(DateTimeInfo dateTimeInfo)
     {
-        return new DataType(Kind.DATETIME, null, dateTimeInfo, null);
+        return new DataType(Kind.DATETIME, null, dateTimeInfo, null, null);
     }
 
     public static class NumberInfo
@@ -161,9 +178,8 @@ public class DataType
         R bool() throws InternalException, E;
 
         R tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, E;
-        //R tuple() throws InternalException, E;
-
-        //R array() throws InternalException, E;
+        R tuple(List<DataType> inner) throws InternalException, E;
+        R array(DataType inner) throws InternalException, E;
     }
 
     public static interface DataTypeVisitor<R> extends DataTypeVisitorEx<R, UserException>
@@ -202,6 +218,18 @@ public class DataType
         {
             throw new InternalException("Unexpected date type");
         }
+
+        @Override
+        public R tuple(List<DataType> inner) throws InternalException, UserException
+        {
+            throw new InternalException("Unexpected tuple type");
+        }
+
+        @Override
+        public R array(DataType inner) throws InternalException, UserException
+        {
+            throw new InternalException("Unexpected array type");
+        }
     }
 
     @SuppressWarnings("nullness")
@@ -220,6 +248,10 @@ public class DataType
                 return visitor.bool();
             case TAGGED:
                 return visitor.tagged(taggedTypeName, tagTypes);
+            case ARRAY:
+                return visitor.array(memberType.get(0));
+            case TUPLE:
+                return visitor.tuple(memberType);
             default:
                 throw new InternalException("Missing kind case");
         }
@@ -310,6 +342,28 @@ public class DataType
             }
 
             @Override
+            public String tuple(List<DataType> inner) throws InternalException, UserException
+            {
+                StringBuilder s = new StringBuilder("(");
+                boolean first = true;
+                for (DataType t : inner)
+                {
+                    s.append(t.apply(this));
+                    if (!first)
+                        s.append(", ");
+                    first = false;
+                }
+                s.append(")");
+                return s.toString();
+            }
+
+            @Override
+            public String array(DataType inner) throws InternalException, UserException
+            {
+                return "[" + inner.apply(this) + "]";
+            }
+
+            @Override
             public String date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 switch (dateTimeInfo.type)
@@ -354,13 +408,13 @@ public class DataType
     // package-visible
     static DataType tagged(TypeId name, List<TagType<DataType>> tagTypes)
     {
-        return new DataType(Kind.TAGGED, null, null, new Pair<>(name, tagTypes));
+        return new DataType(Kind.TAGGED, null, null, new Pair<>(name, tagTypes), null);
     }
 
 
     public static DataType number(NumberInfo numberInfo)
     {
-        return new DataType(Kind.NUMBER, numberInfo, null, null);
+        return new DataType(Kind.NUMBER, numberInfo, null, null, null);
     }
 
     public static boolean canFitInOneNumeric(List<? extends TagType> tags) throws InternalException, UserException
@@ -406,13 +460,13 @@ public class DataType
 
 
     @OnThread(Tag.Any)
-    public DataTypeValue copy(GetValue<List<Object>> get) throws UserException, InternalException
+    public DataTypeValue copy(GetValue<List<Object>> get) throws InternalException
     {
         return copy(get, 0);
     }
 
     @OnThread(Tag.Any)
-    private DataTypeValue copy(GetValue<List<Object>> get, int curIndex) throws UserException, InternalException
+    private DataTypeValue copy(GetValue<List<Object>> get, int curIndex) throws InternalException
     {
         @Nullable Pair<TypeId, List<TagType<DataTypeValue>>> newTagTypes = null;
         if (this.taggedTypeName != null && this.tagTypes != null)
@@ -421,12 +475,23 @@ public class DataType
             for (TagType tagType : this.tagTypes)
                 newTagTypes.getSecond().add(new TagType<>(tagType.getName(), tagType.getInner() == null ? null : tagType.getInner().copy(get, curIndex + 1)));
         }
+        List<DataType> memberTypes = null;
+        if (this.memberType != null)
+        {
+            memberTypes = new ArrayList<>();
+            for (int tupleMember = 0; tupleMember < this.memberType.size(); tupleMember++)
+            {
+                int tupleMemberFinal = tupleMember;
+                DataType dataType = this.memberType.get(tupleMember);
+                memberTypes.add(dataType.copy((i, prog) -> (List<Object>)get.getWithProgress(i, prog).get(tupleMemberFinal)));
+            }
+        }
         return new DataTypeValue(kind, numberInfo, dateTimeInfo, newTagTypes,
-            (i, prog) -> (Number)get.getWithProgress(i, prog).get(curIndex),
+            memberTypes, (i, prog) -> (Number)get.getWithProgress(i, prog).get(curIndex),
             (i, prog) -> (String)get.getWithProgress(i, prog).get(curIndex),
             (i, prog) -> (Temporal) get.getWithProgress(i, prog).get(curIndex),
             (i, prog) -> (Boolean) get.getWithProgress(i, prog).get(curIndex),
-            (i, prog) -> (Integer) get.getWithProgress(i, prog).get(curIndex));
+            (i, prog) -> (Integer) get.getWithProgress(i, prog).get(curIndex), null);
     }
 
     public boolean isTagged()
@@ -630,7 +695,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public Column tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
-                List<List<Object>> values = new ArrayList<>(allData.size());
+                List<Pair<Integer, @Nullable Object>> values = new ArrayList<>(allData.size());
                 for (List<ItemContext> row : allData)
                 {
                     TaggedContext b = row.get(columnIndex).tagged();
@@ -640,10 +705,24 @@ public class DataType
                 }
                 return new MemoryTaggedColumn(rs, columnId, typeName, tags, values);
             }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Column tuple(List<DataType> inner) throws InternalException, UserException
+            {
+                return new MemoryTupleColumn(rs, columnId, inner);
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Column array(DataType inner) throws InternalException, UserException
+            {
+                return null;
+            }
         });
     }
 
-    private static List<Object> loadValue(List<TagType<DataType>> tags, TaggedContext taggedContext) throws UserException, InternalException
+    private static Pair<Integer, @Nullable Object> loadValue(List<TagType<DataType>> tags, TaggedContext taggedContext) throws UserException, InternalException
     {
         String constructor = taggedContext.tag().getText();
         for (int i = 0; i < tags.size(); i++)
@@ -651,42 +730,40 @@ public class DataType
             TagType<DataType> tag = tags.get(i);
             if (tag.getName().equals(constructor))
             {
-                List<Object> r = new ArrayList<>();
-                r.add((Integer)i);
                 ItemContext item = taggedContext.item();
                 if (tag.getInner() != null)
                 {
                     if (item == null)
                         throw new UserException("Expected inner type but found no inner value: \"" + taggedContext.getText() + "\"");
-                    r.addAll(tag.getInner().apply(new DataTypeVisitor<List<Object>>()
+                    return new Pair<>(i, tag.getInner().apply(new DataTypeVisitor<Object>()
                     {
                         @Override
-                        public List<Object> number(NumberInfo displayInfo) throws InternalException, UserException
+                        public Object number(NumberInfo displayInfo) throws InternalException, UserException
                         {
                             DataParser.NumberContext number = item.number();
                             if (number == null)
                                 throw new UserException("Expected number, found: " + item.getText() + item.getStart());
-                            return Collections.singletonList(Utility.parseNumber(number.getText()));
+                            return Utility.parseNumber(number.getText());
                         }
 
                         @Override
-                        public List<Object> text() throws InternalException, UserException
+                        public Object text() throws InternalException, UserException
                         {
                             StringContext string = item.string();
                             if (string == null)
                                 throw new UserException("Expected string, found: " + item.getText() + item.getStart());
-                            return Collections.singletonList(string.getText());
+                            return string.getText();
                         }
 
                         @Override
-                        public List<Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+                        public Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                         {
                             StringContext string = item.string();
                             if (string == null)
                                 throw new UserException("Expected quoted date, found: " + item.getText() + item.getStart());
                             try
                             {
-                                return Collections.singletonList(LocalDate.parse(string.getText()));
+                                return LocalDate.parse(string.getText());
                             }
                             catch (DateTimeParseException e)
                             {
@@ -695,16 +772,16 @@ public class DataType
                         }
 
                         @Override
-                        public List<Object> bool() throws InternalException, UserException
+                        public Object bool() throws InternalException, UserException
                         {
                             BoolContext bool = item.bool();
                             if (bool == null)
                                 throw new UserException("Expected bool, found: " + item.getText() + item.getStart());
-                            return Collections.singletonList(bool.getText().equals("true"));
+                            return bool.getText().equals("true");
                         }
 
                         @Override
-                        public List<Object> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+                        public Object tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
                         {
                             return loadValue(tags, item.tagged());
                         }
@@ -713,7 +790,7 @@ public class DataType
                 else if (item != null)
                     throw new UserException("Expected no inner type but found inner value: \"" + taggedContext.getText() + "\"");
 
-                return r;
+                return new Pair<>(i, null);
             }
         }
         throw new UserException("Could not find matching tag for: \"" + taggedContext.tag().getText() + "\" in: " + tags.stream().map(t -> t.getName()).collect(Collectors.joining(", ")));

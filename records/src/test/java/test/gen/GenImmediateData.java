@@ -15,7 +15,6 @@ import test.DummyManager;
 import test.gen.GenImmediateData.ImmediateData_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -85,7 +84,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
             List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
             for (Column column : larger.data.getData().getColumns())
             {
-                columns.add(rs -> column.shrink(rs, shrunkLength));
+                columns.add(rs -> column._test_shrink(rs, shrunkLength));
             }
             //Could also remove arbitrary column(s)
             return Collections.singletonList(new ImmediateData_Mgr(mgr, new ImmediateDataSource(mgr, new KnownLengthRecordSet(larger.data.getData().getTitle(), columns, shrunkLength))));
