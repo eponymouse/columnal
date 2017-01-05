@@ -27,6 +27,8 @@ QUOTED_CONSTRUCTOR : ('\\' '"' ( ESCAPED_QUOTE | ESCAPED_R | ESCAPED_N | ESCAPED
 UNQUOTED_CONSTRUCTOR : ('\\' ~[ \t\r\n:"]+) { setText(getText().substring(1)); };
 OPEN_BRACKET : '(';
 CLOSE_BRACKET : ')';
+OPEN_SQUARE : '[';
+CLOSE_SQUARE : ']';
 
 COLUMN : 'COLUMN';
 

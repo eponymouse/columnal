@@ -16,11 +16,11 @@ import records.error.UserException;
 import records.grammar.MainLexer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.FXPlatformSupplier;
 import utility.Utility;
 
 import java.nio.file.Path;
-import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
@@ -160,6 +160,7 @@ public class OutputBuilder
     }
 
     @Override
+    @OnThread(Tag.Any)
     public synchronized String toString()
     {
         String finished = lines.stream().map(line -> line.stream().collect(Collectors.joining(" ")) + "\n").collect(Collectors.joining());
@@ -227,11 +228,12 @@ public class OutputBuilder
             }
 
             @Override
-            public String array(int size, DataTypeValue type) throws InternalException, UserException
+            public String array(ExFunction<Integer, Integer> size, DataTypeValue type) throws InternalException, UserException
             {
                 OutputBuilder b = new OutputBuilder();
                 b.raw("[");
-                for (int i = 0; i < size; i++)
+                Integer theSize = size.apply(index);
+                for (int i = 0; i < theSize; i++)
                 {
                     if (i > 0)
                         b.raw(",");

@@ -20,11 +20,13 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
+import utility.Utility;
 import utility.Workers;
 import utility.Workers.Worker;
 
-import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -131,7 +133,7 @@ public class DisplayCache
 
     private class ValueLoader implements Worker
     {
-        private final int index;
+        private final int originalIndex;
         private final SimpleObjectProperty<DisplayValue> v;
         @OnThread(value = Tag.Any, requireSynchronized = true)
         private long originalFinished;
@@ -141,7 +143,7 @@ public class DisplayCache
         @OnThread(Tag.FXPlatform)
         public ValueLoader(int index, SimpleObjectProperty<DisplayValue> v)
         {
-            this.index = index;
+            this.originalIndex = index;
             this.v = v;
         }
 
@@ -152,54 +154,7 @@ public class DisplayCache
                 ProgressListener prog = d -> {
                     Platform.runLater(() -> v.setValue(new DisplayValue(GETTING, d)));
                 };
-                DisplayValue val = column.getType().applyGet(new DataTypeVisitorGet<DisplayValue>()
-                {
-                    @Override
-                    @OnThread(Tag.Simulation)
-                    public DisplayValue number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
-                    {
-                        return new DisplayValue(g.getWithProgress(index, prog), displayInfo.getUnit(), displayInfo.getMinimumDP());
-                    }
-
-                    @Override
-                    @OnThread(Tag.Simulation)
-                    public DisplayValue text(GetValue<String> g) throws InternalException, UserException
-                    {
-                        return new DisplayValue(g.getWithProgress(index, prog));
-                    }
-
-                    @Override
-                    @OnThread(Tag.Simulation)
-                    public DisplayValue tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
-                    {
-                        int tag = g.getWithProgress(index, prog);
-                        TagType<DataTypeValue> tagType = tagTypes.get(tag);
-                        @Nullable DataTypeValue inner = tagType.getInner();
-                        if (DataType.canFitInOneNumeric(tagTypes))
-                        {
-                            if (inner == null)
-                                return new DisplayValue(tagType.getName());
-                            else
-                                return inner.applyGet(this);
-                        }
-                        else
-                        {
-                            return new DisplayValue(tagType.getName() + (inner == null ? "" : (" " + inner.applyGet(this))));
-                        }
-                    }
-
-                    @Override
-                    public DisplayValue bool(GetValue<Boolean> g) throws InternalException, UserException
-                    {
-                        return new DisplayValue(g.getWithProgress(index, prog));
-                    }
-
-                    @Override
-                    public DisplayValue date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
-                    {
-                        return new DisplayValue(g.getWithProgress(index, prog));
-                    }
-                });
+                DisplayValue val = getDisplayValue(column.getType(), originalIndex, prog);
                 Platform.runLater(() -> v.setValue(val));
             }
             catch (UserException | InternalException e)
@@ -209,6 +164,77 @@ public class DisplayCache
                     v.setValue(new DisplayValue(msg == null ? "ERROR" : msg, true));
                 });
             }
+        }
+
+        @OnThread(Tag.Simulation)
+        private DisplayValue getDisplayValue(DataTypeValue type, int index, final ProgressListener prog) throws InternalException, UserException
+        {
+            return type.applyGet(new DataTypeVisitorGet<DisplayValue>()
+                        {
+                            @Override
+                            @OnThread(Tag.Simulation)
+                            public DisplayValue number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
+                            {
+                                return new DisplayValue(g.getWithProgress(index, prog), displayInfo.getUnit(), displayInfo.getMinimumDP());
+                            }
+
+                            @Override
+                            @OnThread(Tag.Simulation)
+                            public DisplayValue text(GetValue<String> g) throws InternalException, UserException
+                            {
+                                return new DisplayValue(g.getWithProgress(index, prog));
+                            }
+
+                            @Override
+                            @OnThread(Tag.Simulation)
+                            public DisplayValue tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                            {
+                                int tag = g.getWithProgress(index, prog);
+                                TagType<DataTypeValue> tagType = tagTypes.get(tag);
+                                @Nullable DataTypeValue inner = tagType.getInner();
+                                if (DataType.canFitInOneNumeric(tagTypes))
+                                {
+                                    if (inner == null)
+                                        return new DisplayValue(tagType.getName());
+                                    else
+                                        return inner.applyGet(this);
+                                }
+                                else
+                                {
+                                    return new DisplayValue(tagType.getName() + (inner == null ? "" : (" " + inner.applyGet(this))));
+                                }
+                            }
+
+                            @Override
+                            public DisplayValue tuple(List<DataTypeValue> types) throws InternalException, UserException
+                            {
+                                return DisplayValue.tuple(Utility.mapListEx(types, t -> t.applyGet(this)));
+                            }
+
+                            @Override
+                            public DisplayValue array(ExFunction<Integer, Integer> size, DataTypeValue type) throws InternalException, UserException
+                            {
+                                int theSize = size.apply(index);
+                                ArrayList<DisplayValue> values = new ArrayList<>(theSize);
+                                for (int i = 0; i < theSize; i++)
+                                {
+                                    values.add(getDisplayValue(type, i, prog));
+                                }
+                                return DisplayValue.array(values);
+                            }
+
+                            @Override
+                            public DisplayValue bool(GetValue<Boolean> g) throws InternalException, UserException
+                            {
+                                return new DisplayValue(g.getWithProgress(index, prog));
+                            }
+
+                            @Override
+                            public DisplayValue date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+                            {
+                                return new DisplayValue(g.getWithProgress(index, prog));
+                            }
+                        });
         }
 
         @Override

@@ -1,10 +1,11 @@
 package records.data.datatype;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ArrayColumnStorage;
 import records.data.BooleanColumnStorage;
 import records.data.ColumnStorage;
 import records.data.DateColumnStorage;
-import records.data.NestedColumnStorage;
+import records.data.TupleColumnStorage;
 import records.data.NumericColumnStorage;
 import records.data.StringColumnStorage;
 import records.data.TaggedColumnStorage;
@@ -16,6 +17,8 @@ import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayValue;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
@@ -31,75 +34,58 @@ import java.util.List;
  */
 public class DataTypeUtility
 {
-    public static List<Object> generateExample(DataType type, int index) throws UserException, InternalException
+    public static Object generateExample(DataType type, int index) throws UserException, InternalException
     {
-        return type.apply(new DataTypeVisitor<List<Object>>()
+        return type.apply(new DataTypeVisitor<Object>()
         {
 
             @Override
-            public List<Object> number(NumberInfo displayInfo) throws InternalException, UserException
+            public Object number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return Collections.singletonList((Long)(long)index);
+                return (Long)(long)index;
             }
 
             @Override
-            public List<Object> text() throws InternalException, UserException
+            public Object text() throws InternalException, UserException
             {
-                return Collections.singletonList(Arrays.asList("Aardvark", "Bear", "Cat", "Dog", "Emu", "Fox").get(index));
+                return Arrays.asList("Aardvark", "Bear", "Cat", "Dog", "Emu", "Fox").get(index);
             }
 
             @Override
-            public List<Object> bool() throws InternalException, UserException
+            public Object bool() throws InternalException, UserException
             {
-                return Collections.singletonList((index % 2) == 1);
+                return (index % 2) == 1;
             }
 
             @Override
-            public List<Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return Collections.singletonList(LocalDate.ofEpochDay(index));
+                return LocalDate.ofEpochDay(index);
             }
 
             @Override
-            public List<Object> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Pair<Integer, @Nullable Object> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tag = index % tags.size();
                 @Nullable DataType inner = tags.get(tag).getInner();
                 if (inner != null)
-                    return Utility.consList((Object)(Integer)tag, generateExample(inner, index - tag));
+                    return new Pair<>((Integer)tag, generateExample(inner, index - tag));
                 else
-                    return Collections.singletonList((Object)(Integer)tag);
+                    return new Pair<>((Integer)tag, null);
+            }
+
+            @Override
+            public Object tuple(List<DataType> inner) throws InternalException, UserException
+            {
+                return Utility.mapListEx(inner, t -> generateExample(t, index)).toArray();
+            }
+
+            @Override
+            public Object array(DataType inner) throws InternalException, UserException
+            {
+                return Collections.emptyList();
             }
         });
-    }
-
-    public static int compare(DataType dataType, List<Object> as, List<Object> bs) throws InternalException
-    {
-        return Utility.compareLists(as, bs);
-        /*
-        return dataType.apply(new DataTypeVisitor<Integer>()
-        {
-            int index = 0;
-
-            @Override
-            public Integer number(NumberInfo displayInfo) throws InternalException, UserException
-            {
-                return Utility.compareNumbers(as.get(index), bs.get(index));
-            }
-
-            @Override
-            public Integer text() throws InternalException, UserException
-            {
-                return ((String)as.get(index)).compareTo((String)bs.get(index));
-            }
-
-            @Override
-            public Integer tagged(List<TagType> tags) throws InternalException, UserException
-            {
-                return null;
-            }
-        })
-        */
     }
 
     public static List<List<DisplayValue>> displayAll(List<DataType> columnTypes, List<List<List<Object>>> dataRows) throws InternalException, UserException
@@ -115,39 +101,38 @@ public class DataTypeUtility
         return r;
     }
 
-    public static DisplayValue display(DataType dataType, List<Object> objects) throws UserException, InternalException
+    public static DisplayValue display(DataType dataType, Object object) throws UserException, InternalException
     {
         return dataType.apply(new DataTypeVisitor<DisplayValue>()
         {
-            int index = 0;
             @Override
             public DisplayValue number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return new DisplayValue((Number)objects.get(index), displayInfo.getUnit(), displayInfo.getMinimumDP());
+                return new DisplayValue((Number)object, displayInfo.getUnit(), displayInfo.getMinimumDP());
             }
 
             @Override
             public DisplayValue text() throws InternalException, UserException
             {
-                return new DisplayValue((String)objects.get(index));
+                return new DisplayValue((String)object);
             }
 
             @Override
             public DisplayValue bool() throws InternalException, UserException
             {
-                return new DisplayValue((Boolean)objects.get(index));
+                return new DisplayValue((Boolean)object);
             }
 
             @Override
             public DisplayValue date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return new DisplayValue((Temporal) objects.get(index));
+                return new DisplayValue((Temporal) object);
             }
 
             @Override
             public DisplayValue tagged(TypeId typeName, List<TagType<DataType>> tagTypes) throws InternalException, UserException
             {
-                int tag = (Integer)objects.get(index++);
+                int tag = ((Pair<Integer, @Nullable Object>)object).getFirst();
                 TagType tagType = tagTypes.get(tag);
                 @Nullable DataType inner = tagType.getInner();
                 if (DataType.canFitInOneNumeric(tagTypes))
@@ -162,53 +147,82 @@ public class DataTypeUtility
                     return new DisplayValue(tagType.getName() + (inner == null ? "" : (" " + inner.apply(this))));
                 }
             }
+
+            @Override
+            public DisplayValue tuple(List<DataType> inner) throws InternalException, UserException
+            {
+                Object[] array = (Object[])object;
+                if (array.length != inner.size())
+                    throw new InternalException("Tuple type does not match value, expected: " + inner.size() + " got " + array.length);
+                List<DisplayValue> innerDisplay = new ArrayList<>();
+                for (int i = 0; i < array.length; i++)
+                {
+                    innerDisplay.add(display(inner.get(i), array[i]));
+                }
+                return DisplayValue.tuple(innerDisplay);
+            }
+
+            @Override
+            public DisplayValue array(DataType inner) throws InternalException, UserException
+            {
+                List<Object> list = (List<Object>)object;
+                return DisplayValue.array(Utility.mapListEx(list, o -> display(inner, o)));
+            }
         });
     }
 
+    @OnThread(Tag.Simulation)
     public static ColumnStorage<?> makeColumnStorage(final DataType inner) throws InternalException
     {
         return inner.apply(new DataTypeVisitorEx<ColumnStorage<?>, InternalException>()
         {
             @Override
+            @OnThread(Tag.Simulation)
             public ColumnStorage<?> number(NumberInfo displayInfo) throws InternalException
             {
                 return new NumericColumnStorage(displayInfo);
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public ColumnStorage<?> bool() throws InternalException
             {
                 return new BooleanColumnStorage();
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public ColumnStorage<?> text() throws InternalException
             {
                 return new StringColumnStorage();
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public ColumnStorage<?> date(DateTimeInfo dateTimeInfo) throws InternalException
             {
                 return new DateColumnStorage(dateTimeInfo);
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public ColumnStorage<?> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException
             {
                 return new TaggedColumnStorage(typeName, tags);
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public ColumnStorage<?> tuple(List<DataType> innerTypes) throws InternalException
             {
-                return new NestedColumnStorage(innerTypes);
+                return new TupleColumnStorage(innerTypes);
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public ColumnStorage<?> array(DataType inner) throws InternalException
             {
-                return new NestedColumnStorage(inner);
+                return new ArrayColumnStorage(inner);
             }
         });
     }

@@ -49,6 +49,7 @@ import records.grammar.SortParser.SummaryTypeContext;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
@@ -98,13 +99,13 @@ public class SummaryStatistics extends Transformation
     private static class JoinedSplit
     {
         private final List<Column> colName = new ArrayList<>();
-        private final List<List<Object>> colValue = new ArrayList<>();
+        private final List<Object> colValue = new ArrayList<>();
 
         public JoinedSplit()
         {
         }
 
-        public JoinedSplit(Column column, List<Object> value, JoinedSplit addTo)
+        public JoinedSplit(Column column, Object value, JoinedSplit addTo)
         {
             colName.add(column);
             colValue.add(value);
@@ -159,7 +160,7 @@ public class SummaryStatistics extends Transformation
                     int iFinal = i;
                     columns.add(rs -> new Column(rs)
                     {
-                        private List<Object> getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                        private Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
                         {
                             return splits.get(index).colValue.get(iFinal);
                         }
@@ -337,7 +338,7 @@ public class SummaryStatistics extends Transformation
                                 protected void fillNextCacheChunk() throws UserException, InternalException
                                 {
                                     int index = getCacheFilled();
-                                    final FoldOperation<Integer, List<Object>> fold;
+                                    final FoldOperation<Integer, Object> fold;
                                     switch (summaryType)
                                     {
                                         case MIN:
@@ -351,6 +352,18 @@ public class SummaryStatistics extends Transformation
                                 }
 
                             };
+                        }
+
+                        @Override
+                        public FunctionInt<RecordSet, Column> tuple(List<DataTypeValue> types) throws InternalException, UserException
+                        {
+                            throw new UnimplementedException();
+                        }
+
+                        @Override
+                        public FunctionInt<RecordSet, Column> array(ExFunction<Integer, Integer> size, DataTypeValue type) throws InternalException, UserException
+                        {
+                            throw new UnimplementedException();
                         }
                     }));
                 }
@@ -382,9 +395,9 @@ public class SummaryStatistics extends Transformation
     private static class SingleSplit
     {
         private Column column;
-        private List<@NonNull List<@NonNull Object>> values;
+        private List<@NonNull Object> values;
 
-        public SingleSplit(Column column, List<@NonNull List<@NonNull Object>> values)
+        public SingleSplit(Column column, List<@NonNull Object> values)
         {
             this.column = column;
             this.values = values;
@@ -404,7 +417,7 @@ public class SummaryStatistics extends Transformation
             //    splits.add(new SingleSplit(c, fastDistinct.get()));
             //else
             {
-                HashSet<List<Object>> r = new HashSet<>();
+                HashSet<Object> r = new HashSet<>();
                 for (int i = 0; c.indexValid(i); i++)
                 {
                     r.add(c.getType().getCollapsed(i));
@@ -425,7 +438,7 @@ public class SummaryStatistics extends Transformation
         SingleSplit cur = allDistincts.get(from);
         List<JoinedSplit> rest = crossProduct(allDistincts, from + 1);
         List<JoinedSplit> r = new ArrayList<>();
-        for (List<Object> o : cur.values)
+        for (Object o : cur.values)
         {
             for (JoinedSplit js : rest)
             {
@@ -635,6 +648,18 @@ public class SummaryStatistics extends Transformation
                 }
 
                 @Override
+                public Boolean tuple(List<DataType> inner) throws InternalException, UserException
+                {
+                    return false; // TODO
+                }
+
+                @Override
+                public Boolean array(DataType inner) throws InternalException, UserException
+                {
+                    return false; // TODO
+                }
+
+                @Override
                 public Boolean date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                 {
                     switch (summaryType)
@@ -729,7 +754,7 @@ public class SummaryStatistics extends Transformation
         }
 
         @Override
-        public List<T> process(@NonNull T x, int i)
+        public List<@NonNull T> process(@NonNull T x, int i)
         {
             if (cur == null)
             {
@@ -746,7 +771,7 @@ public class SummaryStatistics extends Transformation
         }
 
         @Override
-        public List<T> end() throws UserException
+        public List<@NonNull T> end() throws UserException
         {
             if (cur != null)
                 return Collections.singletonList(cur);
@@ -787,11 +812,10 @@ public class SummaryStatistics extends Transformation
         }
     }
 
-    public static class MinMaxTaggedFold implements FoldOperation<Integer, List<Object>>
+    public static class MinMaxTaggedFold implements FoldOperation<Integer, Object>
     {
         private int bestTag = -1;
-        @Nullable
-        List<Object> bestInner = null;
+        @Nullable Object bestInner = null;
         private final List<TagType<DataTypeValue>> tagTypes;
         private final boolean ignoreNullaryTags;
         private final SummaryType summaryType;
@@ -804,7 +828,7 @@ public class SummaryStatistics extends Transformation
         }
 
         @Override
-        public List<List<Object>> process(Integer tagBox, int i) throws InternalException, UserException
+        public List<Object> process(Integer tagBox, int i) throws InternalException, UserException
         {
             int tag = tagBox;
 
@@ -824,14 +848,13 @@ public class SummaryStatistics extends Transformation
             if (innerType == null)
                 return Collections.emptyList(); // Nullary tag, don't need to do any inner comparison
 
-            @NonNull
-            List<Object> x = innerType.getCollapsed(i);
+            @NonNull Object x = innerType.getCollapsed(i);
             if (bestInner == null)
             {
                 bestInner = x;
             } else
             {
-                int comparison = Utility.compareLists(bestInner, x);
+                int comparison = Utility.compareValues(bestInner, x);
                 if ((summaryType == SummaryType.MIN && comparison > 0)
                     || (summaryType == SummaryType.MAX && comparison < 0))
                     bestInner = x;
@@ -840,13 +863,10 @@ public class SummaryStatistics extends Transformation
         }
 
         @Override
-        public List<List<Object>> end() throws UserException
+        public List<Object> end() throws UserException
         {
             if (bestInner != null)
             {
-                if (!(bestInner instanceof ArrayList))
-                    bestInner = new ArrayList<>(bestInner);
-                bestInner.add(0, bestTag);
                 return Collections.singletonList(bestInner);
             }
             else
@@ -874,10 +894,10 @@ public class SummaryStatistics extends Transformation
 
     private static <T, R> void applyFold(ColumnStorage<R> cache, FoldOperation<T, R> fold, Column srcCol, GetValue<T> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
     {
-        applyFold(cache, Function.identity(), fold, srcCol, srcGet, splitIndexes, index);
+        applyFold(cache, x -> x, fold, srcCol, srcGet, splitIndexes, index);
     }
 
-    private static <T, R, S> void applyFold(ColumnStorage<S> cache, Function<R, S> convert, FoldOperation<T, R> fold, Column srcCol, GetValue<T> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
+    private static <T, R, S> void applyFold(ColumnStorage<S> cache, Function<@NonNull R, @NonNull S> convert, FoldOperation<T, R> fold, Column srcCol, GetValue<T> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
     {
         cache.addAll(Utility.mapList(fold.start(), convert));
         for (int i = 0; srcCol.indexValid(i); i++)
@@ -890,7 +910,7 @@ public class SummaryStatistics extends Transformation
         cache.addAll(Utility.mapList(fold.end(), convert));
     }
 
-    private static void applyFold(CalculatedTaggedColumn c, FoldOperation<Integer, List<Object>> fold, Column srcCol, GetValue<Integer> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
+    private static void applyFold(CalculatedTaggedColumn c, FoldOperation<Integer, Object> fold, Column srcCol, GetValue<Integer> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
     {
         c.addAllUnpacked(fold.start());
         for (int i = 0; srcCol.indexValid(i); i++)
@@ -992,6 +1012,18 @@ public class SummaryStatistics extends Transformation
                             return nestedInner.applyGet(this);
                         else
                             return Collections.emptyList();
+                    }
+
+                    @Override
+                    public List<Number> tuple(List<DataTypeValue> types) throws InternalException, UserException
+                    {
+                        return Collections.emptyList();
+                    }
+
+                    @Override
+                    public List<Number> array(ExFunction<Integer, Integer> size, DataTypeValue type) throws InternalException, UserException
+                    {
+                        return Collections.emptyList();
                     }
                 });
             }

@@ -17,24 +17,31 @@ import java.util.List;
  */
 public interface ColumnStorage<T>
 {
+    // The amount currently stored.  Do not assume this is all available data,
+    // as many columns will be loaded/calculated on demand.
     public int filled();
     public @NonNull T get(int index) throws InternalException, UserException;
-    default public void add(T item) throws InternalException
+    default public void add(@NonNull T item) throws InternalException
     {
-        addAll(Collections.singletonList(item));
+        addAll(Collections.<@NonNull T>singletonList(item));
     }
-    public void addAll(List<T> items) throws InternalException;
+    public void addAll(List<@NonNull T> items) throws InternalException;
 
     @OnThread(Tag.Any)
     public abstract DataTypeValue getType();
 
-    default public List<Object> getFullList(int arrayLength) throws UserException, InternalException
+    default public List<T> getFullList(int arrayLength) throws UserException, InternalException
     {
-        List<Object> r = new ArrayList<>();
+        List<T> r = new ArrayList<>();
         for (int i = 0; i < arrayLength; i++)
         {
             r.add(get(i));
         }
         return r;
+    }
+
+    default public List<T> _test_getShrunk(int length) throws InternalException, UserException
+    {
+        return getFullList(length);
     }
 }

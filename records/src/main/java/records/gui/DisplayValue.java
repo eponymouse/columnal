@@ -9,7 +9,9 @@ import threadchecker.OnThread;
 
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 /**
  * A value describing how to display a single piece of data.
@@ -112,6 +114,60 @@ public class DisplayValue
     public int getMinimumDecimalPlaces()
     {
         return minimumDecimalPlaces;
+    }
+
+    @SuppressWarnings("nullness")
+    public static DisplayValue tuple(List<DisplayValue> displays)
+    {
+        boolean allLoaded = true;
+        double loadingProgress = 0;
+        for (DisplayValue display : displays)
+        {
+            if (display.loading == -1)
+            {
+                loadingProgress += 1;
+            }
+            else
+            {
+                allLoaded = false;
+                loadingProgress += display.loading;
+            }
+        }
+        if (allLoaded)
+        {
+            return new DisplayValue("(" + displays.stream().map(d -> d.show).collect(Collectors.joining(", ")) + ")", false);
+        }
+        else
+        {
+            return new DisplayValue(ProgressState.GETTING, loadingProgress / (double)displays.size());
+        }
+    }
+
+    @SuppressWarnings("nullness")
+    public static DisplayValue array(List<DisplayValue> displays)
+    {
+        boolean allLoaded = true;
+        double loadingProgress = 0;
+        for (DisplayValue display : displays)
+        {
+            if (display.loading == -1)
+            {
+                loadingProgress += 1;
+            }
+            else
+            {
+                allLoaded = false;
+                loadingProgress += display.loading;
+            }
+        }
+        if (allLoaded)
+        {
+            return new DisplayValue("[" + displays.stream().map(d -> d.show).collect(Collectors.joining(", ")) + "]", false);
+        }
+        else
+        {
+            return new DisplayValue(ProgressState.GETTING, loadingProgress / (double)displays.size());
+        }
     }
 
     @Override

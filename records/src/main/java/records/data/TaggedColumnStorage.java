@@ -120,7 +120,10 @@ public class TaggedColumnStorage implements ColumnStorage<Pair<Integer, @Nullabl
         if (storage == null)
             throw new InternalException("Value but no store for tag " + tagIndex);
         innerValueIndex.add(storage.filled());
-        storage.add(value.getSecond());
+        @Nullable Object innerValue = value.getSecond();
+        if (innerValue == null)
+            throw new InternalException("Inner value despite no inner type");
+        storage.add(innerValue);
     }
 
     public List<Pair<Integer, @Nullable Object>> getShrunk(int shrunkLength) throws UserException, InternalException

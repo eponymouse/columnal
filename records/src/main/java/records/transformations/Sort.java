@@ -451,19 +451,19 @@ public class Sort extends Transformation
                 exampleColumnTypes.add(c.getType());
 
             // Generate four rows of data for each column:
-            List<List<List<Object>>> data = new ArrayList<>();
+            List<List<Object>> data = new ArrayList<>();
             for (int i = 0; i < 4; i++)
                 data.add(new ArrayList<>());
             for (Column c : exampleColumns)
             {
                 int index = 0;
-                for (List<List<Object>> row : data)
+                for (List<Object> row : data)
                 {
                     row.add(DataTypeUtility.generateExample(c.getType(), (index++ + row.size()) % 4));
                 }
             }
             // Sort it to get result:
-            Collections.<List<List<Object>>>sort(data, (a, b) -> {
+            Collections.<List<Object>>sort(data, (a, b) -> {
                 for (Column c : sortBy)
                 {
                     int i = exampleColumns.indexOf(c);
@@ -471,7 +471,7 @@ public class Sort extends Transformation
                     {
                         try
                         {
-                            int cmp = DataTypeUtility.compare(exampleColumnTypes.get(i), a.get(i), b.get(i));
+                            int cmp = Utility.compareValues(a.get(i), b.get(i));
                             if (cmp != 0)
                                 return cmp;
                         }
@@ -484,7 +484,7 @@ public class Sort extends Transformation
                 }
                 return 0;
             });
-            List<List<List<Object>>> unsorted = new ArrayList<>();
+            List<List<Object>> unsorted = new ArrayList<>();
             if (data.size() == 4)
             {
                 unsorted.add(data.get(2));
@@ -498,12 +498,12 @@ public class Sort extends Transformation
             for (int i = 0; i < exampleColumns.size(); i++)
             {
                 List<DisplayValue> sortedCol = new ArrayList<>();
-                for (List<List<Object>> row : data)
+                for (List<Object> row : data)
                 {
                     sortedCol.add(DataTypeUtility.display(exampleColumnTypes.get(i), row.get(i)));
                 }
                 List<DisplayValue> unsortedCol = new ArrayList<>();
-                for (List<List<Object>> row : unsorted)
+                for (List<Object> row : unsorted)
                 {
                     unsortedCol.add(DataTypeUtility.display(exampleColumnTypes.get(i), row.get(i)));
                 }

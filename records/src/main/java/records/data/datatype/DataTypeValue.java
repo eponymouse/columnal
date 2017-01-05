@@ -8,7 +8,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExSupplier;
+import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -29,11 +29,12 @@ public class DataTypeValue extends DataType
     private final @Nullable GetValue<TemporalAccessor> getDate;
     private final @Nullable GetValue<Boolean> getBoolean;
     private final @Nullable GetValue<Integer> getTag;
-    private final @Nullable ExSupplier<Integer> getArrayLength;
+    // Takes index of item, returns the length of the array at that index.
+    private final @Nullable ExFunction<Integer, Integer> getArrayLength;
 
     // package-visible
     @SuppressWarnings("unchecked")
-    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataTypeValue>>> tagTypes, @Nullable List<DataType> memberTypes, @Nullable GetValue<Number> getNumber, @Nullable GetValue<String> getText, @Nullable GetValue<TemporalAccessor> getDate, @Nullable GetValue<Boolean> getBoolean, @Nullable GetValue<Integer> getTag, @Nullable ExSupplier<Integer> getArrayLength)
+    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataTypeValue>>> tagTypes, @Nullable List<DataType> memberTypes, @Nullable GetValue<Number> getNumber, @Nullable GetValue<String> getText, @Nullable GetValue<TemporalAccessor> getDate, @Nullable GetValue<Boolean> getBoolean, @Nullable GetValue<Integer> getTag, @Nullable ExFunction<Integer, Integer> getArrayLength)
     {
         super(kind, numberInfo, dateTimeInfo, (Pair<TypeId, List<TagType<DataType>>>)(Pair)tagTypes, memberTypes);
         this.getNumber = getNumber;
@@ -69,7 +70,7 @@ public class DataTypeValue extends DataType
         return new DataTypeValue(Kind.NUMBER, numberInfo, null, null, null, getNumber, null, null, null, null, null);
     }
 
-    public static DataTypeValue array(DataType innerType, ExSupplier<Integer> getLength)
+    public static DataTypeValue array(DataType innerType, ExFunction<Integer, Integer> getLength)
     {
         return new DataTypeValue(Kind.ARRAY, null, null, null, Collections.singletonList(innerType), null, null, null, null, null, getLength);
     }
@@ -154,7 +155,7 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R array(int size, DataTypeValue type) throws InternalException, UserException
+        public R array(ExFunction<Integer, Integer> size, DataTypeValue type) throws InternalException, UserException
         {
             return defaultOp("Unexpected array type");
         }
@@ -171,7 +172,7 @@ public class DataTypeValue extends DataType
         R tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
         R tuple(List<DataTypeValue> types) throws InternalException, E;
 
-        R array(int size, DataTypeValue type) throws InternalException, E;
+        R array(ExFunction<Integer, Integer> size, DataTypeValue type) throws InternalException, E;
     }
 
     @OnThread(Tag.Simulation)
@@ -183,7 +184,7 @@ public class DataTypeValue extends DataType
 
     @SuppressWarnings({"nullness", "unchecked"})
     @OnThread(Tag.Simulation)
-    public final <R, E extends Throwable> R applyGet(DataTypeVisitorGetEx<R, E> visitor) throws InternalException, E, UserException
+    public final <R> R applyGet(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
     {
         switch (kind)
         {
@@ -201,17 +202,17 @@ public class DataTypeValue extends DataType
                 return visitor.tuple((List<DataTypeValue>)(List)memberType);
             case ARRAY:
                 DataTypeValue arrayType = (DataTypeValue) memberType.get(0);
-                return visitor.array(arrayType.getArrayLength(), arrayType);
+                return visitor.array(arrayType.getArrayLength, arrayType);
             default:
                 throw new InternalException("Missing kind case");
         }
     }
 
-    public int getArrayLength() throws InternalException, UserException
+    public int getArrayLength(int index) throws InternalException, UserException
     {
         if (getArrayLength == null)
             throw new InternalException("Trying to get array length of non-array: " + this);
-        return getArrayLength.get();
+        return getArrayLength.apply(index);
     }
 
     public static interface GetValue<T>
@@ -274,10 +275,11 @@ public class DataTypeValue extends DataType
             }
 
             @Override
-            public Object array(int size, DataTypeValue type) throws InternalException, UserException
+            public Object array(ExFunction<Integer, Integer> size, DataTypeValue type) throws InternalException, UserException
             {
                 List<Object> l = new ArrayList<>();
-                for (int i = 0; i < size; i++)
+                Integer theSize = size.apply(index);
+                for (int i = 0; i < theSize; i++)
                 {
                     // Need to look for i, not index, to get full list:
                     l.add(getCollapsed(i));

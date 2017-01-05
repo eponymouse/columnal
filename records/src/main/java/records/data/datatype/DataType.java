@@ -4,6 +4,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.MemoryArrayColumn;
 import records.data.MemoryBooleanColumn;
 import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
@@ -17,10 +18,12 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.DataParser;
+import records.grammar.DataParser.ArrayContext;
 import records.grammar.DataParser.BoolContext;
 import records.grammar.DataParser.ItemContext;
 import records.grammar.DataParser.StringContext;
 import records.grammar.DataParser.TaggedContext;
+import records.grammar.DataParser.TupleContext;
 import records.grammar.FormatLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
@@ -417,12 +420,12 @@ public class DataType
         return new DataType(Kind.NUMBER, numberInfo, null, null, null);
     }
 
-    public static boolean canFitInOneNumeric(List<? extends TagType> tags) throws InternalException, UserException
+    public static <T extends DataType> boolean canFitInOneNumeric(List<? extends TagType<T>> tags) throws InternalException, UserException
     {
         // Can fit in one numeric if there is no inner types,
         // or if the only inner type is a single numeric
         boolean foundNumeric = false;
-        for (TagType t : tags)
+        for (TagType<T> t : tags)
         {
             if (t.getInner() != null)
             {
@@ -439,41 +442,15 @@ public class DataType
         return foundNumeric;
     }
 
-    // Only call if canFitInOneNumeric returned true
-    public static int findNumericTag(List<TagType> tags) throws InternalException, UserException
-    {
-        // Can fit in one numeric if there is no inner types,
-        // or if the only inner type is a single numeric
-        for (int i = 0; i < tags.size(); i++)
-        {
-            TagType t = tags.get(i);
-            if (t.getInner() != null)
-            {
-                if (t.getInner().kind == Kind.NUMBER)
-                {
-                    return i;
-                }
-            }
-        }
-        return -1;
-    }
-
-
     @OnThread(Tag.Any)
-    public DataTypeValue copy(GetValue<List<Object>> get) throws InternalException
-    {
-        return copy(get, 0);
-    }
-
-    @OnThread(Tag.Any)
-    private DataTypeValue copy(GetValue<List<Object>> get, int curIndex) throws InternalException
+    public DataTypeValue copy(GetValue<Object> get) throws InternalException
     {
         @Nullable Pair<TypeId, List<TagType<DataTypeValue>>> newTagTypes = null;
         if (this.taggedTypeName != null && this.tagTypes != null)
         {
             newTagTypes = new Pair<>(taggedTypeName, new ArrayList<>());
             for (TagType tagType : this.tagTypes)
-                newTagTypes.getSecond().add(new TagType<>(tagType.getName(), tagType.getInner() == null ? null : tagType.getInner().copy(get, curIndex + 1)));
+                newTagTypes.getSecond().add(new TagType<>(tagType.getName(), tagType.getInner() == null ? null : tagType.getInner().copy(get)));
         }
         List<DataType> memberTypes = null;
         if (this.memberType != null)
@@ -483,15 +460,29 @@ public class DataType
             {
                 int tupleMemberFinal = tupleMember;
                 DataType dataType = this.memberType.get(tupleMember);
-                memberTypes.add(dataType.copy((i, prog) -> (List<Object>)get.getWithProgress(i, prog).get(tupleMemberFinal)));
+                memberTypes.add(dataType.copy((i, prog) -> (List<Object>)((Object[])get.getWithProgress(i, prog))[tupleMemberFinal]));
             }
         }
         return new DataTypeValue(kind, numberInfo, dateTimeInfo, newTagTypes,
-            memberTypes, (i, prog) -> (Number)get.getWithProgress(i, prog).get(curIndex),
-            (i, prog) -> (String)get.getWithProgress(i, prog).get(curIndex),
-            (i, prog) -> (Temporal) get.getWithProgress(i, prog).get(curIndex),
-            (i, prog) -> (Boolean) get.getWithProgress(i, prog).get(curIndex),
-            (i, prog) -> (Integer) get.getWithProgress(i, prog).get(curIndex), null);
+            memberTypes, (i, prog) -> (Number)get.getWithProgress(i, prog),
+            (i, prog) -> (String)get.getWithProgress(i, prog),
+            (i, prog) -> (Temporal) get.getWithProgress(i, prog),
+            (i, prog) -> (Boolean) get.getWithProgress(i, prog),
+            (i, prog) -> (Integer) get.getWithProgress(i, prog), null);
+    }
+
+    public boolean isTuple()
+    {
+        return kind == Kind.TUPLE;
+    }
+
+    // For arrays: single item.  For tuples, the set of contained types.
+    // Everything else: an InternalException
+    public List<DataType> getMemberType() throws InternalException
+    {
+        if (memberType == null)
+            throw new InternalException("Fetching member type for non tuple/array: " + kind);
+        return memberType;
     }
 
     public boolean isTagged()
@@ -710,14 +701,42 @@ public class DataType
             @OnThread(Tag.Simulation)
             public Column tuple(List<DataType> inner) throws InternalException, UserException
             {
-                return new MemoryTupleColumn(rs, columnId, inner);
+                List<Object[]> values = new ArrayList<>(allData.size());
+                for (List<ItemContext> row : allData)
+                {
+                    TupleContext c = row.get(columnIndex).tuple();
+                    if (c == null)
+                        throw new UserException("Expected tuple but found: \"" + row.get(columnIndex).getText() + "\"");
+                    if (c.item().size() != inner.size())
+                        throw new UserException("Wrong number of tuples items; expected " + inner.size() + " but found " + c.item().size());
+                    Object[] tuple = new Object[inner.size()];
+                    for (int i = 0; i < tuple.length; i++)
+                    {
+                        tuple[i] = loadSingleItem(inner.get(i), c.item(i));
+                    }
+                    values.add(tuple);
+                }
+                return new MemoryTupleColumn(rs, columnId, inner, values);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public Column array(DataType inner) throws InternalException, UserException
             {
-                return null;
+                List<List<Object>> values = new ArrayList<>(allData.size());
+                for (List<ItemContext> row : allData)
+                {
+                    ArrayContext c = row.get(columnIndex).array();
+                    if (c == null)
+                        throw new UserException("Expected array but found: \"" + row.get(columnIndex).getText() + "\"");
+                    List<Object> array = new ArrayList<>();
+                    for (ItemContext itemContext : c.item())
+                    {
+                        array.add(loadSingleItem(inner, itemContext));
+                    }
+                    values.add(array);
+                }
+                return new MemoryArrayColumn(rs, columnId, inner, values);
             }
         });
     }
@@ -735,57 +754,7 @@ public class DataType
                 {
                     if (item == null)
                         throw new UserException("Expected inner type but found no inner value: \"" + taggedContext.getText() + "\"");
-                    return new Pair<>(i, tag.getInner().apply(new DataTypeVisitor<Object>()
-                    {
-                        @Override
-                        public Object number(NumberInfo displayInfo) throws InternalException, UserException
-                        {
-                            DataParser.NumberContext number = item.number();
-                            if (number == null)
-                                throw new UserException("Expected number, found: " + item.getText() + item.getStart());
-                            return Utility.parseNumber(number.getText());
-                        }
-
-                        @Override
-                        public Object text() throws InternalException, UserException
-                        {
-                            StringContext string = item.string();
-                            if (string == null)
-                                throw new UserException("Expected string, found: " + item.getText() + item.getStart());
-                            return string.getText();
-                        }
-
-                        @Override
-                        public Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
-                        {
-                            StringContext string = item.string();
-                            if (string == null)
-                                throw new UserException("Expected quoted date, found: " + item.getText() + item.getStart());
-                            try
-                            {
-                                return LocalDate.parse(string.getText());
-                            }
-                            catch (DateTimeParseException e)
-                            {
-                                throw new UserException("Error loading date time \"" + string.getText() + "\"", e);
-                            }
-                        }
-
-                        @Override
-                        public Object bool() throws InternalException, UserException
-                        {
-                            BoolContext bool = item.bool();
-                            if (bool == null)
-                                throw new UserException("Expected bool, found: " + item.getText() + item.getStart());
-                            return bool.getText().equals("true");
-                        }
-
-                        @Override
-                        public Object tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
-                        {
-                            return loadValue(tags, item.tagged());
-                        }
-                    }));
+                    return new Pair<>(i, loadSingleItem(tag.getInner(), item));
                 }
                 else if (item != null)
                     throw new UserException("Expected no inner type but found inner value: \"" + taggedContext.getText() + "\"");
@@ -795,6 +764,84 @@ public class DataType
         }
         throw new UserException("Could not find matching tag for: \"" + taggedContext.tag().getText() + "\" in: " + tags.stream().map(t -> t.getName()).collect(Collectors.joining(", ")));
 
+    }
+
+    @OnThread(Tag.Any)
+    private static Object loadSingleItem(DataType type, final ItemContext item) throws InternalException, UserException
+    {
+        return type.apply(new DataTypeVisitor<Object>()
+        {
+            @Override
+            public Object number(NumberInfo displayInfo) throws InternalException, UserException
+            {
+                DataParser.NumberContext number = item.number();
+                if (number == null)
+                    throw new UserException("Expected number, found: " + item.getText() + item.getStart());
+                return Utility.parseNumber(number.getText());
+            }
+
+            @Override
+            public Object text() throws InternalException, UserException
+            {
+                StringContext string = item.string();
+                if (string == null)
+                    throw new UserException("Expected string, found: " + item.getText() + item.getStart());
+                return string.getText();
+            }
+
+            @Override
+            public Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            {
+                StringContext string = item.string();
+                if (string == null)
+                    throw new UserException("Expected quoted date, found: " + item.getText() + item.getStart());
+                try
+                {
+                    return LocalDate.parse(string.getText());
+                }
+                catch (DateTimeParseException e)
+                {
+                    throw new UserException("Error loading date time \"" + string.getText() + "\"", e);
+                }
+            }
+
+            @Override
+            public Object bool() throws InternalException, UserException
+            {
+                BoolContext bool = item.bool();
+                if (bool == null)
+                    throw new UserException("Expected bool, found: " + item.getText() + item.getStart());
+                return bool.getText().equals("true");
+            }
+
+            @Override
+            public Object tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            {
+                return loadValue(tags, item.tagged());
+            }
+
+            @Override
+            public Object tuple(List<DataType> inner) throws InternalException, UserException
+            {
+                TupleContext tupleContext = item.tuple();
+                if (tupleContext == null)
+                    throw new UserException("Expected tuple, found: " + item.getText() + item.getStart());
+                if (tupleContext.item().size() != inner.size())
+                    throw new UserException("Expected " + inner.size() + " data values as per type, but found: " + tupleContext.item().size());
+                Object[] data = new Object[inner.size()];
+                for (int i = 0; i < inner.size(); i++)
+                {
+                    data[i] = loadSingleItem(inner.get(i), tupleContext.item(i));
+                }
+                return data;
+            }
+
+            @Override
+            public Object array(DataType inner) throws InternalException, UserException
+            {
+                return Utility.mapListEx(item.array().item(), entry -> loadSingleItem(inner, entry));
+            }
+        });
     }
 
     // If topLevelDeclaration is false, save a reference (matters for tagged types)
@@ -853,6 +900,29 @@ public class DataType
                 {
                     b.quote(typeName);
                 }
+                return UnitType.UNIT;
+            }
+
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public UnitType tuple(List<DataType> inner) throws InternalException, InternalException
+            {
+                b.t(FormatLexer.OPEN_BRACKET);
+                for (DataType dataType : inner)
+                {
+                    dataType.save(b, false);
+                }
+                b.t(FormatLexer.CLOSE_BRACKET);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public UnitType array(DataType inner) throws InternalException, InternalException
+            {
+                b.t(FormatLexer.OPEN_SQUARE);
+                inner.save(b, false);
+                b.t(FormatLexer.CLOSE_SQUARE);
                 return UnitType.UNIT;
             }
         });

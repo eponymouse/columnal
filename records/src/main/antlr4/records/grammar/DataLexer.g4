@@ -19,6 +19,10 @@ NEWLINE : '\r'? '\n' ;
 
 TRUE: 'true';
 FALSE: 'false';
+OPEN_ROUND : '(';
+CLOSE_ROUND : ')';
+OPEN_SQUARE : '[';
+CLOSE_SQUARE : ']';
 
 UNQUOTED_IDENT : ~[ \t\n\r"()@+-/*&|=?:;~$!<>\\]+ {utility.Utility.validUnquoted(getText())}?;
 

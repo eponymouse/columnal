@@ -15,9 +15,9 @@ import java.util.List;
 @OnThread(Tag.Simulation)
 public interface FoldOperation<T, R>
 {
-    default List<R> start() { return Collections.emptyList(); }
+    default List<@NonNull R> start() { return Collections.emptyList(); }
 
-    default List<R> process(@NonNull T n, int index) throws InternalException, UserException { return Collections.emptyList(); }
+    default List<@NonNull R> process(@NonNull T n, int index) throws InternalException, UserException { return Collections.emptyList(); }
 
-    default List<R> end() throws UserException  { return Collections.emptyList(); }
+    default List<@NonNull R> end() throws UserException  { return Collections.emptyList(); }
 }

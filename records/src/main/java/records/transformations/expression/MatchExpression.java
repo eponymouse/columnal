@@ -165,8 +165,27 @@ public class MatchExpression extends Expression
         @Override
         public @Nullable EvaluateState match(int rowIndex, Object val, EvaluateState state) throws InternalException, UserException
         {
-            if (val instanceof Pair && ((Pair)val).getFirst() instanceof Integer)
-                return ((Integer)((Pair<Integer, @Nullable Object>)val).getFirst()) == tagIndex ? (subPattern == null ? state : subPattern.match(rowIndex, ((Pair)val).getSecond(), state)) : null;
+            if (val instanceof Pair)
+            {
+                Pair<Integer, @Nullable Object> p = (Pair<Integer, @Nullable Object>)val;
+                if (p.getFirst() instanceof Integer)
+                {
+                    @Nullable Object innerValue = p.getSecond();
+                    if ((p.getFirst()) == tagIndex)
+                    {
+                        if (subPattern == null && innerValue == null)
+                            return state;
+                        else if (subPattern != null && innerValue != null)
+                            return subPattern.match(rowIndex, innerValue, state);
+                        if (subPattern == null && innerValue != null)
+                            throw new InternalException("Pattern match had inner value but no inner pattern");
+                        else //if (subPattern != null && innerValue == null)
+                            throw new InternalException("Pattern match had inner pattern but no inner value");
+                    }
+                    else
+                        return null;
+                }
+            }
             throw new InternalException("Unexpected type; should be integer for tag index but was " + val.getClass());
         }
 
