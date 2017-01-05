@@ -87,7 +87,7 @@ public class PropNumericFunctions
             assertNotNull(instance);
             assertTrue(instance.getSecond().isNumber());
             assertEquals(mgr.loadUse(expectedUnit), instance.getSecond().getNumberInfo().getUnit());
-            Object num = instance.getFirst().getValue(0, Collections.singletonList(Collections.singletonList(src))).get(0);
+            Object num = instance.getFirst().getValue(0, Collections.singletonList(Collections.singletonList(src)));
             return (Number)num;
         }
         catch (RuntimeException e)

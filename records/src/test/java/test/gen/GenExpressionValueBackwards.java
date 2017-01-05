@@ -16,7 +16,6 @@ import records.data.MemoryStringColumn;
 import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
 import records.data.RecordSet;
-import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -29,6 +28,7 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.FunctionInt;
 import records.error.InternalException;
+import records.error.UnimplementedException;
 import records.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.Op;
@@ -118,7 +118,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         try
         {
             DataType type = makeType(r);
-            Pair<List<Object>, Expression> p = makeOfType(type);
+            Pair<Object, Expression> p = makeOfType(type);
             return new ExpressionValue(type, p.getFirst(), getRecordSet(), p.getSecond());
         }
         catch (InternalException | UserException e)
@@ -137,9 +137,9 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
     // Only valid after calling generate
     @NotNull
     @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public Pair<List<Object>, Expression> makeOfType(DataType type) throws UserException, InternalException
+    public Pair<Object, Expression> makeOfType(DataType type) throws UserException, InternalException
     {
-        List<Object> value = makeValue(type);
+        Object value = makeValue(type);
         Expression expression = make(type, value, 4);
         return new Pair<>(value, expression);
     }
@@ -149,7 +149,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         return r.choose(distinctTypes);
     }
 
-    private Expression make(DataType type, List<Object> targetValue, int maxLevels) throws UserException, InternalException
+    private Expression make(DataType type, Object targetValue, int maxLevels) throws UserException, InternalException
     {
         return type.apply(new DataTypeVisitor<Expression>()
         {
@@ -160,7 +160,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                 // could cause failures in things like equal expressions.
                 return termDeep(maxLevels, type, l(
                     () -> columnRef(type, targetValue),
-                    () -> new NumericLiteral((Number)targetValue.get(0), displayInfo.getUnit())
+                    () -> new NumericLiteral((Number)targetValue, displayInfo.getUnit())
                 ), l(() -> {
                     // We just make up a bunch of numbers, and at the very end we add one more to correct the difference
                     int numMiddle = r.nextInt(0, 6);
@@ -184,7 +184,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                         }
                     }
                     // Now add one more to make the difference:
-                    BigInteger diff = (targetValue.get(0) instanceof BigInteger ? (BigInteger)targetValue.get(0) : BigInteger.valueOf(((Number)targetValue.get(0)).longValue())).subtract(curTotal);
+                    BigInteger diff = (targetValue instanceof BigInteger ? (BigInteger)targetValue : BigInteger.valueOf(((Number)targetValue).longValue())).subtract(curTotal);
                     boolean add = r.nextBoolean();
                     expressions.add(make(type, Collections.singletonList(add ? diff : diff.negate()), maxLevels - 1));
                     ops.add(add ? Op.ADD : Op.SUBTRACT);
@@ -202,7 +202,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                             denominator = genInt();
                         }
                         while (Utility.compareNumbers(denominator, 0) == 0);
-                        Number numerator = Utility.multiplyNumbers((Number) targetValue.get(0), denominator);
+                        Number numerator = Utility.multiplyNumbers((Number) targetValue, denominator);
                         // Either just use numerator, or make up crazy one
                         Unit numUnit = r.nextBoolean() ? displayInfo.getUnit() : makeUnit();
                         Unit denomUnit = calculateRequiredMultiplyUnit(numUnit, displayInfo.getUnit()).reciprocal();
@@ -217,7 +217,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             {
                 return termDeep(maxLevels, type, l(
                     () -> columnRef(type, targetValue),
-                    () -> new StringLiteral((String)targetValue.get(0))
+                    () -> new StringLiteral((String)targetValue)
                 ), l());
             }
 
@@ -225,7 +225,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             public Expression date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 List<ExpressionMaker> deep = new ArrayList<ExpressionMaker>();
-                deep.add(() -> new CallExpression(getCreator(dateTimeInfo.getType()), make(DataType.TEXT, Collections.singletonList(targetValue.get(0).toString()), maxLevels - 1)));
+                deep.add(() -> new CallExpression(getCreator(dateTimeInfo.getType()), make(DataType.TEXT, Collections.singletonList(targetValue.toString()), maxLevels - 1)));
 
                 switch (dateTimeInfo.getType())
                 {
@@ -233,8 +233,8 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                     {
                         DateTimeType dateTimeType = r.choose(Arrays.asList(DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
                         DataType t = DataType.date(new DateTimeInfo(dateTimeType));
-                        deep.add(() -> new CallExpression("date", make(t, Collections.singletonList(makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue.get(0))), maxLevels - 1)));
-                        LocalDate target = (LocalDate) targetValue.get(0);
+                        deep.add(() -> new CallExpression("date", make(t, Collections.singletonList(makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue)), maxLevels - 1)));
+                        LocalDate target = (LocalDate) targetValue;
                         deep.add(() -> new CallExpression("date",
                             make(DataType.number(new NumberInfo(getUnit("year"), 0)), Collections.singletonList(target.getYear()), maxLevels - 1),
                             make(DataType.number(new NumberInfo(getUnit("month"), 0)), Collections.singletonList(target.getMonthValue()), maxLevels - 1),
@@ -250,8 +250,8 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                     {
                         DateTimeType dateTimeType = r.choose(Arrays.asList(DateTimeType.YEARMONTHDAY, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
                         DataType t = DataType.date(new DateTimeInfo(dateTimeType));
-                        deep.add(() -> new CallExpression("dateym", make(t, Collections.singletonList(makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue.get(0))), maxLevels - 1)));
-                        YearMonth target = (YearMonth) targetValue.get(0);
+                        deep.add(() -> new CallExpression("dateym", make(t, Collections.singletonList(makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue)), maxLevels - 1)));
+                        YearMonth target = (YearMonth) targetValue;
                         deep.add(() -> new CallExpression("dateym",
                             make(DataType.number(new NumberInfo(getUnit("year"), 0)), Collections.singletonList(target.getYear()), maxLevels - 1),
                             make(DataType.number(new NumberInfo(getUnit("month"), 0)), Collections.singletonList(target.getMonthValue()), maxLevels - 1)
@@ -262,8 +262,8 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                     {
                         DateTimeType dateTimeType = r.choose(Arrays.asList(DateTimeType.TIMEOFDAYZONED, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
                         DataType t = DataType.date(new DateTimeInfo(dateTimeType));
-                        deep.add(() -> new CallExpression("time", make(t, Collections.singletonList(makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue.get(0))), maxLevels - 1)));
-                        LocalTime target = (LocalTime) targetValue.get(0);
+                        deep.add(() -> new CallExpression("time", make(t, Collections.singletonList(makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue)), maxLevels - 1)));
+                        LocalTime target = (LocalTime) targetValue;
                         deep.add(() -> new CallExpression("time",
                             make(DataType.number(new NumberInfo(getUnit("hour"), 0)), Collections.singletonList(target.getHour()), maxLevels - 1),
                             make(DataType.number(new NumberInfo(getUnit("min"), 0)), Collections.singletonList(target.getMinute()), maxLevels - 1),
@@ -276,8 +276,8 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                     {
                         DateTimeType dateTimeType = r.choose(Arrays.asList(DateTimeType.DATETIMEZONED));
                         DataType t = DataType.date(new DateTimeInfo(dateTimeType));
-                        deep.add(() -> new CallExpression("timez", make(t, Collections.singletonList(makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue.get(0))), maxLevels - 1)));
-                        OffsetTime target = (OffsetTime) targetValue.get(0);
+                        deep.add(() -> new CallExpression("timez", make(t, Collections.singletonList(makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue)), maxLevels - 1)));
+                        OffsetTime target = (OffsetTime) targetValue;
                         deep.add(() -> new CallExpression("timez",
                             make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), Collections.singletonList(target.toLocalTime()), maxLevels - 1),
                             make(DataType.TEXT, Collections.singletonList(target.getOffset().toString()), maxLevels - 1)
@@ -286,7 +286,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                         break;
                     case DATETIME:
                     {
-                        LocalDateTime target = (LocalDateTime) targetValue.get(0);
+                        LocalDateTime target = (LocalDateTime) targetValue;
                         //date+time+zone:
                         deep.add(() -> new CallExpression("datetime",
                             make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), Collections.singletonList(target.toLocalDate()), maxLevels - 1),
@@ -296,7 +296,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                         break;
                     case DATETIMEZONED:
                     {
-                        ZonedDateTime target = (ZonedDateTime) targetValue.get(0);
+                        ZonedDateTime target = (ZonedDateTime) targetValue;
                         //datetime+zone
                         deep.add(() -> new CallExpression("datetimez",
                             make(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), Collections.singletonList(target.toLocalDateTime()), maxLevels - 1),
@@ -318,19 +318,19 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                 }
 
                 return termDeep(maxLevels, type, l((ExpressionMaker)() -> {
-                    return new CallExpression(getCreator(dateTimeInfo.getType()), new StringLiteral(targetValue.get(0).toString()));
+                    return new CallExpression(getCreator(dateTimeInfo.getType()), new StringLiteral(targetValue.toString()));
                 }), deep);
             }
 
             @Override
             public Expression bool() throws InternalException, UserException
             {
-                boolean target = (Boolean)targetValue.get(0);
+                boolean target = (Boolean)targetValue;
                 return termDeep(maxLevels, type, l(() -> columnRef(type, targetValue), () -> new BooleanLiteral(target)), l(
                     () -> {
                         DataType t = makeType(r);
-                        List<Object> valA = makeValue(t);
-                        List<Object> valB;
+                        Object valA = makeValue(t);
+                        Object valB;
                         int attempts = 0;
                         do
                         {
@@ -338,13 +338,13 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                             if (attempts++ >= 100)
                                 return new BooleanLiteral(target);
                         }
-                        while (Utility.compareLists(valA, valB) == 0);
+                        while (Utility.compareValues(valA, valB) == 0);
                         return new EqualExpression(make(t, valA, maxLevels - 1), make(t, target == true ? valA : valB, maxLevels - 1));
                     },
                     () -> {
                         DataType t = makeType(r);
-                        List<Object> valA = makeValue(t);
-                        List<Object> valB;
+                        Object valA = makeValue(t);
+                        Object valB;
                         int attempts = 0;
                         do
                         {
@@ -352,12 +352,12 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                             if (attempts++ >= 100)
                                 return new BooleanLiteral(target);
                         }
-                        while (Utility.compareLists(valA, valB) == 0);
+                        while (Utility.compareValues(valA, valB) == 0);
                         return new NotEqualExpression(make(t, valA, maxLevels - 1), make(t, target == true ? valB : valA, maxLevels - 1));
                     },
                     () -> {
                         // If target is true, all must be true:
-                        if ((Boolean)targetValue.get(0))
+                        if ((Boolean)targetValue)
                             return new AndExpression(TestUtil.makeList(r, 2, 5, () -> make(DataType.BOOLEAN, Collections.singletonList(true), maxLevels - 1)));
                         // Otherwise they can take on random values, but one must be false:
                         else
@@ -372,7 +372,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                     },
                     () -> {
                         // If target is false, all must be false:
-                        if ((Boolean)targetValue.get(0) == false)
+                        if ((Boolean)targetValue == false)
                             return new OrExpression(TestUtil.makeList(r, 2, 5, () -> make(DataType.BOOLEAN, Collections.singletonList(false), maxLevels - 1)));
                             // Otherwise they can take on random values, but one must be false:
                         else
@@ -393,7 +393,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             {
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
-                TagType<DataType> tag = tags.get((Integer) targetValue.get(0));
+                TagType<DataType> tag = tags.get((Integer)((Pair<Integer, Object>)targetValue).getFirst());
                 Pair<String, String> name = new Pair<>(typeName.getRaw(), tag.getName());
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
@@ -403,9 +403,21 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                 else
                 {
                     final @NonNull DataType nonNullInner = inner;
-                    nonTerm.add(() -> new TagExpression(name, make(nonNullInner, targetValue.subList(1, targetValue.size()), maxLevels - 1)));
+                    nonTerm.add(() -> new TagExpression(name, make(nonNullInner, ((Pair<Integer, Object>)targetValue).getSecond(), maxLevels - 1)));
                 }
                 return termDeep(maxLevels, type, terminals, nonTerm);
+            }
+
+            @Override
+            public Expression tuple(List<DataType> inner) throws InternalException, UserException
+            {
+                throw new UnimplementedException();
+            }
+
+            @Override
+            public Expression array(DataType inner) throws InternalException, UserException
+            {
+                throw new UnimplementedException();
             }
         });
     }
@@ -521,7 +533,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         return n instanceof BigInteger ? (BigInteger)n : BigInteger.valueOf(n.longValue());
     }
 
-    private Expression columnRef(DataType type, List<Object> value)
+    private Expression columnRef(DataType type, Object value)
     {
         ColumnId name = new ColumnId("GEV Col " + columns.size());
         columns.add(rs -> type.apply(new DataTypeVisitor<Column>()
@@ -529,31 +541,43 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             @Override
             public Column number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return new MemoryNumericColumn(rs, name, new NumberInfo(displayInfo.getUnit(), displayInfo.getMinimumDP()), Stream.of(Utility.toBigDecimal((Number) value.get(0)).toPlainString()));
+                return new MemoryNumericColumn(rs, name, new NumberInfo(displayInfo.getUnit(), displayInfo.getMinimumDP()), Stream.of(Utility.toBigDecimal((Number) value).toPlainString()));
             }
 
             @Override
             public Column text() throws InternalException, UserException
             {
-                return new MemoryStringColumn(rs, name, Collections.singletonList((String)value.get(0)));
+                return new MemoryStringColumn(rs, name, Collections.singletonList((String)value));
             }
 
             @Override
             public Column date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return new MemoryTemporalColumn(rs, name, new DateTimeInfo(DateTimeType.YEARMONTHDAY), Collections.singletonList((Temporal)value.get(0)));
+                return new MemoryTemporalColumn(rs, name, new DateTimeInfo(DateTimeType.YEARMONTHDAY), Collections.singletonList((Temporal)value));
             }
 
             @Override
             public Column bool() throws InternalException, UserException
             {
-                return new MemoryBooleanColumn(rs, name, Collections.singletonList((Boolean) value.get(0)));
+                return new MemoryBooleanColumn(rs, name, Collections.singletonList((Boolean) value));
             }
 
             @Override
             public Column tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return new MemoryTaggedColumn(rs, name, typeName, tags, Collections.singletonList(value));
+                return new MemoryTaggedColumn(rs, name, typeName, tags, Collections.singletonList((Pair)value));
+            }
+
+            @Override
+            public Column tuple(List<DataType> inner) throws InternalException, UserException
+            {
+                throw new UnimplementedException();
+            }
+
+            @Override
+            public Column array(DataType inner) throws InternalException, UserException
+            {
+                throw new UnimplementedException();
             }
         }));
         return new ColumnReference(name);
@@ -570,44 +594,44 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         return Arrays.asList(suppliers);
     }
 
-    private List<Object> makeValue(DataType t) throws UserException, InternalException
+    private Object makeValue(DataType t) throws UserException, InternalException
     {
-        return t.apply(new DataTypeVisitor<List<Object>>()
+        return t.apply(new DataTypeVisitor<Object>()
         {
             @Override
-            public List<Object> number(NumberInfo displayInfo) throws InternalException, UserException
+            public Object number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return Collections.singletonList(genInt());
+                return genInt();
             }
 
             @Override
-            public List<Object> text() throws InternalException, UserException
+            public Object text() throws InternalException, UserException
             {
-                return Collections.singletonList(TestUtil.makeString(r, gs));
+                return TestUtil.makeString(r, gs);
             }
 
             @Override
-            public List<Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 switch (dateTimeInfo.getType())
                 {
                     case YEARMONTHDAY:
-                        return Collections.singletonList(TestUtil.generateDate(r, gs));
+                        return TestUtil.generateDate(r, gs);
                     case YEARMONTH:
-                        return Collections.singletonList(YearMonth.of(r.nextInt(1, 9999), r.nextInt(1, 12)));
+                        return YearMonth.of(r.nextInt(1, 9999), r.nextInt(1, 12));
                     case TIMEOFDAY:
-                        return Collections.singletonList(TestUtil.generateTime(r, gs));
+                        return TestUtil.generateTime(r, gs);
                     case TIMEOFDAYZONED:
-                        return Collections.singletonList(OffsetTime.of(TestUtil.generateTime(r, gs), new ZoneOffsetGenerator().generate(r, gs)));
+                        return OffsetTime.of(TestUtil.generateTime(r, gs), new ZoneOffsetGenerator().generate(r, gs));
                     case DATETIME:
-                        return Collections.singletonList(TestUtil.generateDateTime(r, gs));
+                        return TestUtil.generateDateTime(r, gs);
                     case DATETIMEZONED:
                         // Can be geographical or pure offset:
-                        return Collections.singletonList(ZonedDateTime.of(TestUtil.generateDateTime(r, gs),
+                        return ZonedDateTime.of(TestUtil.generateDateTime(r, gs),
                             r.nextBoolean() ?
                                 new GenZoneId().generate(r, gs) :
                                 ZoneId.ofOffset("", new ZoneOffsetGenerator().generate(r, gs))
-                        ).withFixedOffsetZone());
+                        ).withFixedOffsetZone();
                     default:
                         throw new InternalException("Unknown date type: " + dateTimeInfo.getType());
                 }
@@ -615,23 +639,34 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public List<Object> bool() throws InternalException, UserException
+            public Object bool() throws InternalException, UserException
             {
-                return Collections.singletonList(r.nextBoolean());
+                return r.nextBoolean();
             }
 
             @Override
-            public List<Object> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Object tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tagIndex = r.nextInt(0, tags.size() - 1);
-                ArrayList<Object> o;
+                @Nullable Object o;
                 @Nullable DataType inner = tags.get(tagIndex).getInner();
                 if (inner != null)
-                    o = new ArrayList<>(makeValue(inner));
+                    o = makeValue(inner);
                 else
-                    o = new ArrayList<>();
-                o.add(0, tagIndex);
-                return o;
+                    o = null;
+                return new Pair<Integer, @Nullable Object>(tagIndex, o);
+            }
+
+            @Override
+            public Object tuple(List<DataType> inner) throws InternalException, UserException
+            {
+                throw new UnimplementedException();
+            }
+
+            @Override
+            public Object array(DataType inner) throws InternalException, UserException
+            {
+                throw new UnimplementedException();
             }
         });
     }
@@ -653,7 +688,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
     private Expression makeMatch(int maxLevels, ExSupplier<Expression> makeCorrectOutcome, ExSupplier<Expression> makeOtherOutcome) throws InternalException, UserException
     {
         DataType t = makeType(r);
-        List<Object> actual = makeValue(t);
+        Object actual = makeValue(t);
         // Make a bunch of guards which won't fire:
         List<Function<MatchExpression, MatchClause>> clauses = new ArrayList<>(TestUtil.makeList(r, 0, 5, (ExSupplier<Optional<Function<MatchExpression, MatchClause>>>)() -> {
             // Generate a bunch which can't match the item:
@@ -679,22 +714,23 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
 
     // Pattern and an optional guard
     @NotNull
-    private Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> makePatternMatch(int maxLevels, DataType t, List<Object> actual)
+    private Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> makePatternMatch(int maxLevels, DataType t, Object actual)
     {
         try
         {
             if (t.isTagged() && r.nextBoolean())
             {
+                Pair<Integer, Object> p = (Pair)actual;
                 return t.apply(new SpecificDataTypeVisitor<Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression>>()
                 {
                     @Override
                     public Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> tagged(TypeId typeName, List<TagType<DataType>> tagTypes) throws InternalException, UserException
                     {
-                        TagType<DataType> tagType = tagTypes.get((Integer) actual.get(0));
+                        TagType<DataType> tagType = tagTypes.get((Integer) p.getFirst());
                         @Nullable DataType inner = tagType.getInner();
                         if (inner == null)
                             return new Pair<>(me -> me.new PatternMatchConstructor(tagType.getName(), null), null);
-                        Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> subPattern = makePatternMatch(maxLevels, inner, actual.subList(1, actual.size()));
+                        Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> subPattern = makePatternMatch(maxLevels, inner, p.getSecond());
                         return new Pair<>(me -> me.new PatternMatchConstructor(tagType.getName(), subPattern.getFirst().apply(me)), subPattern.getSecond());
                     }
                 });
@@ -714,7 +750,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         }
     }
 
-    private List<Function<MatchExpression, Pattern>> makeNonMatchingPatterns(final int maxLevels, final DataType t, List<Object> actual)
+    private List<Function<MatchExpression, Pattern>> makeNonMatchingPatterns(final int maxLevels, final DataType t, Object actual)
     {
         class CantMakeNonMatching extends RuntimeException {}
         try
@@ -724,7 +760,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                 Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> match = r.choose(Arrays.<ExSupplier<Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression>>>asList(
                     () ->
                     {
-                        List<Object> nonMatchingValue;
+                        Object nonMatchingValue;
                         int attempts = 0;
                         do
                         {
@@ -732,8 +768,8 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                             if (attempts++ >= 30)
                                 throw new CantMakeNonMatching();
                         }
-                        while (Utility.compareLists(nonMatchingValue, actual) == 0);
-                        List<Object> nonMatchingValueFinal = nonMatchingValue;
+                        while (Utility.compareValues(nonMatchingValue, actual) == 0);
+                        Object nonMatchingValueFinal = nonMatchingValue;
                         return makePatternMatch(maxLevels - 1, t, nonMatchingValueFinal);
                     }
                 )).get();

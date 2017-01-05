@@ -15,7 +15,6 @@ import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
 import records.data.RecordSet;
 import records.data.TableManager;
-import records.data.columntype.NumericColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -25,17 +24,16 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.error.InternalException;
+import records.error.UnimplementedException;
 import records.error.UserException;
-import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExSupplier;
+import utility.Pair;
 
 import java.math.BigDecimal;
-import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
@@ -148,7 +146,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                     DataType type = mgr.getTypeManager().registerTaggedType(TestUtil.makeNonEmptyString(sourceOfRandomness, generationStatus), tags);
                     return new MemoryTaggedColumn(rs, nextCol.get(), type.getTaggedTypeName(), tags, TestUtil.makeList(len, new TagDataGenerator(tags), sourceOfRandomness, generationStatus));
                 }
-                catch (InternalException | UserException e)
+                catch (InternalException e)
                 {
                     throw new RuntimeException(e);
                 }
@@ -193,64 +191,74 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
         });
     }
 
-    private static class TagDataGenerator extends Generator<List<Object>>
+    private static class TagDataGenerator extends Generator<Pair<Integer, @Nullable Object>>
     {
         private final List<TagType<DataType>> tags;
 
         public TagDataGenerator(List<TagType<DataType>> tags)
         {
-            super((Class<List<Object>>)(Class<?>)List.class);
+            super((Class)Pair.class);
             this.tags = tags;
         }
 
         @Override
-        public List<Object> generate(SourceOfRandomness r, GenerationStatus generationStatus)
+        public Pair<Integer, @Nullable Object> generate(SourceOfRandomness r, GenerationStatus generationStatus)
         {
             int tagIndex = r.nextInt(0, tags.size() - 1);
             TagType<DataType> tag = tags.get(tagIndex);
             @Nullable DataType inner = tag.getInner();
             if (inner == null)
-                return Collections.singletonList((Integer)tagIndex);
+                return new Pair<>((Integer)tagIndex, null);
             else
             {
                 try
                 {
-                    List<Object> o = new ArrayList<>();
-                    o.add((Integer) tagIndex);
-                    o.addAll(inner.apply(new DataTypeVisitor<List<Object>>()
+                    Object value = inner.<Object, UserException>apply(new DataTypeVisitor<Object>()
                     {
 
                         @Override
-                        public List<Object> number(NumberInfo displayInfo) throws InternalException, UserException
+                        public Object number(NumberInfo displayInfo) throws InternalException, UserException
                         {
-                            return Collections.singletonList(TestUtil.generateNumber(r, generationStatus));
+                            return TestUtil.generateNumber(r, generationStatus);
                         }
 
                         @Override
-                        public List<Object> text() throws InternalException, UserException
+                        public Object text() throws InternalException, UserException
                         {
-                            return Collections.singletonList(TestUtil.makeString(r, generationStatus));
+                            return TestUtil.makeString(r, generationStatus);
                         }
 
                         @Override
-                        public List<Object> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+                        public Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                         {
-                            return Collections.singletonList(TestUtil.generateDate(r, generationStatus));
+                            return TestUtil.generateDate(r, generationStatus);
                         }
 
                         @Override
-                        public List<Object> bool() throws InternalException, UserException
+                        public Object bool() throws InternalException, UserException
                         {
-                            return Collections.singletonList(r.nextBoolean());
+                            return r.nextBoolean();
                         }
 
                         @Override
-                        public List<Object> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+                        public Object tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
                         {
                             return new TagDataGenerator(tags).generate(r, generationStatus);
                         }
-                    }));
-                    return o;
+
+                        @Override
+                        public Object tuple(List<DataType> inner) throws InternalException, UserException
+                        {
+                            throw new UnimplementedException();
+                        }
+
+                        @Override
+                        public Object array(DataType inner) throws InternalException, UserException
+                        {
+                            throw new UnimplementedException();
+                        }
+                    });
+                    return new Pair<>((Integer) tagIndex, value);
                 }
                 catch (InternalException | UserException e)
                 {

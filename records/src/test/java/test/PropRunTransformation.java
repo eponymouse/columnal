@@ -48,7 +48,7 @@ public class PropRunTransformation
             {
                 try
                 {
-                    int cmp = Utility.compareLists(a, b);
+                    int cmp = Utility.compareValues(a, b);
                     if (cmp > 0)
                     {
                         System.err.println("Problematic comparison: " + a + " vs " + b);

@@ -191,7 +191,7 @@ public class PropDateFunctions
                 throw new RuntimeException(new UserException(s));
             }, mgr);
             assertNotNull(instance);
-            return instance.getFirst().getValue(0, Collections.singletonList(Collections.singletonList(src))).get(0);
+            return instance.getFirst().getValue(0, Collections.singletonList(Collections.singletonList(src)));
         }
         catch (RuntimeException e)
         {

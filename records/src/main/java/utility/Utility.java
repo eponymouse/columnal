@@ -218,7 +218,7 @@ public class Utility
         return compareValues(ax, bx, null);
     }
 
-    private static int compareValues(Object ax, Object bx, @Nullable BigDecimal epsilon) throws InternalException
+    public static int compareValues(Object ax, Object bx, @Nullable BigDecimal epsilon) throws InternalException
     {
         int cmp;
         if (ax instanceof Number)

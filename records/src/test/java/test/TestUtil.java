@@ -164,20 +164,20 @@ public class TestUtil
     }
 
     @OnThread(Tag.Simulation)
-    public static StreamEx<List<List<Object>>> streamFlattened(RecordSet src)
+    public static StreamEx<List<Object>> streamFlattened(RecordSet src)
     {
-        return new StreamEx.Emitter<List<List<Object>>>()
+        return new StreamEx.Emitter<List<Object>>()
         {
             int nextIndex = 0;
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public @Nullable Emitter<List<List<Object>>> next(Consumer<? super List<List<Object>>> consumer)
+            public @Nullable Emitter<List<Object>> next(Consumer<? super List<Object>> consumer)
             {
                 try
                 {
                     if (src.indexValid(nextIndex))
                     {
-                        List<List<Object>> collapsed = src.getColumns().stream().map(c ->
+                        List<Object> collapsed = src.getColumns().stream().map(c ->
                         {
                             try
                             {
@@ -204,20 +204,20 @@ public class TestUtil
     }
 
     @OnThread(Tag.Simulation)
-    public static StreamEx<List<Object>> streamFlattened(Column column)
+    public static StreamEx<Object> streamFlattened(Column column)
     {
-        return new StreamEx.Emitter<List<Object>>()
+        return new StreamEx.Emitter<Object>()
         {
             int nextIndex = 0;
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public @Nullable Emitter<List<Object>> next(Consumer<? super List<Object>> consumer)
+            public @Nullable Emitter<Object> next(Consumer<? super Object> consumer)
             {
                 try
                 {
                     if (column.indexValid(nextIndex))
                     {
-                        List<Object> collapsed = column.getType().getCollapsed(nextIndex);
+                        Object collapsed = column.getType().getCollapsed(nextIndex);
                         consumer.accept(collapsed);
                         nextIndex += 1;
                         return this;
@@ -239,9 +239,9 @@ public class TestUtil
 
     @OnThread(Tag.Simulation)
     @SuppressWarnings("nullness")
-    public static Map<List<List<Object>>, Long> getRowFreq(RecordSet src)
+    public static Map<List<Object>, Long> getRowFreq(RecordSet src)
     {
-        return streamFlattened(src).collect(Collectors.groupingBy(Function.identity(), Collectors.counting()));
+        return streamFlattened(src).collect(Collectors.groupingBy(Function.<List<Object>>identity(), Collectors.<List<Object>>counting()));
     }
 
     public static String makeString(SourceOfRandomness r, GenerationStatus gs)
