@@ -88,14 +88,14 @@ public class AddSubtractExpression extends NaryOpExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         Number n = (Number)expressions.get(0).getValue(rowIndex, state);
         for (int i = 1; i < expressions.size(); i++)
         {
             n = Utility.addSubtractNumbers(n, (Number)expressions.get(i).getValue(rowIndex, state), ops.get(i - 1) == ADD);
         }
-        return Collections.singletonList(n);
+        return n;
     }
 
     @Override

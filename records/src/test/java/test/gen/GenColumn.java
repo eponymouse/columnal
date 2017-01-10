@@ -165,7 +165,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                 String name;
                 do
                 {
-                    name = TestUtil.makeString(sourceOfRandomness, generationStatus);
+                    name = TestUtil.makeNonEmptyString(sourceOfRandomness, generationStatus);
                 }
                 while (usedNames.contains(name));
                 usedNames.add(name);

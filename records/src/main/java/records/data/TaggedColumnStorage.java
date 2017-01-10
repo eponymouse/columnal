@@ -64,7 +64,9 @@ public class TaggedColumnStorage implements ColumnStorage<Pair<Integer, @Nullabl
             if (inner != null)
             {
                 ColumnStorage<?> result = DataTypeUtility.makeColumnStorage(inner);
-                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), result.getType()));
+                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), result.getType().copy((rowIndex, prog) -> {
+                    return result.get(innerValueIndex.get(rowIndex).intValue());
+                })));
                 valueStores.add(result);
             }
             else

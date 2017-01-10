@@ -59,7 +59,7 @@ public class PropFormat
             assertEquals("Right row length for row " + i + " (+" + formatAndData.format.headerRows + "):\n" + formatAndData.content.get(i + formatAndData.format.headerRows) + "\n" + format + "\n" + Utility.listToString(formatAndData.loadedContent.get(i)) + " guessed: " + "", ds.getData().getColumns().size(), formatAndData.loadedContent.get(i).size());
             for (int c = 0; c < ds.getData().getColumns().size(); c++)
             {
-                List<Object> expected = formatAndData.loadedContent.get(i).get(c);
+                Object expected = formatAndData.loadedContent.get(i).get(c);
                 Object loaded = ds.getData().getColumns().get(c).getType().getCollapsed(i);
                 assertEquals("Column " + c + " expected: " + expected + " was " + loaded + " from row " + formatAndData.content.get(i + 1), 0, Utility.compareValues(expected, loaded));
             }

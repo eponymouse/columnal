@@ -276,7 +276,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                         runningTotal = Utility.multiplyNumbers(runningTotal, (Number)pair.getFirst());
                         expressions.add(pair.getSecond());
                     }
-                    return new Pair<>(Collections.singletonList(runningTotal), new TimesExpression(expressions));
+                    return new Pair<>(runningTotal, new TimesExpression(expressions));
                 }));
             }
 
@@ -373,22 +373,22 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                     {
                         case YEARMONTHDAY:
                             LocalDate date = TestUtil.generateDate(r, gs);
-                            return new Pair<>(Collections.singletonList(date), new CallExpression("date", new StringLiteral(date.toString())));
+                            return new Pair<>(date, new CallExpression("date", new StringLiteral(date.toString())));
                         case YEARMONTH:
                             YearMonth ym = YearMonth.from(TestUtil.generateDate(r, gs));
-                            return new Pair<>(Collections.singletonList(ym), new CallExpression("dateym", new StringLiteral(ym.toString())));
+                            return new Pair<>(ym, new CallExpression("dateym", new StringLiteral(ym.toString())));
                         case TIMEOFDAY:
                             LocalTime time = TestUtil.generateTime(r, gs);
-                            return new Pair<>(Collections.singletonList(time), new CallExpression("time", new StringLiteral(time.toString())));
+                            return new Pair<>(time, new CallExpression("time", new StringLiteral(time.toString())));
                         case TIMEOFDAYZONED:
                             OffsetTime timez = OffsetTime.from(TestUtil.generateDateTimeZoned(r, gs));
-                            return new Pair<>(Collections.singletonList(timez), new CallExpression("timez", new StringLiteral(timez.toString())));
+                            return new Pair<>(timez, new CallExpression("timez", new StringLiteral(timez.toString())));
                         case DATETIME:
                             LocalDateTime dateTime = TestUtil.generateDateTime(r, gs);
-                            return new Pair<>(Collections.singletonList(dateTime), new CallExpression("datetime", new StringLiteral(dateTime.toString())));
+                            return new Pair<>(dateTime, new CallExpression("datetime", new StringLiteral(dateTime.toString())));
                         case DATETIMEZONED:
                             ZonedDateTime zonedDateTime = TestUtil.generateDateTimeZoned(r, gs);
-                            return new Pair<>(Collections.singletonList(zonedDateTime.withFixedOffsetZone()), new CallExpression("datetimez", new StringLiteral(zonedDateTime.toString())));
+                            return new Pair<>(zonedDateTime.withFixedOffsetZone(), new CallExpression("datetimez", new StringLiteral(zonedDateTime.toString())));
 
                     }
                     throw new RuntimeException("No date generator for " + dateTimeInfo.getType());
@@ -401,7 +401,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                             int year = r.nextInt(1, 9999);
                             int month = r.nextInt(1, 12);
                             int day = r.nextInt(1, 28);
-                            return new Pair<>(Collections.singletonList(LocalDate.of(year, month, day)), new CallExpression("date",
+                            return new Pair<>(LocalDate.of(year, month, day), new CallExpression("date",
                                 new NumericLiteral(year, getUnit("year")),
                                 new NumericLiteral(month, getUnit("month")),
                                 new NumericLiteral(day, getUnit("day"))
@@ -412,7 +412,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                         shallow.add(() -> {
                             int year = r.nextInt(1, 9999);
                             int month = r.nextInt(1, 12);
-                            return new Pair<>(Collections.singletonList(YearMonth.of(year, month)), new CallExpression("dateym",
+                            return new Pair<>(YearMonth.of(year, month), new CallExpression("dateym",
                                 new NumericLiteral(year, getUnit("year")),
                                 new NumericLiteral(month, getUnit("month"))
                             ));
@@ -424,7 +424,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                             int minute = r.nextInt(0, 59);
                             int second = r.nextInt(0, 59);
                             int nano = r.nextInt(0, 999999999);
-                            return new Pair<>(Collections.singletonList(LocalTime.of(hour, minute, second, nano)), new CallExpression("time",
+                            return new Pair<>(LocalTime.of(hour, minute, second, nano), new CallExpression("time",
                                 new NumericLiteral(hour, getUnit("hour")),
                                 new NumericLiteral(minute, getUnit("min")),
                                 new NumericLiteral(BigDecimal.valueOf(nano).divide(BigDecimal.valueOf(1_000_000_000)).add(BigDecimal.valueOf(second)), getUnit("s"))
@@ -441,7 +441,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                 return termDeep(maxLevels, type, l(() -> columnRef(type), () ->
                 {
                     boolean value = r.nextBoolean();
-                    return new Pair<>(Collections.singletonList(value), new BooleanLiteral(value));
+                    return new Pair<>(value, new BooleanLiteral(value));
                 }), l(
                     () -> {
                         DataType t = makeType(r);
@@ -483,7 +483,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {
-                    terminals.add(() -> new Pair<>(Collections.singletonList(tagIndex), new TagExpression(name, null)));
+                    terminals.add(() -> new Pair<>(new Pair<Integer, @Nullable Object>(tagIndex, null), new TagExpression(name, null)));
                 }
                 else
                 {

@@ -54,15 +54,15 @@ public class OrExpression extends NaryOpExpression
     }
 
     @Override
-    public List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         for (Expression expression : expressions)
         {
             Boolean b = (Boolean) expression.getValue(rowIndex, state);
             if (b == true)
-                return Collections.singletonList(true);
+                return true;
         }
-        return Collections.singletonList(false);
+        return false;
     }
 
     @Override

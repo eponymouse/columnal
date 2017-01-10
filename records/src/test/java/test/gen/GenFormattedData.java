@@ -31,9 +31,11 @@ public class GenFormattedData extends Generator<FormatAndData>
     {
         public final TextFormat format;
         public final List<String> content;
-        public final List<List<List<Object>>> loadedContent;
+        // Outermost list is list of rows
+        // Next list in is list of columns.
+        public final List<List<Object>> loadedContent;
 
-        public FormatAndData(TextFormat format, List<String> content, List<List<List<Object>>> loadedContent)
+        public FormatAndData(TextFormat format, List<String> content, List<List<Object>> loadedContent)
         {
             this.format = format;
             this.content = content;
@@ -45,14 +47,14 @@ public class GenFormattedData extends Generator<FormatAndData>
     public FormatAndData generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
         List<String> fileContent = new ArrayList<>();
-        List<List<List<Object>>> intendedContent = new ArrayList<>();
+        List<List<Object>> intendedContent = new ArrayList<>();
         TextFormat format = new GenFormat().generate(r, generationStatus);
 
         fileContent.add(format.columnTypes.stream().map(c -> c.title.getOutput()).collect(Collectors.joining("" + format.separator)));
         int rowCount = r.nextInt(50, 200);
         for (int row = 0; row < 100; row++)
         {
-            List<List<Object>> data = new ArrayList<>();
+            List<Object> data = new ArrayList<>();
             StringBuilder line = new StringBuilder();
             List<ColumnInfo> columnTypes = format.columnTypes;
             for (int i = 0; i < columnTypes.size(); i++)
@@ -71,10 +73,10 @@ public class GenFormattedData extends Generator<FormatAndData>
                     {
                         String decimalDigs = String.format("%0" + numericColumnType.minDP + "d", Math.abs(r.nextInt())).substring(0, numericColumnType.minDP);
                         line.append("." + decimalDigs);
-                        data.add(Collections.<Object>singletonList(new BigDecimal(Long.toString(value) + "." + decimalDigs)));
+                        data.add(new BigDecimal(Long.toString(value) + "." + decimalDigs));
                     }
                     else
-                        data.add(Collections.<Object>singletonList((Long)value));
+                        data.add((Long)value);
                     line.append(r.nextBoolean() ? "" : numericColumnType.unit.getDisplaySuffix());
                 }
                 else if (c.type.isText())
@@ -82,7 +84,7 @@ public class GenFormattedData extends Generator<FormatAndData>
                     String str = TestUtil.makeString(r, generationStatus).replace("\n", "").replace("\r", "");
                     // TODO quote separators instead of removing them:
                     str = str.replace("" + format.separator, "");
-                    data.add(Collections.singletonList(str));
+                    data.add(str);
                     line.append(str);
                 }
                 else if (c.type.isDate())
@@ -96,7 +98,7 @@ public class GenFormattedData extends Generator<FormatAndData>
                     int month = 1 + r.nextInt(12);
                     int day = 1 + r.nextInt(28);
                     LocalDate date = LocalDate.of(year, month, day);
-                    data.add(Collections.singletonList(date));
+                    data.add(date);
 
                     line.append(date.format(dateColumnType.getDateTimeFormatter()));
                 }

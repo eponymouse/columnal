@@ -113,9 +113,9 @@ public class RaiseExpression extends BinaryOpExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        return Collections.singletonList(Utility.raiseNumber((Number)lhs.getValue(rowIndex, state), (Number) rhs.getValue(rowIndex, state)));
+        return Utility.raiseNumber((Number)lhs.getValue(rowIndex, state), (Number) rhs.getValue(rowIndex, state));
     }
 
     @Override

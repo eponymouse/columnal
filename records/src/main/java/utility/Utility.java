@@ -227,6 +227,19 @@ public class Utility
             cmp = compareLists((List<@NonNull ?>)ax, (List<@NonNull ?>)bx, epsilon);
         else if (ax instanceof Comparable)
             cmp = ((Comparable<Object>)ax).compareTo(bx);
+        else if (ax instanceof Pair)
+        {
+            @NonNull Integer ai = (@NonNull Integer)((Pair) ax).getFirst();
+            @NonNull Integer bi = (@NonNull Integer)((Pair) bx).getFirst();
+            cmp = Integer.compare(ai, bi);
+            if (cmp != 0)
+                return cmp;
+            Object a2 = ((Pair) ax).getSecond();
+            Object b2 = ((Pair) bx).getSecond();
+            if (a2 != null && b2 != null)
+                return compareValues(a2, b2, epsilon);
+            return 0; // Assume bx null too, if types match.
+        }
         else
             throw new InternalException("Uncomparable types: " + ax.getClass() + " " + bx.getClass());
         return cmp;

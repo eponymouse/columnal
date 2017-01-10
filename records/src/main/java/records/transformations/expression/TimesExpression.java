@@ -86,12 +86,12 @@ public class TimesExpression extends NaryOpExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         Number n = (Number) expressions.get(0).getValue(rowIndex, state);
         for (int i = 1; i < expressions.size(); i++)
             n = Utility.multiplyNumbers(n, (Number) expressions.get(i).getValue(rowIndex, state));
-        return Collections.singletonList(n);
+        return n;
     }
 
     @Override

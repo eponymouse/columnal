@@ -35,9 +35,9 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    public List<Object> getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        return Collections.singletonList(value);
+        return value;
     }
 
     @Override
