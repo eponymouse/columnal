@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
+import annotation.qual.Value;
 import org.junit.Test;
 import records.error.InternalException;
 import utility.Utility;
@@ -18,17 +19,17 @@ public class TestCompare
     public void testCompareList() throws InternalException
     {
         equal(o(), o());
-        less(o(), o("hi"));
-        equal(o("hi"), o("hi"));
-        equal(o("hi", "bye"), o("hi", "bye"));
+        less(o(), o(s("hi")));
+        equal(o(s("hi")), o(s("hi")));
+        equal(o(s("hi"), s("bye")), o(s("hi"), s("bye")));
 
-        less(o("hi", "bye"), o("hi5", "bye"));
-        less(o("hi", "bye"), o("hi", "bye2"));
-        less(o("hi", "bye"), o("hi5"));
+        less(o(s("hi"), s("bye")), o(s("hi5"), s("bye")));
+        less(o(s("hi"), s("bye")), o(s("hi"), s("bye2")));
+        less(o(s("hi"), s("bye")), o(s("hi5")));
         
-        equal(o(i(2), "hello"), o(i(2), "hello"));
-        less(o(i(1), "hello"), o(i(2), "hello"));
-        less(o(i(2), "hello"), o(i(2), "helloX"));
+        equal(o(i(2), s("hello")), o(i(2), s("hello")));
+        less(o(i(1), s("hello")), o(i(2), s("hello")));
+        less(o(i(2), s("hello")), o(i(2), s("helloX")));
         
         equal(o(i(2)), o(by(2)));
         less(o(i(1)), o(by(2)));
@@ -40,43 +41,42 @@ public class TestCompare
         less(o(i(1)), o(d(1.01)));
     }
 
-    private BigDecimal d(double v)
+    private @Value BigDecimal d(double v)
     {
-        return new BigDecimal(v);
+        return Utility.value(new BigDecimal(v));
     }
 
-    private Long l(int i)
+    private @Value Long l(int i)
     {
-        return (long)i;
+        return Utility.value((long)i);
     }
 
-    private Byte by(int i)
+    private @Value Byte by(int i)
     {
-        return (byte)i;
+        return Utility.value((byte)i);
     }
 
-    private Integer i(int i)
+    private @Value Integer i(int i)
     {
-        return i;
+        return Utility.value(i);
     }
 
-    private static List<Object> o(Object... os)
+    private @Value String s(String str) { return Utility.value(str); }
+
+    private static List<@Value Object> o(@Value Object... os)
     {
         return Arrays.asList(os);
     }
     
-    private static void equal(List<Object> a, List<Object> b) throws InternalException
+    private static void equal(List<@Value Object> a, List<@Value Object> b) throws InternalException
     {
         assertEquals(0, Utility.compareLists(a, b));
         assertEquals(0, Utility.compareLists(b, a));
-        assertEquals(0, Utility.compareLists(o(b), o(a)));
     }
 
-    private static void less(List<Object> a, List<Object> b) throws InternalException
+    private static void less(List<@Value Object> a, List<@Value Object> b) throws InternalException
     {
         assertEquals(-1, Utility.compareLists(a, b));
         assertEquals(1, Utility.compareLists(b, a));
-        assertEquals(-1, Utility.compareLists(o(a), o(b)));
-        assertEquals(1, Utility.compareLists(o(b), o(a)));
     }
 }

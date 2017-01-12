@@ -1,5 +1,6 @@
 package test;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -59,8 +60,8 @@ public class PropFormat
             assertEquals("Right row length for row " + i + " (+" + formatAndData.format.headerRows + "):\n" + formatAndData.content.get(i + formatAndData.format.headerRows) + "\n" + format + "\n" + Utility.listToString(formatAndData.loadedContent.get(i)) + " guessed: " + "", ds.getData().getColumns().size(), formatAndData.loadedContent.get(i).size());
             for (int c = 0; c < ds.getData().getColumns().size(); c++)
             {
-                Object expected = formatAndData.loadedContent.get(i).get(c);
-                Object loaded = ds.getData().getColumns().get(c).getType().getCollapsed(i);
+                @Value Object expected = formatAndData.loadedContent.get(i).get(c);
+                @Value Object loaded = ds.getData().getColumns().get(c).getType().getCollapsed(i);
                 assertEquals("Column " + c + " expected: " + expected + " was " + loaded + " from row " + formatAndData.content.get(i + 1), 0, Utility.compareValues(expected, loaded));
             }
         }

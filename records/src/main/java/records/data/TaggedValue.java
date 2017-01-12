@@ -29,4 +29,33 @@ public @Value class TaggedValue
     {
         return innerItem;
     }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        TaggedValue that = (TaggedValue) o;
+
+        if (tagIndex != that.tagIndex) return false;
+        return innerItem != null ? innerItem.equals(that.innerItem) : that.innerItem == null;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = tagIndex;
+        result = 31 * result + (innerItem != null ? innerItem.hashCode() : 0);
+        return result;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "TaggedValue{" +
+            tagIndex +
+            ": " + innerItem +
+            '}';
+    }
 }

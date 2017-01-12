@@ -1,5 +1,6 @@
 package test.gen;
 
+import annotation.qual.Value;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.transformations.expression.Expression;
@@ -12,11 +13,11 @@ import java.util.List;
 public class ExpressionValue
 {
     public final DataType type;
-    public final Object value;
+    public final @Value Object value;
     public final RecordSet recordSet;
     public final Expression expression;
 
-    public ExpressionValue(DataType type, Object value, RecordSet recordSet, Expression expression)
+    public ExpressionValue(DataType type, @Value Object value, RecordSet recordSet, Expression expression)
     {
         this.type = type;
         this.value = value;

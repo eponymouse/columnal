@@ -1,5 +1,6 @@
 package test;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -88,7 +89,7 @@ public class PropNumericFunctions
             assertNotNull(instance);
             assertTrue(instance.getSecond().isNumber());
             assertEquals(mgr.loadUse(expectedUnit), instance.getSecond().getNumberInfo().getUnit());
-            Object num = instance.getFirst().getValue(0, ImmutableList.of(src));
+            Object num = instance.getFirst().getValue(0, ImmutableList.<@Value Object>of(Utility.value(src)));
             return (Number)num;
         }
         catch (RuntimeException e)

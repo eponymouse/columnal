@@ -1,5 +1,6 @@
 package test;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
@@ -204,14 +205,14 @@ public class TestUtil
     }
 
     @OnThread(Tag.Simulation)
-    public static StreamEx<Object> streamFlattened(Column column)
+    public static StreamEx<@Value Object> streamFlattened(Column column)
     {
-        return new StreamEx.Emitter<Object>()
+        return new StreamEx.Emitter<@Value Object>()
         {
             int nextIndex = 0;
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public @Nullable Emitter<Object> next(Consumer<? super Object> consumer)
+            public @Nullable Emitter<@Value Object> next(Consumer<? super @Value Object> consumer)
             {
                 try
                 {
@@ -242,6 +243,11 @@ public class TestUtil
     public static Map<List<Object>, Long> getRowFreq(RecordSet src)
     {
         return streamFlattened(src).collect(Collectors.groupingBy(Function.<List<Object>>identity(), Collectors.<List<Object>>counting()));
+    }
+
+    public static @Value String makeStringV(SourceOfRandomness r, GenerationStatus gs)
+    {
+        return Utility.value(makeString(r, gs));
     }
 
     public static String makeString(SourceOfRandomness r, GenerationStatus gs)
@@ -361,6 +367,11 @@ public class TestUtil
         return s;
     }
 
+    public static @Value Number generateNumberV(SourceOfRandomness r, GenerationStatus gs)
+    {
+        return Utility.value(generateNumber(r, gs));
+    }
+
     public static Number generateNumber(SourceOfRandomness r, GenerationStatus gs)
     {
         return new GenNumber().generate(r, gs);
@@ -369,24 +380,24 @@ public class TestUtil
     private static LocalDate MIN_DATE = LocalDate.of(1, 1, 1);
     private static LocalDate MAX_DATE = LocalDate.of(9999, 12, 31);
 
-    public static LocalDate generateDate(SourceOfRandomness r, GenerationStatus gs)
+    public static @Value LocalDate generateDate(SourceOfRandomness r, GenerationStatus gs)
     {
-        return LocalDate.ofEpochDay(r.nextLong(MIN_DATE.toEpochDay(), MAX_DATE.toEpochDay()));
+        return Utility.value(LocalDate.ofEpochDay(r.nextLong(MIN_DATE.toEpochDay(), MAX_DATE.toEpochDay())));
     }
 
-    public static LocalTime generateTime(SourceOfRandomness r, GenerationStatus gs)
+    public static @Value LocalTime generateTime(SourceOfRandomness r, GenerationStatus gs)
     {
-        return new LocalTimeGenerator().generate(r, gs);
+        return Utility.value(new LocalTimeGenerator().generate(r, gs));
     }
 
-    public static LocalDateTime generateDateTime(SourceOfRandomness r, GenerationStatus gs)
+    public static @Value LocalDateTime generateDateTime(SourceOfRandomness r, GenerationStatus gs)
     {
         return LocalDateTime.of(generateDate(r, gs), generateTime(r, gs));
     }
 
-    public static ZonedDateTime generateDateTimeZoned(SourceOfRandomness r, GenerationStatus gs)
+    public static @Value ZonedDateTime generateDateTimeZoned(SourceOfRandomness r, GenerationStatus gs)
     {
-        return ZonedDateTime.of(generateDateTime(r, gs), generateZone(r, gs));
+        return Utility.value(ZonedDateTime.of(generateDateTime(r, gs), generateZone(r, gs)));
     }
 
     public static ZoneId generateZone(SourceOfRandomness r, GenerationStatus gs)

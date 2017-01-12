@@ -1,5 +1,6 @@
 package test;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -174,7 +175,7 @@ public class TestUnit
                 throw new RuntimeException(new UserException(s));
             }, mgr);
             assertNotNull(instance);
-            Object num = instance.getFirst().getValue(0, ImmutableList.of((Object) d(src)));
+            Object num = instance.getFirst().getValue(0, ImmutableList.<@Value Object>of(d(src)));
             assertThat(num, numberMatch(d(expected)));
         }
         catch (RuntimeException e)
@@ -200,8 +201,8 @@ public class TestUnit
         };
     }
 
-    private BigDecimal d(String s)
+    private @Value BigDecimal d(String s)
     {
-        return new BigDecimal(s);
+        return Utility.value(new BigDecimal(s));
     }
 }

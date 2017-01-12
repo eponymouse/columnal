@@ -1,5 +1,6 @@
 package test;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -24,6 +25,7 @@ import records.transformations.function.ToTime;
 import test.gen.GenDate;
 import test.gen.GenZoneId;
 import utility.Pair;
+import utility.Utility;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -79,9 +81,15 @@ public class PropDateFunctions
     {
         LocalDateTime src = LocalDateTime.of(date, time);
         // Test with string input:
-        Object o = runFunction1(src.toString(), DataType.TEXT, new ToDateTime());
+        Object o = runFunction1(v(src.toString()), DataType.TEXT, new ToDateTime());
         assertEquals(LocalDateTime.class, o.getClass());
         assertEquals(src, o);
+    }
+
+    // Shorthand for Utility.value
+    private @Value String v(String string)
+    {
+        return Utility.value(string);
     }
 
     @Property
@@ -89,7 +97,7 @@ public class PropDateFunctions
     {
         ZonedDateTime src = ZonedDateTime.of(date, time, zone);
         // Test with string input:
-        Object o = runFunction1(src.toLocalDateTime().toString() + " " + zone.toString(), DataType.TEXT, new ToDateTimeZone());
+        Object o = runFunction1(v(src.toLocalDateTime().toString() + " " + zone.toString()), DataType.TEXT, new ToDateTimeZone());
         assertEquals(ZonedDateTime.class, o.getClass());
         assertEquals(src.withFixedOffsetZone(), o);
     }
@@ -163,27 +171,27 @@ public class PropDateFunctions
 
     private void checkDateTime(LocalDateTime of, String src) throws Throwable
     {
-        assertEquals(of, runFunction1(src, DataType.TEXT, new ToDateTime()));
+        assertEquals(of, runFunction1(v(src), DataType.TEXT, new ToDateTime()));
     }
 
     private void checkDateTimeZone(ZonedDateTime of, String src) throws Throwable
     {
-        assertEquals(of, runFunction1(src, DataType.TEXT, new ToDateTimeZone()));
+        assertEquals(of, runFunction1(v(src), DataType.TEXT, new ToDateTimeZone()));
     }
 
     private Object strToTime(String src) throws Throwable
     {
-        return runFunction1(src, DataType.TEXT, new ToTime());
+        return runFunction1(v(src), DataType.TEXT, new ToTime());
     }
 
     private Object strToDate(String src) throws Throwable
     {
-        return runFunction1(src, DataType.TEXT, new ToDate());
+        return runFunction1(v(src), DataType.TEXT, new ToDate());
     }
 
     // Tests single numeric input, numeric output function
     @SuppressWarnings("nullness")
-    private Object runFunction1(Object src, DataType srcType, FunctionDefinition function) throws InternalException, UserException, Throwable
+    private Object runFunction1(@Value Object src, DataType srcType, FunctionDefinition function) throws InternalException, UserException, Throwable
     {
         try
         {
@@ -192,7 +200,7 @@ public class PropDateFunctions
                 throw new RuntimeException(new UserException(s));
             }, mgr);
             assertNotNull(instance);
-            return instance.getFirst().getValue(0, ImmutableList.of(src));
+            return instance.getFirst().getValue(0, ImmutableList.<@Value Object>of(src));
         }
         catch (RuntimeException e)
         {

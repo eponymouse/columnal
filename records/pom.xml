@@ -207,7 +207,7 @@
                         <!-- Add all the checkers you want to enable here -->
                         <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
                         <annotationProcessor>org.checkerframework.checker.interning.InterningChecker</annotationProcessor>
-                        <!-- TODO put back <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor> -->
+                        <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor>
                     </annotationProcessors>
                     <compilerArgs>
                         <!-- location of the annotated JDK, which comes from a Maven dependency -->

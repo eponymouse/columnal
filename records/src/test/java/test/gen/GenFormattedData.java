@@ -1,5 +1,6 @@
 package test.gen;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
@@ -9,6 +10,7 @@ import records.importers.ColumnInfo;
 import records.importers.TextFormat;
 import test.TestUtil;
 import test.gen.GenFormattedData.FormatAndData;
+import utility.Utility;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -33,9 +35,9 @@ public class GenFormattedData extends Generator<FormatAndData>
         public final List<String> content;
         // Outermost list is list of rows
         // Next list in is list of columns.
-        public final List<List<Object>> loadedContent;
+        public final List<List<@Value Object>> loadedContent;
 
-        public FormatAndData(TextFormat format, List<String> content, List<List<Object>> loadedContent)
+        public FormatAndData(TextFormat format, List<String> content, List<List<@Value Object>> loadedContent)
         {
             this.format = format;
             this.content = content;
@@ -47,14 +49,14 @@ public class GenFormattedData extends Generator<FormatAndData>
     public FormatAndData generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
         List<String> fileContent = new ArrayList<>();
-        List<List<Object>> intendedContent = new ArrayList<>();
+        List<List<@Value Object>> intendedContent = new ArrayList<>();
         TextFormat format = new GenFormat().generate(r, generationStatus);
 
         fileContent.add(format.columnTypes.stream().map(c -> c.title.getOutput()).collect(Collectors.joining("" + format.separator)));
         int rowCount = r.nextInt(50, 200);
         for (int row = 0; row < 100; row++)
         {
-            List<Object> data = new ArrayList<>();
+            List<@Value Object> data = new ArrayList<>();
             StringBuilder line = new StringBuilder();
             List<ColumnInfo> columnTypes = format.columnTypes;
             for (int i = 0; i < columnTypes.size(); i++)
@@ -73,10 +75,10 @@ public class GenFormattedData extends Generator<FormatAndData>
                     {
                         String decimalDigs = String.format("%0" + numericColumnType.minDP + "d", Math.abs(r.nextInt())).substring(0, numericColumnType.minDP);
                         line.append("." + decimalDigs);
-                        data.add(new BigDecimal(Long.toString(value) + "." + decimalDigs));
+                        data.add(Utility.value(new BigDecimal(Long.toString(value) + "." + decimalDigs)));
                     }
                     else
-                        data.add((Long)value);
+                        data.add(Utility.value((Long)value));
                     line.append(r.nextBoolean() ? "" : numericColumnType.unit.getDisplaySuffix());
                 }
                 else if (c.type.isText())
@@ -84,7 +86,7 @@ public class GenFormattedData extends Generator<FormatAndData>
                     String str = TestUtil.makeString(r, generationStatus).replace("\n", "").replace("\r", "");
                     // TODO quote separators instead of removing them:
                     str = str.replace("" + format.separator, "");
-                    data.add(str);
+                    data.add(Utility.value(str));
                     line.append(str);
                 }
                 else if (c.type.isDate())
@@ -97,7 +99,7 @@ public class GenFormattedData extends Generator<FormatAndData>
                         year = 1900 + r.nextInt(199);
                     int month = 1 + r.nextInt(12);
                     int day = 1 + r.nextInt(28);
-                    LocalDate date = LocalDate.of(year, month, day);
+                    @Value LocalDate date = LocalDate.of(year, month, day);
                     data.add(date);
 
                     line.append(date.format(dateColumnType.getDateTimeFormatter()));

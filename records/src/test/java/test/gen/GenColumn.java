@@ -1,5 +1,6 @@
 package test.gen;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.lang.BooleanGenerator;
@@ -32,6 +33,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExSupplier;
 import utility.Pair;
+import utility.Utility;
 
 import java.math.BigDecimal;
 import java.time.temporal.TemporalAccessor;
@@ -214,47 +216,47 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
             {
                 try
                 {
-                    Object value = inner.<Object, UserException>apply(new DataTypeVisitor<Object>()
+                    @Value Object value = inner.<@Value Object, UserException>apply(new DataTypeVisitor<@Value Object>()
                     {
 
                         @Override
-                        public Object number(NumberInfo displayInfo) throws InternalException, UserException
+                        public @Value Object number(NumberInfo displayInfo) throws InternalException, UserException
                         {
-                            return TestUtil.generateNumber(r, generationStatus);
+                            return TestUtil.generateNumberV(r, generationStatus);
                         }
 
                         @Override
-                        public Object text() throws InternalException, UserException
+                        public @Value Object text() throws InternalException, UserException
                         {
-                            return TestUtil.makeString(r, generationStatus);
+                            return TestUtil.makeStringV(r, generationStatus);
                         }
 
                         @Override
-                        public Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+                        public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
                         {
                             return TestUtil.generateDate(r, generationStatus);
                         }
 
                         @Override
-                        public Object bool() throws InternalException, UserException
+                        public @Value Object bool() throws InternalException, UserException
                         {
-                            return r.nextBoolean();
+                            return Utility.value(r.nextBoolean());
                         }
 
                         @Override
-                        public Object tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+                        public @Value Object tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
                         {
                             return new TagDataGenerator(tags).generate(r, generationStatus);
                         }
 
                         @Override
-                        public Object tuple(List<DataType> inner) throws InternalException, UserException
+                        public @Value Object tuple(List<DataType> inner) throws InternalException, UserException
                         {
                             throw new UnimplementedException();
                         }
 
                         @Override
-                        public Object array(DataType inner) throws InternalException, UserException
+                        public @Value Object array(DataType inner) throws InternalException, UserException
                         {
                             throw new UnimplementedException();
                         }

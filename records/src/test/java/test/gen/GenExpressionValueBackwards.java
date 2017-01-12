@@ -1,5 +1,6 @@
 package test.gen;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.time.ZoneOffsetGenerator;
@@ -84,6 +85,7 @@ import java.util.stream.Stream;
 
 import static test.TestUtil.distinctTypes;
 import static test.TestUtil.generateNumber;
+import static test.TestUtil.generateNumberV;
 
 /**
  * Generates expressions and resulting values by working backwards.
@@ -119,7 +121,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         try
         {
             DataType type = makeType(r);
-            Pair<Object, Expression> p = makeOfType(type);
+            Pair<@Value Object, Expression> p = makeOfType(type);
             return new ExpressionValue(type, p.getFirst(), getRecordSet(), p.getSecond());
         }
         catch (InternalException | UserException e)
@@ -138,9 +140,9 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
     // Only valid after calling generate
     @NotNull
     @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public Pair<Object, Expression> makeOfType(DataType type) throws UserException, InternalException
+    public Pair<@Value Object, Expression> makeOfType(DataType type) throws UserException, InternalException
     {
-        Object value = makeValue(type);
+        @Value Object value = makeValue(type);
         Expression expression = make(type, value, 4);
         return new Pair<>(value, expression);
     }
@@ -330,8 +332,8 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                 return termDeep(maxLevels, type, l(() -> columnRef(type, targetValue), () -> new BooleanLiteral(target)), l(
                     () -> {
                         DataType t = makeType(r);
-                        Object valA = makeValue(t);
-                        Object valB;
+                        @Value Object valA = makeValue(t);
+                        @Value Object valB;
                         int attempts = 0;
                         do
                         {
@@ -344,8 +346,8 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                     },
                     () -> {
                         DataType t = makeType(r);
-                        Object valA = makeValue(t);
-                        Object valB;
+                        @Value Object valA = makeValue(t);
+                        @Value Object valB;
                         int attempts = 0;
                         do
                         {
@@ -529,15 +531,15 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         return m.loadUse(name);
     }
 
-    private BigInteger genInt()
+    private @Value BigInteger genInt()
     {
-        Number n;
+        @Value Number n;
         do
         {
-            n = generateNumber(r, gs);
+            n = generateNumberV(r, gs);
         }
         while (n instanceof BigDecimal);
-        return n instanceof BigInteger ? (BigInteger)n : BigInteger.valueOf(n.longValue());
+        return n instanceof BigInteger ? (@Value BigInteger)n : Utility.value(BigInteger.valueOf(n.longValue()));
     }
 
     private Expression columnRef(DataType type, Object value)
@@ -601,24 +603,24 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         return Arrays.asList(suppliers);
     }
 
-    private Object makeValue(DataType t) throws UserException, InternalException
+    private @Value Object makeValue(DataType t) throws UserException, InternalException
     {
-        return t.apply(new DataTypeVisitor<Object>()
+        return t.apply(new DataTypeVisitor<@Value Object>()
         {
             @Override
-            public Object number(NumberInfo displayInfo) throws InternalException, UserException
+            public @Value Object number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 return genInt();
             }
 
             @Override
-            public Object text() throws InternalException, UserException
+            public @Value Object text() throws InternalException, UserException
             {
-                return TestUtil.makeString(r, gs);
+                return TestUtil.makeStringV(r, gs);
             }
 
             @Override
-            public Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 switch (dateTimeInfo.getType())
                 {
@@ -646,16 +648,16 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public Object bool() throws InternalException, UserException
+            public @Value Object bool() throws InternalException, UserException
             {
-                return r.nextBoolean();
+                return Utility.value(r.nextBoolean());
             }
 
             @Override
-            public Object tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public @Value Object tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tagIndex = r.nextInt(0, tags.size() - 1);
-                @Nullable Object o;
+                @Nullable @Value Object o;
                 @Nullable DataType inner = tags.get(tagIndex).getInner();
                 if (inner != null)
                     o = makeValue(inner);
@@ -665,13 +667,13 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public Object tuple(List<DataType> inner) throws InternalException, UserException
+            public @Value Object tuple(List<DataType> inner) throws InternalException, UserException
             {
                 throw new UnimplementedException();
             }
 
             @Override
-            public Object array(DataType inner) throws InternalException, UserException
+            public @Value Object array(DataType inner) throws InternalException, UserException
             {
                 throw new UnimplementedException();
             }
@@ -760,7 +762,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         }
     }
 
-    private List<Function<MatchExpression, Pattern>> makeNonMatchingPatterns(final int maxLevels, final DataType t, Object actual)
+    private List<Function<MatchExpression, Pattern>> makeNonMatchingPatterns(final int maxLevels, final DataType t, @Value Object actual)
     {
         class CantMakeNonMatching extends RuntimeException {}
         try
@@ -770,7 +772,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                 Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> match = r.choose(Arrays.<ExSupplier<Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression>>>asList(
                     () ->
                     {
-                        Object nonMatchingValue;
+                        @Value Object nonMatchingValue;
                         int attempts = 0;
                         do
                         {
