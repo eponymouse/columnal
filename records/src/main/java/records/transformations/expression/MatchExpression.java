@@ -1,11 +1,13 @@
 package records.transformations.expression;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
+import records.data.TaggedValue;
 import records.data.datatype.DataType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -74,7 +76,7 @@ public class MatchExpression extends Expression
 
         //Returns null if no match
         @OnThread(Tag.Simulation)
-        public @Nullable EvaluateState matches(Object value, EvaluateState state, int rowIndex) throws UserException, InternalException
+        public @Nullable EvaluateState matches(@Value Object value, EvaluateState state, int rowIndex) throws UserException, InternalException
         {
             for (Pattern p : patterns)
             {
@@ -163,28 +165,25 @@ public class MatchExpression extends Expression
         }
 
         @Override
-        public @Nullable EvaluateState match(int rowIndex, Object val, EvaluateState state) throws InternalException, UserException
+        public @Nullable EvaluateState match(int rowIndex, @Value Object val, EvaluateState state) throws InternalException, UserException
         {
-            if (val instanceof Pair)
+            if (val instanceof TaggedValue)
             {
-                Pair<Integer, @Nullable Object> p = (Pair<Integer, @Nullable Object>)val;
-                if (p.getFirst() instanceof Integer)
+                TaggedValue p = (TaggedValue)val;
+                @Nullable @Value Object innerValue = p.getInner();
+                if ((p.getTagIndex()) == tagIndex)
                 {
-                    @Nullable Object innerValue = p.getSecond();
-                    if ((p.getFirst()) == tagIndex)
-                    {
-                        if (subPattern == null && innerValue == null)
-                            return state;
-                        else if (subPattern != null && innerValue != null)
-                            return subPattern.match(rowIndex, innerValue, state);
-                        if (subPattern == null && innerValue != null)
-                            throw new InternalException("Pattern match had inner value but no inner pattern");
-                        else //if (subPattern != null && innerValue == null)
-                            throw new InternalException("Pattern match had inner pattern but no inner value");
-                    }
-                    else
-                        return null;
+                    if (subPattern == null && innerValue == null)
+                        return state;
+                    else if (subPattern != null && innerValue != null)
+                        return subPattern.match(rowIndex, innerValue, state);
+                    if (subPattern == null && innerValue != null)
+                        throw new InternalException("Pattern match had inner value but no inner pattern");
+                    else //if (subPattern != null && innerValue == null)
+                        throw new InternalException("Pattern match had inner pattern but no inner value");
                 }
+                else
+                    return null;
             }
             throw new InternalException("Unexpected type; should be integer for tag index but was " + val.getClass());
         }
@@ -242,7 +241,7 @@ public class MatchExpression extends Expression
 
         @Override
         @OnThread(Tag.Simulation)
-        public @Nullable EvaluateState match(int rowIndex, Object value, EvaluateState state) throws InternalException, UserException
+        public @Nullable EvaluateState match(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException
         {
             Object expected = expression.getValue(rowIndex, state);
             if (Utility.compareValues(expected, value) == 0)
@@ -293,7 +292,7 @@ public class MatchExpression extends Expression
         }
 
         @Override
-        public EvaluateState match(int rowIndex, Object value, EvaluateState state) throws InternalException
+        public EvaluateState match(int rowIndex, @Value Object value, EvaluateState state) throws InternalException
         {
             return state.add(varName, value);
         }
@@ -328,7 +327,7 @@ public class MatchExpression extends Expression
         @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException;
 
         @OnThread(Tag.Simulation)
-        @Nullable EvaluateState match(int rowIndex, Object value, EvaluateState state) throws InternalException, UserException;
+        @Nullable EvaluateState match(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException;
 
         String save();
     }
@@ -361,7 +360,7 @@ public class MatchExpression extends Expression
         }
 
         @OnThread(Tag.Simulation)
-        public @Nullable EvaluateState match(Object value, int rowIndex, EvaluateState state) throws InternalException, UserException
+        public @Nullable EvaluateState match(@Value Object value, int rowIndex, EvaluateState state) throws InternalException, UserException
         {
             @Nullable EvaluateState newState = pattern.match(rowIndex, value, state);
             if (newState == null)
@@ -427,7 +426,7 @@ public class MatchExpression extends Expression
     }
 
     @Override
-    public Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         // It's type checked so can just copy first clause:
         Object value = expression.getValue(rowIndex, state);

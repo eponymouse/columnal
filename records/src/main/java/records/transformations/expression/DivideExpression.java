@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.sosy_lab.common.rationals.Rational;
@@ -70,9 +71,9 @@ public class DivideExpression extends BinaryOpExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        return Utility.divideNumbers((Number)lhs.getValue(rowIndex, state), (Number)rhs.getValue(rowIndex, state));
+        return Utility.value(Utility.divideNumbers((Number)lhs.getValue(rowIndex, state), (Number)rhs.getValue(rowIndex, state)));
     }
 
     @Override

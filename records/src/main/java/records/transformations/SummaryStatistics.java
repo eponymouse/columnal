@@ -1,5 +1,6 @@
 package records.transformations;
 
+import annotation.qual.Value;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.BooleanProperty;
@@ -76,8 +77,14 @@ import java.util.function.Function;
  * Created by neil on 21/10/2016.
  */
 @OnThread(Tag.Simulation)
-public class SummaryStatistics extends Transformation
+public abstract class SummaryStatistics extends Transformation
 {
+    public SummaryStatistics(TableManager mgr, @Nullable TableId tableId)
+    {
+        super(mgr, tableId);
+    }
+    //TODO
+    /*
     public static final String NAME = "stats";
     private final @Nullable Table src;
     private final TableId srcTableId;
@@ -175,7 +182,8 @@ public class SummaryStatistics extends Transformation
                         @Override
                         public DataTypeValue getType() throws InternalException, UserException
                         {
-                            return orig.getType().copy(this::getWithProgress);
+                            throw new UnimplementedException(); // TODO
+                            //return orig.getType().copy(this::getWithProgress);
                         }
                     });
                 }
@@ -206,13 +214,13 @@ public class SummaryStatistics extends Transformation
                     columns.add(srcCol.getType().applyGet(new DataTypeVisitorGet<FunctionInt<RecordSet, Column>>()
                     {
                         @Override
-                        public FunctionInt<RecordSet, Column> date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+                        public FunctionInt<RecordSet, Column> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
                         {
                             throw new UnimplementedException();
                         }
 
                         @Override
-                        public FunctionInt<RecordSet, Column> number(GetValue<Number> srcGet, NumberInfo displayInfo) throws InternalException, UserException
+                        public FunctionInt<RecordSet, Column> number(GetValue<@Value Number> srcGet, NumberInfo displayInfo) throws InternalException, UserException
                         {
                             if (summaryType == SummaryType.COUNT)
                                 return countColumn(srcGet);
@@ -242,7 +250,7 @@ public class SummaryStatistics extends Transformation
                         }
 
                         @Override
-                        public FunctionInt<RecordSet, Column> bool(GetValue<Boolean> srcGet) throws InternalException, UserException
+                        public FunctionInt<RecordSet, Column> bool(GetValue<@Value Boolean> srcGet) throws InternalException, UserException
                         {
                             if (summaryType == SummaryType.COUNT)
                                 return countColumn(srcGet);
@@ -271,7 +279,7 @@ public class SummaryStatistics extends Transformation
                         }
 
                         @Override
-                        public FunctionInt<RecordSet, Column> text(GetValue<String> srcGet) throws InternalException, UserException
+                        public FunctionInt<RecordSet, Column> text(GetValue<@Value String> srcGet) throws InternalException, UserException
                         {
                             if (summaryType == SummaryType.COUNT)
                                 return countColumn(srcGet);
@@ -282,7 +290,7 @@ public class SummaryStatistics extends Transformation
                                 protected void fillNextCacheChunk() throws UserException, InternalException
                                 {
                                     int index = getCacheFilled();
-                                    final FoldOperation<String, String> fold;
+                                    final FoldOperation<@Value String, String> fold;
                                     switch (summaryType)
                                     {
                                         case MIN:
@@ -361,7 +369,7 @@ public class SummaryStatistics extends Transformation
                         }
 
                         @Override
-                        public FunctionInt<RecordSet, Column> array(ExFunction<Integer, Integer> size, DataTypeValue type) throws InternalException, UserException
+                        public FunctionInt<RecordSet, Column> array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
                         {
                             throw new UnimplementedException();
                         }
@@ -448,26 +456,26 @@ public class SummaryStatistics extends Transformation
         return r;
     }
 
-    /*
-    @OnThread(Tag.FXPlatform)
-    public static void withGUICreate(RecordSet src, FXPlatformConsumer<SummaryStatistics> andThen) throws InternalException, UserException
-    {
-        Map<String, Set<SummaryType>> summaries = new HashMap<>();
-        for (Column c : src.getColumns())
-        {
-            if (!c.getName().equals("Mistake"))
-                summaries.put(c.getName(), new HashSet<>(Arrays.asList(SummaryType.MIN, SummaryType.MAX)));
-        }
 
-        Workers.onWorkerThread("Create summary statistics", () -> {
-            Utility.alertOnError(() -> {
-                SummaryStatistics ss = new SummaryStatistics(src, summaries, Collections.singletonList("Mistake"));
-                Platform.runLater(() -> andThen.consume(ss));
-                return (Void)null;
-            });
-        });
-    }
-    */
+    //@OnThread(Tag.FXPlatform)
+    //public static void withGUICreate(RecordSet src, FXPlatformConsumer<SummaryStatistics> andThen) throws InternalException, UserException
+    //{
+//        Map<String, Set<SummaryType>> summaries = new HashMap<>();
+//        for (Column c : src.getColumns())
+//        {
+//            if (!c.getName().equals("Mistake"))
+//                summaries.put(c.getName(), new HashSet<>(Arrays.asList(SummaryType.MIN, SummaryType.MAX)));
+//        }
+//
+//        Workers.onWorkerThread("Create summary statistics", () -> {
+//            Utility.alertOnError(() -> {
+//                SummaryStatistics ss = new SummaryStatistics(src, summaries, Collections.singletonList("Mistake"));
+//                Platform.runLater(() -> andThen.consume(ss));
+//                return (Void)null;
+//            });
+//        });
+//    }
+
 
     @Override
     @NotNull
@@ -815,7 +823,7 @@ public class SummaryStatistics extends Transformation
     public static class MinMaxTaggedFold implements FoldOperation<Integer, Object>
     {
         private int bestTag = -1;
-        @Nullable Object bestInner = null;
+        @Nullable @Value Object bestInner = null;
         private final List<TagType<DataTypeValue>> tagTypes;
         private final boolean ignoreNullaryTags;
         private final SummaryType summaryType;
@@ -892,12 +900,12 @@ public class SummaryStatistics extends Transformation
         }
     }
 
-    private static <T, R> void applyFold(ColumnStorage<R> cache, FoldOperation<T, R> fold, Column srcCol, GetValue<T> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
+    private static <T, R> void applyFold(ColumnStorage<R> cache, FoldOperation<@Value T, @Value R> fold, Column srcCol, GetValue<@Value T> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
     {
         applyFold(cache, x -> x, fold, srcCol, srcGet, splitIndexes, index);
     }
 
-    private static <T, R, S> void applyFold(ColumnStorage<S> cache, Function<@NonNull R, @NonNull S> convert, FoldOperation<T, R> fold, Column srcCol, GetValue<T> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
+    private static <T, R, S> void applyFold(ColumnStorage<S> cache, Function<@NonNull @Value R, @NonNull @Value S> convert, FoldOperation<T, R> fold, Column srcCol, GetValue<T> srcGet, int[] splitIndexes, int index) throws InternalException, UserException
     {
         cache.addAll(Utility.mapList(fold.start(), convert));
         for (int i = 0; srcCol.indexValid(i); i++)
@@ -980,25 +988,25 @@ public class SummaryStatistics extends Transformation
                 {
                     @Override
                     @OnThread(Tag.Simulation)
-                    public List<Number> number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
+                    public List<Number> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
                     {
                         return numericFold.process(g.get(index), index);
                     }
 
                     @Override
-                    public List<Number> bool(GetValue<Boolean> g) throws InternalException, UserException
+                    public List<Number> bool(GetValue<@Value Boolean> g) throws InternalException, UserException
                     {
                         return numericFold.process(g.get(index) ? 1L :0L, index);
                     }
 
                     @Override
-                    public List<Number> text(GetValue<String> g) throws InternalException, UserException
+                    public List<Number> text(GetValue<@Value String> g) throws InternalException, UserException
                     {
                         return Collections.emptyList();
                     }
 
                     @Override
-                    public List<Number> date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+                    public List<Number> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
                     {
                         return Collections.emptyList();
                     }
@@ -1021,7 +1029,7 @@ public class SummaryStatistics extends Transformation
                     }
 
                     @Override
-                    public List<Number> array(ExFunction<Integer, Integer> size, DataTypeValue type) throws InternalException, UserException
+                    public List<Number> array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
                     {
                         return Collections.emptyList();
                     }
@@ -1062,4 +1070,5 @@ public class SummaryStatistics extends Transformation
         result = 31 * result + splitBy.hashCode();
         return result;
     }
+    */
 }

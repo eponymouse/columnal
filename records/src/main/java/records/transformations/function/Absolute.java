@@ -1,5 +1,7 @@
 package records.transformations.function;
 
+import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.unit.Unit;
@@ -31,17 +33,17 @@ public class Absolute extends SingleNumericInOutFunction
     @Override
     protected FunctionInstance makeInstance()
     {
-        return new TaglessFunctionInstance()
+        return new FunctionInstance()
         {
             @Override
-            public Object getSimpleValue(int rowIndex, List<Object> params) throws UserException, InternalException
+            public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params) throws UserException, InternalException
             {
-                return Utility.<Number>withNumber(params.get(0), l -> {
+                return Utility.value(Utility.<Number>withNumber(params.get(0), l -> {
                     if (l == Long.MIN_VALUE)
                         return BigInteger.valueOf(l).negate();
                     else
                         return Math.abs(l);
-                }, BigInteger::abs, BigDecimal::abs);
+                }, BigInteger::abs, BigDecimal::abs));
             }
         };
     }

@@ -1,9 +1,12 @@
 package records.loadsave;
 
+import annotation.qual.Value;
 import org.antlr.v4.runtime.Vocabulary;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.TableId;
+import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
@@ -18,6 +21,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
 import utility.FXPlatformSupplier;
+import utility.Pair;
 import utility.Utility;
 
 import java.nio.file.Path;
@@ -176,13 +180,13 @@ public class OutputBuilder
         cur().add(type.applyGet(new DataTypeVisitorGet<String>()
         {
             @Override
-            public String number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
+            public String number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
                 return g.get(index).toString();
             }
 
             @Override
-            public String text(GetValue<String> g) throws InternalException, UserException
+            public String text(GetValue<@Value String> g) throws InternalException, UserException
             {
                 return quoted(g.get(index));
             }
@@ -199,13 +203,13 @@ public class OutputBuilder
             }
 
             @Override
-            public String bool(GetValue<Boolean> g) throws InternalException, UserException
+            public String bool(GetValue<@Value Boolean> g) throws InternalException, UserException
             {
                 return g.get(index).toString();
             }
 
             @Override
-            public String date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+            public String date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
             {
                 return quoted(g.get(index).toString());
             }
@@ -228,16 +232,16 @@ public class OutputBuilder
             }
 
             @Override
-            public String array(ExFunction<Integer, Integer> size, DataTypeValue type) throws InternalException, UserException
+            public String array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
             {
                 OutputBuilder b = new OutputBuilder();
                 b.raw("[");
-                Integer theSize = size.apply(index);
-                for (int i = 0; i < theSize; i++)
+                @NonNull Pair<Integer, DataTypeValue> details = g.get(index);
+                for (int i = 0; i < details.getFirst(); i++)
                 {
                     if (i > 0)
                         b.raw(",");
-                    b.data(type, i);
+                    b.data(details.getSecond(), i);
                 }
                 b.raw("]");
                 return b.toString();

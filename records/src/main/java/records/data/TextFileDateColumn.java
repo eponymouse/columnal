@@ -1,5 +1,6 @@
 package records.data;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
@@ -18,35 +19,32 @@ import java.util.ArrayList;
 /**
  * Created by neil on 26/12/2016.
  */
-public class TextFileDateColumn extends TextFileColumn<TemporalAccessor>
+public class TextFileDateColumn extends TextFileColumn<DateColumnStorage>
 {
     @OnThread(Tag.Any)
     private final DateTimeInfo dateTimeInfo;
     private final DateTimeFormatter dateTimeFormatter;
     private final TemporalQuery<? extends Temporal> query;
 
+    @SuppressWarnings("initialization")
     public TextFileDateColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, ColumnId columnName, int columnIndex, DateTimeInfo dateTimeInfo, DateTimeFormatter dateTimeFormatter, TemporalQuery query) throws InternalException
     {
-        super(recordSet, textFile, initialFilePosition, sep, columnName, columnIndex, new DateColumnStorage(dateTimeInfo));
+        super(recordSet, textFile, initialFilePosition, sep, columnName, columnIndex);
+        setStorage(new DateColumnStorage(dateTimeInfo) {
+            @Override
+            public void beforeGet(int index, Column.@Nullable ProgressListener progressListener) throws InternalException, UserException
+            {
+                fillUpTo(index);
+            }
+        });
         this.dateTimeInfo = dateTimeInfo;
         this.dateTimeFormatter = dateTimeFormatter;
         this.query = query;
     }
 
-
-    @Override
-    @OnThread(Tag.Any)
-    protected DataTypeValue makeDataType() throws InternalException, UserException
-    {
-        return DataTypeValue.date(dateTimeInfo, (i, prog) -> {
-            fillUpTo(i);
-            return storage.get(i);
-        });
-    }
-
     @Override
     protected void addValues(ArrayList<String> values) throws InternalException
     {
-        storage.addAll(Utility.<String, TemporalAccessor>mapList(values, s -> dateTimeFormatter.parse(s, query)));
+        getStorage().addAll(Utility.<String, TemporalAccessor>mapList(values, s -> dateTimeFormatter.parse(s, query)));
     }
 }

@@ -30,6 +30,7 @@ import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -91,12 +92,11 @@ public abstract class TransformationEditor
         return lv;
     }
 
-    @SuppressWarnings({"keyfor", "intern"})
     protected static TableView<List<DisplayValue>> createExampleTable(ObservableList<Pair<String, List<DisplayValue>>> headerAndData)
     {
         TableView<List<DisplayValue>> t = new TableView<>();
         setHeaderAndData(t, headerAndData);
-        headerAndData.addListener((ListChangeListener<? super Pair<String, List<DisplayValue>>>) c -> setHeaderAndData(t, headerAndData));
+        Utility.listen(headerAndData, c -> setHeaderAndData(t, headerAndData));
         return t;
     }
 

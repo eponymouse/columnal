@@ -1,5 +1,7 @@
 package records.transformations.function;
 
+import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -79,34 +81,34 @@ public class ToDateTimeZone extends ToTemporalFunction
     }
 
     @Override
-    Temporal fromTemporal(TemporalAccessor temporalAccessor)
+    @Value Temporal fromTemporal(TemporalAccessor temporalAccessor)
     {
         return ZonedDateTime.from(temporalAccessor).withFixedOffsetZone();
     }
 
-    private class D_TZ extends TaglessFunctionInstance
+    private class D_TZ extends FunctionInstance
     {
         @Override
-        public Object getSimpleValue(int rowIndex, List<Object> simpleParams) throws UserException, InternalException
+        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> simpleParams) throws UserException, InternalException
         {
             OffsetTime t = (OffsetTime)simpleParams.get(1);
             return ZonedDateTime.of((LocalDate)simpleParams.get(0), t.toLocalTime(), t.getOffset()).withFixedOffsetZone();
         }
     }
 
-    private class DT_Z extends TaglessFunctionInstance
+    private class DT_Z extends FunctionInstance
     {
         @Override
-        public Object getSimpleValue(int rowIndex, List<Object> simpleParams) throws UserException, InternalException
+        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> simpleParams) throws UserException, InternalException
         {
             return ZonedDateTime.of((LocalDateTime)simpleParams.get(0), ZoneId.of((String)simpleParams.get(1))).withFixedOffsetZone();
         }
     }
 
-    private class D_T_Z extends TaglessFunctionInstance
+    private class D_T_Z extends FunctionInstance
     {
         @Override
-        public Object getSimpleValue(int rowIndex, List<Object> simpleParams) throws UserException, InternalException
+        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> simpleParams) throws UserException, InternalException
         {
             return ZonedDateTime.of(LocalDateTime.of((LocalDate) simpleParams.get(0), (LocalTime)simpleParams.get(1)), ZoneId.of((String) simpleParams.get(2))).withFixedOffsetZone();
         }

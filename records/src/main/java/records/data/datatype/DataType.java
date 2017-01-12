@@ -1,9 +1,11 @@
 package records.data.datatype;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.ColumnStorage;
 import records.data.MemoryArrayColumn;
 import records.data.MemoryBooleanColumn;
 import records.data.MemoryNumericColumn;
@@ -12,6 +14,7 @@ import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
 import records.data.MemoryTupleColumn;
 import records.data.RecordSet;
+import records.data.TaggedValue;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.unit.Unit;
@@ -442,6 +445,7 @@ public class DataType
         return foundNumeric;
     }
 
+    /*
     @OnThread(Tag.Any)
     public DataTypeValue copy(GetValue<Object> get) throws InternalException
     {
@@ -470,6 +474,7 @@ public class DataType
             (i, prog) -> (Boolean) get.getWithProgress(i, prog),
             (i, prog) -> (Integer) get.getWithProgress(i, prog), null);
     }
+    */
 
     public boolean isTuple()
     {
@@ -686,7 +691,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public Column tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
-                List<Pair<Integer, @Nullable Object>> values = new ArrayList<>(allData.size());
+                List<TaggedValue> values = new ArrayList<>(allData.size());
                 for (List<ItemContext> row : allData)
                 {
                     TaggedContext b = row.get(columnIndex).tagged();
@@ -723,7 +728,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public Column array(DataType inner) throws InternalException, UserException
             {
-                List<List<Object>> values = new ArrayList<>(allData.size());
+                List<Pair<Integer, DataTypeValue>> values = new ArrayList<>(allData.size());
                 for (List<ItemContext> row : allData)
                 {
                     ArrayContext c = row.get(columnIndex).array();
@@ -734,14 +739,16 @@ public class DataType
                     {
                         array.add(loadSingleItem(inner, itemContext));
                     }
-                    values.add(array);
+                    ColumnStorage storage = DataTypeUtility.makeColumnStorage(inner);
+                    storage.addAll(array);
+                    values.add(new Pair<>(array.size(), storage.getType()));
                 }
                 return new MemoryArrayColumn(rs, columnId, inner, values);
             }
         });
     }
 
-    private static Pair<Integer, @Nullable Object> loadValue(List<TagType<DataType>> tags, TaggedContext taggedContext) throws UserException, InternalException
+    private static TaggedValue loadValue(List<TagType<DataType>> tags, TaggedContext taggedContext) throws UserException, InternalException
     {
         String constructor = taggedContext.tag().getText();
         for (int i = 0; i < tags.size(); i++)
@@ -754,12 +761,12 @@ public class DataType
                 {
                     if (item == null)
                         throw new UserException("Expected inner type but found no inner value: \"" + taggedContext.getText() + "\"");
-                    return new Pair<>(i, loadSingleItem(tag.getInner(), item));
+                    return new TaggedValue(i, loadSingleItem(tag.getInner(), item));
                 }
                 else if (item != null)
                     throw new UserException("Expected no inner type but found inner value: \"" + taggedContext.getText() + "\"");
 
-                return new Pair<>(i, null);
+                return new TaggedValue(i, null);
             }
         }
         throw new UserException("Could not find matching tag for: \"" + taggedContext.tag().getText() + "\" in: " + tags.stream().map(t -> t.getName()).collect(Collectors.joining(", ")));
@@ -767,37 +774,37 @@ public class DataType
     }
 
     @OnThread(Tag.Any)
-    private static Object loadSingleItem(DataType type, final ItemContext item) throws InternalException, UserException
+    private static @Value Object loadSingleItem(DataType type, final ItemContext item) throws InternalException, UserException
     {
-        return type.apply(new DataTypeVisitor<Object>()
+        return type.apply(new DataTypeVisitor<@Value Object>()
         {
             @Override
-            public Object number(NumberInfo displayInfo) throws InternalException, UserException
+            public @Value Object number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 DataParser.NumberContext number = item.number();
                 if (number == null)
                     throw new UserException("Expected number, found: " + item.getText() + item.getStart());
-                return Utility.parseNumber(number.getText());
+                return Utility.value(Utility.parseNumber(number.getText()));
             }
 
             @Override
-            public Object text() throws InternalException, UserException
+            public @Value Object text() throws InternalException, UserException
             {
                 StringContext string = item.string();
                 if (string == null)
                     throw new UserException("Expected string, found: " + item.getText() + item.getStart());
-                return string.getText();
+                return Utility.value(string.getText());
             }
 
             @Override
-            public Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 StringContext string = item.string();
                 if (string == null)
                     throw new UserException("Expected quoted date, found: " + item.getText() + item.getStart());
                 try
                 {
-                    return LocalDate.parse(string.getText());
+                    return Utility.value(LocalDate.parse(string.getText()));
                 }
                 catch (DateTimeParseException e)
                 {
@@ -806,40 +813,40 @@ public class DataType
             }
 
             @Override
-            public Object bool() throws InternalException, UserException
+            public @Value Object bool() throws InternalException, UserException
             {
                 BoolContext bool = item.bool();
                 if (bool == null)
                     throw new UserException("Expected bool, found: " + item.getText() + item.getStart());
-                return bool.getText().equals("true");
+                return Utility.value(bool.getText().equals("true"));
             }
 
             @Override
-            public Object tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public @Value Object tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return loadValue(tags, item.tagged());
             }
 
             @Override
-            public Object tuple(List<DataType> inner) throws InternalException, UserException
+            public @Value Object tuple(List<DataType> inner) throws InternalException, UserException
             {
                 TupleContext tupleContext = item.tuple();
                 if (tupleContext == null)
                     throw new UserException("Expected tuple, found: " + item.getText() + item.getStart());
                 if (tupleContext.item().size() != inner.size())
                     throw new UserException("Expected " + inner.size() + " data values as per type, but found: " + tupleContext.item().size());
-                Object[] data = new Object[inner.size()];
+                @Value Object[] data = new Object[inner.size()];
                 for (int i = 0; i < inner.size(); i++)
                 {
                     data[i] = loadSingleItem(inner.get(i), tupleContext.item(i));
                 }
-                return data;
+                return Utility.value(data);
             }
 
             @Override
-            public Object array(DataType inner) throws InternalException, UserException
+            public @Value Object array(DataType inner) throws InternalException, UserException
             {
-                return Utility.mapListEx(item.array().item(), entry -> loadSingleItem(inner, entry));
+                return Utility.value(Utility.<ItemContext, @Value Object>mapListEx(item.array().item(), entry -> loadSingleItem(inner, entry)));
             }
         });
     }

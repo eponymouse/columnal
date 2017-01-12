@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -13,6 +14,7 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import utility.ExBiConsumer;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.Collections;
 import java.util.List;
@@ -54,15 +56,15 @@ public class AndExpression extends NaryOpExpression
     }
 
     @Override
-    public Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         for (Expression expression : expressions)
         {
             Boolean b = (Boolean) expression.getValue(rowIndex, state);
             if (b == false)
-                return false;
+                return Utility.value(false);
         }
-        return true;
+        return Utility.value(true);
     }
 
     @Override

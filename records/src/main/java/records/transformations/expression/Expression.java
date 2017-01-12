@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.qual.Value;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -85,7 +86,7 @@ public abstract class Expression
     public abstract @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException;
 
     @OnThread(Tag.Simulation)
-    public abstract Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException;
+    public abstract @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException;
 
     // Note that there will be duplicates if referred to multiple times
     public abstract Stream<ColumnId> allColumnNames();

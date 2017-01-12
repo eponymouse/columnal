@@ -50,12 +50,10 @@ public class PropTypecheck
         if (a == b)
         {
             assertEquals(a, b);
-            assertEquals(a, b.copy((i, prog) -> Collections.<@NonNull Object>emptyList()));
         }
         else
         {
             assertNotEquals(a, b);
-            assertNotEquals(a, b.copy((i, prog) -> Collections.<@NonNull Object>emptyList()));
         }
     }
 

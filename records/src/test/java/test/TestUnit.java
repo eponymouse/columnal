@@ -1,5 +1,6 @@
 package test;
 
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.BaseMatcher;
@@ -173,7 +174,7 @@ public class TestUnit
                 throw new RuntimeException(new UserException(s));
             }, mgr);
             assertNotNull(instance);
-            Object num = instance.getFirst().getValue(0, Collections.singletonList((Object) d(src)));
+            Object num = instance.getFirst().getValue(0, ImmutableList.of((Object) d(src)));
             assertThat(num, numberMatch(d(expected)));
         }
         catch (RuntimeException e)

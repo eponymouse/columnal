@@ -1,5 +1,7 @@
 package records.transformations.function;
 
+import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import records.error.InternalException;
 import records.error.UserException;
 
@@ -10,5 +12,5 @@ import java.util.List;
  */
 public abstract class FunctionInstance
 {
-    public abstract Object getValue(int rowIndex, List<Object> params) throws UserException, InternalException;
+    public abstract @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params) throws UserException, InternalException;
 }

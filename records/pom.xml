@@ -106,6 +106,14 @@
         </dependency>
 
         <dependency>
+            <groupId>me</groupId>
+            <artifactId>valueann</artifactId>
+            <version>0.1</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/lib/valueann.jar</systemPath>
+        </dependency>
+
+        <dependency>
             <groupId>com.microsoft</groupId>
             <artifactId>z3</artifactId>
             <version>0.1</version>
@@ -199,6 +207,7 @@
                         <!-- Add all the checkers you want to enable here -->
                         <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
                         <annotationProcessor>org.checkerframework.checker.interning.InterningChecker</annotationProcessor>
+                        <!-- TODO put back <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor> -->
                     </annotationProcessors>
                     <compilerArgs>
                         <!-- location of the annotated JDK, which comes from a Maven dependency -->

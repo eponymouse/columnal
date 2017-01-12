@@ -21,7 +21,7 @@ import utility.UnitType;
 /**
  * Created by neil on 05/11/2016.
  */
-public class TaggedColumnStorage implements ColumnStorage<Pair<Integer, @Nullable Object>>
+public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
 {
     // This stores the tag index as a tag, not a number.
     private final NumericColumnStorage tagStore;
@@ -64,8 +64,8 @@ public class TaggedColumnStorage implements ColumnStorage<Pair<Integer, @Nullabl
             if (inner != null)
             {
                 ColumnStorage<?> result = DataTypeUtility.makeColumnStorage(inner);
-                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), result.getType().copy((rowIndex, prog) -> {
-                    return result.get(innerValueIndex.get(rowIndex).intValue());
+                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), result.getType().copyReorder((rowIndex, prog) -> {
+                    return innerValueIndex.getInt(rowIndex);
                 })));
                 valueStores.add(result);
             }
@@ -92,24 +92,26 @@ public class TaggedColumnStorage implements ColumnStorage<Pair<Integer, @Nullabl
         return tagStore.filled();
     }
 
+    /*
     @Override
-    public Pair<Integer, @Nullable Object> get(int index) throws InternalException, UserException
+    public TaggedValue get(int index) throws InternalException, UserException
     {
         if (index < 0 || index >= filled())
             throw new InternalException("Attempting to access invalid element: " + index + " of " + filled());
-        return (Pair<Integer, @Nullable Object>) dataType.getCollapsed(index);
+        return (TaggedValue) dataType.getCollapsed(index);
     }
+    */
 
-    public void addAll(List<Pair<Integer, @Nullable Object>> values) throws InternalException
+    public void addAll(List<TaggedValue> values) throws InternalException
     {
-        for (Pair<Integer, @Nullable Object> v : values)
+        for (TaggedValue v : values)
             addUnpacked(v);
     }
 
-    protected void addUnpacked(Pair<Integer, @Nullable Object> value) throws InternalException
+    protected void addUnpacked(TaggedValue value) throws InternalException
     {
         //Walk the tag structure, adding to store depending on tag:
-        int tagIndex = value.getFirst();
+        int tagIndex = value.getTagIndex();
         tagStore.addTag(tagIndex);
 
         @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();
@@ -122,18 +124,18 @@ public class TaggedColumnStorage implements ColumnStorage<Pair<Integer, @Nullabl
         if (storage == null)
             throw new InternalException("Value but no store for tag " + tagIndex);
         innerValueIndex.add(storage.filled());
-        @Nullable Object innerValue = value.getSecond();
+        @Nullable Object innerValue = value.getInner();
         if (innerValue == null)
             throw new InternalException("Inner value despite no inner type");
         storage.add(innerValue);
     }
 
-    public List<Pair<Integer, @Nullable Object>> getShrunk(int shrunkLength) throws UserException, InternalException
+    public List<TaggedValue> getShrunk(int shrunkLength) throws UserException, InternalException
     {
-        List<Pair<Integer, @Nullable Object>> s = new ArrayList<>();
+        List<TaggedValue> s = new ArrayList<>();
         for (int i = 0; i < shrunkLength; i++)
         {
-            s.add(get(i));
+            s.add((TaggedValue)getType().getCollapsed(i));
         }
         return s;
     }

@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
@@ -88,14 +89,14 @@ public class AddSubtractExpression extends NaryOpExpression
 
     @Override
     @OnThread(Tag.Simulation)
-    public Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         Number n = (Number)expressions.get(0).getValue(rowIndex, state);
         for (int i = 1; i < expressions.size(); i++)
         {
             n = Utility.addSubtractNumbers(n, (Number)expressions.get(i).getValue(rowIndex, state), ops.get(i - 1) == ADD);
         }
-        return n;
+        return Utility.value(n);
     }
 
     @Override

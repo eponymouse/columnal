@@ -10,8 +10,6 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
-import java.util.Collections;
-
 /**
  * Created by neil on 05/11/2016.
  */
@@ -24,6 +22,7 @@ public abstract class CalculatedNumericColumn extends CalculatedColumn
     private DataTypeValue type;
     protected final NumericColumnStorage cache;
 
+    @SuppressWarnings("initialization")
     public CalculatedNumericColumn(RecordSet recordSet, ColumnId name, DataType copyType) throws InternalException, UserException
     {
         super(recordSet, name);
@@ -33,7 +32,13 @@ public abstract class CalculatedNumericColumn extends CalculatedColumn
             @Override
             public NumericColumnStorage number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return new NumericColumnStorage(displayInfo);
+                return new NumericColumnStorage(displayInfo) {
+                    @Override
+                    public void beforeGet(int index, ProgressListener progressListener) throws InternalException, UserException
+                    {
+                        fillCacheWithProgress(index, progressListener);
+                    }
+                };
             }
         });
     }
@@ -48,14 +53,6 @@ public abstract class CalculatedNumericColumn extends CalculatedColumn
     @OnThread(Tag.Any)
     public synchronized DataTypeValue getType() throws UserException, InternalException
     {
-        if (type == null)
-        {
-            type = copyType.copy((i, prog) ->
-            {
-                fillCacheWithProgress(i, prog);
-                return Collections.singletonList(cache.get(i));
-            });
-        }
-        return type;
+        return cache.getType();
     }
 }

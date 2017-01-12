@@ -121,7 +121,7 @@ public class Filter extends Transformation
                             return c.getType().copyReorder((i, prog) ->
                             {
                                 fillIndexMapTo(i, data, prog);
-                                return indexMap.get(i).intValue();
+                                return Utility.value(indexMap.getInt(i));
                             });
                         }
                     });

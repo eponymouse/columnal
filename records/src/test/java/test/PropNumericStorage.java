@@ -36,7 +36,7 @@ public class PropNumericStorage
 
         List<String> out = new ArrayList<>();
         for (int i = 0; i < input.size(); i++)
-            out.add(storage.get(i).toString());
+            out.add(storage.getType().getCollapsed(i).toString());
         TestUtil.assertEqualList(input, out);
     }
 

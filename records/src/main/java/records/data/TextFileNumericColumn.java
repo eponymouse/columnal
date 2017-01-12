@@ -16,38 +16,37 @@ import java.util.function.UnaryOperator;
 /**
  * Created by neil on 20/10/2016.
  */
-public class TextFileNumericColumn extends TextFileColumn<Number>
+public class TextFileNumericColumn extends TextFileColumn<NumericColumnStorage>
 {
     @OnThread(Tag.Any)
     private final NumberInfo  numberInfo;
     private final @Nullable UnaryOperator<String> processString;
 
+    @SuppressWarnings("initialization")
     public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, ColumnId columnName, int columnIndex, NumberInfo numberInfo, @Nullable UnaryOperator<String> processString) throws InternalException, UserException
     {
-        super(recordSet, textFile, fileStartPosition, sep, columnName, columnIndex, new NumericColumnStorage(numberInfo));
+        super(recordSet, textFile, fileStartPosition, sep, columnName, columnIndex);
+        setStorage(new NumericColumnStorage(numberInfo) {
+            @Override
+            public void beforeGet(int index, Column.@Nullable ProgressListener progressListener) throws InternalException, UserException
+            {
+                fillUpTo(index);
+            }
+        });
         this.numberInfo = numberInfo;
         this.processString = processString;
     }
 
     @Override
-    @OnThread(Tag.Any)
-    protected DataTypeValue makeDataType() throws InternalException, UserException
-    {
-        return DataTypeValue.number(numberInfo, (i, prog) -> {
-            fillUpTo(i);
-            return storage.get(i);
-        });
-    }
-
-    @Override
     protected void addValues(ArrayList<String> values) throws InternalException, UserException
     {
+        NumericColumnStorage store = getStorage();
         for (String value : values)
         {
             String processed = value;
             if (processString != null)
                 processed = processString.apply(processed);
-            ((NumericColumnStorage)storage).addRead(processed);
+            store.addRead(processed);
         }
     }
 }

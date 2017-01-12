@@ -1,15 +1,18 @@
 package records.data;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Column.ProgressListener;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
+import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DumbObjectPool;
+import utility.Utility;
 
-import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +22,7 @@ import java.util.List;
  */
 public class DateColumnStorage implements ColumnStorage<TemporalAccessor>
 {
-    private final ArrayList<TemporalAccessor> values;
+    private final ArrayList<@Value TemporalAccessor> values;
     private final DumbObjectPool<TemporalAccessor> pool;
     @OnThread(Tag.Any)
     private final DateTimeInfo dateTimeInfo;
@@ -40,12 +43,18 @@ public class DateColumnStorage implements ColumnStorage<TemporalAccessor>
         return values.size();
     }
 
-    @Override
-    public TemporalAccessor get(int index) throws InternalException
+    public @Value TemporalAccessor get(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
+        beforeGet(index, progressListener);
         if (index < 0 || index >= filled())
             throw new InternalException("Attempting to access invalid element: " + index + " of " + filled());
         return values.get(index);
+    }
+
+    // For overriding if you want to perform an action before get
+    public void beforeGet(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+    {
+
     }
 
     @Override
@@ -54,7 +63,7 @@ public class DateColumnStorage implements ColumnStorage<TemporalAccessor>
         this.values.ensureCapacity(this.values.size() + items.size());
         for (TemporalAccessor t : items)
         {
-            this.values.add(pool.pool(t));
+            this.values.add(Utility.value(pool.pool(t)));
         }
     }
 
@@ -71,13 +80,8 @@ public class DateColumnStorage implements ColumnStorage<TemporalAccessor>
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.date(dateTimeInfo, (i, prog) -> get(i));
+            dataType = DataTypeValue.date(dateTimeInfo, (i, prog) -> get(i, prog));
         }
         return dataType;
-    }
-
-    public List<TemporalAccessor> getShrunk(int shrunkLength)
-    {
-        return values.subList(0, shrunkLength);
     }
 }

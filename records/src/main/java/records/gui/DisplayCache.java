@@ -1,5 +1,6 @@
 package records.gui;
 
+import annotation.qual.Value;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
@@ -21,6 +22,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
+import utility.Pair;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Worker;
@@ -173,14 +175,14 @@ public class DisplayCache
                         {
                             @Override
                             @OnThread(Tag.Simulation)
-                            public DisplayValue number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
+                            public DisplayValue number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
                             {
                                 return new DisplayValue(g.getWithProgress(index, prog), displayInfo.getUnit(), displayInfo.getMinimumDP());
                             }
 
                             @Override
                             @OnThread(Tag.Simulation)
-                            public DisplayValue text(GetValue<String> g) throws InternalException, UserException
+                            public DisplayValue text(GetValue<@Value String> g) throws InternalException, UserException
                             {
                                 return new DisplayValue(g.getWithProgress(index, prog));
                             }
@@ -212,25 +214,25 @@ public class DisplayCache
                             }
 
                             @Override
-                            public DisplayValue array(ExFunction<Integer, Integer> size, DataTypeValue type) throws InternalException, UserException
+                            public DisplayValue array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
                             {
-                                int theSize = size.apply(index);
-                                ArrayList<DisplayValue> values = new ArrayList<>(theSize);
-                                for (int i = 0; i < theSize; i++)
+                                @NonNull Pair<Integer, DataTypeValue> details = g.get(index);
+                                ArrayList<DisplayValue> values = new ArrayList<>(details.getFirst());
+                                for (int i = 0; i < details.getFirst(); i++)
                                 {
-                                    values.add(getDisplayValue(type, i, prog));
+                                    values.add(getDisplayValue(details.getSecond(), i, prog));
                                 }
                                 return DisplayValue.array(values);
                             }
 
                             @Override
-                            public DisplayValue bool(GetValue<Boolean> g) throws InternalException, UserException
+                            public DisplayValue bool(GetValue<@Value Boolean> g) throws InternalException, UserException
                             {
                                 return new DisplayValue(g.getWithProgress(index, prog));
                             }
 
                             @Override
-                            public DisplayValue date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+                            public DisplayValue date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
                             {
                                 return new DisplayValue(g.getWithProgress(index, prog));
                             }

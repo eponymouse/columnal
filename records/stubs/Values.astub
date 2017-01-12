@@ -1,0 +1,39 @@
+import annotation.qual.Value;
+
+package java.time;
+class LocalTime
+{
+    public static @Value LocalTime of(int a, int b, int c, int d);
+    public static @Value LocalTime from(TemporalAccessor temporal);
+}
+class OffsetTime
+{
+    public static @Value OffsetTime of(LocalTime time, ZoneOffset offset);
+    public static @Value OffsetTime from(TemporalAccessor temporal);
+}
+class LocalDateTime
+{
+    public static @Value LocalDateTime of(LocalDate date, LocalTime time);
+    public static @Value LocalDateTime from(TemporalAccessor temporal);
+}
+class ZonedDateTime
+{
+    public static @Value ZonedDateTime of(LocalDate date, LocalTime time, ZoneId zone);
+    public @Value ZonedDateTime withFixedOffsetZone();
+}
+class LocalDate
+{
+    public static @Value LocalDate of(int year, Month month, int dayOfMonth);
+    public static @Value LocalDate of(int year, int month, int dayOfMonth);
+    public static @Value LocalDate from(TemporalAccessor temporal);
+}
+class YearMonth
+{
+    public static @Value YearMonth of(int year, int month);
+    public static @Value YearMonth from(TemporalAccessor temporal);
+}
+package java.time.format;
+class DateTimeFormatter
+{
+    public <T> @Value T parse(CharSequence text, TemporalQuery<T> query);
+}

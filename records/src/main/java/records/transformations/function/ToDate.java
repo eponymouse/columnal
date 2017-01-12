@@ -1,5 +1,7 @@
 package records.transformations.function;
 
+import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -85,15 +87,15 @@ public class ToDate extends ToTemporalFunction
     }
 
     @Override
-    Temporal fromTemporal(TemporalAccessor temporalAccessor)
+    @Value Temporal fromTemporal(TemporalAccessor temporalAccessor)
     {
         return LocalDate.from(temporalAccessor);
     }
 
-    private class FromYearMonth_Day extends TaglessFunctionInstance
+    private class FromYearMonth_Day extends FunctionInstance
     {
         @Override
-        public Object getSimpleValue(int rowIndex, List<Object> simpleParams) throws UserException, InternalException
+        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> simpleParams) throws UserException, InternalException
         {
             YearMonth ym = (YearMonth) simpleParams.get(0);
             int day = Utility.requireInteger(simpleParams.get(1));
@@ -108,10 +110,10 @@ public class ToDate extends ToTemporalFunction
         }
     }
 
-    private class FromNumbers extends TaglessFunctionInstance
+    private class FromNumbers extends FunctionInstance
     {
         @Override
-        public Object getSimpleValue(int rowIndex, List<Object> simpleParams) throws UserException, InternalException
+        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> simpleParams) throws UserException, InternalException
         {
             int year = Utility.requireInteger(simpleParams.get(0));
             int month = Utility.requireInteger(simpleParams.get(1));

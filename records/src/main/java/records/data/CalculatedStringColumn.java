@@ -8,24 +8,24 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
-import java.util.Collections;
-
 /**
  * Created by neil on 06/11/2016.
  */
 public abstract class CalculatedStringColumn extends CalculatedColumn
 {
-    @OnThread(Tag.Any)
-    private final DataType copyType;
-    @MonotonicNonNull
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private DataTypeValue type;
     protected final StringColumnStorage cache;
+
+    @SuppressWarnings("initialization")
     public CalculatedStringColumn(RecordSet recordSet, ColumnId name, DataType copyType)
     {
         super(recordSet, name);
-        this.copyType = copyType;
-        cache = new StringColumnStorage();
+        cache = new StringColumnStorage() {
+            @Override
+            public void beforeGet(int index, ProgressListener progressListener) throws InternalException, UserException
+            {
+                fillCacheWithProgress(index, progressListener);
+            }
+        };
     }
 
     @Override
@@ -38,14 +38,6 @@ public abstract class CalculatedStringColumn extends CalculatedColumn
     @OnThread(Tag.Any)
     public synchronized DataTypeValue getType() throws UserException, InternalException
     {
-        if (type == null)
-        {
-            type = copyType.copy((i, prog) ->
-            {
-                fillCacheWithProgress(i, prog);
-                return Collections.singletonList(cache.get(i));
-            });
-        }
-        return type;
+        return cache.getType();
     }
 }

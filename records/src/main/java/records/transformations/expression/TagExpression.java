@@ -1,11 +1,13 @@
 package records.transformations.expression;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
+import records.data.TaggedValue;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeId;
 import records.data.unit.UnitManager;
@@ -61,9 +63,9 @@ public class TagExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        return new Pair<Integer, @Nullable Object>(index, inner == null ? null : inner.getValue(rowIndex, state));
+        return new TaggedValue(index, inner == null ? null : inner.getValue(rowIndex, state));
     }
 
     @Override

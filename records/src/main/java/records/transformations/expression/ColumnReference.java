@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
@@ -55,7 +56,7 @@ public class ColumnReference extends Expression
     }
 
     @Override
-    public Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         if (column == null)
             throw new InternalException("Attempting to fetch value despite type check failure");

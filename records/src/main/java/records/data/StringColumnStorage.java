@@ -1,12 +1,16 @@
 package records.data;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Column.ProgressListener;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
+import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DumbObjectPool;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -16,7 +20,7 @@ import java.util.List;
  */
 public class StringColumnStorage implements ColumnStorage<String>
 {
-    private final ArrayList<String> values;
+    private final ArrayList<@Value String> values;
     private final DumbObjectPool<String> pool = new DumbObjectPool<>(String.class, 1000, null);
     @MonotonicNonNull
     @OnThread(value = Tag.Any,requireSynchronized = true)
@@ -33,12 +37,18 @@ public class StringColumnStorage implements ColumnStorage<String>
         return values.size();
     }
     
-    @Override
-    public String get(int index) throws InternalException
+    public @Value String get(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
+        beforeGet(index, progressListener);
         if (index < 0 || index >= values.size())
             throw new InternalException("Attempting to access invalid element: " + index + " of " + values.size());
         return values.get(index);
+    }
+
+    // For overriding if you want to perform an action before get
+    public void beforeGet(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+    {
+
     }
 
     @Override
@@ -47,7 +57,7 @@ public class StringColumnStorage implements ColumnStorage<String>
         this.values.ensureCapacity(this.values.size() + items.size());
         for (String s : items)
         {
-            this.values.add(pool.pool(s));
+            this.values.add(Utility.value(pool.pool(s)));
         }
     }
 
@@ -64,13 +74,8 @@ public class StringColumnStorage implements ColumnStorage<String>
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.text((i, prog) -> get(i));
+            dataType = DataTypeValue.text((i, prog) -> get(i, prog));
         }
         return dataType;
-    }
-
-    public List<String> getShrunk(int shrunkLength)
-    {
-        return values.subList(0, shrunkLength);
     }
 }

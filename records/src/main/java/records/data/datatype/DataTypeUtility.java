@@ -1,10 +1,12 @@
 package records.data.datatype;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ArrayColumnStorage;
 import records.data.BooleanColumnStorage;
 import records.data.ColumnStorage;
 import records.data.DateColumnStorage;
+import records.data.TaggedValue;
 import records.data.TupleColumnStorage;
 import records.data.NumericColumnStorage;
 import records.data.StringColumnStorage;
@@ -34,56 +36,56 @@ import java.util.List;
  */
 public class DataTypeUtility
 {
-    public static Object generateExample(DataType type, int index) throws UserException, InternalException
+    public static @Value Object generateExample(DataType type, int index) throws UserException, InternalException
     {
-        return type.apply(new DataTypeVisitor<Object>()
+        return type.apply(new DataTypeVisitor<@Value Object>()
         {
 
             @Override
-            public Object number(NumberInfo displayInfo) throws InternalException, UserException
+            public @Value Object number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return (Long)(long)index;
+                return Utility.value((long)index);
             }
 
             @Override
-            public Object text() throws InternalException, UserException
+            public @Value Object text() throws InternalException, UserException
             {
-                return Arrays.asList("Aardvark", "Bear", "Cat", "Dog", "Emu", "Fox").get(index);
+                return Utility.value(Arrays.asList("Aardvark", "Bear", "Cat", "Dog", "Emu", "Fox").get(index));
             }
 
             @Override
-            public Object bool() throws InternalException, UserException
+            public @Value Object bool() throws InternalException, UserException
             {
-                return (index % 2) == 1;
+                return Utility.value((index % 2) == 1);
             }
 
             @Override
-            public Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return LocalDate.ofEpochDay(index);
+                return Utility.value(LocalDate.ofEpochDay(index));
             }
 
             @Override
-            public Pair<Integer, @Nullable Object> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public @Value TaggedValue tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tag = index % tags.size();
                 @Nullable DataType inner = tags.get(tag).getInner();
                 if (inner != null)
-                    return new Pair<>((Integer)tag, generateExample(inner, index - tag));
+                    return new TaggedValue(tag, generateExample(inner, index - tag));
                 else
-                    return new Pair<>((Integer)tag, null);
+                    return new TaggedValue(tag, null);
             }
 
             @Override
-            public Object tuple(List<DataType> inner) throws InternalException, UserException
+            public @Value Object tuple(List<DataType> inner) throws InternalException, UserException
             {
-                return Utility.mapListEx(inner, t -> generateExample(t, index)).toArray();
+                return Utility.value(Utility.<DataType, @Value Object>mapListEx(inner, t -> generateExample(t, index)).toArray(new @Value Object[0]));
             }
 
             @Override
-            public Object array(DataType inner) throws InternalException, UserException
+            public @Value Object array(DataType inner) throws InternalException, UserException
             {
-                return Collections.emptyList();
+                return Utility.value(Collections.emptyList());
             }
         });
     }
@@ -132,7 +134,7 @@ public class DataTypeUtility
             @Override
             public DisplayValue tagged(TypeId typeName, List<TagType<DataType>> tagTypes) throws InternalException, UserException
             {
-                int tag = ((Pair<Integer, @Nullable Object>)object).getFirst();
+                int tag = ((TaggedValue)object).getTagIndex();
                 TagType tagType = tagTypes.get(tag);
                 @Nullable DataType inner = tagType.getInner();
                 if (DataType.canFitInOneNumeric(tagTypes))

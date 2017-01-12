@@ -15,6 +15,7 @@ import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
 import records.data.RecordSet;
 import records.data.TableManager;
+import records.data.TaggedValue;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -191,24 +192,24 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
         });
     }
 
-    private static class TagDataGenerator extends Generator<Pair<Integer, @Nullable Object>>
+    private static class TagDataGenerator extends Generator<TaggedValue>
     {
         private final List<TagType<DataType>> tags;
 
         public TagDataGenerator(List<TagType<DataType>> tags)
         {
-            super((Class)Pair.class);
+            super(TaggedValue.class);
             this.tags = tags;
         }
 
         @Override
-        public Pair<Integer, @Nullable Object> generate(SourceOfRandomness r, GenerationStatus generationStatus)
+        public TaggedValue generate(SourceOfRandomness r, GenerationStatus generationStatus)
         {
             int tagIndex = r.nextInt(0, tags.size() - 1);
             TagType<DataType> tag = tags.get(tagIndex);
             @Nullable DataType inner = tag.getInner();
             if (inner == null)
-                return new Pair<>((Integer)tagIndex, null);
+                return new TaggedValue(tagIndex, null);
             else
             {
                 try
@@ -258,7 +259,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                             throw new UnimplementedException();
                         }
                     });
-                    return new Pair<>((Integer) tagIndex, value);
+                    return new TaggedValue((Integer) tagIndex, value);
                 }
                 catch (InternalException | UserException e)
                 {

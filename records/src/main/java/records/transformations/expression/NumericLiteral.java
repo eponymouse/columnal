@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
@@ -28,13 +29,13 @@ import java.util.Optional;
  */
 public class NumericLiteral extends Literal
 {
-    private final Number value;
+    private final @Value Number value;
     private final @Nullable Unit unit;
     private final DataType type;
 
     public NumericLiteral(Number value, @Nullable Unit unit)
     {
-        this.value = value;
+        this.value = Utility.value(value);
         this.unit = unit;
         this.type = unit == null ? DataType.NUMBER : DataType.number(new NumberInfo(unit, 0));
     }
@@ -57,7 +58,7 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         return value;
     }

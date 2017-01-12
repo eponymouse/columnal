@@ -23,7 +23,7 @@ public class MemoryTaggedColumn extends Column
     private final TaggedColumnStorage storage;
     private final TypeId typeName;
 
-    public MemoryTaggedColumn(RecordSet rs, ColumnId title, TypeId typeName, List<TagType<DataType>> tags, List<Pair<Integer, @Nullable Object>> list) throws InternalException
+    public MemoryTaggedColumn(RecordSet rs, ColumnId title, TypeId typeName, List<TagType<DataType>> tags, List<TaggedValue> list) throws InternalException
     {
         super(rs);
         this.title = title;

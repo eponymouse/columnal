@@ -13,6 +13,7 @@ import utility.Utility;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -23,11 +24,22 @@ public class MemoryNumericColumn extends Column
     private final ColumnId title;
     private final NumericColumnStorage storage;
 
-    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, Stream<String> values) throws InternalException, UserException
+    private MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo) throws InternalException, UserException
     {
         super(rs);
         storage = new NumericColumnStorage(numberInfo);
         this.title = title;
+    }
+
+    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, List<Number> values) throws InternalException, UserException
+    {
+        this(rs, title, numberInfo);
+        storage.addAll(values);
+    }
+
+    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, Stream<String> values) throws InternalException, UserException
+    {
+        this(rs, title, numberInfo);
         for (String value : Utility.iterableStream(values))
         {
             storage.addRead(value);
@@ -50,6 +62,6 @@ public class MemoryNumericColumn extends Column
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        return new MemoryNumericColumn(rs, title, storage.getDisplayInfo(), storage.getShrunk(shrunkLength).stream());
+        return new MemoryNumericColumn(rs, title, storage.getDisplayInfo(), storage._test_getShrunk(shrunkLength));
     }
 }

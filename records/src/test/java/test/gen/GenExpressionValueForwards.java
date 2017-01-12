@@ -15,6 +15,7 @@ import records.data.MemoryStringColumn;
 import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
 import records.data.RecordSet;
+import records.data.TaggedValue;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -483,7 +484,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {
-                    terminals.add(() -> new Pair<>(new Pair<Integer, @Nullable Object>(tagIndex, null), new TagExpression(name, null)));
+                    terminals.add(() -> new Pair<>(new TaggedValue(tagIndex, null), new TagExpression(name, null)));
                 }
                 else
                 {
@@ -590,7 +591,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 @Nullable DataType inner = tags.get(tagIndex).getInner();
                 Object rest = inner == null ? null : make(inner, 1).getFirst();
-                Pair<Integer, @Nullable Object> value = new Pair<>(1, rest);
+                TaggedValue value = new TaggedValue(1, rest);
                 return new Pair<>(value, rs -> new MemoryTaggedColumn(rs, name, typeName, tags, Collections.singletonList(value)));
             }
 

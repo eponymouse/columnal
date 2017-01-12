@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.qual.Value;
 import records.error.InternalException;
 
 import java.util.HashMap;
@@ -11,21 +12,21 @@ import java.util.Map;
  */
 public class EvaluateState
 {
-    private final Map<String, Object> variables;
+    private final Map<String, @Value Object> variables;
 
     public EvaluateState()
     {
         this(new HashMap<>());
     }
 
-    private EvaluateState(HashMap<String, Object> variables)
+    private EvaluateState(HashMap<String, @Value Object> variables)
     {
         this.variables = variables;
     }
 
-    public EvaluateState add(String varName, Object value) throws InternalException
+    public EvaluateState add(String varName, @Value Object value) throws InternalException
     {
-        HashMap<String, Object> copy = new HashMap<>(variables);
+        HashMap<String, @Value Object> copy = new HashMap<>(variables);
         if (copy.containsKey(varName))
         {
             throw new InternalException("Duplicate variable name: " + varName);
@@ -34,7 +35,7 @@ public class EvaluateState
         return new EvaluateState(copy);
     }
 
-    public Object get(String varName) throws InternalException
+    public @Value Object get(String varName) throws InternalException
     {
         Object value = variables.get(varName);
         if (value == null)

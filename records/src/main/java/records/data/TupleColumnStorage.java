@@ -42,7 +42,7 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
         return storage.size();
     }
 
-    @Override
+    /*
     public Object @NonNull [] get(int index) throws InternalException, UserException
     {
         Object[] r = new Object[storage.size()];
@@ -51,7 +51,7 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
             r[i] = storage.get(i).get(index);
         }
         return r;
-    }
+    }*/
 
     @Override
     public void addAll(List<Object[]> items) throws InternalException

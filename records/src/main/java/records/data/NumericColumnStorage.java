@@ -5,7 +5,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.data.datatype.DataType;
+import records.data.Column.ProgressListener;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataTypeValue;
 import records.error.FetchException;
@@ -13,6 +13,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -390,26 +391,48 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         return filled;
     }
 
+    /*
     @Pure
-    public Number get(int index) throws InternalException
+    public @Value Number get(int index) throws InternalException
     {
+        beforeGet(index);
         if (NUM_TAGS > 0)
         {
             if (getTag(index) == numericTag)
-                return getNonBlank(index);
+                return Utility.value(getNonBlank(index));
             else
                 throw new InternalException("Calling get on tagged item with no" +
                     " value");
         }
         else
-            return getNonBlank(index);
+            return Utility.value(getNonBlank(index));
+    }
+    */
+
+    // For overriding if you want to perform an action before get
+    public void beforeGet(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+    {
+
     }
 
-    @Pure
-    @NonNull
-    private Number getNonBlank(int index) throws InternalException
+    // For when NumericColumnStorage is used as an internal integer store
+    public int getInt(int index) throws InternalException, UserException
     {
+        Number n = getNonBlank(index, null);
+        if (n instanceof BigDecimal)
+            throw new InternalException("BigDecimal in internal integer store");
+        if (n.longValue() != (long)n.intValue())
+            throw new InternalException("Too large a number in internal integer store");
+        return n.intValue();
+    }
+
+    @NonNull
+    private Number getNonBlank(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
+    {
+        // Must do this before checking range in case it adds more data:
+        beforeGet(index, progressListener);
         checkRange(index);
+
 
         // Guessing here to order most likely cases:
         if (bytes != null)
@@ -498,7 +521,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.number(displayInfo, (i, prog) -> getNonBlank(i));
+            dataType = DataTypeValue.number(displayInfo, (i, prog) -> Utility.value(getNonBlank(i, prog)));
         }
         return dataType;
     }
@@ -539,7 +562,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
                 addLong(n.longValue(), false);
         }
     }
-
+/*
     public int getNumericTag()
     {
         return numericTag;
@@ -563,7 +586,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         }
         return r;
     }
-
+*/
     public NumberInfo getDisplayInfo()
     {
         return displayInfo;

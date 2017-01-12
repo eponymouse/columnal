@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -13,6 +14,7 @@ import records.error.UserException;
 import records.loadsave.OutputBuilder;
 import utility.ExBiConsumer;
 import utility.Pair;
+import utility.Utility;
 
 import java.math.BigInteger;
 import java.util.Collections;
@@ -24,11 +26,11 @@ import java.util.Map;
  */
 public class StringLiteral extends Literal
 {
-    private final String value;
+    private final @Value String value;
 
     public StringLiteral(String value)
     {
-        this.value = value;
+        this.value = Utility.value(value);
     }
 
     @Override
@@ -38,7 +40,7 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    public Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         return value;
     }

@@ -14,6 +14,7 @@ import java.math.MathContext;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -26,6 +27,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import annotation.qual.UnknownIfValue;
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleBinding;
@@ -33,6 +36,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.Styleable;
 import javafx.geometry.Bounds;
@@ -64,13 +68,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
 import records.data.Table;
+import records.data.TaggedValue;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.BasicLexer;
 import records.gui.DisplayValue;
 import records.importers.ChoicePoint.Choice;
-import records.transformations.function.TaglessFunctionInstance;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -170,7 +174,7 @@ public class Utility
     }
 
     @Pure
-    public static int compareLists(List<@NonNull ?> a, List<@NonNull ?> b) throws InternalException
+    public static int compareLists(List<@NonNull @Value ?> a, List<@NonNull @Value ?> b) throws InternalException
     {
         return compareLists(a, b, null);
     }
@@ -194,7 +198,7 @@ public class Utility
      * see that method for more details.
      */
     @Pure
-    public static int compareLists(List<@NonNull ?> a, List<@NonNull ?> b, @Nullable BigDecimal epsilon) throws InternalException
+    public static int compareLists(List<@NonNull @Value ?> a, List<@NonNull @Value ?> b, @Nullable BigDecimal epsilon) throws InternalException
     {
         for (int i = 0; i < a.size(); i++)
         {
@@ -213,29 +217,29 @@ public class Utility
             return -1; // B must have been longer
     }
 
-    public static int compareValues(Object ax, Object bx) throws InternalException
+    public static int compareValues(@Value Object ax, @Value Object bx) throws InternalException
     {
         return compareValues(ax, bx, null);
     }
 
-    public static int compareValues(Object ax, Object bx, @Nullable BigDecimal epsilon) throws InternalException
+    public static int compareValues(@Value Object ax, @Value Object bx, @Nullable BigDecimal epsilon) throws InternalException
     {
         int cmp;
         if (ax instanceof Number)
             cmp = compareNumbers(ax, bx, epsilon);
         else if (ax instanceof List)
-            cmp = compareLists((List<@NonNull ?>)ax, (List<@NonNull ?>)bx, epsilon);
+            cmp = compareLists((List<@NonNull @Value ?>)ax, (List<@NonNull @Value ?>)bx, epsilon);
         else if (ax instanceof Comparable)
             cmp = ((Comparable<Object>)ax).compareTo(bx);
-        else if (ax instanceof Pair)
+        else if (ax instanceof TaggedValue)
         {
-            @NonNull Integer ai = (@NonNull Integer)((Pair) ax).getFirst();
-            @NonNull Integer bi = (@NonNull Integer)((Pair) bx).getFirst();
-            cmp = Integer.compare(ai, bi);
+            TaggedValue at = (TaggedValue) ax;
+            TaggedValue bt = (TaggedValue) bx;
+            cmp = Integer.compare(at.getTagIndex(), bt.getTagIndex());
             if (cmp != 0)
                 return cmp;
-            Object a2 = ((Pair) ax).getSecond();
-            Object b2 = ((Pair) bx).getSecond();
+            Object a2 = at.getInner();
+            Object b2 = bt.getInner();
             if (a2 != null && b2 != null)
                 return compareValues(a2, b2, epsilon);
             return 0; // Assume bx null too, if types match.
@@ -1030,5 +1034,49 @@ public class Utility
     {
         // Defeat thread-checker:
         ((Runnable)(() -> Platform.runLater(r::run))).run();
+    }
+
+    @SuppressWarnings("valuetype")
+    public static <T extends Number> @Value T value(@UnknownIfValue T number)
+    {
+        return number;
+    }
+
+    @SuppressWarnings("valuetype")
+    public static @Value Boolean value(@UnknownIfValue Boolean bool)
+    {
+        return bool;
+    }
+
+    @SuppressWarnings("valuetype")
+    public static @Value String value(@UnknownIfValue String string)
+    {
+        return string;
+    }
+
+    @SuppressWarnings("valuetype")
+    public static <T extends TemporalAccessor> @Value  T value(@UnknownIfValue T temporalAccessor)
+    {
+        return temporalAccessor;
+    }
+
+    @SuppressWarnings("valuetype")
+    public static @Value Object @Value [] value(@Value Object [] tuple)
+    {
+        return tuple;
+    }
+
+    @SuppressWarnings("valuetype")
+    public static @Value ImmutableList<@Value Object> value(@UnknownIfValue List<@Value Object> list)
+    {
+        return ImmutableList.copyOf(list);
+    }
+
+    // Mainly, this method is to avoid having to cast to ListChangeListener to disambiguate
+    // from the invalidionlistener overload in ObservableList
+    @OnThread(Tag.FXPlatform)
+    public static <T> void listen(ObservableList<T> list, FXPlatformConsumer<ListChangeListener.Change<? extends T>> listener)
+    {
+        list.addListener(listener::consume);
     }
 }

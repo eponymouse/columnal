@@ -14,6 +14,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
 import utility.FXPlatformConsumer;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -47,7 +48,7 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
         this.childrenNodeListener = c -> {
             updateNodes();
         };
-        clauses.addListener((ListChangeListener<? super @UnknownInterned @UnknownKeyFor ClauseNode>) c -> {
+        Utility.listen(clauses, c -> {
             updateNodes();
             updateListeners();
         });

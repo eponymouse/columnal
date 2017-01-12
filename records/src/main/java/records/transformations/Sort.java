@@ -1,5 +1,6 @@
 package records.transformations;
 
+import annotation.qual.Value;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.BooleanProperty;
@@ -157,7 +158,7 @@ public class Sort extends Transformation
                         return c.getType().copyReorder((i, prog) ->
                         {
                             fillSortMapTo(i, prog);
-                            return sortMap.get(i).intValue();
+                            return Utility.value(sortMap.getInt(i));
                         });
                     }
                 });
@@ -197,7 +198,7 @@ public class Sort extends Transformation
         for (int dest = destStart; dest <= target; dest++)
         {
             int lowestIndex = 0;
-            @Nullable List<Object> lowest = null;
+            @Nullable List<@Value Object> lowest = null;
             int pointerToLowestIndex = -1;
             int prevSrc = 0;
             if (stillToOrder == null)
@@ -205,7 +206,7 @@ public class Sort extends Transformation
             for (int src = stillToOrder[prevSrc]; src != -1; src = stillToOrder[src])
             {
                 // src is in stillToOrder terms, which is one more than original indexes
-                List<Object> cur = getItem(src - 1);
+                List<@Value Object> cur = getItem(src - 1);
                 if (lowest == null || Utility.compareLists(cur, lowest) < 0)
                 {
                     lowest = cur;
@@ -235,11 +236,11 @@ public class Sort extends Transformation
     }
 
     @Pure
-    private List<Object> getItem(int srcIndex) throws UserException, InternalException
+    private List<@Value Object> getItem(int srcIndex) throws UserException, InternalException
     {
         if (sortBy == null)
             throw new UserException(sortByError);
-        List<Object> r = new ArrayList<>();
+        List<@Value Object> r = new ArrayList<>();
         for (Column c : sortBy)
             r.add(c.getType().getCollapsed(srcIndex));
         return r;
@@ -376,7 +377,7 @@ public class Sort extends Transformation
                 if (src != null)
                     allColumns.addAll(src.getData().getColumns());
                 updateExample(allColumns, getPresent(sortByView.getItems()), srcHeaderAndData, destHeaderAndData);
-                sortByView.getItems().addListener((ListChangeListener<? super Optional<ColumnId>>) c -> {
+                Utility.listen(sortByView.getItems(), c -> {
                     try
                     {
                         updateExample(allColumns, getPresent(sortByView.getItems()), srcHeaderAndData, destHeaderAndData);
@@ -451,19 +452,19 @@ public class Sort extends Transformation
                 exampleColumnTypes.add(c.getType());
 
             // Generate four rows of data for each column:
-            List<List<Object>> data = new ArrayList<>();
+            List<List<@Value Object>> data = new ArrayList<>();
             for (int i = 0; i < 4; i++)
                 data.add(new ArrayList<>());
             for (Column c : exampleColumns)
             {
                 int index = 0;
-                for (List<Object> row : data)
+                for (List<@Value Object> row : data)
                 {
                     row.add(DataTypeUtility.generateExample(c.getType(), (index++ + row.size()) % 4));
                 }
             }
             // Sort it to get result:
-            Collections.<List<Object>>sort(data, (a, b) -> {
+            Collections.<List<@Value Object>>sort(data, (List<@Value Object> a, List<@Value Object> b) -> {
                 for (Column c : sortBy)
                 {
                     int i = exampleColumns.indexOf(c);
@@ -484,7 +485,7 @@ public class Sort extends Transformation
                 }
                 return 0;
             });
-            List<List<Object>> unsorted = new ArrayList<>();
+            List<List<@Value Object>> unsorted = new ArrayList<>();
             if (data.size() == 4)
             {
                 unsorted.add(data.get(2));
@@ -498,12 +499,12 @@ public class Sort extends Transformation
             for (int i = 0; i < exampleColumns.size(); i++)
             {
                 List<DisplayValue> sortedCol = new ArrayList<>();
-                for (List<Object> row : data)
+                for (List<@Value Object> row : data)
                 {
                     sortedCol.add(DataTypeUtility.display(exampleColumnTypes.get(i), row.get(i)));
                 }
                 List<DisplayValue> unsortedCol = new ArrayList<>();
-                for (List<Object> row : unsorted)
+                for (List<@Value Object> row : unsorted)
                 {
                     unsortedCol.add(DataTypeUtility.display(exampleColumnTypes.get(i), row.get(i)));
                 }

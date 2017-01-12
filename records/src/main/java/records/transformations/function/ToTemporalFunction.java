@@ -1,5 +1,7 @@
 package records.transformations.function;
 
+import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
@@ -116,20 +118,20 @@ public abstract class ToTemporalFunction extends SimplyTypedFunctionDefinition
 
     static enum F {FRAC_SEC_OPT, SEC_OPT, MIN, HOUR, HOUR12, AMPM, DAY, MONTH_TEXT, MONTH_NUM, YEAR2, YEAR4 }
 
-    private class FromStringInstance extends TaglessFunctionInstance
+    private class FromStringInstance extends FunctionInstance
     {
         private ArrayList<Pair<List<DateTimeFormatter>, Integer>> usedFormats = new ArrayList<>();
         private ArrayList<List<DateTimeFormatter>> unusedFormats = new ArrayList<>(getFormats());
 
         @Override
-        public Object getSimpleValue(int rowIndex, List<Object> params) throws UserException
+        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params) throws UserException
         {
             String src = (String) params.get(0);
 
             for (int i = 0; i < usedFormats.size(); i++)
             {
                 Pair<List<DateTimeFormatter>, Integer> formats = usedFormats.get(i);
-                List<Pair<DateTimeFormatter, Temporal>> possibilities = getPossibles(src, formats.getFirst());
+                List<Pair<DateTimeFormatter, @Value Temporal>> possibilities = getPossibles(src, formats.getFirst());
                 if (possibilities.size() == 1)
                 {
                     // Didn't throw, so record as used once more:
@@ -141,7 +143,7 @@ public abstract class ToTemporalFunction extends SimplyTypedFunctionDefinition
                 }
                 else if (possibilities.size() > 1)
                 {
-                    throw new UserException("Ambiguous date, can be parsed as " + possibilities.stream().map(p -> p.getSecond().toString()).collect(Collectors.joining(" or ")) + ".  Supply your own format string to disambiguate.");
+                    throw new UserException("Ambiguous date, can be parsed as " + possibilities.stream().map((Pair<DateTimeFormatter, @Value Temporal> p) -> p.getSecond().toString()).collect(Collectors.joining(" or ")) + ".  Supply your own format string to disambiguate.");
                 }
             }
 
@@ -149,7 +151,7 @@ public abstract class ToTemporalFunction extends SimplyTypedFunctionDefinition
             for (Iterator<List<DateTimeFormatter>> iterator = unusedFormats.iterator(); iterator.hasNext(); )
             {
                 List<DateTimeFormatter> formats = iterator.next();
-                List<Pair<DateTimeFormatter, Temporal>> possibilities = getPossibles(src, formats);
+                List<Pair<DateTimeFormatter, @Value Temporal>> possibilities = getPossibles(src, formats);
                 if (possibilities.size() == 1)
                 {
                     // Didn't throw, so record as used:
@@ -160,7 +162,7 @@ public abstract class ToTemporalFunction extends SimplyTypedFunctionDefinition
                 }
                 else if (possibilities.size() > 1)
                 {
-                    throw new UserException("Ambiguous date, can be parsed as " + possibilities.stream().map(p -> p.getSecond().toString()).collect(Collectors.joining(" or ")) + ".  Supply your own format string to disambiguate.");
+                    throw new UserException("Ambiguous date, can be parsed as " + possibilities.stream().map((Pair<DateTimeFormatter, @Value Temporal> p) -> p.getSecond().toString()).collect(Collectors.joining(" or ")) + ".  Supply your own format string to disambiguate.");
                 }
             }
 
@@ -168,9 +170,9 @@ public abstract class ToTemporalFunction extends SimplyTypedFunctionDefinition
         }
 
         @NotNull
-        private List<Pair<DateTimeFormatter, Temporal>> getPossibles(String src, List<DateTimeFormatter> format)
+        private List<Pair<DateTimeFormatter, @Value Temporal>> getPossibles(String src, List<DateTimeFormatter> format)
         {
-            List<Pair<DateTimeFormatter, Temporal>> possibilities = new ArrayList<>();
+            List<Pair<DateTimeFormatter, @Value Temporal>> possibilities = new ArrayList<>();
             for (DateTimeFormatter dateTimeFormatter : format)
             {
                 try
@@ -189,10 +191,10 @@ public abstract class ToTemporalFunction extends SimplyTypedFunctionDefinition
     // If two formats may be mistaken for each other, put them in the same inner list:
     protected abstract List<List<@NonNull DateTimeFormatter>> getFormats();
 
-    class FromTemporalInstance extends TaglessFunctionInstance
+    class FromTemporalInstance extends FunctionInstance
     {
         @Override
-        public Object getSimpleValue(int rowIndex, List<Object> params) throws UserException
+        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params) throws UserException
         {
             try
             {
@@ -205,5 +207,5 @@ public abstract class ToTemporalFunction extends SimplyTypedFunctionDefinition
         }
     }
 
-    abstract Temporal fromTemporal(TemporalAccessor temporalAccessor);
+    abstract @Value Temporal fromTemporal(TemporalAccessor temporalAccessor);
 }

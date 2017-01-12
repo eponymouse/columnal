@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataType.Kind;
@@ -8,6 +9,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -29,9 +31,9 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
         this.type = DataTypeValue.bool(this::getWithProgress);
     }
 
-    private Boolean getWithProgress(int i, @Nullable ProgressListener progressListener) throws UserException, InternalException
+    private @Value Boolean getWithProgress(int i, @Nullable ProgressListener progressListener) throws UserException, InternalException
     {
-        return get(i);
+        return Utility.value(get(i));
     }
 
     @Override
@@ -40,8 +42,7 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
         return length;
     }
 
-    @Override
-    public Boolean get(int index) throws InternalException, UserException
+    private boolean get(int index) throws InternalException, UserException
     {
         if (index < 0 || index >= filled())
             throw new InternalException("Attempting to access invalid element: " + index + " of " + filled());

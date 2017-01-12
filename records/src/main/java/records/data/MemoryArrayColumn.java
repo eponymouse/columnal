@@ -6,6 +6,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.List;
@@ -18,12 +19,11 @@ public class MemoryArrayColumn extends Column
     private final ColumnId title;
     private final ArrayColumnStorage storage;
 
-    public MemoryArrayColumn(RecordSet recordSet, ColumnId title, DataType inner, List<List<Object>> values) throws InternalException
+    public MemoryArrayColumn(RecordSet recordSet, ColumnId title, DataType inner, List<Pair<Integer, DataTypeValue>> values) throws InternalException
     {
         super(recordSet);
         this.title = title;
-        List<Integer> sizes = Utility.mapList(values, List::size);
-        this.storage = new ArrayColumnStorage(inner, sizes::get);
+        this.storage = new ArrayColumnStorage(inner);
         this.storage.addAll(values);
     }
 

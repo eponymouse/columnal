@@ -1,5 +1,6 @@
 package test;
 
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -191,7 +192,7 @@ public class PropDateFunctions
                 throw new RuntimeException(new UserException(s));
             }, mgr);
             assertNotNull(instance);
-            return instance.getFirst().getValue(0, Collections.singletonList(src));
+            return instance.getFirst().getValue(0, ImmutableList.of(src));
         }
         catch (RuntimeException e)
         {

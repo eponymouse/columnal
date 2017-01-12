@@ -60,11 +60,11 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
         this.childrenNodeListener = c -> {
             updateNodes();
         };
-        operands.addListener((ListChangeListener<? super @UnknownInterned @UnknownKeyFor OperandNode>) c -> {
+        Utility.listen(operands, c -> {
             updateNodes();
             updateListeners();
         });
-        operators.addListener((ListChangeListener<? super @UnknownInterned @UnknownKeyFor OperatorEntry>) c -> {
+        Utility.listen(operators, c -> {
             updateNodes();
             updateListeners();
         });

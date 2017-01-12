@@ -49,6 +49,6 @@ public abstract class CalculatedTaggedColumn extends CalculatedColumn
 
     protected void addUnpacked(Object value) throws UserException, InternalException
     {
-        storage.addUnpacked((Pair<Integer, @Nullable Object>)value);
+        storage.addUnpacked((TaggedValue)value);
     }
 }

@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -11,6 +12,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import utility.ExBiConsumer;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.Collections;
 import java.util.List;
@@ -21,11 +23,11 @@ import java.util.Map;
  */
 public class BooleanLiteral extends Literal
 {
-    private final boolean value;
+    private final @Value Boolean value;
 
     public BooleanLiteral(boolean value)
     {
-        this.value = value;
+        this.value = Utility.value(value);
     }
 
     @Override
@@ -35,7 +37,7 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    public Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         return value;
     }
@@ -60,7 +62,7 @@ public class BooleanLiteral extends Literal
 
         BooleanLiteral that = (BooleanLiteral) o;
 
-        return value == that.value;
+        return value.equals(that.value);
     }
 
     @Override

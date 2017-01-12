@@ -1,5 +1,6 @@
 package records.data;
 
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeValue;
@@ -20,7 +21,9 @@ public interface ColumnStorage<T>
     // The amount currently stored.  Do not assume this is all available data,
     // as many columns will be loaded/calculated on demand.
     public int filled();
-    public @NonNull T get(int index) throws InternalException, UserException;
+
+    //public @NonNull T get(int index) throws InternalException, UserException;
+
     default public void add(@NonNull T item) throws InternalException
     {
         addAll(Collections.<@NonNull T>singletonList(item));
@@ -30,18 +33,19 @@ public interface ColumnStorage<T>
     @OnThread(Tag.Any)
     public abstract DataTypeValue getType();
 
-    default public List<T> getFullList(int arrayLength) throws UserException, InternalException
+    default public ImmutableList<T> getAllCollapsed(int arrayLength) throws UserException, InternalException
     {
         List<T> r = new ArrayList<>();
         for (int i = 0; i < arrayLength; i++)
         {
-            r.add(get(i));
+            r.add((T)getType().getCollapsed(i));
         }
-        return r;
+        return ImmutableList.copyOf(r);
     }
+
 
     default public List<T> _test_getShrunk(int length) throws InternalException, UserException
     {
-        return getFullList(length);
+        return getAllCollapsed(length);
     }
 }

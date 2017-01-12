@@ -58,7 +58,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
         this.childrenNodeListener = c -> {
             updateNodes();
         };
-        matches.addListener((ListChangeListener<? super @UnknownInterned @UnknownKeyFor Pair<@UnknownKeyFor Consecutive, @UnknownKeyFor Consecutive>>) c -> {
+        Utility.listen(matches, c -> {
             updateNodes();
             updateListeners();
         });

@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
@@ -19,6 +20,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -79,17 +81,12 @@ public class CallExpression extends Expression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         if (instance == null)
             throw new InternalException("Calling function which didn't typecheck");
 
-        List<Object> actuals = new ArrayList<>();
-        for (Expression param : params)
-        {
-            actuals.add(param.getValue(rowIndex, state));
-        }
-        return instance.getValue(rowIndex, actuals);
+        return instance.getValue(rowIndex, Utility.<Expression, @Value Object>mapListExI(params, p -> p.getValue(rowIndex, state)));
     }
 
     @Override

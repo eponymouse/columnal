@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.BitvectorFormula;
 import org.sosy_lab.java_smt.api.BitvectorFormulaManager;
@@ -51,11 +52,11 @@ public class EqualExpression extends BinaryOpExpression
     }
 
     @Override
-    public Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         Object lhsVal = lhs.getValue(rowIndex, state);
         Object rhsVal = rhs.getValue(rowIndex, state);
-        return 0 == Utility.compareValues(lhsVal, rhsVal);
+        return Utility.value(0 == Utility.compareValues(lhsVal, rhsVal));
     }
 
     @Override

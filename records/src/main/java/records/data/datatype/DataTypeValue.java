@@ -1,9 +1,11 @@
 package records.data.datatype;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.Column.ProgressListener;
+import records.data.TaggedValue;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -16,7 +18,6 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 
 /**
  * The data-type of a homogeneously-typed list of values,
@@ -24,17 +25,17 @@ import java.util.function.Function;
  */
 public class DataTypeValue extends DataType
 {
-    private final @Nullable GetValue<Number> getNumber;
-    private final @Nullable GetValue<String> getText;
-    private final @Nullable GetValue<TemporalAccessor> getDate;
-    private final @Nullable GetValue<Boolean> getBoolean;
+    private final @Nullable GetValue<@Value Number> getNumber;
+    private final @Nullable GetValue<@Value String> getText;
+    private final @Nullable GetValue<@Value TemporalAccessor> getDate;
+    private final @Nullable GetValue<@Value Boolean> getBoolean;
     private final @Nullable GetValue<Integer> getTag;
-    // Takes index of item, returns the length of the array at that index.
-    private final @Nullable ExFunction<Integer, Integer> getArrayLength;
+    // Returns the length of the array at that index and accessor:
+    private final @Nullable GetValue<Pair<Integer, DataTypeValue>> getArrayContent;
 
     // package-visible
     @SuppressWarnings("unchecked")
-    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataTypeValue>>> tagTypes, @Nullable List<DataType> memberTypes, @Nullable GetValue<Number> getNumber, @Nullable GetValue<String> getText, @Nullable GetValue<TemporalAccessor> getDate, @Nullable GetValue<Boolean> getBoolean, @Nullable GetValue<Integer> getTag, @Nullable ExFunction<Integer, Integer> getArrayLength)
+    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataTypeValue>>> tagTypes, @Nullable List<DataType> memberTypes, @Nullable GetValue<@Value Number> getNumber, @Nullable GetValue<@Value String> getText, @Nullable GetValue<@Value TemporalAccessor> getDate, @Nullable GetValue<@Value Boolean> getBoolean, @Nullable GetValue<Integer> getTag, @Nullable GetValue<Pair<Integer, DataTypeValue>> getArrayContent)
     {
         super(kind, numberInfo, dateTimeInfo, (Pair<TypeId, List<TagType<DataType>>>)(Pair)tagTypes, memberTypes);
         this.getNumber = getNumber;
@@ -42,10 +43,10 @@ public class DataTypeValue extends DataType
         this.getDate = getDate;
         this.getBoolean = getBoolean;
         this.getTag = getTag;
-        this.getArrayLength = getArrayLength;
+        this.getArrayContent = getArrayContent;
     }
 
-    public static DataTypeValue bool(GetValue<Boolean> getValue)
+    public static DataTypeValue bool(GetValue<@Value Boolean> getValue)
     {
         return new DataTypeValue(Kind.BOOLEAN, null, null, null, null, null, null, null, getValue, null, null);
     }
@@ -55,24 +56,24 @@ public class DataTypeValue extends DataType
         return new DataTypeValue(Kind.TAGGED, null, null, new Pair<>(name, tagTypes), null, null, null, null, null, getTag, null);
     }
 
-    public static DataTypeValue text(GetValue<String> getText)
+    public static DataTypeValue text(GetValue<@Value String> getText)
     {
         return new DataTypeValue(Kind.TEXT, null, null, null, null, null, getText, null, null, null, null);
     }
 
-    public static DataTypeValue date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> getDate)
+    public static DataTypeValue date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> getDate)
     {
         return new DataTypeValue(Kind.DATETIME, null, dateTimeInfo, null, null, null, null, getDate, null, null, null);
     }
 
-    public static DataTypeValue number(NumberInfo numberInfo, GetValue<Number> getNumber)
+    public static DataTypeValue number(NumberInfo numberInfo, GetValue<@Value Number> getNumber)
     {
         return new DataTypeValue(Kind.NUMBER, numberInfo, null, null, null, getNumber, null, null, null, null, null);
     }
 
-    public static DataTypeValue array(DataType innerType, ExFunction<Integer, Integer> getLength)
+    public static DataTypeValue array(DataType innerType, GetValue<Pair<Integer, DataTypeValue>> getContent)
     {
-        return new DataTypeValue(Kind.ARRAY, null, null, null, Collections.singletonList(innerType), null, null, null, null, null, getLength);
+        return new DataTypeValue(Kind.ARRAY, null, null, null, Collections.singletonList(innerType), null, null, null, null, null, getContent);
     }
 
     public static DataTypeValue tupleV(List<DataTypeValue> types)
@@ -108,7 +109,7 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
+        public R number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
         {
             return defaultOp("Unexpected number data type");
         }
@@ -125,7 +126,7 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R text(GetValue<String> g) throws InternalException, UserException
+        public R text(GetValue<@Value String> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected text data type");
         }
@@ -137,13 +138,13 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R bool(GetValue<Boolean> g) throws InternalException, UserException
+        public R bool(GetValue<@Value Boolean> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected boolean type");
         }
 
         @Override
-        public R date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+        public R date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected date type");
         }
@@ -155,7 +156,7 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R array(ExFunction<Integer, Integer> size, DataTypeValue type) throws InternalException, UserException
+        public R array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected array type");
         }
@@ -164,15 +165,17 @@ public class DataTypeValue extends DataType
     @OnThread(Tag.Simulation)
     public static interface DataTypeVisitorGetEx<R, E extends Throwable>
     {
-        R number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, E;
-        R text(GetValue<String> g) throws InternalException, E;
-        R bool(GetValue<Boolean> g) throws InternalException, E;
-        R date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, E;
+        R number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, E;
+        R text(GetValue<@Value String> g) throws InternalException, E;
+        R bool(GetValue<@Value Boolean> g) throws InternalException, E;
+        R date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, E;
 
         R tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
         R tuple(List<DataTypeValue> types) throws InternalException, E;
 
-        R array(ExFunction<Integer, Integer> size, DataTypeValue type) throws InternalException, E;
+        // Each item is a pair of size and accessor.  The inner type gives the type
+        // of each entry (and is present even when the array is empty)
+        R array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, E;
     }
 
     @OnThread(Tag.Simulation)
@@ -201,26 +204,26 @@ public class DataTypeValue extends DataType
             case TUPLE:
                 return visitor.tuple((List<DataTypeValue>)(List)memberType);
             case ARRAY:
-                DataTypeValue arrayType = (DataTypeValue) memberType.get(0);
-                return visitor.array(arrayType.getArrayLength, arrayType);
+                DataType arrayType = memberType.get(0);
+                return visitor.array(arrayType, getArrayContent);
             default:
                 throw new InternalException("Missing kind case");
         }
     }
-
+/*
     public int getArrayLength(int index) throws InternalException, UserException
     {
         if (getArrayLength == null)
             throw new InternalException("Trying to get array length of non-array: " + this);
         return getArrayLength.apply(index);
-    }
+    }*/
 
     public static interface GetValue<T>
     {
         @OnThread(Tag.Simulation)
         @NonNull T getWithProgress(int index, Column.@Nullable ProgressListener progressListener) throws UserException, InternalException;
         @OnThread(Tag.Simulation)
-        @NonNull default T get(int index) throws UserException, InternalException { return getWithProgress(index, null); }
+        default @NonNull T get(int index) throws UserException, InternalException { return getWithProgress(index, null); }
     }
 
 
@@ -231,79 +234,79 @@ public class DataTypeValue extends DataType
      * Text: String
      * Boolean: Boolean
      * Datetime: LocalDate/LocalTime/ZonedDateTime/....
-     * Tagged type: Pair<Integer, Object>
+     * Tagged type: TaggedValue
      * Tuple: array
      * Array: List
      */
     @OnThread(Tag.Simulation)
-    public final Object getCollapsed(int index) throws InternalException, UserException
+    public final @Value Object getCollapsed(int index) throws InternalException, UserException
     {
-        return applyGet(new DataTypeVisitorGet<Object>()
+        return applyGet(new DataTypeVisitorGet<@Value Object>()
         {
             @Override
             @OnThread(Tag.Simulation)
-            public Object number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
+            public @Value Object number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
                 return g.get(index);
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public Object text(GetValue<String> g) throws InternalException, UserException
+            public @Value Object text(GetValue<@Value String> g) throws InternalException, UserException
             {
                 return g.get(index);
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public Object tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public @Value Object tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 Integer tagIndex = g.get(index);
                 @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();;
-                return new Pair<Integer, @Nullable Object>(tagIndex, inner == null ? null : inner.applyGet(this));
+                return new TaggedValue(tagIndex, inner == null ? null : inner.applyGet(this));
             }
 
             @Override
-            public Object tuple(List<DataTypeValue> types) throws InternalException, UserException
+            public @Value Object tuple(List<DataTypeValue> types) throws InternalException, UserException
             {
-                Object[] array = new Object[types.size()];
+                @Value Object [] array = new Object[types.size()];
                 for (int i = 0; i < types.size(); i++)
                 {
                     array[i] = types.get(i).applyGet(this);
                 }
-                return array;
+                return Utility.value(array);
             }
 
             @Override
-            public Object array(ExFunction<Integer, Integer> size, DataTypeValue type) throws InternalException, UserException
+            public @Value Object array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
             {
-                List<Object> l = new ArrayList<>();
-                Integer theSize = size.apply(index);
-                for (int i = 0; i < theSize; i++)
+                List<@Value Object> l = new ArrayList<>();
+                @NonNull Pair<Integer, DataTypeValue> details = g.get(index);
+                for (int indexInArray = 0; indexInArray < details.getFirst(); indexInArray++)
                 {
-                    // Need to look for i, not index, to get full list:
-                    l.add(getCollapsed(i));
+                    // Need to look for indexInArray, not index, to get full list:
+                    l.add(details.getSecond().getCollapsed(indexInArray));
                 }
-                return l;
+                return Utility.value(l);
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public Object bool(GetValue<Boolean> g) throws InternalException, UserException
+            public @Value Object bool(GetValue<@Value Boolean> g) throws InternalException, UserException
             {
                 return g.get(index);
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public Object date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+            public @Value Object date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
             {
                 return g.get(index);
             }
         });
     }
 
-    public DataTypeValue copyReorder(GetValue<Integer> getOriginalIndex) throws UserException, InternalException
+    public DataTypeValue copyReorder(GetValue<Integer> getOriginalIndex) throws InternalException
     {
         Pair<TypeId, List<TagType<DataTypeValue>>> newTagTypes = null;
         if (this.tagTypes != null && this.taggedTypeName != null)
@@ -313,14 +316,24 @@ public class DataTypeValue extends DataType
                 newTagTypes.getSecond().add(new TagType<>(t.getName(), t.getInner() == null ? null : ((DataTypeValue)t.getInner()).copyReorder(getOriginalIndex)));
         }
 
-
+        final @Nullable List<DataType> memberTypes;
+        if (memberType == null)
+            memberTypes = null;
+        else
+        {
+            ArrayList<DataType> r = new ArrayList<>(memberType.size());
+            for (DataType type : memberType)
+                r.add(((DataTypeValue)type).copyReorder(getOriginalIndex));
+            memberTypes = r;
+        }
         return new DataTypeValue(kind, numberInfo, dateTimeInfo, newTagTypes,
-            memberType == null ? null : Utility.mapListEx(memberType, t -> ((DataTypeValue)t).copyReorder(getOriginalIndex)),
+            memberTypes,
             reOrder(getOriginalIndex, getNumber),
             reOrder(getOriginalIndex, getText),
             reOrder(getOriginalIndex, getDate),
             reOrder(getOriginalIndex, getBoolean),
-            reOrder(getOriginalIndex, getTag), null);
+            reOrder(getOriginalIndex, getTag),
+            reOrder(getOriginalIndex, getArrayContent));
     }
 
     @SuppressWarnings("nullness")
@@ -333,10 +346,4 @@ public class DataTypeValue extends DataType
             return g.getWithProgress(srcIndex, prog == null ? null : (d -> prog.progressUpdate(d * 0.5 + 0.5)));
         };
     }
-
-    public static <T, R> GetValue<R> mapValue(GetValue<T> g, Function<T, @NonNull R> map)
-    {
-        return (i, prog) -> map.apply(g.getWithProgress(i, prog));
-    }
-
 }

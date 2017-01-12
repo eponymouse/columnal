@@ -1,5 +1,7 @@
 package records.transformations.function;
 
+import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import records.data.datatype.DataType;
@@ -64,7 +66,7 @@ public class AsType extends FunctionDefinition
         return new Pair<>(Collections.emptyList(), Collections.singletonList(newExpressionOfDifferentType.getNonNumericType()));
     }
 
-    private static class Instance extends TaglessFunctionInstance
+    private static class Instance extends FunctionInstance
     {
         private final @Nullable BigDecimal scaleBD;
         private final long scaleInt;
@@ -84,9 +86,9 @@ public class AsType extends FunctionDefinition
         }
 
         @Override
-        public Object getSimpleValue(int rowIndex, List<Object> params)
+        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params)
         {
-            return Utility.multiplyNumbers((Number)params.get(0), scaleBD != null ? scaleBD : scaleInt);
+            return Utility.value(Utility.multiplyNumbers((Number)params.get(0), scaleBD != null ? scaleBD : scaleInt));
         }
     }
 }

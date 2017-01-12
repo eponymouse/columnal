@@ -38,7 +38,7 @@ public class ExpressionEditor extends Consecutive
         this.srcTable = srcTable;
         this.type = type;
         container.getChildren().setAll(nodes());
-        nodes().addListener((ListChangeListener<? super @UnknownInterned @UnknownKeyFor Node>) c -> {
+        Utility.listen(nodes(), c -> {
             container.getChildren().setAll(nodes());
         });
         this.onChange = onChange;

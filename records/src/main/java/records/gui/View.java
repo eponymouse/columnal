@@ -178,7 +178,7 @@ public class View extends Pane
         }
     }
 
-    @SuppressWarnings({"initialization", "keyfor", "interning"})
+    @SuppressWarnings({"initialization", "keyfor", "interning", "valuetype"})
     public View() throws InternalException, UserException
     {
         tableManager = new TableManager();

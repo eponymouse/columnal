@@ -1,5 +1,7 @@
 package records.transformations.function;
 
+import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.Utility;
@@ -24,12 +26,12 @@ public class Round extends SingleNumericInOutFunction
     @Override
     protected FunctionInstance makeInstance()
     {
-        return new TaglessFunctionInstance()
+        return new FunctionInstance()
         {
             @Override
-            public Object getSimpleValue(int rowIndex, List<Object> params) throws UserException, InternalException
+            public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params) throws UserException, InternalException
             {
-                return Utility.<Number>withNumber(params.get(0), x -> x, x -> x, d -> d.setScale(0, RoundingMode.HALF_EVEN));
+                return Utility.value(Utility.<Number>withNumber(params.get(0), x -> x, x -> x, d -> d.setScale(0, RoundingMode.HALF_EVEN)));
             }
         };
     }

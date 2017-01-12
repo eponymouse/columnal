@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -113,9 +114,9 @@ public class RaiseExpression extends BinaryOpExpression
     }
 
     @Override
-    public @OnThread(Tag.Simulation) Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
+    public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        return Utility.raiseNumber((Number)lhs.getValue(rowIndex, state), (Number) rhs.getValue(rowIndex, state));
+        return Utility.value(Utility.raiseNumber((Number)lhs.getValue(rowIndex, state), (Number) rhs.getValue(rowIndex, state)));
     }
 
     @Override
