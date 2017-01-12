@@ -1,6 +1,7 @@
 package test.gen;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
@@ -33,6 +34,7 @@ import records.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.AndExpression;
+import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
@@ -46,6 +48,7 @@ import records.transformations.expression.RaiseExpression;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
 import records.transformations.expression.TimesExpression;
+import records.transformations.expression.TupleExpression;
 import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
@@ -502,13 +505,35 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
             @Override
             public Pair<@Value Object, Expression> tuple(List<DataType> inner) throws InternalException, UserException
             {
-                throw new UnimplementedException();
+                if (inner.size() < 2)
+                    throw new InternalException("Invalid tuple type of size " + inner.size() + " during generation");
+                @Value Object[] tuple = new Object[inner.size()];
+                List<Expression> expressions = new ArrayList<>();
+                for (int i = 0; i < tuple.length; i++)
+                {
+                    // We don't reduce max levels as it may make nested tuples
+                    // not feature complex expressions, and the finiteness of the type
+                    // prevents infinite expansion:
+                    Pair<@Value Object, Expression> item = make(inner.get(i), maxLevels);
+                    tuple[i] = item.getFirst();
+                    expressions.add(item.getSecond());
+                }
+                return new Pair<>(Utility.value(tuple), new TupleExpression(ImmutableList.copyOf(expressions)));
             }
 
             @Override
             public Pair<@Value Object, Expression> array(DataType inner) throws InternalException, UserException
             {
-                throw new UnimplementedException();
+                int length = r.nextInt(0, 12);
+                List<@Value Object> values = new ArrayList<>();
+                List<Expression> expressions = new ArrayList<>();
+                for (int i = 0; i < length; i++)
+                {
+                    Pair<@Value Object, Expression> item = make(inner, maxLevels - 1);
+                    values.add(item.getFirst());
+                    expressions.add(item.getSecond());
+                }
+                return new Pair<>(Utility.value(values), new ArrayExpression(ImmutableList.copyOf(expressions)));
             }
         });
     }

@@ -35,6 +35,7 @@ import records.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.AndExpression;
+import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
@@ -51,6 +52,7 @@ import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.OrExpression;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
+import records.transformations.expression.TupleExpression;
 import records.transformations.expression.VarExpression;
 import test.DummyManager;
 import test.TestUtil;
@@ -420,13 +422,23 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             @Override
             public Expression tuple(List<DataType> inner) throws InternalException, UserException
             {
-                throw new UnimplementedException();
+                @Value Object[] target = (@Value Object[]) targetValue;
+                List<ExpressionMaker> terminals = new ArrayList<>();
+                terminals.add(() -> new TupleExpression(Utility.mapListExI_Index(inner, (i, t) -> make(t, target[i], 1))));
+                List<ExpressionMaker> nonTerm = new ArrayList<>();
+                terminals.add(() -> new TupleExpression(Utility.mapListExI_Index(inner, (i, t) -> make(t, target[i], maxLevels - 1))));
+                return termDeep(maxLevels, type, terminals, nonTerm);
             }
 
             @Override
             public Expression array(DataType inner) throws InternalException, UserException
             {
-                throw new UnimplementedException();
+                List<@Value Object> target = (List<@Value Object>) targetValue;
+                List<ExpressionMaker> terminals = new ArrayList<>();
+                terminals.add(() -> new ArrayExpression(Utility.mapListExI(target, t -> make(inner, t, 1))));
+                List<ExpressionMaker> nonTerm = new ArrayList<>();
+                terminals.add(() -> new ArrayExpression(Utility.mapListExI(target, t -> make(inner, t, maxLevels - 1))));
+                return termDeep(maxLevels, type, terminals, nonTerm);
             }
         });
     }
@@ -669,13 +681,13 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             @Override
             public @Value Object tuple(List<DataType> inner) throws InternalException, UserException
             {
-                throw new UnimplementedException();
+                return Utility.value(Utility.mapListEx(inner, t -> makeValue(t)).toArray(new @Value Object[0]));
             }
 
             @Override
             public @Value Object array(DataType inner) throws InternalException, UserException
             {
-                throw new UnimplementedException();
+                return Utility.value(TestUtil.<@Value Object>makeList(r, 0, 12, () -> makeValue(inner)));
             }
         });
     }

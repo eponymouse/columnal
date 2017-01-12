@@ -75,6 +75,7 @@ import records.error.UserException;
 import records.grammar.BasicLexer;
 import records.gui.DisplayValue;
 import records.importers.ChoicePoint.Choice;
+import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -104,6 +105,16 @@ public class Utility
     public static <T, R> ImmutableList<@NonNull R> mapListExI(List<@NonNull T> list, ExFunction<@NonNull T, @NonNull R> func) throws InternalException, UserException
     {
         return ImmutableList.copyOf(mapListEx(list, func));
+    }
+
+    public static <T, R> ImmutableList<@NonNull R> mapListExI_Index(List<@NonNull T> list, ExBiFunction<Integer, @NonNull T, @NonNull R> func) throws InternalException, UserException
+    {
+        ArrayList<@NonNull R> r = new ArrayList<>();
+        for (int i = 0; i < list.size(); i++)
+        {
+            r.add(func.apply(i, list.get(i)));
+        }
+        return ImmutableList.<@NonNull R>copyOf(r);
     }
 
     public static <T, R> @NonNull R @NonNull [] mapArray(Class<R> cls, @NonNull T @NonNull [] src, Function<@NonNull T, @NonNull R> func)
@@ -243,6 +254,20 @@ public class Utility
             if (a2 != null && b2 != null)
                 return compareValues(a2, b2, epsilon);
             return 0; // Assume bx null too, if types match.
+        }
+        else if (ax instanceof Object[])
+        {
+            @Value Object[] ao = (@Value Object[]) ax;
+            @Value Object[] bo = (@Value Object[]) bx;
+            if (ao.length != bo.length)
+                throw new InternalException("Trying to compare tuples of different size");
+            for (int i = 0; i < ao.length; i++)
+            {
+                cmp = compareValues(ao[i], bo[i]);
+                if (cmp != 0)
+                    return cmp;
+            }
+            return 0;
         }
         else
             throw new InternalException("Uncomparable types: " + ax.getClass() + " " + bx.getClass());
@@ -689,6 +714,14 @@ public class Utility
     public static <T> String listToString(List<@NonNull T> options)
     {
         return "[" + options.stream().map(Object::toString).collect(Collectors.joining(", ")) + "]";
+    }
+
+    public static <T> ImmutableList<T> replaceList(ImmutableList<T> members, int replaceIndex, T newValue)
+    {
+        ArrayList<T> r = new ArrayList<T>(members.size());
+        r.addAll(members);
+        r.set(replaceIndex, newValue);
+        return ImmutableList.copyOf(r);
     }
 
     public static class ReadState

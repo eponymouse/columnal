@@ -354,10 +354,10 @@ public class DataType
                 boolean first = true;
                 for (DataType t : inner)
                 {
-                    s.append(t.apply(this));
                     if (!first)
                         s.append(", ");
                     first = false;
+                    s.append(t.apply(this));
                 }
                 s.append(")");
                 return s.toString();
@@ -543,6 +543,7 @@ public class DataType
         // Don't use equals here, use sameType (weaker, but accurate for type comparison)
         if (numberInfo != null ? !numberInfo.sameType(dataType.numberInfo) : dataType.numberInfo != null) return false;
         if (dateTimeInfo != null ? !dateTimeInfo.sameType(dataType.dateTimeInfo) : dateTimeInfo != null) return false;
+        if (memberType != null ? !memberType.equals(dataType.memberType) : dataType.memberType != null) return false;
         return tagTypes != null ? tagTypes.equals(dataType.tagTypes) : dataType.tagTypes == null;
     }
 
@@ -554,6 +555,7 @@ public class DataType
         result = 31 * result + (numberInfo != null ? numberInfo.hashCodeForType() : 0);
         result = 31 * result + (dateTimeInfo != null ? dateTimeInfo.hashCodeForType() : 0);
         result = 31 * result + (tagTypes != null ? tagTypes.hashCode() : 0);
+        result = 31 * result + (memberType != null ? memberType.hashCode() : 0);
         return result;
     }
 

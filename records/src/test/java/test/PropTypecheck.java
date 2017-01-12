@@ -49,11 +49,11 @@ public class PropTypecheck
         // Equivalent to assertEquals(a == b, a.equals(b)) but gives better errors
         if (a == b)
         {
-            assertEquals(a, b);
+            assertEquals("Should be equal: " + a + " versus " + b, a, b);
         }
         else
         {
-            assertNotEquals(a, b);
+            assertNotEquals("Should not be equal: " + a + " versus " + b, a, b);
         }
     }
 

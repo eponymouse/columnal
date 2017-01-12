@@ -318,7 +318,14 @@ public class TestUtil
                 a,
                 DummyManager.INSTANCE.getTypeManager().registerTaggedType("B", Arrays.asList(new TagType<DataType>("Single ", null))),
                 c,
-                DummyManager.INSTANCE.getTypeManager().registerTaggedType("Nested", Arrays.asList(new TagType<DataType>("A", a), new TagType<DataType>("C", c)))
+                DummyManager.INSTANCE.getTypeManager().registerTaggedType("Nested", Arrays.asList(new TagType<DataType>("A", a), new TagType<DataType>("C", c))),
+                DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.NUMBER)),
+                DataType.tuple(Arrays.asList(DataType.BOOLEAN, DataType.TEXT, DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)), c)),
+                DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.tuple(Arrays.asList(DataType.TEXT, DataType.NUMBER)))),
+                DataType.array(DataType.TEXT),
+                DataType.array(DataType.NUMBER),
+                DataType.array(DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.tuple(Arrays.asList(DataType.TEXT, DataType.NUMBER))))),
+                DataType.array(DataType.array(DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.tuple(Arrays.asList(DataType.TEXT, DataType.NUMBER))))))
             );
         }
         catch (UserException | InternalException e)
