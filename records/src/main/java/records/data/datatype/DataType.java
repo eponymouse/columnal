@@ -500,7 +500,7 @@ public class DataType
         return kind == Kind.ARRAY;
     }
 
-    // For arrays: single item.  For tuples, the set of contained types.
+    // For arrays: single item or empty (if empty array).  For tuples, the set of contained types.
     // Everything else: an InternalException
     public List<DataType> getMemberType() throws InternalException
     {
@@ -621,33 +621,136 @@ public class DataType
             throw new InternalException("Requesting date/time info for non-date/time type: " + this);
     }
 
-    public static <T extends DataType> @Nullable T checkSame(@Nullable T a, @Nullable T b, ExConsumer<String> onError) throws UserException, InternalException
+    public static @Nullable DataType checkSame(@Nullable DataType a, @Nullable DataType b, ExConsumer<String> onError) throws UserException, InternalException
     {
-        ArrayList<T> ts = new ArrayList<T>();
         if (a == null || b == null)
-        {
             return null;
+        return DataType.<DataType, @Nullable DataType>zipSame(a, b, new ZipVisitor<DataType, @Nullable DataType>()
+            {
+                @Override
+                public @Nullable DataType number(DataType a, DataType b, NumberInfo displayInfoA, NumberInfo displayInfoB) throws InternalException, UserException
+                {
+                    return displayInfoA.sameType(displayInfoB) ? a : null;
+                }
+
+                @Override
+                public @Nullable DataType text(DataType a, DataType b) throws InternalException, UserException
+                {
+                    return a;
+                }
+
+                @Override
+                public @Nullable DataType date(DataType a, DataType b, DateTimeInfo dateTimeInfoA, DateTimeInfo dateTimeInfoB) throws InternalException, UserException
+                {
+                    return dateTimeInfoA.sameType(dateTimeInfoB) ? a : null;
+                }
+
+                @Override
+                public @Nullable DataType bool(DataType a, DataType b) throws InternalException, UserException
+                {
+                    return a;
+                }
+
+                @Override
+                public @Nullable DataType tagged(DataType a, DataType b, TypeId typeNameA, List<TagType<DataType>> tagsA, TypeId typeNameB, List<TagType<DataType>> tagsB) throws InternalException, UserException
+                {
+                    // Because of the way tagged types work, there's no need to dig any deeper.  The types in a
+                    // tagged type are known a priori because they're declared upfront, so as soon as you know
+                    // what tag it is, you know what the full type is.  Thus the only question is: are these
+                    // two types the same type?  It should be enough to compare type names usually, but because
+                    // of the tricks we pull in testing, we also check tags for sanity:
+                    boolean same = typeNameA.equals(typeNameB) && tagsA.equals(tagsB);
+                    return same ? a : null;
+                }
+
+                @Override
+                public @Nullable DataType tuple(DataType a, DataType b, List<DataType> innerA, List<DataType> innerB) throws InternalException, UserException
+                {
+                    if (innerA.size() != innerB.size())
+                        return null;
+                    List<DataType> innerR = new ArrayList<>();
+                    for (int i = 0; i < innerA.size(); i++)
+                    {
+                        DataType t = checkSame(innerA.get(i), innerB.get(i), onError);
+                        if (t == null)
+                            return null;
+                        innerR.add(t);
+                    }
+                    return DataType.tuple(innerR);
+                }
+
+                @Override
+                public @Nullable DataType array(DataType a, DataType b, @Nullable DataType innerA, @Nullable DataType innerB) throws InternalException, UserException
+                {
+                    @Nullable DataType innerR;
+                    // If innerA is null, means empty array:
+                    if (innerA == null)
+                        innerR = innerB;
+                    // Same for innerB
+                    else if (innerB == null)
+                        innerR = innerA;
+                    else
+                    {
+                        innerR = checkSame(innerA, innerB, onError);
+                        // At this point, if innerR is null, it means error, not empty array, so we must return null:
+                        if (innerR == null)
+                            return null;
+                    }
+                    return innerR == null ? DataType.array() : DataType.array(innerR);
+                }
+
+                @Override
+                public @Nullable DataType differentKind(DataType a, DataType b) throws InternalException, UserException
+                {
+                    return null;
+                }
+            });
+    }
+
+    @SuppressWarnings("nullness")
+    private static <T extends DataType, R> R zipSame(T a, T b, ZipVisitor<T, R> visitor) throws UserException, InternalException
+    {
+        if (a.kind != b.kind)
+            return visitor.differentKind(a, b);
+        else
+        {
+            switch (a.kind)
+            {
+                case NUMBER:
+                    return visitor.number(a, b, a.numberInfo, b.numberInfo);
+                case TEXT:
+                    return visitor.text(a, b);
+                case DATETIME:
+                    return visitor.date(a, b, a.dateTimeInfo, b.dateTimeInfo);
+                case BOOLEAN:
+                    return visitor.bool(a, b);
+                case TAGGED:
+                    return visitor.tagged(a, b, a.taggedTypeName, a.tagTypes, b.taggedTypeName, b.tagTypes);
+                case TUPLE:
+                    return visitor.tuple(a, b, a.memberType, b.memberType);
+                case ARRAY:
+                    return visitor.array(a, b, a.memberType.isEmpty() ? null : a.memberType.get(0), b.memberType.isEmpty() ? null : b.memberType.get(0));
+            }
+            throw new InternalException("Missing kind case");
         }
-        ts.add(a);
-        ts.add(b);
-        return checkAllSame(ts, onError);
     }
 
 
-    public static <T extends DataType> @Nullable T checkAllSame(List<T> types, ExConsumer<String> onError) throws InternalException, UserException
+    public static <T extends DataType> @Nullable DataType checkAllSame(List<T> types, ExConsumer<String> onError) throws InternalException, UserException
     {
         if (types.isEmpty())
             throw new InternalException("Cannot type-check empty list of types");
-        HashSet<T> noDups = new HashSet<>(types);
-        if (noDups.size() == 1)
-            return noDups.iterator().next();
-        // Duplicates are ok if it's empty array plus single non-empty array:
-        noDups.remove(DataType.array());
-        noDups.remove(DataTypeValue.arrayV());
-        if (noDups.size() == 1 && noDups.iterator().next().isArray())
-            return noDups.iterator().next();
-        onError.accept("Differing types: " + noDups.stream().map(Object::toString).collect(Collectors.joining(" and ")));
-        return null;
+        if (types.size() == 1)
+            return types.get(0);
+        DataType cur = types.get(0);
+        for (int i = 1; i < types.size(); i++)
+        {
+            DataType next = checkSame(cur, types.get(i), onError);
+            if (next == null)
+                return null; // Bail out early
+            cur = next;
+        }
+        return cur;
     }
 
     @OnThread(Tag.Simulation)
@@ -1114,5 +1217,20 @@ public class DataType
                 "type=" + type +
                 '}';
         }
+    }
+
+    public static interface ZipVisitor<T extends DataType, R>
+    {
+        R number(T a, T b, NumberInfo displayInfoA, NumberInfo displayInfoB) throws InternalException, UserException;
+        R text(T a, T b) throws InternalException, UserException;
+        R date(T a, T b, DateTimeInfo dateTimeInfoA, DateTimeInfo dateTimeInfoB) throws InternalException, UserException;
+        R bool(T a, T b) throws InternalException, UserException;
+
+        R tagged(T a, T b, TypeId typeNameA, List<TagType<DataType>> tagsA, TypeId typeNameB, List<TagType<DataType>> tagsB) throws InternalException, UserException;
+        R tuple(T a, T b, List<DataType> innerA, List<DataType> innerB) throws InternalException, UserException;
+        // If null, array is empty and thus of unknown type
+        R array(T a, T b, @Nullable DataType innerA, @Nullable DataType innerB) throws InternalException, UserException;
+
+        R differentKind(T a, T b) throws InternalException, UserException;
     }
 }

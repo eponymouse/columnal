@@ -123,11 +123,11 @@ public abstract class BinaryOpExpression extends Expression
         // Most binary ops require same type, so this is typical (can always override):
         if (r.nextBoolean())
         {
-            return copy(lhsType != null && lhsType.isNumber() ? newExpressionOfDifferentType.getNonNumericType() : newExpressionOfDifferentType.getDifferentType(lhsType), rhs);
+            return copy(lhsType != null && lhsType.isNumber() ? newExpressionOfDifferentType.getNonNumericType() : newExpressionOfDifferentType.getDifferentType(rhsType), rhs);
         }
         else
         {
-            return copy(lhs, rhsType != null && rhsType.isNumber() ? newExpressionOfDifferentType.getNonNumericType() : newExpressionOfDifferentType.getDifferentType(rhsType));
+            return copy(lhs, rhsType != null && rhsType.isNumber() ? newExpressionOfDifferentType.getNonNumericType() : newExpressionOfDifferentType.getDifferentType(lhsType));
         }
     }
 

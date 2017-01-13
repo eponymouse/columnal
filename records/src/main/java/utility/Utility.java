@@ -263,7 +263,7 @@ public class Utility
                 throw new InternalException("Trying to compare tuples of different size");
             for (int i = 0; i < ao.length; i++)
             {
-                cmp = compareValues(ao[i], bo[i]);
+                cmp = compareValues(ao[i], bo[i], epsilon);
                 if (cmp != 0)
                     return cmp;
             }

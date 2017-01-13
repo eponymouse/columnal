@@ -1,5 +1,6 @@
 package test.gen;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
@@ -11,15 +12,19 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
+import records.transformations.expression.TypeState;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenTypecheckFail.TypecheckInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
+import utility.Pair;
 import utility.Utility;
 
+import javax.xml.crypto.Data;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -38,7 +43,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
 
     public class TypecheckInfo
     {
-        private final Expression original;
+        public final Expression original;
         public final RecordSet recordSet;
         public final List<Expression> expressionFailures;
 
@@ -94,7 +99,14 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                                 throw new RuntimeException("Getting different type than failure?");
                             DataType newType = pickTypeOtherThan(type, r);
                             //System.err.println("Changed old type " + type + " into " + newType + " when replacing " + p.getFirst());
-                            return gen.makeOfType(newType).getSecond();
+                            Pair<@Value Object, Expression> replacement = gen.makeOfType(newType);
+                            // Special case: don't let it be empty array because it may type check
+                            // against type even though we don't want it to:
+                            while (replacement.getFirst().equals(Collections.emptyList()))
+                            {
+                                replacement = gen.makeOfType(newType);
+                            }
+                            return replacement.getSecond();
                         }
 
                         @Override
@@ -176,14 +188,14 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         return GenExpressionValueBackwards.makeType(r);
     }
 
-    private DataType pickTypeOtherThan(@Nullable DataType type, SourceOfRandomness r)
+    private DataType pickTypeOtherThan(@Nullable DataType type, SourceOfRandomness r) throws InternalException, UserException
     {
         DataType picked;
         do
         {
             picked = pickType(r);
         }
-        while (picked.equals(type));
+        while (picked.equals(type) || DataType.checkSame(picked, type, s -> {}) != null);
         return picked;
     }
 

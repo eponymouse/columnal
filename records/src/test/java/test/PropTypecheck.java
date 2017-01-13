@@ -87,7 +87,6 @@ public class PropTypecheck
     @SuppressWarnings("nullness")
     public void propTypeCheckFail(@From(GenTypecheckFail.class) GenTypecheckFail.TypecheckInfo src) throws InternalException, UserException
     {
-
         for (Expression expression : src.expressionFailures)
         {
             assertNull(src.getDisplay(expression), expression.check(src.recordSet, TestUtil.typeState(), (e, s) -> {}));
@@ -96,7 +95,7 @@ public class PropTypecheck
 
     @Property(trials = 1000)
     @SuppressWarnings("nullness")
-    public void propTypeCheckSucceed(@When(seed=-3832550489265875200L) @From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
+    public void propTypeCheckSucceed(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {
         StringBuilder b = new StringBuilder();
         @Nullable DataType checked = src.expression.check(src.recordSet, TestUtil.typeState(), (e, s) ->

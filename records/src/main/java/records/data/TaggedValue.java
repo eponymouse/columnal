@@ -2,6 +2,7 @@ package records.data;
 
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -25,6 +26,7 @@ public @Value class TaggedValue
         return tagIndex;
     }
 
+    @Pure
     public @Nullable @Value Object getInner()
     {
         return innerItem;

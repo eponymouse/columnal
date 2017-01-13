@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
@@ -37,6 +38,7 @@ public class ArrayExpression extends Expression
 {
     private final ImmutableList<Expression> items;
     private @Nullable DataType type;
+    private @MonotonicNonNull List<DataType> _test_originalTypes;
 
     public ArrayExpression(ImmutableList<Expression> items)
     {
@@ -58,6 +60,7 @@ public class ArrayExpression extends Expression
             typeArray[i] = t;
         }
         this.type = DataType.checkAllSame(Arrays.asList(typeArray), s -> onError.accept(this, s));
+        _test_originalTypes = Arrays.asList(typeArray);
         if (type == null)
             return null;
         return DataType.array(type);
@@ -102,11 +105,20 @@ public class ArrayExpression extends Expression
     @Override
     public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
-        if (items.size() < 1)
+        if (items.size() <= 1)
             return null; // Can't cause a failure with 1 or less items; need 2+ to have a mismatch
         int index = r.nextInt(items.size());
-        if (type == null)
+        if (type == null || _test_originalTypes == null)
             throw new InternalException("Calling _test_typeFailure despite type-check failure");
+        // If all items other than this one are blank arrays, won't cause type error:
+        boolean hasOtherNonBlank = false;
+        for (int i = 0; i < items.size(); i++)
+        {
+            if (i != index && (!_test_originalTypes.get(i).isArray() || !_test_originalTypes.get(i).getMemberType().isEmpty()))
+                hasOtherNonBlank = true;
+        }
+        if (!hasOtherNonBlank)
+            return null; // Won't make a failure
         return new ArrayExpression(Utility.replaceList(items, index, newExpressionOfDifferentType.getDifferentType(type)));
     }
 

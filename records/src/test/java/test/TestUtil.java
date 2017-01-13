@@ -14,6 +14,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.TaggedValue;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -420,6 +421,25 @@ public class TestUtil
     public static String generateZoneString(SourceOfRandomness r, GenerationStatus gs)
     {
         return generateZone(r, gs).toString();
+    }
+
+    public static String toString(@Value Object value)
+    {
+        if (value instanceof Object[])
+        {
+            return "(" + Arrays.stream((@Value Object[])value).map(TestUtil::toString).collect(Collectors.joining(",")) + ")";
+        }
+        else if (value instanceof List)
+        {
+            return "[" + ((List<@Value Object>)value).stream().map(TestUtil::toString).collect(Collectors.joining(",")) + "]";
+        }
+        else if (value instanceof TaggedValue)
+        {
+            TaggedValue t = ((TaggedValue)value);
+            return t.getTagIndex() + (t.getInner() == null ? "" : ":" + toString(t.getInner()));
+        }
+        else
+            return value.toString();
     }
 
     public static class ChoicePick<C extends Choice>
