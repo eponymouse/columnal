@@ -1,6 +1,7 @@
 package records.data.datatype;
 
 import annotation.qual.Value;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
@@ -84,7 +85,8 @@ public class DataType
     // For TAGGED:
     final @Nullable TypeId taggedTypeName;
     final @Nullable List<TagType<DataType>> tagTypes;
-    // For TUPLE (2+) and ARRAY (1):
+    // For TUPLE (2+) and ARRAY (1).  If ARRAY and memberType is empty, indicates
+    // the empty array (which can type-check against any array type)
     final @Nullable List<DataType> memberType;
 
     // package-visible
@@ -103,6 +105,11 @@ public class DataType
     public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null, null, null);
     public static final DataType TEXT = new DataType(Kind.TEXT, null, null, null, null);
     public static final DataType DATE = DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY));
+
+    public static DataType array()
+    {
+        return new DataType(Kind.ARRAY, null, null, null, Collections.emptyList());
+    }
 
     public static DataType array(DataType inner)
     {
@@ -185,7 +192,8 @@ public class DataType
 
         R tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, E;
         R tuple(List<DataType> inner) throws InternalException, E;
-        R array(DataType inner) throws InternalException, E;
+        // If null, array is empty and thus of unknown type
+        R array(@Nullable DataType inner) throws InternalException, E;
     }
 
     public static interface DataTypeVisitor<R> extends DataTypeVisitorEx<R, UserException>
@@ -232,7 +240,7 @@ public class DataType
         }
 
         @Override
-        public R array(DataType inner) throws InternalException, UserException
+        public R array(@Nullable DataType inner) throws InternalException, UserException
         {
             throw new InternalException("Unexpected array type");
         }
@@ -255,7 +263,10 @@ public class DataType
             case TAGGED:
                 return visitor.tagged(taggedTypeName, tagTypes);
             case ARRAY:
-                return visitor.array(memberType.get(0));
+                if (memberType.isEmpty())
+                    return visitor.array(null);
+                else
+                    return visitor.array(memberType.get(0));
             case TUPLE:
                 return visitor.tuple(memberType);
             default:
@@ -364,9 +375,12 @@ public class DataType
             }
 
             @Override
-            public String array(DataType inner) throws InternalException, UserException
+            public String array(@Nullable DataType inner) throws InternalException, UserException
             {
-                return "[" + inner.apply(this) + "]";
+                if (inner == null)
+                    return "[]";
+                else
+                    return "[" + inner.apply(this) + "]";
             }
 
             @Override
@@ -479,6 +493,11 @@ public class DataType
     public boolean isTuple()
     {
         return kind == Kind.TUPLE;
+    }
+
+    public boolean isArray()
+    {
+        return kind == Kind.ARRAY;
     }
 
     // For arrays: single item.  For tuples, the set of contained types.
@@ -617,8 +636,15 @@ public class DataType
 
     public static <T extends DataType> @Nullable T checkAllSame(List<T> types, ExConsumer<String> onError) throws InternalException, UserException
     {
+        if (types.isEmpty())
+            throw new InternalException("Cannot type-check empty list of types");
         HashSet<T> noDups = new HashSet<>(types);
         if (noDups.size() == 1)
+            return noDups.iterator().next();
+        // Duplicates are ok if it's empty array plus single non-empty array:
+        noDups.remove(DataType.array());
+        noDups.remove(DataTypeValue.arrayV());
+        if (noDups.size() == 1 && noDups.iterator().next().isArray())
             return noDups.iterator().next();
         onError.accept("Differing types: " + noDups.stream().map(Object::toString).collect(Collectors.joining(" and ")));
         return null;
@@ -728,8 +754,10 @@ public class DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column array(DataType inner) throws InternalException, UserException
+            public Column array(@Nullable DataType inner) throws InternalException, UserException
             {
+                if (inner == null)
+                    throw new UserException("Cannot have column with type of empty array");
                 List<Pair<Integer, DataTypeValue>> values = new ArrayList<>(allData.size());
                 for (List<ItemContext> row : allData)
                 {
@@ -846,9 +874,15 @@ public class DataType
             }
 
             @Override
-            public @Value Object array(DataType inner) throws InternalException, UserException
+            public @Value Object array(final @Nullable DataType inner) throws InternalException, UserException
             {
-                return Utility.value(Utility.<ItemContext, @Value Object>mapListEx(item.array().item(), entry -> loadSingleItem(inner, entry)));
+                if (inner == null)
+                    throw new UserException("Cannot load column with value of type empty array");
+                else
+                {
+                    @NonNull DataType innerFinal = inner;
+                    return Utility.value(Utility.<ItemContext, @Value Object>mapListEx(item.array().item(), entry -> loadSingleItem(innerFinal, entry)));
+                }
             }
         });
     }
@@ -927,10 +961,11 @@ public class DataType
 
             @Override
             @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            public UnitType array(DataType inner) throws InternalException, InternalException
+            public UnitType array(@Nullable DataType inner) throws InternalException, InternalException
             {
                 b.t(FormatLexer.OPEN_SQUARE);
-                inner.save(b, false);
+                if (inner != null)
+                    inner.save(b, false);
                 b.t(FormatLexer.CLOSE_SQUARE);
                 return UnitType.UNIT;
             }
@@ -1070,6 +1105,14 @@ public class DataType
                     );
             }
             throw new InternalException("Unknown date type: " + type);
+        }
+
+        @Override
+        public String toString()
+        {
+            return "DateTimeInfo{" +
+                "type=" + type +
+                '}';
         }
     }
 }

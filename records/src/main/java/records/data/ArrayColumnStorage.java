@@ -1,14 +1,11 @@
 package records.data;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
-import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
-import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExFunction;
-import utility.ExSupplier;
 import utility.Pair;
 
 import java.util.ArrayList;
@@ -31,15 +28,16 @@ public class ArrayColumnStorage implements ColumnStorage<Pair<Integer, DataTypeV
     // For arrays, each element is storage for an individual array element (i.e. a row)
     // Thus confusing, ColumnStorage here is being used as RowStorage (think of it as VectorStorage)
     private final ArrayList<Pair<Integer, DataTypeValue>> storage = new ArrayList<>();
-    private final DataType innerType;
     @OnThread(Tag.Any)
     private final DataTypeValue type;
 
     // Constructor for array version
-    public ArrayColumnStorage(DataType innerToCopy) throws InternalException
+    public ArrayColumnStorage(@Nullable DataType innerToCopy) throws InternalException
     {
-        innerType = innerToCopy;
-        this.type = DataTypeValue.array(innerType, (i, prog) -> storage.get(i));
+        if (innerToCopy == null)
+            this.type = DataTypeValue.arrayV();
+        else
+            this.type = DataTypeValue.arrayV(innerToCopy, (i, prog) -> storage.get(i));
     }
 
     @Override

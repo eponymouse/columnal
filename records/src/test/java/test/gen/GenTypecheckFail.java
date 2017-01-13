@@ -76,7 +76,9 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         {
             if (null == valid.expression.check(valid.recordSet, TestUtil.typeState(), (e, s) ->
             {
-                throw new RuntimeException(s);
+                // Throw an exception because the *original* should type-check, before
+                // we come to it and try to turn it into a failure:
+                throw new RuntimeException("Original did not type check: " + valid.expression + " because " + s);
             })) throw new RuntimeException("Original did not type check: " + valid.expression);
 
             List<Expression> failures = valid.expression._test_allMutationPoints().map(p -> {

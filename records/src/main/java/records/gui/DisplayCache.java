@@ -214,7 +214,7 @@ public class DisplayCache
                             }
 
                             @Override
-                            public DisplayValue array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+                            public DisplayValue array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
                             {
                                 @NonNull Pair<Integer, DataTypeValue> details = g.get(index);
                                 ArrayList<DisplayValue> values = new ArrayList<>(details.getFirst());

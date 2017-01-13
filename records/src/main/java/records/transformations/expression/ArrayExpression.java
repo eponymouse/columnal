@@ -46,6 +46,9 @@ public class ArrayExpression extends Expression
     @Override
     public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
+        // Empty array - special case:
+        if (items.isEmpty())
+            return DataType.array();
         @NonNull DataType[] typeArray = new DataType[items.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
@@ -55,7 +58,9 @@ public class ArrayExpression extends Expression
             typeArray[i] = t;
         }
         this.type = DataType.checkAllSame(Arrays.asList(typeArray), s -> onError.accept(this, s));
-        return type;
+        if (type == null)
+            return null;
+        return DataType.array(type);
     }
 
     @Override
@@ -97,6 +102,8 @@ public class ArrayExpression extends Expression
     @Override
     public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
+        if (items.size() < 1)
+            return null; // Can't cause a failure with 1 or less items; need 2+ to have a mismatch
         int index = r.nextInt(items.size());
         if (type == null)
             throw new InternalException("Calling _test_typeFailure despite type-check failure");

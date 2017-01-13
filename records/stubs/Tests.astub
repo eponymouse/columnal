@@ -1,0 +1,7 @@
+import org.checkerframework.checker.nullness.qual.Nullable;
+package org.junit;
+
+class Assert
+{
+    public static void assertEquals(@Nullable Object expected, @Nullable Object actual);
+}

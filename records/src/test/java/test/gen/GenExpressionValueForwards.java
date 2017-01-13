@@ -522,8 +522,11 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public Pair<@Value Object, Expression> array(DataType inner) throws InternalException, UserException
+            public Pair<@Value Object, Expression> array(@Nullable DataType inner) throws InternalException, UserException
             {
+                if (inner == null)
+                    return new Pair<>(Utility.value(Collections.emptyList()), new ArrayExpression(ImmutableList.of()));
+
                 int length = r.nextInt(0, 12);
                 List<@Value Object> values = new ArrayList<>();
                 List<Expression> expressions = new ArrayList<>();
@@ -633,7 +636,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public Pair<@Value Object, FunctionInt<RecordSet, Column>> array(DataType inner) throws InternalException, UserException
+            public Pair<@Value Object, FunctionInt<RecordSet, Column>> array(@Nullable DataType inner) throws InternalException, UserException
             {
                 throw new UnimplementedException();
             }

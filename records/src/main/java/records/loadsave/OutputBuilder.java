@@ -232,7 +232,7 @@ public class OutputBuilder
             }
 
             @Override
-            public String array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+            public String array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
             {
                 OutputBuilder b = new OutputBuilder();
                 b.raw("[");

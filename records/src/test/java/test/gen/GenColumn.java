@@ -256,7 +256,7 @@ public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
                         }
 
                         @Override
-                        public @Value Object array(DataType inner) throws InternalException, UserException
+                        public @Value Object array(@Nullable DataType inner) throws InternalException, UserException
                         {
                             throw new UnimplementedException();
                         }

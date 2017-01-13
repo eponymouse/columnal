@@ -107,14 +107,14 @@ public class Utility
         return ImmutableList.copyOf(mapListEx(list, func));
     }
 
-    public static <T, R> ImmutableList<@NonNull R> mapListExI_Index(List<@NonNull T> list, ExBiFunction<Integer, @NonNull T, @NonNull R> func) throws InternalException, UserException
+    public static <T, R> ImmutableList<R> mapListExI_Index(List<T> list, ExBiFunction<Integer, T, R> func) throws InternalException, UserException
     {
-        ArrayList<@NonNull R> r = new ArrayList<>();
+        ArrayList<R> r = new ArrayList<>();
         for (int i = 0; i < list.size(); i++)
         {
             r.add(func.apply(i, list.get(i)));
         }
-        return ImmutableList.<@NonNull R>copyOf(r);
+        return ImmutableList.<R>copyOf(r);
     }
 
     public static <T, R> @NonNull R @NonNull [] mapArray(Class<R> cls, @NonNull T @NonNull [] src, Function<@NonNull T, @NonNull R> func)

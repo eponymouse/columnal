@@ -231,7 +231,7 @@ public class MatchExpression extends Expression
             @Nullable DataType ourType = expression.check(data, state, onError);
             if (ourType == null)
                 return null;
-            if (!srcType.equals(ourType))
+            if (DataType.checkSame(srcType, ourType, s -> onError.accept(expression, s)) == null)
             {
                 onError.accept(expression, "Type mismatch in pattern: source type is " + srcType + " pattern type is: " + ourType);
                 return null;

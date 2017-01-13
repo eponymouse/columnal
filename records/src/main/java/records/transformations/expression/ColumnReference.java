@@ -114,7 +114,7 @@ public class ColumnReference extends Expression
             }
 
             @Override
-            public Formula array(DataType inner) throws InternalException, UserException
+            public Formula array(@Nullable DataType inner) throws InternalException, UserException
             {
                 throw new UserException("Can't do arrays...");
             }

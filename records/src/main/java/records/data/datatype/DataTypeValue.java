@@ -71,14 +71,19 @@ public class DataTypeValue extends DataType
         return new DataTypeValue(Kind.NUMBER, numberInfo, null, null, null, getNumber, null, null, null, null, null);
     }
 
-    public static DataTypeValue array(DataType innerType, GetValue<Pair<Integer, DataTypeValue>> getContent)
+    public static DataTypeValue arrayV()
+    {
+        return new DataTypeValue(Kind.ARRAY, null, null, null, Collections.emptyList(), null, null, null, null, null, null);
+    }
+
+    public static DataTypeValue arrayV(DataType innerType, GetValue<Pair<Integer, DataTypeValue>> getContent)
     {
         return new DataTypeValue(Kind.ARRAY, null, null, null, Collections.singletonList(innerType), null, null, null, null, null, getContent);
     }
 
     public static DataTypeValue tupleV(List<DataTypeValue> types)
     {
-        return new DataTypeValue(Kind.TUPLE, null, null, null, null, null, null, null, null, null, null);
+        return new DataTypeValue(Kind.TUPLE, null, null, null, new ArrayList<>(types), null, null, null, null, null, null);
     }
 
     public static class SpecificDataTypeVisitorGet<R> implements DataTypeVisitorGet<R>
@@ -156,7 +161,7 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+        public R array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected array type");
         }
@@ -174,8 +179,8 @@ public class DataTypeValue extends DataType
         R tuple(List<DataTypeValue> types) throws InternalException, E;
 
         // Each item is a pair of size and accessor.  The inner type gives the type
-        // of each entry (and is present even when the array is empty)
-        R array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, E;
+        // of each entry (but is null when the array is empty)
+        R array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, E;
     }
 
     @OnThread(Tag.Simulation)
@@ -278,7 +283,7 @@ public class DataTypeValue extends DataType
             }
 
             @Override
-            public @Value Object array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+            public @Value Object array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
             {
                 List<@Value Object> l = new ArrayList<>();
                 @NonNull Pair<Integer, DataTypeValue> details = g.get(index);

@@ -1,6 +1,7 @@
 package test.gen;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.time.ZoneOffsetGenerator;
@@ -431,13 +432,16 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public Expression array(DataType inner) throws InternalException, UserException
+            public Expression array(@Nullable DataType inner) throws InternalException, UserException
             {
+                if (inner == null)
+                    return new ArrayExpression(ImmutableList.of());
+                @NonNull DataType innerFinal = inner;
                 List<@Value Object> target = (List<@Value Object>) targetValue;
                 List<ExpressionMaker> terminals = new ArrayList<>();
-                terminals.add(() -> new ArrayExpression(Utility.mapListExI(target, t -> make(inner, t, 1))));
+                terminals.add(() -> new ArrayExpression(Utility.mapListExI(target, t -> make(innerFinal, t, 1))));
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
-                terminals.add(() -> new ArrayExpression(Utility.mapListExI(target, t -> make(inner, t, maxLevels - 1))));
+                terminals.add(() -> new ArrayExpression(Utility.mapListExI(target, t -> make(innerFinal, t, maxLevels - 1))));
                 return termDeep(maxLevels, type, terminals, nonTerm);
             }
         });
@@ -596,7 +600,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public Column array(DataType inner) throws InternalException, UserException
+            public Column array(@Nullable DataType inner) throws InternalException, UserException
             {
                 throw new UnimplementedException();
             }
@@ -685,9 +689,12 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
-            public @Value Object array(DataType inner) throws InternalException, UserException
+            public @Value Object array(@Nullable DataType inner) throws InternalException, UserException
             {
-                return Utility.value(TestUtil.<@Value Object>makeList(r, 0, 12, () -> makeValue(inner)));
+                if (inner == null)
+                    return Utility.value(Collections.emptyList());
+                @NonNull DataType innerFinal = inner;
+                return Utility.value(TestUtil.<@Value Object>makeList(r, 0, 12, () -> makeValue(innerFinal)));
             }
         });
     }

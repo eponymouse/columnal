@@ -94,10 +94,7 @@ public class TupleExpression extends Expression
     @Override
     public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
-        int index = r.nextInt(members.size());
-        if (types == null)
-            throw new InternalException("Calling _test_typeFailure despite type-check failure");
-        return new TupleExpression(Utility.replaceList(members, index, newExpressionOfDifferentType.getDifferentType(types.get(index))));
+        return null;
     }
 
     @Override

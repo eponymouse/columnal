@@ -1,6 +1,7 @@
 package records.data.datatype;
 
 import annotation.qual.Value;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ArrayColumnStorage;
 import records.data.BooleanColumnStorage;
@@ -83,7 +84,7 @@ public class DataTypeUtility
             }
 
             @Override
-            public @Value Object array(DataType inner) throws InternalException, UserException
+            public @Value Object array(@Nullable DataType inner) throws InternalException, UserException
             {
                 return Utility.value(Collections.emptyList());
             }
@@ -165,10 +166,13 @@ public class DataTypeUtility
             }
 
             @Override
-            public DisplayValue array(DataType inner) throws InternalException, UserException
+            public DisplayValue array(@Nullable DataType inner) throws InternalException, UserException
             {
+                if (inner == null)
+                    return DisplayValue.array(Collections.emptyList());
+                @NonNull DataType innerFinal = inner;
                 List<Object> list = (List<Object>)object;
-                return DisplayValue.array(Utility.mapListEx(list, o -> display(inner, o)));
+                return DisplayValue.array(Utility.mapListEx(list, o -> display(innerFinal, o)));
             }
         });
     }
@@ -222,7 +226,7 @@ public class DataTypeUtility
 
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnStorage<?> array(DataType inner) throws InternalException
+            public ColumnStorage<?> array(@Nullable DataType inner) throws InternalException
             {
                 return new ArrayColumnStorage(inner);
             }
