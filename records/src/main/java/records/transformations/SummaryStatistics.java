@@ -39,15 +39,21 @@ import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.TypeId;
 import records.error.FunctionInt;
 import records.error.InternalException;
+import records.error.ParseException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.grammar.BasicLexer;
-import records.grammar.SortParser;
-import records.grammar.SortParser.SplitByContext;
-import records.grammar.SortParser.SummaryColContext;
-import records.grammar.SortParser.SummaryContext;
-import records.grammar.SortParser.SummaryTypeContext;
+import records.grammar.ExpressionLexer;
+import records.grammar.ExpressionParser;
+import records.grammar.TransformationLexer;
+import records.grammar.TransformationParser;
+import records.grammar.TransformationParser.SplitByContext;
+import records.grammar.TransformationParser.SummaryColContext;
+import records.grammar.TransformationParser.SummaryContext;
+import records.grammar.TransformationParser.SummaryTypeContext;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.EvaluateState;
+import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
@@ -72,32 +78,33 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 21/10/2016.
  */
 @OnThread(Tag.Simulation)
-public abstract class SummaryStatistics extends Transformation
+public class SummaryStatistics extends Transformation
 {
-    public SummaryStatistics(TableManager mgr, @Nullable TableId tableId)
-    {
-        super(mgr, tableId);
-    }
-    //TODO
-    /*
-    public static final String NAME = "stats";
+    public static final String NAME = "summary";
     private final @Nullable Table src;
     private final TableId srcTableId;
+    // ColumnId here is the destination column, not source column:
     @OnThread(Tag.Any)
-    private final Map<ColumnId, TreeSet<SummaryType>> summaries;
+    private final Map<ColumnId, SummaryType> summaries;
     @OnThread(Tag.Any)
     private final List<ColumnId> splitBy;
     @OnThread(Tag.Any)
     private String error;
 
-    public static enum SummaryType
+    public static class SummaryType
     {
-        COUNT, MEAN, MIN, MAX, SUM;
+        public SummaryType(Expression summaryExpression)
+        {
+            this.summaryExpression = summaryExpression;
+        }
+
+        private final Expression summaryExpression;
     }
 
     private final @Nullable RecordSet result;
@@ -131,7 +138,7 @@ public abstract class SummaryStatistics extends Transformation
         }
     }
 
-    public SummaryStatistics(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, Map<ColumnId, TreeSet<SummaryType>> summaries, List<ColumnId> splitBy) throws InternalException
+    public SummaryStatistics(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, Map<ColumnId, SummaryType> summaries, List<ColumnId> splitBy) throws InternalException
     {
         super(mgr, thisTableId);
         this.srcTableId = srcTableId;
@@ -204,178 +211,16 @@ public abstract class SummaryStatistics extends Transformation
                 }
             }
 
-            for (Entry<ColumnId, TreeSet<SummaryType>> e : summaries.entrySet())
+            for (Entry<ColumnId, SummaryType> e : summaries.entrySet())
             {
-                for (SummaryType summaryType : e.getValue())
-                {
-                    Column srcCol = src.getColumn(e.getKey());
-                    ColumnId name = new ColumnId(e.getKey() + "." + summaryType);
-
-                    columns.add(srcCol.getType().applyGet(new DataTypeVisitorGet<FunctionInt<RecordSet, Column>>()
-                    {
-                        @Override
-                        public FunctionInt<RecordSet, Column> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
-                        {
-                            throw new UnimplementedException();
-                        }
-
-                        @Override
-                        public FunctionInt<RecordSet, Column> number(GetValue<@Value Number> srcGet, NumberInfo displayInfo) throws InternalException, UserException
-                        {
-                            if (summaryType == SummaryType.COUNT)
-                                return countColumn(srcGet);
-                            return rs -> new CalculatedNumericColumn(rs, name, srcCol.getType())
-                            {
-                                @Override
-                                protected void fillNextCacheChunk() throws UserException, InternalException
-                                {
-                                    int index = getCacheFilled();
-                                    final FoldOperation<Number, Number> fold;
-                                    switch (summaryType)
-                                    {
-                                        case MIN:
-                                        case MAX:
-                                            fold = new MinMaxNumericFold(summaryType);
-                                            break;
-                                        case MEAN:
-                                        case SUM:
-                                            fold = new MeanSumFold(summaryType);
-                                            break;
-                                        default:
-                                            throw new InternalException("Unrecognised summary type");
-                                    }
-                                    applyFold(cache, fold, srcCol, srcGet, splitIndexes, index);
-                                }
-                            };
-                        }
-
-                        @Override
-                        public FunctionInt<RecordSet, Column> bool(GetValue<@Value Boolean> srcGet) throws InternalException, UserException
-                        {
-                            if (summaryType == SummaryType.COUNT)
-                                return countColumn(srcGet);
-                            return rs -> new CalculatedNumericColumn(rs, name, srcCol.getType())
-                            {
-                                @Override
-                                protected void fillNextCacheChunk() throws UserException, InternalException
-                                {
-                                    int index = getCacheFilled();
-                                    final FoldOperation<Boolean, Boolean> fold;
-                                    switch (summaryType)
-                                    {
-                                        case MIN:
-                                        case MAX:
-                                            fold = new MinMaxComparableFold<>(summaryType);
-                                            break;
-                                        case MEAN:
-                                        case SUM:
-                                            throw new UserException("Cannot perform " + summaryType + " on boolean data");
-                                        default:
-                                            throw new InternalException("Unrecognised summary type");
-                                    }
-                                    applyFold(cache, b -> b ? 1 : 0, fold, srcCol, srcGet, splitIndexes, index);
-                                }
-                            };
-                        }
-
-                        @Override
-                        public FunctionInt<RecordSet, Column> text(GetValue<@Value String> srcGet) throws InternalException, UserException
-                        {
-                            if (summaryType == SummaryType.COUNT)
-                                return countColumn(srcGet);
-                            return rs -> new CalculatedStringColumn(rs, name, srcCol.getType())
-                            {
-
-                                @Override
-                                protected void fillNextCacheChunk() throws UserException, InternalException
-                                {
-                                    int index = getCacheFilled();
-                                    final FoldOperation<@Value String, String> fold;
-                                    switch (summaryType)
-                                    {
-                                        case MIN:
-                                        case MAX:
-                                            fold = new MinMaxComparableFold<>(summaryType);
-                                            break;
-                                        case MEAN:
-                                        case SUM:
-                                            throw new UserException("Cannot perform " + summaryType + " on String data");
-                                        default:
-                                            throw new InternalException("Unrecognised summary type");
-                                    }
-                                    applyFold(cache, fold, srcCol, srcGet, splitIndexes, index);
-                                }
-                            };
-                        }
-
-                        private <T> FunctionInt<RecordSet, Column> countColumn(GetValue<T> srcGet)
-                        {
-                            return rs -> new CalculatedNumericColumn(rs, name, DataType.INTEGER)
-                            {
-                                @Override
-                                protected void fillNextCacheChunk() throws UserException, InternalException
-                                {
-                                    int index = getCacheFilled();
-                                    applyFold(cache, new CountFold<T>(), srcCol, srcGet, splitIndexes, index);
-                                }
-                            };
-                        }
-
-                        @Override
-                        public FunctionInt<RecordSet, Column> tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag) throws InternalException, UserException
-                        {
-                            boolean ignoreNullaryTags = true; //TODO configure through GUI
-
-                            if (summaryType == SummaryType.COUNT && !ignoreNullaryTags)
-                                return countColumn(getTag); // Just need to count any entry
-                            if (summaryType == SummaryType.MEAN || summaryType == SummaryType.SUM)
-                            {
-                                return rs -> new CalculatedNumericColumn(rs, name, DataType.INTEGER)
-                                {
-                                    @Override
-                                    protected void fillNextCacheChunk() throws UserException, InternalException
-                                    {
-                                        int index = getCacheFilled();
-                                        applyFold(cache, new MeanSumTaggedFold(summaryType, tagTypes), srcCol, getTag, splitIndexes, index);
-                                    }
-                                };
-                            }
-                            return rs -> new CalculatedTaggedColumn(rs, name, typeName, tagTypes)
-                            {
-                                @Override
-                                protected void fillNextCacheChunk() throws UserException, InternalException
-                                {
-                                    int index = getCacheFilled();
-                                    final FoldOperation<Integer, Object> fold;
-                                    switch (summaryType)
-                                    {
-                                        case MIN:
-                                        case MAX:
-                                            fold = new MinMaxTaggedFold(summaryType, tagTypes, ignoreNullaryTags);
-                                            break;
-                                        default:
-                                            throw new UnimplementedException();
-                                    }
-                                    applyFold(this, fold, srcCol, getTag, splitIndexes, index);
-                                }
-
-                            };
-                        }
-
-                        @Override
-                        public FunctionInt<RecordSet, Column> tuple(List<DataTypeValue> types) throws InternalException, UserException
-                        {
-                            throw new UnimplementedException();
-                        }
-
-                        @Override
-                        public FunctionInt<RecordSet, Column> array(DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
-                        {
-                            throw new UnimplementedException();
-                        }
-                    }));
-                }
+                Expression expression = e.getValue().summaryExpression;
+                @Nullable DataType type = expression.check(src, mgr.getTypeState(), (ee, s) -> {throw new UserException(s);});
+                if (type == null)
+                    throw new InternalException("Type check error"); // Should already have thrown!
+                @NonNull DataType typeFinal = type;
+                columns.add(rs -> typeFinal.makeCalculatedColumn(rs, e.getKey(), i -> expression.getValue(i, new EvaluateState())));
             }
+
             theResult = new RecordSet("Summary", columns)
             {
                 @Override
@@ -511,17 +356,12 @@ public abstract class SummaryStatistics extends Transformation
         @Override
         public @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, TableId tableId, TableId srcTableId, String detail) throws InternalException, UserException
         {
-            SummaryContext loaded = Utility.parseAsOne(detail, BasicLexer::new, SortParser::new, SortParser::summary);
+            SummaryContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::summary);
 
-            Map<ColumnId, TreeSet<SummaryType>> summaryTypes = new HashMap<>();
+            Map<ColumnId, SummaryType> summaryTypes = new HashMap<>();
             for (SummaryColContext sumType : loaded.summaryCol())
             {
-                TreeSet<SummaryType> summaries = new TreeSet<>();
-                for (SummaryTypeContext type : sumType.summaryType())
-                {
-                    summaries.add(SummaryType.valueOf(type.getText()));
-                }
-                summaryTypes.put(new ColumnId(sumType.column.getText()), summaries);
+                summaryTypes.put(new ColumnId(sumType.column.getText()), new SummaryType(Expression.parse(null, sumType.expression().EXPRESSION().getText(), mgr.getTypeManager())));
             }
             List<ColumnId> splits = Utility.<SplitByContext, ColumnId>mapList(loaded.splitBy(), s -> new ColumnId(s.column.getText()));
             return new SummaryStatistics(mgr, tableId, srcTableId, summaryTypes, splits);
@@ -544,17 +384,16 @@ public abstract class SummaryStatistics extends Transformation
         private final ObservableList<@NonNull ColumnId> splitBy;
 
         @OnThread(Tag.FXPlatform)
-        private Editor(@Nullable TableId thisTableId, TableId srcTableId, @Nullable Table src, Map<ColumnId, TreeSet<SummaryType>> summaries, List<ColumnId> splitBy)
+        private Editor(@Nullable TableId thisTableId, TableId srcTableId, @Nullable Table src, Map<ColumnId, SummaryType> summaries, List<ColumnId> splitBy)
         {
             this.thisTableId = thisTableId;
             this.srcTableId = srcTableId;
             this.src = src;
             this.ops = FXCollections.observableArrayList();
             this.splitBy = FXCollections.observableArrayList(splitBy);
-            for (Entry<ColumnId, TreeSet<SummaryType>> entry : summaries.entrySet())
+            for (Entry<ColumnId, SummaryType> entry : summaries.entrySet())
             {
-                for (SummaryType summaryType : entry.getValue())
-                    ops.add(new Pair<>(entry.getKey(), summaryType));
+                ops.add(new Pair<>(entry.getKey(), entry.getValue()));
             }
         }
 
@@ -586,6 +425,7 @@ public abstract class SummaryStatistics extends Transformation
             colsAndSummaries.getChildren().add(columnListView);
 
             VBox buttons = new VBox();
+            /*
             for (SummaryType summaryType : SummaryType.values())
             {
                 Button button = new Button(summaryType.toString() + ">>");
@@ -607,6 +447,7 @@ public abstract class SummaryStatistics extends Transformation
                 });
                 buttons.getChildren().add(button);
             }
+            */
             Button button = new Button("Split>>");
             button.setOnAction(e -> {
                 splitBy.addAll(columnListView.getSelectionModel().getSelectedItems());
@@ -619,7 +460,7 @@ public abstract class SummaryStatistics extends Transformation
             colsAndSummaries.getChildren().add(new VBox(opListView, splitListView));
             return colsAndSummaries;
         }
-
+/*
         private static boolean valid(Column src, SummaryType summaryType) throws InternalException, UserException
         {
             return src.getType().apply(new DataTypeVisitor<Boolean>()
@@ -693,7 +534,7 @@ public abstract class SummaryStatistics extends Transformation
             });
 
         }
-
+*/
         @Override
         public BooleanExpression canPressOk()
         {
@@ -704,11 +545,10 @@ public abstract class SummaryStatistics extends Transformation
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
             return () -> {
-                Map<ColumnId, TreeSet<SummaryType>> summaries = new HashMap<>();
+                Map<ColumnId, SummaryType> summaries = new HashMap<>();
                 for (Pair<ColumnId, SummaryType> op : ops)
                 {
-                    Set<SummaryType> summaryTypes = summaries.computeIfAbsent(op.getFirst(), s -> new TreeSet<SummaryType>());
-                    summaryTypes.add(op.getSecond());
+                    summaries.put(op.getFirst(), op.getSecond());
                 }
                 return new SummaryStatistics(mgr, thisTableId, srcTableId, summaries, splitBy);
             };
@@ -719,15 +559,13 @@ public abstract class SummaryStatistics extends Transformation
     protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
     {
         OutputBuilder b = new OutputBuilder();
-        for (Entry<ColumnId, TreeSet<SummaryType>> entry : summaries.entrySet())
+        for (Entry<ColumnId, SummaryType> entry : summaries.entrySet())
         {
-            if (!entry.getValue().isEmpty())
-            {
-                b.kw("SUMMARY").id(entry.getKey());
-                for (SummaryType t : entry.getValue())
-                    b.id(t.toString());
-                b.nl();
-            }
+            b.kw("SUMMARY");
+            b.id(entry.getKey());
+            b.t(TransformationLexer.EXPRESSION_BEGIN, TransformationLexer.VOCABULARY);
+            b.raw(entry.getValue().summaryExpression.save(true));
+            b.nl();
         }
         for (ColumnId c : splitBy)
         {
@@ -748,7 +586,7 @@ public abstract class SummaryStatistics extends Transformation
     {
         return Collections.singletonList(srcTableId);
     }
-
+    /*
     @OnThread(Tag.Simulation)
     private abstract static class MinMaxFold<T> implements FoldOperation<T, T>
     {

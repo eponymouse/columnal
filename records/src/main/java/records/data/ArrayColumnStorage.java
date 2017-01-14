@@ -1,11 +1,13 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExBiConsumer;
 import utility.Pair;
 
 import java.util.ArrayList;
@@ -32,12 +34,16 @@ public class ArrayColumnStorage implements ColumnStorage<Pair<Integer, DataTypeV
     private final DataTypeValue type;
 
     // Constructor for array version
-    public ArrayColumnStorage(@Nullable DataType innerToCopy) throws InternalException
+    public ArrayColumnStorage(@Nullable DataType innerToCopy, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet) throws InternalException
     {
         if (innerToCopy == null)
             this.type = DataTypeValue.arrayV();
         else
-            this.type = DataTypeValue.arrayV(innerToCopy, (i, prog) -> storage.get(i));
+            this.type = DataTypeValue.arrayV(innerToCopy, (i, prog) -> {
+                if (beforeGet != null)
+                    beforeGet.accept(i, prog);
+                return storage.get(i);
+            });
     }
 
     @Override

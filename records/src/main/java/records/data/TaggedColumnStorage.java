@@ -4,6 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
@@ -15,6 +16,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExBiConsumer;
 import utility.Pair;
 import utility.UnitType;
 
@@ -50,8 +52,13 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     @OnThread(Tag.Any)
     private final DataTypeValue dataType;
 
-    @SuppressWarnings("initialization")
     public <DT extends DataType> TaggedColumnStorage(TypeId typeName, List<TagType<DT>> copyTagTypes) throws InternalException
+    {
+        this(typeName, copyTagTypes, null);
+    }
+
+    @SuppressWarnings("initialization")
+    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, List<TagType<DT>> copyTagTypes, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet) throws InternalException
     {
         tagStore = new NumericColumnStorage(copyTagTypes.size());
         innerValueIndex = new NumericColumnStorage();
@@ -63,7 +70,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             DataType inner = tagType.getInner();
             if (inner != null)
             {
-                ColumnStorage<?> result = DataTypeUtility.makeColumnStorage(inner);
+                ColumnStorage<?> result = DataTypeUtility.makeColumnStorage(inner, null);
                 tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), result.getType().copyReorder((rowIndex, prog) -> {
                     return innerValueIndex.getInt(rowIndex);
                 })));
@@ -76,8 +83,10 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             }
         }
         dataType = DataTypeValue.tagged(typeName, tagTypes, (i, prog) -> {
-                return tagStore.getTag(i);
-                });
+            if (beforeGet != null)
+                beforeGet.accept(i, prog);
+            return tagStore.getTag(i);
+        });
     }
 
     @OnThread(Tag.Any)

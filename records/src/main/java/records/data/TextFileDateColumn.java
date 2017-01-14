@@ -2,7 +2,6 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -19,7 +18,7 @@ import java.util.ArrayList;
 /**
  * Created by neil on 26/12/2016.
  */
-public class TextFileDateColumn extends TextFileColumn<DateColumnStorage>
+public class TextFileDateColumn extends TextFileColumn<TemporalColumnStorage>
 {
     @OnThread(Tag.Any)
     private final DateTimeInfo dateTimeInfo;
@@ -30,13 +29,7 @@ public class TextFileDateColumn extends TextFileColumn<DateColumnStorage>
     public TextFileDateColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, ColumnId columnName, int columnIndex, DateTimeInfo dateTimeInfo, DateTimeFormatter dateTimeFormatter, TemporalQuery query) throws InternalException
     {
         super(recordSet, textFile, initialFilePosition, sep, columnName, columnIndex);
-        setStorage(new DateColumnStorage(dateTimeInfo) {
-            @Override
-            public void beforeGet(int index, Column.@Nullable ProgressListener progressListener) throws InternalException, UserException
-            {
-                fillUpTo(index);
-            }
-        });
+        setStorage(new TemporalColumnStorage(dateTimeInfo, (index, prog) -> fillUpTo(index)));
         this.dateTimeInfo = dateTimeInfo;
         this.dateTimeFormatter = dateTimeFormatter;
         this.query = query;

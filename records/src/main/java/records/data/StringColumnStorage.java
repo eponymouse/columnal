@@ -10,6 +10,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DumbObjectPool;
+import utility.ExBiConsumer;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -22,13 +23,20 @@ public class StringColumnStorage implements ColumnStorage<String>
 {
     private final ArrayList<@Value String> values;
     private final DumbObjectPool<String> pool = new DumbObjectPool<>(String.class, 1000, null);
+    private final @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet;
     @MonotonicNonNull
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private DataTypeValue dataType;
 
-    public StringColumnStorage()
+    public StringColumnStorage(@Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet)
     {
         values = new ArrayList<>();
+        this.beforeGet = beforeGet;
+    }
+
+    public StringColumnStorage()
+    {
+        this(null);
     }
 
     @Override
@@ -39,16 +47,11 @@ public class StringColumnStorage implements ColumnStorage<String>
     
     public @Value String get(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
-        beforeGet(index, progressListener);
+        if (beforeGet != null)
+            beforeGet.accept(index, progressListener);
         if (index < 0 || index >= values.size())
             throw new InternalException("Attempting to access invalid element: " + index + " of " + values.size());
         return values.get(index);
-    }
-
-    // For overriding if you want to perform an action before get
-    public void beforeGet(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
-    {
-
     }
 
     @Override

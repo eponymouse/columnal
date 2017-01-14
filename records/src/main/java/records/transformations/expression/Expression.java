@@ -9,14 +9,17 @@ import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
+import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
+import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
+import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
@@ -25,6 +28,7 @@ import records.grammar.ExpressionParser.AndExpressionContext;
 import records.grammar.ExpressionParser.BooleanLiteralContext;
 import records.grammar.ExpressionParser.BracketedCompoundContext;
 import records.grammar.ExpressionParser.BracketedMatchContext;
+import records.grammar.ExpressionParser.CallExpressionContext;
 import records.grammar.ExpressionParser.ColumnRefContext;
 import records.grammar.ExpressionParser.DivideExpressionContext;
 import records.grammar.ExpressionParser.ExpressionContext;
@@ -51,11 +55,13 @@ import records.transformations.expression.MatchExpression.PatternMatchExpression
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
+import utility.ExConsumer;
 import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -236,6 +242,12 @@ public abstract class Expression
             return new VarExpression(ctx.getText());
         }
 
+        @Override
+        public Expression visitCallExpression(CallExpressionContext ctx)
+        {
+            // Utility.mapList(ctx.UNIT(), u -> )
+            return new CallExpression(ctx.functionName().getText(), Collections.emptyList(), Utility.mapList(ctx.expression(), e -> visitExpression(e)));
+        }
 
         /*
         @Override

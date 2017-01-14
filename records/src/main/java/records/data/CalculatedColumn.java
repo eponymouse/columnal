@@ -106,10 +106,20 @@ public abstract class CalculatedColumn extends Column
 */
     protected final void fillCacheWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
     {
+        if (index < 0 || index >= getLength())
+            return; // Will later throw out of bounds problem
+
+        int filled = getCacheFilled();
         // Fetch values:
-        while (index >= getCacheFilled())
+        while (index >= filled)
         {
+            int prevFilled = filled;
             fillNextCacheChunk();
+            filled = getCacheFilled();
+            if (filled <= prevFilled)
+            {
+                throw new InternalException("Looking for index " + index + " but cache not growing beyond size " + filled);
+            }
         }
     }
 

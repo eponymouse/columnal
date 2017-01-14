@@ -236,9 +236,11 @@ public class TypeManager
                 }
 
                 @Override
-                public UnitType array(DataType inner) throws InternalException, UserException
+                public UnitType array(@Nullable DataType inner) throws InternalException, UserException
                 {
-                    return inner.apply(this);
+                    if (inner != null)
+                        inner.apply(this);
+                    return UnitType.UNIT;
                 }
             });
         }

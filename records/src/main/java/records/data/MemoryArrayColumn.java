@@ -23,7 +23,7 @@ public class MemoryArrayColumn extends Column
     {
         super(recordSet);
         this.title = title;
-        this.storage = new ArrayColumnStorage(inner);
+        this.storage = new ArrayColumnStorage(inner, null);
         this.storage.addAll(values);
     }
 

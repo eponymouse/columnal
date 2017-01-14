@@ -277,7 +277,7 @@ public class OutputBuilder
 
     // Outputs the given raw string
     @OnThread(Tag.Any)
-    private OutputBuilder raw(String item)
+    public OutputBuilder raw(String item)
     {
         cur().add(item);
         return this;

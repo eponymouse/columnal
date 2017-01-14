@@ -3,12 +3,12 @@ package records.data;
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
-import records.data.datatype.DataType.Kind;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExBiConsumer;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -24,29 +24,33 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
     private final BitSet data = new BitSet();
     @OnThread(Tag.Any)
     private final DataTypeValue type;
+    private final @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet;
 
     @SuppressWarnings("initialization")
-    public BooleanColumnStorage()
+    public BooleanColumnStorage(@Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet)
     {
         this.type = DataTypeValue.bool(this::getWithProgress);
+        this.beforeGet = beforeGet;
+    }
+
+    public BooleanColumnStorage()
+    {
+        this(null);
     }
 
     private @Value Boolean getWithProgress(int i, @Nullable ProgressListener progressListener) throws UserException, InternalException
     {
-        return Utility.value(get(i));
+        if (beforeGet != null)
+            beforeGet.accept(i, progressListener);
+        if (i < 0 || i >= filled())
+            throw new InternalException("Attempting to access invalid element: " + i + " of " + filled());
+        return Utility.value(data.get(i));
     }
 
     @Override
     public int filled()
     {
         return length;
-    }
-
-    private boolean get(int index) throws InternalException, UserException
-    {
-        if (index < 0 || index >= filled())
-            throw new InternalException("Attempting to access invalid element: " + index + " of " + filled());
-        return data.get(index);
     }
 
     @Override

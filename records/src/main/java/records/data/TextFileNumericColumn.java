@@ -26,13 +26,7 @@ public class TextFileNumericColumn extends TextFileColumn<NumericColumnStorage>
     public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, ColumnId columnName, int columnIndex, NumberInfo numberInfo, @Nullable UnaryOperator<String> processString) throws InternalException, UserException
     {
         super(recordSet, textFile, fileStartPosition, sep, columnName, columnIndex);
-        setStorage(new NumericColumnStorage(numberInfo) {
-            @Override
-            public void beforeGet(int index, Column.@Nullable ProgressListener progressListener) throws InternalException, UserException
-            {
-                fillUpTo(index);
-            }
-        });
+        setStorage(new NumericColumnStorage(numberInfo, (index, prog) -> fillUpTo(index)));
         this.numberInfo = numberInfo;
         this.processString = processString;
     }

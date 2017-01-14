@@ -4,7 +4,13 @@ import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import records.data.ArrayColumnStorage;
+import records.data.BooleanColumnStorage;
+import records.data.CachedCalculatedColumn;
+import records.data.CalculatedNumericColumn;
+import records.data.CalculatedStringColumn;
 import records.data.Column;
+import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.ColumnStorage;
 import records.data.MemoryArrayColumn;
@@ -14,8 +20,13 @@ import records.data.MemoryStringColumn;
 import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
 import records.data.MemoryTupleColumn;
+import records.data.NumericColumnStorage;
 import records.data.RecordSet;
+import records.data.StringColumnStorage;
+import records.data.TaggedColumnStorage;
 import records.data.TaggedValue;
+import records.data.TemporalColumnStorage;
+import records.data.TupleColumnStorage;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.unit.Unit;
@@ -32,7 +43,9 @@ import records.grammar.FormatLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExBiConsumer;
 import utility.ExConsumer;
+import utility.ExFunction;
 import utility.Pair;
 import utility.UnitType;
 import utility.Utility;
@@ -75,6 +88,83 @@ import java.util.stream.Collectors;
  */
 public class DataType
 {
+    @OnThread(Tag.Simulation)
+    public Column makeCalculatedColumn(RecordSet rs, ColumnId name, ExFunction<Integer, @Value Object> getItem) throws UserException, InternalException
+    {
+        return apply(new DataTypeVisitor<Column>()
+        {
+            private <T> T castTo(Class<T> cls, @Value Object value) throws InternalException
+            {
+                if (!cls.isAssignableFrom(value.getClass()))
+                    throw new InternalException("Type inconsistency: should be " + cls + " but is " + value.getClass() + " for column: " + name);
+                return cls.cast(value);
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Column number(NumberInfo displayInfo) throws InternalException, UserException
+            {
+                return new CachedCalculatedColumn<NumericColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new NumericColumnStorage(displayInfo, g), cache -> {
+                    cache.add(castTo(Number.class, getItem.apply(cache.filled())));
+                });
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Column text() throws InternalException, UserException
+            {
+                return new CachedCalculatedColumn<StringColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new StringColumnStorage(g), cache -> {
+                    cache.add(castTo(String.class, getItem.apply(cache.filled())));
+                });
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Column date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            {
+                return new CachedCalculatedColumn<TemporalColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new TemporalColumnStorage(dateTimeInfo, g), cache -> {
+                    cache.add(castTo(TemporalAccessor.class, getItem.apply(cache.filled())));
+                });
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Column bool() throws InternalException, UserException
+            {
+                return new CachedCalculatedColumn<BooleanColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new BooleanColumnStorage(g), cache -> {
+                    cache.add(castTo(Boolean.class, getItem.apply(cache.filled())));
+                });
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Column tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            {
+                return new CachedCalculatedColumn<TaggedColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new TaggedColumnStorage(typeName, tags, g), cache -> {
+                    cache.add(castTo(TaggedValue.class, getItem.apply(cache.filled())));
+                });
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Column tuple(List<DataType> inner) throws InternalException, UserException
+            {
+                return new CachedCalculatedColumn<TupleColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new TupleColumnStorage(inner, g), cache -> {
+                    cache.add(castTo(Object[].class, getItem.apply(cache.filled())));
+                });
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Column array(@Nullable DataType inner) throws InternalException, UserException
+            {
+                return new CachedCalculatedColumn<ArrayColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new ArrayColumnStorage(inner, g), cache -> {
+                    cache.add(castTo(Pair.class, getItem.apply(cache.filled())));
+                });
+            }
+        });
+    }
+
     // Flattened ADT.  kind is the head tag, other bits are null/non-null depending:
     public static enum Kind {NUMBER, TEXT, DATETIME, BOOLEAN, TAGGED, TUPLE, ARRAY }
     final Kind kind;
@@ -872,7 +962,7 @@ public class DataType
                     {
                         array.add(loadSingleItem(inner, itemContext));
                     }
-                    ColumnStorage storage = DataTypeUtility.makeColumnStorage(inner);
+                    ColumnStorage storage = DataTypeUtility.makeColumnStorage(inner, null);
                     storage.addAll(array);
                     values.add(new Pair<>(array.size(), storage.getType()));
                 }

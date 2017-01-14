@@ -19,13 +19,7 @@ public class TextFileStringColumn extends TextFileColumn<StringColumnStorage>
     public TextFileStringColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, ColumnId columnName, int columnIndex)
     {
         super(recordSet, textFile, initialFilePosition, sep, columnName, columnIndex);
-        setStorage(new StringColumnStorage() {
-            @Override
-            public void beforeGet(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
-            {
-                fillUpTo(index);
-            }
-        });
+        setStorage(new StringColumnStorage((index, prog) -> fillUpTo(index)));
     }
 
     @Override

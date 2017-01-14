@@ -2,6 +2,8 @@ package records.data;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
@@ -9,6 +11,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExBiConsumer;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -24,13 +27,17 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
     @OnThread(Tag.Any)
     private final DataTypeValue type;
 
-    // Constructor for tuple version
     public TupleColumnStorage(List<DataType> innerToCopy) throws InternalException
+    {
+        this(innerToCopy, null);
+    }
+
+    public TupleColumnStorage(List<DataType> innerToCopy, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet) throws InternalException
     {
         ArrayList<ColumnStorage<?>> buildList = new ArrayList<>();
         for (DataType anInnerToCopy : innerToCopy)
         {
-            buildList.add(DataTypeUtility.makeColumnStorage(anInnerToCopy));
+            buildList.add(DataTypeUtility.makeColumnStorage(anInnerToCopy, beforeGet));
         }
         storage = ImmutableList.copyOf(buildList);
         type = DataTypeValue.tupleV(Utility.<ColumnStorage<?>, DataTypeValue>mapList(storage, s -> s.getType()));

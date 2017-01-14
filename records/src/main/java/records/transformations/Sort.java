@@ -36,9 +36,10 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.BasicLexer;
-import records.grammar.SortParser;
-import records.grammar.SortParser.OrderByContext;
-import records.grammar.SortParser.SortContext;
+import records.grammar.TransformationLexer;
+import records.grammar.TransformationParser;
+import records.grammar.TransformationParser.OrderByContext;
+import records.grammar.TransformationParser.SortContext;
 import records.gui.DisplayValue;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
@@ -291,7 +292,7 @@ public class Sort extends Transformation
         @OnThread(Tag.Simulation)
         public Transformation loadSingle(TableManager mgr, TableId tableId, TableId srcTableId, String detail) throws InternalException, UserException
         {
-            SortContext loaded = Utility.parseAsOne(detail, BasicLexer::new, SortParser::new, SortParser::sort);
+            SortContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::sort);
 
             return new Sort(mgr, tableId, srcTableId, Utility.<OrderByContext, ColumnId>mapList(loaded.orderBy(), o -> new ColumnId(o.column.getText())));
         }

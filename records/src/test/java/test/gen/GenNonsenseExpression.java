@@ -4,10 +4,12 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import edu.emory.mathcs.backport.java.util.Collections;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableManager;
 import records.data.datatype.TypeId;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
@@ -91,7 +93,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 },
                 () -> new DivideExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new RaiseExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
-                //() -> new CallExpression(TestUtil.generateVarName(r), TestUtil.makeList(r, 0, 5, () -> genDepth(r, depth + 1, gs))),
+                () -> new CallExpression(TestUtil.generateVarName(r), TestUtil.makeList(r.nextInt(0, 2), new GenUnit(), r, gs), TestUtil.makeList(r, 0, 5, () -> genDepth(true, r, depth + 1, gs))),
                 () -> new MatchExpression(genDepth(false, r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1)))
             )).get();
         }

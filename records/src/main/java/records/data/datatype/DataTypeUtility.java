@@ -5,8 +5,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ArrayColumnStorage;
 import records.data.BooleanColumnStorage;
+import records.data.Column.ProgressListener;
 import records.data.ColumnStorage;
-import records.data.DateColumnStorage;
+import records.data.TemporalColumnStorage;
 import records.data.TaggedValue;
 import records.data.TupleColumnStorage;
 import records.data.NumericColumnStorage;
@@ -22,7 +23,7 @@ import records.error.UserException;
 import records.gui.DisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
+import utility.ExBiConsumer;
 import utility.Utility;
 
 import java.time.LocalDate;
@@ -178,7 +179,7 @@ public class DataTypeUtility
     }
 
     @OnThread(Tag.Simulation)
-    public static ColumnStorage<?> makeColumnStorage(final DataType inner) throws InternalException
+    public static ColumnStorage<?> makeColumnStorage(final DataType inner, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet) throws InternalException
     {
         return inner.apply(new DataTypeVisitorEx<ColumnStorage<?>, InternalException>()
         {
@@ -186,49 +187,49 @@ public class DataTypeUtility
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> number(NumberInfo displayInfo) throws InternalException
             {
-                return new NumericColumnStorage(displayInfo);
+                return new NumericColumnStorage(displayInfo, beforeGet);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> bool() throws InternalException
             {
-                return new BooleanColumnStorage();
+                return new BooleanColumnStorage(beforeGet);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> text() throws InternalException
             {
-                return new StringColumnStorage();
+                return new StringColumnStorage(beforeGet);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> date(DateTimeInfo dateTimeInfo) throws InternalException
             {
-                return new DateColumnStorage(dateTimeInfo);
+                return new TemporalColumnStorage(dateTimeInfo, beforeGet);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException
             {
-                return new TaggedColumnStorage(typeName, tags);
+                return new TaggedColumnStorage(typeName, tags, beforeGet);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> tuple(List<DataType> innerTypes) throws InternalException
             {
-                return new TupleColumnStorage(innerTypes);
+                return new TupleColumnStorage(innerTypes, beforeGet);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> array(@Nullable DataType inner) throws InternalException
             {
-                return new ArrayColumnStorage(inner);
+                return new ArrayColumnStorage(inner, beforeGet);
             }
         });
     }

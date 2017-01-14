@@ -1,10 +1,10 @@
-parser grammar SortParser;
+parser grammar TransformationParser;
 
-// TODO rename if the combination in same file works out
-
-options { tokenVocab = BasicLexer; }
+options { tokenVocab = TransformationLexer; }
 
 item : ATOM | STRING;
+
+expression: EXPRESSION_BEGIN EXPRESSION EXPRESSION_END;
 
 orderKW : {_input.LT(1).getText().equals("ASCENDING") || _input.LT(1).getText().equals("DESCENDING")}? ATOM;
 orderBy : orderKW column=item NEWLINE;
@@ -13,6 +13,6 @@ sort : orderBy+;
 splitKW : {_input.LT(1).getText().equals("SPLIT")}? ATOM;
 fromKW : {_input.LT(1).getText().equals("SUMMARY")}? ATOM;
 summaryType : item;
-summaryCol : fromKW column=item summaryType+ NEWLINE;
+summaryCol : fromKW column=item expression; // No newline because expression consumes it
 splitBy : splitKW column=item NEWLINE;
 summary : summaryCol+ splitBy*;

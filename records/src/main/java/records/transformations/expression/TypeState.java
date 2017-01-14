@@ -27,7 +27,9 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
- * The state used while type-checking expressions
+ * The state used while type-checking expressions.
+ *
+ * It changes based on pattern matches, which introduce new variables.
  */
 public class TypeState
 {

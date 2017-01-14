@@ -6,6 +6,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column.ProgressListener;
+import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataTypeValue;
 import records.error.FetchException;
@@ -13,6 +14,8 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExBiConsumer;
+import utility.ExBiFunction;
 import utility.Utility;
 
 import java.math.BigDecimal;
@@ -83,15 +86,21 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     private DataTypeValue dataType;
     @OnThread(value = Tag.Any)
     private final NumberInfo displayInfo;
+    private final @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet;
 
     public NumericColumnStorage(NumberInfo displayInfo)
     {
-        this(displayInfo, 0, -1);
+        this(displayInfo, null);
+    }
+
+    public NumericColumnStorage(NumberInfo displayInfo, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet)
+    {
+        this(displayInfo, 0, -1, beforeGet);
     }
 
     public NumericColumnStorage()
     {
-        this(NumberInfo.DEFAULT, 0, -1);
+        this(NumberInfo.DEFAULT, 0, -1, null);
     }
 
     public NumericColumnStorage(int numberOfTags) throws InternalException
@@ -103,15 +112,16 @@ public class NumericColumnStorage implements ColumnStorage<Number>
 
     public NumericColumnStorage(int numberOfTags, int tagForNumeric, NumberInfo displayInfo) throws InternalException
     {
-        this(displayInfo, numberOfTags, tagForNumeric);
+        this(displayInfo, numberOfTags, tagForNumeric, null);
         if (numberOfTags > MAX_TAGS)
             throw new InternalException("Tried to create numeric column with " + numberOfTags + " tags");
     }
 
-    private NumericColumnStorage(NumberInfo displayInfo, int numberOfTags, int tagForNumeric)
+    private NumericColumnStorage(NumberInfo displayInfo, int numberOfTags, int tagForNumeric, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet)
     {
         this.numericTag = tagForNumeric;
         this.displayInfo = displayInfo;
+        this.beforeGet = beforeGet;
 
         NUM_TAGS = numberOfTags;
         BYTE_MIN = (int)Byte.MIN_VALUE + numberOfTags >= (int)Byte.MAX_VALUE ? Byte.MAX_VALUE : (byte)((int)Byte.MIN_VALUE + numberOfTags);
@@ -409,12 +419,6 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     }
     */
 
-    // For overriding if you want to perform an action before get
-    public void beforeGet(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
-    {
-
-    }
-
     // For when NumericColumnStorage is used as an internal integer store
     public int getInt(int index) throws InternalException, UserException
     {
@@ -430,7 +434,8 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     private Number getNonBlank(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
         // Must do this before checking range in case it adds more data:
-        beforeGet(index, progressListener);
+        if (beforeGet != null)
+            beforeGet.accept(index, progressListener);
         checkRange(index);
 
 

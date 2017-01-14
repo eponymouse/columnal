@@ -9,6 +9,9 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.SummaryStatistics;
 //import records.transformations.SummaryStatistics.SummaryType;
+import records.transformations.SummaryStatistics.SummaryType;
+import records.transformations.expression.CallExpression;
+import records.transformations.expression.ColumnReference;
 import test.DummyManager;
 import test.TestUtil;
 import test.TestUtil.Transformation_Mgr;
@@ -34,12 +37,10 @@ public class GenSummaryStats extends Generator<Transformation_Mgr>
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public Transformation_Mgr generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        throw new RuntimeException("TODO");
-        /*
         Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
         List<ColumnId> splitBy = TestUtil.makeList(sourceOfRandomness, 0, 4, () -> TestUtil.generateColumnId(sourceOfRandomness));
-        Map<ColumnId, TreeSet<SummaryType>> summaries = TestUtil.makeMap(sourceOfRandomness, 1, 5, () -> TestUtil.generateColumnId(sourceOfRandomness),
-            () -> new TreeSet<>(TestUtil.makeList(sourceOfRandomness, 1, 5, () -> sourceOfRandomness.choose(SummaryType.values()))));
+        Map<ColumnId, SummaryType> summaries = TestUtil.makeMap(sourceOfRandomness, 1, 5, () -> TestUtil.generateColumnId(sourceOfRandomness),
+            () -> new SummaryType(new CallExpression("count", new ColumnReference(TestUtil.generateColumnId(sourceOfRandomness)))));
         try
         {
             DummyManager mgr = new DummyManager();
@@ -49,6 +50,5 @@ public class GenSummaryStats extends Generator<Transformation_Mgr>
         {
             throw new RuntimeException(e);
         }
-        */
     }
 }

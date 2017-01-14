@@ -11,6 +11,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DumbObjectPool;
+import utility.ExBiConsumer;
 import utility.Utility;
 
 import java.time.temporal.TemporalAccessor;
@@ -20,7 +21,7 @@ import java.util.List;
 /**
  * Created by neil on 04/11/2016.
  */
-public class DateColumnStorage implements ColumnStorage<TemporalAccessor>
+public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
 {
     private final ArrayList<@Value TemporalAccessor> values;
     private final DumbObjectPool<TemporalAccessor> pool;
@@ -29,12 +30,19 @@ public class DateColumnStorage implements ColumnStorage<TemporalAccessor>
     @MonotonicNonNull
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private DataTypeValue dataType;
+    private final @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet;
 
-    public DateColumnStorage(DateTimeInfo dateTimeInfo) throws InternalException
+    public TemporalColumnStorage(DateTimeInfo dateTimeInfo) throws InternalException
+    {
+        this(dateTimeInfo, null);
+    }
+
+    public TemporalColumnStorage(DateTimeInfo dateTimeInfo, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet) throws InternalException
     {
         this.values = new ArrayList<>();
         this.pool = new DumbObjectPool<>(TemporalAccessor.class, 1000, dateTimeInfo.getComparator());
         this.dateTimeInfo = dateTimeInfo;
+        this.beforeGet = beforeGet;
     }
 
     @Override
@@ -45,16 +53,11 @@ public class DateColumnStorage implements ColumnStorage<TemporalAccessor>
 
     public @Value TemporalAccessor get(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
-        beforeGet(index, progressListener);
+        if (beforeGet != null)
+            beforeGet.accept(index, progressListener);
         if (index < 0 || index >= filled())
             throw new InternalException("Attempting to access invalid element: " + index + " of " + filled());
         return values.get(index);
-    }
-
-    // For overriding if you want to perform an action before get
-    public void beforeGet(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
-    {
-
     }
 
     @Override
