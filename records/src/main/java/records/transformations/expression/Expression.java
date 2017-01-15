@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
@@ -118,7 +119,7 @@ public abstract class Expression
         }
         catch (RuntimeException e)
         {
-            throw new UserException("Problem parsing expression", e);
+            throw new UserException("Problem parsing expression \"" + src + "\"", e);
         }
     }
 
@@ -246,7 +247,12 @@ public abstract class Expression
         public Expression visitCallExpression(CallExpressionContext ctx)
         {
             // Utility.mapList(ctx.UNIT(), u -> )
-            return new CallExpression(ctx.functionName().getText(), Collections.emptyList(), Utility.mapList(ctx.expression(), e -> visitExpression(e)));
+            List<@NonNull Expression> args;
+            if (ctx.topLevelExpression() != null)
+                args = Collections.singletonList(visitTopLevelExpression(ctx.topLevelExpression()));
+            else
+                args = Utility.mapList(ctx.expression(), e -> visitExpression(e));
+            return new CallExpression(ctx.functionName().getText(), Collections.emptyList(), args);
         }
 
         /*

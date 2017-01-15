@@ -98,7 +98,7 @@ public class CallExpression extends Expression
     @Override
     public String save(boolean topLevel)
     {
-        return functionName + "(" + params.stream().map(e -> e.save(false)).collect(Collectors.joining(", ")) + ")";
+        return functionName + "(" + params.stream().map(e -> e.save(params.size() == 1)).collect(Collectors.joining(", ")) + ")";
     }
 
     @Override

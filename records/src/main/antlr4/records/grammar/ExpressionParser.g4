@@ -29,13 +29,16 @@ lessThanExpression :  expression (LESS_THAN expression)+;
 greaterThanExpression :  expression (GREATER_THAN expression)+;
 andExpression :  expression (AND expression)+;
 orExpression :  expression (OR expression)+;
-compoundExpression : plusMinusExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | callExpression;
+compoundExpression : plusMinusExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression;
 
 constructor : rawConstructor rawConstructor;
 tagExpression : constructor (CONS expression)?;
 
 functionName : UNQUOTED_IDENT;
-callExpression : functionName UNIT* OPEN_BRACKET (topLevelExpression | expression (NEXT_PARAM expression)+) CLOSE_BRACKET;
+callExpression : functionName UNIT* OPEN_BRACKET (topLevelExpression | expression (COMMA expression)+) CLOSE_BRACKET;
+
+tupleExpression : OPEN_BRACKET expression (COMMA expression)+ CLOSE_BRACKET;
+arrayExpression : OPEN_SQUARE (expression (COMMA expression)*)? CLOSE_SQUARE;
 
 newVariable : NEWVAR UNQUOTED_IDENT;
 constructorName : STRING | UNQUOTED_IDENT;
@@ -48,7 +51,7 @@ match : expression MATCH matchClause (DELIM matchClause)*;
 
 bracketedCompound : OPEN_BRACKET compoundExpression CLOSE_BRACKET;
 bracketedMatch : OPEN_BRACKET match CLOSE_BRACKET;
-expressionNoTag : bracketedCompound | terminal | bracketedMatch;
+expressionNoTag : bracketedCompound | terminal | bracketedMatch | callExpression | tupleExpression | arrayExpression;
 // tagExpression doesn't need brackets because the constructor means it's identifiable from its left token
 expression : expressionNoTag | tagExpression;
 topLevelExpression : compoundExpression | match | expression /* includes terminal */;

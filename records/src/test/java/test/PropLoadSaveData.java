@@ -41,7 +41,7 @@ public class PropLoadSaveData
 {
     @Property(trials = 30)
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void testImmediate(@From(GenTableManager.class) TableManager mgr1, @From(GenTableManager.class) TableManager mgr2, @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
+    public void testImmediate(@From(GenTableManager.class) TableManager mgr1, @From(GenTableManager.class) TableManager mgr2, @When(seed=-1004992142344902733L) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         String saved = save(original.mgr);
         try

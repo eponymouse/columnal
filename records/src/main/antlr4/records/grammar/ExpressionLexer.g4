@@ -12,6 +12,8 @@ WS : ( ' ' | '\t' )+ -> skip ;
 
 OPEN_BRACKET : '(';
 CLOSE_BRACKET : ')';
+OPEN_SQUARE : '[';
+CLOSE_SQUARE : ']';
 
 UNIT : '{' ~'}'* '}';
 
@@ -32,13 +34,14 @@ MAPSTO : '~';
 NEWVAR : '$';
 CONSTRUCTOR : '\\';
 RAISEDTO : '^';
+COMMA: ',';
 
 NUMBER : [+-]? [0-9]+ ('.' [0-9]+)?;
 
 TRUE: 'true';
 FALSE: 'false';
 
-UNQUOTED_IDENT : ~[ \t\n\r"()@+-/*&|=?:;~$!<>\\]+ {utility.Utility.validUnquoted(getText())}?;
+UNQUOTED_IDENT : ~[ \t\n\r"()[\]@+-/*&|=?:;~$!<>\\]+ {utility.Utility.validUnquoted(getText())}?;
 
 
 

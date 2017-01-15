@@ -82,14 +82,23 @@ public abstract class DataSource extends Table
         List<List<ItemContext>> rows = new ArrayList<>();
         for (TerminalNode line : detail.DETAIL_LINE())
         {
-            Utility.parseAsOne(line.getText(), DataLexer::new, DataParser::new, p -> {
-                RowContext row = p.row();
-                if (row != null)
+            String lineText = line.getText();
+            try
+            {
+                Utility.parseAsOne(lineText, DataLexer::new, DataParser::new, p ->
                 {
-                    rows.add(row.item());
-                }
-                return 0;
-            });
+                    RowContext row = p.row();
+                    if (row != null)
+                    {
+                        rows.add(row.item());
+                    }
+                    return 0;
+                });
+            }
+            catch (UserException e)
+            {
+                throw new UserException("Error loading data line: \"" + lineText + "\"", e);
+            }
         }
         return rows;
     }

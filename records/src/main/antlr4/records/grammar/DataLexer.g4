@@ -12,6 +12,7 @@ WS : ( ' ' | '\t' )+ ;
 
 CONS: ':';
 CONSTRUCTOR : '\\';
+COMMA: ',';
 
 NUMBER : [+-]? [0-9]+ ('.' [0-9]+)?;
 
@@ -24,7 +25,7 @@ CLOSE_ROUND : ')';
 OPEN_SQUARE : '[';
 CLOSE_SQUARE : ']';
 
-UNQUOTED_IDENT : ~[ \t\n\r"()@+-/*&|=?:;~$!<>\\]+ {utility.Utility.validUnquoted(getText())}?;
+UNQUOTED_IDENT : ~[ \t\n\r"()@+-/*&|=?:;~$!<>\\,[\]]+ {utility.Utility.validUnquoted(getText())}?;
 
 
 
