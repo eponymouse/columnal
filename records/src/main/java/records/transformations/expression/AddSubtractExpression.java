@@ -75,15 +75,7 @@ public class AddSubtractExpression extends NaryOpExpression
     @Override
     public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
-        List<DataType> types = new ArrayList<>();
-        for (Expression expression : expressions)
-        {
-            @Nullable DataType expType = expression.check(data, state, onError);
-            if (expType == null)
-                return null;
-            types.add(expType);
-        }
-        type = DataType.checkAllSame(types, s -> onError.accept(this, s));
+        type = checkAllOperandsSameType(data, state, onError);
         return type;
     }
 

@@ -21,6 +21,8 @@ import records.transformations.expression.BinaryOpExpression;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ComparisonExpression;
+import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
@@ -85,6 +87,17 @@ public class GenNonsenseExpression extends Generator<Expression>
             return r.choose(Arrays.<Supplier<Expression>>asList(
                 () -> new NotEqualExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new EqualExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
+                () -> {
+                    List<Expression> expressions = TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
+                    List<ComparisonOperator> operators = r.nextBoolean() ? Arrays.asList(ComparisonOperator.GREATER_THAN, ComparisonOperator.GREATER_THAN_OR_EQUAL_TO) : Arrays.asList(ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_THAN_OR_EQUAL_TO);
+                    return new ComparisonExpression(expressions, ImmutableList.copyOf(TestUtil.makeList(expressions.size() - 1, (Generator<ComparisonOperator>)(Generator<?>)new EnumGenerator(ComparisonOperator.class) {
+                        @Override
+                        public Enum<?> generate(SourceOfRandomness random, GenerationStatus status)
+                        {
+                            return random.choose(operators);
+                        }
+                    }, r, gs)));
+                },
                 () -> new AndExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new OrExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new TimesExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),

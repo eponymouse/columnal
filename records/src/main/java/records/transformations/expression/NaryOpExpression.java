@@ -2,7 +2,11 @@ package records.transformations.expression;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
+import records.data.RecordSet;
+import records.data.datatype.DataType;
+import records.error.InternalException;
 import records.error.UserException;
+import utility.ExBiConsumer;
 import utility.Pair;
 
 import java.util.ArrayList;
@@ -101,5 +105,19 @@ public abstract class NaryOpExpression extends Expression
     public List<Expression> getChildren()
     {
         return Collections.unmodifiableList(expressions);
+    }
+
+    @Nullable
+    protected DataType checkAllOperandsSameType(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    {
+        List<DataType> types = new ArrayList<>();
+        for (Expression expression : expressions)
+        {
+            @Nullable DataType expType = expression.check(data, state, onError);
+            if (expType == null)
+                return null;
+            types.add(expType);
+        }
+        return DataType.checkAllSame(types, s -> onError.accept(this, s));
     }
 }

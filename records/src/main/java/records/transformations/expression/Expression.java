@@ -36,6 +36,8 @@ import records.grammar.ExpressionParser.CallExpressionContext;
 import records.grammar.ExpressionParser.ColumnRefContext;
 import records.grammar.ExpressionParser.DivideExpressionContext;
 import records.grammar.ExpressionParser.ExpressionContext;
+import records.grammar.ExpressionParser.GreaterThanExpressionContext;
+import records.grammar.ExpressionParser.LessThanExpressionContext;
 import records.grammar.ExpressionParser.MatchClauseContext;
 import records.grammar.ExpressionParser.MatchContext;
 import records.grammar.ExpressionParser.NotEqualExpressionContext;
@@ -53,6 +55,7 @@ import records.grammar.ExpressionParser.TupleExpressionContext;
 import records.grammar.ExpressionParser.VarRefContext;
 import records.grammar.ExpressionParserBaseVisitor;
 import records.transformations.expression.AddSubtractExpression.Op;
+import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.MatchExpression.PatternMatch;
@@ -218,6 +221,32 @@ public abstract class Expression
         public Expression visitPlusMinusExpression(PlusMinusExpressionContext ctx)
         {
             return new AddSubtractExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), Utility.<TerminalNode, Op>mapList(ctx.PLUS_MINUS(), op -> op.getText().equals("+") ? Op.ADD : Op.SUBTRACT));
+        }
+
+        @Override
+        public Expression visitGreaterThanExpression(GreaterThanExpressionContext ctx)
+        {
+            try
+            {
+                return new ComparisonExpression(Utility.mapList(ctx.expression(), this::visitExpression), Utility.mapListExI(ctx.GREATER_THAN(), op -> ComparisonOperator.parse(op.getText())));
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+
+        @Override
+        public Expression visitLessThanExpression(LessThanExpressionContext ctx)
+        {
+            try
+            {
+                return new ComparisonExpression(Utility.mapList(ctx.expression(), this::visitExpression), Utility.mapListExI(ctx.LESS_THAN(), op -> ComparisonOperator.parse(op.getText())));
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
         }
 
         @Override
