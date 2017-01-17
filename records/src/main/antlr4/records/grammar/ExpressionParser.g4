@@ -6,7 +6,7 @@ tableId : (STRING | UNQUOTED_IDENT);
 columnId : (STRING | UNQUOTED_IDENT);
 columnRef : (COLREF tableId)? COLREF columnId;
 
-numericLiteral : NUMBER;
+numericLiteral : NUMBER UNIT?;
 stringLiteral : STRING;
 booleanLiteral : TRUE | FALSE;
 
@@ -43,15 +43,14 @@ arrayExpression : OPEN_SQUARE (expression (COMMA expression)*)? CLOSE_SQUARE;
 newVariable : NEWVAR UNQUOTED_IDENT;
 constructorName : STRING | UNQUOTED_IDENT;
 rawConstructor : CONSTRUCTOR constructorName;
-patternMatch : rawConstructor (CONS patternMatch)? | newVariable | expressionNoTag;
-pattern : patternMatch (AND expression)*;
+patternMatch : MATCHCONSTRUCTOR constructorName (CONS patternMatch)? | newVariable | expression;
+pattern : patternMatch (PATTERNAND expression)*;
 
 matchClause : pattern (DELIM pattern)* MAPSTO expression;
 match : expression MATCH matchClause (DELIM matchClause)*;
 
 bracketedCompound : OPEN_BRACKET compoundExpression CLOSE_BRACKET;
 bracketedMatch : OPEN_BRACKET match CLOSE_BRACKET;
-expressionNoTag : bracketedCompound | terminal | bracketedMatch | callExpression | tupleExpression | arrayExpression;
 // tagExpression doesn't need brackets because the constructor means it's identifiable from its left token
-expression : expressionNoTag | tagExpression;
+expression : bracketedCompound | terminal | bracketedMatch | callExpression | tupleExpression | arrayExpression | tagExpression;
 topLevelExpression : compoundExpression | match | expression /* includes terminal */;

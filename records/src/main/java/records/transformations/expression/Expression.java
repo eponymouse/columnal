@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
 import org.antlr.v4.runtime.tree.TerminalNode;
@@ -19,6 +20,7 @@ import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.FunctionInt;
 import records.error.InternalException;
@@ -26,6 +28,7 @@ import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
 import records.grammar.ExpressionParser.AndExpressionContext;
+import records.grammar.ExpressionParser.ArrayExpressionContext;
 import records.grammar.ExpressionParser.BooleanLiteralContext;
 import records.grammar.ExpressionParser.BracketedCompoundContext;
 import records.grammar.ExpressionParser.BracketedMatchContext;
@@ -46,6 +49,7 @@ import records.grammar.ExpressionParser.StringLiteralContext;
 import records.grammar.ExpressionParser.TableIdContext;
 import records.grammar.ExpressionParser.TagExpressionContext;
 import records.grammar.ExpressionParser.TimesExpressionContext;
+import records.grammar.ExpressionParser.TupleExpressionContext;
 import records.grammar.ExpressionParser.VarRefContext;
 import records.grammar.ExpressionParserBaseVisitor;
 import records.transformations.expression.AddSubtractExpression.Op;
@@ -152,7 +156,14 @@ public abstract class Expression
         @Override
         public Expression visitNumericLiteral(NumericLiteralContext ctx)
         {
-            return new NumericLiteral(Utility.parseNumber(ctx.getText()), null);
+            try
+            {
+                return new NumericLiteral(Utility.parseNumber(ctx.NUMBER().getText()), ctx.UNIT() == null ? null : typeManager.getUnitManager().loadUse(ctx.UNIT().getText()));
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException("Error parsing unit: \"" + ctx.UNIT().getText() + "\"", e);
+            }
         }
 
         @Override
@@ -222,7 +233,7 @@ public abstract class Expression
 
             String typeName = ctx.constructor().rawConstructor(0).constructorName().getText();
 
-            return new TagExpression(new Pair<>(typeName, constructorName), visitExpression(ctx.expression()));
+            return new TagExpression(new Pair<>(typeName, constructorName), ctx.expression() == null ? null : visitExpression(ctx.expression()));
         }
 
         @Override
@@ -294,20 +305,32 @@ public abstract class Expression
 
         private PatternMatch processPatternMatch(MatchExpression me, PatternMatchContext ctx) throws InternalException
         {
-            if (ctx.rawConstructor() != null)
+            if (ctx.constructorName() != null)
             {
                 PatternMatchContext subPattern = ctx.patternMatch();
-                return me.new PatternMatchConstructor(ctx.rawConstructor().constructorName().getText(), subPattern == null ? null : processPatternMatch(me, subPattern));
+                return me.new PatternMatchConstructor(ctx.constructorName().getText(), subPattern == null ? null : processPatternMatch(me, subPattern));
             }
             else if (ctx.newVariable() != null)
             {
                 return me.new PatternMatchVariable(ctx.newVariable().getText().substring(1));
             }
-            else if (ctx.expressionNoTag() != null)
+            else if (ctx.expression() != null)
             {
-                return new PatternMatchExpression(visitExpressionNoTag(ctx.expressionNoTag()));
+                return new PatternMatchExpression(visitExpression(ctx.expression()));
             }
             throw new RuntimeException("Unknown case in processPatternMatch");
+        }
+
+        @Override
+        public Expression visitArrayExpression(ArrayExpressionContext ctx)
+        {
+            return new ArrayExpression(ImmutableList.copyOf(Utility.mapList(ctx.expression(), c -> visitExpression(c))));
+        }
+
+        @Override
+        public Expression visitTupleExpression(TupleExpressionContext ctx)
+        {
+            return new TupleExpression(ImmutableList.copyOf(Utility.mapList(ctx.expression(), c -> visitExpression(c))));
         }
 
         public Expression visitChildren(RuleNode node) {
@@ -317,6 +340,8 @@ public abstract class Expression
             for(int i = 0; i < n && this.shouldVisitNextChild(node, result); ++i) {
                 ParseTree c = node.getChild(i);
                 Expression childResult = c.accept(this);
+                if (childResult == null)
+                    break;
                 result = this.aggregateResult(result, childResult);
             }
             if (result == null)

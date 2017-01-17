@@ -15,7 +15,8 @@ CLOSE_BRACKET : ')';
 OPEN_SQUARE : '[';
 CLOSE_SQUARE : ']';
 
-UNIT : '{' ~'}'* '}';
+UNIT : '{' ~'}'* '}'
+  { String orig = getText(); setText(orig.substring(1, orig.length() - 1)); };
 
 PLUS_MINUS: [+-];
 TIMES: '*';
@@ -32,6 +33,8 @@ CONS: ':';
 DELIM : ';';
 MAPSTO : '~';
 NEWVAR : '$';
+PATTERNAND: '$&';
+MATCHCONSTRUCTOR : '$\\';
 CONSTRUCTOR : '\\';
 RAISEDTO : '^';
 COMMA: ',';

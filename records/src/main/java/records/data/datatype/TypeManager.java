@@ -259,4 +259,9 @@ public class TypeManager
             saver.saveType(b.toString());
         }
     }
+
+    public UnitManager getUnitManager()
+    {
+        return unitManager;
+    }
 }

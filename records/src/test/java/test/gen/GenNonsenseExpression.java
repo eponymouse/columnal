@@ -1,5 +1,6 @@
 package test.gen;
 
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
@@ -15,6 +16,7 @@ import records.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.AndExpression;
+import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BinaryOpExpression;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.CallExpression;
@@ -31,6 +33,7 @@ import records.transformations.expression.RaiseExpression;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
 import records.transformations.expression.TimesExpression;
+import records.transformations.expression.TupleExpression;
 import records.transformations.expression.VarExpression;
 import test.DummyManager;
 import test.TestUtil;
@@ -94,7 +97,9 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> new DivideExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new RaiseExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new CallExpression(TestUtil.generateVarName(r), TestUtil.makeList(r.nextInt(0, 2), new GenUnit(), r, gs), TestUtil.makeList(r, 1, 5, () -> genDepth(true, r, depth + 1, gs))),
-                () -> new MatchExpression(genDepth(false, r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1)))
+                () -> new MatchExpression(genDepth(false, r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1))),
+                () -> new ArrayExpression(ImmutableList.copyOf(TestUtil.makeList(r, 0, 6, () -> genDepth(r, depth + 1, gs)))),
+                () -> new TupleExpression(ImmutableList.copyOf(TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs))))
             )).get();
         }
     }

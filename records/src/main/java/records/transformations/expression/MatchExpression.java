@@ -191,7 +191,7 @@ public class MatchExpression extends Expression
         @Override
         public String save()
         {
-            return "\\" + OutputBuilder.quotedIfNecessary(constructor) + (subPattern == null ? "" : (":" + subPattern.save()));
+            return "$\\" + OutputBuilder.quotedIfNecessary(constructor) + (subPattern == null ? "" : (":" + subPattern.save()));
         }
 
         @Override
@@ -375,7 +375,7 @@ public class MatchExpression extends Expression
 
         public String save()
         {
-            return pattern.save() + guards.stream().map(e -> " & " + e.save(false)).collect(Collectors.joining());
+            return pattern.save() + guards.stream().map(e -> " $& " + e.save(false)).collect(Collectors.joining());
         }
 
         public PatternMatch getPattern()

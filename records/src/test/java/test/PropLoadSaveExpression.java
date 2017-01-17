@@ -2,6 +2,7 @@ package test;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.data.datatype.TypeManager;
@@ -9,6 +10,9 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
+import test.gen.ExpressionValue;
+import test.gen.GenExpressionValueBackwards;
+import test.gen.GenExpressionValueForwards;
 import test.gen.GenNonsenseExpression;
 
 import static org.junit.Assert.assertEquals;
@@ -19,8 +23,19 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class PropLoadSaveExpression
 {
-    @Property
-    public void testLoadSave(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
+    @Property(trials = 2000)
+    public void testLoadSaveNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
+    {
+        testLoadSave(expression);
+    }
+
+    @Property(trials = 1000)
+    public void testLoadSaveReal(@From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue) throws InternalException, UserException
+    {
+        testLoadSave(expressionValue.expression);
+    }
+
+    private void testLoadSave(@From(GenNonsenseExpression.class) Expression expression) throws UserException, InternalException
     {
         String saved = expression.save(true);
         // Use same manage to load so that types are preserved:
@@ -28,6 +43,5 @@ public class PropLoadSaveExpression
         assertEquals("Saved version: " + saved, expression, reloaded);
         String resaved = reloaded.save(true);
         assertEquals(saved, resaved);
-        
     }
 }
