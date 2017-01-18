@@ -17,6 +17,7 @@ import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import records.data.RecordSet;
 import records.data.Table;
+import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -117,7 +118,7 @@ public class TableDisplay extends BorderPane
             recordSet = table.getData();
             error = null;
         }
-        catch (UserException e)
+        catch (UserException | InternalException e)
         {
             error = e.getLocalizedMessage();
             recordSet = null;

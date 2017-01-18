@@ -408,7 +408,7 @@ public class Sort extends Transformation
             return new VBox(colsAndSort, example);
         }
 
-        private List<Column> getPresent(ObservableList<Optional<ColumnId>> cols) throws UserException
+        private List<Column> getPresent(ObservableList<Optional<ColumnId>> cols) throws UserException, InternalException
         {
             ArrayList<Column> r = new ArrayList<>();
             for (Optional<ColumnId> col : cols)

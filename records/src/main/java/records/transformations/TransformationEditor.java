@@ -23,6 +23,7 @@ import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
+import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayValue;
 import threadchecker.OnThread;
@@ -68,8 +69,13 @@ public abstract class TransformationEditor
             } catch (UserException e)
             {
                 lv.setPlaceholder(new Label("Could not find table: " + id + "\n" + e.getLocalizedMessage()));
+            } catch (InternalException e)
+            {
+                Utility.report(e);
+                lv.setPlaceholder(new Label("Could not find table due to internal error: " + id + "\n" + e.getLocalizedMessage()));
             }
-        } else
+        }
+        else
         {
             lv.setPlaceholder(new Label("Could not find table: " + id));
         }

@@ -10,8 +10,10 @@ import org.junit.runner.RunWith;
 import records.data.Column;
 import records.data.RecordSet;
 import records.data.Table;
+import records.data.TableId;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.Concatenate;
 import records.transformations.Filter;
 import records.transformations.Sort;
 import records.transformations.expression.CallExpression;
@@ -26,6 +28,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -127,7 +130,64 @@ public class PropRunTransformation
             assertTrue("Value " + targetValue + " should be " + op.saveOp()+ " " + data + " (but wasn't)", check.test(Utility.compareValues(data, targetValue)));
         }
 
-        // TODO check the concat with inverted filter is the same data as original
+        Filter invertedFilter = new Filter(srcTable.mgr, null, srcTable.data.getId(),
+            new ComparisonExpression(
+                Arrays.asList(
+                    new ColumnReference(target.getName(), ColumnReferenceType.CORRESPONDING_ROW),
+                    new CallExpression("element", new ColumnReference(target.getName(), ColumnReferenceType.WHOLE_COLUMN), new NumericLiteral(targetIndex + 1 /* User index */, null))
+                ), ImmutableList.of(invert(op))));
+
+        // Lengths should equal original:
+        assertEquals(srcTable.data.getData().getLength(), filter.getData().getLength() + invertedFilter.getData().getLength());
+
+        Concatenate concatFilters = new Concatenate(srcTable.mgr, null, "concatFilters", Arrays.asList(filter.getId(), invertedFilter.getId()));
+
+        // Check that the same set of rows is present:
+        assertEquals(TestUtil.getRowFreq(srcTable.data.getData()), TestUtil.getRowFreq(concatFilters.getData()));
     }
+
+    private ComparisonOperator invert(ComparisonOperator op)
+    {
+        switch (op)
+        {
+            case LESS_THAN:
+                return ComparisonOperator.GREATER_THAN_OR_EQUAL_TO;
+            case LESS_THAN_OR_EQUAL_TO:
+                return ComparisonOperator.GREATER_THAN;
+            case GREATER_THAN:
+                return ComparisonOperator.LESS_THAN_OR_EQUAL_TO;
+            case GREATER_THAN_OR_EQUAL_TO:
+                return ComparisonOperator.LESS_THAN;
+        }
+        throw new RuntimeException("Missing case for inverting comparison op");
+    }
+
     // #error TODO add test for summary stats
+
+    @Property
+    @OnThread(Tag.Simulation)
+    public void testConcatSelf(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original) throws InternalException, UserException
+    {
+        List<TableId> ids = new ArrayList<>();
+        int originalLength = original.data.getData().getLength();
+        for (int repeats = 1; repeats < 4; repeats++)
+        {
+            // Add once each time round the loop:
+            ids.add(original.data.getId());
+            Concatenate concatenate = new Concatenate(original.mgr, null, "ConcatSelf", ids);
+            for (Column column : concatenate.getData().getColumns())
+            {
+                // Compare each value from the original set with the corresponding later repeated values:
+                for (int originalRow = 0; originalRow < originalLength; originalRow++)
+                {
+                    // This will compare to self, but why not:
+                    for (int repeatCompare = 0; repeatCompare < repeats; repeatCompare++)
+                    {
+                        assertEquals(0, Utility.compareValues(column.getType().getCollapsed(originalRow), column.getType().getCollapsed(originalRow + repeatCompare * originalLength)));
+                    }
+                }
+
+            }
+        }
+    }
 }

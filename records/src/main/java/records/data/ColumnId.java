@@ -8,7 +8,7 @@ import threadchecker.Tag;
  * Created by neil on 14/11/2016.
  */
 @OnThread(Tag.Any)
-public class ColumnId
+public class ColumnId implements Comparable<ColumnId>
 {
     String columnId;
 
@@ -49,5 +49,11 @@ public class ColumnId
     public String getRaw()
     {
         return columnId;
+    }
+
+    @Override
+    public int compareTo(ColumnId o)
+    {
+        return columnId.compareTo(o.columnId);
     }
 }

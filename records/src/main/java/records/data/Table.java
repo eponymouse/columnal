@@ -5,6 +5,7 @@ import javafx.geometry.Bounds;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
 import records.grammar.MainParser.PositionContext;
@@ -59,7 +60,7 @@ public abstract class Table
 
     @NotNull
     @OnThread(Tag.Any)
-    public abstract RecordSet getData() throws UserException;
+    public abstract RecordSet getData() throws UserException, InternalException;
 
     public static interface Saver
     {

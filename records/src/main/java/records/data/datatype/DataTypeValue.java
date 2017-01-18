@@ -18,6 +18,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * The data-type of a homogeneously-typed list of values,
@@ -311,34 +312,61 @@ public class DataTypeValue extends DataType
         });
     }
 
-    public DataTypeValue copyReorder(GetValue<Integer> getOriginalIndex) throws InternalException
+    // Copies the type of this item, but allows you to pull the data from an arbitrary DataTypeValue
+    // (i.e. not necessarily this one).  Useful for implementing concat and similar.
+    public static DataTypeValue copySeveral(DataType original, GetValue<Pair<DataTypeValue, Integer>> getOriginalValueAndIndex) throws InternalException
     {
         Pair<TypeId, List<TagType<DataTypeValue>>> newTagTypes = null;
-        if (this.tagTypes != null && this.taggedTypeName != null)
+        if (original.tagTypes != null && original.taggedTypeName != null)
         {
-            newTagTypes = new Pair<>(taggedTypeName, new ArrayList<>());
-            for (TagType t : tagTypes)
-                newTagTypes.getSecond().add(new TagType<>(t.getName(), t.getInner() == null ? null : ((DataTypeValue)t.getInner()).copyReorder(getOriginalIndex)));
+            newTagTypes = new Pair<>(original.taggedTypeName, new ArrayList<>());
+            for (int tagIndex = 0; tagIndex < original.tagTypes.size(); tagIndex++)
+            {
+                TagType t = original.tagTypes.get(tagIndex);
+                int tagIndexFinal = tagIndex;
+                DataType inner = t.getInner();
+                if (inner == null)
+                    newTagTypes.getSecond().add(new TagType<>(t.getName(), null));
+                else
+                    newTagTypes.getSecond().add(new TagType<>(t.getName(), ((DataTypeValue) inner).copySeveral(inner, (i, prog) ->
+                    {
+                        @NonNull Pair<DataTypeValue, Integer> destinationParent = getOriginalValueAndIndex.get(i);
+                        @Nullable List<TagType<DataType>> destinationTagTypes = destinationParent.getFirst().tagTypes;
+                        if (destinationTagTypes == null)
+                            throw new InternalException("Joining together columns but other column not tagged");
+                        DataTypeValue innerDTV = (DataTypeValue) destinationTagTypes.get(tagIndexFinal).getInner();
+                        if (innerDTV == null)
+                            throw new InternalException("Joining together columns but tag types don't match across types");
+                        return new Pair<DataTypeValue, Integer>(innerDTV, destinationParent.getSecond());
+                    })));
+            }
         }
 
         final @Nullable List<DataType> memberTypes;
-        if (memberType == null)
+        if (original.memberType == null)
             memberTypes = null;
         else
         {
-            ArrayList<DataType> r = new ArrayList<>(memberType.size());
-            for (DataType type : memberType)
-                r.add(((DataTypeValue)type).copyReorder(getOriginalIndex));
+            ArrayList<DataType> r = new ArrayList<>(original.memberType.size());
+            // TODO not sure if this bit is right:
+            for (DataType type : original.memberType)
+                r.add(((DataTypeValue)type).copySeveral(type, getOriginalValueAndIndex));
             memberTypes = r;
         }
-        return new DataTypeValue(kind, numberInfo, dateTimeInfo, newTagTypes,
+        return new DataTypeValue(original.kind, original.numberInfo, original.dateTimeInfo, newTagTypes,
             memberTypes,
-            reOrder(getOriginalIndex, getNumber),
-            reOrder(getOriginalIndex, getText),
-            reOrder(getOriginalIndex, getDate),
-            reOrder(getOriginalIndex, getBoolean),
-            reOrder(getOriginalIndex, getTag),
-            reOrder(getOriginalIndex, getArrayContent));
+            DataTypeValue.<@Value Number>several(getOriginalValueAndIndex, dtv -> dtv.getNumber),
+            DataTypeValue.<@Value String>several(getOriginalValueAndIndex, dtv -> dtv.getText),
+            DataTypeValue.<@Value TemporalAccessor>several(getOriginalValueAndIndex, dtv -> dtv.getDate),
+            DataTypeValue.<@Value Boolean>several(getOriginalValueAndIndex, dtv -> dtv.getBoolean),
+            several(getOriginalValueAndIndex, dtv -> dtv.getTag),
+            several(getOriginalValueAndIndex, dtv -> dtv.getArrayContent));
+
+    }
+
+    public DataTypeValue copyReorder(GetValue<Integer> getOriginalIndex) throws InternalException
+    {
+        return copySeveral(this, (i, prog) -> new Pair<DataTypeValue, Integer>(this, getOriginalIndex.getWithProgress(i, prog)));
     }
 
     @SuppressWarnings("nullness")
@@ -349,6 +377,20 @@ public class DataTypeValue extends DataType
         return (int destIndex, final ProgressListener prog) -> {
             int srcIndex = getOriginalIndex.getWithProgress(destIndex, prog == null ? null : (d -> prog.progressUpdate(d*0.5)));
             return g.getWithProgress(srcIndex, prog == null ? null : (d -> prog.progressUpdate(d * 0.5 + 0.5)));
+        };
+    }
+
+    private static <T> @Nullable GetValue<T> several(GetValue<Pair<DataTypeValue, Integer>> getOriginalIndex, @Nullable Function<DataTypeValue, @Nullable GetValue<T>> g)
+    {
+        if (g == null)
+            return null;
+        @NonNull Function<DataTypeValue, @Nullable GetValue<T>> gFinal = g;
+        return (int destIndex, final @Nullable ProgressListener prog) -> {
+            @OnThread(Tag.Simulation) @NonNull Pair<DataTypeValue, Integer> src = getOriginalIndex.getWithProgress(destIndex, prog);
+            @Nullable GetValue<T> innerGet = gFinal.apply(src.getFirst());
+            if (innerGet == null)
+                throw new InternalException("Inner get in several was null");
+            return innerGet.getWithProgress(src.getSecond(), prog == null ? null : prog);
         };
     }
 }

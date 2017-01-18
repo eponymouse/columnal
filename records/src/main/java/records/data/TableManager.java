@@ -55,6 +55,14 @@ public class TableManager
             return null;
     }
 
+    public Table getSingleTableOrThrow(TableId tableId) throws UserException
+    {
+        @Nullable Table t = getSingleTableOrNull(tableId);
+        if (t == null)
+            throw new UserException("Could not find table \"" + tableId + "\"");
+        return t;
+    }
+
     // Generates a new unused ID and registers it.
     public synchronized TableId getNextFreeId(@UnknownInitialization(Object.class) Table table)
     {

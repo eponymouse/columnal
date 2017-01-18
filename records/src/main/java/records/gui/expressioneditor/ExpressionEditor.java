@@ -9,6 +9,7 @@ import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import records.data.ColumnId;
 import records.data.Table;
 import records.data.datatype.DataType;
+import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
@@ -68,6 +69,11 @@ public class ExpressionEditor extends Consecutive
         catch (UserException e)
         {
             Utility.log(e);
+            return Collections.emptyList();
+        }
+        catch (InternalException e)
+        {
+            Utility.report(e);
             return Collections.emptyList();
         }
     }
