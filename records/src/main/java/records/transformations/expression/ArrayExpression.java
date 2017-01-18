@@ -99,7 +99,7 @@ public class ArrayExpression extends Expression
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
         return IntStream.range(0, items.size()).mapToObj(i ->
-            items.get(i)._test_allMutationPoints().map(p -> p.<Function<Expression, Expression>>replaceSecond(newExp -> new ArrayExpression(Utility.replaceList(items, i, newExp))))).flatMap(s -> s);
+            items.get(i)._test_allMutationPoints().map(p -> p.<Function<Expression, Expression>>replaceSecond(newExp -> new ArrayExpression(Utility.replaceList(items, i, p.getSecond().apply(newExp)))))).flatMap(s -> s);
     }
 
     @Override

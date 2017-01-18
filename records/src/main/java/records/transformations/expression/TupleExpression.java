@@ -88,7 +88,7 @@ public class TupleExpression extends Expression
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
         return IntStream.range(0, members.size()).mapToObj(i ->
-            members.get(i)._test_allMutationPoints().map(p -> p.<Function<Expression, Expression>>replaceSecond(newExp -> new TupleExpression(Utility.replaceList(members, i, newExp))))).flatMap(s -> s);
+            members.get(i)._test_allMutationPoints().map(p -> p.<Function<Expression, Expression>>replaceSecond(newExp -> new TupleExpression(Utility.replaceList(members, i, p.getSecond().apply(newExp)))))).flatMap(s -> s);
     }
 
     @Override

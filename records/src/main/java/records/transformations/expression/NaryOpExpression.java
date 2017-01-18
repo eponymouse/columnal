@@ -70,7 +70,7 @@ public abstract class NaryOpExpression extends Expression
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
         return IntStream.range(0, expressions.size()).mapToObj(i ->
-            expressions.get(i)._test_allMutationPoints().map(p -> p.<Function<Expression, Expression>>replaceSecond(newExp -> copy(makeNullList(i, newExp))))).flatMap(s -> s);
+            expressions.get(i)._test_allMutationPoints().map(p -> new Pair<Expression, Function<Expression, Expression>>(p.getFirst(), (Expression exp) -> copy(makeNullList(i, p.getSecond().apply(exp)))))).flatMap(s -> s);
     }
 
     protected List<@Nullable Expression> makeNullList(int index, Expression newExp)

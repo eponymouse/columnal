@@ -83,9 +83,9 @@ public class PropTypecheck
         }
     }
 
-    @Property(trials = 2000)
+    @Property(trials = 1000)
     @SuppressWarnings("nullness")
-    public void propTypeCheckFail(@From(GenTypecheckFail.class) @When(seed=2077427454699149062L) GenTypecheckFail.TypecheckInfo src) throws InternalException, UserException
+    public void propTypeCheckFail(@From(GenTypecheckFail.class) GenTypecheckFail.TypecheckInfo src) throws InternalException, UserException
     {
         for (Expression expression : src.expressionFailures)
         {

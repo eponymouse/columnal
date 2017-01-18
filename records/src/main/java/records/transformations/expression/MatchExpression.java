@@ -509,7 +509,7 @@ public class MatchExpression extends Expression
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
         // TODO allow replacement within clauses
-        return expression._test_allMutationPoints().map(p -> p.replaceSecond(e -> new MatchExpression(e, Utility.<MatchClause, Function<MatchExpression, MatchClause>>mapList(clauses, c -> c::copy))));
+        return expression._test_allMutationPoints().map(p -> new Pair<Expression, Function<Expression, Expression>>(p.getFirst(), e -> new MatchExpression(p.getSecond().apply(e), Utility.<MatchClause, Function<MatchExpression, MatchClause>>mapList(clauses, c -> c::copy))));
     }
 
     @Override

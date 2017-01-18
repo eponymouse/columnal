@@ -21,6 +21,7 @@ import threadchecker.Tag;
 import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.ListEx;
 
 import javax.xml.crypto.Data;
 import java.util.ArrayList;
@@ -102,7 +103,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                             Pair<@Value Object, Expression> replacement = gen.makeOfType(newType);
                             // Special case: don't let it be empty array because it may type check
                             // against type even though we don't want it to:
-                            while (replacement.getFirst().equals(Collections.emptyList()))
+                            while (replacement.getFirst() instanceof ListEx && ((ListEx)replacement.getFirst()).size() == 0)
                             {
                                 replacement = gen.makeOfType(newType);
                             }
@@ -161,7 +162,14 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                     if (failedCopy == null)
                         return null;
                     else
-                        return p.getSecond().apply(failedCopy);
+                    {
+                        Expression failedFull = p.getSecond().apply(failedCopy);
+                        if (failedFull.toString().equals(valid.expression.toString()))
+                        {
+                            System.err.println("Error in GenTypecheckFail: converted expression to itself");
+                        }
+                        return failedFull;
+                    }
                 }
                 catch (InternalException | UserException e)
                 {
