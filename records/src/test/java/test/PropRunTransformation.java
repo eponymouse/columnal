@@ -31,6 +31,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.function.Predicate;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -91,19 +92,40 @@ public class PropRunTransformation
         int targetIndex = r.nextInt(target.getLength());
         @Value Object targetValue = target.getType().getCollapsed(targetIndex);
 
+        ComparisonOperator op;
+        Predicate<Integer> check;
+        switch (r.nextInt(4))
+        {
+            case 0:
+                op = ComparisonOperator.GREATER_THAN;
+                check = cmp -> cmp > 0;
+                break;
+            case 1:
+                op = ComparisonOperator.GREATER_THAN_OR_EQUAL_TO;
+                check = cmp -> cmp >= 0;
+                break;
+            case 2:
+                op = ComparisonOperator.LESS_THAN;
+                check = cmp -> cmp < 0;
+                break;
+            default:
+                op = ComparisonOperator.LESS_THAN_OR_EQUAL_TO;
+                check = cmp -> cmp <= 0;
+                break;
+        }
+
         // Then filter on <= that:
         Filter filter = new Filter(srcTable.mgr, null, srcTable.data.getId(),
             new ComparisonExpression(
                 Arrays.asList(
                     new ColumnReference(target.getName(), ColumnReferenceType.CORRESPONDING_ROW),
                     new CallExpression("element", new ColumnReference(target.getName(), ColumnReferenceType.WHOLE_COLUMN), new NumericLiteral(targetIndex + 1 /* User index */, null))
-                ), ImmutableList.of(ComparisonOperator.LESS_THAN_OR_EQUAL_TO)));
+                ), ImmutableList.of(op)));
         for (int row = 0; row < filter.getData().getLength(); row++)
         {
             @Value Object data = filter.getData().getColumn(target.getName()).getType().getCollapsed(row);
-            assertTrue("Value " + targetValue + " should be <= " + data + " (but wasn't)", Utility.compareValues(data, targetValue) <= 0);
+            assertTrue("Value " + targetValue + " should be " + op.saveOp()+ " " + data + " (but wasn't)", check.test(Utility.compareValues(data, targetValue)));
         }
-        //TODO vary comparison operator
 
         // TODO check the concat with inverted filter is the same data as original
     }
