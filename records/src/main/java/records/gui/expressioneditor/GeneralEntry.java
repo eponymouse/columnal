@@ -25,6 +25,7 @@ import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StringLiteral;
@@ -410,7 +411,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
     {
         if (status.get() == Status.COLUMN_REFERENCE)
         {
-            return new ColumnReference(new ColumnId(textField.getText()));
+            return new ColumnReference(new ColumnId(textField.getText()), ColumnReferenceType.CORRESPONDING_ROW);
         }
         else if (status.get() == Status.LITERAL)
         {

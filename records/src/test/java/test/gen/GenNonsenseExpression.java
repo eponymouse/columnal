@@ -21,6 +21,7 @@ import records.transformations.expression.BinaryOpExpression;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DivideExpression;
@@ -123,7 +124,7 @@ public class GenNonsenseExpression extends Generator<Expression>
             new NumericLiteral(r.nextBigInteger(160), null), // TODO gen unit
             new BooleanLiteral(r.nextBoolean()),
             new StringLiteral(TestUtil.generateColumnId(r).getOutput()),
-            new ColumnReference(TestUtil.generateColumnId(r)),
+            new ColumnReference(TestUtil.generateColumnId(r), ColumnReferenceType.CORRESPONDING_ROW),
             new VarExpression(TestUtil.generateVarName(r))
         ));
     }

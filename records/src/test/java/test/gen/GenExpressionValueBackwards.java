@@ -40,6 +40,7 @@ import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
@@ -62,6 +63,7 @@ import threadchecker.Tag;
 import utility.ExSupplier;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.ListEx;
 
 import java.math.BigDecimal;
 import java.math.BigInteger;
@@ -155,11 +157,13 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         return r.choose(distinctTypes);
     }
 
+    @SuppressWarnings("valuetype")
     private Expression make(DataType type, Object targetValue, int maxLevels) throws UserException, InternalException
     {
         return type.apply(new DataTypeVisitor<Expression>()
         {
             @Override
+            @OnThread(Tag.Simulation)
             public Expression number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 // We only do integers because beyond that the result isn't guaranteed, which
@@ -192,7 +196,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                     // Now add one more to make the difference:
                     BigInteger diff = (targetValue instanceof BigInteger ? (BigInteger)targetValue : BigInteger.valueOf(((Number)targetValue).longValue())).subtract(curTotal);
                     boolean add = r.nextBoolean();
-                    expressions.add(make(type, add ? diff : diff.negate(), maxLevels - 1));
+                    expressions.add(make(type, Utility.value(add ? diff : diff.negate()), maxLevels - 1));
                     ops.add(add ? Op.ADD : Op.SUBTRACT);
                     return new AddSubtractExpression(expressions, ops);
                 }, () -> {
@@ -219,6 +223,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Expression text() throws InternalException, UserException
             {
                 return termDeep(maxLevels, type, l(
@@ -228,6 +233,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Expression date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 List<ExpressionMaker> deep = new ArrayList<ExpressionMaker>();
@@ -329,6 +335,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Expression bool() throws InternalException, UserException
             {
                 boolean target = (Boolean)targetValue;
@@ -395,6 +402,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Expression tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 List<ExpressionMaker> terminals = new ArrayList<>();
@@ -421,6 +429,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Expression tuple(List<DataType> inner) throws InternalException, UserException
             {
                 @Value Object[] target = (@Value Object[]) targetValue;
@@ -432,12 +441,13 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Expression array(@Nullable DataType inner) throws InternalException, UserException
             {
                 if (inner == null)
                     return new ArrayExpression(ImmutableList.of());
                 @NonNull DataType innerFinal = inner;
-                List<@Value Object> target = (List<@Value Object>) targetValue;
+                @Value ListEx target = Utility.valueList(targetValue);
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 terminals.add(() -> new ArrayExpression(Utility.mapListExI(target, t -> make(innerFinal, t, 1))));
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
@@ -605,7 +615,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                 throw new UnimplementedException();
             }
         }));
-        return new ColumnReference(name);
+        return new ColumnReference(name, ColumnReferenceType.CORRESPONDING_ROW);
     }
 
     @FunctionalInterface
@@ -699,6 +709,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         });
     }
 
+    @OnThread(Tag.Simulation)
     private Expression termDeep(int maxLevels, DataType type, List<ExpressionMaker> terminals, List<ExpressionMaker> deeper) throws UserException, InternalException
     {
         if (maxLevels > 1 && r.nextInt(0, 5) == 0)
@@ -713,6 +724,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             return r.choose(deeper).make();
     }
 
+    @OnThread(Tag.Simulation)
     private Expression makeMatch(int maxLevels, ExSupplier<Expression> makeCorrectOutcome, ExSupplier<Expression> makeOtherOutcome) throws InternalException, UserException
     {
         DataType t = makeType(r);
@@ -781,6 +793,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         }
     }
 
+    @OnThread(Tag.Simulation)
     private List<Function<MatchExpression, Pattern>> makeNonMatchingPatterns(final int maxLevels, final DataType t, @Value Object actual)
     {
         class CantMakeNonMatching extends RuntimeException {}

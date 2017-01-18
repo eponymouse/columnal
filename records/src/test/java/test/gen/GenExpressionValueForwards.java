@@ -38,6 +38,7 @@ import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
@@ -441,6 +442,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Pair<@Value Object, Expression> bool() throws InternalException, UserException
             {
                 return termDeep(maxLevels, type, l(() -> columnRef(type), () ->
@@ -642,7 +644,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
             }
         });
         columns.add(pair.getSecond());
-        return pair.replaceSecond(new ColumnReference(name));
+        return pair.replaceSecond(new ColumnReference(name, ColumnReferenceType.CORRESPONDING_ROW));
     }
 
     @FunctionalInterface

@@ -24,6 +24,8 @@ import records.transformations.function.ToDateTimeZone;
 import records.transformations.function.ToTime;
 import test.gen.GenDate;
 import test.gen.GenZoneId;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
@@ -59,6 +61,7 @@ public class PropDateFunctions
     }
 
     @Property
+    @OnThread(Tag.Simulation)
     public void testStringToDate(@From(GenDate.class) LocalDate src) throws Throwable
     {
         // Test with string input:
@@ -68,6 +71,7 @@ public class PropDateFunctions
     }
 
     @Property
+    @OnThread(Tag.Simulation)
     public void testStringToTime(LocalTime src) throws Throwable
     {
         // Test with string input:
@@ -77,6 +81,7 @@ public class PropDateFunctions
     }
 
     @Property
+    @OnThread(Tag.Simulation)
     public void testStringToDateTime(@From(GenDate.class) LocalDate date, LocalTime time) throws Throwable
     {
         LocalDateTime src = LocalDateTime.of(date, time);
@@ -93,6 +98,7 @@ public class PropDateFunctions
     }
 
     @Property
+    @OnThread(Tag.Simulation)
     public void testStringToDateTimeZone(@From(GenDate.class) LocalDate date, LocalTime time, @From(GenZoneId.class) ZoneId zone) throws Throwable
     {
         ZonedDateTime src = ZonedDateTime.of(date, time, zone);
@@ -103,6 +109,7 @@ public class PropDateFunctions
     }
 
     @Test
+    @OnThread(Tag.Simulation)
     public void testFromString() throws Throwable
     {
         checkDate(LocalDate.of(2016, 12, 01), "2016-12-01");
@@ -142,6 +149,7 @@ public class PropDateFunctions
         checkDateTimes();
     }
 
+    @OnThread(Tag.Simulation)
     private void checkDateTimes() throws Throwable
     {
         for (Pair<LocalTime, String> time : times)
@@ -157,33 +165,39 @@ public class PropDateFunctions
         }
     }
 
+    @OnThread(Tag.Simulation)
     private void checkTime(LocalTime of, String src) throws Throwable
     {
         times.add(new Pair<>(of, src));
         assertEquals(of, strToTime(src));
     }
 
+    @OnThread(Tag.Simulation)
     private void checkDate(LocalDate of, String src) throws Throwable
     {
         dates.add(new Pair<>(of, src));
         assertEquals(of, strToDate(src));
     }
 
+    @OnThread(Tag.Simulation)
     private void checkDateTime(LocalDateTime of, String src) throws Throwable
     {
         assertEquals(of, runFunction1(v(src), DataType.TEXT, new ToDateTime()));
     }
 
+    @OnThread(Tag.Simulation)
     private void checkDateTimeZone(ZonedDateTime of, String src) throws Throwable
     {
         assertEquals(of, runFunction1(v(src), DataType.TEXT, new ToDateTimeZone()));
     }
 
+    @OnThread(Tag.Simulation)
     private Object strToTime(String src) throws Throwable
     {
         return runFunction1(v(src), DataType.TEXT, new ToTime());
     }
 
+    @OnThread(Tag.Simulation)
     private Object strToDate(String src) throws Throwable
     {
         return runFunction1(v(src), DataType.TEXT, new ToDate());
@@ -191,6 +205,7 @@ public class PropDateFunctions
 
     // Tests single numeric input, numeric output function
     @SuppressWarnings("nullness")
+    @OnThread(Tag.Simulation)
     private Object runFunction1(@Value Object src, DataType srcType, FunctionDefinition function) throws InternalException, UserException, Throwable
     {
         try

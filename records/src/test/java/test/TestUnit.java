@@ -19,6 +19,8 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.AsType;
 import records.transformations.function.FunctionInstance;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
@@ -133,6 +135,7 @@ public class TestUnit
     }
 
     @Test
+    @OnThread(Tag.Simulation)
     public void testAs() throws Throwable
     {
         test("3.2808399", "foot", "1", "m");
@@ -149,6 +152,7 @@ public class TestUnit
         //TODO add failure tests, like converting scalar to/from units, or unrelated units, or m/s to m/s^2 etc
     }
     @Test
+    @OnThread(Tag.Simulation)
     public void testAsFail()
     {
         assertThrows(UserException.class, () -> test_("1", "m", "1", "s"));
@@ -159,6 +163,7 @@ public class TestUnit
         assertThrows(UserException.class, () -> test_("1", "m", "1", "1"));
     }
 
+    @OnThread(Tag.Simulation)
     private void test(String expected, String destUnit, String src, String srcUnit) throws Throwable
     {
         test_(expected, destUnit, src, srcUnit);
@@ -166,6 +171,7 @@ public class TestUnit
     }
 
     @SuppressWarnings("nullness")
+    @OnThread(Tag.Simulation)
     private void test_(String expected, String destUnit, String src, String srcUnit) throws InternalException, UserException, Throwable
     {
         try

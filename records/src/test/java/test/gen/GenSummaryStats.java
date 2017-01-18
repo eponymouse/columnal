@@ -12,6 +12,7 @@ import records.transformations.SummaryStatistics;
 import records.transformations.SummaryStatistics.SummaryType;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
+import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import test.DummyManager;
 import test.TestUtil;
 import test.TestUtil.Transformation_Mgr;
@@ -40,7 +41,7 @@ public class GenSummaryStats extends Generator<Transformation_Mgr>
         Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
         List<ColumnId> splitBy = TestUtil.makeList(sourceOfRandomness, 0, 4, () -> TestUtil.generateColumnId(sourceOfRandomness));
         Map<ColumnId, SummaryType> summaries = TestUtil.makeMap(sourceOfRandomness, 1, 5, () -> TestUtil.generateColumnId(sourceOfRandomness),
-            () -> new SummaryType(new CallExpression("count", new ColumnReference(TestUtil.generateColumnId(sourceOfRandomness)))));
+            () -> new SummaryType(new CallExpression("count", new ColumnReference(TestUtil.generateColumnId(sourceOfRandomness), ColumnReferenceType.WHOLE_COLUMN))));
         try
         {
             DummyManager mgr = new DummyManager();

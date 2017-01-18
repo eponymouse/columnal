@@ -208,6 +208,7 @@
                         <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
                         <annotationProcessor>org.checkerframework.checker.interning.InterningChecker</annotationProcessor>
                         <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor>
+                        <annotationProcessor>annotation.userindex.UserIndexChecker</annotationProcessor>
                     </annotationProcessors>
                     <compilerArgs>
                         <!-- location of the annotated JDK, which comes from a Maven dependency -->

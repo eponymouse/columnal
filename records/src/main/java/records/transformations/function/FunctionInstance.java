@@ -4,6 +4,8 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 import java.util.List;
 
@@ -12,5 +14,6 @@ import java.util.List;
  */
 public abstract class FunctionInstance
 {
+    @OnThread(Tag.Simulation)
     public abstract @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params) throws UserException, InternalException;
 }

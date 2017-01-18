@@ -7,6 +7,9 @@ import java.util.List;
 import annotation.qual.Value;
 import org.junit.Test;
 import records.error.InternalException;
+import records.error.UserException;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Utility;
 import static org.junit.Assert.assertEquals;
 
@@ -16,7 +19,8 @@ import static org.junit.Assert.assertEquals;
 public class TestCompare
 {
     @Test
-    public void testCompareList() throws InternalException
+    @OnThread(Tag.Simulation)
+    public void testCompareList() throws InternalException, UserException
     {
         equal(o(), o());
         less(o(), o(s("hi")));
@@ -67,14 +71,16 @@ public class TestCompare
     {
         return Arrays.asList(os);
     }
-    
-    private static void equal(List<@Value Object> a, List<@Value Object> b) throws InternalException
+
+    @OnThread(Tag.Simulation)
+    private static void equal(List<@Value Object> a, List<@Value Object> b) throws InternalException, UserException
     {
         assertEquals(0, Utility.compareLists(a, b));
         assertEquals(0, Utility.compareLists(b, a));
     }
 
-    private static void less(List<@Value Object> a, List<@Value Object> b) throws InternalException
+    @OnThread(Tag.Simulation)
+    private static void less(List<@Value Object> a, List<@Value Object> b) throws InternalException, UserException
     {
         assertEquals(-1, Utility.compareLists(a, b));
         assertEquals(1, Utility.compareLists(b, a));

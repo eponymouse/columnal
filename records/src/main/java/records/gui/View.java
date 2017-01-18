@@ -178,7 +178,8 @@ public class View extends Pane
         }
     }
 
-    @SuppressWarnings({"initialization", "keyfor", "interning", "valuetype"})
+    // The type of the listener really throws off the checkers so suppress them all:
+    @SuppressWarnings({"initialization", "keyfor", "interning", "userindex", "valuetype"})
     public View() throws InternalException, UserException
     {
         tableManager = new TableManager();

@@ -34,6 +34,7 @@
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
         <option name="stubs" value="C:\Users\neil\IdeaProjects\records\records/stubs" />
+        <processor name="annotation.userindex.UserIndexChecker" />
         <processor name="annotation.ValueTypeChecker" />
         <processor name="org.checkerframework.checker.interning.InterningChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />

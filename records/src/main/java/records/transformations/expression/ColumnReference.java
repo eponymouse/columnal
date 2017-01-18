@@ -1,7 +1,9 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -19,8 +21,12 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.loadsave.OutputBuilder;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.Pair;
+import utility.Utility;
+import utility.Utility.ListEx;
 
 import java.util.List;
 import java.util.Map;
@@ -33,26 +39,45 @@ import java.util.stream.Stream;
  */
 public class ColumnReference extends Expression
 {
+    public static enum ColumnReferenceType
+    {
+        // Column is in same table as referring item, use the same row as that item
+        // E.g. if doing a transform, score_percent = score / 100;
+        CORRESPONDING_ROW,
+
+        // Column may or may not be in same table, use whole column as item,
+        // e.g. if normalising, cost = cost {CORRESPONDING_ROW}/sum(cost{WHOLE_COLUMN})
+        WHOLE_COLUMN
+    }
     private final @Nullable TableId tableName;
     private final ColumnId columnName;
     private @MonotonicNonNull Column column;
+    private final ColumnReferenceType referenceType;
 
-    public ColumnReference(@Nullable TableId tableName, ColumnId columnName)
+    public ColumnReference(@Nullable TableId tableName, ColumnId columnName, ColumnReferenceType referenceType)
     {
         this.tableName = tableName;
         this.columnName = columnName;
+        this.referenceType = referenceType;
     }
 
-    public ColumnReference(ColumnId columnName)
+    public ColumnReference(ColumnId columnName, ColumnReferenceType type)
     {
-        this(null, columnName);
+        this(null, columnName, type);
     }
 
     @Override
     public DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
         column = data.getColumn(columnName);
-        return column.getType();
+        switch (referenceType)
+        {
+            case CORRESPONDING_ROW:
+                return column.getType();
+            case WHOLE_COLUMN:
+                return DataType.array(column.getType());
+        }
+        throw new InternalException("Unknown reference type: " + referenceType);
     }
 
     @Override
@@ -60,7 +85,30 @@ public class ColumnReference extends Expression
     {
         if (column == null)
             throw new InternalException("Attempting to fetch value despite type check failure");
-        return column.getType().getCollapsed(rowIndex);
+        switch (referenceType)
+        {
+            case CORRESPONDING_ROW:
+                return column.getType().getCollapsed(rowIndex);
+            case WHOLE_COLUMN:
+                @NonNull Column columnFinal = column;
+                return Utility.value(new ListEx() {
+
+                    @Override
+                    @OnThread(Tag.Simulation)
+                    public int size() throws InternalException, UserException
+                    {
+                        return columnFinal.getLength();
+                    }
+
+                    @Override
+                    @OnThread(Tag.Simulation)
+                    public @Value Object get(int index) throws UserException, InternalException
+                    {
+                        return columnFinal.getType().getCollapsed(index);
+                    }
+                });
+        }
+        throw new InternalException("Unknown reference type: " + referenceType);
     }
 
     @Override

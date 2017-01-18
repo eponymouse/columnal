@@ -52,6 +52,7 @@ import utility.Utility;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -465,26 +466,34 @@ public class Sort extends Transformation
                 }
             }
             // Sort it to get result:
-            Collections.<List<@Value Object>>sort(data, (List<@Value Object> a, List<@Value Object> b) -> {
-                for (Column c : sortBy)
+            Collections.<List<@Value Object>>sort(data, new Comparator<List<@Value Object>>()
+            {
+                @Override
+                @OnThread(value = Tag.Simulation, ignoreParent = true)
+                public int compare(List<@Value Object> a, List<@Value Object> b)
                 {
-                    int i = exampleColumns.indexOf(c);
-                    if (i != -1)
+                    for (Column c : sortBy)
                     {
-                        try
+                        int i = exampleColumns.indexOf(c);
+                        if (i != -1)
                         {
-                            int cmp = Utility.compareValues(a.get(i), b.get(i));
-                            if (cmp != 0)
-                                return cmp;
-                        }
-                        catch (InternalException e)
-                        {
-                            //Report this?
-                            Utility.report(e);
+                            try
+                            {
+                                int cmp = Utility.compareValues(a.get(i), b.get(i));
+                                if (cmp != 0)
+                                    return cmp;
+                            } catch (InternalException e)
+                            {
+                                //Report this?
+                                Utility.report(e);
+                            } catch (UserException e)
+                            {
+                                Utility.log(e);
+                            }
                         }
                     }
+                    return 0;
                 }
-                return 0;
             });
             List<List<@Value Object>> unsorted = new ArrayList<>();
             if (data.size() == 4)

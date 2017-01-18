@@ -34,40 +34,45 @@ public class ComparisonExpression extends NaryOpExpression
     {
         LESS_THAN {
             @Override
-            public boolean comparisonTrue(@Value Object a, @Value Object b)
+            @OnThread(Tag.Simulation)
+            public boolean comparisonTrue(@Value Object a, @Value Object b) throws InternalException, UserException
             {
-                return Utility.compareNumbers(a, b) < 0;
+                return Utility.compareValues(a, b) < 0;
             }
             public String saveOp() { return "<"; }
         },
         LESS_THAN_OR_EQUAL_TO {
             @Override
-            public boolean comparisonTrue(@Value Object a, @Value Object b)
+            @OnThread(Tag.Simulation)
+            public boolean comparisonTrue(@Value Object a, @Value Object b) throws InternalException, UserException
             {
-                return Utility.compareNumbers(a, b) <= 0;
+                return Utility.compareValues(a, b) <= 0;
             }
             public String saveOp() { return "<="; }
         },
         GREATER_THAN {
             @Override
-            public boolean comparisonTrue(@Value Object a, @Value Object b)
+            @OnThread(Tag.Simulation)
+            public boolean comparisonTrue(@Value Object a, @Value Object b) throws InternalException, UserException
             {
-                return Utility.compareNumbers(a, b) > 0;
+                return Utility.compareValues(a, b) > 0;
             }
 
             public String saveOp() { return ">"; }
         },
         GREATER_THAN_OR_EQUAL_TO {
             @Override
-            public boolean comparisonTrue(@Value Object a, @Value Object b)
+            @OnThread(Tag.Simulation)
+            public boolean comparisonTrue(@Value Object a, @Value Object b) throws InternalException, UserException
             {
-                return Utility.compareNumbers(a, b) >= 0;
+                return Utility.compareValues(a, b) >= 0;
             }
 
             public String saveOp() { return ">="; }
         };
 
-        public abstract boolean comparisonTrue(@Value Object a, @Value Object b);
+        @OnThread(Tag.Simulation)
+        public abstract boolean comparisonTrue(@Value Object a, @Value Object b) throws InternalException, UserException;
         public abstract String saveOp();
 
         public static ComparisonOperator parse(String text) throws UserException

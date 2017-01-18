@@ -94,7 +94,7 @@ public class ToTime extends ToTemporalFunction
             int hour = Utility.requireInteger(simpleParams.get(0));
             int minute = Utility.requireInteger(simpleParams.get(1));
             Number second = (Number)simpleParams.get(2);
-            return LocalTime.of(hour, minute, Utility.requireInteger(Utility.getIntegerPart(second)), Utility.getFracPart(second, 9).intValue());
+            return LocalTime.of(hour, minute, Utility.requireInteger(Utility.value(Utility.getIntegerPart(second))), Utility.getFracPart(second, 9).intValue());
         }
     }
 }

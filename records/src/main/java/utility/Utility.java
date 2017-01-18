@@ -28,6 +28,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import annotation.qual.UnknownIfValue;
+import annotation.userindex.qual.UserIndex;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
@@ -105,6 +106,17 @@ public class Utility
     public static <T, R> ImmutableList<@NonNull R> mapListExI(List<@NonNull T> list, ExFunction<@NonNull T, @NonNull R> func) throws InternalException, UserException
     {
         return ImmutableList.copyOf(mapListEx(list, func));
+    }
+
+    @OnThread(Tag.Simulation)
+    public static <R> ImmutableList<@NonNull R> mapListExI(ListEx list, ExFunction<@NonNull @Value Object, @NonNull R> func) throws InternalException, UserException
+    {
+        ArrayList<@NonNull R> r = new ArrayList<>(list.size());
+        for (int i = 0; i < list.size(); i++)
+        {
+            r.add(func.apply(list.get(i)));
+        }
+        return ImmutableList.copyOf(r);
     }
 
     public static <T, R> ImmutableList<R> mapListExI_Index(List<T> list, ExBiFunction<Integer, T, R> func) throws InternalException, UserException
@@ -185,7 +197,8 @@ public class Utility
     }
 
     @Pure
-    public static int compareLists(List<@NonNull @Value ?> a, List<@NonNull @Value ?> b) throws InternalException
+    @OnThread(Tag.Simulation)
+    public static int compareLists(List<@NonNull @Value ?> a, List<@NonNull @Value ?> b) throws InternalException, UserException
     {
         return compareLists(a, b, null);
     }
@@ -209,7 +222,8 @@ public class Utility
      * see that method for more details.
      */
     @Pure
-    public static int compareLists(List<@NonNull @Value ?> a, List<@NonNull @Value ?> b, @Nullable BigDecimal epsilon) throws InternalException
+    @OnThread(Tag.Simulation)
+    public static int compareLists(List<@NonNull @Value ?> a, List<@NonNull @Value ?> b, @Nullable BigDecimal epsilon) throws InternalException, UserException
     {
         for (int i = 0; i < a.size(); i++)
         {
@@ -228,18 +242,43 @@ public class Utility
             return -1; // B must have been longer
     }
 
-    public static int compareValues(@Value Object ax, @Value Object bx) throws InternalException
+    @Pure
+    @OnThread(Tag.Simulation)
+    public static int compareLists(ListEx a, ListEx b, @Nullable BigDecimal epsilon) throws InternalException, UserException
+    {
+        for (int i = 0; i < a.size(); i++)
+        {
+            if (i >= b.size())
+                return 1; // A was larger
+            Object ax = a.get(i);
+            Object bx = b.get(i);
+            int cmp = compareValues(ax, bx, epsilon);
+            if (cmp != 0)
+                return cmp;
+
+        }
+        if (a.size() == b.size())
+            return 0; // Same
+        else
+            return -1; // B must have been longer
+    }
+
+    @OnThread(Tag.Simulation)
+    public static int compareValues(@Value Object ax, @Value Object bx) throws InternalException, UserException
     {
         return compareValues(ax, bx, null);
     }
 
-    public static int compareValues(@Value Object ax, @Value Object bx, @Nullable BigDecimal epsilon) throws InternalException
+    @OnThread(Tag.Simulation)
+    public static int compareValues(@Value Object ax, @Value Object bx, @Nullable BigDecimal epsilon) throws InternalException, UserException
     {
         int cmp;
         if (ax instanceof Number)
             cmp = compareNumbers(ax, bx, epsilon);
         else if (ax instanceof List)
             cmp = compareLists((List<@NonNull @Value ?>)ax, (List<@NonNull @Value ?>)bx, epsilon);
+        else if (ax instanceof ListEx)
+            cmp = compareLists((ListEx)ax, (ListEx)bx, epsilon);
         else if (ax instanceof Comparable)
             cmp = ((Comparable<Object>)ax).compareTo(bx);
         else if (ax instanceof TaggedValue)
@@ -583,16 +622,16 @@ public class Utility
         });
     }
 
-    public static int requireInteger(Object o) throws UserException, InternalException
+    public static @Value int requireInteger(@Value Object o) throws UserException, InternalException
     {
-        return withNumber(o, l -> {
+        return Utility.<@Value Integer>withNumber(o, l -> {
             if (l.longValue() != l.intValue())
                 throw new UserException("Number too large: " + l);
-            return l.intValue();
+            return Utility.value(l.intValue());
         }, bi -> {
             try
             {
-                return bi.intValueExact();
+                return Utility.value(bi.intValueExact());
             }
             catch (ArithmeticException e)
             {
@@ -601,7 +640,7 @@ public class Utility
         }, bd -> {
             try
             {
-                return bd.intValueExact();
+                return Utility.value(bd.intValueExact());
             }
             catch (ArithmeticException e)
             {
@@ -722,6 +761,28 @@ public class Utility
         r.addAll(members);
         r.set(replaceIndex, newValue);
         return ImmutableList.copyOf(r);
+    }
+
+    @SuppressWarnings("userindex")
+    public static @UserIndex @Value int userIndex(@Value Object value) throws InternalException, UserException
+    {
+        @Value int integer = requireInteger(value);
+        return integer;
+    }
+
+    @SuppressWarnings("valuetype")
+    public static @Value ListEx valueList(@Value Object value) throws InternalException
+    {
+        if (!(value instanceof ListEx))
+            throw new InternalException("Unexpected type problem: expected list but found " + value.getClass());
+        return (ListEx)value;
+    }
+
+    @OnThread(Tag.Simulation)
+    public static @Value Object getAtIndex(@Value ListEx objects, @UserIndex int userIndex) throws UserException, InternalException
+    {
+        // User index is one-based:
+        return objects.get(userIndex - 1);
     }
 
     public static class ReadState
@@ -1100,9 +1161,35 @@ public class Utility
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value ImmutableList<@Value Object> value(@UnknownIfValue List<@Value Object> list)
+    public static @Value ListEx value(@UnknownIfValue ListEx list)
     {
-        return ImmutableList.copyOf(list);
+        return list;
+    }
+
+    @SuppressWarnings("valuetype")
+    public static @Value ListEx value(@UnknownIfValue List<@Value Object> list)
+    {
+        return new ListEx()
+        {
+            @Override
+            public int size() throws InternalException, UserException
+            {
+                return list.size();
+            }
+
+            @Override
+            public @Value Object get(int index) throws InternalException, UserException
+            {
+                return list.get(index);
+            }
+        };
+    }
+
+    @OnThread(Tag.Simulation)
+    public static abstract interface ListEx
+    {
+        public int size() throws InternalException, UserException;
+        public @Value Object get(int index) throws InternalException, UserException;
     }
 
     // Mainly, this method is to avoid having to cast to ListChangeListener to disambiguate

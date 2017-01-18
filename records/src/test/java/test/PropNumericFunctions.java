@@ -22,6 +22,8 @@ import records.transformations.function.FunctionInstance;
 import records.transformations.function.Round;
 import test.gen.GenNumber;
 import test.gen.GenUnit;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
@@ -49,6 +51,7 @@ public class PropNumericFunctions
 
 
     @Property
+    @OnThread(Tag.Simulation)
     public void propAbs(@From(GenNumber.class) Number src, @From(GenUnit.class) Unit u) throws Throwable
     {
         BigDecimal absed = Utility.toBigDecimal(runNumericFunction(u.toString(), src, u.toString(), new Absolute()));
@@ -59,6 +62,7 @@ public class PropNumericFunctions
     }
 
     @Property
+    @OnThread(Tag.Simulation)
     public void propRound(@From(GenNumber.class) Number src, @From(GenUnit.class) Unit u) throws Throwable
     {
         BigDecimal rounded = Utility.toBigDecimal(runNumericFunction(u.toString(), src, u.toString(), new Round()));
@@ -78,6 +82,7 @@ public class PropNumericFunctions
 
     // Tests single numeric input, numeric output function
     @SuppressWarnings("nullness")
+    @OnThread(Tag.Simulation)
     private Number runNumericFunction(String expectedUnit, Number src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
     {
         try
