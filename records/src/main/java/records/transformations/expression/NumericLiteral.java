@@ -18,7 +18,6 @@ import utility.Pair;
 import utility.Utility;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -51,8 +50,6 @@ public class NumericLiteral extends Literal
     {
         if (value instanceof BigDecimal)
             return Optional.of(Rational.ofBigDecimal((BigDecimal) value));
-        else if (value instanceof BigInteger)
-            return Optional.of(Rational.ofBigInteger((BigInteger) value));
         else
             return Optional.of(Rational.of(value.longValue()));
     }
@@ -69,6 +66,8 @@ public class NumericLiteral extends Literal
         String num;
         if (value instanceof Double)
             num = String.format("%f", value.doubleValue());
+        else if (value instanceof BigDecimal)
+            num = ((BigDecimal)value).toPlainString();
         else
             num =  value.toString();
         if (unit == null || unit.equals(Unit.SCALAR))
@@ -83,8 +82,6 @@ public class NumericLiteral extends Literal
         // TODO handle non-integers properly
         if (value instanceof BigDecimal)
             return formulaManager.getIntegerFormulaManager().makeNumber((BigDecimal)value);
-        if (value instanceof BigInteger)
-            return formulaManager.getIntegerFormulaManager().makeNumber((BigInteger)value);
         else
             return formulaManager.getIntegerFormulaManager().makeNumber(value.longValue());
     }

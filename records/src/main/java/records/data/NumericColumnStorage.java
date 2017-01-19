@@ -19,7 +19,7 @@ import utility.ExBiFunction;
 import utility.Utility;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -57,8 +57,6 @@ import java.util.List;
  */
 public class NumericColumnStorage implements ColumnStorage<Number>
 {
-    private static final int MAX_TAGS = 1_000_000;
-    private final int NUM_TAGS;
     private int filled = 0;
     // We only use bytes, shorts, ints if all the numbers fit.
     private byte @Nullable [] bytes = new byte[8];
@@ -67,20 +65,17 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     // We use longs if most of them fit.  Long.MAX_VALUE means consult bigIntegers array.
     // Long.MIN_VALUE means consult bigDecimals array.
     private long @Nullable [] longs;
-    private final byte BYTE_MIN;
+    private static final byte BYTE_MIN = Byte.MIN_VALUE;
     private static final byte BYTE_MAX = Byte.MAX_VALUE;
-    private final short SHORT_MIN;
+    private static final short SHORT_MIN = Short.MIN_VALUE;
     private static final short SHORT_MAX = Short.MAX_VALUE;
-    private final int INT_MIN;
+    private static final int INT_MIN = Integer.MIN_VALUE;
     private static final int INT_MAX = Integer.MAX_VALUE;
-    private static final long SEE_BIGINT = Long.MIN_VALUE;
-    private static final long SEE_BIGDEC = Long.MIN_VALUE+1;
-    private final long LONG_MIN;
+    private static final long SEE_BIGDEC = Long.MIN_VALUE;
+    private static final long LONG_MIN = Long.MIN_VALUE + 1;
     private static final long LONG_MAX = Long.MAX_VALUE;
-    private @Nullable BigInteger @Nullable [] bigIntegers;
     // If any are non-integer, we use bigDecimals
     private @Nullable BigDecimal @Nullable [] bigDecimals;
-    private int numericTag;
     @MonotonicNonNull
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private DataTypeValue dataType;
@@ -93,41 +88,15 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         this(displayInfo, null);
     }
 
-    public NumericColumnStorage(NumberInfo displayInfo, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet)
-    {
-        this(displayInfo, 0, -1, beforeGet);
-    }
-
     public NumericColumnStorage()
     {
-        this(NumberInfo.DEFAULT, 0, -1, null);
+        this(NumberInfo.DEFAULT, null);
     }
 
-    public NumericColumnStorage(int numberOfTags) throws InternalException
+    public NumericColumnStorage(NumberInfo displayInfo, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet)
     {
-        this(numberOfTags, -1, NumberInfo.DEFAULT);
-        if (numberOfTags > MAX_TAGS)
-            throw new InternalException("Tried to create numeric column with " + numberOfTags + " tags");
-    }
-
-    public NumericColumnStorage(int numberOfTags, int tagForNumeric, NumberInfo displayInfo) throws InternalException
-    {
-        this(displayInfo, numberOfTags, tagForNumeric, null);
-        if (numberOfTags > MAX_TAGS)
-            throw new InternalException("Tried to create numeric column with " + numberOfTags + " tags");
-    }
-
-    private NumericColumnStorage(NumberInfo displayInfo, int numberOfTags, int tagForNumeric, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet)
-    {
-        this.numericTag = tagForNumeric;
         this.displayInfo = displayInfo;
         this.beforeGet = beforeGet;
-
-        NUM_TAGS = numberOfTags;
-        BYTE_MIN = (int)Byte.MIN_VALUE + numberOfTags >= (int)Byte.MAX_VALUE ? Byte.MAX_VALUE : (byte)((int)Byte.MIN_VALUE + numberOfTags);
-        SHORT_MIN = (int)Short.MIN_VALUE + numberOfTags >= (int)Short.MAX_VALUE ? Short.MAX_VALUE : (short)((int)Short.MIN_VALUE + numberOfTags);
-        INT_MIN = Integer.MIN_VALUE + numberOfTags;
-        LONG_MIN = Long.MIN_VALUE + 2 + numberOfTags; // Allocate space for SEE_BIGINT and SEE_BIGDEC
     }
 
     public void addRead(String number) throws InternalException, UserException
@@ -161,17 +130,10 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             // but is Long.MIN_VALUE or close by, as they are special values.
         }
         catch (NumberFormatException ex) { }
-        // Not a long; is it a big integer?
-        try
-        {
-            addBigInteger(new BigInteger(number));
-            return;
-        }
-        catch (NumberFormatException ex) { }
         // Ok, last try: big decimal (and rethrow if not)
         try
         {
-            addBigDecimal(new BigDecimal(number));
+            addBigDecimal(new BigDecimal(number, MathContext.DECIMAL128));
         }
         catch (NumberFormatException e)
         {
@@ -198,16 +160,8 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         if (bytes != null)
         {
             shorts = new short[bytes.length];
-            if (NUM_TAGS > 0)
-            {
-                for (int i = 0; i < shorts.length; i++)
-                    shorts[i] = byteToShort(bytes[i]);
-            }
-            else
-            {
-                for (int i = 0; i < shorts.length; i++)
-                    shorts[i] = bytes[i];
-            }
+            for (int i = 0; i < shorts.length; i++)
+                shorts[i] = bytes[i];
             bytes = null;
         }
         else if (shorts == null)
@@ -245,31 +199,15 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             if (bytes != null)
             {
                 ints = new int[bytes.length];
-                if (NUM_TAGS > 0)
-                {
-                    for (int i = 0; i < ints.length; i++)
-                        ints[i] = shortToInt(byteToShort(bytes[i]));
-                }
-                else
-                {
-                    for (int i = 0; i < ints.length; i++)
-                        ints[i] = bytes[i];
-                }
+                for (int i = 0; i < ints.length; i++)
+                    ints[i] = bytes[i];
                 bytes = null;
             }
             else if (shorts != null)
             {
                 ints = new int[shorts.length];
-                if (NUM_TAGS > 0)
-                {
-                    for (int i = 0; i < ints.length; i++)
-                        ints[i] = shortToInt(shorts[i]);
-                }
-                else
-                {
-                    for (int i = 0; i < ints.length; i++)
-                        ints[i] = shorts[i];
-                }
+                for (int i = 0; i < ints.length; i++)
+                    ints[i] = shorts[i];
                 shorts = null;
             }
             else
@@ -290,53 +228,29 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     {
         // If it overlaps our special values but isn't special, store as biginteger:
         if (!special && (n < LONG_MIN))
-            addBigInteger(BigInteger.valueOf(n));
+            addBigDecimal(BigDecimal.valueOf(n));
 
         if (longs == null)
         {
             if (bytes != null)
             {
                 longs = new long[bytes.length];
-                if (NUM_TAGS > 0)
-                {
-                    for (int i = 0; i < longs.length; i++)
-                        longs[i] = intToLong(shortToInt(byteToShort(bytes[i])));
-                }
-                else
-                {
-                    for (int i = 0; i < longs.length; i++)
-                        longs[i] = bytes[i];
-                }
+                for (int i = 0; i < longs.length; i++)
+                    longs[i] = bytes[i];
                 bytes = null;
             }
             else if (shorts != null)
             {
                 longs = new long[shorts.length];
-                if (NUM_TAGS > 0)
-                {
-                    for (int i = 0; i < longs.length; i++)
-                        longs[i] = intToLong(shortToInt(shorts[i]));
-                }
-                else
-                {
-                    for (int i = 0; i < longs.length; i++)
-                        longs[i] = shorts[i];
-                }
+                for (int i = 0; i < longs.length; i++)
+                    longs[i] = shorts[i];
                 shorts = null;
             }
             else if (ints != null)
             {
                 longs = new long[ints.length];
-                if (NUM_TAGS > 0)
-                {
-                    for (int i = 0; i < longs.length; i++)
-                        longs[i] = intToLong(ints[i]);
-                }
-                else
-                {
-                    for (int i = 0; i < longs.length; i++)
-                        longs[i] = ints[i];
-                }
+                for (int i = 0; i < longs.length; i++)
+                    longs[i] = ints[i];
                 ints = null;
             }
             else
@@ -348,27 +262,6 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             longs = Arrays.copyOf(longs, increaseLength(longs.length));
         }
         longs[filled++] = n;
-    }
-
-    @EnsuresNonNull({"longs", "bigIntegers"})
-    private final void addBigInteger(BigInteger bigInteger) throws InternalException
-    {
-        // This will convert to LONG_OR_BIG if needed:
-        addLong(SEE_BIGINT, true);
-
-        if (bigIntegers == null)
-        {
-            bigIntegers = new BigInteger[longs.length];
-        }
-
-        // Subtract one because addLong already increased it:
-        if (filled - 1 >= bigIntegers.length)
-        {
-            bigIntegers = Arrays.copyOf(bigIntegers, increaseLength(bigIntegers.length));
-        }
-        bigIntegers[filled - 1] = bigInteger;
-
-        assert longs != null : "@AssumeAssertion(nullness)";
     }
 
     @EnsuresNonNull({"longs", "bigDecimals"})
@@ -457,15 +350,6 @@ public class NumericColumnStorage implements ColumnStorage<Number>
                     throw new InternalException("SEE_BIGDEC but null BigDecimal");
                 return bigDecimal;
             }
-            else if (longs[index] == SEE_BIGINT)
-            {
-                if (bigIntegers == null)
-                    throw new InternalException("SEE_BIGINT but null BigInteger array");
-                @Nullable BigInteger bigInteger = bigIntegers[index];
-                if (bigInteger == null)
-                    throw new InternalException("SEE_BIGINT but null BigInteger");
-                return bigInteger;
-            }
             else
                 return longs[index];
         }
@@ -476,19 +360,14 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     public int getTag(int index) throws InternalException
     {
         checkRange(index);
-
         // Guessing here to order most likely cases:
         if (bytes != null)
-            return bytes[index] >= BYTE_MIN ? numericTag : bytes[index] - Byte.MIN_VALUE;
-        else if (ints != null)
-            return ints[index] >= INT_MIN ? numericTag : ints[index] - Integer.MIN_VALUE;
+            return bytes[index];
         else if (shorts != null)
-            return shorts[index] >= SHORT_MIN ? numericTag : shorts[index] - Short.MIN_VALUE;
-        else if (longs != null)
-        {
-            return (longs[index] >= LONG_MIN || longs[index] == SEE_BIGINT || longs[index] == SEE_BIGDEC) ? numericTag : (int)(longs[index] - (Long.MIN_VALUE + 2));
-        }
-        throw new InternalException("All arrays null in NumericColumnStorage");
+            return shorts[index];
+        else if (ints != null)
+            return ints[index];
+        throw new InternalException("Tag not found in NumericColumnStorage; only longs/decimals");
     }
 
     private void checkRange(int index) throws InternalException
@@ -499,18 +378,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
 
     public void addTag(int tagIndex) throws InternalException
     {
-        // Don't add the tag if it's the numeric one; that is implicit when we add the number in a sec:
-        if (tagIndex == numericTag)
-            return;
-
-        if (bytes != null && tagIndex < BYTE_MIN - Byte.MIN_VALUE)
-            addByte((byte)(Byte.MIN_VALUE + tagIndex));
-        else if (shorts != null && tagIndex < SHORT_MIN - Short.MIN_VALUE)
-            addShort((short)(Short.MIN_VALUE + tagIndex));
-        else if (ints != null)
-            addInteger(Integer.MIN_VALUE + tagIndex);
-        else if (longs != null)
-            addLong(Long.MIN_VALUE + 2 + tagIndex, true);
+        add(tagIndex);
     }
 
     @OnThread(Tag.Any)
@@ -553,8 +421,6 @@ public class NumericColumnStorage implements ColumnStorage<Number>
 
         if (n instanceof BigDecimal)
             addBigDecimal((BigDecimal) n);
-        else if (n instanceof BigInteger)
-            addBigInteger((BigInteger) n);
         else
         {
             if ((long)n.byteValue() == n.longValue())

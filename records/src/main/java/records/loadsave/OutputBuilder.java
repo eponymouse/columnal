@@ -24,6 +24,7 @@ import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.Utility;
 
+import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -182,7 +183,11 @@ public class OutputBuilder
             @Override
             public String number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
-                return g.get(index).toString();
+                @Value @NonNull Number number = g.get(index);
+                if (number instanceof BigDecimal)
+                    return ((BigDecimal)number).toPlainString();
+                else
+                    return number.toString();
             }
 
             @Override

@@ -31,7 +31,7 @@ public class Round extends SingleNumericInOutFunction
             @Override
             public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params) throws UserException, InternalException
             {
-                return Utility.value(Utility.<Number>withNumber(params.get(0), x -> x, x -> x, d -> d.setScale(0, RoundingMode.HALF_EVEN)));
+                return Utility.value(Utility.<Number>withNumber(params.get(0), x -> x, d -> d.setScale(0, RoundingMode.HALF_EVEN)));
             }
         };
     }

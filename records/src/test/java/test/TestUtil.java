@@ -21,6 +21,7 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -37,6 +38,7 @@ import threadchecker.Tag;
 import utility.ExSupplier;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.ListEx;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -424,15 +426,32 @@ public class TestUtil
         return generateZone(r, gs).toString();
     }
 
+    @OnThread(Tag.Simulation)
     public static String toString(@Value Object value)
     {
         if (value instanceof Object[])
         {
             return "(" + Arrays.stream((@Value Object[])value).map(TestUtil::toString).collect(Collectors.joining(",")) + ")";
         }
-        else if (value instanceof List)
+        else if (value instanceof ListEx)
         {
-            return "[" + ((List<@Value Object>)value).stream().map(TestUtil::toString).collect(Collectors.joining(",")) + "]";
+            StringBuilder sb = new StringBuilder("[");
+            ListEx list = (ListEx) value;
+            try
+            {
+                for (int i = 0; i < list.size(); i++)
+                {
+                    if (i != 0)
+                        sb.append(", ");
+                    sb.append(toString(list.get(i)));
+                }
+            }
+            catch (InternalException | UserException e)
+            {
+                sb.append("ERROR...");
+            }
+            sb.append("]");
+            return sb.toString();
         }
         else if (value instanceof TaggedValue)
         {
@@ -441,6 +460,21 @@ public class TestUtil
         }
         else
             return value.toString();
+    }
+
+    @OnThread(Tag.Simulation)
+    public static String toString(Column c) throws UserException, InternalException
+    {
+        StringBuilder sb = new StringBuilder("[");
+        DataTypeValue t = c.getType();
+        for (int i = 0; i < c.getLength(); i++)
+        {
+            if (i != 0)
+                sb.append(", ");
+            sb.append(toString(t.getCollapsed(i)));
+        }
+        sb.append("]");
+        return sb.toString();
     }
 
     public static class ChoicePick<C extends Choice>

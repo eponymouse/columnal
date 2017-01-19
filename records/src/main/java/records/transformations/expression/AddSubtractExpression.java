@@ -86,8 +86,10 @@ public class AddSubtractExpression extends NaryOpExpression
         Number n = (Number)expressions.get(0).getValue(rowIndex, state);
         for (int i = 1; i < expressions.size(); i++)
         {
+            //System.err.println("Actual Cur: " + Utility.toBigDecimal(n).toPlainString() + " after " + expressions.get(i-1).save(true));
             n = Utility.addSubtractNumbers(n, (Number)expressions.get(i).getValue(rowIndex, state), ops.get(i - 1) == ADD);
         }
+        //System.err.println("Actual Result: " + Utility.toBigDecimal(n).toPlainString() + " after " + expressions.get(expressions.size()-1).save(true));
         return Utility.value(n);
     }
 

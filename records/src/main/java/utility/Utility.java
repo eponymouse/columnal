@@ -9,7 +9,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.math.MathContext;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
@@ -355,15 +354,8 @@ public class Utility
     {
         if (n instanceof BigDecimal)
             return (BigDecimal) n;
-        else if (n instanceof BigInteger)
-            return new BigDecimal((BigInteger)n);
         else
             return BigDecimal.valueOf(n.longValue());
-    }
-
-    public static MathContext getMathContext()
-    {
-        return MathContext.DECIMAL64;
     }
 
     public static <R, PARSER extends Parser> R parseAsOne(String input, Function<CharStream, Lexer> makeLexer, Function<TokenStream, PARSER> makeParser, ExFunction<PARSER, R> withParser) throws InternalException, UserException
@@ -416,13 +408,7 @@ public class Utility
             return Long.valueOf(number);
         }
         catch (NumberFormatException ex) { }
-        // Not a long; is it a big integer?
-        try
-        {
-            return new BigInteger(number);
-        }
-        catch (NumberFormatException ex) { }
-        // Ok, last try: big decimal (and let it throw if not)
+        // Last try: big decimal (and let it throw if not)
         return new BigDecimal(number);
     }
 
@@ -489,14 +475,7 @@ public class Utility
             else
                 return toBigDecimal(lhs).subtract(toBigDecimal(rhs), MathContext.DECIMAL128);
         }
-        else if (lhs instanceof BigInteger || rhs instanceof BigInteger)
-        {
-            if (add)
-                return toBigInteger(lhs).add(toBigInteger(rhs));
-            else
-                return toBigInteger(lhs).subtract(toBigInteger(rhs));
-        }
-        else
+        else // Must both be Long or smaller:
         {
             try
             {
@@ -507,17 +486,9 @@ public class Utility
             }
             catch (ArithmeticException e)
             {
-                return addSubtractNumbers(toBigInteger(lhs), toBigInteger(rhs), add);
+                return addSubtractNumbers(toBigDecimal(lhs), toBigDecimal(rhs), add);
             }
         }
-    }
-
-    private static BigInteger toBigInteger(Number number)
-    {
-        if (number instanceof BigInteger)
-            return (BigInteger)number;
-        else
-            return BigInteger.valueOf(number.longValue());
     }
 
     public static Number multiplyNumbers(Number lhs, Number rhs)
@@ -525,10 +496,6 @@ public class Utility
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
         {
             return toBigDecimal(lhs).multiply(toBigDecimal(rhs), MathContext.DECIMAL128);
-        }
-        else if (lhs instanceof BigInteger || rhs instanceof BigInteger)
-        {
-            return toBigInteger(lhs).multiply(toBigInteger(rhs));
         }
         else
         {
@@ -538,7 +505,7 @@ public class Utility
             }
             catch (ArithmeticException e)
             {
-                return multiplyNumbers(toBigInteger(lhs), toBigInteger(rhs));
+                return multiplyNumbers(toBigDecimal(lhs), toBigDecimal(rhs));
             }
         }
     }
@@ -548,14 +515,6 @@ public class Utility
         if (lhs instanceof BigDecimal || rhs instanceof BigDecimal)
         {
             return toBigDecimal(lhs).divide(toBigDecimal(rhs), MathContext.DECIMAL128);
-        }
-        else if (lhs instanceof BigInteger || rhs instanceof BigInteger)
-        {
-            BigInteger[] divRem = toBigInteger(lhs).divideAndRemainder(toBigInteger(rhs));
-            if (divRem[1].equals(BigInteger.ZERO))
-                return divRem[0];
-            else
-                return divideNumbers(toBigDecimal(lhs), toBigDecimal(rhs));
         }
         else
         {
@@ -573,7 +532,6 @@ public class Utility
     {
         // It must fit in an int and not be massive/tiny:
         if (((rhs instanceof BigDecimal && !rhs.equals(BigDecimal.valueOf(((BigDecimal)rhs).intValue())))
-            || (rhs instanceof BigInteger && !rhs.equals(BigInteger.valueOf(((BigInteger)rhs).intValue())))
             || rhs.longValue() != (long)rhs.intValue())
             || Math.abs(rhs.intValue()) >= 1000)
         {
@@ -604,12 +562,10 @@ public class Utility
         }
     }
 
-    public static <T> T withNumber(Object num, ExFunction<Long, T> withLong, ExFunction<BigInteger, T> withBigInt, ExFunction<BigDecimal, T> withBigDecimal) throws InternalException, UserException
+    public static <T> T withNumber(Object num, ExFunction<Long, T> withLong, ExFunction<BigDecimal, T> withBigDecimal) throws InternalException, UserException
     {
         if (num instanceof BigDecimal)
             return withBigDecimal.apply((BigDecimal) num);
-        else if (num instanceof BigInteger)
-            return withBigInt.apply((BigInteger) num);
         else
             return withLong.apply(((Number)num).longValue());
     }
@@ -617,7 +573,7 @@ public class Utility
     public static boolean isIntegral(Object o) throws UserException, InternalException
     {
         // From http://stackoverflow.com/a/12748321/412908
-        return withNumber(o, x -> true, x -> true, bd -> {
+        return withNumber(o, x -> true, bd -> {
             return bd.signum() == 0 || bd.scale() <= 0 || bd.stripTrailingZeros().scale() <= 0;
         });
     }
@@ -628,15 +584,6 @@ public class Utility
             if (l.longValue() != l.intValue())
                 throw new UserException("Number too large: " + l);
             return Utility.value(l.intValue());
-        }, bi -> {
-            try
-            {
-                return Utility.value(bi.intValueExact());
-            }
-            catch (ArithmeticException e)
-            {
-                throw new UserException("Number too large: " + bi);
-            }
         }, bd -> {
             try
             {
@@ -783,6 +730,13 @@ public class Utility
     {
         // User index is one-based:
         return objects.get(userIndex - 1);
+    }
+
+    public static @Value Number valueNumber(@Value Object o) throws InternalException
+    {
+        if (o instanceof Number)
+            return (@Value Number)o;
+        throw new InternalException("Expected number but found " + o.getClass());
     }
 
     public static class ReadState
@@ -932,14 +886,10 @@ public class Utility
             BigDecimal da, db;
             if (a instanceof BigDecimal)
                 da = (BigDecimal)a;
-            else if (a instanceof BigInteger)
-                da = new BigDecimal((BigInteger)a);
             else
                 da = BigDecimal.valueOf(((Number)a).longValue());
             if (b instanceof BigDecimal)
                 db = (BigDecimal)b;
-            else if (b instanceof BigInteger)
-                db = new BigDecimal((BigInteger)b);
             else
                 db = BigDecimal.valueOf(((Number)b).longValue());
             if (epsilon == null)
@@ -959,13 +909,6 @@ public class Utility
                     return da.compareTo(db);
                 }
             }
-        }
-        else if (a instanceof BigInteger || b instanceof BigInteger)
-        {
-            BigInteger ia, ib;
-            ia = a instanceof BigInteger ? (BigInteger)a : BigInteger.valueOf(((Number)a).longValue());
-            ib = b instanceof BigInteger ? (BigInteger)b : BigInteger.valueOf(((Number)b).longValue());
-            return ia.compareTo(ib);
         }
         else
         {

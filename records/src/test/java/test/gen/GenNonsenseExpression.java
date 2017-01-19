@@ -121,7 +121,7 @@ public class GenNonsenseExpression extends Generator<Expression>
     private Expression genTerminal(SourceOfRandomness r)
     {
         return r.choose(Arrays.asList(
-            new NumericLiteral(r.nextBigInteger(160), null), // TODO gen unit
+            new NumericLiteral(Utility.parseNumber(r.nextBigInteger(160).toString()), null), // TODO gen unit
             new BooleanLiteral(r.nextBoolean()),
             new StringLiteral(TestUtil.generateColumnId(r).getOutput()),
             new ColumnReference(TestUtil.generateColumnId(r), ColumnReferenceType.CORRESPONDING_ROW),

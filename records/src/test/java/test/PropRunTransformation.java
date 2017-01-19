@@ -4,23 +4,29 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import one.util.streamex.StreamEx;
 import org.junit.runner.RunWith;
 import records.data.Column;
+import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.TableId;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.Concatenate;
 import records.transformations.Filter;
 import records.transformations.Sort;
+import records.transformations.SummaryStatistics;
+import records.transformations.SummaryStatistics.SummaryType;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
+import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
 import test.gen.GenImmediateData;
 import test.gen.GenRandom;
@@ -28,15 +34,20 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.Predicate;
 
+import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
@@ -162,7 +173,43 @@ public class PropRunTransformation
         throw new RuntimeException("Missing case for inverting comparison op");
     }
 
-    // #error TODO add test for summary stats
+    @Property
+    @OnThread(Tag.Simulation)
+    public void testSummaryStats(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original) throws InternalException, UserException
+    {
+        Optional<Column> numericColumn = original.data.getData().getColumns().stream().filter(c ->
+        {
+            try
+            {
+                return c.getType().isNumber();
+            } catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }).findFirst();
+        assumeTrue(numericColumn.isPresent());
+
+        Expression countExpression = new CallExpression("count", new ColumnReference(original.data.getData().getColumns().get(0).getName(), ColumnReferenceType.WHOLE_COLUMN));
+        SummaryStatistics summaryStatistics = new SummaryStatistics(original.mgr, null, original.data.getId(), Collections.singletonMap(new ColumnId("COUNT"), new SummaryType(countExpression)), Collections.emptyList());
+        assertEquals(1, summaryStatistics.getData().getLength());
+        assertEquals(1, summaryStatistics.getData().getColumns().size());
+        assertEquals(original.data.getData().getLength(), Utility.requireInteger(summaryStatistics.getData().getColumns().get(0).getType().getCollapsed(0)));
+
+        Expression sumExpression = new CallExpression("sum", new ColumnReference(numericColumn.get().getName(), ColumnReferenceType.WHOLE_COLUMN));
+        summaryStatistics = new SummaryStatistics(original.mgr, null, original.data.getId(), Collections.singletonMap(new ColumnId("SUM"), new SummaryType(sumExpression)), Collections.emptyList());
+        assertEquals(1, summaryStatistics.getData().getLength());
+        assertEquals(1, summaryStatistics.getData().getColumns().size());
+        assertThat(TestUtil.toString(numericColumn.get()), Utility.toBigDecimal(Utility.valueNumber(summaryStatistics.getData().getColumns().get(0).getType().getCollapsed(0))), comparesEqualTo(bdSum(numericColumn.get().getLength(), numericColumn.get().getType())));
+    }
+
+    @OnThread(Tag.Simulation)
+    private BigDecimal bdSum(int length, DataTypeValue type) throws UserException, InternalException
+    {
+        BigDecimal total = BigDecimal.ZERO;
+        for (int i = 0; i < length; i++)
+            total = total.add(Utility.toBigDecimal(Utility.valueNumber(type.getCollapsed(i))), MathContext.DECIMAL128);
+        return total;
+    }
 
     @Property
     @OnThread(Tag.Simulation)

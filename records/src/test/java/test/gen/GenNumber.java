@@ -5,7 +5,7 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import utility.Utility;
 
-import java.math.BigInteger;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -28,7 +28,7 @@ public class GenNumber extends Generator<Number>
         if (n.doubleValue() == (double)n.intValue())
         {
             // If it fits in smaller, we may randomly choose to use smaller:
-            rets.add(BigInteger.valueOf(n.intValue()));
+            rets.add(BigDecimal.valueOf(n.intValue()));
             if ((long) n.intValue() == n.longValue())
                 rets.add(n.intValue());
             if ((long) n.shortValue() == n.longValue())

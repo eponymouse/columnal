@@ -14,6 +14,7 @@ public class FunctionList
         new Count(),
         new GetElement(),
         new Round(),
+        new Sum(),
         new ToDate(),
         new ToDateTime(),
         new ToDateTimeZone(),

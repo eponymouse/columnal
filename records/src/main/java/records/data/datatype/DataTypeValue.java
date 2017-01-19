@@ -236,7 +236,7 @@ public class DataTypeValue extends DataType
     /**
      * Gets the collapsed, dynamically typed value at the given index
      *
-     * Number: Byte/Short/Integer/Long/BigInteger/BigDecimal
+     * Number: Byte/Short/Integer/Long/BigDecimal
      * Text: String
      * Boolean: Boolean
      * Datetime: LocalDate/LocalTime/ZonedDateTime/....

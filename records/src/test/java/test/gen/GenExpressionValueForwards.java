@@ -58,7 +58,6 @@ import utility.Pair;
 import utility.Utility;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -199,7 +198,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                             //if (r.nextBoolean() || Utility.compareNumbers(rhs.getFirst().get(0), 10) > 0)
                             //{
                                 // Apply abs to LHS:
-                                lhs = num(Utility.withNumber(lhs.getFirst(), l -> safeAbs(l), BigInteger::abs, BigDecimal::abs), new CallExpression("abs", lhs.getSecond()));
+                                lhs = num(Utility.withNumber(lhs.getFirst(), l -> safeAbs(l), BigDecimal::abs), new CallExpression("abs", lhs.getSecond()));
                             //}
                             //else
                             //{
@@ -257,7 +256,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                                 if (Utility.compareNumbers(lhs.getFirst(), 0) < 0)
                                 {
                                     // Apply abs to LHS:
-                                    lhs = num(Utility.withNumber(lhs.getFirst(), l -> safeAbs(l), BigInteger::abs, BigDecimal::abs), new CallExpression("abs", lhs.getSecond()));
+                                    lhs = num(Utility.withNumber(lhs.getFirst(), l -> safeAbs(l), BigDecimal::abs), new CallExpression("abs", lhs.getSecond()));
                                 }
                                 return num(Utility.raiseNumber((Number) lhs.getFirst(), BigDecimal.valueOf(1.0 / raiseTo)), new RaiseExpression(lhs.getSecond(), new DivideExpression(new NumericLiteral(1, null), new NumericLiteral(raiseTo, null))));
                             }
@@ -550,7 +549,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
 
     private Number safeAbs(Long l)
     {
-        return l.longValue() == Long.MIN_VALUE ? BigInteger.valueOf(l).abs() : Math.abs(l);
+        return l.longValue() == Long.MIN_VALUE ? BigDecimal.valueOf(l).abs() : Math.abs(l);
     }
 
     // What unit do you have to multiply src by to get dest?

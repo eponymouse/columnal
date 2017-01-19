@@ -438,7 +438,7 @@ public class MatchExpression extends Expression
                 return clause.outcome.getValue(rowIndex, newState);
             }
         }
-        throw new UserException("No matching clause found");
+        throw new UserException("No matching clause found in expression: \"" + save(true) + "\"");
     }
 
     @Override

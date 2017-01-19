@@ -66,7 +66,7 @@ import utility.Utility;
 import utility.Utility.ListEx;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
+import java.math.MathContext;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -91,6 +91,7 @@ import java.util.stream.Stream;
 import static test.TestUtil.distinctTypes;
 import static test.TestUtil.generateNumber;
 import static test.TestUtil.generateNumberV;
+import static test.TestUtil.generateTableIdPair;
 
 /**
  * Generates expressions and resulting values by working backwards.
@@ -176,28 +177,36 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                     int numMiddle = r.nextInt(0, 6);
                     List<Expression> expressions = new ArrayList<>();
                     List<Op> ops = new ArrayList<>();
-                    BigInteger curTotal = genInt();
+                    BigDecimal curTotal = BigDecimal.valueOf(genInt());
                     expressions.add(make(type, curTotal, maxLevels - 1));
                     for (int i = 0; i < numMiddle; i++)
                     {
-                        BigInteger next = genInt();
+                        //System.err.println("Exp Cur: " + curTotal.toPlainString() + " after " + expressions.get(i));
+                        long next = genInt();
                         expressions.add(make(type, next, maxLevels - 1));
+                        BigDecimal prevTotal = curTotal;
                         if (r.nextBoolean())
                         {
-                            curTotal = curTotal.add(next);
+                            curTotal = curTotal.add(BigDecimal.valueOf(next), MathContext.DECIMAL128);
+                            if (prevTotal.add(BigDecimal.valueOf(next)).compareTo(curTotal) != 0)
+                                throw new RuntimeException("Error building expression +");
                             ops.add(Op.ADD);
                         }
                         else
                         {
-                            curTotal = curTotal.subtract(next);
+                            curTotal = curTotal.subtract(BigDecimal.valueOf(next), MathContext.DECIMAL128);
+                            if (prevTotal.subtract(BigDecimal.valueOf(next)).compareTo(curTotal) != 0)
+                                throw new RuntimeException("Error building expression +");
                             ops.add(Op.SUBTRACT);
                         }
                     }
+                    //System.err.println("Exp Cur: " + curTotal.toPlainString() + " after " + expressions.get(expressions.size() - 1));
                     // Now add one more to make the difference:
-                    BigInteger diff = (targetValue instanceof BigInteger ? (BigInteger)targetValue : BigInteger.valueOf(((Number)targetValue).longValue())).subtract(curTotal);
+                    BigDecimal diff = (targetValue instanceof BigDecimal ? (BigDecimal)targetValue : BigDecimal.valueOf(((Number)targetValue).longValue())).subtract(curTotal, MathContext.DECIMAL128);
                     boolean add = r.nextBoolean();
                     expressions.add(make(type, Utility.value(add ? diff : diff.negate()), maxLevels - 1));
                     ops.add(add ? Op.ADD : Op.SUBTRACT);
+                    //System.err.println("Exp Result: " + Utility.toBigDecimal((Number)targetValue).toPlainString() + " after " + expressions.get(expressions.size() - 1) + " diff was: " + diff.toPlainString());
                     return new AddSubtractExpression(expressions, ops);
                 }, () -> {
                     // A few options; keep units and value in numerator and divide by 1
@@ -206,13 +215,19 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
                         return new DivideExpression(make(type, targetValue, maxLevels - 1), new NumericLiteral(1, Unit.SCALAR));
                     else
                     {
-                        BigInteger denominator;
+                        long denominator;
                         do
                         {
                             denominator = genInt();
                         }
                         while (Utility.compareNumbers(denominator, 0) == 0);
                         Number numerator = Utility.multiplyNumbers((Number) targetValue, denominator);
+                        if (Utility.compareNumbers(Utility.divideNumbers(numerator, denominator), targetValue) != 0)
+                        {
+                            // Divide won't come out right: just divide by 1:
+                            return new DivideExpression(make(type, targetValue, maxLevels - 1), new NumericLiteral(1, Unit.SCALAR));
+                        }
+
                         // Either just use numerator, or make up crazy one
                         Unit numUnit = r.nextBoolean() ? displayInfo.getUnit() : makeUnit();
                         Unit denomUnit = calculateRequiredMultiplyUnit(numUnit, displayInfo.getUnit()).reciprocal();
@@ -557,7 +572,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         return m.loadUse(name);
     }
 
-    private @Value BigInteger genInt()
+    private @Value long genInt()
     {
         @Value Number n;
         do
@@ -565,7 +580,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
             n = generateNumberV(r, gs);
         }
         while (n instanceof BigDecimal);
-        return n instanceof BigInteger ? (@Value BigInteger)n : Utility.value(BigInteger.valueOf(n.longValue()));
+        return Utility.value(n.longValue());
     }
 
     private Expression columnRef(DataType type, Object value)

@@ -15,7 +15,6 @@ import utility.Pair;
 import utility.Utility;
 
 import java.math.BigDecimal;
-import java.math.BigInteger;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -40,10 +39,10 @@ public class Absolute extends SingleNumericInOutFunction
             {
                 return Utility.value(Utility.<Number>withNumber(params.get(0), l -> {
                     if (l == Long.MIN_VALUE)
-                        return BigInteger.valueOf(l).negate();
+                        return BigDecimal.valueOf(l).negate();
                     else
                         return Math.abs(l);
-                }, BigInteger::abs, BigDecimal::abs));
+                }, BigDecimal::abs));
             }
         };
     }
