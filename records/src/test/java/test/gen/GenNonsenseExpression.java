@@ -136,7 +136,7 @@ public class GenNonsenseExpression extends Generator<Expression>
 
     private MatchExpression.Pattern genPattern(MatchExpression e, SourceOfRandomness r, GenerationStatus gs, int depth)
     {
-        return new MatchExpression.Pattern(genPatternMatch(e, r, gs, depth), TestUtil.makeList(r, 0, 3, () -> genDepth(r, depth, gs)));
+        return new MatchExpression.Pattern(genPatternMatch(e, r, gs, depth), r.nextBoolean() ? null : genDepth(r, depth, gs));
     }
 
     private MatchExpression.PatternMatch genPatternMatch(MatchExpression e, SourceOfRandomness r, GenerationStatus gs, int depth)
@@ -146,9 +146,9 @@ public class GenNonsenseExpression extends Generator<Expression>
             () -> e.new PatternMatchVariable(TestUtil.makeUnquotedIdent(r, gs)),
             () ->
             {
-                //String typeName = TestUtil.makeNonEmptyString(r, gs);
+                String typeName = TestUtil.makeNonEmptyString(r, gs);
                 String constructorName = TestUtil.makeNonEmptyString(r, gs);
-                return e.new PatternMatchConstructor(constructorName, r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1));
+                return e.new PatternMatchConstructor(typeName, constructorName, r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1));
             }
         )).get();
     }
@@ -201,6 +201,6 @@ public class GenNonsenseExpression extends Generator<Expression>
 
     private MatchExpression.Pattern shrinkPattern(SourceOfRandomness random, MatchExpression.Pattern p, MatchExpression ne)
     {
-        return new MatchExpression.Pattern(p.getPattern(), java.util.Collections.emptyList());
+        return new MatchExpression.Pattern(p.getPattern(), null);
     }
 }

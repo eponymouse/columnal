@@ -27,7 +27,7 @@ public class TestLoadSaveExpression
         //TODO add tests with units
         assertBothWays(
             new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW),
-            "@Card"
+            "@column Card"
         );
         assertBothWays(
             new BooleanLiteral(true),
@@ -39,7 +39,7 @@ public class TestLoadSaveExpression
         );
         assertEquals(
             new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW),
-            Expression.parse(null, "@\"Card\"", DummyManager.INSTANCE.getTypeManager())
+            Expression.parse(null, "@column \"Card\"", DummyManager.INSTANCE.getTypeManager())
         );
     }
     @Test
@@ -51,11 +51,11 @@ public class TestLoadSaveExpression
         );
         assertEquals(
             new NotEqualExpression(new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("xxx")),
-            Expression.parse(null, "@\"Card\" /= \"xxx\"", DummyManager.INSTANCE.getTypeManager())
+            Expression.parse(null, "@column \"Card\" /= \"xxx\"", DummyManager.INSTANCE.getTypeManager())
         );
         assertBothWays(
             new NotEqualExpression(new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("xxx")),
-            "@Card /= \"xxx\""
+            "@column Card /= \"xxx\""
         );
         assertBothWays(
             new NotEqualExpression(new BooleanLiteral(false), new BooleanLiteral(true)),

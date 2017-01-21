@@ -37,6 +37,6 @@ Professional Version
  - Excel export (both data, and data+formulae)
  - Graphing
  - Multi-source operations (e.g. lookup, merge) -- or should this be free?
- - Tuples and arrays of data
+ - Tuples and arrays of data -- or should this be free? or importing is only in pro version?
 
 

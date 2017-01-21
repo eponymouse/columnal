@@ -5,15 +5,16 @@ Add functions, such as:
  round.to.dp,
  tostring/fromstring,
  upper, lower, startswith,
+ average,
+ min, max,
  modulo
  Add these two as auto-complete options:
    only(col): gets single value from that column (not usable on current table)
    all(col): gets whole column
 
-++ for string concat?  Or maybe ~ ?
-Rework summary to use functions for summaries, and let such functions
-  take whole columns as args.  Need way to distinguish current row column value
-  (@ColName) from whole column (!ColName ?).  Do expression editor?
+++ for string concat?  Or maybe ~ ?  Or overload + (and for array concat)
+Change some of the symbols to _keywords
+Allow method calls on tuple parameter list?
 Allow double dollar as an anonymous variable name in matches
 Add tests for runtime errors (division by zero, invalid dates, incomplete pattern matches, if we allow those)
 Look up Unicode string collations, both for user values (in columns) and things like function names, constructor names

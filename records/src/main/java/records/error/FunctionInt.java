@@ -4,7 +4,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 
 /**
- * Created by neil on 31/10/2016.
+ * TODO remove this in favour of ExFunction
  */
 @FunctionalInterface
 public interface FunctionInt<T, R>

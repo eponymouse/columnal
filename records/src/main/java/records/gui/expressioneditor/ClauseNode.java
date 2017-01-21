@@ -291,7 +291,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
                 final @NonNull Function<MatchExpression, PatternMatch> patExp2 = patExp;
                 final @NonNull Expression matchExp2 = matchExp;
 
-                patterns.add(me -> new Pattern(patExp2.apply(me), Collections.singletonList(matchExp2)));
+                patterns.add(me -> new Pattern(patExp2.apply(me), matchExp2));
             } else
                 allOk = false;
         }

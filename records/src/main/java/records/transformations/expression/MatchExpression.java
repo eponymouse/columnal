@@ -9,6 +9,7 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.TaggedValue;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
@@ -89,7 +90,7 @@ public class MatchExpression extends Expression
 
         public String save()
         {
-            return patterns.stream().map(p -> p.save()).collect(Collectors.joining(";")) + " ~ " + outcome.save(false);
+            return " @case " + patterns.stream().map(p -> p.save()).collect(Collectors.joining(" @orcase ")) + " @then " + outcome.save(false);
         }
 
         public MatchClause copy(MatchExpression e)
@@ -121,12 +122,14 @@ public class MatchExpression extends Expression
 
     public class PatternMatchConstructor implements PatternMatch
     {
+        private final String typeName;
         private final String constructor;
         private final @Nullable PatternMatch subPattern;
         private int tagIndex = -1;
 
-        public PatternMatchConstructor(String constructor, @Nullable PatternMatch subPattern)
+        public PatternMatchConstructor(String typeName, String constructor, @Nullable PatternMatch subPattern)
         {
+            this.typeName = typeName;
             this.constructor = constructor;
             this.subPattern = subPattern;
         }
@@ -191,7 +194,7 @@ public class MatchExpression extends Expression
         @Override
         public String save()
         {
-            return "$\\" + OutputBuilder.quotedIfNecessary(constructor) + (subPattern == null ? "" : (":" + subPattern.save()));
+            return "$ \\" + OutputBuilder.quotedIfNecessary(typeName) + ":" + OutputBuilder.quotedIfNecessary(constructor) + (subPattern == null ? "" : (":" + subPattern.save()));
         }
 
         @Override
@@ -335,12 +338,12 @@ public class MatchExpression extends Expression
     public static class Pattern
     {
         private final PatternMatch pattern;
-        private final List<Expression> guards;
+        private final @Nullable Expression guard;
 
-        public Pattern(PatternMatch pattern, List<Expression> guards)
+        public Pattern(PatternMatch pattern, @Nullable Expression guard)
         {
             this.pattern = pattern;
-            this.guards = guards;
+            this.guard = guard;
         }
 
         public @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
@@ -348,12 +351,12 @@ public class MatchExpression extends Expression
             TypeState rhsState = pattern.check(data, state, onError, srcType);
             if (rhsState == null)
                 return null;
-            for (Expression e : guards)
+            if (guard != null)
             {
-                @Nullable DataType type = e.check(data, rhsState, onError);
+                @Nullable DataType type = guard.check(data, rhsState, onError);
                 if (type == null || !DataType.BOOLEAN.equals(type))
                 {
-                    onError.accept(e, "Pattern guards must have boolean type, found: " + (type == null ? " error" : type));
+                    onError.accept(guard, "Pattern guards must have boolean type, found: " + (type == null ? " error" : type));
                 }
             }
             return rhsState;
@@ -365,17 +368,14 @@ public class MatchExpression extends Expression
             @Nullable EvaluateState newState = pattern.match(rowIndex, value, state);
             if (newState == null)
                 return null;
-            for (Expression guard : guards)
-            {
-                if (!guard.getBoolean(rowIndex, newState, null))
-                    return null;
-            }
+            if (guard != null && !guard.getBoolean(rowIndex, newState, null))
+                return null;
             return newState;
         }
 
         public String save()
         {
-            return pattern.save() + guards.stream().map(e -> " $& " + e.save(false)).collect(Collectors.joining());
+            return pattern.save() + (guard == null ? "" : " @given " + guard.save(false));
         }
 
         public PatternMatch getPattern()
@@ -389,18 +389,17 @@ public class MatchExpression extends Expression
             if (this == o) return true;
             if (o == null || getClass() != o.getClass()) return false;
 
-            Pattern pattern1 = (Pattern)o;
+            Pattern pattern1 = (Pattern) o;
 
             if (!pattern.equals(pattern1.pattern)) return false;
-            return guards.equals(pattern1.guards);
-
+            return guard != null ? guard.equals(pattern1.guard) : pattern1.guard == null;
         }
 
         @Override
         public int hashCode()
         {
             int result = pattern.hashCode();
-            result = 31 * result + guards.hashCode();
+            result = 31 * result + (guard != null ? guard.hashCode() : 0);
             return result;
         }
     }
@@ -450,7 +449,7 @@ public class MatchExpression extends Expression
     @Override
     public String save(boolean topLevel)
     {
-        String inner = expression.save(false) + " ? " + clauses.stream().map(c -> c.save()).collect(Collectors.joining(";"));
+        String inner = "@match " + expression.save(false) + clauses.stream().map(c -> c.save()).collect(Collectors.joining(""));
         return topLevel ? inner : ("(" + inner + ")");
     }
 

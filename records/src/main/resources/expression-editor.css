@@ -2,8 +2,8 @@
     -fx-font-family: "Noto Sans";
     -fx-font-size: 12pt;
 
-    -fx-alignment: baseline-left;
-    -fx-row-valignment: baseline;
+    -fx-alignment: bottom-left;
+    -fx-row-valignment: bottom;
     -fx-vgap: 1px;
 }
 .mapsto {

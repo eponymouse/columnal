@@ -2,9 +2,10 @@ parser grammar ExpressionParser;
 
 options { tokenVocab = ExpressionLexer; }
 
-tableId : (STRING | UNQUOTED_IDENT);
-columnId : (STRING | UNQUOTED_IDENT);
-columnRef : (COLREF tableId)? COLREF columnId;
+tableId : STRING | UNQUOTED_IDENT;
+columnId : STRING | UNQUOTED_IDENT;
+columnRefType : COLUMN | WHOLECOLUMN;
+columnRef : columnRefType (tableId COLON)? columnId;
 
 numericLiteral : NUMBER UNIT?;
 stringLiteral : STRING;
@@ -31,8 +32,8 @@ andExpression :  expression (AND expression)+;
 orExpression :  expression (OR expression)+;
 compoundExpression : plusMinusExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression;
 
-constructor : rawConstructor rawConstructor;
-tagExpression : constructor (CONS expression)?;
+constructor : CONSTRUCTOR typeName COLON constructorName;
+tagExpression : constructor (COLON expression)?;
 
 functionName : UNQUOTED_IDENT;
 callExpression : functionName UNIT* OPEN_BRACKET (topLevelExpression | expression (COMMA expression)+) CLOSE_BRACKET;
@@ -40,14 +41,21 @@ callExpression : functionName UNIT* OPEN_BRACKET (topLevelExpression | expressio
 tupleExpression : OPEN_BRACKET expression (COMMA expression)+ CLOSE_BRACKET;
 arrayExpression : OPEN_SQUARE (expression (COMMA expression)*)? CLOSE_SQUARE;
 
-newVariable : NEWVAR UNQUOTED_IDENT;
+newVariable : PATTERN UNQUOTED_IDENT;
+typeName : STRING | UNQUOTED_IDENT;
 constructorName : STRING | UNQUOTED_IDENT;
-rawConstructor : CONSTRUCTOR constructorName;
-patternMatch : MATCHCONSTRUCTOR constructorName (CONS patternMatch)? | newVariable | expression;
-pattern : patternMatch (PATTERNAND expression)*;
+patternTuple : PATTERN tupleExpression;
+patternMatch : PATTERN constructor (COLON patternMatch)? | newVariable | expression;
+pattern : patternMatch (CASEGUARD expression)?;
 
-matchClause : pattern (DELIM pattern)* MAPSTO expression;
-match : expression MATCH matchClause (DELIM matchClause)*;
+/* Single argument, matched once as variable name or tuple pattern */
+functionArg : (newVariable | patternTuple) COLON expression;
+/* Single argument, matched by multiple cases (equivalent to FUNCTION x : @match x) */
+functionCase : matchClause+;
+function: FUNCTION (functionArg | functionCase);
+
+matchClause : CASE pattern (ORCASE pattern)* MAPSTO expression;
+match : MATCH expression matchClause+;
 
 bracketedCompound : OPEN_BRACKET compoundExpression CLOSE_BRACKET;
 bracketedMatch : OPEN_BRACKET match CLOSE_BRACKET;

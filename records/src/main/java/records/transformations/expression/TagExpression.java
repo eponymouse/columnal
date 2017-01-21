@@ -77,16 +77,8 @@ public class TagExpression extends Expression
     @Override
     public String save(boolean topLevel)
     {
-        String tag;
         @Nullable String typeName = tagName.getFirst();
-        if (typeName != null)
-        {
-            tag = "\\" + OutputBuilder.quotedIfNecessary(typeName) + "\\" + OutputBuilder.quotedIfNecessary(tagName.getSecond());
-        }
-        else
-        {
-            tag = "\\" + OutputBuilder.quotedIfNecessary(tagName.getSecond());
-        }
+        String tag = "\\" + OutputBuilder.quotedIfNecessary(typeName) + ":" + OutputBuilder.quotedIfNecessary(tagName.getSecond());
         if (inner == null)
             return tag;
         else

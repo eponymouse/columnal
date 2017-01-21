@@ -154,7 +154,7 @@ public abstract class Expression
             TableIdContext tableIdContext = ctx.tableId();
             if (ctx.columnId() == null)
                 throw new RuntimeException("Error processing column reference");
-            return new ColumnReference(tableIdContext == null ? null : new TableId(tableIdContext.getText()), new ColumnId(ctx.columnId().getText()), ColumnReferenceType.CORRESPONDING_ROW);
+            return new ColumnReference(tableIdContext == null ? null : new TableId(tableIdContext.getText()), new ColumnId(ctx.columnId().getText()), ctx.columnRefType().WHOLECOLUMN() != null ? ColumnReferenceType.WHOLE_COLUMN : ColumnReferenceType.CORRESPONDING_ROW);
         }
 
         @Override
@@ -259,9 +259,9 @@ public abstract class Expression
         @Override
         public Expression visitTagExpression(TagExpressionContext ctx)
         {
-            String constructorName = ctx.constructor().rawConstructor(1).constructorName().getText();
+            String constructorName = ctx.constructor().constructorName().getText();
 
-            String typeName = ctx.constructor().rawConstructor(0).constructorName().getText();
+            String typeName = ctx.constructor().typeName().getText();
 
             return new TagExpression(new Pair<>(typeName, constructorName), ctx.expression() == null ? null : visitExpression(ctx.expression()));
         }
@@ -317,10 +317,11 @@ public abstract class Expression
                     List<Pattern> patterns = new ArrayList<>();
                     for (PatternContext patternContext : matchClauseContext.pattern())
                     {
-                        List<Expression> guards = Utility.<ExpressionContext, Expression>mapList(patternContext.expression(), this::visitExpression);
+                        @Nullable ExpressionContext guardExpression = patternContext.expression();
+                        @Nullable Expression guard = guardExpression == null ? null : visitExpression(guardExpression);
                         try
                         {
-                            patterns.add(new Pattern(processPatternMatch(me, patternContext.patternMatch()), guards));
+                            patterns.add(new Pattern(processPatternMatch(me, patternContext.patternMatch()), guard));
                         }
                         catch (InternalException e)
                         {
@@ -335,10 +336,10 @@ public abstract class Expression
 
         private PatternMatch processPatternMatch(MatchExpression me, PatternMatchContext ctx) throws InternalException
         {
-            if (ctx.constructorName() != null)
+            if (ctx.constructor() != null)
             {
                 PatternMatchContext subPattern = ctx.patternMatch();
-                return me.new PatternMatchConstructor(ctx.constructorName().getText(), subPattern == null ? null : processPatternMatch(me, subPattern));
+                return me.new PatternMatchConstructor(ctx.constructor().typeName().getText(), ctx.constructor().constructorName().getText(), subPattern == null ? null : processPatternMatch(me, subPattern));
             }
             else if (ctx.newVariable() != null)
             {

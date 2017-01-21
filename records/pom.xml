@@ -180,6 +180,7 @@
                 <version>4.5.3</version>
                 <!-- From http://stackoverflow.com/questions/18124061/how-to-import-grammar-in-antlr4-to-build-with-maven?lq=1 -->
                 <configuration>
+                    <treatWarningsAsErrors>true</treatWarningsAsErrors>
                     <libDirectory>${basedir}/src/main/antlr4/records/grammar</libDirectory>
                     <listener>false</listener>
                     <visitor>true</visitor>

@@ -114,7 +114,7 @@ public class ColumnReference extends Expression
     @Override
     public String save(boolean topLevel)
     {
-        return "@" + OutputBuilder.quotedIfNecessary(columnName.getOutput());
+        return (referenceType == ColumnReferenceType.WHOLE_COLUMN ? "@wholecolumn " : "@column ") + OutputBuilder.quotedIfNecessary(columnName.getOutput());
     }
 
     @Override
