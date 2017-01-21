@@ -436,16 +436,7 @@ public class DataType
             @Override
             public String tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
-                if (tags.size() == 1)
-                {
-                    return tags.get(0).toString();
-                }
-                // Look for one tag plus one with content:
-                if (tags.size() == 2)
-                {
-                    return tags.get(0) + "|" + tags.get(1);
-                }
-                return "...";
+                return typeName.getRaw();
             }
 
             @Override

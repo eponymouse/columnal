@@ -30,12 +30,6 @@ public class CleanDateColumnType extends ColumnType
     }
 
     @Override
-    public boolean isDate()
-    {
-        return true;
-    }
-
-    @Override
     public boolean equals(@Nullable Object o)
     {
         if (this == o) return true;

@@ -10,8 +10,10 @@ import records.data.TableManager;
 import records.data.TextFileDateColumn;
 import records.data.TextFileNumericColumn;
 import records.data.TextFileStringColumn;
+import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
+import records.data.columntype.TextColumnType;
 import records.data.datatype.DataType.NumberInfo;
 import records.error.FetchException;
 import records.error.FunctionInt;
@@ -80,16 +82,16 @@ public class TextImport
         {
             ColumnInfo columnInfo = format.columnTypes.get(i);
             int iFinal = i;
-            if (columnInfo.type.isNumeric())
+            if (columnInfo.type instanceof NumericColumnType)
             {
                 columns.add(rs ->
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) columnInfo.type;
                     return new TextFileNumericColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal, new NumberInfo(numericColumnType.unit, numericColumnType.minDP), numericColumnType::removePrefix);
                 });
-            } else if (columnInfo.type.isText())
+            } else if (columnInfo.type instanceof TextColumnType)
                 columns.add(rs -> new TextFileStringColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal));
-            else if (columnInfo.type.isDate())
+            else if (columnInfo.type instanceof CleanDateColumnType)
             {
                 columns.add(rs ->
                 {
@@ -97,8 +99,13 @@ public class TextImport
                     return new TextFileDateColumn(rs, textFile, startPosition, (byte) format.separator, columnInfo.title, iFinal, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
                 });
             }
-            // If it's blank, should we add any column?
-            // Maybe if it has title?                }
+            else if (columnInfo.type instanceof BlankColumnType)
+            {
+                // If it's blank, should we add any column?
+                // Maybe if it has title?                }
+            }
+            else
+                throw new InternalException("Unhandled column type: " + columnInfo.type.getClass());
         }
 
 

@@ -3,6 +3,7 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import records.error.UserException;
 import utility.Utility;
 
 import java.math.BigDecimal;
@@ -22,7 +23,15 @@ public class GenNumber extends Generator<Number>
     @Override
     public Number generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        Number n = Utility.parseNumber(new GenNumberAsString().generate(sourceOfRandomness, generationStatus));
+        Number n;
+        try
+        {
+            n = Utility.parseNumber(new GenNumberAsString().generate(sourceOfRandomness, generationStatus));
+        }
+        catch (UserException e)
+        {
+            throw new RuntimeException(e);
+        }
         List<Number> rets = new ArrayList<>();
         rets.add(n);
         if (n.doubleValue() == (double)n.intValue())

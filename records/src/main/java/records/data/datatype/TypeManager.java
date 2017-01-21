@@ -56,6 +56,9 @@ public class TypeManager
     // or renames it to a spare name and returns that.
     public DataType registerTaggedType(String idealTypeName, List<TagType<DataType>> tagTypes) throws InternalException
     {
+        if (tagTypes.isEmpty())
+            throw new InternalException("Tagged type cannot have zero tags");
+
         TypeId idealTypeId = new TypeId(idealTypeName);
         if (knownTypes.containsKey(idealTypeId))
         {

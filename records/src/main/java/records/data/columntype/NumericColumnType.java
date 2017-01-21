@@ -20,21 +20,18 @@ public class NumericColumnType extends ColumnType
         this.commonPrefix = commonPrefix;
     }
 
-    @Override
-    public boolean isNumeric()
-    {
-        return true;
-    }
-
+    /**
+     * Removes numeric prefix from the string, and gets rid of commas.
+     */
     public String removePrefix(String val)
     {
         val = val.trim();
         if (commonPrefix != null)
-            return StringUtils.removeStart(val, commonPrefix).trim();
+            return StringUtils.removeStart(val, commonPrefix).trim().replace(",", "");
         else if (val.startsWith(unit.getDisplayPrefix()))
-            return StringUtils.removeStart(val, unit.getDisplayPrefix()).trim();
+            return StringUtils.removeStart(val, unit.getDisplayPrefix()).trim().replace(",", "");
         else
-            return val.trim();
+            return val.trim().replace(",", "");
     }
 
     @Override

@@ -4,8 +4,10 @@ import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
+import records.data.columntype.TextColumnType;
 import records.importers.ColumnInfo;
 import records.importers.TextFormat;
 import test.TestUtil;
@@ -64,7 +66,7 @@ public class GenFormattedData extends Generator<FormatAndData>
                 // TODO generate X-or-blank column types
                 ColumnInfo c = columnTypes.get(i);
                 // TODO add random spaces, randomise content using generators
-                if (c.type.isNumeric())
+                if (c.type instanceof NumericColumnType)
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) c.type;
                     line.append(r.nextBoolean() ? "" : numericColumnType.unit.getDisplayPrefix());
@@ -81,7 +83,7 @@ public class GenFormattedData extends Generator<FormatAndData>
                         data.add(Utility.value((Long)value));
                     line.append(r.nextBoolean() ? "" : numericColumnType.unit.getDisplaySuffix());
                 }
-                else if (c.type.isText())
+                else if (c.type instanceof TextColumnType)
                 {
                     String str = TestUtil.makeString(r, generationStatus).replace("\n", "").replace("\r", "");
                     // TODO quote separators instead of removing them:
@@ -89,7 +91,7 @@ public class GenFormattedData extends Generator<FormatAndData>
                     data.add(Utility.value(str));
                     line.append(str);
                 }
-                else if (c.type.isDate())
+                else if (c.type instanceof CleanDateColumnType)
                 {
                     CleanDateColumnType dateColumnType = (CleanDateColumnType) c.type;
                     int year;
@@ -104,7 +106,7 @@ public class GenFormattedData extends Generator<FormatAndData>
 
                     line.append(date.format(dateColumnType.getDateTimeFormatter()));
                 }
-                else if (c.type.isBlank())
+                else if (c.type instanceof BlankColumnType)
                 {
                     //data.add(Collections.emptyList());
                 }

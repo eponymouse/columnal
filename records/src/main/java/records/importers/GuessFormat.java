@@ -6,9 +6,11 @@ import com.google.common.collect.Multisets;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
+import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
+import records.data.columntype.OrBlankColumnType;
 import records.data.columntype.TextColumnType;
 import records.data.unit.UnitManager;
 import records.error.UserException;
@@ -56,7 +58,7 @@ public class GuessFormat
                     Format format = guessBodyFormat(mgr, vals.get(headerRows).size(), headerRows, vals);
                     // If they are all text record this as feasible but keep going in case we get better
                     // result with more header rows:
-                    if (format.columnTypes.stream().allMatch(c -> c.type.isText() || c.type.isBlank()))
+                    if (format.columnTypes.stream().allMatch(c -> c.type instanceof TextColumnType || c.type instanceof BlankColumnType))
                         allText.put(headerRows, format);
                     else // Not all just text; go with it:
                         return format;
@@ -344,9 +346,8 @@ public class GuessFormat
             {
                 columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, commonPrefix));
             }
-            // TODO
-            //else if (allNumericOrBlank)
-                //columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, true));
+            else if (allNumericOrBlank)
+                columnTypes.add(new OrBlankColumnType(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, commonPrefix)));
             else
                 columnTypes.add(new TextColumnType());
             // Go backwards to find column titles:
@@ -360,7 +361,7 @@ public class GuessFormat
                 }
             }
         }
-        int nonBlankColumnCount = (int)columnTypes.stream().filter(c -> !c.isBlank()).count();
+        int nonBlankColumnCount = (int)columnTypes.stream().filter(c -> !(c instanceof BlankColumnType)).count();
         // All must think it's viable, and then pick last one:
         Optional<List<String>> headerRow = viableColumnNameRows.entrySet().stream().filter(e -> e.getValue() == nonBlankColumnCount || e.getValue() == columnTypes.size()).max(Entry.comparingByKey()).map(e -> initialVals.get(e.getKey()));
 

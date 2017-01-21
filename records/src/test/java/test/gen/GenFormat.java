@@ -4,6 +4,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.ColumnId;
+import records.data.columntype.BlankColumnType;
 import records.data.columntype.ColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
@@ -70,10 +71,10 @@ public class GenFormat extends Generator<TextFormat>
                 new CleanDateColumnType(sourceOfRandomness.choose(dateFormats), LocalDate::from)));
                 //TODO tag?, boolean
             // Don't end with blank:
-            if (i == columnCount - 1 && (type.isBlank() || columns.stream().allMatch(GenFormat::canBeBlank)))
+            if (i == columnCount - 1 && (type instanceof BlankColumnType || columns.stream().allMatch(GenFormat::canBeBlank)))
                 type = new TextColumnType();
             // Don't let all be text/blank:
-            if (i == columnCount - 1 && columns.stream().allMatch(c -> c.type.isText() || c.type.isBlank()))
+            if (i == columnCount - 1 && columns.stream().allMatch(c -> c.type instanceof TextColumnType || c.type instanceof BlankColumnType))
                 type = new CleanDateColumnType(sourceOfRandomness.choose(dateFormats), LocalDate::from);
             String title = hasTitle ? "GenCol" + i : "";
             columns.add(new ColumnInfo(type, new ColumnId(title)));
@@ -89,11 +90,11 @@ public class GenFormat extends Generator<TextFormat>
         for (int i = 0; i < larger.columnTypes.size(); i++)
         {
             List<ColumnInfo> reducedCols = new ArrayList<>(larger.columnTypes);
-            if (i == larger.columnTypes.size() - 1 && i >= 1 && reducedCols.get(i - 1).type.isBlank())
+            if (i == larger.columnTypes.size() - 1 && i >= 1 && reducedCols.get(i - 1).type instanceof BlankColumnType)
                 continue; // Don't remove last one if one before is blank
             reducedCols.remove(i);
             // Don't let them all be blank or all text/blank:
-            if (reducedCols.stream().allMatch(GenFormat::canBeBlank) || reducedCols.stream().allMatch(c -> c.type.isText() || c.type.isBlank()))
+            if (reducedCols.stream().allMatch(GenFormat::canBeBlank) || reducedCols.stream().allMatch(c -> c.type instanceof TextColumnType || c.type instanceof BlankColumnType))
                 continue;
             TextFormat smaller = new TextFormat(larger.headerRows, reducedCols, larger.separator);
             if (reducedCols.size() >= 2) // TODO allow one column
@@ -104,6 +105,6 @@ public class GenFormat extends Generator<TextFormat>
 
     private static boolean canBeBlank(ColumnInfo columnInfo)
     {
-        return columnInfo.type.isBlank();
+        return columnInfo.type instanceof BlankColumnType;
     }
 }

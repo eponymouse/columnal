@@ -9,10 +9,4 @@ public class BlankColumnType extends ColumnType
 
     // Singleton:
     private BlankColumnType() {};
-
-    @Override
-    public boolean isBlank()
-    {
-        return true;
-    }
 }

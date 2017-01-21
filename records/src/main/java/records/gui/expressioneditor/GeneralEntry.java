@@ -518,7 +518,14 @@ public class GeneralEntry extends LeafNode implements OperandNode
             if (number != null)
             {
                 //TODO support units
-                return new NumericLiteral(Utility.parseNumber(number.getText()), null);
+                try
+                {
+                    return new NumericLiteral(Utility.parseNumber(number.getText()), null);
+                }
+                catch (UserException e)
+                {
+                    return null;
+                }
             }
             BooleanLiteralContext bool = parseOrNull(ExpressionParser::booleanLiteral);
             if (bool != null)

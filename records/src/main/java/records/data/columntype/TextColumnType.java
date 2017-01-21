@@ -8,12 +8,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 public class TextColumnType extends ColumnType
 {
     @Override
-    public boolean isText()
-    {
-        return true;
-    }
-
-    @Override
     public boolean equals(@Nullable Object obj)
     {
         return obj != null && obj instanceof TextColumnType;

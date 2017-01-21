@@ -1,5 +1,7 @@
 package records.importers;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -10,12 +12,21 @@ import records.data.ImmediateDataSource;
 import records.data.KnownLengthRecordSet;
 import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
+import records.data.MemoryTaggedColumn;
 import records.data.RecordSet;
 import records.data.TableManager;
 import records.data.MemoryTemporalColumn;
+import records.data.TaggedValue;
+import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
+import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
+import records.data.columntype.OrBlankColumnType;
+import records.data.columntype.TextColumnType;
+import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.DataType.TagType;
+import records.data.unit.Unit;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
@@ -28,6 +39,7 @@ import java.io.IOException;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -73,27 +85,50 @@ public class HTMLImport
                 ColumnInfo columnInfo = format.columnTypes.get(i);
                 int iFinal = i;
                 List<String> slice = Utility.sliceSkipBlankRows(vals, format.headerRows, iFinal);
-                if (columnInfo.type.isNumeric())
+                ColumnType columnType = columnInfo.type;
+                if (columnType instanceof NumericColumnType)
                 {
                     //TODO remove prefix
                     // TODO treat maybe blank as a tagged type
                     columns.add(rs ->
                     {
-                        NumericColumnType numericColumnType = (NumericColumnType) columnInfo.type;
+                        NumericColumnType numericColumnType = (NumericColumnType) columnType;
                         return new MemoryNumericColumn(rs, columnInfo.title, new NumberInfo(numericColumnType.unit, numericColumnType.minDP), slice.stream().map(numericColumnType::removePrefix));
                     });
                 }
-                else if (columnInfo.type.isText())
+                else if (columnType instanceof TextColumnType)
                 {
                     columns.add(rs -> new MemoryStringColumn(rs, columnInfo.title, slice));
                 }
-                else if (columnInfo.type.isDate())
+                else if (columnType instanceof CleanDateColumnType)
                 {
-                    columns.add(rs -> new MemoryTemporalColumn(rs, columnInfo.title, ((CleanDateColumnType)columnInfo.type).getDateTimeInfo(), Utility.<String, TemporalAccessor>mapList(slice, s -> ((CleanDateColumnType)columnInfo.type).parse(s))));
+                    columns.add(rs -> new MemoryTemporalColumn(rs, columnInfo.title, ((CleanDateColumnType) columnType).getDateTimeInfo(), Utility.<String, TemporalAccessor>mapList(slice, s -> ((CleanDateColumnType) columnType).parse(s))));
                 }
-                else if (!columnInfo.type.isBlank())
+                else if (columnType instanceof OrBlankColumnType && ((OrBlankColumnType)columnType).getInner() instanceof NumericColumnType)
                 {
-                    throw new InternalException("Unhandled column type: " + columnInfo.type);
+                    OrBlankColumnType or = (OrBlankColumnType) columnType;
+                    NumericColumnType inner = (NumericColumnType) or.getInner();
+                    String idealTypeName = "?Number{" + (inner.unit.equals(Unit.SCALAR) ? "" : inner.unit) + "}";
+                    @Nullable DataType type = mgr.getTypeManager().lookupType(idealTypeName);
+                    // Only way it's there already is if it's same from another column, so use it.
+                    if (type == null)
+                    {
+                        type = mgr.getTypeManager().registerTaggedType(idealTypeName, Arrays.asList(
+                            new TagType<DataType>("Blank", null),
+                            new TagType<DataType>(idealTypeName.substring(1), DataType.number(new NumberInfo(inner.unit, inner.minDP)))
+                        ));
+                    }
+                    @NonNull DataType typeFinal = type;
+                    columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, typeFinal.getTaggedTypeName(), typeFinal.getTagTypes(), Utility.mapListEx(slice, item -> {
+                        if (item.isEmpty())
+                            return new TaggedValue(0, null);
+                        else
+                            return new TaggedValue(1, Utility.value(Utility.parseNumber(inner.removePrefix(item))));
+                    })));
+                }
+                else if (!(columnType instanceof BlankColumnType))
+                {
+                    throw new InternalException("Unhandled column type: " + columnType.getClass());
                 }
                 // If it's blank, should we add any column?
                 // Maybe if it has title?                }

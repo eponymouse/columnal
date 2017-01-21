@@ -400,7 +400,7 @@ public class Utility
         e.printStackTrace(); // TODO log and send back
     }
 
-    public static Number parseNumber(String number)
+    public static Number parseNumber(String number) throws UserException
     {
         // First try as a long:
         try
@@ -408,8 +408,15 @@ public class Utility
             return Long.valueOf(number);
         }
         catch (NumberFormatException ex) { }
-        // Last try: big decimal (and let it throw if not)
-        return new BigDecimal(number);
+        // Last try: big decimal (and re-throw if not)
+        try
+        {
+            return new BigDecimal(number);
+        }
+        catch (NumberFormatException e)
+        {
+            throw new UserException("Problem parsing number \"" + number + "\"");
+        }
     }
 
     /**

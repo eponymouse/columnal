@@ -6,9 +6,4 @@ package records.data.columntype;
 public class ColumnType
 {
     public static final BlankColumnType BLANK = BlankColumnType.INSTANCE;
-
-    public boolean isText() { return false; }
-    public boolean isBlank() { return false; }
-    public boolean isNumeric() { return false; }
-    public boolean isDate() { return false; }
 }
