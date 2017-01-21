@@ -5,7 +5,10 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 
 /**
- * Created by neil on 20/12/2016.
+ * A TextField which is a child of an ExpressionParent.
+ * When the user tries to move left or right at the
+ * beginning/end of the field respectively, it asks
+ * the parent to move focus to the appropriate adjacent item.
  */
 public class LeaveableTextField extends TextField
 {

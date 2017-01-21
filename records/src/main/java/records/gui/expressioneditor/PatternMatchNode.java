@@ -42,7 +42,7 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
     public PatternMatchNode(ExpressionParent parent)
     {
         this.parent = parent;
-        this.source = new Consecutive(this, new Label("match("), new Label(") with")).prompt("expression");
+        this.source = new Consecutive(this, c -> new Label("match("), new Label(") with")).prompt("expression");
         this.clauses = FXCollections.observableArrayList();
         this.nodes = FXCollections.observableArrayList();
         this.childrenNodeListener = c -> {
@@ -88,11 +88,11 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
 
 
     // Gets the outcome type
-    @Override
-    public @Nullable DataType getType(ExpressionNode child)
-    {
-        return parent.getType(this);
-    }
+    //@Override
+    //public @Nullable DataType getType(ExpressionNode child)
+    //{
+        //return parent.getType(this);
+    //}
 
     @Override
     public List<ColumnId> getAvailableColumns()
@@ -106,6 +106,12 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
         // They are only asking for parent vars, and we don't affect those
         // ClauseNode takes care of the variables it introduces
         return parent.getAvailableVariables(this);
+    }
+
+    @Override
+    public List<DataType> getAvailableTaggedTypes()
+    {
+        return parent.getAvailableTaggedTypes();
     }
 
     @Override
@@ -182,7 +188,7 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
     }
 
     @Override
-    public ExpressionNode prompt(String prompt)
+    public OperandNode prompt(String prompt)
     {
         // Ignore
         return this;

@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -36,13 +37,25 @@ public class StringLiteralNode extends LeafNode implements OperandNode
         Completion currentCompletion = new Completion()
         {
             @Override
-            Pair<Node, String> getDisplay(String currentText)
+            Pair<Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
             {
                 return new Pair<>(null, currentText);
             }
 
             @Override
             boolean shouldShow(String input)
+            {
+                return true;
+            }
+
+            @Override
+            CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+            {
+                return CompletionAction.SELECT;
+            }
+
+            @Override
+            boolean features(String curInput, char character)
             {
                 return true;
             }
@@ -69,7 +82,7 @@ public class StringLiteralNode extends LeafNode implements OperandNode
     }
 
     @Override
-    public ExpressionNode prompt(String prompt)
+    public OperandNode prompt(String prompt)
     {
         textField.setPromptText(prompt);
         return this;

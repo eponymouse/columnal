@@ -33,7 +33,8 @@ import java.util.stream.Stream;
 
 /**
  * Consecutive implements all the methods of OperandNode but deliberately
- * does not extend it.  For that, use Bracketed.
+ * does not extend it because Consecutive by itself is not a valid
+ * operand.  For that, use Bracketed.
  */
 public @Interned class Consecutive implements ExpressionParent, ExpressionNode
 {
@@ -49,13 +50,14 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
     private @Nullable String prompt;
 
     @SuppressWarnings("initialization")
-    public Consecutive(ExpressionParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode)
+    public Consecutive(ExpressionParent parent, @Nullable Function<Consecutive, Node> makePrefixNode, @Nullable Node suffixNode)
     {
         this.parent = parent;
         nodes = FXCollections.observableArrayList();
         operands = FXCollections.observableArrayList();
         operators = FXCollections.observableArrayList();
-        this.prefixNode = prefixNode;
+
+        this.prefixNode = makePrefixNode == null ? null : makePrefixNode.apply(this);
         this.suffixNode = suffixNode;
         this.childrenNodeListener = c -> {
             updateNodes();
@@ -197,13 +199,6 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
     }
 
     @Override
-    public @Nullable DataType getType(ExpressionNode child)
-    {
-        //TODO: work it out from surrounding
-        return null;
-    }
-
-    @Override
     public List<ColumnId> getAvailableColumns()
     {
         if (parent != null)
@@ -219,6 +214,14 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
             return parent.getAvailableVariables(this);
         else
             return Collections.emptyList();
+    }
+
+    @Override
+    public List<DataType> getAvailableTaggedTypes()
+    {
+        if (parent != null)
+            return parent.getAvailableTaggedTypes();
+        return Collections.emptyList();
     }
 
     @Override

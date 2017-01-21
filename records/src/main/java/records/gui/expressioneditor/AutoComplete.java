@@ -1,5 +1,7 @@
 package records.gui.expressioneditor;
 
+import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.value.ObservableStringValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -14,12 +16,10 @@ import javafx.scene.input.MouseButton;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.AutoComplete.Completion.CompletionAction;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
-import utility.FXPlatformBiConsumer;
-import utility.FXPlatformBiFunction;
-import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 
@@ -137,7 +137,8 @@ public class AutoComplete extends PopupControl
                 {
                     completionsWithoutLast = calculateCompletions.apply(withoutLast);
 
-                    if (withoutLast != null && !available.stream().anyMatch(c -> c.getDisplay(withoutLast).getSecond().contains("" + last)))
+                    String textFinal = text;
+                    if (withoutLast != null && !available.stream().anyMatch(c -> c.features(textFinal, last)))
                     {
                         // No completions feature the character and it is in the following alphabet, so
                         // complete the top one and move character to next slot
@@ -153,14 +154,15 @@ public class AutoComplete extends PopupControl
             }
             for (Completion completion : available)
             {
-                if (completion.completesOnExactly(text, available.size() == 1))
+                CompletionAction completionAction = completion.completesOnExactly(text, available.size() == 1);
+                if (completionAction == CompletionAction.COMPLETE_IMMEDIATELY)
                 {
                     change.setText(onSelect.exactCompletion(text, completion));
                     change.setRange(0, textField.getLength());
                     hide();
                     return change;
                 }
-                else if (completion.getDisplay(text).getSecond().equals(text))
+                else if (completionAction == CompletionAction.SELECT)
                 {
                     // Select it, at least:
                     completions.getSelectionModel().select(completion);
@@ -240,12 +242,35 @@ public class AutoComplete extends PopupControl
 
     public abstract static class Completion
     {
-        abstract Pair<@Nullable Node, String> getDisplay(String currentText);
+        /**
+         * Given a property with the latest text, what graphical node and text property
+         * should we show for the item?
+         */
+        abstract Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText);
+
+        /**
+         * Given the current input, should we be showing this completion?
+         */
         abstract boolean shouldShow(String input);
-        public boolean completesOnExactly(String input, boolean onlyAvailableCompletion)
+
+        public static enum CompletionAction
         {
-            return false;
+            COMPLETE_IMMEDIATELY,
+            SELECT,
+            NONE
         }
+
+        /**
+         * Given current input, and whether or not this is the only completion available,
+         * should we complete it right now, select it at least, or do nothing?
+         */
+        abstract CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion);
+
+        /**
+         * Does this completion feature the given character at all after
+         * the current input?
+         */
+        abstract boolean features(String curInput, char character);
     }
 
 
@@ -262,9 +287,9 @@ public class AutoComplete extends PopupControl
         }
 
         @Override
-        Pair<@Nullable Node, String> getDisplay(String currentText)
+        Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(new Label(" " + shortcuts[0] + " "), title);
+            return new Pair<>(new Label(" " + shortcuts[0] + " "), new ReadOnlyStringWrapper(title));
         }
 
         @Override
@@ -274,14 +299,20 @@ public class AutoComplete extends PopupControl
         }
 
         @Override
-        public boolean completesOnExactly(String input, boolean onlyAvailable)
+        public CompletionAction completesOnExactly(String input, boolean onlyAvailable)
         {
             for (Character shortcut : shortcuts)
             {
                 if (input.equals(shortcut.toString()))
-                    return true;
+                    return CompletionAction.COMPLETE_IMMEDIATELY;
             }
-            return false;
+            return CompletionAction.NONE;
+        }
+
+        @Override
+        public boolean features(String curInput, char character)
+        {
+            return Arrays.stream(shortcuts).anyMatch(c -> (char)c == character);
         }
     }
 
@@ -291,6 +322,7 @@ public class AutoComplete extends PopupControl
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected void updateItem(Completion item, boolean empty)
         {
+            textProperty().unbind();
             if (empty)
             {
                 setGraphic(null);
@@ -298,9 +330,9 @@ public class AutoComplete extends PopupControl
             }
             else
             {
-                Pair<@Nullable Node, String> p = item.getDisplay(textField.getText());
+                Pair<@Nullable Node, ObservableStringValue> p = item.getDisplay(textField.textProperty());
                 setGraphic(p.getFirst());
-                setText(p.getSecond());
+                textProperty().bind(p.getSecond());
             }
             super.updateItem(item, empty);
         }

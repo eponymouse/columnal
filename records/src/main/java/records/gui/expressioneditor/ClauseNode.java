@@ -126,6 +126,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
             matches.get(matches.size() - 1).getSecond().focus(side);
     }
 
+    /*
     @Override
     public @Nullable DataType getType(ExpressionNode child)
     {
@@ -142,7 +143,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
         }
         // Not a child of ours!
         return null;
-    }
+    }*/
 
     @Override
     public List<ColumnId> getAvailableColumns()
@@ -182,6 +183,12 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
         }
         Utility.logStackTrace("Unknown child: " + child);
         return vars;
+    }
+
+    @Override
+    public List<DataType> getAvailableTaggedTypes()
+    {
+        return parent.getAvailableTaggedTypes();
     }
 
     @Override

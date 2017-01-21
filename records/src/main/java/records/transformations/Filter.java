@@ -429,7 +429,7 @@ public class Filter extends Transformation
                     }
                 }
             };
-            return new VBox(rawField, new ExpressionEditor(null, src, DataType.BOOLEAN, updater).getContainer(), example);
+            return new VBox(rawField, new ExpressionEditor(null, src, DataType.BOOLEAN, mgr.getTypeManager(), updater).getContainer(), example);
         }
 
         @Override

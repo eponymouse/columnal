@@ -1,19 +1,16 @@
 package records.gui.expressioneditor;
 
-import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
 import records.gui.expressioneditor.AutoComplete.Completion;
-import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
-import records.transformations.expression.Expression;
-import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 
@@ -128,9 +125,9 @@ public class OperatorEntry extends LeafNode
         }
 
         @Override
-        Pair<@Nullable Node, String> getDisplay(String currentText)
+        Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(null, operator);
+            return new Pair<>(null, new ReadOnlyStringWrapper(operator));
         }
 
         @Override
@@ -140,9 +137,18 @@ public class OperatorEntry extends LeafNode
         }
 
         @Override
-        public boolean completesOnExactly(String input, boolean isOnlyCompletion)
+        public CompletionAction completesOnExactly(String input, boolean isOnlyCompletion)
         {
-            return input.equals(operator) && isOnlyCompletion;
+            if (input.equals(operator))
+                return isOnlyCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT;
+            else
+                return CompletionAction.NONE;
+        }
+
+        @Override
+        boolean features(String curInput, char character)
+        {
+            return operator.contains("" + character);
         }
     }
 

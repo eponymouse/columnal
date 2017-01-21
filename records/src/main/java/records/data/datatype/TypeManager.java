@@ -167,6 +167,9 @@ public class TypeManager
         return knownTypes.get(typeId);
     }
 
+    /**
+     * Gets all the known (tagged) types.
+     */
     public Map<TypeId, DataType> getKnownTypes()
     {
         return Collections.unmodifiableMap(knownTypes);

@@ -19,10 +19,12 @@
 }
 .entry, .function {
     -fx-background-insets: 0;
-    -fx-background-color: white;
     -fx-alignment: top-center;
     -fx-padding: 0 2 2 2;
     -fx-fill-width: true;
+}
+.entry {
+    -fx-background-color: white;
 }
 .entry:ps-column {
     -fx-background-color: lightsteelblue;

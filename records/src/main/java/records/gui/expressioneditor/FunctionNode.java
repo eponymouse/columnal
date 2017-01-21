@@ -1,11 +1,20 @@
 package records.gui.expressioneditor;
 
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
+import javafx.scene.shape.CubicCurveTo;
+import javafx.scene.shape.HLineTo;
+import javafx.scene.shape.MoveTo;
+import javafx.scene.shape.Path;
+import javafx.scene.shape.VLineTo;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.datatype.DataType;
@@ -48,7 +57,7 @@ public class FunctionNode implements ExpressionParent, OperandNode
         typeLabel.getStyleClass().add("function-top");
         VBox vBox = new VBox(typeLabel, functionName);
         vBox.getStyleClass().add("function");
-        arguments = new Consecutive(this, new HBox(vBox, new Label("(")), new Label(")"));
+        arguments = new Consecutive(this, c -> new HBox(vBox, new OpenBracketShape(c)), new Label(")"));
 
         Utility.addChangeListenerPlatformNN(functionName.textProperty(), text -> {
             parent.changed(this);
@@ -82,7 +91,7 @@ public class FunctionNode implements ExpressionParent, OperandNode
     }
 
     @Override
-    public ExpressionNode prompt(String prompt)
+    public OperandNode prompt(String prompt)
     {
         // Ignore
         return this;
@@ -107,12 +116,12 @@ public class FunctionNode implements ExpressionParent, OperandNode
         return this;
     }
 
-    @Override
-    public @Nullable DataType getType(ExpressionNode child)
-    {
+    //@Override
+    //public @Nullable DataType getType(ExpressionNode child)
+    //{
         // Not valid for multiple args anyway
-        return null;
-    }
+        //return null;
+    //}
 
     @Override
     public List<ColumnId> getAvailableColumns()
@@ -124,6 +133,12 @@ public class FunctionNode implements ExpressionParent, OperandNode
     public List<String> getAvailableVariables(ExpressionNode child)
     {
         return parent.getAvailableVariables(this);
+    }
+
+    @Override
+    public List<DataType> getAvailableTaggedTypes()
+    {
+        return parent.getAvailableTaggedTypes();
     }
 
     @Override
@@ -150,5 +165,78 @@ public class FunctionNode implements ExpressionParent, OperandNode
     {
         functionName.requestFocus();
         functionName.positionCaret(functionName.getLength());
+    }
+
+    private static class OpenBracketClipLeft extends Path
+    {
+        private double aspectRatio = 0.2;
+        @SuppressWarnings("initialization")
+        public OpenBracketClipLeft(ReadOnlyDoubleProperty heightProperty)
+        {
+            getElements().addAll(
+                new MoveTo(0, 0),
+                new HLineTo() {{xProperty().bind(heightProperty.multiply(aspectRatio));}},
+                new CubicCurveTo() {{
+                    controlY2Property().bind(heightProperty);
+                    yProperty().bind(heightProperty);
+                    xProperty().bind(heightProperty.multiply(aspectRatio));
+                }},
+                new HLineTo(0),
+                new VLineTo(0)
+            );
+            setFill(Color.BLACK);
+            setStroke(null);
+        }
+    }
+
+    private static class OpenBracketClipRight extends Path
+    {
+        private double aspectRatio = 0.2;
+        @SuppressWarnings("initialization")
+        public OpenBracketClipRight(ReadOnlyDoubleProperty heightProperty)
+        {
+            getElements().addAll(
+                new MoveTo() {{xProperty().bind(heightProperty.multiply(aspectRatio));}},
+                new CubicCurveTo() {{
+                    controlY2Property().bind(heightProperty);
+                    yProperty().bind(heightProperty);
+                    xProperty().bind(heightProperty.multiply(aspectRatio));
+                }},
+                new VLineTo(0)
+            );
+            setFill(Color.BLACK);
+            setStroke(null);
+        }
+    }
+
+    @SuppressWarnings("initialization")
+    private static class OpenBracketShape extends AnchorPane
+    {
+        public OpenBracketShape(Consecutive c)
+        {
+            Label topLabel = new Label(" ");
+            topLabel.getStyleClass().add("function-top");
+            TextField bottomField = new TextField("");
+            bottomField.setMinWidth(2.0);
+            bottomField.setPrefWidth(2.0);
+            bottomField.setVisible(false);
+            VBox lhs = new VBox(topLabel, bottomField);
+            lhs.getStyleClass().add("function");
+            lhs.setClip(new OpenBracketClipLeft(lhs.heightProperty()));
+
+            Label topLabelRHS = new Label(" ");
+            topLabelRHS.getStyleClass().add("function-top");
+            TextField bottomFieldRHS = new TextField("");
+            bottomFieldRHS.setMinWidth(2.0);
+            bottomFieldRHS.setPrefWidth(2.0);
+            bottomFieldRHS.setVisible(false);
+            VBox rhs = new VBox(topLabelRHS, bottomFieldRHS);
+            rhs.getStyleClass().add("function");
+            rhs.setClip(new OpenBracketClipRight(rhs.heightProperty()));
+            getChildren().addAll(lhs, rhs);
+            AnchorPane.setLeftAnchor(lhs, 0.0);
+            AnchorPane.setRightAnchor(lhs, 3.0);
+            AnchorPane.setRightAnchor(rhs, 0.0);
+        }
     }
 }
