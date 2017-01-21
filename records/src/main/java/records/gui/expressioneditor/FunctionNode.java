@@ -7,7 +7,6 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.CubicCurveTo;
@@ -52,11 +51,7 @@ public class FunctionNode implements ExpressionParent, OperandNode
                     super.forward();
             }
         };
-        functionName.getStyleClass().add("function-name");
-        Label typeLabel = new Label("function");
-        typeLabel.getStyleClass().add("function-top");
-        VBox vBox = new VBox(typeLabel, functionName);
-        vBox.getStyleClass().add("function");
+        VBox vBox = ExpressionEditorUtil.withLabelAbove(functionName, "function", "function");
         arguments = new Consecutive(this, c -> new HBox(vBox, new OpenBracketShape(c)), new Label(")"));
 
         Utility.addChangeListenerPlatformNN(functionName.textProperty(), text -> {

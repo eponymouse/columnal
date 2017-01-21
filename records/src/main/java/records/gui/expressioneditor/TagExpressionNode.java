@@ -4,6 +4,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.datatype.DataType;
@@ -27,6 +28,7 @@ public class TagExpressionNode implements ExpressionParent, OperandNode
     private final TagType<DataType> tagType;
     private final @Nullable Consecutive inner;
     private final ObservableList<Node> nodes;
+    private final VBox labelledField;
 
     @SuppressWarnings("initialization")
     public TagExpressionNode(ExpressionParent parent, TypeId typeName, TagType<DataType> tagType)
@@ -35,13 +37,15 @@ public class TagExpressionNode implements ExpressionParent, OperandNode
         this.typeName = typeName;
         this.tagType = tagType;
         this.tagNameField = new LeaveableTextField(this, this);
+        tagNameField.setText(tagType.getName());
+        labelledField = ExpressionEditorUtil.withLabelAbove(tagNameField, "tag", "tag " + typeName.getRaw() + ":");
         if (tagType.getInner() == null)
             inner = null;
         else
-            inner = new Consecutive(this, c -> tagNameField, null);
+            inner = new Consecutive(this, c -> labelledField, null);
 
         if (inner == null)
-            nodes = FXCollections.observableArrayList(tagNameField);
+            nodes = FXCollections.observableArrayList(labelledField);
         else
             nodes = inner.nodes();
     }

@@ -10,14 +10,14 @@
     -fx-font-size: 140%;
     -fx-text-fill: #808080;
 }
-.entry-type, .function-top {
+.entry-type, .labelled-top {
     -fx-font-size: 8pt;
     -fx-cursor: hand;
     -fx-background-image: url("stipple.png");
     -fx-background-repeat: repeat;
     -fx-max-width: 9999.0;
 }
-.entry, .function {
+.entry, .labelled {
     -fx-background-insets: 0;
     -fx-alignment: top-center;
     -fx-padding: 0 2 2 2;
@@ -35,10 +35,14 @@
     -fx-background-radius: 0;
 }
 .function {
-    -fx-background-color: skyblue;
+    -fx-background-color: paleturquoise ;
     -fx-background-radius: 0;
 }
-.entry-field, .operator-field, .function-name {
+.tag {
+    -fx-background-color: yellowgreen;
+    -fx-background-radius: 0;
+}
+.entry-field, .operator-field, .labelled-name {
     -fx-background-insets: 0;
     -fx-background-color: transparent;
     -fx-border-width: 1;
@@ -46,6 +50,6 @@
     -fx-padding: 1;
 }
 .entry-field:ps-empty, .entry-field:hover, .entry-field:focused,
-  .operator-field:hover, .operator-field:focused, .function-name:hover, .function-name:focused {
+  .operator-field:hover, .operator-field:focused, .labelled-name:hover, .labelled-name:focused {
     -fx-border-color: grey;
 }

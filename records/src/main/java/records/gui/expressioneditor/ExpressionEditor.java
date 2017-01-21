@@ -47,7 +47,7 @@ public class ExpressionEditor extends Consecutive
             container.getChildren().setAll(nodes());
         });
         this.onChange = onChange;
-        Utility.onNonNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
+        //Utility.onNonNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
     }
 
     public Node getContainer()

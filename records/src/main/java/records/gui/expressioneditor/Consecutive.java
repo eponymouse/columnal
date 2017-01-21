@@ -110,15 +110,7 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
 
     private void updateNodes()
     {
-        if (operands.size() == 1 && prompt != null)
-            operands.get(0).prompt(prompt);
-        else
-        {
-            for (OperandNode child : operands)
-            {
-                child.prompt("");
-            }
-        }
+        updatePrompt();
 
         List<Node> childrenNodes = new ArrayList<Node>();
         for (int i = 0; i < operands.size(); i++)
@@ -131,6 +123,19 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
         if (this.suffixNode != null)
             childrenNodes.add(this.suffixNode);
         nodes.setAll(childrenNodes);
+    }
+
+    private void updatePrompt()
+    {
+        if (operands.size() == 1 && prompt != null)
+            operands.get(0).prompt(prompt);
+        else
+        {
+            for (OperandNode child : operands)
+            {
+                child.prompt("");
+            }
+        }
     }
 
     @Override
@@ -296,7 +301,7 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
     public Consecutive prompt(String value)
     {
         prompt = value;
-        updateNodes();
+        updatePrompt();
         return this;
     }
 

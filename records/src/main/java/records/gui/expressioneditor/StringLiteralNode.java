@@ -68,6 +68,7 @@ public class StringLiteralNode extends LeafNode implements OperandNode
             @Override
             protected String selected(String currentText, Completion c, String rest)
             {
+                parent.focusRightOf(StringLiteralNode.this);
                 return currentText;
             }
         }, c -> false);
