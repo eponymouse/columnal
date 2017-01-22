@@ -19,6 +19,7 @@ import records.error.UserException;
 import records.transformations.function.Absolute;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionInstance;
+import records.transformations.function.Mean;
 import records.transformations.function.Round;
 import records.transformations.function.Sum;
 import test.gen.GenNumber;
@@ -39,6 +40,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertThrows;
+import static org.junit.Assert.fail;
 
 /**
  * Created by neil on 13/12/2016.
@@ -89,8 +91,35 @@ public class PropNumericFunctions
     public void propSum(@From(GenNumbers.class) List<Number> src, @From(GenUnit.class) Unit u) throws Throwable
     {
         @Nullable Number total = src.stream().reduce((a, b) -> Utility.addSubtractNumbers(a, b, true)).orElse(null);
-        assertEquals(total == null ? null : Utility.toBigDecimal(total), Utility.toBigDecimal(runNumericSummaryFunction(u.toString(), src, u.toString(), new Sum())));
+        assertEquals(total == null ? BigDecimal.ZERO : Utility.toBigDecimal(total), Utility.toBigDecimal(runNumericSummaryFunction(u.toString(), src, u.toString(), new Sum())));
     }
+
+    @Property
+    @OnThread(Tag.Simulation)
+    public void propAverage(@From(GenNumbers.class) List<Number> src, @From(GenUnit.class) Unit u) throws Throwable
+    {
+        @Nullable Number total = src.stream().reduce((a, b) -> Utility.addSubtractNumbers(a, b, true)).orElse(null);
+        if (total == null)
+        {
+            // List must be empty:
+            try
+            {
+                runNumericSummaryFunction(u.toString(), src, u.toString(), new Mean());
+                fail("Should have thrown exception on empty list");
+            }
+            catch (UserException e)
+            {
+                // Expected
+            }
+        }
+        else
+        {
+            BigDecimal expected = Utility.toBigDecimal(Utility.divideNumbers(total, src.size()));
+            BigDecimal actual = Utility.toBigDecimal(runNumericSummaryFunction(u.toString(), src, u.toString(), new Mean()));
+            assertThat("Expected " + expected + " actual" + actual, Utility.toBigDecimal(Utility.addSubtractNumbers(actual, expected, false)).abs(), Matchers.lessThanOrEqualTo(new BigDecimal("0.000001")));
+        }
+    }
+
     // Tests single numeric input, numeric output function
     @OnThread(Tag.Simulation)
     private Number runNumericFunction(String expectedUnit, Number src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable

@@ -13,6 +13,7 @@ public class FunctionList
         new AsUnit(),
         new Count(),
         new GetElement(),
+        new Mean(),
         new Round(),
         new Sum(),
         new ToDate(),
