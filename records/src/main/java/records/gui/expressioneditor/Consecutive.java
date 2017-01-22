@@ -419,10 +419,6 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
         return null; //TODO
     }
 
-    public @Nullable List<Expression> toArgs()
-    {
-        return null; // TODO
-    }
 
     public @Nullable Function<MatchExpression, PatternMatch> toPattern()
     {

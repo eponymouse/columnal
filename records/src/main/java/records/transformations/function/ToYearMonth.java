@@ -37,10 +37,10 @@ public class ToYearMonth extends ToTemporalFunction
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY))));
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
-        r.add(new FunctionType(FromNumbers::new, DataType.date(getResultType()),
+        r.add(new FunctionType(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
             DataType.number(new NumberInfo(mgr.loadUse("year"), 0)),
             DataType.number(new NumberInfo(mgr.loadUse("month"), 0))
-        ));
+        )));
         return r;
     }
 
@@ -73,9 +73,10 @@ public class ToYearMonth extends ToTemporalFunction
     private class FromNumbers extends FunctionInstance
     {
         @Override
-        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> simpleParams) throws UserException, InternalException
+        public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
         {
-            return YearMonth.of(Utility.requireInteger(simpleParams.get(0)), Utility.requireInteger(simpleParams.get(1)));
+            @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
+            return YearMonth.of(Utility.requireInteger(paramList[0]), Utility.requireInteger(paramList[1]));
         }
     }
 }

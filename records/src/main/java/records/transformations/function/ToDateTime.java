@@ -39,7 +39,7 @@ public class ToDateTime extends ToTemporalFunction
     {
         ArrayList<FunctionType> r = new ArrayList<>(fromString());
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
-        r.add(new FunctionType(DateAndTimeInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY))));
+        r.add(new FunctionType(DateAndTimeInstance::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)))));
         return r;
     }
 
@@ -82,9 +82,10 @@ public class ToDateTime extends ToTemporalFunction
     private class DateAndTimeInstance extends FunctionInstance
     {
         @Override
-        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params) throws UserException, InternalException
+        public @Value Object getValue(int rowIndex, @Value Object params) throws UserException, InternalException
         {
-            return LocalDateTime.of((LocalDate)params.get(0), (LocalTime) params.get(1));
+            @Value Object[] paramList = Utility.valueTuple(params, 2);
+            return LocalDateTime.of((LocalDate)paramList[0], (LocalTime) paramList[1]);
         }
     }
 }

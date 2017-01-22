@@ -29,36 +29,17 @@ public abstract class SingleNumericSummaryFunction extends FunctionDefinition
     }
 
     @Override
-    public @Nullable Pair<FunctionInstance, DataType> typeCheck(List<Unit> units, List<DataType> params, ExConsumer<String> onError, UnitManager mgr) throws InternalException, UserException
+    protected List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
     {
-        if (!units.isEmpty())
-        {
-            onError.accept("Function \"" + getName() + "\" does not accept unit parameter");
-            return null;
-        }
-        @Nullable DataType paramType = checkSingleParam(params, onError);
-        if (paramType == null)
-            return null;
-        if (!paramType.isArray() || paramType.getMemberType().isEmpty() || !paramType.getMemberType().get(0).isNumber())
-        {
-            onError.accept("Function \"" + getName() + "\" requires a parameter of non-empty list of numeric type");
-            return null;
-        }
-
-        return new Pair<>(makeInstance(), paramType.getMemberType().get(0));
+        // TODO allow other units:
+        return Collections.singletonList(new FunctionType(this::makeInstance, DataType.NUMBER, DataType.array(DataType.NUMBER)));
     }
 
     protected abstract FunctionInstance makeInstance();
 
     @Override
-    public Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
+    public Pair<List<Unit>, Expression> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {
-        return new Pair<>(Collections.emptyList(), Collections.singletonList(new ArrayExpression(ImmutableList.of(newExpressionOfDifferentType.getNonNumericType()))));
-    }
-
-    @Override
-    public List<DataType> getLikelyArgTypes(UnitManager unitManager) throws UserException, InternalException
-    {
-        return Collections.singletonList(DataType.array(DataType.NUMBER));
+        return new Pair<>(Collections.emptyList(), new ArrayExpression(ImmutableList.of(newExpressionOfDifferentType.getNonNumericType())));
     }
 }

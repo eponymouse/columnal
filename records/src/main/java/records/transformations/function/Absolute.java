@@ -35,9 +35,9 @@ public class Absolute extends SingleNumericInOutFunction
         return new FunctionInstance()
         {
             @Override
-            public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params) throws UserException, InternalException
+            public @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
             {
-                return Utility.value(Utility.<Number>withNumber(params.get(0), l -> {
+                return Utility.value(Utility.<Number>withNumber(param, l -> {
                     if (l == Long.MIN_VALUE)
                         return BigDecimal.valueOf(l).negate();
                     else

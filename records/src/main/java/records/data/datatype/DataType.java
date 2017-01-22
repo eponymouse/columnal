@@ -59,6 +59,7 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
@@ -204,6 +205,11 @@ public class DataType
     public static DataType array(DataType inner)
     {
         return new DataType(Kind.ARRAY, null, null, null, Collections.singletonList(inner));
+    }
+
+    public static DataType tuple(DataType... inner)
+    {
+        return tuple(Arrays.asList(inner));
     }
 
     public static DataType tuple(List<DataType> inner)

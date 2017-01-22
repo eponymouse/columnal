@@ -26,28 +26,23 @@ import java.util.Random;
 /**
  * Created by neil on 11/12/2016.
  */
-public class AsType extends FunctionDefinition
+public class AsUnit extends FunctionDefinition
 {
-    public AsType()
+    public AsUnit()
     {
         super("as");
     }
 
     @Override
-    public @Nullable Pair<FunctionInstance, DataType> typeCheck(List<Unit> units, List<DataType> params, ExConsumer<String> onError, UnitManager mgr) throws InternalException, UserException
+    public @Nullable Pair<FunctionInstance, DataType> typeCheck(List<Unit> units, DataType param, ExConsumer<String> onError, UnitManager mgr) throws InternalException, UserException
     {
         if (units.size() != 1)
         {
             onError.accept("Must specify one unit to convert to");
             return null;
         }
-        if (params.size() != 1)
-        {
-            onError.accept("Function takes exactly one parameter");
-            return null;
-        }
 
-        Unit srcUnit = params.get(0).getNumberInfo().getUnit();
+        Unit srcUnit = param.getNumberInfo().getUnit();
         Optional<Rational> multiplier = ((Unit) srcUnit).canScaleTo(units.get(0), mgr);
 
         if (!multiplier.isPresent())
@@ -60,16 +55,16 @@ public class AsType extends FunctionDefinition
     }
 
     @Override
-    public Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
+    public Pair<List<Unit>, Expression> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {
         // TODO also return units which can convert
-        return new Pair<>(Collections.emptyList(), Collections.singletonList(newExpressionOfDifferentType.getNonNumericType()));
+        return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.getNonNumericType());
     }
 
     @Override
-    public List<DataType> getLikelyArgTypes(UnitManager unitManager) throws UserException, InternalException
+    protected List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
     {
-        return Collections.singletonList(DataType.NUMBER);
+        throw new InternalException("Overloads inapplicable to astype");
     }
 
     private static class Instance extends FunctionInstance
@@ -92,9 +87,9 @@ public class AsType extends FunctionDefinition
         }
 
         @Override
-        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params)
+        public @Value Object getValue(int rowIndex, @Value Object param)
         {
-            return Utility.value(Utility.multiplyNumbers((Number)params.get(0), scaleBD != null ? scaleBD : scaleInt));
+            return Utility.value(Utility.multiplyNumbers((Number)param, scaleBD != null ? scaleBD : scaleInt));
         }
     }
 }

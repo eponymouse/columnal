@@ -2,6 +2,8 @@ package records.transformations.function;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.error.InternalException;
+import records.error.UserException;
 import utility.Pair;
 
 import java.util.Arrays;
@@ -20,20 +22,22 @@ import java.util.function.Supplier;
 public class FunctionType
 {
     private final DataType returnType;
-    private final List<DataType> fixedParams;
+    /**
+     * If one item, that is the argument type.  If multiple, it's a tuple of those types.
+     */
+    private final DataType paramType;
     private final Supplier<FunctionInstance> makeInstance;
 
-    public FunctionType(Supplier<FunctionInstance> makeInstance, DataType returnType, DataType... fixedParams)
+    public FunctionType(Supplier<FunctionInstance> makeInstance, DataType returnType, DataType paramType)
     {
         this.makeInstance = makeInstance;
         this.returnType = returnType;
-        this.fixedParams = Arrays.asList(fixedParams);
+        this.paramType = paramType;
     }
 
-    public boolean matches(List<DataType> params)
+    public boolean matches(DataType actualType) throws InternalException, UserException
     {
-        // TODO this won't work properly with passing an empty list in
-        return fixedParams.equals(params);
+        return DataType.checkSame(paramType, actualType, s -> {}) != null;
     }
 
     public Pair<FunctionInstance, DataType> getFunctionAndReturnType()
@@ -41,8 +45,8 @@ public class FunctionType
         return new Pair<>(makeInstance.get(), returnType);
     }
 
-    public DataType getFixedParams()
+    public DataType getParamType()
     {
-        return fixedParams.size() == 1 ? fixedParams.get(0) : DataType.tuple(fixedParams);
+        return paramType;
     }
 }

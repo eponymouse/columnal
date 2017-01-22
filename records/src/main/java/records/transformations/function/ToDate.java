@@ -65,12 +65,12 @@ public class ToDate extends ToTemporalFunction
         ArrayList<FunctionType> r = new ArrayList<>(fromString());
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
-        r.add(new FunctionType(FromYearMonth_Day::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), DataType.number(new NumberInfo(mgr.loadUse("day"), 0))));
-        r.add(new FunctionType(FromNumbers::new, DataType.date(getResultType()),
+        r.add(new FunctionType(FromYearMonth_Day::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), DataType.number(new NumberInfo(mgr.loadUse("day"), 0)))));
+        r.add(new FunctionType(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
             DataType.number(new NumberInfo(mgr.loadUse("year"), 0)),
             DataType.number(new NumberInfo(mgr.loadUse("month"), 0)),
             DataType.number(new NumberInfo(mgr.loadUse("day"), 0))
-        ));
+        )));
         return r;
     }
 
@@ -95,10 +95,11 @@ public class ToDate extends ToTemporalFunction
     private class FromYearMonth_Day extends FunctionInstance
     {
         @Override
-        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> simpleParams) throws UserException, InternalException
+        public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
         {
-            YearMonth ym = (YearMonth) simpleParams.get(0);
-            int day = Utility.requireInteger(simpleParams.get(1));
+            @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
+            YearMonth ym = (YearMonth) paramList[0];
+            int day = Utility.requireInteger(paramList[1]);
             try
             {
                 return LocalDate.of(ym.getYear(), ym.getMonth(), day);
@@ -113,11 +114,12 @@ public class ToDate extends ToTemporalFunction
     private class FromNumbers extends FunctionInstance
     {
         @Override
-        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> simpleParams) throws UserException, InternalException
+        public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
         {
-            int year = Utility.requireInteger(simpleParams.get(0));
-            int month = Utility.requireInteger(simpleParams.get(1));
-            int day = Utility.requireInteger(simpleParams.get(2));
+            @Value Object[] paramList = Utility.valueTuple(simpleParams, 3);
+            int year = Utility.requireInteger(paramList[0]);
+            int month = Utility.requireInteger(paramList[1]);
+            int day = Utility.requireInteger(paramList[2]);
             try
             {
                 return LocalDate.of(year, month, day);

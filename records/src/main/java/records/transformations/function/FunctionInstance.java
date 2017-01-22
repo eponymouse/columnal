@@ -15,5 +15,5 @@ import java.util.List;
 public abstract class FunctionInstance
 {
     @OnThread(Tag.Simulation)
-    public abstract @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params) throws UserException, InternalException;
+    public abstract @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException;
 }

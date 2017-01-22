@@ -10,9 +10,13 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
 import utility.ExConsumer;
 import utility.Pair;
+import utility.Utility;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 11/12/2016.
@@ -26,30 +30,60 @@ public abstract class FunctionDefinition
         this.name = name;
     }
 
-    public abstract @Nullable Pair<FunctionInstance, DataType> typeCheck(List<Unit> units, List<DataType> params, ExConsumer<String> onError, UnitManager mgr) throws InternalException, UserException;
+    public @Nullable Pair<FunctionInstance, DataType> typeCheck(List<Unit> units, DataType param, ExConsumer<String> onError, UnitManager mgr) throws InternalException, UserException
+    {
+        if (!units.isEmpty())
+        {
+            onError.accept("Function \"" + getName() + "\" does not accept unit parameter");
+            return null;
+        }
+
+        List<FunctionType> types = getOverloads(mgr);
+        List<FunctionType> possibilities = new ArrayList<>();
+        for (FunctionType type : types)
+        {
+            if (type.matches(param))
+                possibilities.add(type);
+        }
+
+        if (possibilities.size() == 0)
+        {
+            onError.accept("Function " + getName() + " cannot accept parameter of type " + param);
+            return null;
+        }
+        if (possibilities.size() > 1)
+            throw new InternalException("Function " + getName() + " has multiple possible overloads for type " + param);
+
+        return possibilities.get(0).getFunctionAndReturnType();
+    }
 
     public String getName()
     {
         return name;
     }
 
-    // Returns the type of the parameter if there's only one
-    protected static @Nullable DataType checkSingleParam(List<DataType> params, ExConsumer<String> onError) throws InternalException, UserException
+    // For testing: give a unit list and parameter list that should fail typechecking
+    public Pair<List<Unit>, Expression> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {
-        if (params.size() != 1)
+        return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.getTypes(1, type ->
         {
-            onError.accept("Function takes one parameter, but has been given " + params.size());
-            return null;
-        }
-        return params.get(0);
+            for (FunctionType functionType : getOverloads(unitManager))
+            {
+                if (functionType.matches(type.get(0)))
+                    return false;
+            }
+            return true;
+        }).get(0));
     }
 
-    // For testing: give a unit list and parameter list that should fail typechecking
-    public abstract Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException;
+    protected abstract List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException;
 
     /**
      * For auto-completion; what are common argument types for this function?
      * @param unitManager
      */
-    public abstract List<DataType> getLikelyArgTypes(UnitManager unitManager) throws UserException, InternalException;
+    public final List<DataType> getLikelyArgTypes(UnitManager unitManager) throws UserException, InternalException
+    {
+        return Utility.mapList(getOverloads(unitManager), t -> t.getParamType());
+    }
 }

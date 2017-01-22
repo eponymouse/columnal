@@ -40,13 +40,13 @@ public class ToDateTimeZone extends ToTemporalFunction
     {
         ArrayList<FunctionType> r = new ArrayList<>(fromString());
         r.add(new FunctionType(DT_Z::new, DataType.date(getResultType()),
-            DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), DataType.TEXT));
-        r.add(new FunctionType(D_T_Z::new, DataType.date(getResultType()),
+            DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), DataType.TEXT)));
+        r.add(new FunctionType(D_T_Z::new, DataType.date(getResultType()), DataType.tuple(
             DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
-            DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT));
-        r.add(new FunctionType(D_TZ::new, DataType.date(getResultType()),
+            DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT)));
+        r.add(new FunctionType(D_TZ::new, DataType.date(getResultType()), DataType.tuple(
             DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
-            DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))));
+            DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)))));
         return r;
     }
 
@@ -89,28 +89,31 @@ public class ToDateTimeZone extends ToTemporalFunction
     private class D_TZ extends FunctionInstance
     {
         @Override
-        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> simpleParams) throws UserException, InternalException
+        public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
         {
-            OffsetTime t = (OffsetTime)simpleParams.get(1);
-            return ZonedDateTime.of((LocalDate)simpleParams.get(0), t.toLocalTime(), t.getOffset()).withFixedOffsetZone();
+            @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
+            OffsetTime t = (OffsetTime)paramList[1];
+            return ZonedDateTime.of((LocalDate)paramList[0], t.toLocalTime(), t.getOffset()).withFixedOffsetZone();
         }
     }
 
     private class DT_Z extends FunctionInstance
     {
         @Override
-        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> simpleParams) throws UserException, InternalException
+        public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
         {
-            return ZonedDateTime.of((LocalDateTime)simpleParams.get(0), ZoneId.of((String)simpleParams.get(1))).withFixedOffsetZone();
+            @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
+            return ZonedDateTime.of((LocalDateTime)paramList[0], ZoneId.of((String)paramList[1])).withFixedOffsetZone();
         }
     }
 
     private class D_T_Z extends FunctionInstance
     {
         @Override
-        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> simpleParams) throws UserException, InternalException
+        public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
         {
-            return ZonedDateTime.of(LocalDateTime.of((LocalDate) simpleParams.get(0), (LocalTime)simpleParams.get(1)), ZoneId.of((String) simpleParams.get(2))).withFixedOffsetZone();
+            @Value Object[] paramList = Utility.valueTuple(simpleParams, 3);
+            return ZonedDateTime.of(LocalDateTime.of((LocalDate) paramList[0], (LocalTime)paramList[1]), ZoneId.of((String) paramList[2])).withFixedOffsetZone();
         }
     }
 }

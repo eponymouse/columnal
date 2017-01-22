@@ -54,11 +54,11 @@ public class ToTime extends ToTemporalFunction
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))));
-        r.add(new FunctionType(FromNumbers::new, DataType.date(getResultType()),
+        r.add(new FunctionType(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
             DataType.number(new NumberInfo(mgr.loadUse("hour"), 0)),
             DataType.number(new NumberInfo(mgr.loadUse("min"), 0)),
             DataType.number(new NumberInfo(mgr.loadUse("s"), 0))
-        ));
+        )));
         return r;
     }
 
@@ -89,11 +89,12 @@ public class ToTime extends ToTemporalFunction
     private class FromNumbers extends FunctionInstance
     {
         @Override
-        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> simpleParams) throws UserException, InternalException
+        public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
         {
-            int hour = Utility.requireInteger(simpleParams.get(0));
-            int minute = Utility.requireInteger(simpleParams.get(1));
-            Number second = (Number)simpleParams.get(2);
+            @Value Object[] paramList = Utility.valueTuple(simpleParams, 3);
+            int hour = Utility.requireInteger(paramList[0]);
+            int minute = Utility.requireInteger(paramList[1]);
+            Number second = (Number)paramList[2];
             return LocalTime.of(hour, minute, Utility.requireInteger(Utility.value(Utility.getIntegerPart(second))), Utility.getFracPart(second, 9).intValue());
         }
     }

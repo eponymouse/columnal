@@ -31,38 +31,23 @@ public class Count extends FunctionDefinition
     }
 
     @Override
-    public @Nullable Pair<FunctionInstance, DataType> typeCheck(List<Unit> units, List<DataType> params, ExConsumer<String> onError, UnitManager mgr) throws InternalException, UserException
+    protected List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
     {
-        if (!units.isEmpty())
-        {
-            onError.accept("Units should be empty");
-            return null;
-        }
-        if (params.size() != 1 || !params.get(0).isArray())
-        {
-            onError.accept("Count function accepts a single array parameter");
-        }
-        return new Pair<>(new Instance(), DataType.NUMBER);
+        return Collections.singletonList(new FunctionType(Instance::new, DataType.NUMBER, DataType.array()));
     }
 
     @Override
-    public Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
+    public Pair<List<Unit>, Expression> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {
-        return new Pair<>(Collections.emptyList(), Collections.singletonList(newExpressionOfDifferentType.getDifferentType(DataType.array())));
-    }
-
-    @Override
-    public List<DataType> getLikelyArgTypes(UnitManager unitManager)
-    {
-        return Collections.singletonList(DataType.array());
+        return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.getDifferentType(DataType.array()));
     }
 
     private static class Instance extends FunctionInstance
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params) throws UserException, InternalException
+        public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
         {
-            return Utility.value(Utility.valueList(params.get(0)).size());
+            return Utility.value(Utility.valueList(param).size());
         }
     }
 }

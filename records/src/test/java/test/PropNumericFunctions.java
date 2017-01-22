@@ -87,14 +87,14 @@ public class PropNumericFunctions
     {
         try
         {
-            @Nullable Pair<FunctionInstance, DataType> instance = function.typeCheck(Collections.emptyList(), Collections.singletonList(DataType.number(new NumberInfo(mgr.loadUse(srcUnit), 0))), s ->
+            @Nullable Pair<FunctionInstance, DataType> instance = function.typeCheck(Collections.emptyList(), DataType.number(new NumberInfo(mgr.loadUse(srcUnit), 0)), s ->
             {
                 throw new RuntimeException(new UserException(s));
             }, mgr);
             assertNotNull(instance);
             assertTrue(instance.getSecond().isNumber());
             assertEquals(mgr.loadUse(expectedUnit), instance.getSecond().getNumberInfo().getUnit());
-            Object num = instance.getFirst().getValue(0, ImmutableList.<@Value Object>of(Utility.value(src)));
+            Object num = instance.getFirst().getValue(0, Utility.value(src));
             return (Number)num;
         }
         catch (RuntimeException e)

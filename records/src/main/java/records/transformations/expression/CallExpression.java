@@ -1,8 +1,10 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.units.qual.C;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
@@ -39,23 +41,23 @@ import java.util.stream.Stream;
 public class CallExpression extends Expression
 {
     private final String functionName;
-    private final List<Expression> params;
+    private final Expression param;
     private final List<Unit> units;
     @MonotonicNonNull
     private FunctionDefinition definition;
     @MonotonicNonNull
     private FunctionInstance instance;
 
-    public CallExpression(String functionName, List<Unit> units, List<Expression> args)
+    public CallExpression(String functionName, List<Unit> units, Expression arg)
     {
         this.functionName = functionName;
         this.units = new ArrayList<>(units);
-        this.params = new ArrayList<>(args);
+        this.param = arg;
     }
 
     public CallExpression(String functionName, Expression... args)
     {
-        this(functionName, Collections.emptyList(), Arrays.asList(args));
+        this(functionName, Collections.emptyList(), args.length == 1 ? args[0] : new TupleExpression(ImmutableList.copyOf(args)));
     }
 
     @Override
@@ -65,15 +67,10 @@ public class CallExpression extends Expression
         if (def == null)
             throw new UserException("Unknown function: " + functionName);
         this.definition = def;
-        List<DataType> paramTypes = new ArrayList<>();
-        for (Expression param : params)
-        {
-            @Nullable DataType t = param.check(data, state, onError);
-            if (t == null)
-                return null;
-            paramTypes.add(t);
-        }
-        @Nullable Pair<FunctionInstance, DataType> checked = definition.typeCheck(units, paramTypes, s -> onError.accept(this, s), state.getUnitManager());
+        @Nullable DataType paramType = param.check(data, state, onError);
+        if (paramType == null)
+            return null;
+        @Nullable Pair<FunctionInstance, DataType> checked = definition.typeCheck(units, paramType, s -> onError.accept(this, s), state.getUnitManager());
         if (checked == null)
             return null;
         this.instance = checked.getFirst();
@@ -86,19 +83,22 @@ public class CallExpression extends Expression
         if (instance == null)
             throw new InternalException("Calling function which didn't typecheck");
 
-        return instance.getValue(rowIndex, Utility.<Expression, @Value Object>mapListExI(params, p -> p.getValue(rowIndex, state)));
+        return instance.getValue(rowIndex, param.getValue(rowIndex, state));
     }
 
     @Override
     public Stream<ColumnId> allColumnNames()
     {
-        return params.stream().flatMap(Expression::allColumnNames);
+        return param.allColumnNames();
     }
 
     @Override
     public String save(boolean topLevel)
     {
-        return functionName + "(" + params.stream().map(e -> e.save(params.size() == 1)).collect(Collectors.joining(", ")) + ")";
+        if (param instanceof TupleExpression)
+            return functionName + param.save(false);
+        else
+            return functionName + "(" + param.save(true) + ")";
     }
 
     @Override
@@ -110,13 +110,7 @@ public class CallExpression extends Expression
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
-        return IntStream.range(0, params.size()).mapToObj(i -> {
-            ArrayList<Expression> newParams = new ArrayList<Expression>(params);
-            return new Pair<Expression, Function<Expression, Expression>>(params.get(i), e -> {
-                newParams.set(i, e);
-                return new CallExpression(functionName, units, newParams);
-            });
-        });
+        return param._test_allMutationPoints().map(p -> new Pair<>(p.getFirst(), newParam -> new CallExpression(functionName, units, newParam)));
     }
 
     @Override
@@ -124,7 +118,7 @@ public class CallExpression extends Expression
     {
         if (definition == null)
             throw new InternalException("Calling _test_typeFailure after type check failure");
-        Pair<List<Unit>, List<Expression>> badParams = definition._test_typeFailure(r, newExpressionOfDifferentType, unitManager);
+        Pair<List<Unit>, Expression> badParams = definition._test_typeFailure(r, newExpressionOfDifferentType, unitManager);
         return new CallExpression(functionName, badParams.getFirst(), badParams.getSecond());
     }
 
@@ -137,14 +131,14 @@ public class CallExpression extends Expression
         CallExpression that = (CallExpression) o;
 
         if (!functionName.equals(that.functionName)) return false;
-        return params.equals(that.params);
+        return param.equals(that.param);
     }
 
     @Override
     public int hashCode()
     {
         int result = functionName.hashCode();
-        result = 31 * result + params.hashCode();
+        result = 31 * result + param.hashCode();
         return result;
     }
 }

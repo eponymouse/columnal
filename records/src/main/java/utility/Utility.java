@@ -732,6 +732,16 @@ public class Utility
         return (ListEx)value;
     }
 
+    @SuppressWarnings("valuetype")
+    public static @Value Object[] valueTuple(@Value Object value, int size) throws InternalException
+    {
+        if (!(value instanceof Object[]))
+            throw new InternalException("Unexpected type problem: expected tuple but found " + value.getClass());
+        if (size != ((Object[]) value).length)
+            throw new InternalException("Unexpected tuple size: expected " + size + " but found " + ((Object[]) value).length);
+        return (Object[]) value;
+    }
+
     @OnThread(Tag.Simulation)
     public static @Value Object getAtIndex(@Value ListEx objects, @UserIndex int userIndex) throws UserException, InternalException
     {

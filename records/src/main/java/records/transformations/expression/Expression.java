@@ -288,11 +288,11 @@ public abstract class Expression
         public Expression visitCallExpression(CallExpressionContext ctx)
         {
             // Utility.mapList(ctx.UNIT(), u -> )
-            List<@NonNull Expression> args;
+            @NonNull Expression args;
             if (ctx.topLevelExpression() != null)
-                args = Collections.singletonList(visitTopLevelExpression(ctx.topLevelExpression()));
+                args = visitTopLevelExpression(ctx.topLevelExpression());
             else
-                args = Utility.mapList(ctx.expression(), e -> visitExpression(e));
+                args = new TupleExpression(ImmutableList.copyOf(Utility.mapList(ctx.expression(), e -> visitExpression(e))));
             return new CallExpression(ctx.functionName().getText(), Collections.emptyList(), args);
         }
 

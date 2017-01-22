@@ -104,9 +104,9 @@ public class FunctionNode implements ExpressionParent, OperandNode
     {
         // TODO keep track of whether function is known
         // TODO allow units (second optional consecutive)
-        @Nullable List<Expression> argExps = arguments.toArgs();
-        if (argExps != null)
-            return new CallExpression(functionName.getText(), Collections.emptyList(), argExps);
+        @Nullable Expression argExp = arguments.toExpression(onError);
+        if (argExp != null)
+            return new CallExpression(functionName.getText(), Collections.emptyList(), argExp);
         else
             return null;
     }

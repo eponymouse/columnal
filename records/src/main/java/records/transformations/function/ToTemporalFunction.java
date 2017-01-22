@@ -16,6 +16,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
 import utility.ExConsumer;
 import utility.Pair;
+import utility.Utility;
 
 import java.time.DateTimeException;
 import java.time.Year;
@@ -39,7 +40,7 @@ import java.util.stream.Collectors;
 /**
  * Created by neil on 15/12/2016.
  */
-public abstract class ToTemporalFunction extends SimplyTypedFunctionDefinition
+public abstract class ToTemporalFunction extends FunctionDefinition
 {
     public ToTemporalFunction(String name)
     {
@@ -109,8 +110,8 @@ public abstract class ToTemporalFunction extends SimplyTypedFunctionDefinition
     List<FunctionType> fromString()
     {
         return Arrays.asList(
-            new FunctionType(FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT),
-            new FunctionType(FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT, DataType.TEXT)
+            new FunctionType(FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT)
+            //new FunctionType(FromStringInstance::new, DataType.date(getResultType()), DataType.tuple(DataType.TEXT, DataType.TEXT))
         );
     }
 
@@ -124,9 +125,9 @@ public abstract class ToTemporalFunction extends SimplyTypedFunctionDefinition
         private ArrayList<List<DateTimeFormatter>> unusedFormats = new ArrayList<>(getFormats());
 
         @Override
-        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params) throws UserException
+        public @Value Object getValue(int rowIndex, @Value Object param) throws UserException
         {
-            String src = (String) params.get(0);
+            String src = (String) param;
 
             for (int i = 0; i < usedFormats.size(); i++)
             {
@@ -194,11 +195,11 @@ public abstract class ToTemporalFunction extends SimplyTypedFunctionDefinition
     class FromTemporalInstance extends FunctionInstance
     {
         @Override
-        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params) throws UserException
+        public @Value Object getValue(int rowIndex, @Value Object param) throws UserException
         {
             try
             {
-                return fromTemporal((TemporalAccessor) params.get(0));
+                return fromTemporal((TemporalAccessor) param);
             }
             catch (DateTimeException e)
             {

@@ -41,7 +41,7 @@ public class ToTimeAndZone extends ToTemporalFunction
         ArrayList<FunctionType> r = new ArrayList<>(fromString());
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
         r.add(new FunctionType(T_Z::new, DataType.date(getResultType()),
-            DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT));
+            DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT)));
         return r;
     }
 
@@ -84,9 +84,10 @@ public class ToTimeAndZone extends ToTemporalFunction
     private class T_Z extends FunctionInstance
     {
         @Override
-        public @Value Object getValue(int rowIndex, ImmutableList<@Value Object> simpleParams) throws UserException, InternalException
+        public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
         {
-            return OffsetTime.of((LocalTime)simpleParams.get(0), ZoneOffset.of((String)simpleParams.get(1)));
+            @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
+            return OffsetTime.of((LocalTime)paramList[0], ZoneOffset.of((String)paramList[1]));
         }
     }
 }

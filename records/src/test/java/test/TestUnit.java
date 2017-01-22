@@ -4,7 +4,6 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.hamcrest.BaseMatcher;
 import org.hamcrest.CustomMatcher;
 import org.hamcrest.Matcher;
 import org.junit.Before;
@@ -17,7 +16,7 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.function.AsType;
+import records.transformations.function.AsUnit;
 import records.transformations.function.FunctionInstance;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -176,12 +175,12 @@ public class TestUnit
     {
         try
         {
-            @Nullable Pair<FunctionInstance, DataType> instance = new AsType().typeCheck(Collections.singletonList(mgr.loadUse(destUnit)), Collections.singletonList(DataType.number(new NumberInfo(mgr.loadUse(srcUnit), 0))), s ->
+            @Nullable Pair<FunctionInstance, DataType> instance = new AsUnit().typeCheck(Collections.singletonList(mgr.loadUse(destUnit)), DataType.number(new NumberInfo(mgr.loadUse(srcUnit), 0)), s ->
             {
                 throw new RuntimeException(new UserException(s));
             }, mgr);
             assertNotNull(instance);
-            Object num = instance.getFirst().getValue(0, ImmutableList.<@Value Object>of(d(src)));
+            Object num = instance.getFirst().getValue(0, d(src));
             assertThat(num, numberMatch(d(expected)));
         }
         catch (RuntimeException e)

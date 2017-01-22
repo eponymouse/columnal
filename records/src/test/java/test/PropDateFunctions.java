@@ -210,12 +210,12 @@ public class PropDateFunctions
     {
         try
         {
-            @Nullable Pair<FunctionInstance, DataType> instance = function.typeCheck(Collections.emptyList(), Collections.singletonList(srcType), s ->
+            @Nullable Pair<FunctionInstance, DataType> instance = function.typeCheck(Collections.emptyList(), srcType, s ->
             {
                 throw new RuntimeException(new UserException(s));
             }, mgr);
             assertNotNull(instance);
-            return instance.getFirst().getValue(0, ImmutableList.<@Value Object>of(src));
+            return instance.getFirst().getValue(0, src);
         }
         catch (RuntimeException e)
         {

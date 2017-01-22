@@ -42,12 +42,12 @@ public class Sum extends SingleNumericSummaryFunction
     private static class Instance extends FunctionInstance
     {
         @Override
-        public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, ImmutableList<@Value Object> params) throws UserException, InternalException
+        public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
         {
             // If there are non-integers this will get widened.  And if not, it will stay Integer
             // which will be faster:
             Number total = Integer.valueOf(0);
-            ListEx list = Utility.valueList(params.get(0));
+            ListEx list = Utility.valueList(param);
             int size = list.size();
             for (int i = 0; i < size; i++)
             {
