@@ -1,17 +1,21 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.Multimap;
+import com.google.common.collect.Multimaps;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import org.checkerframework.checker.interning.qual.UnknownInterned;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import org.jetbrains.annotations.NotNull;
-import records.data.ColumnId;
+import records.data.Column;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
+import records.error.InternalException;
+import records.error.UserException;
 import records.transformations.expression.Expression;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
@@ -22,7 +26,7 @@ import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -36,7 +40,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 19/12/2016.
  */
-public class ClauseNode implements ExpressionParent, ExpressionNode
+public abstract class ClauseNode implements ExpressionParent, ExpressionNode
 {
     private final PatternMatchNode parent;
     private final ObservableList<Pair<Consecutive, Consecutive>> matches;
@@ -146,24 +150,24 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
     }*/
 
     @Override
-    public List<ColumnId> getAvailableColumns()
+    public List<Column> getAvailableColumns()
     {
         return parent.getAvailableColumns();
     }
 
     @Override
-    public List<String> getAvailableVariables(ExpressionNode child)
+    public List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child)
     {
         //TODO union of clause variables or just the clause variable for guard
         // (and always mix in parent variables)
-        ArrayList<@NonNull String> vars = new ArrayList<>(parent.getAvailableVariables(this));
+        ArrayList<Pair<String, @Nullable DataType>> vars = new ArrayList<>(parent.getAvailableVariables(this));
 
-        HashSet<@NonNull String> allClauseVars = null;
+        Multimap<@NonNull String, @Nullable DataType> allClauseVars = null;
         for (Pair<Consecutive, Consecutive> match : matches)
         {
             if (match.getFirst() == child)
                 return vars; // Matching side only has access to parent vars
-            List<String> newMatchVars = match.getFirst().getDeclaredVariables();
+            List<Pair<String, @Nullable DataType>> newMatchVars = match.getFirst().getDeclaredVariables();
             if (match.getSecond() == child)
             {
                 vars.addAll(newMatchVars);
@@ -171,14 +175,59 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
             }
             // Otherwise keep intersection of vars from different clauses:
             if (allClauseVars == null)
-                allClauseVars = new HashSet<>(newMatchVars);
+            {
+                allClauseVars = ArrayListMultimap.create();
+                for (Pair<String, @Nullable DataType> newMatchVar : newMatchVars)
+                {
+                    allClauseVars.put(newMatchVar.getFirst(), newMatchVar.getSecond());
+                }
+            }
             else
-                allClauseVars.retainAll(newMatchVars);
+            {
+                ArrayListMultimap<@NonNull String, @Nullable DataType> newAllClauseVars = ArrayListMultimap.create();
+                for (Pair<String, @Nullable DataType> newMatchVar : newMatchVars)
+                {
+                    // Key must be in newMatchVars and allClauseVars, and if so we retain both types
+                    if (allClauseVars.containsKey(newMatchVar.getFirst()))
+                    {
+                        newAllClauseVars.putAll(newMatchVar.getFirst(), allClauseVars.get(newMatchVar.getFirst()));
+                        newAllClauseVars.put(newMatchVar.getFirst(), newMatchVar.getSecond());
+                    }
+                }
+                allClauseVars = newAllClauseVars;
+            }
         }
         if (outcome == child)
         {
             if (allClauseVars != null)
-                vars.addAll(allClauseVars);
+            {
+                for (Entry<String, Collection<@Nullable DataType>> varType : allClauseVars.asMap().entrySet())
+                {
+                    // If all types are non-null and the same, add as known type
+                    // Otherwise, must add null (unknown type).
+                    // This is the behaviour of checkAllSame so we can just use that:
+                    @Nullable DataType t;
+                    try
+                    {
+                        List<DataType> nonNull = new ArrayList<>();
+                        for (@Nullable DataType dataType : varType.getValue())
+                        {
+                            if (dataType != null)
+                                nonNull.add(dataType);
+                        }
+                        if (nonNull.size() == varType.getValue().size())
+                            t = DataType.checkAllSame(nonNull, s -> {});
+                        else
+                            t = null;
+                    }
+                    catch (InternalException | UserException e)
+                    {
+                        // Don't worry too much about it, just give unknown type:
+                        t = null;
+                    }
+                    vars.add(new Pair<>(varType.getKey(), t));
+                }
+            }
             return vars;
         }
         Utility.logStackTrace("Unknown child: " + child);
@@ -186,9 +235,9 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
     }
 
     @Override
-    public List<DataType> getAvailableTaggedTypes()
+    public TypeManager getTypeManager() throws InternalException
     {
-        return parent.getAvailableTaggedTypes();
+        return parent.getTypeManager();
     }
 
     @Override

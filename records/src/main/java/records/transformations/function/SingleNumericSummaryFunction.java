@@ -55,4 +55,10 @@ public abstract class SingleNumericSummaryFunction extends FunctionDefinition
     {
         return new Pair<>(Collections.emptyList(), Collections.singletonList(new ArrayExpression(ImmutableList.of(newExpressionOfDifferentType.getNonNumericType()))));
     }
+
+    @Override
+    public List<DataType> getLikelyArgTypes(UnitManager unitManager) throws UserException, InternalException
+    {
+        return Collections.singletonList(DataType.array(DataType.NUMBER));
+    }
 }

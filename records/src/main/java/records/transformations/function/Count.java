@@ -7,7 +7,6 @@ import records.data.datatype.DataType;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
@@ -50,6 +49,12 @@ public class Count extends FunctionDefinition
     public Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {
         return new Pair<>(Collections.emptyList(), Collections.singletonList(newExpressionOfDifferentType.getDifferentType(DataType.array())));
+    }
+
+    @Override
+    public List<DataType> getLikelyArgTypes(UnitManager unitManager)
+    {
+        return Collections.singletonList(DataType.array());
     }
 
     private static class Instance extends FunctionInstance

@@ -10,6 +10,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
 import utility.ExConsumer;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -56,6 +57,12 @@ public abstract class SimplyTypedFunctionDefinition extends FunctionDefinition
     }
 
     protected abstract List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException;
+
+    @Override
+    public List<DataType> getLikelyArgTypes(UnitManager unitManager) throws UserException, InternalException
+    {
+        return Utility.mapList(getOverloads(unitManager), t -> t.getFixedParams());
+    }
 
     @Override
     public Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException

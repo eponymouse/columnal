@@ -15,6 +15,7 @@ import javafx.scene.layout.VBox;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
+import records.data.Column;
 import records.data.ColumnId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
@@ -151,7 +152,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
                 {
                     // What to do with rest != "" here? Don't allow? Skip to after args?
                     FunctionCompletion fc = (FunctionCompletion)c;
-                    parent.replace(GeneralEntry.this, new FunctionNode(fc.function.getName(), parent).focusWhenShown());
+                    parent.replace(GeneralEntry.this, new FunctionNode(fc.function, parent).focusWhenShown());
                 }
                 else if (c instanceof TagCompletion)
                 {
@@ -261,12 +262,12 @@ public class GeneralEntry extends LeafNode implements OperandNode
         addAllFunctions(r);
         r.add(new SimpleCompletion("", "true", "", Status.LITERAL));
         r.add(new SimpleCompletion("", "false", "", Status.LITERAL));
-        for (ColumnId columnId : parent.getAvailableColumns())
+        for (Column column : parent.getAvailableColumns())
         {
-            r.add(new SimpleCompletion(ARROW_SAME_ROW, columnId.getRaw(), " [value in this row]", Status.COLUMN_REFERENCE_SAME_ROW));
-            r.add(new SimpleCompletion(ARROW_WHOLE, columnId.getRaw(), " [whole column]", Status.COLUMN_REFERENCE_WHOLE));
+            r.add(new SimpleCompletion(ARROW_SAME_ROW, column.getName().getRaw(), " [value in this row]", Status.COLUMN_REFERENCE_SAME_ROW));
+            r.add(new SimpleCompletion(ARROW_WHOLE, column.getName().getRaw(), " [whole column]", Status.COLUMN_REFERENCE_WHOLE));
         }
-        for (DataType dataType : parent.getAvailableTaggedTypes())
+        for (DataType dataType : parent.getTypeManager().getKnownTypes().values())
         {
             for (TagType<DataType> tagType : dataType.getTagTypes())
             {
@@ -609,4 +610,14 @@ public class GeneralEntry extends LeafNode implements OperandNode
             return false;
         }
     }
+
+    public @Nullable Column getColumn()
+    {
+        if (status.get() == Status.COLUMN_REFERENCE_SAME_ROW || status.get() == Status.COLUMN_REFERENCE_WHOLE)
+        {
+            // TODO get columns from... somewhere
+        }
+        return null;
+    }
+
 }

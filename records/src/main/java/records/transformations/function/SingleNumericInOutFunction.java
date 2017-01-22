@@ -56,4 +56,10 @@ abstract class SingleNumericInOutFunction extends FunctionDefinition
         //TODO randomly pick from a few other options (e.g. zero param, 2 param, units)
         return new Pair<>(Collections.emptyList(), Collections.singletonList(newExpressionOfDifferentType.getNonNumericType()));
     }
+
+    @Override
+    public List<DataType> getLikelyArgTypes(UnitManager unitManager) throws UserException, InternalException
+    {
+        return Collections.singletonList(DataType.NUMBER);
+    }
 }

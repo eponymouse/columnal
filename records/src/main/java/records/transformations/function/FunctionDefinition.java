@@ -46,4 +46,10 @@ public abstract class FunctionDefinition
 
     // For testing: give a unit list and parameter list that should fail typechecking
     public abstract Pair<List<Unit>, List<Expression>> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException;
+
+    /**
+     * For auto-completion; what are common argument types for this function?
+     * @param unitManager
+     */
+    public abstract List<DataType> getLikelyArgTypes(UnitManager unitManager) throws UserException, InternalException;
 }

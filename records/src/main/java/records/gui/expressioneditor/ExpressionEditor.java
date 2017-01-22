@@ -1,12 +1,9 @@
 package records.gui.expressioneditor;
 
-import javafx.collections.ListChangeListener;
 import javafx.scene.Node;
 import javafx.scene.layout.FlowPane;
-import org.checkerframework.checker.interning.qual.UnknownInterned;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
-import records.data.ColumnId;
+import records.data.Column;
 import records.data.Table;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
@@ -14,6 +11,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -62,13 +60,13 @@ public class ExpressionEditor extends Consecutive
 //    }
 
     @Override
-    public List<ColumnId> getAvailableColumns()
+    public List<Column> getAvailableColumns()
     {
         if (srcTable == null)
             return Collections.emptyList();
         try
         {
-            return srcTable.getData().getColumnIds();
+            return srcTable.getData().getColumns();
         }
         catch (UserException e)
         {
@@ -83,7 +81,7 @@ public class ExpressionEditor extends Consecutive
     }
 
     @Override
-    public List<String> getAvailableVariables(ExpressionNode child)
+    public List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child)
     {
         // No variables from outside the expression:
         return Collections.emptyList();
@@ -104,8 +102,8 @@ public class ExpressionEditor extends Consecutive
     }
 
     @Override
-    public List<DataType> getAvailableTaggedTypes()
+    public TypeManager getTypeManager() throws InternalException
     {
-        return new ArrayList<>(typeManager.getKnownTypes().values());
+        return typeManager;
     }
 }

@@ -5,12 +5,12 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import org.checkerframework.checker.interning.qual.Interned;
-import org.checkerframework.checker.interning.qual.UnknownInterned;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
-import records.data.ColumnId;
+import records.data.Column;
 import records.data.datatype.DataType;
-import records.grammar.ExpressionParser.PlusMinusExpressionContext;
+import records.data.datatype.TypeManager;
+import records.error.InternalException;
+import records.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.DivideExpression;
@@ -20,6 +20,7 @@ import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.PatternMatch;
 import records.transformations.expression.TimesExpression;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -204,7 +205,66 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
     }
 
     @Override
-    public List<ColumnId> getAvailableColumns()
+    public List<Pair<DataType, List<String>>> getSuggestedContext(ExpressionNode child) throws InternalException, UserException
+    {
+        List<Pair<DataType, List<String>>> r = new ArrayList<>();
+
+        int childIndex = operands.indexOf(child);
+        if (childIndex == -1)
+            throw new InternalException("Asking for suggestions from non-child");
+
+        if (parent != null)
+        {
+            // We can ask parent for our context, then it's a matter of translating
+            // it to our children.  If we have multiple children with operators
+            // (except ","), we say there's no context.  If we have multiple children
+            // and all-comma operators, we can decompose a tuple suggestion.
+            List<Pair<DataType, List<String>>> contextFromParent = parent.getSuggestedContext(this);
+
+            if (operators.isEmpty())
+            {
+                r.addAll(contextFromParent);
+            }
+            /* We can't decompose the string so this won't work...
+            else if (operators.stream().allMatch(op -> op.get().equals(",")))
+            {
+
+                r.addAll(contextFromParent.stream().filter(p ->
+                {
+                    try
+                    {
+                        return p.getFirst().isTuple() && p.getFirst().getMemberType().size() == operands.size();
+                    }
+                    catch (InternalException e)
+                    {
+                        Utility.log(e);
+                        return false;
+                    }
+                }).map().collect(Collectors.toList()));
+            }
+            */
+        }
+
+        // We can look for comparison expressions with columns and make suggestions:
+        if (operators.size() == 1 && (operators.get(0).equals("=") || operators.get(0).equals("<>")))
+        {
+            // If childIndex is 1, we want to look at 0 and vice versa:
+            OperandNode comparator = operands.get(1 - childIndex);
+            if (comparator instanceof GeneralEntry)
+            {
+                @Nullable Column column = ((GeneralEntry)comparator).getColumn();
+                if (column != null)
+                {
+                    // TODO get most frequent values (may need a callback!)
+                }
+            }
+        }
+        // TODO also <, >=, etc
+        return r;
+    }
+
+    @Override
+    public List<Column> getAvailableColumns()
     {
         if (parent != null)
             return parent.getAvailableColumns();
@@ -213,7 +273,7 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
     }
 
     @Override
-    public List<String> getAvailableVariables(ExpressionNode child)
+    public List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child)
     {
         if (parent != null)
             return parent.getAvailableVariables(this);
@@ -222,11 +282,11 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
     }
 
     @Override
-    public List<DataType> getAvailableTaggedTypes()
+    public TypeManager getTypeManager() throws InternalException
     {
         if (parent != null)
-            return parent.getAvailableTaggedTypes();
-        return Collections.emptyList();
+            return parent.getTypeManager();
+        throw new InternalException("Consecutive with no parent; should be overridden");
     }
 
     @Override
@@ -278,7 +338,7 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
         }
     }
 
-    public List<String> getDeclaredVariables()
+    public List<Pair<String, @Nullable DataType>> getDeclaredVariables()
     {
         if (isValidAsMatchVariable(operands.get(0)))
         {

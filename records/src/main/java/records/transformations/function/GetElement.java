@@ -17,6 +17,7 @@ import utility.ExConsumer;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
@@ -68,6 +69,12 @@ public class GetElement extends FunctionDefinition
     {
         // TODO
         return new Pair<>(Collections.emptyList(), Collections.emptyList());
+    }
+
+    @Override
+    public List<DataType> getLikelyArgTypes(UnitManager unitManager) throws UserException, InternalException
+    {
+        return Collections.singletonList(DataType.tuple(Arrays.asList(DataType.array(), DataType.NUMBER)));
     }
 
     private static class Instance extends FunctionInstance

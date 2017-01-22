@@ -24,7 +24,7 @@ DIVIDE: '/';
 AND: '&';
 OR: '|';
 EQUALITY : '=';
-NON_EQUALITY : '/=';
+NON_EQUALITY : '<>';
 LESS_THAN: '<=' | '<';
 GREATER_THAN: '>=' | '>';
 COLUMN : '@column';

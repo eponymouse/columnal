@@ -66,6 +66,12 @@ public class AsType extends FunctionDefinition
         return new Pair<>(Collections.emptyList(), Collections.singletonList(newExpressionOfDifferentType.getNonNumericType()));
     }
 
+    @Override
+    public List<DataType> getLikelyArgTypes(UnitManager unitManager) throws UserException, InternalException
+    {
+        return Collections.singletonList(DataType.NUMBER);
+    }
+
     private static class Instance extends FunctionInstance
     {
         private final @Nullable BigDecimal scaleBD;

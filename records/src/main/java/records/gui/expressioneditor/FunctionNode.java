@@ -15,13 +15,18 @@ import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.VLineTo;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.ColumnId;
+import records.data.Column;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
+import records.error.InternalException;
+import records.error.UserException;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.Expression;
+import records.transformations.function.FunctionDefinition;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.Collections;
@@ -35,11 +40,13 @@ public class FunctionNode implements ExpressionParent, OperandNode
     private final TextField functionName;
     private final Consecutive arguments;
     private final ExpressionParent parent;
+    private final FunctionDefinition function;
 
     @SuppressWarnings("initialization")
-    public FunctionNode(String funcName, ExpressionParent parent)
+    public FunctionNode(FunctionDefinition function, ExpressionParent parent)
     {
         this.parent = parent;
+        this.function = function;
         this.functionName = new LeaveableTextField(this, parent) {
             @Override
             @OnThread(value = Tag.FXPlatform, ignoreParent = true)
@@ -58,7 +65,7 @@ public class FunctionNode implements ExpressionParent, OperandNode
             parent.changed(this);
         });
 
-        functionName.setText(funcName);
+        functionName.setText(function.getName());
     }
 
     @Override
@@ -119,21 +126,27 @@ public class FunctionNode implements ExpressionParent, OperandNode
     //}
 
     @Override
-    public List<ColumnId> getAvailableColumns()
+    public List<Pair<DataType, List<String>>> getSuggestedContext(ExpressionNode child) throws InternalException, UserException
+    {
+        return Utility.mapList(function.getLikelyArgTypes(getTypeManager().getUnitManager()), t -> new Pair<>(t, Collections.emptyList()));
+    }
+
+    @Override
+    public List<Column> getAvailableColumns()
     {
         return parent.getAvailableColumns();
     }
 
     @Override
-    public List<String> getAvailableVariables(ExpressionNode child)
+    public List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child)
     {
         return parent.getAvailableVariables(this);
     }
 
     @Override
-    public List<DataType> getAvailableTaggedTypes()
+    public TypeManager getTypeManager() throws InternalException
     {
-        return parent.getAvailableTaggedTypes();
+        return parent.getTypeManager();
     }
 
     @Override

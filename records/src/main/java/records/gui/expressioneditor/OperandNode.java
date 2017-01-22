@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,7 +20,7 @@ public @Interned interface OperandNode extends ExpressionNode
     /**
      * Gets the variables declared in this node.
      */
-    public default List<String> getDeclaredVariables()
+    public default List<Pair<String, @Nullable DataType>> getDeclaredVariables()
     {
         return Collections.emptyList();
     }

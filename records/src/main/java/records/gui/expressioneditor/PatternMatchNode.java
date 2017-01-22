@@ -5,15 +5,16 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import org.checkerframework.checker.interning.qual.UnknownInterned;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
-import records.data.ColumnId;
+import records.data.Column;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
+import records.error.InternalException;
 import records.transformations.expression.Expression;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -28,7 +29,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 20/12/2016.
  */
-public class PatternMatchNode implements ExpressionParent, OperandNode
+public abstract class PatternMatchNode implements ExpressionParent, OperandNode
 {
     private final Consecutive source;
     private final ObservableList<ClauseNode> clauses;
@@ -52,7 +53,7 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
             updateNodes();
             updateListeners();
         });
-        clauses.add(new ClauseNode("", this));
+        //clauses.add(new ClauseNode("", this));
     }
 
     private void updateNodes()
@@ -95,13 +96,13 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
     //}
 
     @Override
-    public List<ColumnId> getAvailableColumns()
+    public List<Column> getAvailableColumns()
     {
         return parent.getAvailableColumns();
     }
 
     @Override
-    public List<String> getAvailableVariables(ExpressionNode child)
+    public List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child)
     {
         // They are only asking for parent vars, and we don't affect those
         // ClauseNode takes care of the variables it introduces
@@ -109,9 +110,9 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
     }
 
     @Override
-    public List<DataType> getAvailableTaggedTypes()
+    public TypeManager getTypeManager() throws InternalException
     {
-        return parent.getAvailableTaggedTypes();
+        return parent.getTypeManager();
     }
 
     @Override
