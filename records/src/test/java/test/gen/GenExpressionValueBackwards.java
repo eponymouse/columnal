@@ -103,7 +103,7 @@ import static test.TestUtil.generateTableIdPair;
  * results due to precision (e.g. make me a function which returns 0.3333333; 1/3 might
  * not quite crack it).
  */
-public class GenExpressionValueBackwards extends Generator<ExpressionValue>
+public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
 {
 
     @SuppressWarnings("initialization")
@@ -112,9 +112,6 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         super(ExpressionValue.class);
     }
 
-    // Easier than passing parameters around:
-    private SourceOfRandomness r;
-    private GenerationStatus gs;
     private List<FunctionInt<RecordSet, Column>> columns;
     private int nextVar = 0;
 
@@ -124,6 +121,7 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
     {
         this.r = r;
         this.gs = generationStatus;
+        this.numberOnlyInt = true;
         this.columns = new ArrayList<>();
         try
         {
@@ -152,11 +150,6 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         @Value Object value = makeValue(type);
         Expression expression = make(type, value, 4);
         return new Pair<>(value, expression);
-    }
-
-    public static DataType makeType(SourceOfRandomness r)
-    {
-        return r.choose(distinctTypes);
     }
 
     @SuppressWarnings("valuetype")
@@ -573,17 +566,6 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
         return m.loadUse(name);
     }
 
-    private @Value long genInt()
-    {
-        @Value Number n;
-        do
-        {
-            n = generateNumberV(r, gs);
-        }
-        while (n instanceof BigDecimal);
-        return Utility.value(n.longValue());
-    }
-
     private Expression columnRef(DataType type, Object value)
     {
         ColumnId name = new ColumnId("GEV Col " + columns.size());
@@ -643,86 +625,6 @@ public class GenExpressionValueBackwards extends Generator<ExpressionValue>
     private List<ExpressionMaker> l(ExpressionMaker... suppliers)
     {
         return Arrays.asList(suppliers);
-    }
-
-    private @Value Object makeValue(DataType t) throws UserException, InternalException
-    {
-        return t.apply(new DataTypeVisitor<@Value Object>()
-        {
-            @Override
-            public @Value Object number(NumberInfo displayInfo) throws InternalException, UserException
-            {
-                return genInt();
-            }
-
-            @Override
-            public @Value Object text() throws InternalException, UserException
-            {
-                return TestUtil.makeStringV(r, gs);
-            }
-
-            @Override
-            public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
-            {
-                switch (dateTimeInfo.getType())
-                {
-                    case YEARMONTHDAY:
-                        return TestUtil.generateDate(r, gs);
-                    case YEARMONTH:
-                        return YearMonth.of(r.nextInt(1, 9999), r.nextInt(1, 12));
-                    case TIMEOFDAY:
-                        return TestUtil.generateTime(r, gs);
-                    case TIMEOFDAYZONED:
-                        return OffsetTime.of(TestUtil.generateTime(r, gs), new ZoneOffsetGenerator().generate(r, gs));
-                    case DATETIME:
-                        return TestUtil.generateDateTime(r, gs);
-                    case DATETIMEZONED:
-                        // Can be geographical or pure offset:
-                        return ZonedDateTime.of(TestUtil.generateDateTime(r, gs),
-                            r.nextBoolean() ?
-                                new GenZoneId().generate(r, gs) :
-                                ZoneId.ofOffset("", new ZoneOffsetGenerator().generate(r, gs))
-                        ).withFixedOffsetZone();
-                    default:
-                        throw new InternalException("Unknown date type: " + dateTimeInfo.getType());
-                }
-
-            }
-
-            @Override
-            public @Value Object bool() throws InternalException, UserException
-            {
-                return Utility.value(r.nextBoolean());
-            }
-
-            @Override
-            public @Value Object tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
-            {
-                int tagIndex = r.nextInt(0, tags.size() - 1);
-                @Nullable @Value Object o;
-                @Nullable DataType inner = tags.get(tagIndex).getInner();
-                if (inner != null)
-                    o = makeValue(inner);
-                else
-                    o = null;
-                return new TaggedValue(tagIndex, o);
-            }
-
-            @Override
-            public @Value Object tuple(List<DataType> inner) throws InternalException, UserException
-            {
-                return Utility.value(Utility.mapListEx(inner, t -> makeValue(t)).toArray(new @Value Object[0]));
-            }
-
-            @Override
-            public @Value Object array(@Nullable DataType inner) throws InternalException, UserException
-            {
-                if (inner == null)
-                    return Utility.value(Collections.emptyList());
-                @NonNull DataType innerFinal = inner;
-                return Utility.value(TestUtil.<@Value Object>makeList(r, 0, 12, () -> makeValue(innerFinal)));
-            }
-        });
     }
 
     @OnThread(Tag.Simulation)
