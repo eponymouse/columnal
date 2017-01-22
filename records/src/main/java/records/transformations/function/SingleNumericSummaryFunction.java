@@ -10,6 +10,8 @@ import records.error.UserException;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
+import records.transformations.function.FunctionType.ArrayType;
+import records.transformations.function.FunctionType.NumberAnyUnit;
 import utility.ExConsumer;
 import utility.Pair;
 
@@ -31,8 +33,7 @@ public abstract class SingleNumericSummaryFunction extends FunctionDefinition
     @Override
     protected List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
     {
-        // TODO allow other units:
-        return Collections.singletonList(new FunctionType(this::makeInstance, DataType.NUMBER, DataType.array(DataType.NUMBER)));
+        return Collections.singletonList(new FunctionType(this::makeInstance, new ArrayType(new NumberAnyUnit())));
     }
 
     protected abstract FunctionInstance makeInstance();

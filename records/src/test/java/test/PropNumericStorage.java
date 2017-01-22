@@ -8,7 +8,7 @@ import records.data.NumericColumnStorage;
 import records.data.datatype.DataType.NumberInfo;
 import records.error.InternalException;
 import records.error.UserException;
-import test.gen.GenNumbers;
+import test.gen.GenNumbersAsString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -26,7 +26,7 @@ public class PropNumericStorage
 {
     @Property
     @OnThread(Tag.Simulation)
-    public void testPureNumbers(@From(GenNumbers.class) List<String> input) throws IOException, InternalException, UserException
+    public void testPureNumbers(@From(GenNumbersAsString.class) List<String> input) throws IOException, InternalException, UserException
     {
         NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT);
         for (String s : input)

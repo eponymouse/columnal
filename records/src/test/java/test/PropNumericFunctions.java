@@ -20,7 +20,9 @@ import records.transformations.function.Absolute;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionInstance;
 import records.transformations.function.Round;
+import records.transformations.function.Sum;
 import test.gen.GenNumber;
+import test.gen.GenNumbers;
 import test.gen.GenUnit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -29,6 +31,8 @@ import utility.Utility;
 
 import java.math.BigDecimal;
 import java.util.Collections;
+import java.util.List;
+import java.util.Optional;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
@@ -80,11 +84,19 @@ public class PropNumericFunctions
         assertThat(gap, Matchers.lessThanOrEqualTo(BigDecimal.valueOf(0.5)));
     }
 
+    @Property
+    @OnThread(Tag.Simulation)
+    public void propSum(@From(GenNumbers.class) List<Number> src, @From(GenUnit.class) Unit u) throws Throwable
+    {
+        @Nullable Number total = src.stream().reduce((a, b) -> Utility.addSubtractNumbers(a, b, true)).orElse(null);
+        assertEquals(total == null ? null : Utility.toBigDecimal(total), Utility.toBigDecimal(runNumericSummaryFunction(u.toString(), src, u.toString(), new Sum())));
+    }
     // Tests single numeric input, numeric output function
-    @SuppressWarnings("nullness")
     @OnThread(Tag.Simulation)
     private Number runNumericFunction(String expectedUnit, Number src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
     {
+        if (mgr == null)
+            throw new RuntimeException();
         try
         {
             @Nullable Pair<FunctionInstance, DataType> instance = function.typeCheck(Collections.emptyList(), DataType.number(new NumberInfo(mgr.loadUse(srcUnit), 0)), s ->
@@ -92,6 +104,37 @@ public class PropNumericFunctions
                 throw new RuntimeException(new UserException(s));
             }, mgr);
             assertNotNull(instance);
+            // Won't happen, but for nullness checker:
+            if (instance == null) throw new RuntimeException();
+            assertTrue(instance.getSecond().isNumber());
+            assertEquals(mgr.loadUse(expectedUnit), instance.getSecond().getNumberInfo().getUnit());
+            Object num = instance.getFirst().getValue(0, Utility.value(src));
+            return (Number)num;
+        }
+        catch (RuntimeException e)
+        {
+            if (e.getCause() != null)
+                throw e.getCause();
+            else
+                throw e;
+        }
+    }
+
+    // Tests single numeric input, numeric output function
+    @OnThread(Tag.Simulation)
+    private Number runNumericSummaryFunction(String expectedUnit, List<Number> src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
+    {
+        if (mgr == null)
+            throw new RuntimeException();
+        try
+        {
+            @Nullable Pair<FunctionInstance, DataType> instance = function.typeCheck(Collections.emptyList(), DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit), 0))), s ->
+            {
+                throw new RuntimeException(new UserException(s));
+            }, mgr);
+            assertNotNull(instance);
+            // Won't happen, but for nullness checker:
+            if (instance == null) throw new RuntimeException();
             assertTrue(instance.getSecond().isNumber());
             assertEquals(mgr.loadUse(expectedUnit), instance.getSecond().getNumberInfo().getUnit());
             Object num = instance.getFirst().getValue(0, Utility.value(src));

@@ -1127,7 +1127,7 @@ public class Utility
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value ListEx value(@UnknownIfValue List<@Value Object> list)
+    public static @Value ListEx value(@UnknownIfValue List<@Value ? extends Object> list)
     {
         return new ListEx()
         {

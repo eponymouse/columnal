@@ -10,18 +10,18 @@ import java.util.List;
 /**
  * Created by neil on 09/12/2016.
  */
-public class GenNumbers extends Generator<List<Number>>
+public class GenNumbersAsString extends Generator<List<String>>
 {
     @SuppressWarnings("unchecked")
-    public GenNumbers()
+    public GenNumbersAsString()
     {
-        super((Class<List<Number>>) (Class<?>) List.class);
+        super((Class<List<String>>) (Class<?>) List.class);
     }
 
     @Override
-    public List<Number> generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+    public List<String> generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         int length = sourceOfRandomness.nextInt(0, 100);
-        return TestUtil.makeList(length, new GenNumber(), sourceOfRandomness, generationStatus);
+        return TestUtil.makeList(length, new GenNumberAsString(), sourceOfRandomness, generationStatus);
     }
 }
