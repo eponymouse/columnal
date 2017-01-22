@@ -2,26 +2,20 @@ package records.transformations.function;
 
 import annotation.userindex.qual.UserIndex;
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
-import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.Expression;
-import records.transformations.expression.Expression._test_TypeVary;
+import records.transformations.function.FunctionType.AnyType;
+import records.transformations.function.FunctionType.ArrayType;
+import records.transformations.function.FunctionType.ExactType;
+import records.transformations.function.FunctionType.TupleType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExConsumer;
-import utility.Pair;
 import utility.Utility;
-import utility.Utility.ListEx;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 /**
  * Created by neil on 17/01/2017.
@@ -37,8 +31,7 @@ public class GetElement extends FunctionDefinition
     @Override
     protected List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
     {
-        // TODO
-        return Collections.emptyList();
+        return Collections.singletonList(new FunctionType(Instance::new, new TupleType(0, new ArrayType(new AnyType()), new ExactType(DataType.NUMBER))));
     }
 
     private static class Instance extends FunctionInstance

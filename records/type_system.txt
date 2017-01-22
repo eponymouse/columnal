@@ -1,0 +1,41 @@
+Types
+===
+
+There are several basic types or family of types:
+ - Number (with unit)
+ - Date/time types
+ - Text type
+ - Boolean type
+
+Then three ways to build composite types:
+ - Tagged types (aka sum types, variant types): 1 or more tags, each with 0 or 1 inner types
+ - Tuples (aka records, product type): 2 or more types.  Fixed length but types can differ from each other.
+ - Lists (aka arrays): 1 type, but 0-2,000,000,000 items.
+
+Type checking/resolution
+===
+
+Most type checking is done inside out.  We resolve the type at the inner-most points
+and then resolve outwards.  For example, if you have:
+  a + func(b)       [where a and b stand for any expression]
+then we resolve a, then b, then check func(b), then check a + func(b) and so on.
+
+In general, most expressions have an immediately known type.  For example,
+tagged expressions are known because tagged types are predeclared, so the
+tag must come from a single type.  Number/text/boolean literals are trivial.
+Operators are straightforward as long as the inner types are known.  Similarly
+for tuple literals.
+
+There are a couple of tricky cases.  One is that of the empty array literal,
+which can be of any array type.  We have a special case for this in the type
+system and make sure it can unify against any array.
+
+The other tricky case is functions which are somewhat generic, e.g. abs
+takes a numeric type with any units and returns the same type.  sum takes
+a list of numeric type with any units and returns that type.  element takes
+an array of any type and returns that type.  first takes a tuple of any type
+and returns the first element type.
+
+The same principle applies here: the types are resolved inside out, resolving
+the argument types in order to know the result type.  We just need a bit of extra
+plumbing to do this for all different types of function, which is a type matcher.

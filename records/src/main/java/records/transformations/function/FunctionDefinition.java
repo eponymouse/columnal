@@ -39,11 +39,14 @@ public abstract class FunctionDefinition
         }
 
         List<FunctionType> types = getOverloads(mgr);
-        List<FunctionType> possibilities = new ArrayList<>();
-        for (FunctionType type : types)
+        List<Pair<DataType, FunctionType>> possibilities = new ArrayList<>();
+        for (FunctionType functionType : types)
         {
-            if (type.matches(param))
-                possibilities.add(type);
+            DataType t = functionType.checkType(param, onError);
+            if (t != null)
+            {
+                possibilities.add(new Pair<>(t, functionType));
+            }
         }
 
         if (possibilities.size() == 0)
@@ -54,7 +57,7 @@ public abstract class FunctionDefinition
         if (possibilities.size() > 1)
             throw new InternalException("Function " + getName() + " has multiple possible overloads for type " + param);
 
-        return possibilities.get(0).getFunctionAndReturnType();
+        return new Pair<>(possibilities.get(0).getSecond().getFunction(), possibilities.get(0).getFirst());
     }
 
     public String getName()
@@ -69,7 +72,7 @@ public abstract class FunctionDefinition
         {
             for (FunctionType functionType : getOverloads(unitManager))
             {
-                if (functionType.matches(type.get(0)))
+                if (functionType.checkType(type.get(0), s -> {}) != null)
                     return false;
             }
             return true;
@@ -84,6 +87,13 @@ public abstract class FunctionDefinition
      */
     public final List<DataType> getLikelyArgTypes(UnitManager unitManager) throws UserException, InternalException
     {
-        return Utility.mapList(getOverloads(unitManager), t -> t.getParamType());
+        List<DataType> r = new ArrayList<>();
+        for (FunctionType functionType : getOverloads(unitManager))
+        {
+            @Nullable DataType t = functionType.getLikelyParamType();
+            if (t != null)
+                r.add(t);
+        }
+        return r;
     }
 }
