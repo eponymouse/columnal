@@ -19,6 +19,7 @@ import records.transformations.function.Absolute;
 import records.transformations.function.Count;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionInstance;
+import records.transformations.function.GetElement;
 import records.transformations.function.Mean;
 import records.transformations.function.Round;
 import records.transformations.function.Sum;
@@ -32,12 +33,14 @@ import utility.Pair;
 import utility.Utility;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import static junit.framework.TestCase.assertTrue;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.fail;
 
@@ -75,4 +78,42 @@ public class PropListFunctions
         }
     }
 
+    @Property
+    @OnThread(Tag.Simulation)
+    public void propElement(@From(GenValueList.class) GenValueList.ListAndType src) throws Throwable
+    {
+        if (mgr == null)
+            throw new RuntimeException();
+        GetElement function = new GetElement();
+        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(src.type, DataType.NUMBER), s -> {}, mgr);
+        if (checked == null)
+        {
+            // It's ok to fail on empty array type; that's expected:
+            if (!src.type.isArray() || !src.type.getMemberType().isEmpty())
+                fail("Type check failure");
+        }
+        else
+        {
+            assertEquals(src.type.getMemberType().get(0), checked.getSecond());
+            // Try valid values:
+            for (int i = 0; i < src.list.size(); i++)
+            {
+                @Value Object actual = checked.getFirst().getValue(0, Utility.value(new @Value Object[]{Utility.value(src.list), Utility.value(i + 1 /* one-based index */)}));
+                assertSame(src.list.get(i), actual);
+            }
+            // Try invalid integer values:
+            for (int i : Arrays.asList(-2, -1, 0, src.list.size() + 1, src.list.size() + 2))
+            {
+                try
+                {
+                    checked.getFirst().getValue(0, Utility.value(new @Value Object[]{Utility.value(src.list), Utility.value(i)}));
+                    fail("Expected user exception for index " + i);
+                }
+                catch (UserException e)
+                {
+                }
+            }
+            // Try invalid non-integer values:
+        }
+    }
 }

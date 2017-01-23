@@ -745,6 +745,8 @@ public class Utility
     @OnThread(Tag.Simulation)
     public static @Value Object getAtIndex(@Value ListEx objects, @UserIndex int userIndex) throws UserException, InternalException
     {
+        if (userIndex < 1 || userIndex > objects.size())
+            throw new UserException("List index " + userIndex + " out of bounds, should be between 1 and " + objects.size() + " (inclusive)");
         // User index is one-based:
         return objects.get(userIndex - 1);
     }

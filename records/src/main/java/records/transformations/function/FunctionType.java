@@ -114,7 +114,13 @@ public class FunctionType
         {
             if (paramType.isArray())
             {
-                return matchInner.checkType(paramType.getMemberType().get(0), onError);
+                List<DataType> paramMemberType = paramType.getMemberType();
+                if (paramMemberType.isEmpty())
+                {
+                    onError.accept("Cannot apply function to empty array");
+                    return null;
+                }
+                return matchInner.checkType(paramMemberType.get(0), onError);
             }
             onError.accept("Expected array but found: " + paramType);
             return null;

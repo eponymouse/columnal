@@ -66,6 +66,6 @@ public class GenValueList extends GenValueBase<ListAndType>
             {
                 return values[index];
             }
-        }, DataType.array(t));
+        }, length == 0 && sourceOfRandomness.nextBoolean() ? DataType.array() : DataType.array(t));
     }
 }
