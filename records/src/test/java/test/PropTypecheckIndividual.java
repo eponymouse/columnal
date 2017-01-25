@@ -9,6 +9,7 @@ import org.hamcrest.Matchers;
 import org.junit.Assume;
 import org.junit.Test;
 import org.junit.runner.RunWith;
+import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.Column;
@@ -29,8 +30,10 @@ import records.transformations.expression.EqualExpression;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NotEqualExpression;
+import records.transformations.expression.RaiseExpression;
 import records.transformations.expression.TypeState;
 import test.gen.GenDataType;
+import test.gen.GenUnit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
@@ -41,6 +44,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -119,6 +123,23 @@ public class PropTypecheckIndividual
         }
     }
 
+    class DummyConstExpression extends DummyExpression
+    {
+        private final Rational value;
+
+        private DummyConstExpression(@Nullable DataType type, Rational value)
+        {
+            super(type);
+            this.value = value;
+        }
+
+        @Override
+        public Optional<Rational> constantFold()
+        {
+            return Optional.of(value);
+        }
+    }
+
     @Property
     public void testEquals(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException, UserException
     {
@@ -173,6 +194,55 @@ public class PropTypecheckIndividual
                 assertEquals(null, new ArrayExpression(Utility.mapListExI(badTypes, DummyExpression::new)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
             }
         }
+    }
+
+    // Tests non-numeric types in raise expressions
+    @Property
+    public void testRaiseNonNumeric(@From(GenDataType.class) DataType a) throws UserException, InternalException
+    {
+        Assume.assumeFalse(a.isNumber());
+        assertEquals(null, new RaiseExpression(new DummyExpression(a), new DummyExpression(DataType.NUMBER)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
+        assertEquals(null, new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
+    }
+
+    @Property
+    public void testRaiseNumeric(@From(GenUnit.class) Unit unit) throws UserException, InternalException
+    {
+        // The rules for raise (besides both must be numeric) are:
+        // RHS unit is forbidden
+        // LHS plain and RHS plain are fine, for any value of RHS
+        // LHS units and RHS variable is banned (only constant RHS)
+        // LHS units and RHS integer is always fine
+        // LHS units and RHS 1/integer is ok if all unit powers are divisible by the integer
+        // LHS units and any other value is not ok.
+
+        // Any unit but scalar:
+        Assume.assumeFalse(unit.equals(Unit.SCALAR));
+
+        // No units on RHS:
+        DataType unitNum = DataType.number(new NumberInfo(unit, 0));
+        assertEquals(null, check(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(unitNum))));
+        // Plain on both is fine, even when RHS doesn't constant fold:
+        assertEquals(DataType.NUMBER, check(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(DataType.NUMBER))));
+        // LHS units is banned if RHS doesn't constant fold:
+        assertEquals(null, check(new RaiseExpression(new DummyExpression(unitNum), new DummyExpression(DataType.NUMBER))));
+        // LHS units and RHS integer is fine:
+        assertEquals(unitNum, check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.ONE))));
+        assertEquals(DataType.NUMBER, check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.ZERO))));
+        assertEquals(DataType.number(new NumberInfo(unit.raisedTo(5), 0)), check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(5)))));
+        assertEquals(DataType.number(new NumberInfo(unit.reciprocal(), 0)), check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(-1)))));
+        assertEquals(DataType.number(new NumberInfo(unit.raisedTo(3).reciprocal(), 0)), check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(-3)))));
+        // 1/integer is ok if all units divisible:
+        assertEquals(unitNum, check(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(3), 0))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(1L, 3L)))));
+        // Any other rational not allowed:
+        assertEquals(null, check(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(6), 0))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(2L, 3L)))));
+    }
+
+    // TODO typecheck all the compound expressions (addsubstract, or, and, times, comparison, match, tag)
+
+    private static @Nullable DataType check(Expression e) throws UserException, InternalException
+    {
+        return e.check(new DummyRecordSet(), TestUtil.typeState(), (ex, s) -> {});
     }
 
     private static class DummyRecordSet extends KnownLengthRecordSet

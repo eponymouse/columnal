@@ -52,7 +52,7 @@ public class Unit
     public Unit raisedTo(int power) throws UserException
     {
         if (power == 0)
-            throw new UserException("Invalid raise to power zero");
+            return SCALAR;
         Unit u = new Unit();
         u.units.putAll(units);
         u.units.replaceAll((s, origPower) -> origPower * power);
