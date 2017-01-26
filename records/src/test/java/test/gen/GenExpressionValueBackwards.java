@@ -41,6 +41,8 @@ import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
+import records.transformations.expression.ComparisonExpression;
+import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
@@ -83,6 +85,7 @@ import java.time.temporal.TemporalField;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -406,6 +409,47 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                                 exps.add(make(DataType.BOOLEAN, mustBeTrue == i ? true : r.nextBoolean(), maxLevels - 1));
                             return new OrExpression(exps);
                         }
+                    },
+                    () -> {
+                        // First form a valid set of values and sort them into order
+                        boolean ascending = r.nextBoolean();
+                        DataType dataType = r.choose(TestUtil.distinctTypes);
+                        List<Pair<@Value Object, Expression>> operands = TestUtil.makeList(r, 2, 5, () -> makeOfType(dataType));
+                        Collections.sort(operands, (a, b) -> { try
+                        {
+                            return Utility.compareValues(a.getFirst(), b.getFirst()) * (ascending ? 1 : -1);
+                        } catch (UserException | InternalException e) { throw new RuntimeException(e); }});
+                        List<ComparisonOperator> ops = new ArrayList<>();
+                        for (int i = 0; i < operands.size() - 1; i++)
+                            ops.add(ascending ? ComparisonOperator.LESS_THAN : ComparisonOperator.GREATER_THAN);
+                        // Randomly duplicate a value and change to <=/>=:
+                        int swap = r.nextInt(0, operands.size() - 2); // Picking operator really, not operand
+                        // Copy from left to right or right to left:
+                        if (r.nextBoolean())
+                        {
+                            // Copy from right to left:
+                            Object newTarget = operands.get(swap + 1);
+                            operands.set(swap, new Pair<>(newTarget, make(dataType, newTarget, maxLevels - 1)));
+                            ops.set(swap, ascending ? ComparisonOperator.LESS_THAN_OR_EQUAL_TO : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
+                        }
+                        else
+                        {
+                            // Copy from left to right:
+                            Object newTarget = operands.get(swap);
+                            operands.set(swap + 1, new Pair<>(newTarget, make(dataType, newTarget, maxLevels - 1)));
+                            ops.set(swap, ascending ? ComparisonOperator.LESS_THAN_OR_EQUAL_TO : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
+                        }
+                        // If we are aiming for true, job done.
+                        if ((Boolean)targetValue == false)
+                        {
+                            // Need to make it false by swapping two adjacent values (and getting rid of <=/>=)
+                            int falsifyOp = r.nextInt(0, operands.size() - 2); // Picking operator really, not operand
+                            Pair<Object, Expression> temp = operands.get(falsifyOp);
+                            operands.set(falsifyOp, operands.get(falsifyOp + 1));
+                            operands.set(falsifyOp + 1, temp);
+                            ops.set(falsifyOp, ascending ? ComparisonOperator.LESS_THAN : ComparisonOperator.GREATER_THAN);
+                        }
+                        return new ComparisonExpression(Utility.mapList(operands, Pair::getSecond), ImmutableList.copyOf(ops));
                     }
                 ));
             }

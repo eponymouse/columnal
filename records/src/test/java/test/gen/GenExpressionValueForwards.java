@@ -39,6 +39,8 @@ import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
+import records.transformations.expression.ComparisonExpression;
+import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
@@ -458,6 +460,40 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                             return new Pair<>(Utility.value(Utility.compareValues(lhs.getFirst(), rhs.getFirst()) == 0), new EqualExpression(lhs.getSecond(), rhs.getSecond()));
                         else
                             return new Pair<>(Utility.value(Utility.compareValues(lhs.getFirst(), rhs.getFirst()) != 0), new NotEqualExpression(lhs.getSecond(), rhs.getSecond()));
+                    },
+                    () ->
+                    {
+                        DataType t = makeType(r);
+
+                        List<Pair<@Value Object, Expression>> args = TestUtil.<Pair<@Value Object, Expression>>makeList(r, 2, 4, () -> make(t, maxLevels - 1));
+                        boolean lt = r.nextBoolean();
+                        List<ComparisonOperator> ops = new ArrayList<>();
+                        boolean result = true;
+                        for (int i = 0; i < args.size() - 1; i++)
+                        {
+                            ops.add(r.nextBoolean() ?
+                                (lt ? ComparisonOperator.LESS_THAN : ComparisonOperator.GREATER_THAN)
+                                : (lt ? ComparisonOperator.LESS_THAN_OR_EQUAL_TO : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO)
+                            );
+                            @Value Object lhs = args.get(i).getFirst();
+                            @Value Object rhs = args.get(i + 1).getFirst();
+                            switch (ops.get(ops.size() - 1))
+                            {
+                                case LESS_THAN:
+                                    result &= Utility.compareValues(lhs, rhs) < 0;
+                                    break;
+                                case LESS_THAN_OR_EQUAL_TO:
+                                    result &= Utility.compareValues(lhs, rhs) <= 0;
+                                    break;
+                                case GREATER_THAN:
+                                    result &= Utility.compareValues(lhs, rhs) > 0;
+                                    break;
+                                case GREATER_THAN_OR_EQUAL_TO:
+                                    result &= Utility.compareValues(lhs, rhs) >= 0;
+                                    break;
+                            }
+                        }
+                        return new Pair<>(Utility.value(result), new ComparisonExpression(Utility.mapList(args, Pair::getSecond), ImmutableList.copyOf(ops)));
                     },
                     () -> {
                         int size = r.nextInt(2, 5);

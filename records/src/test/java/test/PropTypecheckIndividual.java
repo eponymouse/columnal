@@ -1,6 +1,7 @@
 package test;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
@@ -24,12 +25,16 @@ import records.data.unit.UnitManager;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.AndExpression;
 import records.transformations.expression.ArrayExpression;
+import records.transformations.expression.ComparisonExpression;
+import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NotEqualExpression;
+import records.transformations.expression.OrExpression;
 import records.transformations.expression.RaiseExpression;
 import records.transformations.expression.TypeState;
 import test.gen.GenDataType;
@@ -41,6 +46,7 @@ import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -238,7 +244,43 @@ public class PropTypecheckIndividual
         assertEquals(null, check(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(6), 0))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(2L, 3L)))));
     }
 
-    // TODO typecheck all the compound expressions (addsubstract, or, and, times, comparison, match, tag)
+    @Property
+    public void checkAndOr(@From(GenDataType.class) DataType nonBool) throws InternalException, UserException
+    {
+        Assume.assumeFalse(nonBool.equals(DataType.BOOLEAN));
+
+        for (Function<List<Expression>, Expression> create : Arrays.<Function<List<Expression>, Expression>>asList(AndExpression::new, OrExpression::new))
+        {
+            assertEquals(DataType.BOOLEAN, check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN)))));
+            assertEquals(DataType.BOOLEAN, check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN)))));
+            assertEquals(DataType.BOOLEAN, check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN)))));
+
+            assertEquals(null, check(create.apply(Arrays.asList(new DummyExpression(nonBool)))));
+            assertEquals(null, check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN), new DummyExpression(nonBool)))));
+            assertEquals(null, check(create.apply(Arrays.asList(new DummyExpression(nonBool), new DummyExpression(DataType.BOOLEAN)))));
+            assertEquals(null, check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN), new DummyExpression(nonBool)))));
+            assertEquals(null, check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN), new DummyExpression(nonBool), new DummyExpression(DataType.BOOLEAN)))));
+            assertEquals(null, check(create.apply(Arrays.asList(new DummyExpression(nonBool), new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN)))));
+        }
+    }
+
+    @Property
+    public void checkComparison(@From(GenDataType.class) DataType main, @From(GenDataType.class) DataType other) throws InternalException, UserException
+    {
+        // Must be different types:
+        Assume.assumeFalse(DataType.checkSame(main, other, s -> {}) != null);
+
+        assertEquals(DataType.BOOLEAN, check(new ComparisonExpression(Arrays.asList(new DummyExpression(main), new DummyExpression(main)), ImmutableList.of(ComparisonOperator.LESS_THAN))));
+        assertEquals(DataType.BOOLEAN, check(new ComparisonExpression(Arrays.asList(new DummyExpression(main), new DummyExpression(main), new DummyExpression(main)), ImmutableList.of(ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_THAN_OR_EQUAL_TO))));
+
+        assertEquals(null, check(new ComparisonExpression(Arrays.asList(new DummyExpression(other), new DummyExpression(main)), ImmutableList.of(ComparisonOperator.LESS_THAN))));
+        assertEquals(null, check(new ComparisonExpression(Arrays.asList(new DummyExpression(main), new DummyExpression(other)), ImmutableList.of(ComparisonOperator.GREATER_THAN))));
+        assertEquals(null, check(new ComparisonExpression(Arrays.asList(new DummyExpression(other), new DummyExpression(main), new DummyExpression(main)), ImmutableList.of(ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_THAN_OR_EQUAL_TO))));
+        assertEquals(null, check(new ComparisonExpression(Arrays.asList(new DummyExpression(main), new DummyExpression(other), new DummyExpression(main)), ImmutableList.of(ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_THAN_OR_EQUAL_TO))));
+        assertEquals(null, check(new ComparisonExpression(Arrays.asList(new DummyExpression(main), new DummyExpression(main), new DummyExpression(other)), ImmutableList.of(ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_THAN_OR_EQUAL_TO))));
+    }
+
+    // TODO typecheck all the compound expressions (addsubtract, times, match, tag)
 
     private static @Nullable DataType check(Expression e) throws UserException, InternalException
     {
