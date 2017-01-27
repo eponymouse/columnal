@@ -109,7 +109,9 @@ public class ComparisonExpression extends NaryOpExpression
     public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
         type = checkAllOperandsSameType(data, state, onError);
-        return type;
+        if (type == null)
+            return null;
+        return DataType.BOOLEAN;
     }
 
     @Override
@@ -118,8 +120,10 @@ public class ComparisonExpression extends NaryOpExpression
         @Value Object cur = expressions.get(0).getValue(rowIndex, state);
         for (int i = 1; i < expressions.size(); i++)
         {
-            if (!operators.get(i - 1).comparisonTrue(cur, expressions.get(i).getValue(rowIndex, state)))
+            @Value Object next = expressions.get(i).getValue(rowIndex, state);
+            if (!operators.get(i - 1).comparisonTrue(cur, next))
                 return Utility.value(false);
+            cur = next;
         }
         return Utility.value(true);
     }

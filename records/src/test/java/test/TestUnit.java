@@ -79,6 +79,8 @@ public class TestUnit
         assertEquals(Unit._test_make(m, 3), mgr.loadUse("m*m m"));
         assertEquals(Unit._test_make(m, 3), mgr.loadUse("m^2 m"));
         assertEquals(Unit._test_make(m, 3), mgr.loadUse("m m^2"));
+        assertEquals(Unit._test_make(), mgr.loadUse("m^0"));
+        assertEquals(Unit._test_make(), mgr.loadUse("m/m"));
 
         assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("m/s^2"));
         assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("(m/s^2)"));
@@ -129,7 +131,6 @@ public class TestUnit
         assertThrows(UserException.class, () -> mgr.loadUse("m/s/s"));
         assertThrows(UserException.class, () -> mgr.loadUse("m l/(g^3 s) / s"));
         assertThrows(UserException.class, () -> mgr.loadUse("m^0.5"));
-        assertThrows(UserException.class, () -> mgr.loadUse("m^0"));
         assertThrows(UserException.class, () -> mgr.loadUse("m^-0.5"));
     }
 

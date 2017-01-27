@@ -421,21 +421,28 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         } catch (UserException | InternalException e) { throw new RuntimeException(e); }});
                         List<ComparisonOperator> ops = new ArrayList<>();
                         for (int i = 0; i < operands.size() - 1; i++)
-                            ops.add(ascending ? ComparisonOperator.LESS_THAN : ComparisonOperator.GREATER_THAN);
+                        {
+                            // We may have randomly generated equal values, so check for that and adjust
+                            // operator to the or-equals variant if necessary:
+                            ops.add(
+                                Utility.compareValues(operands.get(i).getFirst(), operands.get(i+1).getFirst()) == 0 ?
+                                  (ascending ? ComparisonOperator.LESS_THAN_OR_EQUAL_TO : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO)
+                                : (ascending ? ComparisonOperator.LESS_THAN : ComparisonOperator.GREATER_THAN));
+                        }
                         // Randomly duplicate a value and change to <=/>=:
                         int swap = r.nextInt(0, operands.size() - 2); // Picking operator really, not operand
                         // Copy from left to right or right to left:
                         if (r.nextBoolean())
                         {
                             // Copy from right to left:
-                            Object newTarget = operands.get(swap + 1);
+                            Object newTarget = operands.get(swap + 1).getFirst();
                             operands.set(swap, new Pair<>(newTarget, make(dataType, newTarget, maxLevels - 1)));
                             ops.set(swap, ascending ? ComparisonOperator.LESS_THAN_OR_EQUAL_TO : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
                         }
                         else
                         {
                             // Copy from left to right:
-                            Object newTarget = operands.get(swap);
+                            Object newTarget = operands.get(swap).getFirst();
                             operands.set(swap + 1, new Pair<>(newTarget, make(dataType, newTarget, maxLevels - 1)));
                             ops.set(swap, ascending ? ComparisonOperator.LESS_THAN_OR_EQUAL_TO : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO);
                         }
