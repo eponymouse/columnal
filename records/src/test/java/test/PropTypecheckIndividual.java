@@ -8,12 +8,10 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.Matchers;
 import org.junit.Assume;
-import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
-import records.data.Column;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
@@ -22,8 +20,8 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
-import records.error.FunctionInt;
 import records.error.InternalException;
+import records.error.UnimplementedException;
 import records.error.UserException;
 import records.transformations.expression.AndExpression;
 import records.transformations.expression.ArrayExpression;
@@ -33,6 +31,10 @@ import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
+import records.transformations.expression.MatchExpression;
+import records.transformations.expression.MatchExpression.Pattern;
+import records.transformations.expression.MatchExpression.PatternMatch;
+import records.transformations.expression.MatchExpression.PatternMatchConstructor;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.OrExpression;
 import records.transformations.expression.RaiseExpression;
@@ -56,6 +58,7 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Created by neil on 24/01/2017.
@@ -280,7 +283,49 @@ public class PropTypecheckIndividual
         assertEquals(null, check(new ComparisonExpression(Arrays.asList(new DummyExpression(main), new DummyExpression(main), new DummyExpression(other)), ImmutableList.of(ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_THAN_OR_EQUAL_TO))));
     }
 
-    // TODO typecheck all the compound expressions (addsubtract, times, match, tag)
+    // TODO typecheck all the compound expressions (addsubtract, times, tag)
+
+    @Property
+    public void checkMatch(@From(GenDataType.class) DataType matchType, @From(GenDataType.class) DataType resultType, @From(GenDataType.class) DataType other) throws InternalException, UserException
+    {
+        // Doesn't matter if match is same as result, but other must be different than both to make failures actually fail:
+        Assume.assumeFalse(DataType.checkSame(matchType, other, s -> {}) != null);
+        Assume.assumeFalse(DataType.checkSame(resultType, other, s -> {}) != null);
+
+        // Not valid to have zero clauses as can't determine result type:
+        try
+        {
+            assertEquals(null, check(new MatchExpression(new DummyExpression(matchType), Collections.emptyList())));
+            fail("Zero clauses in match should throw exception");
+        }
+        catch (InternalException e)
+        {
+            // As expected...
+        }
+
+        // One clause with one pattern, all checks out:
+        assertEquals(resultType, check(new MatchExpression(new DummyExpression(matchType), Arrays.asList(me -> me.new MatchClause(
+            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
+        // One clause, two patterns
+        assertEquals(resultType, check(new MatchExpression(new DummyExpression(matchType), Arrays.asList(me -> me.new MatchClause(
+            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
+        // Two clauses, two patterns each
+        assertEquals(resultType, check(new MatchExpression(new DummyExpression(matchType), Arrays.asList(me -> me.new MatchClause(
+            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), me -> me.new MatchClause(
+            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
+        // Two clauses, two patterns, one pattern doesn't match:
+        assertEquals(null, check(new MatchExpression(new DummyExpression(matchType), Arrays.asList(me -> me.new MatchClause(
+            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), me -> me.new MatchClause(
+            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(other), null)), new DummyExpression(resultType))))));
+        // Two clauses, two patterns, one clause doesn't match:
+        assertEquals(null, check(new MatchExpression(new DummyExpression(matchType), Arrays.asList(me -> me.new MatchClause(
+            Arrays.asList(new Pattern(new DummyPatternMatch(other), null), new Pattern(new DummyPatternMatch(other), null)), new DummyExpression(resultType)), me -> me.new MatchClause(
+            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType))))));
+        // Two clauses, two patterns, one result doesn't match:
+        assertEquals(null, check(new MatchExpression(new DummyExpression(matchType), Arrays.asList(me -> me.new MatchClause(
+            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(resultType)), me -> me.new MatchClause(
+            Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(other))))));
+    }
 
     private static @Nullable DataType check(Expression e) throws UserException, InternalException
     {
@@ -292,6 +337,34 @@ public class PropTypecheckIndividual
         public DummyRecordSet() throws InternalException, UserException
         {
             super("Dummy", Collections.emptyList(), 0);
+        }
+    }
+
+    private static class DummyPatternMatch implements PatternMatch
+    {
+        private final DataType expected;
+
+        private DummyPatternMatch(DataType expected)
+        {
+            this.expected = expected;
+        }
+
+        @Override
+        public @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
+        {
+            return DataType.checkSame(srcType, expected, s -> {}) != null ? state : null;
+        }
+
+        @Override
+        public @OnThread(Tag.Simulation) @Nullable EvaluateState match(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException
+        {
+            throw new UnimplementedException();
+        }
+
+        @Override
+        public String save()
+        {
+            return "TEST";
         }
     }
 }
