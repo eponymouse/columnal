@@ -701,7 +701,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
         // Make a bunch of guards which won't fire:
         List<Function<MatchExpression, MatchClause>> clauses = new ArrayList<>(TestUtil.makeList(r, 0, 5, (ExSupplier<Optional<Function<MatchExpression, MatchClause>>>)() -> {
             // Generate a bunch which can't match the item:
-            List<ExFunction<MatchExpression, Pattern>> patterns = makeNonMatchingPatterns(maxLevels, t, actual);
+            List<ExFunction<MatchExpression, Pattern>> patterns = makeNonMatchingPatterns(maxLevels - 1, t, actual);
             Expression outcome = makeOtherOutcome.get();
             if (patterns.isEmpty())
                 return Optional.<Function<MatchExpression, MatchClause>>empty();
@@ -717,7 +717,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             });
         }).stream().<Function<MatchExpression, MatchClause>>flatMap(o -> o.isPresent() ? Stream.<Function<MatchExpression, MatchClause>>of(o.get()) : Stream.<Function<MatchExpression, MatchClause>>empty()).collect(Collectors.<Function<MatchExpression, MatchClause>>toList()));
         Expression correctOutcome = makeCorrectOutcome.get();
-        List<ExFunction<MatchExpression, Pattern>> patterns = new ArrayList<>(makeNonMatchingPatterns(maxLevels, t, actual));
+        List<ExFunction<MatchExpression, Pattern>> patterns = new ArrayList<>(makeNonMatchingPatterns(maxLevels - 1, t, actual));
         Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> match = makePatternMatch(maxLevels - 1, t, actual);
         patterns.add(r.nextInt(0, patterns.size()), me -> {
             @Nullable Expression guard = r.nextBoolean() ? null : make(DataType.BOOLEAN, true, maxLevels - 1);
@@ -736,7 +736,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 throw new RuntimeException(e);
             }
         });
-        return new MatchExpression(make(t, actual, maxLevels), clauses);
+        return new MatchExpression(make(t, actual, maxLevels - 1), clauses);
     }
 
     // Pattern and an optional guard
