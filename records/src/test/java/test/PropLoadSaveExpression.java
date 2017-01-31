@@ -16,6 +16,7 @@ import test.gen.GenExpressionValueForwards;
 import test.gen.GenNonsenseExpression;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Created by neil on 30/11/2016.
@@ -32,7 +33,14 @@ public class PropLoadSaveExpression
     @Property(trials = 1000)
     public void testLoadSaveReal(@From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue) throws InternalException, UserException
     {
-        testLoadSave(expressionValue.expression);
+        try
+        {
+            testLoadSave(expressionValue.expression);
+        }
+        catch (OutOfMemoryError e)
+        {
+            fail("Out of memory issue with expression: " + expressionValue.expression);
+        }
     }
 
     private void testLoadSave(@From(GenNonsenseExpression.class) Expression expression) throws UserException, InternalException
@@ -43,5 +51,6 @@ public class PropLoadSaveExpression
         assertEquals("Saved version: " + saved, expression, reloaded);
         String resaved = reloaded.save(true);
         assertEquals(saved, resaved);
+
     }
 }
