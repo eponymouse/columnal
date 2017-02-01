@@ -18,6 +18,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.Concatenate;
 import records.transformations.Filter;
+import records.transformations.HideColumns;
 import records.transformations.Sort;
 import records.transformations.SummaryStatistics;
 import records.transformations.SummaryStatistics.SummaryType;
@@ -49,6 +50,7 @@ import static org.hamcrest.Matchers.comparesEqualTo;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 import static org.junit.Assume.assumeTrue;
 
@@ -235,6 +237,84 @@ public class PropRunTransformation
                 }
 
             }
+        }
+    }
+
+    // TODO test concat other, and failure cases
+
+    @Property
+    @OnThread(Tag.Simulation)
+    public void testSuccessfulHide(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original) throws InternalException, UserException
+    {
+        List<ColumnId> originalIds = original.data.getData().getColumnIds();
+
+        assumeTrue(originalIds.size() > 1);
+
+        // Test zero:
+        {
+            List<ColumnId> expected = new ArrayList<>(originalIds);
+            HideColumns hidden = new HideColumns(original.mgr, null, original.data.getId(), Collections.emptyList());
+            assertEquals(expected, hidden.getData().getColumnIds());
+            assertDataSame(hidden.getData(), original.data.getData());
+        }
+
+        // Test one:
+        for (ColumnId single : originalIds)
+        {
+            List<ColumnId> expected = new ArrayList<>(originalIds);
+            expected.remove(single);
+            HideColumns hidden = new HideColumns(original.mgr, null, original.data.getId(), Collections.singletonList(single));
+            assertEquals(expected, hidden.getData().getColumnIds());
+            assertDataSame(hidden.getData(), original.data.getData());
+        }
+    }
+
+    // Checks that all columns from first parameter have same data as
+    // their counterpart in second parameter.  Note this is not symmetrical!
+    @OnThread(Tag.Simulation)
+    private void assertDataSame(RecordSet smaller, RecordSet bigger) throws UserException, InternalException
+    {
+        for (Column a : smaller.getColumns())
+        {
+            Column b = bigger.getColumn(a.getName());
+            assertEquals(a.getLength(), b.getLength());
+            for (int i = 0; i < a.getLength(); i++)
+            {
+                assertEquals(0, Utility.compareValues(a.getType().getCollapsed(i), b.getType().getCollapsed(i)));
+            }
+        }
+    }
+
+    @Property
+    @OnThread(Tag.Simulation)
+    public void testUnsuccessfulHide(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original) throws InternalException, UserException
+    {
+        // Hiding all should be invalid:
+        try
+        {
+            new HideColumns(original.mgr, null, original.data.getId(), original.data.getData().getColumnIds()).getData();
+            fail("Hide all");
+        }
+        catch (UserException e)
+        {
+            // As expected
+        }
+
+        // Hiding a column which doesn't feature (perhaps alongside legit columns):
+        ArrayList<ColumnId> toRemove = new ArrayList<>();
+        toRemove.add(new ColumnId("hdgsufdhggggiosfsgdf"));
+        for (ColumnId c : original.data.getData().getColumnIds())
+        {
+            try
+            {
+                new HideColumns(original.mgr, null, original.data.getId(), toRemove).getData();
+                fail("Hide non-existing");
+            }
+            catch (UserException e)
+            {
+                // As expected
+            }
+            toRemove.add(new Random().nextInt(toRemove.size()), c);
         }
     }
 }

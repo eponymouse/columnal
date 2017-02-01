@@ -11,6 +11,12 @@ Add functions, such as:
  Add these two as auto-complete options:
    only(col): gets single value from that column (not usable on current table)
    all(col): gets whole column
+Add transformations such as:
+  manual edit (new and existing columns)
+  Transform-each
+Add TransformationManager entry and GUI for transformations, including:
+  hide columns
+
 
 ++ for string concat?  Or maybe ~ ?  Or overload + (and for array concat)
 Change some of the symbols to _keywords
