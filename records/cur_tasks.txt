@@ -15,6 +15,10 @@ Add transformations such as:
   manual edit (new and existing columns)
   Transform-each
 Add TransformationManager entry and GUI for transformations, including:
+  concat
+  hide columns
+Add load-save and no-op edit tests for transformations, including:
+  concat
   hide columns
 
 

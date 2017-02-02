@@ -6,6 +6,12 @@ item : ATOM | STRING;
 
 expression: EXPRESSION_BEGIN EXPRESSION EXPRESSION_END;
 
+/* Hide: */
+hideKW : {_input.LT(1).getText().equals("HIDE")}? ATOM;
+hideColumn : hideKW column=item NEWLINE;
+hideColumns : hideColumn*;
+
+/* Sort: */
 orderKW : {_input.LT(1).getText().equals("ASCENDING") || _input.LT(1).getText().equals("DESCENDING")}? ATOM;
 orderBy : orderKW column=item NEWLINE;
 sort : orderBy+;

@@ -8,7 +8,6 @@ import javafx.scene.layout.Pane;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
-import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.TableId;
@@ -17,6 +16,9 @@ import records.data.Transformation;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.TransformationLexer;
+import records.grammar.TransformationParser;
+import records.grammar.TransformationParser.HideColumnsContext;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -26,6 +28,7 @@ import utility.Utility;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -127,13 +130,13 @@ public class HideColumns extends Transformation
     @Override
     public @OnThread(Tag.FXPlatform) List<TableId> getSources()
     {
-        return Collections.emptyList(); //TODO
+        return Collections.singletonList(srcTableId);
     }
 
     @Override
     public @OnThread(Tag.FXPlatform) TransformationEditor edit()
     {
-        return new Editor();
+        return new Editor(getId(), srcTableId, src, hideIds);
     }
 
     @Override
@@ -159,8 +162,21 @@ public class HideColumns extends Transformation
         return result;
     }
 
-    private class Editor extends TransformationEditor
+    private static class Editor extends TransformationEditor
     {
+        private final @Nullable TableId tableId;
+        private final TableId srcTableId;
+        private final List<ColumnId> columnsToHide;
+        private final @Nullable Table src;
+
+        public Editor(@Nullable TableId tableId, TableId srcTableId, @Nullable Table src, List<ColumnId> toHide)
+        {
+            this.tableId = tableId;
+            this.srcTableId = srcTableId;
+            this.src = src;
+            columnsToHide = new ArrayList<>(toHide);
+        }
+
         @Override
         public @OnThread(Tag.FX) StringExpression displayTitle()
         {
@@ -182,19 +198,41 @@ public class HideColumns extends Transformation
         @Override
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
-            throw new RuntimeException(); // TODO
+            return () -> new HideColumns(mgr, tableId, srcTableId, columnsToHide);
         }
 
         @Override
         public @Nullable Table getSource()
         {
-            return null;
+            return src;
         }
 
         @Override
         public TableId getSourceId()
         {
-            throw new RuntimeException(); // TODO
+            return srcTableId;
+        }
+    }
+
+    public static class Info extends SingleSourceTransformationInfo
+    {
+        public Info()
+        {
+            super("hide", Arrays.asList("collapse"));
+        }
+
+        @Override
+        protected @OnThread(Tag.Simulation) Transformation loadSingle(TableManager mgr, TableId tableId, TableId srcTableId, String detail) throws InternalException, UserException
+        {
+            HideColumnsContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::hideColumns);
+
+            return new HideColumns(mgr, tableId, srcTableId, Utility.mapList(loaded.hideColumn(), hc -> new ColumnId(hc.column.getText())));
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(TableManager mgr, TableId srcTableId, @Nullable Table src)
+        {
+            return new Editor(null, srcTableId, src, Collections.emptyList());
         }
     }
 }

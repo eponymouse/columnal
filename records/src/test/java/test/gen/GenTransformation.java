@@ -15,6 +15,7 @@ public class GenTransformation extends Generator<Transformation_Mgr>
 {
     List<Generator<Transformation_Mgr>> generators = Arrays.asList(
         new GenFilter(),
+        new GenHideColumns(),
         new GenSort(),
         new GenSummaryStats()
     );
