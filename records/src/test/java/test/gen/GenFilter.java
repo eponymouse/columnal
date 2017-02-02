@@ -7,6 +7,7 @@ import records.data.TableId;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.Filter;
+import records.transformations.expression.Expression;
 import test.DummyManager;
 import test.TestUtil;
 import test.TestUtil.Transformation_Mgr;
@@ -32,7 +33,9 @@ public class GenFilter extends Generator<Transformation_Mgr>
         try
         {
             DummyManager mgr = new DummyManager();
-            return new Transformation_Mgr(mgr, new Filter(mgr, ids.getFirst(), ids.getSecond(), gen().make(GenNonsenseExpression.class).generate(sourceOfRandomness, generationStatus)));
+            GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
+            Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);
+            return new Transformation_Mgr(mgr, new Filter(mgr, ids.getFirst(), ids.getSecond(), nonsenseExpression));
         }
         catch (InternalException | UserException e)
         {

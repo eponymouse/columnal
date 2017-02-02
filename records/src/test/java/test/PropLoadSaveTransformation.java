@@ -18,6 +18,7 @@ import test.gen.GenFilter;
 import test.gen.GenSort;
 import test.gen.GenSummaryStats;
 import test.gen.GenTableManager;
+import test.gen.GenTransformation;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationSupplier;
@@ -38,7 +39,7 @@ public class PropLoadSaveTransformation
 {
     @Property(trials = 1000)
     @OnThread(value = Tag.FXPlatform,ignoreParent = true)
-    public void testTransformation(@From(GenTableManager.class) TableManager mgr1, @From(GenTableManager.class) TableManager mgr2, @From(GenSort.class) @From(GenSummaryStats.class) @From(GenFilter.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
+    public void testTransformation(@From(GenTableManager.class) TableManager mgr1, @From(GenTableManager.class) TableManager mgr2, @From(GenTransformation.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         String saved = save(original.mgr);
         try
@@ -91,7 +92,7 @@ public class PropLoadSaveTransformation
 
     @Property
     @OnThread(value = Tag.Simulation,ignoreParent = true)
-    public void testNoOpEdit(@From(GenSort.class) @From(GenSummaryStats.class) @From(GenFilter.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
+    public void testNoOpEdit(@From(GenTransformation.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         SwingUtilities.invokeAndWait(() -> new JFXPanel());
         CompletableFuture<SimulationSupplier<Transformation>> f = new CompletableFuture<>();
