@@ -47,32 +47,32 @@ public class TestLoadSaveExpression
     {
         assertBothWays(
             new NotEqualExpression(new StringLiteral("Card"), new StringLiteral("xxx")),
-            "\"Card\" /= \"xxx\""
+            "\"Card\" <> \"xxx\""
         );
         assertEquals(
             new NotEqualExpression(new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("xxx")),
-            Expression.parse(null, "@column \"Card\" /= \"xxx\"", DummyManager.INSTANCE.getTypeManager())
+            Expression.parse(null, "@column \"Card\" <> \"xxx\"", DummyManager.INSTANCE.getTypeManager())
         );
         assertBothWays(
             new NotEqualExpression(new ColumnReference(new ColumnId("Card"), ColumnReferenceType.CORRESPONDING_ROW), new StringLiteral("xxx")),
-            "@column Card /= \"xxx\""
+            "@column Card <> \"xxx\""
         );
         assertBothWays(
             new NotEqualExpression(new BooleanLiteral(false), new BooleanLiteral(true)),
-            "false /= true"
+            "false <> true"
         );
         assertBothWays(
             new NotEqualExpression(new NumericLiteral(23, null), new BooleanLiteral(true)),
-            "23 /= true"
+            "23 <> true"
         );
         assertBothWays(
             new NotEqualExpression(new NumericLiteral(0, null), new BooleanLiteral(true)),
-            "0 /= true"
+            "0 <> true"
         );
         assertBothWays(
             new NotEqualExpression(new BooleanLiteral(false),
                 new NotEqualExpression(new NumericLiteral(0, null), new BooleanLiteral(true))),
-            "false /= (0 /= true)"
+            "false <> (0 <> true)"
         );
 
         assertBothWays(
@@ -82,7 +82,7 @@ public class TestLoadSaveExpression
                     new BooleanLiteral(false)
                 )
             ),
-            "1403426927672136511427478267571691349056738827396 /= ((false /= 807027098579703254931175241526980987544176732399) /= false)"
+            "1403426927672136511427478267571691349056738827396 <> ((false <> 807027098579703254931175241526980987544176732399) <> false)"
         );
     }
 
