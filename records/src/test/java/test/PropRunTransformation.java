@@ -24,6 +24,7 @@ import records.transformations.HideColumns;
 import records.transformations.Sort;
 import records.transformations.SummaryStatistics;
 import records.transformations.SummaryStatistics.SummaryType;
+import records.transformations.Transform;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -48,6 +49,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
+import java.util.function.Function;
 import java.util.function.Predicate;
 
 import static org.hamcrest.Matchers.comparesEqualTo;
@@ -279,7 +281,7 @@ public class PropRunTransformation
         new Concatenate(data.mgr, null, "concated", Arrays.asList(data.data.getId(), data.dataB.getId()), missing).getData();
         // TODO check the actual data coming out.
 
-        // TODO test it works with overlapping same-typed columns (may need transform)
+        // TODO test it works with overlapping same-typed columns (may need transform to rename columns)
         // TODO test it fails with overlapping columns of different types
     }
     // TODO test concat other, and failure cases
@@ -297,7 +299,7 @@ public class PropRunTransformation
             List<ColumnId> expected = new ArrayList<>(originalIds);
             HideColumns hidden = new HideColumns(original.mgr, null, original.data.getId(), Collections.emptyList());
             assertEquals(expected, hidden.getData().getColumnIds());
-            assertDataSame(hidden.getData(), original.data.getData());
+            assertDataSame(hidden.getData(), original.data.getData(), Function.identity());
         }
 
         // Test one:
@@ -307,18 +309,49 @@ public class PropRunTransformation
             expected.remove(single);
             HideColumns hidden = new HideColumns(original.mgr, null, original.data.getId(), Collections.singletonList(single));
             assertEquals(expected, hidden.getData().getColumnIds());
-            assertDataSame(hidden.getData(), original.data.getData());
+            assertDataSame(hidden.getData(), original.data.getData(), Function.identity());
         }
     }
 
-    // Checks that all columns from first parameter have same data as
-    // their counterpart in second parameter.  Note this is not symmetrical!
+    @Property
     @OnThread(Tag.Simulation)
-    private void assertDataSame(RecordSet smaller, RecordSet bigger) throws UserException, InternalException
+    public void testTransformAsRename(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original, @From(GenRandom.class) Random r) throws InternalException, UserException
+    {
+        // Pick a few new destination columns:
+        int numNew = r.nextInt(5);
+        Map<ColumnId, Expression> newCols = new HashMap<>();
+        List<Column> oldColumns = original.data.getData().getColumns();
+        Map<ColumnId, ColumnId> columnMapping = new HashMap<>();
+
+        for (Column oldColumn : oldColumns)
+        {
+            columnMapping.put(oldColumn.getName(), oldColumn.getName());
+        }
+        for (int i = 0; i < numNew; i++)
+        {
+            ColumnId old = oldColumns.get(r.nextInt(oldColumns.size())).getName();
+            ColumnId newId = new ColumnId("Trans" + i);
+            newCols.put(newId, new ColumnReference(old, ColumnReferenceType.CORRESPONDING_ROW));
+            columnMapping.put(newId, old);
+        }
+
+
+        Transform transform = new Transform(original.mgr, null, original.data.getId(), newCols);
+
+        assertDataSame(transform.getData(), original.data.getData(), columnMapping::get);
+    }
+
+    // Checks that all columns from first parameter have same data as
+    // their counterpart in second parameter, where counterpart
+    // is determined by applying the function to map the column name
+    // Note this is not symmetrical between the two data sets!
+    // Any columns that are in second param but not first are ignored.
+    @OnThread(Tag.Simulation)
+    private void assertDataSame(RecordSet smaller, RecordSet bigger, Function<ColumnId, ColumnId> smallToBig) throws UserException, InternalException
     {
         for (Column a : smaller.getColumns())
         {
-            Column b = bigger.getColumn(a.getName());
+            Column b = bigger.getColumn(smallToBig.apply(a.getName()));
             assertEquals(a.getLength(), b.getLength());
             for (int i = 0; i < a.getLength(); i++)
             {

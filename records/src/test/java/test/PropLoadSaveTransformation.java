@@ -28,6 +28,8 @@ import javax.swing.SwingUtilities;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 
 import static org.junit.Assert.assertEquals;
 
@@ -92,13 +94,13 @@ public class PropLoadSaveTransformation
 
     @Property
     @OnThread(value = Tag.Simulation,ignoreParent = true)
-    public void testNoOpEdit(@From(GenTransformation.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
+    public void testNoOpEdit(@From(GenTransformation.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException, TimeoutException
     {
         SwingUtilities.invokeAndWait(() -> new JFXPanel());
         CompletableFuture<SimulationSupplier<Transformation>> f = new CompletableFuture<>();
         Platform.runLater(() -> {
             f.complete(original.transformation.edit().getTransformation(original.mgr));
         });
-        assertEquals(f.get().get(), original.transformation);
+        assertEquals(f.get(10, TimeUnit.SECONDS).get(), original.transformation);
     }
 }
