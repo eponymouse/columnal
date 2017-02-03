@@ -7,6 +7,7 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import one.util.streamex.StreamEx;
+import org.checkerframework.checker.units.qual.C;
 import org.junit.Assume;
 import org.junit.runner.RunWith;
 import records.data.Column;
@@ -247,6 +248,7 @@ public class PropRunTransformation
     }
 
     @Property
+    @SuppressWarnings("nullness")
     @OnThread(Tag.Simulation)
     public void testConcatUnrelated(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr data) throws InternalException, UserException
     {
@@ -269,22 +271,54 @@ public class PropRunTransformation
         }
 
         // Test it does work with enough missing values:
-        Map<Pair<TableId, ColumnId>, Optional<@Value Object>> missing = new HashMap<>();
+        Map<ColumnId, Optional<@Value Object>> missing = new HashMap<>();
 
         for (ImmediateDataSource table : Arrays.asList(data.data, data.dataB))
         {
             for (ColumnId id : table.getData().getColumnIds())
             {
-                missing.put(new Pair<>(table.getId(), id), Optional.of(table.getData().getColumn(id).getType().getCollapsed(0)));
+                missing.put(id, Optional.of(table.getData().getColumn(id).getType().getCollapsed(0)));
             }
         }
-        new Concatenate(data.mgr, null, "concated", Arrays.asList(data.data.getId(), data.dataB.getId()), missing).getData();
-        // TODO check the actual data coming out.
+        RecordSet concat = new Concatenate(data.mgr, null, "concated", Arrays.asList(data.data.getId(), data.dataB.getId()), missing).getData();
+        assertEquals(data.data.getData().getLength() + data.dataB.getData().getLength(), concat.getLength());
+        for (ColumnId c : concat.getColumnIds())
+        {
+            // First check all of the ones that correspond to A:
+            for (int i = 0; i < data.data.getData().getLength(); i++)
+            {
+                // If it was in A, check value
+                if (data.data.getData().getColumnIds().contains(c))
+                {
+                    assertEquals(0, Utility.compareValues(data.data.getData().getColumn(c).getType().getCollapsed(i), concat.getColumn(c).getType().getCollapsed(i)));
+                }
+                else
+                {
+                    // Otherwise it must be the default:
+                    assertEquals(0, Utility.compareValues(missing.get(c).get(), concat.getColumn(c).getType().getCollapsed(i)));
+                }
+            }
+
+            // Then check B:
+            for (int i = data.data.getData().getLength(); i < data.data.getData().getLength() + data.dataB.getData().getLength(); i++)
+            {
+                // If it was in A, check value
+                if (data.dataB.getData().getColumnIds().contains(c))
+                {
+                    assertEquals(0, Utility.compareValues(data.dataB.getData().getColumn(c).getType().getCollapsed(i), concat.getColumn(c).getType().getCollapsed(i)));
+                }
+                else
+                {
+                    // Otherwise it must be the default:
+                    assertEquals(0, Utility.compareValues(missing.get(c).get(), concat.getColumn(c).getType().getCollapsed(i)));
+                }
+            }
+        }
 
         // TODO test it works with overlapping same-typed columns (may need transform to rename columns)
         // TODO test it fails with overlapping columns of different types
     }
-    // TODO test concat other, and failure cases
+    // TODO test more concat failure cases
 
     @Property
     @OnThread(Tag.Simulation)
