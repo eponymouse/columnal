@@ -42,6 +42,7 @@ public class TransformationManager
     public List<TransformationInfo> getTransformations()
     {
         return Arrays.asList(
+            //new Concatenate.Info(),
             new Filter.Info(),
             new HideColumns.Info(),
             new Sort.Info(),

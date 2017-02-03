@@ -7,9 +7,11 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import one.util.streamex.StreamEx;
+import org.junit.Assume;
 import org.junit.runner.RunWith;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.ImmediateDataSource;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.TableId;
@@ -33,6 +35,7 @@ import test.gen.GenImmediateData;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.Utility;
 
 import java.math.BigDecimal;
@@ -40,6 +43,7 @@ import java.math.MathContext;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -153,7 +157,7 @@ public class PropRunTransformation
         // Lengths should equal original:
         assertEquals(srcTable.data.getData().getLength(), filter.getData().getLength() + invertedFilter.getData().getLength());
 
-        Concatenate concatFilters = new Concatenate(srcTable.mgr, null, "concatFilters", Arrays.asList(filter.getId(), invertedFilter.getId()));
+        Concatenate concatFilters = new Concatenate(srcTable.mgr, null, "concatFilters", Arrays.asList(filter.getId(), invertedFilter.getId()), Collections.emptyMap());
 
         // Check that the same set of rows is present:
         assertEquals(TestUtil.getRowFreq(srcTable.data.getData()), TestUtil.getRowFreq(concatFilters.getData()));
@@ -223,7 +227,7 @@ public class PropRunTransformation
         {
             // Add once each time round the loop:
             ids.add(original.data.getId());
-            Concatenate concatenate = new Concatenate(original.mgr, null, "ConcatSelf", ids);
+            Concatenate concatenate = new Concatenate(original.mgr, null, "ConcatSelf", ids, Collections.emptyMap());
             for (Column column : concatenate.getData().getColumns())
             {
                 // Compare each value from the original set with the corresponding later repeated values:
@@ -240,6 +244,44 @@ public class PropRunTransformation
         }
     }
 
+    @Property
+    @OnThread(Tag.Simulation)
+    public void testConcatUnrelated(@From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr data) throws InternalException, UserException
+    {
+        // Test that concating two tables with different columns with insufficient defaults
+        // will fail:
+        List<ColumnId> sharedIds = new ArrayList<>(data.data.getData().getColumnIds());
+        sharedIds.retainAll(data.dataB.getData().getColumnIds());
+        Assume.assumeTrue(sharedIds.isEmpty());
+        Assume.assumeTrue(data.data.getData().getLength() > 0);
+        Assume.assumeTrue(data.dataB.getData().getLength() > 0);
+
+        try
+        {
+            new Concatenate(data.mgr, null, "concated", Arrays.asList(data.data.getId(), data.dataB.getId()), Collections.emptyMap()).getData();
+            fail("Expected failure concatting two unrelated tables");
+        }
+        catch (UserException e)
+        {
+            // Expected
+        }
+
+        // Test it does work with enough missing values:
+        Map<Pair<TableId, ColumnId>, Optional<@Value Object>> missing = new HashMap<>();
+
+        for (ImmediateDataSource table : Arrays.asList(data.data, data.dataB))
+        {
+            for (ColumnId id : table.getData().getColumnIds())
+            {
+                missing.put(new Pair<>(table.getId(), id), Optional.of(table.getData().getColumn(id).getType().getCollapsed(0)));
+            }
+        }
+        new Concatenate(data.mgr, null, "concated", Arrays.asList(data.data.getId(), data.dataB.getId()), missing).getData();
+        // TODO check the actual data coming out.
+
+        // TODO test it works with overlapping same-typed columns (may need transform)
+        // TODO test it fails with overlapping columns of different types
+    }
     // TODO test concat other, and failure cases
 
     @Property

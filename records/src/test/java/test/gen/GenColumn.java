@@ -51,7 +51,8 @@ import java.util.function.Supplier;
 public class GenColumn extends Generator<BiFunction<Integer, RecordSet, Column>>
 {
     private final TableManager mgr;
-    private Supplier<ColumnId> nextCol = new Supplier<ColumnId>() {
+    // Static so we don't get unintended duplicates during testing:
+    private static Supplier<ColumnId> nextCol = new Supplier<ColumnId>() {
         int nextId = 0;
         @Override
         public ColumnId get()

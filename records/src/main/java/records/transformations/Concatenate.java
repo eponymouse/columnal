@@ -1,5 +1,6 @@
 package records.transformations;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
@@ -29,7 +30,10 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Queue;
 
 /**
@@ -40,6 +44,13 @@ public class Concatenate extends Transformation
 {
     @OnThread(Tag.Any)
     private final List<TableId> sources;
+
+    // If there is a column which is not in every source table, it should appear in this map
+    // If it's mapped to Optional.empty then it should be omitted in the concatenated version.
+    // If it's mapped to Optional.of then it should be given that value in the concatenated version
+    // for any source table which lacks the column.
+    private final Map<Pair<TableId, ColumnId>, Optional<@Value Object>> missingValues;
+
     @OnThread(Tag.Any)
     private @Nullable String error = null;
     @OnThread(Tag.Any)
@@ -47,11 +58,12 @@ public class Concatenate extends Transformation
     private final String title;
 
     @SuppressWarnings("initialization")
-    public Concatenate(TableManager mgr, @Nullable TableId tableId, String title, List<TableId> sources) throws InternalException
+    public Concatenate(TableManager mgr, @Nullable TableId tableId, String title, List<TableId> sources, Map<Pair<TableId, ColumnId>, Optional<@Value Object>> missingValues) throws InternalException
     {
         super(mgr, tableId);
         this.sources = sources;
         this.title = title;
+        this.missingValues = new HashMap<>(missingValues);
 
         KnownLengthRecordSet rs = null;
         try

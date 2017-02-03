@@ -30,11 +30,13 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
     {
         public final TableManager mgr;
         public final ImmediateDataSource data;
+        public final ImmediateDataSource dataB;
 
-        public ImmediateData_Mgr(TableManager mgr, ImmediateDataSource data)
+        public ImmediateData_Mgr(TableManager mgr, ImmediateDataSource data, ImmediateDataSource dataB)
         {
             this.mgr = mgr;
             this.data = data;
+            this.dataB = dataB;
         }
     }
 
@@ -53,6 +55,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
 
             // Bias towards small:
             final int length = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 1111);
+            final int lengthB = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 1111);
 
             int numColumns = r.nextInt(1, 12);
             List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
@@ -63,7 +66,15 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                 columns.add(rs -> col.apply(length, rs));
             }
 
-            return new ImmediateData_Mgr(mgr, new ImmediateDataSource(mgr, new KnownLengthRecordSet("Title", columns, length)));
+            int numColumnsB = r.nextInt(1, 12);
+            List<FunctionInt<RecordSet, Column>> columnsB = new ArrayList<>();
+            for (int i = 0; i < numColumnsB; i++)
+            {
+                BiFunction<Integer, RecordSet, Column> col = genColumn.generate(r, generationStatus);
+                columnsB.add(rs -> col.apply(length, rs));
+            }
+
+            return new ImmediateData_Mgr(mgr, new ImmediateDataSource(mgr, new KnownLengthRecordSet("Title", columns, length)), new ImmediateDataSource(mgr, new KnownLengthRecordSet("Title", columnsB, lengthB)));
         }
         catch (InternalException | UserException e)
         {
@@ -87,7 +98,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                 columns.add(rs -> column._test_shrink(rs, shrunkLength));
             }
             //Could also remove arbitrary column(s)
-            return Collections.singletonList(new ImmediateData_Mgr(mgr, new ImmediateDataSource(mgr, new KnownLengthRecordSet(larger.data.getData().getTitle(), columns, shrunkLength))));
+            return Collections.singletonList(new ImmediateData_Mgr(mgr, new ImmediateDataSource(mgr, new KnownLengthRecordSet(larger.data.getData().getTitle(), columns, shrunkLength)), larger.dataB));
         }
         catch (Exception e)
         {
