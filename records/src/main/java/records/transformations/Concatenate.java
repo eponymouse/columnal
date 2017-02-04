@@ -188,7 +188,11 @@ public class Concatenate extends Transformation
                                         {
                                             int start = srcTableIndex == 0 ? 0 : ends.get(srcTableIndex - 1);
                                             // First one with end beyond our target must be right one:
-                                            return new Pair<DataTypeValue, Integer>(tables.get(srcTableIndex).getData().getColumn(oldC.getKey()).getType(), concatenatedRow - start);
+                                            @Nullable Column oldColumn = tables.get(srcTableIndex).getData().getColumnOrNull(oldC.getKey());
+                                            if (oldColumn == null)
+                                                return new Pair<DataTypeValue, Integer>(oldC.getValue().fromCollapsed((i, progB) -> missingValues.get(oldC.getKey()).get()), 0);
+                                            else
+                                                return new Pair<DataTypeValue, Integer>(oldColumn.getType(), concatenatedRow - start);
                                         }
                                     }
                                     throw new InternalException("Attempting to access beyond end of concatenated tables: index" + (concatenatedRow + 1) + " but only length " + ends.get(ends.size() - 1));

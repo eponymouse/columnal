@@ -49,6 +49,7 @@ import utility.ExFunction;
 import utility.Pair;
 import utility.UnitType;
 import utility.Utility;
+import utility.Utility.ListEx;
 
 import java.time.LocalDate;
 import java.time.OffsetTime;
@@ -161,6 +162,97 @@ public class DataType
             {
                 return new CachedCalculatedColumn<ArrayColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new ArrayColumnStorage(inner, g), cache -> {
                     cache.add(castTo(Pair.class, getItem.apply(cache.filled())));
+                });
+            }
+        });
+    }
+
+    public DataTypeValue fromCollapsed(GetValue<@Value Object> get) throws UserException, InternalException
+    {
+        return apply(new DataTypeVisitor<DataTypeValue>()
+        {
+            @SuppressWarnings("value")
+            private <T> GetValue<@Value T> castTo(Class<T> cls) throws InternalException
+            {
+                return (i, prog) -> {
+                    Object value = get.getWithProgress(i, prog);
+                    if (!cls.isAssignableFrom(value.getClass()))
+                        throw new InternalException("Type inconsistency: should be " + cls + " but is " + value.getClass());
+                    return cls.cast(value);
+                };
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public DataTypeValue number(NumberInfo displayInfo) throws InternalException, UserException
+            {
+                return DataTypeValue.number(displayInfo, castTo(Number.class));
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public DataTypeValue text() throws InternalException, UserException
+            {
+                return DataTypeValue.text(castTo(String.class));
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public DataTypeValue date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            {
+                return DataTypeValue.date(dateTimeInfo, castTo(TemporalAccessor.class));
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public DataTypeValue bool() throws InternalException, UserException
+            {
+                return DataTypeValue.bool(castTo(Boolean.class));
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public DataTypeValue tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            {
+                GetValue<TaggedValue> getTaggedValue = castTo(TaggedValue.class);
+                return DataTypeValue.tagged(typeName, Utility.mapListEx(tags, tag -> {
+                    @Nullable DataType inner = tag.getInner();
+                    return new TagType<>(tag.getName(), inner == null ? null : inner.fromCollapsed(
+                        (i, prog) -> {
+                            @Nullable @Value Object innerValue = getTaggedValue.getWithProgress(i, prog).getInner();
+                            if (innerValue == null)
+                                throw new InternalException("Unexpected null inner value for tag " + typeName + " " + tags.get(i));
+                            return innerValue;
+                        }
+                    ));
+                }), (i, prog) -> getTaggedValue.getWithProgress(i, prog).getTagIndex());
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            @SuppressWarnings("value")
+            public DataTypeValue tuple(List<DataType> inner) throws InternalException, UserException
+            {
+                List<DataTypeValue> innerValues = new ArrayList<>();
+                for (int type = 0; type < inner.size(); type++)
+                {
+                    int typeFinal = type;
+                    innerValues.add(fromCollapsed((i, prog) -> {
+                        Object[] tuple = castTo(Object[].class).getWithProgress(i, prog);
+                        return tuple[typeFinal];
+                    }));
+                }
+                return DataTypeValue.tupleV(innerValues);
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public DataTypeValue array(@Nullable DataType inner) throws InternalException, UserException
+            {
+                GetValue<@Value ListEx> getList = castTo(ListEx.class);
+                return inner == null ? DataTypeValue.arrayV() : DataTypeValue.arrayV(inner, (i, prog) -> {
+                    @NonNull @Value ListEx list = getList.getWithProgress(i, prog);
+                    return new Pair<>(list.size(), fromCollapsed((arrayIndex, arrayProg) -> list.get(arrayIndex)));
                 });
             }
         });

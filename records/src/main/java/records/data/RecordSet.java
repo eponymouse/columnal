@@ -9,6 +9,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.text.Text;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
@@ -137,6 +138,17 @@ public abstract class RecordSet
                 return c;
         }
         throw new UserException("Column not found");
+    }
+
+    @OnThread(Tag.Any)
+    public final @Nullable Column getColumnOrNull(ColumnId name)
+    {
+        for (Column c : columns)
+        {
+            if (c.getName().equals(name))
+                return c;
+        }
+        return null;
     }
 
     //package-protected:
