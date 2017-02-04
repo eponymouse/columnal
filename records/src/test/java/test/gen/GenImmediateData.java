@@ -71,7 +71,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
             for (int i = 0; i < numColumnsB; i++)
             {
                 BiFunction<Integer, RecordSet, Column> col = genColumn.generate(r, generationStatus);
-                columnsB.add(rs -> col.apply(length, rs));
+                columnsB.add(rs -> col.apply(lengthB, rs));
             }
 
             return new ImmediateData_Mgr(mgr, new ImmediateDataSource(mgr, new KnownLengthRecordSet("Title", columns, length)), new ImmediateDataSource(mgr, new KnownLengthRecordSet("Title", columnsB, lengthB)));
