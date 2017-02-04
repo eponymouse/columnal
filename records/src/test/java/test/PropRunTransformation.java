@@ -305,7 +305,7 @@ public class PropRunTransformation
                 // If it was in A, check value
                 if (data.dataB.getData().getColumnIds().contains(c))
                 {
-                    assertEquals(0, Utility.compareValues(data.dataB.getData().getColumn(c).getType().getCollapsed(i), concat.getColumn(c).getType().getCollapsed(i)));
+                    assertEquals(0, Utility.compareValues(data.dataB.getData().getColumn(c).getType().getCollapsed(i - data.data.getData().getLength()), concat.getColumn(c).getType().getCollapsed(i)));
                 }
                 else
                 {
