@@ -44,6 +44,7 @@ import records.transformations.expression.ComparisonExpression.ComparisonOperato
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
+import records.transformations.expression.IfThenElseExpression;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.OrExpression;
@@ -56,6 +57,8 @@ import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
+import utility.ExSupplier;
 import utility.Pair;
 import utility.Utility;
 
@@ -90,7 +93,7 @@ import static test.TestUtil.distinctTypes;
  * In contrast, going backwards we would start with the year-month value we want,
  * then generate the integer values to match.
  */
-public class GenExpressionValueForwards extends Generator<ExpressionValue>
+public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
 {
     @SuppressWarnings("initialization")
     public GenExpressionValueForwards()
@@ -99,10 +102,8 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
     }
 
     // Easier than passing parameters around:
-    private SourceOfRandomness r;
-    private GenerationStatus gs;
     private List<FunctionInt<RecordSet, Column>> columns;
-    private int nextVar = 0;
+    private int targetSize;
 
     @Override
     @OnThread(value = Tag.Simulation, ignoreParent = true)
@@ -111,10 +112,11 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
         this.r = r;
         this.gs = generationStatus;
         this.columns = new ArrayList<>();
+        this.targetSize = r.nextInt(1, 100);
         try
         {
             DataType type = makeType(r);
-            Pair<@Value Object, Expression> p = makeOfType(type);
+            Pair<List<@Value Object>, Expression> p = makeOfType(type);
             return new ExpressionValue(type, p.getFirst(), getRecordSet(), p.getSecond());
         }
         catch (InternalException | UserException e)
@@ -127,13 +129,13 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
     @OnThread(Tag.Simulation)
     public KnownLengthRecordSet getRecordSet() throws InternalException, UserException
     {
-        return new KnownLengthRecordSet("", this.columns, 1);
+        return new KnownLengthRecordSet("", this.columns, targetSize);
     }
 
     // Only valid after calling generate
     @NotNull
     @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public Pair<@Value Object, Expression> makeOfType(DataType type) throws UserException, InternalException
+    public Pair<List<@Value Object>, Expression> makeOfType(DataType type) throws UserException, InternalException
     {
         return make(type, 4);
     }
@@ -143,57 +145,56 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
         return r.choose(distinctTypes);
     }
 
-    private Pair<@Value Object, Expression> make(DataType type, int maxLevels) throws UserException, InternalException
+    private Pair<List<@Value Object>, Expression> make(DataType type, int maxLevels) throws UserException, InternalException
     {
-        return type.apply(new DataTypeVisitor<Pair<@Value Object, Expression>>()
+        return type.apply(new DataTypeVisitor<Pair<List<@Value Object>, Expression>>()
         {
             @Override
-            public Pair<@Value Object, Expression> number(NumberInfo displayInfo) throws InternalException, UserException
+            @OnThread(value = Tag.Simulation,ignoreParent = true)
+            public Pair<List<@Value Object>, Expression> number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 return termDeep(maxLevels, type, l(
-                    () -> columnRef(type),
+                    columnRef(type),
                     () ->
                     {
                         Number number = TestUtil.generateNumberV(r, gs);
-                        return new Pair<>(number, new NumericLiteral(number, displayInfo.getUnit()));
+                        return literal(number, new NumericLiteral(number, displayInfo.getUnit()));
                     }
                 ), l(() -> {
                     int numArgs = r.nextInt(2, 6);
                     List<Expression> expressions = new ArrayList<>();
                     List<Op> ops = new ArrayList<>();
-                    Number curTotal = 0;
+                    List<Number> curTotals = replicate(0);
                     for (int i = 0; i < numArgs; i++)
                     {
-                        Pair<@Value Object, Expression> pair = make(type, maxLevels - 1);
+                        Pair<List<@Value Object>, Expression> pair = make(type, maxLevels - 1);
                         expressions.add(pair.getSecond());
                         // First one we count as add, because we're adding to the zero running total:
                         boolean opIsAdd = i == 0 || r.nextBoolean();
-                        curTotal = Utility.addSubtractNumbers(curTotal, (Number) pair.getFirst(), opIsAdd);
+                        eachI(curTotals, (row, curTotal) -> Utility.addSubtractNumbers(curTotal, (Number) pair.getFirst().get(row), opIsAdd));
                         if (i > 0)
                             ops.add(opIsAdd ? Op.ADD : Op.SUBTRACT);
                     }
-                    return num(curTotal, new AddSubtractExpression(expressions, ops));
+                    return num(curTotals, new AddSubtractExpression(expressions, ops));
                 }, () -> {
-                    // Either just use numerator, or make up crazy one
+                    // Either just use target unit, or make up crazy one
                     Unit numUnit = r.nextBoolean() ? displayInfo.getUnit() : makeUnit();
                     Unit denomUnit = calculateRequiredMultiplyUnit(numUnit, displayInfo.getUnit()).reciprocal();
-                    Pair<@Value Object, Expression> numerator = make(DataType.number(new NumberInfo(numUnit, 0)), maxLevels - 1);
-                    Pair<@Value Object, Expression> denominator;
-                    do
-                    {
-                        denominator = make(DataType.number(new NumberInfo(denomUnit, 0)), maxLevels - 1);
-                    }
-                    while (Utility.compareNumbers(denominator.getFirst(), 0) == 0);
-                    return num(Utility.divideNumbers((Number)numerator.getFirst(), (Number)denominator.getFirst()),new DivideExpression(numerator.getSecond(), denominator.getSecond()));
-                }, () ->
+                    Pair<List<@Value Object>, Expression> numerator = make(DataType.number(new NumberInfo(numUnit, 0)), maxLevels - 1);
+                    Pair<List<@Value Object>, Expression> denominator = make(DataType.number(new NumberInfo(denomUnit, 0)), maxLevels - 1);
+                    // We avoid divide by zeros and return -7 in that case (arbitrary pick unlikely to come up by accident/bug):
+                    return map2(numerator, denominator, (top, bottom) -> Utility.compareValues(bottom, Utility.value(0)) == 0 ? Utility.value(-7) : Utility.value(Utility.divideNumbers((Number) top, (Number) bottom)), (topE, bottomE) -> new IfThenElseExpression(new EqualExpression(bottomE, new NumericLiteral(0, denomUnit)), new NumericLiteral(-7, displayInfo.getUnit()), new DivideExpression(topE, bottomE)));
+                }, /* TODO put RaiseExpression back again
+                () ->
                 {
                     if (displayInfo.getUnit().equals(Unit.SCALAR))
                     {
                         // Can have any power if it's scalar:
-                        Pair<@Value Object, Expression> lhs = make(type, maxLevels - 1);
-                        Pair<@Value Object, Expression> rhs = make(type, maxLevels - 1);
+                        Pair<List<@Value Object>, Expression> lhs = make(type, maxLevels - 1);
+                        Pair<List<@Value Object>, Expression> rhs = make(type, maxLevels - 1);
 
                         // Except you can't raise a negative to a non-integer power.  So check for that:
+
                         if (Utility.compareNumbers(lhs.getFirst(), 0) < 0 && !Utility.isIntegral(rhs.getFirst()))
                         {
                             // Two fixes: apply abs to LHS, or round to RHS.  Latter only suitable if power low
@@ -239,13 +240,13 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                             {
                                 // Positive integer power possible; go go go!
                                 Unit lhsUnit = displayInfo.getUnit().rootedBy(powers.get(0));
-                                Pair<@Value Object, Expression> lhs = make(DataType.number(new NumberInfo(lhsUnit, 0)), maxLevels - 1);
+                                Pair<List<@Value Object>, Expression> lhs = make(DataType.number(new NumberInfo(lhsUnit, 0)), maxLevels - 1);
                                 return num(Utility.raiseNumber((Number) lhs.getFirst(), powers.get(0)), new RaiseExpression(lhs.getSecond(), new NumericLiteral(powers.get(0), null)));
                             }
                             else if (r.nextBoolean())
                             {
                                 // Just use 1 as power:
-                                Pair<@Value Object, Expression> lhs = make(type, maxLevels - 1);
+                                Pair<List<@Value Object>, Expression> lhs = make(type, maxLevels - 1);
                                 return lhs.replaceSecond(new RaiseExpression(lhs.getSecond(), new NumericLiteral(1, null)));
                             }
                             else
@@ -253,7 +254,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                                 // Make up a power, then root it:
                                 int raiseTo = r.nextInt(2, 5);
                                 Unit lhsUnit = displayInfo.getUnit().raisedTo(raiseTo);
-                                Pair<@Value Object, Expression> lhs = make(DataType.number(new NumberInfo(lhsUnit, 0)), maxLevels - 1);
+                                Pair<List<@Value Object>, Expression> lhs = make(DataType.number(new NumberInfo(lhsUnit, 0)), maxLevels - 1);
                                 // You can't raise a negative to a non-integer power.  So check for that:
                                 if (Utility.compareNumbers(lhs.getFirst(), 0) < 0)
                                 {
@@ -269,9 +270,9 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                             return make(DataType.number(displayInfo), maxLevels - 1);
                         }
                     }
-                },
+                }, */
                 () -> {
-                    Number runningTotal = 1;
+                    List<Number> runningTotals = replicate(1);
                     Unit runningUnit = Unit.SCALAR;
                     int numArgs = r.nextInt(2, 6);
                     List<Expression> expressions = new ArrayList<>();
@@ -279,29 +280,31 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                     {
                         Unit unit = i == numArgs - 1 ? calculateRequiredMultiplyUnit(runningUnit, displayInfo.getUnit()) : makeUnit();
                         runningUnit = runningUnit.times(unit);
-                        Pair<@Value Object, Expression> pair = make(DataType.number(new NumberInfo(unit, 0)), maxLevels - 1);
-                        runningTotal = Utility.multiplyNumbers(runningTotal, (Number)pair.getFirst());
+                        Pair<List<@Value Object>, Expression> pair = make(DataType.number(new NumberInfo(unit, 0)), maxLevels - 1);
+                        eachI(runningTotals, (row, runningTotal) -> Utility.multiplyNumbers(runningTotal, (Number)pair.getFirst().get(row)));
                         expressions.add(pair.getSecond());
                     }
-                    return num(runningTotal, new TimesExpression(expressions));
+                    return num(runningTotals, new TimesExpression(expressions));
                 }));
             }
 
             @Override
-            public Pair<@Value Object, Expression> text() throws InternalException, UserException
+            @OnThread(value = Tag.Simulation,ignoreParent = true)
+            public Pair<List<@Value Object>, Expression> text() throws InternalException, UserException
             {
                 return termDeep(maxLevels, type, l(
-                    () -> columnRef(type),
+                    columnRef(type),
                     () ->
                     {
                         @Value String value = TestUtil.makeStringV(r, gs);
-                        return new Pair<>(value, new StringLiteral(value));
+                        return literal(value, new StringLiteral(value));
                     }
                 ), l());
             }
 
             @Override
-            public Pair<@Value Object, Expression> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            @OnThread(value = Tag.Simulation,ignoreParent = true)
+            public Pair<List<@Value Object>, Expression> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 List<ExpressionMaker> deep = new ArrayList<>();
                 // We don't use the from-integer versions here with deeper expressions because we can't
@@ -311,65 +314,68 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                 {
                     case YEARMONTHDAY:
                         deep.add(() -> {
-                            Pair<@Value Object, Expression> dateTime = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return new Pair<>(LocalDate.from((TemporalAccessor) dateTime.getFirst()), new CallExpression("date", dateTime.getSecond()));
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            return map(dateTimes, v -> LocalDate.from((TemporalAccessor) v), e -> new CallExpression("date", e));
                         });
                         deep.add(() -> {
-                            Pair<@Value Object, Expression> dateTime = make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), maxLevels - 1);
-                            YearMonth yearMonth = YearMonth.from((TemporalAccessor) dateTime.getFirst());
+                            Pair<List<@Value Object>, Expression> dateTime = make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), maxLevels - 1);
                             int day = r.nextInt(1, 28);
-                            return new Pair<>(LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), day), new CallExpression("date", dateTime.getSecond(), new NumericLiteral(day, getUnit("day"))));
+                            return map(dateTime, v ->
+                            {
+                                YearMonth yearMonth = YearMonth.from((TemporalAccessor) v);
+                                return LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), day);
+                            }, e -> new CallExpression("date", e, new NumericLiteral(day, getUnit("day"))));
                         });
                         break;
                     case YEARMONTH:
                         deep.add(() -> {
-                            Pair<@Value Object, Expression> dateTime = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.YEARMONTHDAY, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return new Pair<>(YearMonth.from((TemporalAccessor) dateTime.getFirst()), new CallExpression("dateym", dateTime.getSecond()));
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.YEARMONTHDAY, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            return map(dateTimes, v -> YearMonth.from((TemporalAccessor) v), e -> new CallExpression("dateym", e));
                         });
                         break;
                     case TIMEOFDAY:
                         deep.add(() -> {
-                            Pair<@Value Object, Expression> dateTime = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAYZONED, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return new Pair<>(LocalTime.from((TemporalAccessor) dateTime.getFirst()), new CallExpression("time", dateTime.getSecond()));
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAYZONED, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            return map(dateTimes, v -> LocalTime.from((TemporalAccessor) v), e -> new CallExpression("time", e));
                         });
                         break;
                     case TIMEOFDAYZONED:
                         deep.add(() -> {
-                            Pair<@Value Object, Expression> dateTime = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return new Pair<>(OffsetTime.from((TemporalAccessor) dateTime.getFirst()), new CallExpression("timez", dateTime.getSecond()));
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            return map(dateTimes, v -> OffsetTime.from((TemporalAccessor) v), e -> new CallExpression("timez", e));
                         });
                         deep.add(() -> {
-                            Pair<@Value Object, Expression> dateTime = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
-                            return new Pair<>(OffsetTime.of((LocalTime)dateTime.getFirst(), zone), new CallExpression("timez", dateTime.getSecond(), new StringLiteral(zone.toString())));
+                            return map(dateTimes, v -> OffsetTime.of((LocalTime)v, zone), e -> new CallExpression("timez", e, new StringLiteral(zone.toString())));
                         });
                         break;
                     case DATETIME:
                         // down cast:
                         deep.add(() -> {
-                            Pair<@Value Object, Expression> dateTime = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return new Pair<>(LocalDateTime.from((TemporalAccessor) dateTime.getFirst()), new CallExpression("datetime", dateTime.getSecond()));
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            return map(dateTimes, v -> LocalDateTime.from((TemporalAccessor) v), e -> new CallExpression("datetime", e));
                         });
                         // date + time:
                         deep.add(() -> {
-                            Pair<@Value Object, Expression> date = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
-                            Pair<@Value Object, Expression> time = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
-                            return new Pair<>(LocalDateTime.of((LocalDate) date.getFirst(), (LocalTime) time.getFirst()), new CallExpression("datetime", date.getSecond(), time.getSecond()));
+                            Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
+                            return map2(dates, times, (date, time) -> LocalDateTime.of((LocalDate) date, (LocalTime) time), (dateE, timeE) -> new CallExpression("datetime", dateE, timeE));
                         });
                         break;
                     case DATETIMEZONED:
                         // datetime + zone:
                         deep.add(() -> {
-                            Pair<@Value Object, Expression> dateTime = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIME)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIME)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
-                            return new Pair<>(ZonedDateTime.of((LocalDateTime)dateTime.getFirst(), zone).withFixedOffsetZone(), new CallExpression("datetimez", dateTime.getSecond(), new StringLiteral(zone.toString())));
+                            return map(dateTimes, v -> ZonedDateTime.of((LocalDateTime)v, zone).withFixedOffsetZone(), e -> new CallExpression("datetimez", e, new StringLiteral(zone.toString())));
                         });
                         // date+time+zone:
                         deep.add(() -> {
-                            Pair<@Value Object, Expression> date = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
-                            Pair<@Value Object, Expression> time = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
-                            return new Pair<>(ZonedDateTime.of((LocalDate)date.getFirst(), (LocalTime) time.getFirst(), zone).withFixedOffsetZone(), new CallExpression("datetimez", date.getSecond(), time.getSecond(), new StringLiteral(zone.toString())));
+                            return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone).withFixedOffsetZone(), (dateE, timeE) -> new CallExpression("datetimez", dateE, timeE, new StringLiteral(zone.toString())));
                         });
                         break;
                 }
@@ -380,22 +386,22 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                     {
                         case YEARMONTHDAY:
                             @Value LocalDate date = TestUtil.generateDate(r, gs);
-                            return new Pair<>(date, new CallExpression("date", new StringLiteral(date.toString())));
+                            return literal(date, new CallExpression("date", new StringLiteral(date.toString())));
                         case YEARMONTH:
                             @Value YearMonth ym = YearMonth.from(TestUtil.generateDate(r, gs));
-                            return new Pair<>(ym, new CallExpression("dateym", new StringLiteral(ym.toString())));
+                            return literal(ym, new CallExpression("dateym", new StringLiteral(ym.toString())));
                         case TIMEOFDAY:
                             @Value LocalTime time = TestUtil.generateTime(r, gs);
-                            return new Pair<>(time, new CallExpression("time", new StringLiteral(time.toString())));
+                            return literal(time, new CallExpression("time", new StringLiteral(time.toString())));
                         case TIMEOFDAYZONED:
                             @Value OffsetTime timez = OffsetTime.from(TestUtil.generateDateTimeZoned(r, gs));
-                            return new Pair<>(timez, new CallExpression("timez", new StringLiteral(timez.toString())));
+                            return literal(timez, new CallExpression("timez", new StringLiteral(timez.toString())));
                         case DATETIME:
                             @Value LocalDateTime dateTime = TestUtil.generateDateTime(r, gs);
-                            return new Pair<>(dateTime, new CallExpression("datetime", new StringLiteral(dateTime.toString())));
+                            return literal(dateTime, new CallExpression("datetime", new StringLiteral(dateTime.toString())));
                         case DATETIMEZONED:
                             @Value ZonedDateTime zonedDateTime = TestUtil.generateDateTimeZoned(r, gs);
-                            return new Pair<>(zonedDateTime.withFixedOffsetZone(), new CallExpression("datetimez", new StringLiteral(zonedDateTime.toString())));
+                            return literal(zonedDateTime.withFixedOffsetZone(), new CallExpression("datetimez", new StringLiteral(zonedDateTime.toString())));
 
                     }
                     throw new RuntimeException("No date generator for " + dateTimeInfo.getType());
@@ -408,7 +414,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                             int year = r.nextInt(1, 9999);
                             int month = r.nextInt(1, 12);
                             int day = r.nextInt(1, 28);
-                            return new Pair<>(LocalDate.of(year, month, day), new CallExpression("date",
+                            return literal(LocalDate.of(year, month, day), new CallExpression("date",
                                 new NumericLiteral(year, getUnit("year")),
                                 new NumericLiteral(month, getUnit("month")),
                                 new NumericLiteral(day, getUnit("day"))
@@ -419,7 +425,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                         shallow.add(() -> {
                             int year = r.nextInt(1, 9999);
                             int month = r.nextInt(1, 12);
-                            return new Pair<>(YearMonth.of(year, month), new CallExpression("dateym",
+                            return literal(YearMonth.of(year, month), new CallExpression("dateym",
                                 new NumericLiteral(year, getUnit("year")),
                                 new NumericLiteral(month, getUnit("month"))
                             ));
@@ -431,7 +437,7 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                             int minute = r.nextInt(0, 59);
                             int second = r.nextInt(0, 59);
                             int nano = r.nextInt(0, 999999999);
-                            return new Pair<>(LocalTime.of(hour, minute, second, nano), new CallExpression("time",
+                            return literal(LocalTime.of(hour, minute, second, nano), new CallExpression("time",
                                 new NumericLiteral(hour, getUnit("hour")),
                                 new NumericLiteral(minute, getUnit("min")),
                                 new NumericLiteral(BigDecimal.valueOf(nano).divide(BigDecimal.valueOf(1_000_000_000)).add(BigDecimal.valueOf(second)), getUnit("s"))
@@ -443,79 +449,80 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
             }
 
             @Override
-            @OnThread(Tag.Simulation)
-            public Pair<@Value Object, Expression> bool() throws InternalException, UserException
+            @OnThread(value = Tag.Simulation,ignoreParent = true)
+            public Pair<List<@Value Object>, Expression> bool() throws InternalException, UserException
             {
-                return termDeep(maxLevels, type, l(() -> columnRef(type), () ->
+                return termDeep(maxLevels, type, l(columnRef(type), () ->
                 {
                     boolean value = r.nextBoolean();
-                    return new Pair<>(Utility.value(value), new BooleanLiteral(value));
+                    return literal(Utility.value(value), new BooleanLiteral(value));
                 }), l(
                     () -> {
                         DataType t = makeType(r);
 
-                        Pair<@Value Object, Expression> lhs = make(t, maxLevels - 1);
-                        Pair<@Value Object, Expression> rhs = make(t, maxLevels - 1);
+                        Pair<List<@Value Object>, Expression> lhs = make(t, maxLevels - 1);
+                        Pair<List<@Value Object>, Expression> rhs = make(t, maxLevels - 1);
                         if (r.nextBoolean())
-                            return new Pair<>(Utility.value(Utility.compareValues(lhs.getFirst(), rhs.getFirst()) == 0), new EqualExpression(lhs.getSecond(), rhs.getSecond()));
+                            return map2(lhs, rhs, (l, r) -> Utility.value(Utility.compareValues(l, r) == 0), EqualExpression::new);
                         else
-                            return new Pair<>(Utility.value(Utility.compareValues(lhs.getFirst(), rhs.getFirst()) != 0), new NotEqualExpression(lhs.getSecond(), rhs.getSecond()));
+                            return map2(lhs, rhs, (l, r) -> Utility.value(Utility.compareValues(l, r) != 0), NotEqualExpression::new);
                     },
                     () ->
                     {
                         DataType t = makeType(r);
 
-                        List<Pair<@Value Object, Expression>> args = TestUtil.<Pair<@Value Object, Expression>>makeList(r, 2, 4, () -> make(t, maxLevels - 1));
+                        List<Pair<List<@Value Object>, Expression>> args = TestUtil.<Pair<List<@Value Object>, Expression>>makeList(r, 2, 4, () -> make(t, maxLevels - 1));
                         boolean lt = r.nextBoolean();
                         List<ComparisonOperator> ops = new ArrayList<>();
-                        boolean result = true;
-                        for (int i = 0; i < args.size() - 1; i++)
+                        List<Boolean> result = replicate(true);
+                        for (int argIndex = 0; argIndex < args.size() - 1; argIndex++)
                         {
                             ops.add(r.nextBoolean() ?
                                 (lt ? ComparisonOperator.LESS_THAN : ComparisonOperator.GREATER_THAN)
                                 : (lt ? ComparisonOperator.LESS_THAN_OR_EQUAL_TO : ComparisonOperator.GREATER_THAN_OR_EQUAL_TO)
                             );
-                            @Value Object lhs = args.get(i).getFirst();
-                            @Value Object rhs = args.get(i + 1).getFirst();
+                            List<@Value Object> lhs = args.get(argIndex).getFirst();
+                            List<@Value Object> rhs = args.get(argIndex + 1).getFirst();
                             switch (ops.get(ops.size() - 1))
                             {
                                 case LESS_THAN:
-                                    result &= Utility.compareValues(lhs, rhs) < 0;
+                                    eachI(result, (i, v) -> v & Utility.compareValues(lhs.get(i), rhs.get(i)) < 0);
                                     break;
                                 case LESS_THAN_OR_EQUAL_TO:
-                                    result &= Utility.compareValues(lhs, rhs) <= 0;
+                                    eachI(result, (i, v) -> v & Utility.compareValues(lhs.get(i), rhs.get(i)) <= 0);
                                     break;
                                 case GREATER_THAN:
-                                    result &= Utility.compareValues(lhs, rhs) > 0;
+                                    eachI(result, (i, v) -> v & Utility.compareValues(lhs.get(i), rhs.get(i)) > 0);
                                     break;
                                 case GREATER_THAN_OR_EQUAL_TO:
-                                    result &= Utility.compareValues(lhs, rhs) >= 0;
+                                    eachI(result, (i, v) -> v & Utility.compareValues(lhs.get(i), rhs.get(i)) >= 0);
                                     break;
                             }
                         }
-                        return new Pair<>(Utility.value(result), new ComparisonExpression(Utility.mapList(args, Pair::getSecond), ImmutableList.copyOf(ops)));
+                        return new Pair<>(Utility.<Boolean, @Value Object>mapList(result, b -> Utility.value(b)), new ComparisonExpression(Utility.mapList(args, Pair::getSecond), ImmutableList.copyOf(ops)));
                     },
                     () -> {
                         int size = r.nextInt(2, 5);
                         boolean and = r.nextBoolean();
-                        boolean value = and ? true : false;
+                        List<Boolean> values = replicate(and ? true : false);
                         ArrayList<Expression> exps = new ArrayList<Expression>();
                         for (int i = 0; i < size; i++)
                         {
-                            Pair<@Value Object, Expression> pair = make(DataType.BOOLEAN, maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> pair = make(DataType.BOOLEAN, maxLevels - 1);
                             if (and)
-                                value &= (Boolean)pair.getFirst();
+                                eachI(values, (vi, v) -> v & (Boolean)pair.getFirst().get(vi));
                             else
-                                value |= (Boolean)pair.getFirst();
+                                eachI(values, (vi, v) -> v | (Boolean)pair.getFirst().get(vi));
                             exps.add(pair.getSecond());
                         }
-                        return new Pair<>(Utility.value(value), and ? new AndExpression(exps) : new OrExpression(exps));
+                        return new Pair<>(Utility.<Boolean, @Value Object>mapList(values, b -> Utility.value(b)), and ? new AndExpression(exps) : new OrExpression(exps));
                     }
                 ));
             }
 
             @Override
-            public Pair<@Value Object, Expression> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            @OnThread(value = Tag.Simulation,ignoreParent = true)
+            public Pair<List<@Value Object>, Expression> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
@@ -525,62 +532,72 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {
-                    terminals.add(() -> new Pair<>(new TaggedValue(tagIndex, null), new TagExpression(name, null)));
+                    terminals.add(() -> literal(new TaggedValue(tagIndex, null), new TagExpression(name, null)));
                 }
                 else
                 {
                     final @NonNull DataType nonNullInner = inner;
                     nonTerm.add(() ->
                     {
-                        Pair<@Value Object, Expression> innerVal = make(nonNullInner, maxLevels - 1);
-                        return new Pair<>(new TaggedValue(tagIndex, innerVal.getFirst()), new TagExpression(name, innerVal.getSecond()));
+                        Pair<List<@Value Object>, Expression> innerVal = make(nonNullInner, maxLevels - 1);
+                        return map(innerVal, v -> new TaggedValue(tagIndex, v), e -> new TagExpression(name, e));
                     });
                 }
                 return termDeep(maxLevels, type, terminals, nonTerm);
             }
 
             @Override
-            public Pair<@Value Object, Expression> tuple(List<DataType> inner) throws InternalException, UserException
+            @OnThread(value = Tag.Simulation,ignoreParent = true)
+            public Pair<List<@Value Object>, Expression> tuple(List<DataType> inner) throws InternalException, UserException
             {
                 if (inner.size() < 2)
                     throw new InternalException("Invalid tuple type of size " + inner.size() + " during generation");
-                @Value Object[] tuple = new Object[inner.size()];
-                List<Expression> expressions = new ArrayList<>();
-                for (int i = 0; i < tuple.length; i++)
+
+                return termDeep(maxLevels, type, l(columnRef(type)), l(() ->
                 {
-                    // We don't reduce max levels as it may make nested tuples
-                    // not feature complex expressions, and the finiteness of the type
-                    // prevents infinite expansion:
-                    Pair<@Value Object, Expression> item = make(inner.get(i), maxLevels);
-                    tuple[i] = item.getFirst();
-                    expressions.add(item.getSecond());
-                }
-                return new Pair<>(Utility.value(tuple), new TupleExpression(ImmutableList.copyOf(expressions)));
+                    List<@Value Object[]> tuples = GenExpressionValueForwards.this.<@Value Object[]>replicateM(() -> new Object[inner.size()]);
+                    List<Expression> expressions = new ArrayList<>();
+                    for (int i = 0; i < inner.size(); i++)
+                    {
+                        // We don't reduce max levels as it may make nested tuples
+                        // not feature complex expressions, and the finiteness of the type
+                        // prevents infinite expansion:
+                        Pair<List<@Value Object>, Expression> item = make(inner.get(i), maxLevels);
+                        for (int row = 0; row < tuples.size(); row++)
+                            tuples.get(row)[i] = item.getFirst().get(row);
+                        expressions.add(item.getSecond());
+                    }
+                    return new Pair<>(Utility.<@Value Object[], @Value Object>mapList(tuples, Utility::value), new TupleExpression(ImmutableList.copyOf(expressions)));
+                }));
             }
 
             @Override
-            public Pair<@Value Object, Expression> array(@Nullable DataType inner) throws InternalException, UserException
+            @OnThread(value = Tag.Simulation,ignoreParent = true)
+            public Pair<List<@Value Object>, Expression> array(@Nullable DataType inner) throws InternalException, UserException
             {
                 if (inner == null)
-                    return new Pair<>(Utility.value(Collections.emptyList()), new ArrayExpression(ImmutableList.of()));
-
-                int length = r.nextInt(0, 12);
-                List<@Value Object> values = new ArrayList<>();
-                List<Expression> expressions = new ArrayList<>();
-                for (int i = 0; i < length; i++)
+                    return literal(Utility.value(Collections.emptyList()), new ArrayExpression(ImmutableList.of()));
+                @Nullable DataType innerFinal = inner;
+                return termDeep(maxLevels, type, l(columnRef(type)), l(() ->
                 {
-                    Pair<@Value Object, Expression> item = make(inner, maxLevels - 1);
-                    values.add(item.getFirst());
-                    expressions.add(item.getSecond());
-                }
-                return new Pair<>(Utility.value(values), new ArrayExpression(ImmutableList.copyOf(expressions)));
+                    int length = r.nextInt(0, 12);
+                    List<List<@Value Object>> values = new ArrayList<>();
+                    List<Expression> expressions = new ArrayList<>();
+                    for (int i = 0; i < length; i++)
+                    {
+                        Pair<List<@Value Object>, Expression> item = make(innerFinal, maxLevels - 1);
+                        values.add(item.getFirst());
+                        expressions.add(item.getSecond());
+                    }
+                    return new Pair<>(Utility.<List<@Value Object>, @Value Object>mapList(values, Utility::value), new ArrayExpression(ImmutableList.copyOf(expressions)));
+                }));
             }
         });
     }
 
-    private Pair<@Value Object, Expression> num(Number value, Expression expression)
+    private Pair<List<@Value Object>, Expression> num(List<Number> values, Expression expression)
     {
-        return new Pair<>(Utility.value(value), expression);
+        return new Pair<>(Utility.<Number, @Value Object>mapList(values, Utility::value), expression);
     }
 
     private Number safeAbs(Long l)
@@ -623,69 +640,97 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
         return new BigDecimal(new GenNumberAsString().generate(r, gs));
     }
 
-    private Pair<@Value Object, Expression> columnRef(DataType type) throws UserException, InternalException
+    private ExpressionMaker columnRef(DataType type) throws UserException, InternalException
     {
         ColumnId name = new ColumnId("GEV Col " + columns.size());
-        Pair<@Value Object, FunctionInt<RecordSet, Column>> pair = type.apply(new DataTypeVisitor<Pair<@Value Object, FunctionInt<RecordSet, Column>>>()
+        return () ->
         {
-            @Override
-            public Pair<@Value Object, FunctionInt<RecordSet, Column>> number(NumberInfo displayInfo) throws InternalException, UserException
-            {
-                @Value Number value = TestUtil.generateNumberV(r, gs);
-                return new Pair<>(value, rs -> new MemoryNumericColumn(rs, name, new NumberInfo(displayInfo.getUnit(), displayInfo.getMinimumDP()), Stream.of(Utility.toBigDecimal(value).toPlainString())));
-            }
-
-            @Override
-            public Pair<@Value Object, FunctionInt<RecordSet, Column>> text() throws InternalException, UserException
-            {
-                @Value String value = TestUtil.makeStringV(r, gs);
-                return new Pair<>(value, rs -> new MemoryStringColumn(rs, name, Collections.singletonList(value)));
-            }
-
-            @Override
-            public Pair<@Value Object, FunctionInt<RecordSet, Column>> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
-            {
-                Temporal value = TestUtil.generateDate(r, gs);
-                return new Pair<>(Utility.value(value), rs -> new MemoryTemporalColumn(rs, name, new DateTimeInfo(DateTimeType.YEARMONTHDAY), Collections.singletonList((Temporal) value)));
-            }
-
-            @Override
-            public Pair<@Value Object, FunctionInt<RecordSet, Column>> bool() throws InternalException, UserException
-            {
-                boolean value = r.nextBoolean();
-                return new Pair<>(Utility.value(value), rs -> new MemoryBooleanColumn(rs, name, Collections.singletonList((Boolean) value)));
-            }
-
-            @Override
-            public Pair<@Value Object, FunctionInt<RecordSet, Column>> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
-            {
-                int tagIndex = r.nextInt(0, tags.size() - 1);
-                @Nullable DataType inner = tags.get(tagIndex).getInner();
-                @Value Object rest = inner == null ? null : make(inner, 1).getFirst();
-                TaggedValue value = new TaggedValue(1, rest);
-                return new Pair<>(value, rs -> new MemoryTaggedColumn(rs, name, typeName, tags, Collections.singletonList(value)));
-            }
-
-            @Override
-            public Pair<@Value Object, FunctionInt<RecordSet, Column>> tuple(List<DataType> inner) throws InternalException, UserException
-            {
-                throw new UnimplementedException();
-            }
-
-            @Override
-            public Pair<@Value Object, FunctionInt<RecordSet, Column>> array(@Nullable DataType inner) throws InternalException, UserException
-            {
-                throw new UnimplementedException();
-            }
-        });
-        columns.add(pair.getSecond());
-        return pair.replaceSecond(new ColumnReference(name, ColumnReferenceType.CORRESPONDING_ROW));
+            List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(type));
+            columns.add(rs -> type.makeCalculatedColumn(rs, name, value::get));
+            return new Pair<List<@Value Object>, Expression>(value, new ColumnReference(name, ColumnReferenceType.CORRESPONDING_ROW));
+        };
     }
 
     @FunctionalInterface
-    public static interface ExpressionMaker
+    public interface ExpressionMaker
     {
-        public Pair<@Value Object, Expression> make() throws InternalException, UserException;
+        @OnThread(Tag.Simulation)
+        public Pair<List<@Value Object>, Expression> make() throws InternalException, UserException;
+    }
+
+    // Replicates the first argument.  Useful when you have a constant expression
+    // which will just be repeated:
+    private Pair<List<@Value Object>, Expression> literal(@Value Object o, Expression e)
+    {
+        return new Pair<>(this.<@Value Object>replicate(o), e);
+    }
+
+    // Replicates an item targetSize times into a list:
+    private <T> List<T> replicate(T single)
+    {
+        List<T> repeated = new ArrayList<>();
+        for (int i = 0; i < targetSize; i++)
+        {
+            repeated.add(single);
+        }
+        return repeated;
+    }
+
+    // Replicates a generator targetSize times into a list:
+    private <T> List<T> replicateM(ExSupplier<T> single) throws InternalException, UserException
+    {
+        List<T> repeated = new ArrayList<>();
+        for (int i = 0; i < targetSize; i++)
+        {
+            repeated.add(single.get());
+        }
+        return repeated;
+    }
+
+    private static interface ExBiFunction<S, T, R>
+    {
+        @OnThread(Tag.Simulation)
+        public R apply(S s, T t) throws UserException, InternalException;
+    }
+
+    // Modifies a list in-place by applying the given function
+    private <T> void each(List<T> list, ExFunction<T, T> modify) throws InternalException, UserException
+    {
+        for (int i = 0; i < list.size(); i++)
+        {
+            list.set(i, modify.apply(list.get(i)));
+        }
+    }
+
+    // Like each but supplies index too
+    @OnThread(Tag.Simulation)
+    private <T> void eachI(List<T> list, ExBiFunction<Integer, T, T> modify) throws InternalException, UserException
+    {
+        for (int i = 0; i < list.size(); i++)
+        {
+            list.set(i, modify.apply(i, list.get(i)));
+        }
+    }
+
+    @OnThread(Tag.Simulation)
+    private <T> Pair<List<@Value Object>, Expression> map(Pair<List<@Value Object>, Expression> src, ExFunction<@Value Object, @Value Object> eachValue, ExFunction<Expression, Expression> withExpression) throws InternalException, UserException
+    {
+        List<@Value Object> list = new ArrayList<>(src.getFirst());
+        each(list, eachValue);
+        return new Pair<>(list, withExpression.apply(src.getSecond()));
+    }
+
+    // zipWith, by another name
+    @OnThread(Tag.Simulation)
+    private <T> Pair<List<@Value Object>, Expression> map2(Pair<List<@Value Object>, Expression> srcA, Pair<List<@Value Object>, Expression> srcB, ExBiFunction<@Value Object, @Value Object, @Value Object> eachValue, ExBiFunction<Expression, Expression, Expression> withExpression) throws InternalException, UserException
+    {
+        List<@Value Object> list = new ArrayList<>(srcA.getFirst());
+        List<@Value Object> listB = new ArrayList<>(srcB.getFirst());
+        for (int i = 0; i < list.size(); i++)
+        {
+            list.set(i, eachValue.apply(list.get(i), listB.get(i)));
+        }
+        return new Pair<>(list, withExpression.apply(srcA.getSecond(), srcB.getSecond()));
     }
 
     private List<ExpressionMaker> l(ExpressionMaker... suppliers)
@@ -693,7 +738,8 @@ public class GenExpressionValueForwards extends Generator<ExpressionValue>
         return Arrays.asList(suppliers);
     }
 
-    private Pair<@Value Object, Expression> termDeep(int maxLevels, DataType type, List<ExpressionMaker> terminals, List<ExpressionMaker> deeper) throws UserException, InternalException
+    @OnThread(Tag.Simulation)
+    private Pair<List<@Value Object>, Expression> termDeep(int maxLevels, DataType type, List<ExpressionMaker> terminals, List<ExpressionMaker> deeper) throws UserException, InternalException
     {
         /*
         if (maxLevels > 1 && r.nextInt(0, 5) == 0)

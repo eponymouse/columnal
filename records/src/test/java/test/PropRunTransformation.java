@@ -315,7 +315,7 @@ public class PropRunTransformation
             }
         }
 
-        // TODO test it works with overlapping same-typed columns (may need transform to rename columns)
+        //#error TODO test it works with overlapping same-typed columns (may need transform to rename columns)
         // TODO test it fails with overlapping columns of different types
     }
     // TODO test more concat failure cases

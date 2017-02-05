@@ -161,7 +161,11 @@ public class DataType
             public Column array(@Nullable DataType inner) throws InternalException, UserException
             {
                 return new CachedCalculatedColumn<ArrayColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new ArrayColumnStorage(inner, g), cache -> {
-                    cache.add(castTo(Pair.class, getItem.apply(cache.filled())));
+                    if (inner != null)
+                    {
+                        ListEx listItem = castTo(ListEx.class, getItem.apply(cache.filled()));
+                        cache.add(new Pair<Integer, DataTypeValue>(listItem.size(), inner.fromCollapsed((i, prog) -> listItem.get(i))));
+                    }
                 });
             }
         });

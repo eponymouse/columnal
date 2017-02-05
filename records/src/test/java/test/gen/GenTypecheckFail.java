@@ -100,7 +100,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                                 throw new RuntimeException("Getting different type than failure?");
                             DataType newType = pickTypeOtherThan(type, r);
                             //System.err.println("Changed old type " + type + " into " + newType + " when replacing " + p.getFirst());
-                            Pair<@Value Object, Expression> replacement = gen.makeOfType(newType);
+                            Pair<List<@Value Object>, Expression> replacement = gen.makeOfType(newType);
                             // Special case: don't let it be empty array because it may type check
                             // against type even though we don't want it to:
                             while (replacement.getFirst() instanceof ListEx && ((ListEx)replacement.getFirst()).size() == 0)

@@ -37,9 +37,12 @@ public class PropRunExpression
             {
                 throw new InternalException(s);
             });
-            Object actualValue = src.expression.getValue(0, new EvaluateState());
-            assertTrue("{{{" + src.expression.toString() + "}}} should have been " + TestUtil.toString(src.value) + " but was " + TestUtil.toString(actualValue) + " columns: " + src.recordSet.getColumnIds().stream().map(Object::toString).collect(Collectors.joining(", ")) + " " + src.recordSet.debugGetVals(0),
-                Utility.compareValues(src.value, actualValue, new BigDecimal("0.000000001")) == 0);
+            for (int row = 0; row < src.value.size(); row++)
+            {
+                Object actualValue = src.expression.getValue(row, new EvaluateState());
+                assertTrue("{{{" + src.expression.toString() + "}}} should have been " + TestUtil.toString(src.value.get(row)) + " but was " + TestUtil.toString(actualValue) + " columns: " + src.recordSet.getColumnIds().stream().map(Object::toString).collect(Collectors.joining(", ")) + " " + src.recordSet.debugGetVals(row),
+                    Utility.compareValues(src.value.get(row), actualValue, new BigDecimal("0.000000001")) == 0);
+            }
         }
         catch (ArithmeticException | InternalException | UserException | ClassCastException e)
         {

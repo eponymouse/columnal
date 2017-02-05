@@ -13,11 +13,13 @@ import java.util.List;
 public class ExpressionValue
 {
     public final DataType type;
-    public final @Value Object value;
+    // Should be match between number of values and number of column entries
+    // in recordSet.  Will be 1 for GenBackwards and N for GenForwards.
+    public final List<@Value Object> value;
     public final RecordSet recordSet;
     public final Expression expression;
 
-    public ExpressionValue(DataType type, @Value Object value, RecordSet recordSet, Expression expression)
+    public ExpressionValue(DataType type, List<@Value Object> value, RecordSet recordSet, Expression expression)
     {
         this.type = type;
         this.value = value;
