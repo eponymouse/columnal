@@ -46,7 +46,7 @@ public class PropRunExpression
         }
         catch (ArithmeticException | InternalException | UserException | ClassCastException e)
         {
-            System.err.println(src.expression.toString() + " " + src.recordSet.debugGetVals());
+            System.err.println("Expression: {{{" + src.expression.toString() + "}}} " + src.recordSet.debugGetVals());
             throw e;
         }
     }
