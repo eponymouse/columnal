@@ -49,13 +49,36 @@ public class IfThenElseExpression extends Expression
     @Override
     public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
-        return null; // TODO
+        @Nullable DataType conditionType = condition.check(data, state, onError);
+        if (conditionType == null)
+            return null;
+        if (DataType.checkSame(DataType.BOOLEAN, conditionType, s -> onError.accept(this, s)) == null)
+        {
+            onError.accept(condition, "Expected boolean type in condition but was " + conditionType);
+            return null;
+        }
+        @Nullable DataType thenType = thenExpression.check(data, state, onError);
+        @Nullable DataType elseType = elseExpression.check(data, state, onError);
+        if (thenType == null || elseType == null)
+            return null;
+
+        @Nullable DataType jointType = DataType.checkSame(thenType, elseType, s -> onError.accept(this, s));
+        if (jointType == null)
+        {
+            onError.accept(condition, "Expected same type in then and else, but was " + thenType + " and " + elseType);
+            return null;
+        }
+        return jointType;
     }
 
     @Override
     public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        return Utility.value(0); // TODO
+        Boolean b = (Boolean)condition.getValue(rowIndex, state);
+        if (b)
+            return thenExpression.getValue(rowIndex, state);
+        else
+            return elseExpression.getValue(rowIndex, state);
     }
 
     @Override
@@ -91,12 +114,22 @@ public class IfThenElseExpression extends Expression
     @Override
     public boolean equals(@Nullable Object o)
     {
-        return false; // TODO
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        IfThenElseExpression that = (IfThenElseExpression) o;
+
+        if (!condition.equals(that.condition)) return false;
+        if (!thenExpression.equals(that.thenExpression)) return false;
+        return elseExpression.equals(that.elseExpression);
     }
 
     @Override
     public int hashCode()
     {
-        return 0; // TODO
+        int result = condition.hashCode();
+        result = 31 * result + thenExpression.hashCode();
+        result = 31 * result + elseExpression.hashCode();
+        return result;
     }
 }
