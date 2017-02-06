@@ -581,12 +581,16 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 return termDeep(maxLevels, type, l(columnRef(type)), l(() ->
                 {
                     int length = r.nextInt(0, 12);
-                    List<List<@Value Object>> values = new ArrayList<>();
+                    // Each outer list item is one row in the final set of expression values
+                    // Each inner list is an entire array.
+                    List<List<@Value Object>> values = GenExpressionValueForwards.this.<List<@Value Object>>replicateM(ArrayList<@Value Object>::new);
                     List<Expression> expressions = new ArrayList<>();
                     for (int i = 0; i < length; i++)
                     {
                         Pair<List<@Value Object>, Expression> item = make(innerFinal, maxLevels - 1);
-                        values.add(item.getFirst());
+                        // This is the set of items for the i-th item in each array, so add accordingly:
+                        for (int j = 0; j < item.getFirst().size() /* aka targetSize */; j++)
+                            values.get(j).add(item.getFirst().get(j));
                         expressions.add(item.getSecond());
                     }
                     return new Pair<>(Utility.<List<@Value Object>, @Value Object>mapList(values, Utility::value), new ArrayExpression(ImmutableList.copyOf(expressions)));
