@@ -118,7 +118,7 @@ public abstract class CalculatedColumn extends Column
             filled = getCacheFilled();
             if (filled <= prevFilled)
             {
-                throw new InternalException("Looking for index " + index + " but cache not growing beyond size " + filled);
+                throw new InternalException("Looking for index " + index + " but cache not growing beyond size " + filled + " length should be: " + getLength());
             }
         }
     }

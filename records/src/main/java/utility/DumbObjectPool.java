@@ -2,6 +2,7 @@ package utility;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.error.InternalException;
 
 import java.lang.ref.WeakReference;
 import java.lang.reflect.Array;
@@ -46,11 +47,16 @@ public class DumbObjectPool<T>
      * @return
      */
     @SuppressWarnings({"unchecked", "nullness"})
-    public T pool(T s)
+    public T pool(T s) throws InternalException
     {
         int index = Arrays.binarySearch(pool, 0, used, s, comparator);
-        if (index >= 0 && pool[index] != null && pool[index].equals(s))
-            return pool[index];
+        if (index >= 0)
+        {
+            if (pool[index] != null && pool[index].equals(s))
+                return pool[index];
+            else
+                throw new InternalException("Object found in pool yet does not satisfy equals: " + pool[index] + " vs " + s + " equals gives " + pool[index].equals(s) + " but comparator " + comparator.compare(pool[index], s));
+        }
         // Change to insertion point:
         index = ~index;
         if (used < limit)
