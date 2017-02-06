@@ -228,7 +228,10 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     {
         // If it overlaps our special values but isn't special, store as biginteger:
         if (!special && (n < LONG_MIN))
+        {
             addBigDecimal(BigDecimal.valueOf(n));
+            return;
+        }
 
         if (longs == null)
         {
@@ -345,6 +348,8 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             {
                 if (bigDecimals == null)
                     throw new InternalException("SEE_BIGDEC but null BigDecimal array");
+                if (index >= bigDecimals.length)
+                    throw new InternalException("SEE_BIGDEC but BigDecimal array not long enough");
                 @Nullable BigDecimal bigDecimal = bigDecimals[index];
                 if (bigDecimal == null)
                     throw new InternalException("SEE_BIGDEC but null BigDecimal");
