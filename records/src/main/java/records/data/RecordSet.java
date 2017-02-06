@@ -176,7 +176,18 @@ public abstract class RecordSet
     {
         try
         {
-            return IntStream.range(0, getLength()).mapToObj(this::debugGetVals).collect(Collectors.joining("\n"));
+            return columns.stream().map(c ->
+            {
+                try
+                {
+                    return c.getName() + "::" + c.getType();
+                }
+                catch (InternalException | UserException e)
+                {
+                    return c.getName() + "::TYPE_ERR";
+                }
+            }).collect(Collectors.joining(" ")) +
+                IntStream.range(0, getLength()).mapToObj(this::debugGetVals).collect(Collectors.joining("\n"));
         }
         catch (InternalException | UserException e)
         {
@@ -189,7 +200,7 @@ public abstract class RecordSet
         return columns.stream().map(c -> { try
         {
             return "\"" + c.getType().getCollapsed(i).toString() + "\"";
-        }catch (Exception e) { return "ERR"; }}).collect(Collectors.joining(","));
+        }catch (Exception e) { return "ERR:" + e.getLocalizedMessage(); }}).collect(Collectors.joining(","));
     }
 
     @OnThread(Tag.Any)
