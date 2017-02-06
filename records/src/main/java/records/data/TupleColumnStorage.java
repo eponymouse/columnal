@@ -46,7 +46,7 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
     @Override
     public int filled()
     {
-        return storage.size();
+        return storage.stream().mapToInt(ColumnStorage::filled).min().orElse(0);
     }
 
     /*
