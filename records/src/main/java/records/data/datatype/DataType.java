@@ -241,7 +241,7 @@ public class DataType
                 for (int type = 0; type < inner.size(); type++)
                 {
                     int typeFinal = type;
-                    innerValues.add(fromCollapsed((i, prog) -> {
+                    innerValues.add(inner.get(type).fromCollapsed((i, prog) -> {
                         Object[] tuple = castTo(Object[].class).getWithProgress(i, prog);
                         return tuple[typeFinal];
                     }));
@@ -254,9 +254,12 @@ public class DataType
             public DataTypeValue array(@Nullable DataType inner) throws InternalException, UserException
             {
                 GetValue<@Value ListEx> getList = castTo(ListEx.class);
-                return inner == null ? DataTypeValue.arrayV() : DataTypeValue.arrayV(inner, (i, prog) -> {
+                if (inner == null)
+                    return DataTypeValue.arrayV();
+                DataType innerFinal = inner;
+                return DataTypeValue.arrayV(inner, (i, prog) -> {
                     @NonNull @Value ListEx list = getList.getWithProgress(i, prog);
-                    return new Pair<>(list.size(), fromCollapsed((arrayIndex, arrayProg) -> list.get(arrayIndex)));
+                    return new Pair<>(list.size(), innerFinal.fromCollapsed((arrayIndex, arrayProg) -> list.get(arrayIndex)));
                 });
             }
         });
@@ -1366,12 +1369,16 @@ public class DataType
                 case TIMEOFDAY:
                     return Comparator.comparing((TemporalAccessor t) -> t.get(ChronoField.HOUR_OF_DAY))
                         .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MINUTE_OF_HOUR))
-                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.SECOND_OF_MINUTE));
+                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.SECOND_OF_MINUTE))
+                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.NANO_OF_SECOND));
                 case TIMEOFDAYZONED:
-                    return Comparator.comparing((TemporalAccessor t) -> OffsetTime.from(t).withOffsetSameInstant(ZoneOffset.UTC),
+                    return Comparator.comparing((TemporalAccessor t) -> {
+                            return OffsetTime.from(t).withOffsetSameInstant(ZoneOffset.UTC);
+                        },
                         Comparator.comparing((TemporalAccessor t) -> t.get(ChronoField.HOUR_OF_DAY))
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MINUTE_OF_HOUR))
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.SECOND_OF_MINUTE))
+                            .thenComparing((TemporalAccessor t) -> t.get(ChronoField.NANO_OF_SECOND))
                     );
                 case DATETIME:
                     return Comparator.comparing((TemporalAccessor t) -> t.get(ChronoField.YEAR))
@@ -1379,7 +1386,8 @@ public class DataType
                         .thenComparing((TemporalAccessor t) -> t.get(ChronoField.DAY_OF_MONTH))
                         .thenComparing((TemporalAccessor t) -> t.get(ChronoField.HOUR_OF_DAY))
                         .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MINUTE_OF_HOUR))
-                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.SECOND_OF_MINUTE));
+                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.SECOND_OF_MINUTE))
+                        .thenComparing((TemporalAccessor t) -> t.get(ChronoField.NANO_OF_SECOND));
                 case DATETIMEZONED:
                     return Comparator.comparing((TemporalAccessor t) -> ZonedDateTime.from(t).withZoneSameInstant(ZoneOffset.UTC),
                         Comparator.comparing((TemporalAccessor t) -> t.get(ChronoField.YEAR))
@@ -1388,6 +1396,7 @@ public class DataType
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.HOUR_OF_DAY))
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MINUTE_OF_HOUR))
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.SECOND_OF_MINUTE))
+                            .thenComparing((TemporalAccessor t) -> t.get(ChronoField.NANO_OF_SECOND))
                     );
             }
             throw new InternalException("Unknown date type: " + type);
