@@ -30,7 +30,8 @@ lessThanExpression :  expression (LESS_THAN expression)+;
 greaterThanExpression :  expression (GREATER_THAN expression)+;
 andExpression :  expression (AND expression)+;
 orExpression :  expression (OR expression)+;
-compoundExpression : plusMinusExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression;
+ifThenElseExpression : IF expression THEN expression ELSE expression;
+compoundExpression : plusMinusExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | ifThenElseExpression;
 
 constructor : CONSTRUCTOR typeName COLON constructorName;
 tagExpression : constructor (COLON expression)?;
@@ -54,7 +55,7 @@ functionArg : (newVariable | patternTuple) COLON expression;
 functionCase : matchClause+;
 function: FUNCTION (functionArg | functionCase);
 
-matchClause : CASE pattern (ORCASE pattern)* MAPSTO expression;
+matchClause : CASE pattern (ORCASE pattern)* THEN expression;
 match : MATCH expression matchClause+;
 
 bracketedCompound : OPEN_BRACKET compoundExpression CLOSE_BRACKET;

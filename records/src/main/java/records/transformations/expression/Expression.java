@@ -37,6 +37,7 @@ import records.grammar.ExpressionParser.ColumnRefContext;
 import records.grammar.ExpressionParser.DivideExpressionContext;
 import records.grammar.ExpressionParser.ExpressionContext;
 import records.grammar.ExpressionParser.GreaterThanExpressionContext;
+import records.grammar.ExpressionParser.IfThenElseExpressionContext;
 import records.grammar.ExpressionParser.LessThanExpressionContext;
 import records.grammar.ExpressionParser.MatchClauseContext;
 import records.grammar.ExpressionParser.MatchContext;
@@ -254,6 +255,12 @@ public abstract class Expression
         public Expression visitTimesExpression(TimesExpressionContext ctx)
         {
             return new TimesExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression));
+        }
+
+        @Override
+        public Expression visitIfThenElseExpression(IfThenElseExpressionContext ctx)
+        {
+            return new IfThenElseExpression(visitExpression(ctx.expression(0)), visitExpression(ctx.expression(1)), visitExpression(ctx.expression(2)));
         }
 
         @Override

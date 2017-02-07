@@ -90,7 +90,8 @@ public class IfThenElseExpression extends Expression
     @Override
     public String save(boolean topLevel)
     {
-        return ""; // TODO
+        String content = "@if " + condition.save(false) + " @then " + thenExpression.save(false) + " @else " + elseExpression.save(false);
+        return topLevel ? content : ("(" + content + ")");
     }
 
     @Override
