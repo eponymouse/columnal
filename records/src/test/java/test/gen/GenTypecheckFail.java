@@ -1,6 +1,7 @@
 package test.gen;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
@@ -10,6 +11,7 @@ import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
 import records.transformations.expression.TypeState;
@@ -103,7 +105,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                             Pair<List<@Value Object>, Expression> replacement = gen.makeOfType(newType);
                             // Special case: don't let it be empty array because it may type check
                             // against type even though we don't want it to:
-                            while (replacement.getFirst() instanceof ListEx && ((ListEx)replacement.getFirst()).size() == 0)
+                            while (replacement.getSecond().equals(new ArrayExpression(ImmutableList.of())))
                             {
                                 replacement = gen.makeOfType(newType);
                             }
