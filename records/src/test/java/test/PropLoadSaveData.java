@@ -54,7 +54,7 @@ public class PropLoadSaveData
 
 
             assertEquals(saved, savedAgain);
-            assertEquals(original.data, loaded);
+            assertEquals(original.data(), loaded);
             assertEquals(loaded, loadedAgain);
         }
         catch (Throwable t)

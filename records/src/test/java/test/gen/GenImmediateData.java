@@ -2,11 +2,14 @@ package test.gen;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
+import com.pholser.junit.quickcheck.generator.InRange;
+import com.pholser.junit.quickcheck.generator.Precision;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.Column;
 import records.data.ImmediateDataSource;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
+import records.data.Table;
 import records.data.TableManager;
 import records.error.FunctionInt;
 import records.error.InternalException;
@@ -29,16 +32,23 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
     public static class ImmediateData_Mgr
     {
         public final TableManager mgr;
-        public final ImmediateDataSource data;
-        public final ImmediateDataSource dataB;
+        // Amount is set by Precision annotation (for laziness), default is 1
+        public final List<ImmediateDataSource> data;
 
-        public ImmediateData_Mgr(TableManager mgr, ImmediateDataSource data, ImmediateDataSource dataB)
+        public ImmediateData_Mgr(TableManager mgr, List<ImmediateDataSource> data)
         {
             this.mgr = mgr;
-            this.data = data;
-            this.dataB = dataB;
+            this.data = new ArrayList<>(data);
+        }
+
+        // Shortcut for first item:
+        public Table data()
+        {
+            return data.get(0);
         }
     }
+
+    private int numTables = 1;
 
     public GenImmediateData()
     {
@@ -53,28 +63,24 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
         {
             TableManager mgr = new GenTableManager().generate(r, generationStatus);
 
-            // Bias towards small:
-            final int length = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 1111);
-            final int lengthB = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 1111);
+            List<ImmediateDataSource> tables = new ArrayList<>();
 
-            int numColumns = r.nextInt(1, 12);
-            List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
-            GenColumn genColumn = new GenColumn(mgr);
-            for (int i = 0; i < numColumns; i++)
+            for (int t = 0; t < numTables; t++)
             {
-                BiFunction<Integer, RecordSet, Column> col = genColumn.generate(r, generationStatus);
-                columns.add(rs -> col.apply(length, rs));
-            }
+                // Bias towards small:
+                final int length = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 1111);
 
-            int numColumnsB = r.nextInt(1, 12);
-            List<FunctionInt<RecordSet, Column>> columnsB = new ArrayList<>();
-            for (int i = 0; i < numColumnsB; i++)
-            {
-                BiFunction<Integer, RecordSet, Column> col = genColumn.generate(r, generationStatus);
-                columnsB.add(rs -> col.apply(lengthB, rs));
+                int numColumns = r.nextInt(1, 12);
+                List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
+                GenColumn genColumn = new GenColumn(mgr);
+                for (int i = 0; i < numColumns; i++)
+                {
+                    BiFunction<Integer, RecordSet, Column> col = genColumn.generate(r, generationStatus);
+                    columns.add(rs -> col.apply(length, rs));
+                }
+                tables.add(new ImmediateDataSource(mgr, new KnownLengthRecordSet("Title " + t, columns, length)));
             }
-
-            return new ImmediateData_Mgr(mgr, new ImmediateDataSource(mgr, new KnownLengthRecordSet("Title", columns, length)), new ImmediateDataSource(mgr, new KnownLengthRecordSet("Title", columnsB, lengthB)));
+            return new ImmediateData_Mgr(mgr, tables);
         }
         catch (InternalException | UserException e)
         {
@@ -83,6 +89,12 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
         }
     }
 
+    public void configure(Precision p)
+    {
+        numTables = p.scale();
+    }
+
+/*
     @Override
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public List<ImmediateData_Mgr> doShrink(SourceOfRandomness random, ImmediateData_Mgr larger)
@@ -91,6 +103,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
         {
             TableManager mgr = new DummyManager();
             // Don't shrink to zero, gets weird:
+
             int shrunkLength = Math.max(1, larger.data.getData().getLength() / 4);
             List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
             for (Column column : larger.data.getData().getColumns())
@@ -105,5 +118,5 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
             e.printStackTrace();
             return super.doShrink(random, larger);
         }
-    }
+    }*/
 }
