@@ -343,4 +343,45 @@ public class Concatenate extends Transformation
             return new Editor(null, Collections.singletonList(srcTableId), src == null ? Collections.emptyList() : Collections.singletonList(src), Collections.emptyMap());
         }
     }
+
+    @Override
+    public boolean transformationEquals(Transformation o)
+    {
+        Concatenate that = (Concatenate) o;
+
+        if (!sources.equals(that.sources)) return false;
+
+        if (!missingValues.keySet().equals(that.missingValues.keySet()))
+            return false;
+        for (ColumnId columnId : missingValues.keySet())
+        {
+            try
+            {
+                Optional<@Value Object> us = missingValues.get(columnId);
+                Optional<@Value Object> them = that.missingValues.get(columnId);
+                if (them == null)
+                    return false; // Shouldn't happen if key sets are equal, but just in case.
+                if (!us.isPresent() && !them.isPresent())
+                    continue; // Both missing, fine
+                if (!us.isPresent() || them.isPresent())
+                    return false; // One missing, not equal
+                if (Utility.compareValues(us.get(), them.get()) != 0)
+                    return false;
+            }
+            catch (InternalException | UserException e)
+            {
+                // I believe this method is only used in testing, so runtime should be okay:
+                throw new RuntimeException(e);
+            }
+        }
+        return true;
+    }
+
+    @Override
+    public int transformationHashCode()
+    {
+        int result = sources.hashCode();
+        result = 31 * result + missingValues.hashCode();
+        return result;
+    }
 }

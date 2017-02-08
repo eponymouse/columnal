@@ -55,4 +55,54 @@ public abstract class Transformation extends Table
 
     @OnThread(Tag.FXPlatform)
     protected abstract List<String> saveDetail(@Nullable File destination);
+
+    // hashCode and equals must be implemented properly (used for testing).
+    // To make sure we don't forget, we introduce abstract methods which must
+    // be overridden.  (We don't make hashCode and equals themselves abstract
+    // because subclasses would then lose access to Table.hashCode which they'd need).
+    @Override
+    public final int hashCode()
+    {
+        return 31 * super.hashCode() + transformationHashCode();
+    }
+
+    protected abstract int transformationHashCode();
+
+    @Override
+    public final boolean equals(@Nullable Object obj)
+    {
+        if (!super.equals(obj))
+            return false;
+        return transformationEquals((Transformation)obj);
+    }
+
+    protected abstract boolean transformationEquals(Transformation obj);
+
+    // Mainly for testing:
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public String toString()
+    {
+        StringBuilder b = new StringBuilder();
+        save(null, new Saver()
+        {
+            @Override
+            public @OnThread(Tag.FXPlatform) void saveTable(String tableSrc)
+            {
+                b.append(tableSrc);
+            }
+
+            @Override
+            public @OnThread(Tag.FXPlatform) void saveUnit(String unitSrc)
+            {
+                b.append(unitSrc);
+            }
+
+            @Override
+            public @OnThread(Tag.FXPlatform) void saveType(String typeSrc)
+            {
+                b.append(typeSrc);
+            }
+        });
+        return b.toString();
+    }
 }

@@ -909,4 +909,23 @@ public class SummaryStatistics extends Transformation
         return result;
     }
     */
+
+    @Override
+    public boolean transformationEquals(Transformation o)
+    {
+        SummaryStatistics that = (SummaryStatistics) o;
+
+        if (!srcTableId.equals(that.srcTableId)) return false;
+        if (!summaries.equals(that.summaries)) return false;
+        return splitBy.equals(that.splitBy);
+    }
+
+    @Override
+    public int transformationHashCode()
+    {
+        int result = srcTableId.hashCode();
+        result = 31 * result + summaries.hashCode();
+        result = 31 * result + splitBy.hashCode();
+        return result;
+    }
 }

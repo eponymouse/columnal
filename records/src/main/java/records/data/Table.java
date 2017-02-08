@@ -3,6 +3,7 @@ package records.data;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
@@ -181,6 +182,7 @@ public abstract class Table
     }
 
     @Override
+    @EnsuresNonNullIf(expression = "#1", result = true)
     public synchronized boolean equals(@Nullable Object o)
     {
         if (this == o) return true;

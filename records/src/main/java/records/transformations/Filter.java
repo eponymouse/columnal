@@ -480,4 +480,21 @@ public class Filter extends Transformation
             return new Editor(mgr, null, srcTableId, src);
         }
     }
+
+    @Override
+    public boolean transformationEquals(Transformation o)
+    {
+        Filter filter = (Filter) o;
+
+        if (!srcTableId.equals(filter.srcTableId)) return false;
+        return filterExpression.equals(filter.filterExpression);
+    }
+
+    @Override
+    public int transformationHashCode()
+    {
+        int result = srcTableId.hashCode();
+        result = 31 * result + filterExpression.hashCode();
+        return result;
+    }
 }

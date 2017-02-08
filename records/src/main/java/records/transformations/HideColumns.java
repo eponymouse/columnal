@@ -235,4 +235,21 @@ public class HideColumns extends Transformation
             return new Editor(null, srcTableId, src, Collections.emptyList());
         }
     }
+
+    @Override
+    public boolean transformationEquals(Transformation o)
+    {
+        HideColumns that = (HideColumns) o;
+
+        if (!srcTableId.equals(that.srcTableId)) return false;
+        return hideIds.equals(that.hideIds);
+    }
+
+    @Override
+    public int transformationHashCode()
+    {
+        int result = srcTableId.hashCode();
+        result = 31 * result + hideIds.hashCode();
+        return result;
+    }
 }

@@ -160,4 +160,21 @@ public class Transform extends Transformation
             throw new UserException(error == null ? "Unknown error" : error);
         return recordSet;
     }
+
+    @Override
+    public boolean transformationEquals(Transformation o)
+    {
+        Transform transform = (Transform) o;
+
+        if (!newColumns.equals(transform.newColumns)) return false;
+        return srcTableId.equals(transform.srcTableId);
+    }
+
+    @Override
+    public int transformationHashCode()
+    {
+        int result = newColumns.hashCode();
+        result = 31 * result + srcTableId.hashCode();
+        return result;
+    }
 }

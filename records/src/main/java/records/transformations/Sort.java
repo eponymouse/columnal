@@ -555,12 +555,8 @@ public class Sort extends Transformation
     }
 
     @Override
-    public boolean equals(@Nullable Object o)
+    public boolean transformationEquals(Transformation o)
     {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-        if (!super.equals(o)) return false;
-
         Sort sort = (Sort) o;
 
         if (!srcTableId.equals(sort.srcTableId)) return false;
@@ -569,10 +565,9 @@ public class Sort extends Transformation
     }
 
     @Override
-    public int hashCode()
+    public int transformationHashCode()
     {
-        int result = super.hashCode();
-        result = 31 * result + srcTableId.hashCode();
+        int result = srcTableId.hashCode();
         result = 31 * result + originalSortBy.hashCode();
         return result;
     }
