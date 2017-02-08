@@ -4,18 +4,14 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.generator.Precision;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import one.util.streamex.StreamEx;
-import org.checkerframework.checker.units.qual.C;
 import org.junit.Assume;
 import org.junit.runner.RunWith;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.ImmediateDataSource;
 import records.data.RecordSet;
-import records.data.Table;
 import records.data.TableId;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
@@ -38,7 +34,6 @@ import test.gen.GenImmediateData;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 import utility.Utility;
 
 import java.math.BigDecimal;
@@ -161,7 +156,7 @@ public class PropRunTransformation
         // Lengths should equal original:
         assertEquals(srcTable.data().getData().getLength(), filter.getData().getLength() + invertedFilter.getData().getLength());
 
-        Concatenate concatFilters = new Concatenate(srcTable.mgr, null, "concatFilters", Arrays.asList(filter.getId(), invertedFilter.getId()), Collections.emptyMap());
+        Concatenate concatFilters = new Concatenate(srcTable.mgr, null, Arrays.asList(filter.getId(), invertedFilter.getId()), Collections.emptyMap());
 
         // Check that the same set of rows is present:
         assertEquals(TestUtil.getRowFreq(srcTable.data().getData()), TestUtil.getRowFreq(concatFilters.getData()));
@@ -231,7 +226,7 @@ public class PropRunTransformation
         {
             // Add once each time round the loop:
             ids.add(original.data().getId());
-            Concatenate concatenate = new Concatenate(original.mgr, null, "ConcatSelf", ids, Collections.emptyMap());
+            Concatenate concatenate = new Concatenate(original.mgr, null, ids, Collections.emptyMap());
             for (Column column : concatenate.getData().getColumns())
             {
                 // Compare each value from the original set with the corresponding later repeated values:
@@ -263,7 +258,7 @@ public class PropRunTransformation
 
         try
         {
-            new Concatenate(data.mgr, null, "concated", Arrays.asList(data.data().getId(), data.data.get(1).getId()), Collections.emptyMap()).getData();
+            new Concatenate(data.mgr, null, Arrays.asList(data.data().getId(), data.data.get(1).getId()), Collections.emptyMap()).getData();
             fail("Expected failure concatting two unrelated tables");
         }
         catch (UserException e)
@@ -281,7 +276,7 @@ public class PropRunTransformation
                 missing.put(id, Optional.of(table.getData().getColumn(id).getType().getCollapsed(0)));
             }
         }
-        RecordSet concat = new Concatenate(data.mgr, null, "concated", Arrays.asList(data.data().getId(), data.data.get(1).getId()), missing).getData();
+        RecordSet concat = new Concatenate(data.mgr, null, Arrays.asList(data.data().getId(), data.data.get(1).getId()), missing).getData();
         assertEquals(data.data().getData().getLength() + data.data.get(1).getData().getLength(), concat.getLength());
         for (ColumnId c : concat.getColumnIds())
         {

@@ -3,11 +3,11 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import records.data.ColumnId;
 import records.data.TableId;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.Filter;
-import records.transformations.expression.Expression;
+import records.transformations.HideColumns;
 import test.DummyManager;
 import test.TestUtil;
 import test.TestUtil.Transformation_Mgr;
@@ -15,12 +15,16 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
+import java.util.List;
+
+import static org.junit.Assume.assumeNoException;
+
 /**
- * Created by neil on 27/11/2016.
+ * Created by neil on 02/02/2017.
  */
-public class GenFilter extends Generator<Transformation_Mgr>
+public class GenNonsenseHideColumns extends Generator<Transformation_Mgr>
 {
-    public GenFilter()
+    public GenNonsenseHideColumns()
     {
         super(Transformation_Mgr.class);
     }
@@ -30,15 +34,16 @@ public class GenFilter extends Generator<Transformation_Mgr>
     public Transformation_Mgr generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
+        List<ColumnId> cols = TestUtil.makeList(sourceOfRandomness, 0, 10, () -> TestUtil.generateColumnId(sourceOfRandomness));
+
         try
         {
             DummyManager mgr = new DummyManager();
-            GenNonsenseExpression genNonsenseExpression = new GenNonsenseExpression();
-            Expression nonsenseExpression = genNonsenseExpression.generate(sourceOfRandomness, generationStatus);
-            return new Transformation_Mgr(mgr, new Filter(mgr, ids.getFirst(), ids.getSecond(), nonsenseExpression));
+            return new Transformation_Mgr(mgr, new HideColumns(mgr, ids.getFirst(), ids.getSecond(), cols));
         }
         catch (InternalException | UserException e)
         {
+            assumeNoException(e);
             throw new RuntimeException(e);
         }
     }

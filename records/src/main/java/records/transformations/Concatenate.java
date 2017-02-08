@@ -2,7 +2,12 @@ package records.transformations;
 
 import annotation.qual.Value;
 import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.StringExpression;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.scene.control.Label;
+import javafx.scene.layout.Pane;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -15,22 +20,20 @@ import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitor;
-import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.NumberInfo;
-import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
-import records.data.datatype.TypeId;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.SimulationSupplier;
 import utility.Utility;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -42,7 +45,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.Queue;
 import java.util.Set;
 
 /**
@@ -54,30 +56,33 @@ public class Concatenate extends Transformation
     @OnThread(Tag.Any)
     private final List<TableId> sources;
 
+    @OnThread(Tag.Any)
+    private final List<Table> sourceTables;
+
     // If there is a column which is not in every source table, it must appear in this map
     // If any column is mapped to Optional.empty then it should be omitted in the concatenated version, even if it appears in all.
     // If it's mapped to Optional.of then it should be given that value in the concatenated version
     // for any source table which lacks the column.
+    @OnThread(Tag.Any)
     private final Map<ColumnId, Optional<@Value Object>> missingValues;
 
     @OnThread(Tag.Any)
     private @Nullable String error = null;
     @OnThread(Tag.Any)
     private final @Nullable RecordSet recordSet;
-    private final String title;
 
     @SuppressWarnings("initialization")
-    public Concatenate(TableManager mgr, @Nullable TableId tableId, String title, List<TableId> sources, Map<ColumnId, Optional<@Value Object>> missingVals) throws InternalException
+    public Concatenate(TableManager mgr, @Nullable TableId tableId, List<TableId> sources, Map<ColumnId, Optional<@Value Object>> missingVals) throws InternalException
     {
         super(mgr, tableId);
         this.sources = sources;
-        this.title = title;
         this.missingValues = new HashMap<>(missingVals);
 
         KnownLengthRecordSet rs = null;
+        List<Table> tables = Collections.emptyList();
         try
         {
-            List<Table> tables = Utility.mapListEx(sources, getManager()::getSingleTableOrThrow);
+            tables = Utility.mapListEx(sources, getManager()::getSingleTableOrThrow);
             LinkedHashMap<ColumnId, DataType> prevColumns = getColumnsNameAndType(tables.get(0));
             int totalLength = tables.get(0).getData().getLength();
             List<Integer> ends = new ArrayList<>();
@@ -158,7 +163,8 @@ public class Concatenate extends Transformation
                 totalLength += length;
                 ends.add(totalLength);
             }
-            rs = new KnownLengthRecordSet(title, Utility.<Entry<ColumnId, DataType>, FunctionInt<RecordSet, Column>>mapList(new ArrayList<>(prevColumns.entrySet()), (Entry<ColumnId, DataType> oldC) -> new FunctionInt<RecordSet, Column>()
+            List<Table> tablesFinal = tables;
+            rs = new KnownLengthRecordSet("", Utility.<Entry<ColumnId, DataType>, FunctionInt<RecordSet, Column>>mapList(new ArrayList<>(prevColumns.entrySet()), (Entry<ColumnId, DataType> oldC) -> new FunctionInt<RecordSet, Column>()
             {
                 @Override
                 @OnThread(Tag.Simulation)
@@ -188,7 +194,7 @@ public class Concatenate extends Transformation
                                         {
                                             int start = srcTableIndex == 0 ? 0 : ends.get(srcTableIndex - 1);
                                             // First one with end beyond our target must be right one:
-                                            @Nullable Column oldColumn = tables.get(srcTableIndex).getData().getColumnOrNull(oldC.getKey());
+                                            @Nullable Column oldColumn = tablesFinal.get(srcTableIndex).getData().getColumnOrNull(oldC.getKey());
                                             if (oldColumn == null)
                                                 return new Pair<DataTypeValue, Integer>(oldC.getValue().fromCollapsed((i, progB) -> missingValues.get(oldC.getKey()).get()), 0);
                                             else
@@ -203,6 +209,8 @@ public class Concatenate extends Transformation
                     };
                 }
             }), totalLength);
+
+
         }
         catch (UserException e)
         {
@@ -210,6 +218,7 @@ public class Concatenate extends Transformation
             if (msg != null)
                 this.error = msg;
         }
+        sourceTables = tables;
         this.recordSet = rs;
     }
 
@@ -228,7 +237,7 @@ public class Concatenate extends Transformation
     @Override
     public @OnThread(Tag.FXPlatform) TransformationEditor edit()
     {
-        throw new RuntimeException("TODO");
+        return new Editor(getId(), sources, sourceTables, missingValues);
     }
 
     @Override
@@ -261,5 +270,77 @@ public class Concatenate extends Transformation
             r.put(c.getName(), c.getType());
         }
         return r;
+    }
+
+    private static class Editor extends TransformationEditor
+    {
+        private final @Nullable TableId tableId;
+        private final List<TableId> srcTableIds;
+        private final List<Table> srcs; // May be empty
+        private final Map<ColumnId, Optional<@Value Object>> missingVals;
+
+        private Editor(@Nullable TableId tableId, List<TableId> srcTableIds, List<Table> srcs, Map<ColumnId, Optional<@Value Object>> missingVals)
+        {
+            this.tableId = tableId;
+            this.srcTableIds = srcTableIds;
+            this.srcs = srcs;
+            this.missingVals = missingVals;
+        }
+
+        @Override
+        public @OnThread(Tag.FX) StringExpression displayTitle()
+        {
+            return new ReadOnlyStringWrapper("Concatenate");
+        }
+
+        @Override
+        public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
+        {
+            return new Pane(new Label("TODO"));
+        }
+
+        @Override
+        public BooleanExpression canPressOk()
+        {
+            return new ReadOnlyBooleanWrapper(true);
+        }
+
+        @Override
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
+        {
+            return () -> new Concatenate(mgr, tableId, srcTableIds, missingVals);
+        }
+
+        @Override
+        public @Nullable Table getSource()
+        {
+            return srcs.isEmpty() ? null : srcs.get(0);
+        }
+
+        @Override
+        public TableId getSourceId()
+        {
+            return srcTableIds.get(0);
+        }
+    }
+
+    public static class Info extends TransformationInfo
+    {
+        public Info()
+        {
+            super("concatenate", Arrays.asList("append", "join"));
+        }
+
+        @Override
+        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, TableId tableId, List<TableId> source, String detail) throws InternalException, UserException
+        {
+            return new Concatenate(mgr, tableId, source, Collections.emptyMap() /* TODO */);
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(TableManager mgr, TableId srcTableId, @Nullable Table src)
+        {
+            return new Editor(null, Collections.singletonList(srcTableId), src == null ? Collections.emptyList() : Collections.singletonList(src), Collections.emptyMap());
+        }
     }
 }

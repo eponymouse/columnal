@@ -2,28 +2,18 @@ package test;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
 import org.junit.runner.RunWith;
-import records.data.DataSource;
-import records.data.ImmediateDataSource;
 import records.data.Table;
 import records.data.Table.FullSaver;
 import records.data.TableManager;
-import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.TransformationManager;
-import test.gen.GenFilter;
 import test.gen.GenImmediateData;
-import test.gen.GenSort;
-import test.gen.GenSummaryStats;
 import test.gen.GenTableManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 import utility.Utility;
 
 import javax.swing.SwingUtilities;

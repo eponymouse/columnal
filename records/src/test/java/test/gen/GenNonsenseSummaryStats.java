@@ -27,9 +27,9 @@ import java.util.TreeSet;
 /**
  * Created by neil on 16/11/2016.
  */
-public class GenSummaryStats extends Generator<Transformation_Mgr>
+public class GenNonsenseSummaryStats extends Generator<Transformation_Mgr>
 {
-    public GenSummaryStats()
+    public GenNonsenseSummaryStats()
     {
         super(Transformation_Mgr.class);
     }

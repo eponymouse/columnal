@@ -9,18 +9,20 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * Created by neil on 02/02/2017.
+ * Generates a transformation which can be successfully loaded and saved,
+ * but not necessarily executed successfully.
  */
-public class GenTransformation extends Generator<Transformation_Mgr>
+public class GenNonsenseTransformation extends Generator<Transformation_Mgr>
 {
     List<Generator<Transformation_Mgr>> generators = Arrays.asList(
-        new GenFilter(),
-        new GenHideColumns(),
-        new GenSort(),
-        new GenSummaryStats()
+        new GenNonsenseConcatenate(),
+        new GenNonsenseFilter(),
+        new GenNonsenseHideColumns(),
+        new GenNonsenseSort(),
+        new GenNonsenseSummaryStats()
     );
 
-    public GenTransformation()
+    public GenNonsenseTransformation()
     {
         super(Transformation_Mgr.class);
     }

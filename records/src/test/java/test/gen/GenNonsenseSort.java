@@ -25,9 +25,9 @@ import static org.junit.Assume.assumeThat;
 /**
  * Created by neil on 16/11/2016.
  */
-public class GenSort extends Generator<Transformation_Mgr>
+public class GenNonsenseSort extends Generator<Transformation_Mgr>
 {
-    public GenSort()
+    public GenNonsenseSort()
     {
         super(Transformation_Mgr.class);
     }
