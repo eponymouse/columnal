@@ -195,7 +195,7 @@ public class Filter extends Transformation
     @Override
     public @OnThread(Tag.FXPlatform) TransformationEditor edit()
     {
-        return new Editor(getManager(), getId(), srcTableId, src);
+        return new Editor(getManager(), getId(), srcTableId, src, filterExpression);
     }
 
     @Override
@@ -228,9 +228,10 @@ public class Filter extends Transformation
         private final ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData;
         private final ObservableList<Pair<String, List<DisplayValue>>> destHeaderAndData;
         private final TableManager mgr;
+        private final Expression expression;
 
         @OnThread(Tag.FXPlatform)
-        public Editor(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, @Nullable Table src)
+        public Editor(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, @Nullable Table src, Expression expression)
         {
             this.mgr = mgr;
             this.thisTableId = thisTableId;
@@ -239,6 +240,7 @@ public class Filter extends Transformation
             this.rawField = new TextField("");
             this.srcHeaderAndData = FXCollections.observableArrayList();
             this.destHeaderAndData = FXCollections.observableArrayList();
+            this.expression = expression;
         }
 
         private void updateExample(Expression expression) throws UserException, InternalException
@@ -441,11 +443,7 @@ public class Filter extends Transformation
         @Override
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
-            String expr = rawField.getText();
-            if (expr.isEmpty())
-                expr = "true";
-            String exprFinal = expr;
-            return () -> new Filter(mgr, thisTableId, srcTableId, Expression.parse(null, exprFinal, mgr.getTypeManager()));
+            return () -> new Filter(mgr, thisTableId, srcTableId, expression);
         }
 
         @Override
@@ -477,7 +475,7 @@ public class Filter extends Transformation
         @Override
         public TransformationEditor editNew(TableManager mgr, TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(mgr, null, srcTableId, src);
+            return new Editor(mgr, null, srcTableId, src, new BooleanLiteral(true));
         }
     }
 
