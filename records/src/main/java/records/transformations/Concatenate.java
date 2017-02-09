@@ -273,7 +273,7 @@ public class Concatenate extends Transformation
             {
                 OutputBuilder b = new OutputBuilder();
                 b.id(e.getKey()).kw("@TYPE");
-                e.getValue().getFirst().save(b, true);
+                e.getValue().getFirst().save(b, false);
                 if (e.getValue().getSecond().isPresent())
                     b.kw("@VALUE").dataValue(e.getValue().getFirst(), e.getValue().getSecond().get());
                 else
@@ -376,12 +376,12 @@ public class Concatenate extends Transformation
             for (ConcatMissingColumnContext missing : ctx.concatMissingColumn())
             {
                 String columnName = missing.concatMissingColumnName().getText();
-                TypeContext typeSrc = Utility.parseAsOne(missing.typeValue().TYPE().getText(), FormatLexer::new, FormatParser::new, p -> p.type());
+                TypeContext typeSrc = Utility.parseAsOne(missing.type().TYPE().getText().trim(), FormatLexer::new, FormatParser::new, p -> p.type());
                 DataType dataType = mgr.getTypeManager().loadTypeUse(typeSrc);
                 Pair<DataType, Optional<@Value Object>> instruction = new Pair<>(dataType, Optional.<@Value Object>empty());
-                if (missing.typeValue() != null)
+                if (missing.value() != null)
                 {
-                    ItemContext value = Utility.parseAsOne(missing.typeValue().VALUE().getText(), DataLexer::new, DataParser::new, p -> p.item());
+                    ItemContext value = Utility.parseAsOne(missing.value().VALUE().getText().trim(), DataLexer::new, DataParser::new, p -> p.item());
                     instruction = new Pair<>(dataType, Optional.<@Value Object>of(DataType.loadSingleItem(dataType, value)));
                 }
                 missingInstr.put(new ColumnId(columnName), instruction);
@@ -417,7 +417,7 @@ public class Concatenate extends Transformation
                     return false;
                 if (!us.getSecond().isPresent() && !them.getSecond().isPresent())
                     continue; // Both missing, fine
-                if (!us.getSecond().isPresent() || them.getSecond().isPresent())
+                if (!us.getSecond().isPresent() || !them.getSecond().isPresent())
                     return false; // One missing, not equal
                 if (Utility.compareValues(us.getSecond().get(), them.getSecond().get()) != 0)
                     return false;

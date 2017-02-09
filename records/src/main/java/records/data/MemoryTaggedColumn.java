@@ -59,4 +59,9 @@ public class MemoryTaggedColumn extends Column
         });
         return new MemoryTaggedColumn(rs, title, typeName, tags, storage.getShrunk(shrunkLength));
     }
+
+    public void add(TaggedValue taggedValue) throws InternalException
+    {
+        storage.add(taggedValue);
+    }
 }

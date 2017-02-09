@@ -76,4 +76,18 @@ public class ImmediateDataSource extends DataSource
             });
         });
     }
+
+    @Override
+    public boolean dataEquals(DataSource o)
+    {
+        ImmediateDataSource that = (ImmediateDataSource) o;
+
+        return data.equals(that.data);
+    }
+
+    @Override
+    public int dataHashCode()
+    {
+        return data.hashCode();
+    }
 }

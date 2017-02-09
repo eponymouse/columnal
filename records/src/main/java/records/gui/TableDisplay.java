@@ -89,7 +89,7 @@ public class TableDisplay extends BorderPane
         {
             super();
             getColumns().setAll(recordSet.getDisplayColumns());
-            Workers.onWorkerThread("Determining row count for " + recordSet.getTitle(), () -> {
+            Workers.onWorkerThread("Determining row count", () -> {
                 ArrayList<Integer> indexesToAdd = new ArrayList<Integer>();
                 Utility.alertOnError_(() -> {
                     for (int i = 0; i < INITIAL_LOAD; i++)
@@ -149,7 +149,7 @@ public class TableDisplay extends BorderPane
             parent.edit(getTable());
         });
 
-        Label title = new Label(recordSet.getTitle());
+        Label title = new Label(table.getId().getOutput());
         Utility.addStyleClass(title, "table-title");
         HBox header = new HBox(title, spacer, addButton);
         Utility.addStyleClass(header, "table-header");

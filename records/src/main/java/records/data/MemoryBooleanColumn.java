@@ -43,4 +43,9 @@ public class MemoryBooleanColumn extends Column
     {
         return new MemoryBooleanColumn(rs, title, storage.getShrunk(shrunkLength));
     }
+
+    public void add(boolean b) throws InternalException
+    {
+        storage.add(b);
+    }
 }

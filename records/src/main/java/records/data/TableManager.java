@@ -122,6 +122,7 @@ public class TableManager
                     }
                     catch (InternalException | UserException e)
                     {
+                        Utility.log(e);
                         exceptions.add(e);
                     }
                     if (loaded.size() + exceptions.size() == total)
@@ -137,6 +138,7 @@ public class TableManager
                     }
                     catch (InternalException | UserException e)
                     {
+                        Utility.log(e);
                         exceptions.add(e);
                     }
                     if (loaded.size() + exceptions.size() == total)
@@ -147,7 +149,8 @@ public class TableManager
         try
         {
             allDone.get();
-        } catch (InterruptedException | ExecutionException e)
+        }
+        catch (InterruptedException | ExecutionException e)
         {
             Utility.log(e);
         }

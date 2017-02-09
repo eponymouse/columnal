@@ -393,12 +393,12 @@ public class TestUtil
 
     public static @Value LocalDate generateDate(SourceOfRandomness r, GenerationStatus gs)
     {
-        return Utility.value(LocalDate.ofEpochDay(r.nextLong(MIN_DATE.toEpochDay(), MAX_DATE.toEpochDay())));
+        return (LocalDate)Utility.value(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.ofEpochDay(r.nextLong(MIN_DATE.toEpochDay(), MAX_DATE.toEpochDay())));
     }
 
     public static @Value LocalTime generateTime(SourceOfRandomness r, GenerationStatus gs)
     {
-        return Utility.value(new LocalTimeGenerator().generate(r, gs));
+        return (LocalTime)Utility.value(new DateTimeInfo(DateTimeType.TIMEOFDAY), new LocalTimeGenerator().generate(r, gs));
     }
 
     public static @Value LocalDateTime generateDateTime(SourceOfRandomness r, GenerationStatus gs)
@@ -408,7 +408,7 @@ public class TestUtil
 
     public static @Value ZonedDateTime generateDateTimeZoned(SourceOfRandomness r, GenerationStatus gs)
     {
-        return Utility.value(ZonedDateTime.of(generateDateTime(r, gs), generateZone(r, gs)));
+        return (ZonedDateTime)Utility.value(new DateTimeInfo(DateTimeType.DATETIMEZONED), ZonedDateTime.of(generateDateTime(r, gs), generateZone(r, gs)));
     }
 
     public static ZoneId generateZone(SourceOfRandomness r, GenerationStatus gs)

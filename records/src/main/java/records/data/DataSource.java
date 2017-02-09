@@ -3,6 +3,7 @@ package records.data;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.ColumnMaker;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.FunctionInt;
@@ -26,11 +27,13 @@ import records.grammar.MainParser.DataSourceImmediateContext;
 import records.grammar.MainParser.DetailContext;
 import records.grammar.MainParser.TableContext;
 import records.transformations.expression.TypeState;
+import utility.ExConsumer;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Created by neil on 09/11/2016.
@@ -59,29 +62,28 @@ public abstract class DataSource extends Table
         {
             DataSourceImmediateContext immed = dataSource.dataSourceImmediate();
             List<Pair<ColumnId, DataType>> format = loadFormat(manager.getTypeManager(), immed.dataFormat());
-            List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
+            List<ColumnMaker<?>> columns = new ArrayList<>();
 
-            List<List<ItemContext>> dataRows = loadData(immed.detail());
             //TODO check for data row even length, error if not (allow & ignore blank lines)
             for (int i = 0; i < format.size(); i++)
             {
                 DataType t = format.get(i).getSecond();
                 ColumnId columnId = format.get(i).getFirst();
-                int iFinal = i;
-                columns.add(rs -> t.makeImmediateColumn(rs, columnId, dataRows, iFinal));
+                columns.add(t.makeImmediateColumn(columnId));
             }
-            int length = dataRows.size();
-            return new ImmediateDataSource(manager, new TableId(immed.tableId().getText()), new KnownLengthRecordSet("Data", columns, length));
+            RecordSet recordSet = new LoadedRecordSet(columns, immed, format);
+            return new ImmediateDataSource(manager, new TableId(immed.tableId().getText()), recordSet);
         }
         else
             throw new UnimplementedException();
     }
 
-    private static List<List<ItemContext>> loadData(DetailContext detail) throws UserException, InternalException
+    private static int loadData(DetailContext detail, ExConsumer<List<ItemContext>> withEachRow) throws UserException, InternalException
     {
-        List<List<ItemContext>> rows = new ArrayList<>();
+        int count = 0;
         for (TerminalNode line : detail.DETAIL_LINE())
         {
+            count += 1;
             String lineText = line.getText();
             try
             {
@@ -90,7 +92,7 @@ public abstract class DataSource extends Table
                     RowContext row = p.row();
                     if (row != null)
                     {
-                        rows.add(row.item());
+                        withEachRow.accept(row.item());
                     }
                     return 0;
                 });
@@ -100,7 +102,7 @@ public abstract class DataSource extends Table
                 throw new UserException("Error loading data line: \"" + lineText + "\"", e);
             }
         }
-        return rows;
+        return count;
     }
 
     private static List<Pair<ColumnId, DataType>> loadFormat(TypeManager typeManager, DataFormatContext dataFormatContext) throws UserException, InternalException
@@ -125,5 +127,57 @@ public abstract class DataSource extends Table
             });
         }
         return r;
+    }
+
+    // hashCode and equals must be implemented properly (used for testing).
+    // To make sure we don't forget, we introduce abstract methods which must
+    // be overridden.  (We don't make hashCode and equals themselves abstract
+    // because subclasses would then lose access to Table.hashCode which they'd need).
+    @Override
+    public final int hashCode()
+    {
+        return 31 * super.hashCode() + dataHashCode();
+    }
+
+    protected abstract int dataHashCode();
+
+    @Override
+    public final boolean equals(@Nullable Object obj)
+    {
+        if (!super.equals(obj))
+            return false;
+        return dataEquals((DataSource)obj);
+    }
+
+    protected abstract boolean dataEquals(DataSource obj);
+
+    private static class LoadedRecordSet extends RecordSet
+    {
+        private int length;
+
+        public LoadedRecordSet(List<ColumnMaker<?>> columns, DataSourceImmediateContext immed, List<Pair<ColumnId, DataType>> format) throws InternalException, UserException
+        {
+            super("Data", columns);
+            length = loadData(immed.detail(), row ->
+            {
+                for (int i = 0; i < format.size(); i++)
+                {
+                    columns.get(i).loadRow(row.get(i));
+                }
+            });
+        }
+
+        @Override
+        public boolean indexValid(int index) throws UserException, InternalException
+        {
+            return index < length;
+        }
+
+        @Override
+        public int getLength() throws UserException, InternalException
+        {
+            return length;
+        }
+
     }
 }

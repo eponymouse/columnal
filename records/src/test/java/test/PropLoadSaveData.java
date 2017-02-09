@@ -2,6 +2,7 @@ package test;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.embed.swing.JFXPanel;
 import org.junit.runner.RunWith;
@@ -31,7 +32,7 @@ public class PropLoadSaveData
 {
     @Property(trials = 30)
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void testImmediate(@From(GenTableManager.class) TableManager mgr1, @From(GenTableManager.class) TableManager mgr2, @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
+    public void testImmediate(@When(seed=3749938699373864535L) @From(GenTableManager.class) TableManager mgr1, @When(seed=712032941380097422L) @From(GenTableManager.class) TableManager mgr2, @When(seed=2839467935659722156L) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         String saved = save(original.mgr);
         try

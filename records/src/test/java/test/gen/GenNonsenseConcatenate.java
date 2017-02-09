@@ -40,6 +40,23 @@ public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
     {
         this.r = sourceOfRandomness;
         this.gs = generationStatus;
+
+        DummyManager mgr;
+        try
+        {
+            mgr = new DummyManager();
+            for (DataType type : TestUtil.distinctTypes)
+            {
+                if (type.isTagged())
+                    mgr.getTypeManager().registerTaggedType(type.getTaggedTypeName().getRaw(), type.getTagTypes());
+            }
+        }
+        catch (InternalException | UserException e)
+        {
+            assumeNoException(e);
+            throw new RuntimeException(e);
+        }
+
         TableId ourId = TestUtil.generateTableId(sourceOfRandomness);
         List<TableId> srcIds = TestUtil.makeList(sourceOfRandomness, 1, 5, () -> TestUtil.generateTableId(sourceOfRandomness));
 
@@ -62,10 +79,9 @@ public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
 
         try
         {
-            DummyManager mgr = new DummyManager();
             return new Transformation_Mgr(mgr, new Concatenate(mgr, ourId, srcIds, missing));
         }
-        catch (InternalException | UserException e)
+        catch (InternalException e)
         {
             assumeNoException(e);
             throw new RuntimeException(e);

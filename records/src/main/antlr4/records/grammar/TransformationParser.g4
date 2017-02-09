@@ -6,7 +6,8 @@ item : ATOM | STRING;
 
 expression: EXPRESSION_BEGIN EXPRESSION EXPRESSION_END;
 value: VALUE_BEGIN VALUE VALUE_END;
-typeValue: TYPE_BEGIN TYPE TYPE_VALUE VALUE VALUE_END;
+type: TYPE_BEGIN TYPE;
+
 
 /* Hide: */
 hideKW : {_input.LT(1).getText().equals("HIDE")}? ATOM;
@@ -28,5 +29,5 @@ summary : summaryCol+ splitBy*;
 /* Concat: */
 concatMissingColumnName : item;
 concatOmit : {_input.LT(1).getText().equals("@OMIT")}? ATOM;
-concatMissingColumn : concatMissingColumnName (concatOmit | typeValue) NEWLINE;
+concatMissingColumn : concatMissingColumnName type ((concatOmit NEWLINE) | value);
 concatMissing : concatMissingColumn*;

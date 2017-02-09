@@ -8,6 +8,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.ListEx;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class MemoryArrayColumn extends Column
     private final ColumnId title;
     private final ArrayColumnStorage storage;
 
-    public MemoryArrayColumn(RecordSet recordSet, ColumnId title, DataType inner, List<Pair<Integer, DataTypeValue>> values) throws InternalException
+    public MemoryArrayColumn(RecordSet recordSet, ColumnId title, DataType inner, List<ListEx> values) throws InternalException
     {
         super(recordSet);
         this.title = title;
@@ -46,5 +47,10 @@ public class MemoryArrayColumn extends Column
     {
         MemoryArrayColumn shrunk = new MemoryArrayColumn(rs, title, storage.getType().getMemberType().get(0), storage._test_getShrunk(shrunkLength));
         return shrunk;
+    }
+
+    public void add(ListEx listEx) throws InternalException
+    {
+        storage.add(listEx);
     }
 }

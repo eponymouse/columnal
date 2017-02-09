@@ -64,7 +64,7 @@ public class DataTypeUtility
             @Override
             public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return Utility.value(LocalDate.ofEpochDay(index));
+                return Utility.value(dateTimeInfo, LocalDate.ofEpochDay(index));
             }
 
             @Override

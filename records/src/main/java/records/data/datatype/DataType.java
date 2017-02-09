@@ -1,5 +1,6 @@
 package records.data.datatype;
 
+import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -7,8 +8,6 @@ import org.checkerframework.dataflow.qual.Pure;
 import records.data.ArrayColumnStorage;
 import records.data.BooleanColumnStorage;
 import records.data.CachedCalculatedColumn;
-import records.data.CalculatedNumericColumn;
-import records.data.CalculatedStringColumn;
 import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.ColumnId;
@@ -27,9 +26,9 @@ import records.data.TaggedColumnStorage;
 import records.data.TaggedValue;
 import records.data.TemporalColumnStorage;
 import records.data.TupleColumnStorage;
-import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.unit.Unit;
+import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.DataParser;
@@ -51,21 +50,27 @@ import utility.UnitType;
 import utility.Utility;
 import utility.Utility.ListEx;
 
-import java.time.LocalDate;
 import java.time.OffsetTime;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.format.SignStyle;
 import java.time.temporal.ChronoField;
-import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
+import java.util.function.BiConsumer;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+
+import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
+import static java.time.temporal.ChronoField.YEAR;
 
 /**
  * A data type can be the following:
@@ -164,7 +169,7 @@ public class DataType
                     if (inner != null)
                     {
                         ListEx listItem = castTo(ListEx.class, getItem.apply(cache.filled()));
-                        cache.add(new Pair<Integer, DataTypeValue>(listItem.size(), inner.fromCollapsed((i, prog) -> listItem.get(i))));
+                        cache.add(listItem);
                     }
                 });
             }
@@ -291,10 +296,8 @@ public class DataType
     }
 
     public static final DataType NUMBER = DataType.number(NumberInfo.DEFAULT);
-    public static final DataType INTEGER = NUMBER;
     public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null, null, null);
     public static final DataType TEXT = new DataType(Kind.TEXT, null, null, null, null);
-    public static final DataType DATE = DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY));
 
     public static DataType array()
     {
@@ -939,96 +942,116 @@ public class DataType
         return cur;
     }
 
-    @OnThread(Tag.Simulation)
-    public Column makeImmediateColumn(RecordSet rs, ColumnId columnId, List<List<ItemContext>> allData, int columnIndex) throws InternalException, UserException
+    public static class ColumnMaker<C extends Column> implements FunctionInt<RecordSet, Column>
     {
-        return apply(new DataTypeVisitor<Column>()
+        private @Nullable C column;
+        private final FunctionInt<RecordSet, C> makeColumn;
+        private final ExBiConsumer<C, ItemContext> loadData;
+
+        private ColumnMaker(FunctionInt<RecordSet, C> makeColumn, ExBiConsumer<C, ItemContext> loadData)
+        {
+            this.makeColumn = makeColumn;
+            this.loadData = loadData;
+        }
+
+        @Override
+        public final Column apply(RecordSet rs) throws InternalException, UserException
+        {
+            column = makeColumn.apply(rs);
+            return column;
+        }
+
+        // Only valid to call after apply:
+        public void loadRow(ItemContext ctx) throws InternalException, UserException
+        {
+            if (column == null)
+                throw new InternalException("Calling loadRow before column creation");
+            loadData.accept(column, ctx);
+        }
+    }
+
+    @OnThread(Tag.Simulation)
+    public ColumnMaker<?> makeImmediateColumn(ColumnId columnId) throws InternalException, UserException
+    {
+        return apply(new DataTypeVisitor<ColumnMaker<?>>()
         {
             @Override
             @OnThread(Tag.Simulation)
-            public Column number(NumberInfo displayInfo) throws InternalException, UserException
+            public ColumnMaker<?> number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                List<String> column = new ArrayList<>(allData.size());
-                for (List<ItemContext> row : allData)
-                {
-                    DataParser.NumberContext number = row.get(columnIndex).number();
+                return new ColumnMaker<MemoryNumericColumn>(rs -> new MemoryNumericColumn(rs, columnId, displayInfo, Collections.emptyList()), (column, data) -> {
+                    DataParser.NumberContext number = data.number();
                     if (number == null)
-                        throw new UserException("Expected string value but found: \"" + row.get(columnIndex).getText() + "\"");
+                        throw new UserException("Expected string value but found: \"" + data.getText() + "\"");
                     column.add(number.getText());
-                }
-                return new MemoryNumericColumn(rs, columnId, displayInfo, column.stream());
+                });
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column text() throws InternalException, UserException
+            public ColumnMaker<?> text() throws InternalException, UserException
             {
-                List<String> column = new ArrayList<>(allData.size());
-                for (List<ItemContext> row : allData)
-                {
-                    StringContext string = row.get(columnIndex).string();
+                return new ColumnMaker<MemoryStringColumn>(rs -> new MemoryStringColumn(rs, columnId, Collections.emptyList()), (column, data) -> {
+                    StringContext string = data.string();
                     if (string == null)
-                        throw new UserException("Expected string value but found: \"" + row.get(columnIndex).getText() + "\"");
+                        throw new UserException("Expected string value but found: \"" + data.getText() + "\"");
                     column.add(string.getText());
-                }
-                return new MemoryStringColumn(rs, columnId, column);
+                });
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public ColumnMaker<?> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                List<TemporalAccessor> values = new ArrayList<>(allData.size());
-                for (List<ItemContext> row : allData)
+                return new ColumnMaker<MemoryTemporalColumn>(rs -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Collections.emptyList()), (column, data) ->
                 {
-                    StringContext c = row.get(columnIndex).string();
+                    StringContext c = data.string();
                     if (c == null)
-                        throw new UserException("Expected quoted date value but found: \"" + row.get(columnIndex).getText() + "\"");
-                    values.add(LocalDate.parse(c.getText()));
-                }
-                return new MemoryTemporalColumn(rs, columnId, dateTimeInfo, values);
+                        throw new UserException("Expected quoted date value but found: \"" + data.getText() + "\"");
+                    DateTimeFormatter formatter = dateTimeInfo.getFormatter();
+                    try
+                    {
+                        column.add(formatter.parse(c.getText()));
+                    }
+                    catch (DateTimeParseException e)
+                    {
+                        throw new UserException("Problem reading date/time of type " + dateTimeInfo.getType(), e);
+                    }
+                });
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column bool() throws InternalException, UserException
+            public ColumnMaker<?> bool() throws InternalException, UserException
             {
-                List<Boolean> values = new ArrayList<>(allData.size());
-                for (List<ItemContext> row : allData)
-                {
-                    BoolContext b = row.get(columnIndex).bool();
+                return new ColumnMaker<MemoryBooleanColumn>(rs -> new MemoryBooleanColumn(rs, columnId, Collections.emptyList()), (column, data) -> {
+                    BoolContext b = data.bool();
                     if (b == null)
-                        throw new UserException("Expected boolean value but found: \"" + row.get(columnIndex).getText() + "\"");
-                    values.add(b.getText().equals("true"));
-                }
-                return new MemoryBooleanColumn(rs, columnId, values);
+                        throw new UserException("Expected boolean value but found: \"" + data.getText() + "\"");
+                    column.add(b.getText().equals("true"));
+                });
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public ColumnMaker<?> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
-                List<TaggedValue> values = new ArrayList<>(allData.size());
-                for (List<ItemContext> row : allData)
-                {
-                    TaggedContext b = row.get(columnIndex).tagged();
+                return new ColumnMaker<MemoryTaggedColumn>(rs -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Collections.emptyList()), (column, data) -> {
+                    TaggedContext b = data.tagged();
                     if (b == null)
-                        throw new UserException("Expected tagged value but found: \"" + row.get(columnIndex).getText() + "\"");
-                    values.add(loadValue(tags, b));
-                }
-                return new MemoryTaggedColumn(rs, columnId, typeName, tags, values);
+                        throw new UserException("Expected tagged value but found: \"" + data.getText() + "\"");
+                    column.add(loadValue(tags, b));
+                });
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column tuple(List<DataType> inner) throws InternalException, UserException
+            public ColumnMaker<?> tuple(List<DataType> inner) throws InternalException, UserException
             {
-                List<Object[]> values = new ArrayList<>(allData.size());
-                for (List<ItemContext> row : allData)
-                {
-                    TupleContext c = row.get(columnIndex).tuple();
+                return new ColumnMaker<MemoryTupleColumn>(rs -> new MemoryTupleColumn(rs, columnId, inner), (column, data) -> {
+                    TupleContext c = data.tuple();
                     if (c == null)
-                        throw new UserException("Expected tuple but found: \"" + row.get(columnIndex).getText() + "\"");
+                        throw new UserException("Expected tuple but found: \"" + data.getText() + "\"");
                     if (c.item().size() != inner.size())
                         throw new UserException("Wrong number of tuples items; expected " + inner.size() + " but found " + c.item().size());
                     Object[] tuple = new Object[inner.size()];
@@ -1036,33 +1059,44 @@ public class DataType
                     {
                         tuple[i] = loadSingleItem(inner.get(i), c.item(i));
                     }
-                    values.add(tuple);
-                }
-                return new MemoryTupleColumn(rs, columnId, inner, values);
+                    column.add(tuple);
+                });
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column array(@Nullable DataType inner) throws InternalException, UserException
+            public ColumnMaker<?> array(@Nullable DataType inner) throws InternalException, UserException
             {
                 if (inner == null)
                     throw new UserException("Cannot have column with type of empty array");
-                List<Pair<Integer, DataTypeValue>> values = new ArrayList<>(allData.size());
-                for (List<ItemContext> row : allData)
-                {
-                    ArrayContext c = row.get(columnIndex).array();
+
+                DataType innerFinal = inner;
+                return new ColumnMaker<MemoryArrayColumn>(rs -> new MemoryArrayColumn(rs, columnId, innerFinal, Collections.emptyList()), (column, data) -> {
+                    ArrayContext c = data.array();
                     if (c == null)
-                        throw new UserException("Expected array but found: \"" + row.get(columnIndex).getText() + "\"");
-                    List<Object> array = new ArrayList<>();
+                        throw new UserException("Expected array but found: \"" + data.getText() + "\"");
+                    List<@Value Object> array = new ArrayList<>();
                     for (ItemContext itemContext : c.item())
                     {
-                        array.add(loadSingleItem(inner, itemContext));
+                        array.add(loadSingleItem(innerFinal, itemContext));
                     }
-                    ColumnStorage storage = DataTypeUtility.makeColumnStorage(inner, null);
-                    storage.addAll(array);
-                    values.add(new Pair<>(array.size(), storage.getType()));
-                }
-                return new MemoryArrayColumn(rs, columnId, inner, values);
+                    //ColumnStorage storage = DataTypeUtility.makeColumnStorage(inner, null);
+                    //storage.addAll(array);
+                    column.add(new ListEx()
+                    {
+                        @Override
+                        public int size() throws InternalException, UserException
+                        {
+                            return array.size();
+                        }
+
+                        @Override
+                        public @Value Object get(int index) throws InternalException, UserException
+                        {
+                            return array.get(index);
+                        }
+                    });
+                });
             }
         });
     }
@@ -1121,13 +1155,14 @@ public class DataType
                 StringContext string = item.string();
                 if (string == null)
                     throw new UserException("Expected quoted date, found: " + item.getText() + item.getStart());
+                DateTimeFormatter formatter = dateTimeInfo.getFormatter();
                 try
                 {
-                    return Utility.value(LocalDate.parse(string.getText()));
+                    return Utility.value(dateTimeInfo, formatter.parse(string.getText()));
                 }
                 catch (DateTimeParseException e)
                 {
-                    throw new UserException("Error loading date time \"" + string.getText() + "\"", e);
+                    throw new UserException("Error loading date time \"" + string.getText() + "\", type " + dateTimeInfo.getType(), e);
                 }
             }
 
@@ -1187,7 +1222,7 @@ public class DataType
             {
                 b.t(FormatLexer.NUMBER, FormatLexer.VOCABULARY);
                 b.n(displayInfo.getMinimumDP());
-                b.unit("");
+                b.unit(displayInfo.getUnit().toString());
                 return UnitType.UNIT;
             }
 
@@ -1201,7 +1236,27 @@ public class DataType
             @Override
             public UnitType date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
             {
-                b.t(FormatLexer.DATE, FormatLexer.VOCABULARY);
+                switch (dateTimeInfo.getType())
+                {
+                    case YEARMONTHDAY:
+                        b.t(FormatLexer.YEARMONTHDAY, FormatLexer.VOCABULARY);
+                        break;
+                    case YEARMONTH:
+                        b.t(FormatLexer.YEARMONTH, FormatLexer.VOCABULARY);
+                        break;
+                    case TIMEOFDAY:
+                        b.t(FormatLexer.TIMEOFDAY, FormatLexer.VOCABULARY);
+                        break;
+                    case TIMEOFDAYZONED:
+                        b.t(FormatLexer.TIMEOFDAYZONED, FormatLexer.VOCABULARY);
+                        break;
+                    case DATETIME:
+                        b.t(FormatLexer.DATETIME, FormatLexer.VOCABULARY);
+                        break;
+                    case DATETIMEZONED:
+                        b.t(FormatLexer.DATETIMEZONED, FormatLexer.VOCABULARY);
+                        break;
+                }
                 return UnitType.UNIT;
             }
 
@@ -1279,6 +1334,40 @@ public class DataType
 
     public static class DateTimeInfo
     {
+        public DateTimeFormatter getFormatter() throws InternalException
+        {
+            DateTimeFormatter formatter;
+            switch (getType())
+            {
+                case YEARMONTHDAY:
+                    formatter = DateTimeFormatter.ISO_LOCAL_DATE;
+                    break;
+                case YEARMONTH:
+                    // Not accessible in YearMonth, but taken from there:
+                    formatter = new DateTimeFormatterBuilder()
+                        .appendValue(YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
+                        .appendLiteral('-')
+                        .appendValue(MONTH_OF_YEAR, 2)
+                        .toFormatter();
+                    break;
+                case TIMEOFDAY:
+                    formatter = DateTimeFormatter.ISO_LOCAL_TIME;
+                    break;
+                case TIMEOFDAYZONED:
+                    formatter = DateTimeFormatter.ISO_TIME;
+                    break;
+                case DATETIME:
+                    formatter = DateTimeFormatter.ISO_DATE_TIME;
+                    break;
+                case DATETIMEZONED:
+                    formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
+                    break;
+                default:
+                    throw new InternalException("Unrecognised date/time type: " + getType());
+            }
+            return formatter;
+        }
+
         public static enum DateTimeType
         {
             /** LocalDate */
@@ -1359,7 +1448,7 @@ public class DataType
         }
 
 
-        public Comparator<TemporalAccessor> getComparator() throws InternalException
+        public Comparator<@UnknownIfValue TemporalAccessor> getComparator() throws InternalException
         {
             switch (type)
             {

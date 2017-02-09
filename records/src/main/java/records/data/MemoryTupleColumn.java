@@ -51,4 +51,9 @@ public class MemoryTupleColumn extends Column
         shrunk.storage.addAll(storage._test_getShrunk(shrunkLength));
         return shrunk;
     }
+
+    public void add(Object[] tuple) throws InternalException
+    {
+        storage.add(tuple);
+    }
 }

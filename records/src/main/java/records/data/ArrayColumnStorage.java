@@ -9,6 +9,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.Pair;
+import utility.Utility.ListEx;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -25,11 +26,11 @@ import java.util.List;
  *
  * Thus the storage is just a list of DataTypeValue, i.e. accessors of the array content.
  */
-public class ArrayColumnStorage implements ColumnStorage<Pair<Integer, DataTypeValue>>
+public class ArrayColumnStorage implements ColumnStorage<ListEx>
 {
     // For arrays, each element is storage for an individual array element (i.e. a row)
     // Thus confusing, ColumnStorage here is being used as RowStorage (think of it as VectorStorage)
-    private final ArrayList<Pair<Integer, DataTypeValue>> storage = new ArrayList<>();
+    private final ArrayList<ListEx> storage = new ArrayList<>();
     @OnThread(Tag.Any)
     private final DataTypeValue type;
 
@@ -39,11 +40,22 @@ public class ArrayColumnStorage implements ColumnStorage<Pair<Integer, DataTypeV
         if (innerToCopy == null)
             this.type = DataTypeValue.arrayV();
         else
-            this.type = DataTypeValue.arrayV(innerToCopy, (i, prog) -> {
+        {
+            DataType innerFinal = innerToCopy;
+            this.type = DataTypeValue.arrayV(innerToCopy, (i, prog) ->
+            {
                 if (beforeGet != null)
                     beforeGet.accept(i, prog);
-                return storage.get(i);
+                try
+                {
+                    ListEx list = storage.get(i);
+                    return new Pair<>(list.size(), innerFinal.fromCollapsed((i2, prog2) -> list.get(i2)));
+                } catch (ClassCastException e)
+                {
+                    throw new InternalException("Incorrect type in array storage", e);
+                }
             });
+        }
     }
 
     @Override
@@ -58,8 +70,13 @@ public class ArrayColumnStorage implements ColumnStorage<Pair<Integer, DataTypeV
     }*/
 
     @Override
-    public void addAll(List<Pair<Integer, DataTypeValue>> items) throws InternalException
+    public void addAll(List<ListEx> items) throws InternalException
     {
+        for (Object item : items)
+        {
+            if (!(item instanceof ListEx))
+                throw new InternalException("Not ListEx: " + item.getClass());
+        }
         storage.addAll(items);
     }
 

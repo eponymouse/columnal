@@ -10,6 +10,8 @@ import javafx.scene.layout.Priority;
 import javafx.scene.text.Text;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
+import records.data.datatype.DataTypeValue;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
@@ -43,17 +45,14 @@ import java.util.stream.IntStream;
 public abstract class RecordSet
 {
     @OnThread(Tag.Any)
-    private final String title;
-    @OnThread(Tag.Any)
     private final List<Column> columns;
 
     @SuppressWarnings("initialization")
-    public RecordSet(String title, List<FunctionInt<RecordSet, Column>> columns) throws InternalException, UserException
+    public RecordSet(String title, List<? extends FunctionInt<RecordSet, ? extends Column>> columns) throws InternalException, UserException
     {
-        this.title = title;
         this.columns = new ArrayList<>();
         Set<ColumnId> colNames = new HashSet<>();
-        for (FunctionInt<RecordSet, Column> f : columns)
+        for (FunctionInt<RecordSet, ? extends Column> f : columns)
         {
             Column newCol = f.apply(this);
             this.columns.add(newCol);
@@ -121,12 +120,6 @@ public abstract class RecordSet
             return c;
         };
         return Utility.mapList(columns, makeDisplayColumn);
-    }
-
-    @OnThread(Tag.Any)
-    public final String getTitle()
-    {
-        return title;
     }
 
     @OnThread(Tag.Any)
@@ -207,5 +200,49 @@ public abstract class RecordSet
     public final List<ColumnId> getColumnIds()
     {
         return Utility.<Column, ColumnId>mapList(columns, Column::getName);
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || !(o instanceof RecordSet)) return false;
+
+        RecordSet recordSet = (RecordSet) o;
+
+        if (columns.size() != recordSet.columns.size()) return false;
+        try
+        {
+            int length = getLength();
+            if (length != recordSet.getLength()) return false;
+            for (Column usCol : columns)
+            {
+                Column themCol = recordSet.getColumn(usCol.getName()); // Throws if not there
+                DataTypeValue us = usCol.getType();
+                DataTypeValue them = themCol.getType();
+                if (DataType.checkSame(us, them, s -> {}) == null)
+                    return false;
+                for (int i = 0; i < length; i++)
+                {
+                    if (Utility.compareValues(us.getCollapsed(i), them.getCollapsed(i)) != 0)
+                        return false;
+                }
+            }
+        }
+        catch (InternalException | UserException e)
+        {
+            // Only used for testing anyway:
+            return false;
+        }
+        return true;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = columns.size();
+        // It's bad performance but semantically valid to not compare the column
+        // values here.  Lots of hash code collisions but that's valid.
+        return result;
     }
 }

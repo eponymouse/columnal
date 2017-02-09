@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Table.Saver;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.unit.Unit;
@@ -13,6 +14,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
+import records.grammar.FormatParser.DateContext;
 import records.grammar.FormatParser.NumberContext;
 import records.grammar.FormatParser.TagItemContext;
 import records.grammar.FormatParser.TypeContext;
@@ -36,7 +38,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import static records.data.datatype.DataType.BOOLEAN;
-import static records.data.datatype.DataType.DATE;
 import static records.data.datatype.DataType.TEXT;
 
 /**
@@ -120,8 +121,24 @@ public class TypeManager
             return BOOLEAN;
         else if (type.TEXT() != null)
             return TEXT;
-        else if (type.DATE() != null)
-            return DATE;
+        else if (type.date() != null)
+        {
+            DateContext d = type.date();
+            if (d.YEARMONTHDAY() != null)
+                return DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY));
+            else if (d.YEARMONTH() != null)
+                return DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH));
+            else if (d.DATETIME() != null)
+                return DataType.date(new DateTimeInfo(DateTimeType.DATETIME));
+            else if (d.DATETIMEZONED() != null)
+                return DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED));
+            else if (d.TIMEOFDAY() != null)
+                return DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY));
+            else if (d.TIMEOFDAYZONED() != null)
+                return DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED));
+
+            throw new InternalException("Unrecognised date/time type: " + d.getText());
+        }
         else if (type.number() != null)
         {
             NumberContext n = type.number();

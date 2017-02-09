@@ -15,5 +15,4 @@ VALUE_END: NEWLINE -> popMode;
 VALUE: (~[\n\r])+;
 
 mode TYPE_MODE;
-TYPE_VALUE: '@VALUE' -> popMode, pushMode(VALUE_MODE);
-TYPE: (~[\n\r@])+;
+TYPE: (~[\n\r@])+ -> popMode;

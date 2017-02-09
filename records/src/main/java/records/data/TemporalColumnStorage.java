@@ -16,6 +16,7 @@ import utility.Utility;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /**
@@ -24,7 +25,7 @@ import java.util.List;
 public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
 {
     private final ArrayList<@Value TemporalAccessor> values;
-    private final DumbObjectPool<TemporalAccessor> pool;
+    private final DumbObjectPool<@Value TemporalAccessor> pool;
     @OnThread(Tag.Any)
     private final DateTimeInfo dateTimeInfo;
     @MonotonicNonNull
@@ -40,7 +41,7 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
     public TemporalColumnStorage(DateTimeInfo dateTimeInfo, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet) throws InternalException
     {
         this.values = new ArrayList<>();
-        this.pool = new DumbObjectPool<>(TemporalAccessor.class, 1000, dateTimeInfo.getComparator());
+        this.pool = new DumbObjectPool<>((Class<@Value TemporalAccessor>)TemporalAccessor.class, 1000, (Comparator<@Value TemporalAccessor>)dateTimeInfo.getComparator());
         this.dateTimeInfo = dateTimeInfo;
         this.beforeGet = beforeGet;
     }
@@ -66,7 +67,7 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
         this.values.ensureCapacity(this.values.size() + items.size());
         for (TemporalAccessor t : items)
         {
-            this.values.add(Utility.value(pool.pool(t)));
+            this.values.add(pool.pool(Utility.value(dateTimeInfo, t)));
         }
     }
 

@@ -26,6 +26,11 @@ public class MemoryStringColumn extends Column
         this.storage.addAll(values);
     }
 
+    public void add(String value) throws InternalException
+    {
+        storage.add(value);
+    }
+
     @Override
     @OnThread(Tag.Any)
     public ColumnId getName()

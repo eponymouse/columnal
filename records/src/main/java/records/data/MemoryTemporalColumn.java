@@ -45,4 +45,9 @@ public class MemoryTemporalColumn extends Column
     {
         return new MemoryTemporalColumn(rs, title, getType().getDateTimeInfo(), storage._test_getShrunk(shrunkLength));
     }
+
+    public void add(TemporalAccessor value) throws InternalException
+    {
+        storage.add(value);
+    }
 }

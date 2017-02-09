@@ -18,6 +18,7 @@ import test.DummyManager;
 import test.gen.GenImmediateData.ImmediateData_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExBiFunction;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -75,7 +76,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                 GenColumn genColumn = new GenColumn(mgr);
                 for (int i = 0; i < numColumns; i++)
                 {
-                    BiFunction<Integer, RecordSet, Column> col = genColumn.generate(r, generationStatus);
+                    ExBiFunction<Integer, RecordSet, Column> col = genColumn.generate(r, generationStatus);
                     columns.add(rs -> col.apply(length, rs));
                 }
                 tables.add(new ImmediateDataSource(mgr, new KnownLengthRecordSet("Title " + t, columns, length)));

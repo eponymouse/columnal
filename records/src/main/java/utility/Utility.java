@@ -13,6 +13,12 @@ import java.math.MathContext;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetTime;
+import java.time.YearMonth;
+import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -69,6 +75,7 @@ import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
 import records.data.Table;
 import records.data.TaggedValue;
+import records.data.datatype.DataType.DateTimeInfo;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
@@ -1111,9 +1118,42 @@ public class Utility
     }
 
     @SuppressWarnings("valuetype")
-    public static <T extends TemporalAccessor> @Value  T value(@UnknownIfValue T temporalAccessor)
+    public static @Value TemporalAccessor value(DateTimeInfo dest, @UnknownIfValue TemporalAccessor t)
     {
-        return temporalAccessor;
+        switch (dest.getType())
+        {
+            case YEARMONTHDAY:
+                if (t instanceof LocalDate)
+                    return t;
+                else
+                    return LocalDate.from(t);
+            case YEARMONTH:
+                if (t instanceof YearMonth)
+                    return t;
+                else
+                    return YearMonth.from(t);
+            case TIMEOFDAY:
+                if (t instanceof LocalTime)
+                    return t;
+                else
+                    return LocalTime.from(t);
+            case TIMEOFDAYZONED:
+                if (t instanceof OffsetTime)
+                    return t;
+                else
+                    return OffsetTime.from(t);
+            case DATETIME:
+                if (t instanceof LocalDateTime)
+                    return t;
+                else
+                    return LocalDateTime.from(t);
+            case DATETIMEZONED:
+                if (t instanceof ZonedDateTime)
+                    return t;
+                else
+                    return ZonedDateTime.from(t);
+        }
+        return t;
     }
 
     @SuppressWarnings("valuetype")

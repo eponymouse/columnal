@@ -46,6 +46,11 @@ public class MemoryNumericColumn extends Column
         }
     }
 
+    public void add(String value) throws InternalException, UserException
+    {
+        storage.addRead(value);
+    }
+
     @Override
     public @OnThread(Tag.Any) ColumnId getName()
     {

@@ -45,4 +45,22 @@ public class LinkedDataSource extends DataSource
         then.saveTable(b.toString());
     }
 
+    @Override
+    public boolean dataEquals(DataSource o)
+    {
+        LinkedDataSource that = (LinkedDataSource) o;
+
+        if (typeToken != that.typeToken) return false;
+        if (!data.equals(that.data)) return false;
+        return path.equals(that.path);
+    }
+
+    @Override
+    public int dataHashCode()
+    {
+        int result = data.hashCode();
+        result = 31 * result + typeToken;
+        result = 31 * result + path.hashCode();
+        return result;
+    }
 }

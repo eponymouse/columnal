@@ -3,9 +3,10 @@ parser grammar FormatParser;
 options { tokenVocab = FormatLexer; }
 
 number : NUMBER DIGITS UNIT;
+date : YEARMONTHDAY | YEARMONTH | TIMEOFDAY | TIMEOFDAYZONED | DATETIME | DATETIMEZONED;
 tuple : OPEN_BRACKET type (COMMA type)+ CLOSE_BRACKET;
 array : OPEN_SQUARE type CLOSE_SQUARE;
-type : BOOLEAN | number | TEXT | DATE | tagRef | tuple | array;
+type : BOOLEAN | number | TEXT | date | tagRef | tuple | array;
 taggedDecl : TAGGED OPEN_BRACKET tagItem+ CLOSE_BRACKET;
 tagRef : TAGGED STRING;
 

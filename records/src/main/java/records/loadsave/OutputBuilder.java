@@ -230,7 +230,7 @@ public class OutputBuilder
             @Override
             public String date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
             {
-                return quoted(g.get(index).toString());
+                return quoted(dateTimeInfo.getFormatter().format(g.get(index)));
             }
 
             @Override
