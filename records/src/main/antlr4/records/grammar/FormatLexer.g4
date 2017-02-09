@@ -20,6 +20,7 @@ QUOTED_CONSTRUCTOR : ('\\' STRING) { String orig = getText(); setText(utility.Gr
 UNQUOTED_CONSTRUCTOR : ('\\' ~[ \t\r\n:"]+) { setText(getText().substring(1)); };
 OPEN_BRACKET : '(';
 CLOSE_BRACKET : ')';
+COMMA: ',';
 OPEN_SQUARE : '[';
 CLOSE_SQUARE : ']';
 

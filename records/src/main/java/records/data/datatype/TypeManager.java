@@ -137,8 +137,16 @@ public class TypeManager
                 throw new UserException("Undeclared tagged type: \"" + type.tagRef().STRING().getText() + "\"");
             return taggedType;
         }
+        else if (type.tuple() != null)
+        {
+            return DataType.tuple(Utility.mapListEx(type.tuple().type(), this::loadTypeUse));
+        }
+        else if (type.array() != null)
+        {
+            return DataType.array(loadTypeUse(type.array().type()));
+        }
         else
-            throw new InternalException("Unrecognised case: " + type);
+            throw new InternalException("Unrecognised case: \"" + type.getText() + "\"");
     }
 
     private static String increaseNumber(String str)
