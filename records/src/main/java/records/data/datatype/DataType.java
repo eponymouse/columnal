@@ -1240,8 +1240,12 @@ public class DataType
             public UnitType tuple(List<DataType> inner) throws InternalException, InternalException
             {
                 b.t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
+                boolean first = true;
                 for (DataType dataType : inner)
                 {
+                    if (!first)
+                        b.raw(",");
+                    first = false;
                     dataType.save(b, false);
                 }
                 b.t(FormatLexer.CLOSE_BRACKET, FormatLexer.VOCABULARY);
