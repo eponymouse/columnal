@@ -7,8 +7,8 @@ UNIT inch "Inches" = 2.54cm
 UNIT foot "Feet" = 12 inch
 UNIT mile "Miles" = 5280 foot
 
-UNIT l "litre" = 10^-3 m^3
-UNIT ml "millilitre" = 10^-3 l
+UNIT l "Litre" = 10^-3 m^3
+UNIT ml "Millilitre" = 10^-3 l
 
 
 UNIT s "Seconds"
