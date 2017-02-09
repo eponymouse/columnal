@@ -13,6 +13,7 @@ import records.data.ColumnId;
 import records.data.ImmediateDataSource;
 import records.data.RecordSet;
 import records.data.TableId;
+import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -34,6 +35,7 @@ import test.gen.GenImmediateData;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.Utility;
 
 import java.math.BigDecimal;
@@ -267,13 +269,13 @@ public class PropRunTransformation
         }
 
         // Test it does work with enough missing values:
-        Map<ColumnId, Optional<@Value Object>> missing = new HashMap<>();
+        Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missing = new HashMap<>();
 
         for (ImmediateDataSource table : data.data)
         {
             for (ColumnId id : table.getData().getColumnIds())
             {
-                missing.put(id, Optional.of(table.getData().getColumn(id).getType().getCollapsed(0)));
+                missing.put(id, new Pair<>(table.getData().getColumn(id).getType(), Optional.<@Value Object>of(table.getData().getColumn(id).getType().getCollapsed(0))));
             }
         }
         RecordSet concat = new Concatenate(data.mgr, null, Arrays.asList(data.data().getId(), data.data.get(1).getId()), missing).getData();
@@ -291,7 +293,7 @@ public class PropRunTransformation
                 else
                 {
                     // Otherwise it must be the default:
-                    assertEquals(0, Utility.compareValues(missing.get(c).get(), concat.getColumn(c).getType().getCollapsed(i)));
+                    assertEquals(0, Utility.compareValues(missing.get(c).getSecond().get(), concat.getColumn(c).getType().getCollapsed(i)));
                 }
             }
 
@@ -306,7 +308,7 @@ public class PropRunTransformation
                 else
                 {
                     // Otherwise it must be the default:
-                    assertEquals(0, Utility.compareValues(missing.get(c).get(), concat.getColumn(c).getType().getCollapsed(i)));
+                    assertEquals(0, Utility.compareValues(missing.get(c).getSecond().get(), concat.getColumn(c).getType().getCollapsed(i)));
                 }
             }
         }

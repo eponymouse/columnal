@@ -1093,7 +1093,7 @@ public class DataType
     }
 
     @OnThread(Tag.Any)
-    private static @Value Object loadSingleItem(DataType type, final ItemContext item) throws InternalException, UserException
+    public static @Value Object loadSingleItem(DataType type, final ItemContext item) throws InternalException, UserException
     {
         return type.apply(new DataTypeVisitor<@Value Object>()
         {
@@ -1239,12 +1239,12 @@ public class DataType
             @OnThread(value = Tag.FXPlatform, ignoreParent = true)
             public UnitType tuple(List<DataType> inner) throws InternalException, InternalException
             {
-                b.t(FormatLexer.OPEN_BRACKET);
+                b.t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
                 for (DataType dataType : inner)
                 {
                     dataType.save(b, false);
                 }
-                b.t(FormatLexer.CLOSE_BRACKET);
+                b.t(FormatLexer.CLOSE_BRACKET, FormatLexer.VOCABULARY);
                 return UnitType.UNIT;
             }
 
@@ -1252,10 +1252,10 @@ public class DataType
             @OnThread(value = Tag.FXPlatform, ignoreParent = true)
             public UnitType array(@Nullable DataType inner) throws InternalException, InternalException
             {
-                b.t(FormatLexer.OPEN_SQUARE);
+                b.t(FormatLexer.OPEN_SQUARE, FormatLexer.VOCABULARY);
                 if (inner != null)
                     inner.save(b, false);
-                b.t(FormatLexer.CLOSE_SQUARE);
+                b.t(FormatLexer.CLOSE_SQUARE, FormatLexer.VOCABULARY);
                 return UnitType.UNIT;
             }
         });

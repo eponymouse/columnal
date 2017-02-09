@@ -119,7 +119,7 @@ public class TestUtil
         {
             // These should be escaped, but would be blown away on load: "\n", "\r", "\t"
             return makeList(sourceOfRandomness, 1, 10, () -> sourceOfRandomness.choose(Arrays.asList(
-                "a", "Z", "0", "9", "-", "=", "+", " ", "^", "@", "\"", "'"
+                "a", "r", "n", "Z", "0", "9", "-", "=", "+", " ", "^", "@", "\"", "'"
             ))).stream().collect(Collectors.joining());
         }
     }

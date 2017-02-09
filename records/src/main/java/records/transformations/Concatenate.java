@@ -24,6 +24,17 @@ import records.data.datatype.DataTypeValue;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.DataLexer;
+import records.grammar.DataParser;
+import records.grammar.DataParser.ItemContext;
+import records.grammar.FormatLexer;
+import records.grammar.FormatParser;
+import records.grammar.FormatParser.TypeContext;
+import records.grammar.TransformationLexer;
+import records.grammar.TransformationParser;
+import records.grammar.TransformationParser.ConcatMissingColumnContext;
+import records.grammar.TransformationParser.ConcatMissingContext;
+import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -46,6 +57,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 18/01/2017.
@@ -64,7 +76,7 @@ public class Concatenate extends Transformation
     // If it's mapped to Optional.of then it should be given that value in the concatenated version
     // for any source table which lacks the column.
     @OnThread(Tag.Any)
-    private final Map<ColumnId, Optional<@Value Object>> missingValues;
+    private final Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingValues;
 
     @OnThread(Tag.Any)
     private @Nullable String error = null;
@@ -72,7 +84,7 @@ public class Concatenate extends Transformation
     private final @Nullable RecordSet recordSet;
 
     @SuppressWarnings("initialization")
-    public Concatenate(TableManager mgr, @Nullable TableId tableId, List<TableId> sources, Map<ColumnId, Optional<@Value Object>> missingVals) throws InternalException
+    public Concatenate(TableManager mgr, @Nullable TableId tableId, List<TableId> sources, Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingVals) throws InternalException
     {
         super(mgr, tableId);
         this.sources = sources;
@@ -92,9 +104,13 @@ public class Concatenate extends Transformation
             for (Iterator<Entry<ColumnId, DataType>> iterator = prevColumns.entrySet().iterator(); iterator.hasNext(); )
             {
                 Entry<ColumnId, DataType> entry = iterator.next();
-                @Nullable Optional<@Value Object> instruction = missingValues.get(entry.getKey());
-                if (instruction != null && !instruction.isPresent())
+                @Nullable Pair<DataType, Optional<@Value Object>> typedInstruction = missingValues.get(entry.getKey());
+                if (typedInstruction != null && !typedInstruction.getSecond().isPresent())
+                {
+                    if (DataType.checkSame(typedInstruction.getFirst(), entry.getValue(), s -> {}) == null)
+                        throw new UserException("Types do not match for column " + entry.getKey() + ": saved type " + typedInstruction.getFirst() + " but column in source table(s) has type " + entry.getValue());
                     iterator.remove();
+                }
             }
             // After this point, prevColumns will never have an entry for columns with an omit instruction
 
@@ -102,7 +118,7 @@ public class Concatenate extends Transformation
             // 1. Present in all, type matches in all, instruction is omit or no instruction.
             // 2. Type doesn't match in every instance where column name is present and instruction is not to omit
             // 3. It is present in some, and type matches in all, and it has a default value/instruction
-            // 4. It is present in some, and type matches in all whre present, and it doesn't have a default value
+            // 4. It is present in some, and type matches in all where present, and it doesn't have a default value
             // Numbers 1 and 3 are valid, but 2 and 4 are not.
 
             for (int i = 1; i < tables.size(); i++)
@@ -118,15 +134,17 @@ public class Concatenate extends Transformation
                     if (prev == null)
                     {
                         // This is fine, as long as there is an instruction for that column
-                        @Nullable Optional<@Value Object> onMissing = missingValues.get(curEntry.getKey());
+                        @Nullable Pair<DataType, Optional<@Value Object>> onMissing = missingValues.get(curEntry.getKey());
                         if (onMissing == null)
                         {
                             // Case 4
                             throw new UserException("Column " + curEntry.getKey() + " from table " + tables.get(i).getId() + " is not present in all tables and the handling is unspecified");
                         }
-                        if (onMissing.isPresent())
+                        if (onMissing.getSecond().isPresent())
                         {
-                            // Case 4
+                            // Case 3
+                            if (DataType.checkSame(onMissing.getFirst(), curEntry.getValue(), s -> {}) == null)
+                                throw new UserException("Types do not match for column " + curEntry.getKey() + ": saved type " + onMissing.getFirst() + " but column in source table(s) has type " + curEntry.getValue());
                             prevColumns.put(curEntry.getKey(), curEntry.getValue());
                         }
                         // Otherwise if empty optional, leave out column
@@ -149,13 +167,13 @@ public class Concatenate extends Transformation
                 for (ColumnId id : notPresentInCur)
                 {
                     // Since it was in prev, it can't have an omit instruction, make sure it has default value:
-                    @Nullable Optional<@Value Object> instruction = missingValues.get(id);
+                    @Nullable Pair<DataType, Optional<@Value Object>> instruction = missingValues.get(id);
                     if (instruction == null)
                     {
                         // Case 4
                         throw new UserException("Column " + id + " is not present in all tables and the handling is unspecified");
                     }
-                    if (!instruction.isPresent())
+                    if (!instruction.getSecond().isPresent())
                         throw new InternalException("Column " + id + " was instructed to omit but is present in prev");
                 }
 
@@ -196,7 +214,7 @@ public class Concatenate extends Transformation
                                             // First one with end beyond our target must be right one:
                                             @Nullable Column oldColumn = tablesFinal.get(srcTableIndex).getData().getColumnOrNull(oldC.getKey());
                                             if (oldColumn == null)
-                                                return new Pair<DataTypeValue, Integer>(oldC.getValue().fromCollapsed((i, progB) -> missingValues.get(oldC.getKey()).get()), 0);
+                                                return new Pair<DataTypeValue, Integer>(oldC.getValue().fromCollapsed((i, progB) -> missingValues.get(oldC.getKey()).getSecond().get()), 0);
                                             else
                                                 return new Pair<DataTypeValue, Integer>(oldColumn.getType(), concatenatedRow - start);
                                         }
@@ -249,7 +267,26 @@ public class Concatenate extends Transformation
     @Override
     protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
     {
-        return Collections.emptyList(); // TODO
+        return missingValues.entrySet().stream().map((Entry<ColumnId, Pair<DataType, Optional<@Value Object>>> e) ->
+        {
+            try
+            {
+                OutputBuilder b = new OutputBuilder();
+                b.id(e.getKey()).kw("@TYPE");
+                e.getValue().getFirst().save(b, true);
+                if (e.getValue().getSecond().isPresent())
+                    b.kw("@VALUE").dataValue(e.getValue().getFirst(), e.getValue().getSecond().get());
+                else
+                    b.kw("@OMIT");
+                return b.toString();
+            }
+            catch (InternalException | UserException e1)
+            {
+                Utility.log(e1);
+                // Not correct but at least will manage to save:
+                return e.getKey().getOutput() + " @TYPE BOOLEAN @VALUE " + e.getValue().getSecond().get();
+            }
+        }).collect(Collectors.<String>toList());
     }
 
     @Override
@@ -277,9 +314,9 @@ public class Concatenate extends Transformation
         private final @Nullable TableId tableId;
         private final List<TableId> srcTableIds;
         private final List<Table> srcs; // May be empty
-        private final Map<ColumnId, Optional<@Value Object>> missingVals;
+        private final Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingVals;
 
-        private Editor(@Nullable TableId tableId, List<TableId> srcTableIds, List<Table> srcs, Map<ColumnId, Optional<@Value Object>> missingVals)
+        private Editor(@Nullable TableId tableId, List<TableId> srcTableIds, List<Table> srcs, Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingVals)
         {
             this.tableId = tableId;
             this.srcTableIds = srcTableIds;
@@ -334,7 +371,22 @@ public class Concatenate extends Transformation
         @Override
         public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, TableId tableId, List<TableId> source, String detail) throws InternalException, UserException
         {
-            return new Concatenate(mgr, tableId, source, Collections.emptyMap() /* TODO */);
+            Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingInstr = new HashMap<>();
+            ConcatMissingContext ctx = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, p -> p.concatMissing());
+            for (ConcatMissingColumnContext missing : ctx.concatMissingColumn())
+            {
+                String columnName = missing.concatMissingColumnName().getText();
+                TypeContext typeSrc = Utility.parseAsOne(missing.typeValue().TYPE().getText(), FormatLexer::new, FormatParser::new, p -> p.type());
+                DataType dataType = mgr.getTypeManager().loadTypeUse(typeSrc);
+                Pair<DataType, Optional<@Value Object>> instruction = new Pair<>(dataType, Optional.<@Value Object>empty());
+                if (missing.typeValue() != null)
+                {
+                    ItemContext value = Utility.parseAsOne(missing.typeValue().VALUE().getText(), DataLexer::new, DataParser::new, p -> p.item());
+                    instruction = new Pair<>(dataType, Optional.<@Value Object>of(DataType.loadSingleItem(dataType, value)));
+                }
+                missingInstr.put(new ColumnId(columnName), instruction);
+            }
+            return new Concatenate(mgr, tableId, source, missingInstr);
         }
 
         @Override
@@ -357,15 +409,17 @@ public class Concatenate extends Transformation
         {
             try
             {
-                Optional<@Value Object> us = missingValues.get(columnId);
-                Optional<@Value Object> them = that.missingValues.get(columnId);
+                Pair<DataType, Optional<@Value Object>> us = missingValues.get(columnId);
+                Pair<DataType, Optional<@Value Object>> them = that.missingValues.get(columnId);
                 if (them == null)
                     return false; // Shouldn't happen if key sets are equal, but just in case.
-                if (!us.isPresent() && !them.isPresent())
+                if (!us.getFirst().equals(them.getFirst()))
+                    return false;
+                if (!us.getSecond().isPresent() && !them.getSecond().isPresent())
                     continue; // Both missing, fine
-                if (!us.isPresent() || them.isPresent())
+                if (!us.getSecond().isPresent() || them.getSecond().isPresent())
                     return false; // One missing, not equal
-                if (Utility.compareValues(us.get(), them.get()) != 0)
+                if (Utility.compareValues(us.getSecond().get(), them.getSecond().get()) != 0)
                     return false;
             }
             catch (InternalException | UserException e)

@@ -97,7 +97,7 @@ public class SummaryStatistics extends Transformation
     @OnThread(Tag.Any)
     private String error;
 
-    public static class SummaryType
+    public static final class SummaryType
     {
         public SummaryType(Expression summaryExpression)
         {
@@ -105,6 +105,23 @@ public class SummaryStatistics extends Transformation
         }
 
         private final Expression summaryExpression;
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            SummaryType that = (SummaryType) o;
+
+            return summaryExpression.equals(that.summaryExpression);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return summaryExpression.hashCode();
+        }
     }
 
     private final @Nullable RecordSet result;

@@ -19,6 +19,7 @@ import records.error.UserException;
 import records.grammar.MainLexer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExBiFunction;
 import utility.ExFunction;
 import utility.FXPlatformSupplier;
 import utility.Pair;
@@ -29,6 +30,7 @@ import java.nio.file.Path;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 
 /**
@@ -69,7 +71,11 @@ public class OutputBuilder
     @OnThread(Tag.Any)
     public synchronized OutputBuilder t(int token, Vocabulary vocabulary)
     {
-        cur().add(stripQuotes(vocabulary.getLiteralName(token)));
+        String literalName = vocabulary.getLiteralName(token);
+        // Awkward to throw an exception here.  Tests should pick this up.
+        //if (literalName == null)
+        //    throw new InternalException("Unknown token in vocabulary: " + token);
+        cur().add(stripQuotes(literalName));
         return this;
     }
 
@@ -142,7 +148,7 @@ public class OutputBuilder
     public static String quoted(String s)
     {
         // Order matters; escape ^ by itself first:
-        return "\"" + s.replace("^", "^^").replace("\"", "^\"").replace("\n", "^n").replace("\r", "^r") + "\"";
+        return "\"" + s.replace("^", "^c").replace("\"", "^q").replace("\n", "^n").replace("\r", "^r").replace("@", "^a") + "\"";
     }
 
     @OnThread(Tag.Any)
@@ -174,9 +180,17 @@ public class OutputBuilder
         return finished;
     }
 
+    // Outputs a single value
+    @OnThread(Tag.Any)
+    public synchronized OutputBuilder dataValue(DataType type, @Value Object value) throws UserException, InternalException
+    {
+        // Defeat thread checker:
+        return ((ExBiFunction<DataTypeValue, Integer, OutputBuilder>)this::data).apply(type.fromCollapsed((i, prog) -> value), 0);
+    }
+
     // Outputs an element of an entire data set
     @OnThread(Tag.Simulation)
-    public synchronized void data(DataTypeValue type, int index) throws UserException, InternalException
+    public synchronized OutputBuilder data(DataTypeValue type, int index) throws UserException, InternalException
     {
         cur().add(type.applyGet(new DataTypeVisitorGet<String>()
         {
@@ -252,6 +266,7 @@ public class OutputBuilder
                 return b.toString();
             }
         }));
+        return this;
     }
 
     // Don't forget, this will get an extra space added to it as spacing

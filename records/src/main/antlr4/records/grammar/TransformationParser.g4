@@ -5,6 +5,8 @@ options { tokenVocab = TransformationLexer; }
 item : ATOM | STRING;
 
 expression: EXPRESSION_BEGIN EXPRESSION EXPRESSION_END;
+value: VALUE_BEGIN VALUE VALUE_END;
+typeValue: TYPE_BEGIN TYPE TYPE_VALUE VALUE VALUE_END;
 
 /* Hide: */
 hideKW : {_input.LT(1).getText().equals("HIDE")}? ATOM;
@@ -22,3 +24,9 @@ summaryType : item;
 summaryCol : fromKW column=item expression; // No newline because expression consumes it
 splitBy : splitKW column=item NEWLINE;
 summary : summaryCol+ splitBy*;
+
+/* Concat: */
+concatMissingColumnName : item;
+concatOmit : {_input.LT(1).getText().equals("@OMIT")}? ATOM;
+concatMissingColumn : concatMissingColumnName (concatOmit | typeValue) NEWLINE;
+concatMissing : concatMissingColumn*;
