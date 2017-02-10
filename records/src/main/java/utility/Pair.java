@@ -2,6 +2,10 @@ package utility;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.error.InternalException;
+import records.error.UserException;
+
+import java.util.function.Function;
 
 /**
  * Created by neil on 02/11/2016.
@@ -25,6 +29,11 @@ public final class Pair<A, B>
     public B getSecond()
     {
         return second;
+    }
+
+    public <C> Pair<C, B> mapFirstEx(ExFunction<A, C> map) throws InternalException, UserException
+    {
+        return new Pair<>(map.apply(first), second);
     }
 
     public <C> Pair<A, C> replaceSecond(C replacement)

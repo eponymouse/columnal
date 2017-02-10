@@ -37,7 +37,7 @@ public class PropLoadSaveTransformation
 {
     @Property(trials = 1000)
     @OnThread(value = Tag.FXPlatform,ignoreParent = true)
-    public void testLoadSaveTransformation(@When(seed=4564574157331121922L) @From(GenTableManager.class) TableManager mgr1, @When(seed = 4116911356622825036L) @From(GenTableManager.class) TableManager mgr2, @When(seed=7103048356356196165L) @From(GenNonsenseTransformation.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
+    public void testLoadSaveTransformation(@From(GenTableManager.class) TableManager mgr1, @From(GenTableManager.class) TableManager mgr2, @From(GenNonsenseTransformation.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         String saved = save(original.mgr);
         try

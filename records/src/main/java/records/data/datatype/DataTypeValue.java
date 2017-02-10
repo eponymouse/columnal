@@ -312,8 +312,17 @@ public class DataTypeValue extends DataType
         });
     }
 
-    // Copies the type of this item, but allows you to pull the data from an arbitrary DataTypeValue
-    // (i.e. not necessarily this one).  Useful for implementing concat and similar.
+    /**
+     * Copies the type of this item, but allows you to pull the data from an arbitrary DataTypeValue
+     * (i.e. not necessarily the original).  Useful for implementing concat, sort and similar, as it
+     * allows arbitrary mapping of an index back to any index of any DataTypeValue.
+     *
+     * @param original The original type which we are copying from
+     * @param getOriginalValueAndIndex A function which takes the final index which we are interested
+     *                                 in and gives back the DataTypeValue to draw from, and the index
+     *                                 to ask for that in that DataTypeValue.  Any DataTypeValue returned
+     *                                 must be of the same type as original.
+     */
     public static DataTypeValue copySeveral(DataType original, GetValue<Pair<DataTypeValue, Integer>> getOriginalValueAndIndex) throws InternalException
     {
         Pair<TypeId, List<TagType<DataTypeValue>>> newTagTypes = null;
@@ -348,9 +357,25 @@ public class DataTypeValue extends DataType
         else
         {
             ArrayList<DataType> r = new ArrayList<>(original.memberType.size());
-            // TODO not sure if this bit is right:
-            for (DataType type : original.memberType)
-                r.add(((DataTypeValue)type).copySeveral(type, getOriginalValueAndIndex));
+            // If it's a tuple, we should map each member element across
+            if (original.isTuple())
+            {
+                for (int memberTypeIndex = 0; memberTypeIndex < original.memberType.size(); memberTypeIndex++)
+                {
+                    DataType type = original.memberType.get(memberTypeIndex);
+                    int memberTypeIndexFinal = memberTypeIndex;
+                    r.add(((DataTypeValue) type).copySeveral(type, (i, prog) -> getOriginalValueAndIndex.getWithProgress(i, prog).mapFirstEx(dtv -> {
+                        if (dtv.memberType == null)
+                            throw new InternalException("copySeveral: original " + original + " had memberType but given target does not: " + dtv);
+                        return (DataTypeValue)dtv.memberType.get(memberTypeIndexFinal);
+                    })));
+                }
+            }
+            else
+            {
+                // If it's an array, just keep the original inner type:
+                r.addAll(original.memberType);
+            }
             memberTypes = r;
         }
         return new DataTypeValue(original.kind, original.numberInfo, original.dateTimeInfo, newTagTypes,
@@ -367,17 +392,6 @@ public class DataTypeValue extends DataType
     public DataTypeValue copyReorder(GetValue<Integer> getOriginalIndex) throws InternalException
     {
         return copySeveral(this, (i, prog) -> new Pair<DataTypeValue, Integer>(this, getOriginalIndex.getWithProgress(i, prog)));
-    }
-
-    @SuppressWarnings("nullness")
-    private static <T> @Nullable GetValue<T> reOrder(GetValue<Integer> getOriginalIndex, @Nullable GetValue<T> g)
-    {
-        if (g == null)
-            return null;
-        return (int destIndex, final ProgressListener prog) -> {
-            int srcIndex = getOriginalIndex.getWithProgress(destIndex, prog == null ? null : (d -> prog.progressUpdate(d*0.5)));
-            return g.getWithProgress(srcIndex, prog == null ? null : (d -> prog.progressUpdate(d * 0.5 + 0.5)));
-        };
     }
 
     private static <T> @Nullable GetValue<T> several(GetValue<Pair<DataTypeValue, Integer>> getOriginalIndex, @Nullable Function<DataTypeValue, @Nullable GetValue<T>> g)

@@ -52,6 +52,8 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
@@ -169,20 +171,20 @@ public class TestUtil
     }
 
     @OnThread(Tag.Simulation)
-    public static StreamEx<List<Object>> streamFlattened(RecordSet src)
+    public static StreamEx<List<@Value Object>> streamFlattened(RecordSet src)
     {
-        return new StreamEx.Emitter<List<Object>>()
+        return new StreamEx.Emitter<List<@Value Object>>()
         {
             int nextIndex = 0;
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public @Nullable Emitter<List<Object>> next(Consumer<? super List<Object>> consumer)
+            public @Nullable Emitter<List<@Value Object>> next(Consumer<? super List<Object>> consumer)
             {
                 try
                 {
                     if (src.indexValid(nextIndex))
                     {
-                        List<Object> collapsed = src.getColumns().stream().sorted(Comparator.comparing(Column::getName)).map(c ->
+                        List<@Value Object> collapsed = src.getColumns().stream().sorted(Comparator.comparing(Column::getName)).map(c ->
                         {
                             try
                             {
@@ -244,9 +246,30 @@ public class TestUtil
 
     @OnThread(Tag.Simulation)
     @SuppressWarnings("nullness")
-    public static Map<List<Object>, Long> getRowFreq(RecordSet src)
+    public static Map<List<@Value Object>, Long> getRowFreq(RecordSet src)
     {
-        return streamFlattened(src).collect(Collectors.groupingBy(Function.<List<Object>>identity(), Collectors.<List<Object>>counting()));
+        SortedMap<List<@Value Object>, Long> r = new TreeMap<>((Comparator<List<@Value Object>>)(List<@Value Object> a, List<@Value Object> b) -> {
+            if (a.size() != b.size())
+                return b.size() - a.size();
+            for (int i = 0; i < a.size(); i++)
+            {
+                try
+                {
+                    int cmp = Utility.compareValues(a.get(i), b.get(i));
+                    if (cmp != 0)
+                        return cmp;
+                }
+                catch (InternalException | UserException e)
+                {
+                    throw new RuntimeException(e);
+                }
+            }
+            return 0;
+        });
+        streamFlattened(src).forEach((List<@Value Object> row) -> {
+            r.compute(row, (List<@Value Object> k , Long v) -> v == null ? 1 : v + 1);
+        });
+        return r;
     }
 
     public static @Value String makeStringV(SourceOfRandomness r, GenerationStatus gs)

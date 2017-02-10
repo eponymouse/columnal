@@ -1188,10 +1188,78 @@ public class Utility
     }
 
     @OnThread(Tag.Simulation)
-    public static abstract interface ListEx
+    public static abstract class ListEx
     {
-        public int size() throws InternalException, UserException;
-        public @Value Object get(int index) throws InternalException, UserException;
+        @OnThread(Tag.Any)
+        public ListEx() {}
+
+        public abstract int size() throws InternalException, UserException;
+        public abstract @Value Object get(int index) throws InternalException, UserException;
+
+        // For comparison during testing
+        @Override
+        public int hashCode()
+        {
+            try
+            {
+                int size = size();
+                int result = size;
+                for (int i = 0; i < size; i++)
+                {
+                    result = 31 * result + get(i).hashCode();
+                }
+                return result;
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // For comparison during testing
+        @Override
+        public boolean equals(@Nullable Object obj)
+        {
+            if (obj == null || !(obj instanceof ListEx))
+                return false;
+            ListEx them = (ListEx)obj;
+            try
+            {
+                int size = size();
+                if (size != them.size())
+                    return false;
+                for (int i = 0; i < size; i++)
+                {
+                    if (Utility.compareValues(get(i), them.get(i)) != 0)
+                        return false;
+                }
+                return true;
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+
+        // To help during testing:
+
+        @Override
+        public String toString()
+        {
+            try
+            {
+                int size = size();
+                StringBuilder b = new StringBuilder("[");
+                for (int i = 0; i < size; i++)
+                    b.append(i == 0 ? "" : ", ").append(get(i).toString());
+                b.append("]");
+                return b.toString();
+            }
+            catch (InternalException | UserException e)
+            {
+                return "ERR: " + e.getLocalizedMessage();
+            }
+        }
     }
 
     // Mainly, this method is to avoid having to cast to ListChangeListener to disambiguate
