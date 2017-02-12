@@ -1,5 +1,10 @@
 package records.transformations;
 
+import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.StringExpression;
+import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.scene.layout.Pane;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
@@ -13,21 +18,32 @@ import records.data.datatype.DataTypeValue;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.ExpressionLexer;
+import records.grammar.ExpressionParser;
+import records.grammar.TransformationLexer;
+import records.grammar.TransformationParser;
+import records.grammar.TransformationParser.TransformContext;
+import records.grammar.TransformationParser.TransformItemContext;
+import records.loadsave.OutputBuilder;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
+import utility.SimulationSupplier;
 import utility.Utility;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Queue;
+import java.util.stream.Collectors;
 
 /**
  * A transformation on a single table which calculates a new set of columns
@@ -37,6 +53,7 @@ import java.util.Queue;
 @OnThread(Tag.Simulation)
 public class Transform extends Transformation
 {
+    @OnThread(Tag.Any)
     private final Map<ColumnId, Expression> newColumns;
     private final TableId srcTableId;
     private final @Nullable Table src;
@@ -138,7 +155,7 @@ public class Transform extends Transformation
     @Override
     public @OnThread(Tag.FXPlatform) TransformationEditor edit()
     {
-        throw new RuntimeException();
+        return new Editor(this.getId(), this.srcTableId, this.src, this.newColumns);
     }
 
     @Override
@@ -150,7 +167,13 @@ public class Transform extends Transformation
     @Override
     protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
     {
-        return Collections.emptyList(); // TODO
+        return newColumns.entrySet().stream().map(entry -> {
+            OutputBuilder b = new OutputBuilder();
+            b.kw("CALCULATE").id(entry.getKey());
+            b.kw("@EXPRESSION");
+            b.raw(entry.getValue().save(true));
+            return b.toString();
+        }).collect(Collectors.<String>toList());
     }
 
     @Override
@@ -176,5 +199,84 @@ public class Transform extends Transformation
         int result = newColumns.hashCode();
         result = 31 * result + srcTableId.hashCode();
         return result;
+    }
+
+    public static class Info extends TransformationInfo
+    {
+        public Info()
+        {
+            super("transform", Arrays.asList("calculate"));
+        }
+
+        @Override
+        public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, TableId tableId, List<TableId> source, String detail) throws InternalException, UserException
+        {
+            Map<ColumnId, Expression> columns = new HashMap<>();
+
+            TransformContext transform = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, p -> p.transform());
+            for (TransformItemContext transformItemContext : transform.transformItem())
+            {
+                columns.put(new ColumnId(transformItemContext.column.getText()), Expression.parse(null, transformItemContext.expression().EXPRESSION().getText(), mgr.getTypeManager()));
+            }
+
+            return new Transform(mgr, tableId, source.get(0), columns);
+        }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(TableManager mgr, TableId srcTableId, @Nullable Table src)
+        {
+            return new Editor(null, srcTableId, src, Collections.emptyMap());
+        }
+    }
+    private static class Editor extends TransformationEditor
+    {
+        private final @Nullable TableId ourId;
+        private TableId srcId;
+        private @Nullable Table srcTable;
+        private final Map<ColumnId, Expression> newColumns = new HashMap<>();
+
+        public Editor(@Nullable TableId id, TableId srcId, @Nullable Table srcTable, Map<ColumnId, Expression> newColumns)
+        {
+            ourId = id;
+            this.srcId = srcId;
+            this.srcTable = srcTable;
+            this.newColumns.putAll(newColumns);
+        }
+
+        @Override
+        public @OnThread(Tag.FX) StringExpression displayTitle()
+        {
+            return new ReadOnlyStringWrapper("Transform");
+        }
+
+        @Override
+        public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
+        {
+            return new Pane(); // TODO
+        }
+
+        @Override
+        public BooleanExpression canPressOk()
+        {
+            return new ReadOnlyBooleanWrapper(true);
+        }
+
+        @Override
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
+        {
+            return () -> new Transform(mgr, ourId, srcId, newColumns);
+        }
+
+        @Override
+        public @Nullable Table getSource()
+        {
+            return srcTable;
+        }
+
+        @Override
+        public TableId getSourceId()
+        {
+            return srcId;
+        }
     }
 }

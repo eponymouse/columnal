@@ -46,7 +46,8 @@ public class TransformationManager
             new Filter.Info(),
             new HideColumns.Info(),
             new Sort.Info(),
-            new SummaryStatistics.Info()
+            new SummaryStatistics.Info(),
+            new Transform.Info()
         );
     }
 

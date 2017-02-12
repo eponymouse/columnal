@@ -31,3 +31,9 @@ concatMissingColumnName : item;
 concatOmit : {_input.LT(1).getText().equals("@OMIT")}? ATOM;
 concatMissingColumn : concatMissingColumnName type ((concatOmit NEWLINE) | value);
 concatMissing : concatMissingColumn*;
+
+/* Transform: */
+
+transformCalculate : {_input.LT(1).getText().equals("CALCULATE")}? ATOM;
+transformItem : transformCalculate column=item expression;
+transform : transformItem*;
