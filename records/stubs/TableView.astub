@@ -17,6 +17,11 @@ class BorderPane
     //@Initialized void setTop(@Nullable Node a);
     void setCenter(@Nullable Node a);
 }
+package javafx.scene;
+class Node
+{
+    void setClip(@Nullable Node a);
+}
 package java.lang;
 class Object
 {

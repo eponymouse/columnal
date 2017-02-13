@@ -34,6 +34,7 @@ import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.ConcatMissingColumnContext;
 import records.grammar.TransformationParser.ConcatMissingContext;
+import records.gui.View;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -253,9 +254,9 @@ public class Concatenate extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) TransformationEditor edit()
+    public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
     {
-        return new Editor(getId(), sources, sourceTables, missingValues);
+        return new Editor(view, getId(), sources, sourceTables, missingValues);
     }
 
     @Override
@@ -316,7 +317,7 @@ public class Concatenate extends Transformation
         private final List<Table> srcs; // May be empty
         private final Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingVals;
 
-        private Editor(@Nullable TableId tableId, List<TableId> srcTableIds, List<Table> srcs, Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingVals)
+        private Editor(View view, @Nullable TableId tableId, List<TableId> srcTableIds, List<Table> srcs, Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingVals)
         {
             this.tableId = tableId;
             this.srcTableIds = srcTableIds;
@@ -346,12 +347,6 @@ public class Concatenate extends Transformation
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
             return () -> new Concatenate(mgr, tableId, srcTableIds, missingVals);
-        }
-
-        @Override
-        public @Nullable Table getSource()
-        {
-            return srcs.isEmpty() ? null : srcs.get(0);
         }
 
         @Override
@@ -390,9 +385,9 @@ public class Concatenate extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(TableManager mgr, TableId srcTableId, @Nullable Table src)
+        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(null, Collections.singletonList(srcTableId), src == null ? Collections.emptyList() : Collections.singletonList(src), Collections.emptyMap());
+            return new Editor(view, null, srcTableId == null ? Collections.emptyList() : Collections.singletonList(srcTableId), src == null ? Collections.emptyList() : Collections.singletonList(src), Collections.emptyMap());
         }
     }
 

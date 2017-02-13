@@ -51,6 +51,8 @@ import records.grammar.TransformationParser.SplitByContext;
 import records.grammar.TransformationParser.SummaryColContext;
 import records.grammar.TransformationParser.SummaryContext;
 import records.grammar.TransformationParser.SummaryTypeContext;
+import records.gui.SingleSourceControl;
+import records.gui.View;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
@@ -365,9 +367,9 @@ public class SummaryStatistics extends Transformation
         }
 
         @Override
-        public TransformationEditor editNew(TableManager mgr, TableId srcTableId, @Nullable Table src)
+        public TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(null, srcTableId, src, Collections.emptyMap(), Collections.emptyList());
+            return new Editor(view, mgr, null, srcTableId, src, Collections.emptyMap(), Collections.emptyList());
         }
 
         @Override
@@ -386,26 +388,24 @@ public class SummaryStatistics extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) TransformationEditor edit()
+    public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
     {
-        return new Editor(getId(), srcTableId, src, summaries, splitBy);
+        return new Editor(view, getManager(), getId(), srcTableId, src, summaries, splitBy);
     }
 
     private static class Editor extends TransformationEditor
     {
         private final @Nullable TableId thisTableId;
-        private final TableId srcTableId;
-        private final @Nullable Table src;
+        private final SingleSourceControl srcControl;
         private final BooleanProperty ready = new SimpleBooleanProperty(false);
         private final ObservableList<@NonNull Pair<ColumnId, SummaryType>> ops;
         private final ObservableList<@NonNull ColumnId> splitBy;
 
         @OnThread(Tag.FXPlatform)
-        private Editor(@Nullable TableId thisTableId, TableId srcTableId, @Nullable Table src, Map<ColumnId, SummaryType> summaries, List<ColumnId> splitBy)
+        private Editor(View view, TableManager mgr, @Nullable TableId thisTableId, @Nullable TableId srcTableId, @Nullable Table src, Map<ColumnId, SummaryType> summaries, List<ColumnId> splitBy)
         {
             this.thisTableId = thisTableId;
-            this.srcTableId = srcTableId;
-            this.src = src;
+            this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
             this.ops = FXCollections.observableArrayList();
             this.splitBy = FXCollections.observableArrayList(splitBy);
             for (Entry<ColumnId, SummaryType> entry : summaries.entrySet())
@@ -415,15 +415,9 @@ public class SummaryStatistics extends Transformation
         }
 
         @Override
-        public @Nullable Table getSource()
+        public @Nullable TableId getSourceId()
         {
-            return src;
-        }
-
-        @Override
-        public TableId getSourceId()
-        {
-            return srcTableId;
+            return srcControl.getTableIdOrNull();
         }
 
         @Override
@@ -437,7 +431,7 @@ public class SummaryStatistics extends Transformation
         public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
             HBox colsAndSummaries = new HBox();
-            ListView<ColumnId> columnListView = getColumnListView(src, srcTableId);
+            ListView<ColumnId> columnListView = getColumnListView(srcControl.getTableOrNull(), srcControl.getTableIdOrNull());
             columnListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             colsAndSummaries.getChildren().add(columnListView);
 
@@ -567,7 +561,7 @@ public class SummaryStatistics extends Transformation
                 {
                     summaries.put(op.getFirst(), op.getSecond());
                 }
-                return new SummaryStatistics(mgr, thisTableId, srcTableId, summaries, splitBy);
+                return new SummaryStatistics(mgr, thisTableId, srcControl.getTableIdOrThrow(), summaries, splitBy);
             };
         }
     }

@@ -41,6 +41,8 @@ import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.OrderByContext;
 import records.grammar.TransformationParser.SortContext;
 import records.gui.DisplayValue;
+import records.gui.SingleSourceControl;
+import records.gui.View;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -275,9 +277,9 @@ public class Sort extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) TransformationEditor edit()
+    public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
     {
-        return new Editor(getId(), srcTableId, src, originalSortBy);
+        return new Editor(view, getManager(), getId(), srcTableId, originalSortBy);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -299,26 +301,24 @@ public class Sort extends Transformation
         }
 
         @Override
-        public TransformationEditor editNew(TableManager mgr, TableId srcTableId, @Nullable Table src)
+        public TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(null, srcTableId, src, Collections.emptyList());
+            return new Editor(view, mgr, null, srcTableId, Collections.emptyList());
         }
     }
 
     private static class Editor extends TransformationEditor
     {
         private final @Nullable TableId thisTableId;
-        private final TableId srcTableId;
-        private final @Nullable Table src;
+        private final SingleSourceControl srcControl;
         private final ObservableList<Optional<ColumnId>> sortBy;
         private final BooleanProperty ready = new SimpleBooleanProperty(false);
 
         @OnThread(Tag.FXPlatform)
-        private Editor(@Nullable TableId thisTableId, TableId srcTableId, @Nullable Table src, List<ColumnId> sortBy)
+        private Editor(View view, TableManager mgr, @Nullable TableId thisTableId, @Nullable TableId srcTableId, List<ColumnId> sortBy)
         {
             this.thisTableId = thisTableId;
-            this.srcTableId = srcTableId;
-            this.src = src;
+            this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
             this.sortBy = FXCollections.observableArrayList();
             // TODO handle case that src table is missing
             for (ColumnId c : sortBy)
@@ -335,15 +335,9 @@ public class Sort extends Transformation
         }
 
         @Override
-        public @Nullable Table getSource()
+        public @Nullable TableId getSourceId()
         {
-            return src;
-        }
-
-        @Override
-        public TableId getSourceId()
-        {
-            return srcTableId;
+            return srcControl.getTableIdOrNull();
         }
 
         @Override
@@ -351,7 +345,8 @@ public class Sort extends Transformation
         public @OnThread(Tag.FXPlatform) Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
             HBox colsAndSort = new HBox();
-            ListView<ColumnId> columnListView = getColumnListView(src, srcTableId);
+            // TODO need to handle changes in source table.
+            ListView<ColumnId> columnListView = getColumnListView(srcControl.getTableOrNull(), srcControl.getTableIdOrNull());
             columnListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             colsAndSort.getChildren().add(columnListView);
 
@@ -376,8 +371,8 @@ public class Sort extends Transformation
             List<Column> allColumns = new ArrayList<>();
             try
             {
-                if (src != null)
-                    allColumns.addAll(src.getData().getColumns());
+                if (srcControl.getTableOrNull() != null)
+                    allColumns.addAll(srcControl.getTableOrNull().getData().getColumns());
                 updateExample(allColumns, getPresent(sortByView.getItems()), srcHeaderAndData, destHeaderAndData);
                 Utility.listen(sortByView.getItems(), c -> {
                     try
@@ -408,13 +403,14 @@ public class Sort extends Transformation
             return new VBox(colsAndSort, example);
         }
 
+        @OnThread(Tag.FXPlatform)
         private List<Column> getPresent(ObservableList<Optional<ColumnId>> cols) throws UserException, InternalException
         {
             ArrayList<Column> r = new ArrayList<>();
             for (Optional<ColumnId> col : cols)
             {
-                if (col.isPresent() && src != null)
-                    r.add(src.getData().getColumn(col.get()));
+                if (col.isPresent() && srcControl.getTableOrNull() != null)
+                    r.add(srcControl.getTableOrNull().getData().getColumn(col.get()));
             }
             return r;
         }
@@ -540,7 +536,7 @@ public class Sort extends Transformation
                 for (Optional<ColumnId> c : sortBy)
                     if (c.isPresent())
                         presentSortBy.add(c.get());
-                return new Sort(mgr, thisTableId, srcTableId, presentSortBy);
+                return new Sort(mgr, thisTableId, srcControl.getTableIdOrThrow(), presentSortBy);
             };
         }
     }

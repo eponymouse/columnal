@@ -45,6 +45,8 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayValue;
+import records.gui.SingleSourceControl;
+import records.gui.View;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.EvaluateState;
@@ -193,9 +195,9 @@ public class Filter extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) TransformationEditor edit()
+    public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
     {
-        return new Editor(getManager(), getId(), srcTableId, src, filterExpression);
+        return new Editor(view, getManager(), getId(), srcTableId, src, filterExpression);
     }
 
     @Override
@@ -221,8 +223,7 @@ public class Filter extends Transformation
     private static class Editor extends TransformationEditor
     {
         private final @Nullable TableId thisTableId;
-        private final TableId srcTableId;
-        private final @Nullable Table src;
+        private final SingleSourceControl srcControl;
         private final List<ColumnId> allColumns = new ArrayList<>();
         private final TextField rawField;
         private final ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData;
@@ -231,20 +232,21 @@ public class Filter extends Transformation
         private final Expression expression;
 
         @OnThread(Tag.FXPlatform)
-        public Editor(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, @Nullable Table src, Expression expression)
+        public Editor(View view, TableManager mgr, @Nullable TableId thisTableId, @Nullable TableId srcTableId, @Nullable Table src, Expression expression)
         {
             this.mgr = mgr;
             this.thisTableId = thisTableId;
-            this.srcTableId = srcTableId;
-            this.src = src;
+            this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
             this.rawField = new TextField("");
             this.srcHeaderAndData = FXCollections.observableArrayList();
             this.destHeaderAndData = FXCollections.observableArrayList();
             this.expression = expression;
         }
 
+        @OnThread(Tag.FXPlatform)
         private void updateExample(Expression expression) throws UserException, InternalException
         {
+            @Nullable Table src = srcControl.getTableOrNull();
             if (src == null)
                 return;
             if (expression.check(src.getData(), mgr.getTypeState(), (e, s) -> {}) == null)
@@ -431,7 +433,7 @@ public class Filter extends Transformation
                     }
                 }
             };
-            return new VBox(rawField, new ExpressionEditor(null, src, DataType.BOOLEAN, mgr.getTypeManager(), updater).getContainer(), example);
+            return new VBox(rawField, new ExpressionEditor(null, srcControl.getTableOrNull(), DataType.BOOLEAN, mgr.getTypeManager(), updater).getContainer(), example);
         }
 
         @Override
@@ -443,19 +445,13 @@ public class Filter extends Transformation
         @Override
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
-            return () -> new Filter(mgr, thisTableId, srcTableId, expression);
+            return () -> new Filter(mgr, thisTableId, srcControl.getTableIdOrThrow(), expression);
         }
 
         @Override
-        public @Nullable Table getSource()
+        public @Nullable TableId getSourceId()
         {
-            return src;
-        }
-
-        @Override
-        public TableId getSourceId()
-        {
-            return srcTableId;
+            return srcControl.getTableIdOrNull();
         }
     }
 
@@ -473,9 +469,9 @@ public class Filter extends Transformation
         }
 
         @Override
-        public TransformationEditor editNew(TableManager mgr, TableId srcTableId, @Nullable Table src)
+        public TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(mgr, null, srcTableId, src, new BooleanLiteral(true));
+            return new Editor(view, mgr, null, srcTableId, src, new BooleanLiteral(true));
         }
     }
 

@@ -2,6 +2,7 @@ package records.gui;
 
 import javafx.application.Application;
 import javafx.application.Platform;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
@@ -121,13 +122,26 @@ public class Main extends Application
             }
         });
 
-        BorderPane root = new BorderPane(new ScrollPane(v), new MenuBar(menu), null, null, null);
+        ScrollPane scrollPane = new ScrollPane(v);
+
+        // From https://reportmill.wordpress.com/2014/06/03/make-scrollpane-content-fill-viewport-bounds/
+        Utility.addChangeListenerPlatform(scrollPane.viewportBoundsProperty(), bounds -> {
+            if (bounds != null)
+            {
+                Node content = scrollPane.getContent();
+                scrollPane.setFitToWidth(content.prefWidth(-1) < bounds.getWidth());
+                scrollPane.setFitToHeight(content.prefHeight(-1) < bounds.getHeight());
+            }
+        });
+
+        BorderPane root = new BorderPane(scrollPane, new MenuBar(menu), null, null, null);
         Scene scene = new Scene(root);
         scene.getStylesheets().add(Utility.getStylesheet("mainview.css"));
         primaryStage.setScene(scene);
         primaryStage.setWidth(1000);
         primaryStage.setHeight(800);
         primaryStage.show();
+        //org.scenicview.ScenicView.show(primaryStage.getScene());
     }
 
     // TODO pass -XX:AutoBoxCacheMax= parameter on execution

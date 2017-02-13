@@ -1,17 +1,25 @@
 package records.gui;
 
 import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.StackPane;
 import javafx.scene.shape.QuadCurve;
+import javafx.scene.shape.Rectangle;
+import javafx.scene.shape.Shape;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
@@ -49,7 +57,7 @@ import java.util.stream.Collectors;
  * Created by neil on 18/10/2016.
  */
 @OnThread(Tag.FXPlatform)
-public class View extends Pane
+public class View extends StackPane
 {
     private static final double DEFAULT_SPACE = 150.0;
 
@@ -59,6 +67,15 @@ public class View extends Pane
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private final List<Transformation> transformations = new ArrayList<>();
     private final TableManager tableManager;
+    private final Pane mainPane;
+    // We want a display that dims everything except the hovered-over table
+    // But that requires clipping which messes up the mouse selection.  So we
+    // use two panes: one which is invisible for the mouse events, and one for the
+    // display:
+    private final Pane pickPaneMouse;
+    private final Pane pickPaneDisplay;
+    private final ObjectProperty<@Nullable Table> currentPick;
+    private @Nullable FXPlatformConsumer<@Nullable Table> onPick;
 
     // Does not write to that destination, just uses it for relative paths
     public void save(@Nullable File destination, FXPlatformConsumer<String> then)
@@ -183,19 +200,74 @@ public class View extends Pane
     public View() throws InternalException, UserException
     {
         tableManager = new TableManager();
+        mainPane = new Pane();
+        pickPaneMouse = new Pane();
+        pickPaneDisplay = new Pane();
+        pickPaneDisplay.getStyleClass().add("view-pick-pane");
+        getChildren().add(mainPane);
+        currentPick = new SimpleObjectProperty<>(null);
+        // Needs to pick up mouse events on mouse pane, not display pane:
+        pickPaneMouse.setMouseTransparent(false);
+        pickPaneDisplay.setMouseTransparent(true);
+        Utility.addChangeListenerPlatform(currentPick, t -> {
+            if (t != null)
+            {
+                Bounds b = t.getDisplay().getBoundsInParent();
+                pickPaneDisplay.setClip(Shape.subtract(new Rectangle(mainPane.getWidth(), mainPane.getHeight()), new Rectangle(b.getMinX(), b.getMinY(), b.getWidth(), b.getHeight())));
+                pickPaneMouse.setCursor(Cursor.HAND);
+            }
+            else
+            {
+                pickPaneDisplay.setClip(null);
+                pickPaneMouse.setCursor(null);
+            }
+        });
+
+        pickPaneMouse.setOnMouseMoved(e -> {
+            @Nullable Table table = pickAt(e.getX(), e.getY());
+            currentPick.setValue(table);
+        });
+        pickPaneMouse.setOnMouseClicked(e -> {
+            @Nullable Table cur = currentPick.get();
+            if (cur != null)
+            {
+                if (onPick != null)
+                    onPick.consume(cur);
+                getChildren().removeAll(pickPaneMouse, pickPaneDisplay);
+            }
+        });
+        //TODO let escape cancel
+
+
         overlays = FXCollections.observableHashMap();
         overlays.addListener((MapChangeListener<? super Transformation, ? super Overlays>) c -> {
             Overlays removed = c.getValueRemoved();
             if (removed != null)
             {
-                getChildren().removeAll(removed.arrowFrom, removed.name, removed.arrowTo);
+                mainPane.getChildren().removeAll(removed.arrowFrom, removed.name, removed.arrowTo);
             }
             Overlays added = c.getValueAdded();
             if (added != null)
             {
-                getChildren().addAll(added.arrowFrom, added.name, added.arrowTo);
+                mainPane.getChildren().addAll(added.arrowFrom, added.name, added.arrowTo);
             }
         });
+    }
+
+    private @Nullable Table pickAt(double x, double y)
+    {
+        Point2D sceneLocation = localToScene(x, y);
+        @Nullable Table picked = null;
+        // This is paint order, so later nodes are drawn on top
+        // Thus we just need to pick the last node in the list:
+        for (Node node : mainPane.getChildren())
+        {
+            if (node instanceof TableDisplay && node.isVisible() && node.contains(node.sceneToLocal(sceneLocation)))
+            {
+                picked = ((TableDisplay)node).getTable();
+            }
+        }
+        return picked;
     }
 
     public void addSource(DataSource data)
@@ -224,7 +296,7 @@ public class View extends Pane
                 sourceDisplays.add(td);
         }
         overlays.put(transformation, new Overlays(sourceDisplays, transformation.getTransformationLabel(), tableDisplay, () -> {
-            View.this.edit(transformation.getId(), transformation.edit());
+            View.this.edit(transformation.getId(), transformation.edit(View.this));
         }));
 
         return tableDisplay;
@@ -232,7 +304,7 @@ public class View extends Pane
 
     private void addDisplay(TableDisplay tableDisplay, @Nullable TableDisplay alignToRightOf)
     {
-        getChildren().add(tableDisplay);
+        mainPane.getChildren().add(tableDisplay);
         if (alignToRightOf != null)
         {
             tableDisplay.setLayoutX(alignToRightOf.getLayoutX() + alignToRightOf.getWidth() + DEFAULT_SPACE);
@@ -357,7 +429,7 @@ public class View extends Pane
         }
         if (removed != null)
         {
-            getChildren().remove(removed.getDisplay());
+            mainPane.getChildren().remove(removed.getDisplay());
             removed.save(null, then);
         }
     }
@@ -370,7 +442,7 @@ public class View extends Pane
 
     public void edit(Table src)
     {
-        EditTransformationDialog dialog = new EditTransformationDialog(getScene().getWindow(), this, src);
+        EditTransformationDialog dialog = new EditTransformationDialog(getScene().getWindow(), this, src.getId());
         showEditDialog(dialog, null);
     }
 
@@ -386,4 +458,16 @@ public class View extends Pane
     {
         // Don't allow focus
     }
+
+    @OnThread(Tag.FXPlatform)
+    public void pickTable(FXPlatformConsumer<@Nullable Table> whenPicked)
+    {
+        // Reset the clip:
+        pickPaneDisplay.setClip(null);
+        currentPick.setValue(null);
+
+        getChildren().addAll(pickPaneDisplay, pickPaneMouse);
+        onPick = whenPicked;
+    }
 }
+

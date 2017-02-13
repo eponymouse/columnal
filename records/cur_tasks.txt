@@ -13,23 +13,17 @@ Add functions, such as:
    all(col): gets whole column
 Add transformations such as:
   manual edit (new and existing columns)
-  Transform-each
-Add TransformationManager entry and GUI for transformations, including:
-  concat
-  hide columns
-Add load-save and no-op edit tests for transformations, including:
-  concat
-  hide columns
-
+Finish GUI for most transformations
+Finish expression editor.
 
 ++ for string concat?  Or maybe ~ ?  Or overload + (and for array concat)
-Change some of the symbols to _keywords
+Change some of the symbols to @keywords
 Allow method calls on tuple parameter list?
 Allow double dollar as an anonymous variable name in matches
 Add tests for runtime errors (division by zero, invalid dates, incomplete pattern matches, if we allow those)
 Look up Unicode string collations, both for user values (in columns) and things like function names, constructor names
 Implement and test complete load/save, including units and types sections
-Intern the strings (i.e. for translation)
+Move the strings to a strings file (i.e. for translation), add checking for % substitutions
 Explicitly test core functions like multiplyNumbers, compareLists
 Finish GUI for import choices
 Allow quoting of columns (and escaping?) in input files

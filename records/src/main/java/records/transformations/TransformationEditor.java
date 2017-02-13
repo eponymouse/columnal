@@ -54,11 +54,9 @@ public abstract class TransformationEditor
 
     public abstract SimulationSupplier<Transformation> getTransformation(TableManager mgr);
 
-    public abstract @Nullable Table getSource();
+    public abstract @Nullable TableId getSourceId();
 
-    public abstract TableId getSourceId();
-
-    protected static ListView<ColumnId> getColumnListView(@Nullable Table src, TableId id)
+    protected static ListView<ColumnId> getColumnListView(@Nullable Table src, @Nullable TableId id)
     {
         ListView<ColumnId> lv = new ListView<>();
         if (src != null)

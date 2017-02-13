@@ -7,6 +7,7 @@ import records.data.TableManager;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.View;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -42,6 +43,6 @@ public abstract class TransformationInfo
     public abstract Transformation load(TableManager mgr, TableId tableId, List<TableId> source, String detail) throws InternalException, UserException;
 
     @OnThread(Tag.FXPlatform)
-    public abstract TransformationEditor editNew(TableManager mgr, TableId srcTableId, @Nullable Table src);
+    public abstract TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src);
 
 }

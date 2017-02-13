@@ -13,6 +13,7 @@ import records.data.TableManager;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.View;
 import test.gen.GenTableManager;
 import test.gen.GenNonsenseTransformation;
 import threadchecker.OnThread;
@@ -95,7 +96,16 @@ public class PropLoadSaveTransformation
         SwingUtilities.invokeAndWait(() -> new JFXPanel());
         CompletableFuture<SimulationSupplier<Transformation>> f = new CompletableFuture<>();
         Platform.runLater(() -> {
-            f.complete(original.transformation.edit().getTransformation(original.mgr));
+            View view;
+            try
+            {
+                view = new View();
+            }
+            catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
+            f.complete(original.transformation.edit(view).getTransformation(original.mgr));
         });
         assertEquals(original.transformation, f.get(10, TimeUnit.SECONDS).get());
     }

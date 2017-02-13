@@ -46,7 +46,7 @@ public class EditTransformationDialog
     private final Dialog<SimulationSupplier<Transformation>> dialog;
     private final View parentView;
 
-    private EditTransformationDialog(Window owner, View parentView, TableId srcId, @Nullable Table src, @Nullable TransformationEditor existing)
+    private EditTransformationDialog(Window owner, View parentView, @Nullable TableId srcId, @Nullable TransformationEditor existing)
     {
         this.parentView = parentView;
         dialog = new Dialog<>();
@@ -89,7 +89,7 @@ public class EditTransformationDialog
         Utility.addChangeListenerPlatform(selectedTransformation, trans ->
         {
             if (trans != null)
-                editor.set(Optional.of(trans.editNew(parentView.getManager(), srcId, src)));
+                editor.set(Optional.of(trans.editNew(parentView, parentView.getManager(), srcId, srcId == null ? null : parentView.getManager().getSingleTableOrNull(srcId))));
             else
                 editor.set(Optional.empty());
         });
@@ -134,15 +134,15 @@ public class EditTransformationDialog
     }
 
     // Make a new transformation with the given source table
-    public EditTransformationDialog(Window owner, View parentView, Table src)
+    public EditTransformationDialog(Window owner, View parentView, TableId src)
     {
-        this(owner, parentView, src.getId(), src, null);
+        this(owner, parentView, src, null);
 
     }
 
     public EditTransformationDialog(Window window, View parentView, TransformationEditor editor)
     {
-        this(window, parentView, editor.getSourceId(), editor.getSource(), editor);
+        this(window, parentView, editor.getSourceId(), editor);
     }
 
     private void showError(@UnknownInitialization(Object.class) EditTransformationDialog this, Exception e)

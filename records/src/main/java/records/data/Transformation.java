@@ -2,6 +2,7 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.grammar.MainLexer;
+import records.gui.View;
 import records.loadsave.OutputBuilder;
 import records.transformations.TransformationEditor;
 import threadchecker.OnThread;
@@ -29,7 +30,7 @@ public abstract class Transformation extends Table
     public abstract List<TableId> getSources();
 
     @OnThread(Tag.FXPlatform)
-    public abstract TransformationEditor edit();
+    public abstract TransformationEditor edit(View view);
 
 
     @Override

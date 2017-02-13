@@ -18,16 +18,15 @@ import records.data.datatype.DataTypeValue;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
-import records.grammar.ExpressionLexer;
-import records.grammar.ExpressionParser;
 import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.TransformContext;
 import records.grammar.TransformationParser.TransformItemContext;
+import records.gui.SingleSourceControl;
+import records.gui.View;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
-import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -42,7 +41,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Queue;
 import java.util.stream.Collectors;
 
 /**
@@ -153,9 +151,9 @@ public class Transform extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) TransformationEditor edit()
+    public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
     {
-        return new Editor(this.getId(), this.srcTableId, this.src, this.newColumns);
+        return new Editor(view, getManager(), this.getId(), this.srcTableId, this.newColumns);
     }
 
     @Override
@@ -223,23 +221,22 @@ public class Transform extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(TableManager mgr, TableId srcTableId, @Nullable Table src)
+        public @OnThread(Tag.FXPlatform) TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(null, srcTableId, src, Collections.emptyMap());
+            return new Editor(view, mgr, null, srcTableId, Collections.emptyMap());
         }
     }
     private static class Editor extends TransformationEditor
     {
         private final @Nullable TableId ourId;
-        private TableId srcId;
-        private @Nullable Table srcTable;
+        private final SingleSourceControl srcControl;
         private final Map<ColumnId, Expression> newColumns = new HashMap<>();
 
-        public Editor(@Nullable TableId id, TableId srcId, @Nullable Table srcTable, Map<ColumnId, Expression> newColumns)
+        @OnThread(Tag.FXPlatform)
+        public Editor(View view, TableManager mgr, @Nullable TableId id, @Nullable TableId srcId, Map<ColumnId, Expression> newColumns)
         {
             ourId = id;
-            this.srcId = srcId;
-            this.srcTable = srcTable;
+            this.srcControl = new SingleSourceControl(view, mgr, srcId);
             this.newColumns.putAll(newColumns);
         }
 
@@ -264,19 +261,13 @@ public class Transform extends Transformation
         @Override
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
-            return () -> new Transform(mgr, ourId, srcId, newColumns);
+            return () -> new Transform(mgr, ourId, srcControl.getTableIdOrThrow(), newColumns);
         }
 
         @Override
-        public @Nullable Table getSource()
+        public @Nullable TableId getSourceId()
         {
-            return srcTable;
-        }
-
-        @Override
-        public TableId getSourceId()
-        {
-            return srcId;
+            return srcControl.getTableIdOrNull();
         }
     }
 }

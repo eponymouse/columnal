@@ -2,6 +2,7 @@ package records.data;
 
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.Table.FullSaver;
 import records.data.Table.Saver;
 import records.data.datatype.TypeManager;
@@ -46,6 +47,7 @@ public class TableManager
         this.typeManager = new TypeManager(unitManager);
     }
 
+    @Pure
     public synchronized @Nullable Table getSingleTableOrNull(TableId tableId)
     {
         List<Table> tables = usedIds.get(tableId);
@@ -55,6 +57,7 @@ public class TableManager
             return null;
     }
 
+    @Pure
     public Table getSingleTableOrThrow(TableId tableId) throws UserException
     {
         @Nullable Table t = getSingleTableOrNull(tableId);
