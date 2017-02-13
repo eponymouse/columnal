@@ -358,25 +358,25 @@ public class GeneralEntry extends LeafNode implements OperandNode
 
 
         @Override
-        Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
         {
             return new Pair<>(prefix.isEmpty() ? null : new Label(" " + prefix + " "), new ReadOnlyStringWrapper(text + suffix));
         }
 
         @Override
-        boolean shouldShow(String input)
+        public boolean shouldShow(String input)
         {
             return text.startsWith(input);
         }
 
         @Override
-        CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
         {
             return text.equals(input) ? (onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT) : CompletionAction.NONE;
         }
 
         @Override
-        boolean features(String curInput, char character)
+        public boolean features(String curInput, char character)
         {
             return text.contains("" + character);
         }
@@ -403,19 +403,19 @@ public class GeneralEntry extends LeafNode implements OperandNode
         }
 
         @Override
-        Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
         {
             return new Pair<>(null, new ReadOnlyStringWrapper(function.getName() + "(...)"));
         }
 
         @Override
-        boolean shouldShow(String input)
+        public boolean shouldShow(String input)
         {
             return function.getName().startsWith(input);
         }
 
         @Override
-        CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
         {
             if (function.getName().equals(input))
             {
@@ -430,7 +430,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
         }
 
         @Override
-        boolean features(String curInput, char character)
+        public boolean features(String curInput, char character)
         {
             return function.getName().contains("" + character);
         }
@@ -439,13 +439,13 @@ public class GeneralEntry extends LeafNode implements OperandNode
     private static class NumericLiteralCompletion extends GeneralCompletion
     {
         @Override
-        Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
         {
             return new Pair<>(null, currentText);
         }
 
         @Override
-        boolean shouldShow(String input)
+        public boolean shouldShow(String input)
         {
             // To allow "+", "-", or "1.", we add zero at the end before parsing:
             try
@@ -460,13 +460,13 @@ public class GeneralEntry extends LeafNode implements OperandNode
         }
 
         @Override
-        CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
         {
             return onlyAvailableCompletion ? CompletionAction.SELECT : CompletionAction.NONE;
         }
 
         @Override
-        boolean features(String curInput, char character)
+        public boolean features(String curInput, char character)
         {
             if (curInput.isEmpty())
                 return "0123456789+-._".contains("" + character);
@@ -562,13 +562,13 @@ public class GeneralEntry extends LeafNode implements OperandNode
         }
 
         @Override
-        Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
         {
             return new Pair<>(null, new ReadOnlyStringWrapper(tagType.getName() + " [type " + typeName.getRaw() + "]"));
         }
 
         @Override
-        boolean shouldShow(String input)
+        public boolean shouldShow(String input)
         {
             return tagType.getName().startsWith(input) || getScopedName().startsWith(input);
         }
@@ -580,7 +580,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
         }
 
         @Override
-        CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
         {
             if (tagType.equals(input) || getScopedName().equals(input))
                 return onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT;
@@ -588,7 +588,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
         }
 
         @Override
-        boolean features(String curInput, char character)
+        public boolean features(String curInput, char character)
         {
             // Important to check type first.  If type is same as tag,
             // type will permit more characters to follow than tag alone:

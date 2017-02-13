@@ -445,7 +445,8 @@ public class Filter extends Transformation
         @Override
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
-            return () -> new Filter(mgr, thisTableId, srcControl.getTableIdOrThrow(), expression);
+            SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
+            return () -> new Filter(mgr, thisTableId, srcId.get(), expression);
         }
 
         @Override

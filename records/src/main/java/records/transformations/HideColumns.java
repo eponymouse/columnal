@@ -4,6 +4,9 @@ import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.scene.control.ListView;
+import javafx.scene.control.SelectionMode;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -170,6 +173,7 @@ public class HideColumns extends Transformation
         private final @Nullable TableId tableId;
         private final SingleSourceControl srcControl;
         private final List<ColumnId> columnsToHide;
+        private final ListView<ColumnId> srcColumnList;
 
         @OnThread(Tag.FXPlatform)
         public Editor(View view, TableManager mgr, @Nullable TableId tableId, @Nullable TableId srcTableId, @Nullable Table src, List<ColumnId> toHide)
@@ -177,6 +181,8 @@ public class HideColumns extends Transformation
             this.tableId = tableId;
             columnsToHide = new ArrayList<>(toHide);
             this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
+            this.srcColumnList = getColumnListView(mgr, srcControl.tableIdProperty());
+            srcColumnList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         }
 
         @Override
@@ -188,7 +194,7 @@ public class HideColumns extends Transformation
         @Override
         public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
-            return new VBox(srcControl /*, new SelectableColumnView()*/);
+            return new VBox(srcControl, new HBox(srcColumnList));
         }
 
         @Override
@@ -200,7 +206,8 @@ public class HideColumns extends Transformation
         @Override
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
-            return () -> new HideColumns(mgr, tableId, srcControl.getTableIdOrThrow(), columnsToHide);
+            SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
+            return () -> new HideColumns(mgr, tableId, srcId.get(), columnsToHide);
         }
 
         @Override

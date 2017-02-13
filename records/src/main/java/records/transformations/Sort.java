@@ -313,6 +313,7 @@ public class Sort extends Transformation
         private final SingleSourceControl srcControl;
         private final ObservableList<Optional<ColumnId>> sortBy;
         private final BooleanProperty ready = new SimpleBooleanProperty(false);
+        private final ListView<ColumnId> columnListView;
 
         @OnThread(Tag.FXPlatform)
         private Editor(View view, TableManager mgr, @Nullable TableId thisTableId, @Nullable TableId srcTableId, List<ColumnId> sortBy)
@@ -326,6 +327,7 @@ public class Sort extends Transformation
                 this.sortBy.add(Optional.of(c));
             }
             this.sortBy.add(Optional.empty());
+            columnListView = getColumnListView(mgr, srcControl.tableIdProperty());
         }
 
         @Override
@@ -346,7 +348,6 @@ public class Sort extends Transformation
         {
             HBox colsAndSort = new HBox();
             // TODO need to handle changes in source table.
-            ListView<ColumnId> columnListView = getColumnListView(srcControl.getTableOrNull(), srcControl.getTableIdOrNull());
             columnListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             colsAndSort.getChildren().add(columnListView);
 
@@ -530,13 +531,14 @@ public class Sort extends Transformation
         @Override
         public @OnThread(Tag.FXPlatform) SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
+            SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             return () -> {
                 // Ignore the special empty column put in for GUI:
                 List<ColumnId> presentSortBy = new ArrayList<>();
                 for (Optional<ColumnId> c : sortBy)
                     if (c.isPresent())
                         presentSortBy.add(c.get());
-                return new Sort(mgr, thisTableId, srcControl.getTableIdOrThrow(), presentSortBy);
+                return new Sort(mgr, thisTableId, srcId.get(), presentSortBy);
             };
         }
     }

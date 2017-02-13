@@ -1,6 +1,7 @@
 package records.data;
 
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Table.FullSaver;
@@ -29,6 +30,8 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 14/11/2016.
@@ -194,5 +197,10 @@ public class TableManager
                 table.save(destination, saver);
             }
         }
+    }
+
+    public synchronized Collection<Table> getAllTables()
+    {
+        return usedIds.values().stream().flatMap(Collection::stream).collect(Collectors.<@NonNull Table>toList());
     }
 }

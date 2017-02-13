@@ -125,13 +125,13 @@ public class OperatorEntry extends LeafNode
         }
 
         @Override
-        Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
         {
             return new Pair<>(null, new ReadOnlyStringWrapper(operator));
         }
 
         @Override
-        boolean shouldShow(String input)
+        public boolean shouldShow(String input)
         {
             return operator.contains(input);
         }
@@ -146,7 +146,7 @@ public class OperatorEntry extends LeafNode
         }
 
         @Override
-        boolean features(String curInput, char character)
+        public boolean features(String curInput, char character)
         {
             return operator.contains("" + character);
         }

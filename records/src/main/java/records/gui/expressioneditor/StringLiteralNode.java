@@ -37,25 +37,25 @@ public class StringLiteralNode extends LeafNode implements OperandNode
         Completion currentCompletion = new Completion()
         {
             @Override
-            Pair<Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+            public Pair<Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
             {
                 return new Pair<>(null, currentText);
             }
 
             @Override
-            boolean shouldShow(String input)
+            public boolean shouldShow(String input)
             {
                 return true;
             }
 
             @Override
-            CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+            public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
             {
                 return CompletionAction.SELECT;
             }
 
             @Override
-            boolean features(String curInput, char character)
+            public boolean features(String curInput, char character)
             {
                 return true;
             }

@@ -261,7 +261,8 @@ public class Transform extends Transformation
         @Override
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
-            return () -> new Transform(mgr, ourId, srcControl.getTableIdOrThrow(), newColumns);
+            SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
+            return () -> new Transform(mgr, ourId, srcId.get(), newColumns);
         }
 
         @Override

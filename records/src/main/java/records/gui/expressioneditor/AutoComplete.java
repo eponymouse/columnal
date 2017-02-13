@@ -246,12 +246,15 @@ public class AutoComplete extends PopupControl
          * Given a property with the latest text, what graphical node and text property
          * should we show for the item?
          */
-        abstract Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText);
+        public abstract Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText);
 
         /**
          * Given the current input, should we be showing this completion?
+         *
+         * TODO this shouldn't be here, it should be pushed down to a subclass, as it's
+         * not called by AutoComplete itself
          */
-        abstract boolean shouldShow(String input);
+        public abstract boolean shouldShow(String input);
 
         public static enum CompletionAction
         {
@@ -264,13 +267,13 @@ public class AutoComplete extends PopupControl
          * Given current input, and whether or not this is the only completion available,
          * should we complete it right now, select it at least, or do nothing?
          */
-        abstract CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion);
+        public abstract CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion);
 
         /**
          * Does this completion feature the given character at all after
          * the current input?
          */
-        abstract boolean features(String curInput, char character);
+        public abstract boolean features(String curInput, char character);
     }
 
 
@@ -287,13 +290,13 @@ public class AutoComplete extends PopupControl
         }
 
         @Override
-        Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
         {
             return new Pair<>(new Label(" " + shortcuts[0] + " "), new ReadOnlyStringWrapper(title));
         }
 
         @Override
-        boolean shouldShow(String input)
+        public boolean shouldShow(String input)
         {
             return input.isEmpty() || Arrays.stream(shortcuts).anyMatch(c -> input.equals(c.toString()));
         }

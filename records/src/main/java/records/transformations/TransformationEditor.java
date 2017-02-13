@@ -2,7 +2,9 @@ package records.transformations;
 
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.StringExpression;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -56,28 +58,15 @@ public abstract class TransformationEditor
 
     public abstract @Nullable TableId getSourceId();
 
-    protected static ListView<ColumnId> getColumnListView(@Nullable Table src, @Nullable TableId id)
+    protected static ListView<ColumnId> getColumnListView(TableManager mgr, ObservableObjectValue<@Nullable TableId> idProperty)
     {
         ListView<ColumnId> lv = new ListView<>();
-        if (src != null)
+        lv.setPlaceholder(new Label("Could not find table: " + idProperty.get()));
+        Utility.addChangeListenerPlatform(idProperty, id -> updateList(lv, id, id == null ? null : mgr.getSingleTableOrNull(id)));
         {
-            try
-            {
-                lv.setItems(FXCollections.observableArrayList(src.getData().getColumnIds()));
-            } catch (UserException e)
-            {
-                lv.setPlaceholder(new Label("Could not find table: " + id + "\n" + e.getLocalizedMessage()));
-            } catch (InternalException e)
-            {
-                Utility.report(e);
-                lv.setPlaceholder(new Label("Could not find table due to internal error: " + id + "\n" + e.getLocalizedMessage()));
-            }
+            @Nullable TableId id = idProperty.get();
+            updateList(lv, id, id == null ? null : mgr.getSingleTableOrNull(id));
         }
-        else
-        {
-            lv.setPlaceholder(new Label("Could not find table: " + id));
-        }
-
         lv.setCellFactory(lv2 -> new TextFieldListCell<ColumnId>(new StringConverter<ColumnId>()
         {
             @Override
@@ -94,6 +83,27 @@ public abstract class TransformationEditor
         }));
         lv.setEditable(false);
         return lv;
+    }
+
+    private static void updateList(ListView<ColumnId> lv, @Nullable TableId id, @Nullable Table src)
+    {
+        lv.setPlaceholder(new Label("Could not find table: " + id));
+        if (src != null)
+        {
+            try
+            {
+                lv.setItems(FXCollections.observableArrayList(src.getData().getColumnIds()));
+            }
+            catch (UserException e)
+            {
+                lv.setPlaceholder(new Label("Could not find table: " + id + "\n" + e.getLocalizedMessage()));
+            }
+            catch (InternalException e)
+            {
+                Utility.report(e);
+                lv.setPlaceholder(new Label("Could not find table due to internal error: " + id + "\n" + e.getLocalizedMessage()));
+            }
+        }
     }
 
     protected static TableView<List<DisplayValue>> createExampleTable(ObservableList<Pair<String, List<DisplayValue>>> headerAndData)

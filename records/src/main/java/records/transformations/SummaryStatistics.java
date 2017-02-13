@@ -400,6 +400,7 @@ public class SummaryStatistics extends Transformation
         private final BooleanProperty ready = new SimpleBooleanProperty(false);
         private final ObservableList<@NonNull Pair<ColumnId, SummaryType>> ops;
         private final ObservableList<@NonNull ColumnId> splitBy;
+        private final ListView<ColumnId> columnListView;
 
         @OnThread(Tag.FXPlatform)
         private Editor(View view, TableManager mgr, @Nullable TableId thisTableId, @Nullable TableId srcTableId, @Nullable Table src, Map<ColumnId, SummaryType> summaries, List<ColumnId> splitBy)
@@ -412,6 +413,7 @@ public class SummaryStatistics extends Transformation
             {
                 ops.add(new Pair<>(entry.getKey(), entry.getValue()));
             }
+            columnListView = getColumnListView(mgr, srcControl.tableIdProperty());
         }
 
         @Override
@@ -431,7 +433,6 @@ public class SummaryStatistics extends Transformation
         public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
             HBox colsAndSummaries = new HBox();
-            ListView<ColumnId> columnListView = getColumnListView(srcControl.getTableOrNull(), srcControl.getTableIdOrNull());
             columnListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             colsAndSummaries.getChildren().add(columnListView);
 
@@ -555,13 +556,14 @@ public class SummaryStatistics extends Transformation
         @Override
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
+            SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             return () -> {
                 Map<ColumnId, SummaryType> summaries = new HashMap<>();
                 for (Pair<ColumnId, SummaryType> op : ops)
                 {
                     summaries.put(op.getFirst(), op.getSecond());
                 }
-                return new SummaryStatistics(mgr, thisTableId, srcControl.getTableIdOrThrow(), summaries, splitBy);
+                return new SummaryStatistics(mgr, thisTableId, srcId.get(), summaries, splitBy);
             };
         }
     }
