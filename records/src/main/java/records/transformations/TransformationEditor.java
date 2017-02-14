@@ -20,6 +20,7 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Column;
 import records.data.ColumnId;
 import records.data.Table;
 import records.data.TableId;
@@ -58,7 +59,7 @@ public abstract class TransformationEditor
 
     public abstract @Nullable TableId getSourceId();
 
-    protected static ListView<ColumnId> getColumnListView(TableManager mgr, ObservableObjectValue<@Nullable TableId> idProperty)
+    protected static ListView<ColumnId> getColumnListView(TableManager mgr, ObservableObjectValue<@Nullable TableId> idProperty, @Nullable FXPlatformConsumer<ColumnId> onDoubleClick)
     {
         ListView<ColumnId> lv = new ListView<>();
         lv.setPlaceholder(new Label("Could not find table: " + idProperty.get()));
@@ -81,7 +82,22 @@ public abstract class TransformationEditor
                 throw new UnsupportedOperationException();
             }
         }));
+
         lv.setEditable(false);
+
+        if (onDoubleClick != null)
+        {
+            FXPlatformConsumer<ColumnId> handler = onDoubleClick;
+            lv.setOnMouseClicked(e -> {
+                if (e.getClickCount() == 2)
+                {
+                    ColumnId selectedItem = lv.getSelectionModel().getSelectedItem();
+                    if (selectedItem != null)
+                        handler.consume(selectedItem);
+                }
+            });
+        }
+
         return lv;
     }
 

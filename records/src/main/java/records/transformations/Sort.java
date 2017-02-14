@@ -327,7 +327,7 @@ public class Sort extends Transformation
                 this.sortBy.add(Optional.of(c));
             }
             this.sortBy.add(Optional.empty());
-            columnListView = getColumnListView(mgr, srcControl.tableIdProperty());
+            columnListView = getColumnListView(mgr, srcControl.tableIdProperty(), null);
         }
 
         @Override

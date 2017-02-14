@@ -413,7 +413,7 @@ public class SummaryStatistics extends Transformation
             {
                 ops.add(new Pair<>(entry.getKey(), entry.getValue()));
             }
-            columnListView = getColumnListView(mgr, srcControl.tableIdProperty());
+            columnListView = getColumnListView(mgr, srcControl.tableIdProperty(), null);
         }
 
         @Override

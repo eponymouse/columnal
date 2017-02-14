@@ -4,8 +4,15 @@ import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -31,6 +38,7 @@ import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.SimulationSupplier;
 import utility.Utility;
+import utility.gui.SmallDeleteButton;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -172,16 +180,19 @@ public class HideColumns extends Transformation
     {
         private final @Nullable TableId tableId;
         private final SingleSourceControl srcControl;
-        private final List<ColumnId> columnsToHide;
+        private final ObservableList<ColumnId> columnsToHide;
         private final ListView<ColumnId> srcColumnList;
 
         @OnThread(Tag.FXPlatform)
         public Editor(View view, TableManager mgr, @Nullable TableId tableId, @Nullable TableId srcTableId, @Nullable Table src, List<ColumnId> toHide)
         {
             this.tableId = tableId;
-            columnsToHide = new ArrayList<>(toHide);
+            columnsToHide = FXCollections.observableArrayList(toHide);
             this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
-            this.srcColumnList = getColumnListView(mgr, srcControl.tableIdProperty());
+            this.srcColumnList = getColumnListView(mgr, srcControl.tableIdProperty(), col -> {
+                if (!columnsToHide.contains(col))
+                    columnsToHide.add(col);
+            });
             srcColumnList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         }
 
@@ -194,7 +205,21 @@ public class HideColumns extends Transformation
         @Override
         public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
-            return new VBox(srcControl, new HBox(srcColumnList));
+            Button add = new Button(">>");
+            ListView<ColumnId> hiddenColumns = new ListView<>(columnsToHide);
+            hiddenColumns.setCellFactory(lv -> new DeletableListCell());
+            hiddenColumns.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+
+            add.setOnAction(e -> {
+                for (ColumnId selected : srcColumnList.getSelectionModel().getSelectedItems())
+                {
+                    if (!columnsToHide.contains(selected))
+                        columnsToHide.add(selected);
+                }
+                //sortHiddenColumns();
+            });
+
+            return new VBox(srcControl, new HBox(srcColumnList, add, hiddenColumns));
         }
 
         @Override
@@ -214,6 +239,52 @@ public class HideColumns extends Transformation
         public @Nullable TableId getSourceId()
         {
             return srcControl.getTableIdOrNull();
+        }
+
+        private class DeletableListCell extends ListCell<ColumnId>
+        {
+            private final SmallDeleteButton button;
+            private final Label label;
+
+            @SuppressWarnings("initialization")
+            public DeletableListCell()
+            {
+                getStyleClass().add("deletable-list-cell");
+                button = new SmallDeleteButton();
+                button.setOnAction(() -> {
+                    if (isSelected())
+                    {
+                        // Delete all in selection
+                        // TODO (and do highlights for all delete buttons in selection on hover)
+                    }
+                    else
+                    {
+                        // Just delete this one
+                        columnsToHide.remove(getItem());
+                    }
+                });
+                label = new Label("");
+                BorderPane.setAlignment(label, Pos.CENTER_LEFT);
+                setGraphic(new BorderPane(label, null, button, null, null));
+            }
+
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            protected void updateItem(ColumnId item, boolean empty)
+            {
+                if (empty)
+                {
+                    label.setText("");
+                    button.setVisible(false);
+                }
+                else
+                {
+                    label.setText(item.toString());
+                    button.setVisible(true);
+                }
+
+                super.updateItem(item, empty);
+            }
         }
     }
 

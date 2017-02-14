@@ -1,0 +1,18 @@
+.deletable-list-cell {
+    -fx-content-display: right;
+}
+.small-delete > .small-delete-circle {
+    -fx-fill: transparent;
+}
+.small-delete > .small-delete-cross {
+    -fx-stroke: grey;
+    -fx-stroke-width: 2;
+}
+.small-delete:hover > .small-delete-circle,
+    .deletable-list-cell:my_hover_sel .small-delete > .small-delete-circle {
+    -fx-fill: red;
+}
+.small-delete:hover > .small-delete-cross,
+    .deletable-list-cell:my_hover_sel .small-delete > .small-delete-cross {
+    -fx-stroke: white;
+}

@@ -55,6 +55,7 @@ public class EditTransformationDialog
 
         dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         dialog.setResizable(true);
+        dialog.getDialogPane().setPrefWidth(800.0);
 
         List<TransformationInfo> available = TransformationManager.getInstance().getTransformations();
 
@@ -83,7 +84,7 @@ public class EditTransformationDialog
                 }
             });
         });
-        pane.setCenter(new VBox(new TextField(), filteredListView));
+        pane.setLeft(new VBox(new TextField(), filteredListView));
         ReadOnlyObjectProperty<TransformationInfo> selectedTransformation = filteredListView.getSelectionModel().selectedItemProperty();
         SimpleObjectProperty<Optional<TransformationEditor>> editor = new SimpleObjectProperty<>();
         Utility.addChangeListenerPlatform(selectedTransformation, trans ->
@@ -94,11 +95,10 @@ public class EditTransformationDialog
                 editor.set(Optional.empty());
         });
         BorderPane infoPane = new BorderPane();
-        infoPane.setMinWidth(600.0);
         Label title = new Label("");
         title.textProperty().bind(new DisplayTitleStringBinding(editor));
         infoPane.setTop(title);
-        pane.setRight(infoPane);
+        pane.setCenter(infoPane);
 
         Utility.addChangeListenerPlatform(editor, ed ->
         {
@@ -109,8 +109,9 @@ public class EditTransformationDialog
         });
         editor.set(existing == null ? Optional.empty() : Optional.of(existing));
         dialog.getDialogPane().setContent(pane);
+        dialog.getDialogPane().getStylesheets().add(Utility.getStylesheet("transformation.css"));
 
-        //dialog.setOnShown(e -> org.scenicview.ScenicView.show(dialog.getDialogPane().getScene()));
+        dialog.setOnShown(e -> org.scenicview.ScenicView.show(dialog.getDialogPane().getScene()));
 
         dialog.setResultConverter(new Callback<ButtonType, SimulationSupplier<Transformation>>()
         {
