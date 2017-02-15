@@ -15,6 +15,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -203,6 +204,12 @@ public class HideColumns extends Transformation
             });
             srcColumnList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             selectedCells = FXCollections.observableArrayList();
+            srcColumnList.setOnKeyPressed(e -> {
+                if (e.getCode() == KeyCode.ENTER)
+                {
+                    addAllItems(srcColumnList.getSelectionModel().getSelectedItems());
+                }
+            });
         }
 
         @Override
@@ -218,6 +225,12 @@ public class HideColumns extends Transformation
             ListView<ColumnId> hiddenColumns = new ListView<>(columnsToHide);
             hiddenColumns.setCellFactory(lv -> new DeletableListCell(lv));
             hiddenColumns.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+            hiddenColumns.setOnKeyPressed(e -> {
+                if (e.getCode() == KeyCode.DELETE || e.getCode() == KeyCode.BACK_SPACE)
+                {
+                    deleteSelection(hiddenColumns);
+                }
+            });
 
             add.setOnAction(e -> {
                 ObservableList<ColumnId> selectedItems = srcColumnList.getSelectionModel().getSelectedItems();
@@ -258,6 +271,15 @@ public class HideColumns extends Transformation
             return srcControl.getTableIdOrNull();
         }
 
+        @OnThread(Tag.FXPlatform)
+        public void deleteSelection(ListView<ColumnId> listView)
+        {
+            ArrayList<DeletableListCell> cols = new ArrayList<>(selectedCells);
+            List<ColumnId> selectedItems = new ArrayList<>(listView.getSelectionModel().getSelectedItems());
+            listView.getSelectionModel().clearSelection();
+            DeletableListCell.animateOutToRight(cols, () -> columnsToHide.removeAll(selectedItems));
+        }
+
         private class DeletableListCell extends SlidableListCell<ColumnId>
         {
             private final SmallDeleteButton button;
@@ -272,8 +294,7 @@ public class HideColumns extends Transformation
                     if (isSelected())
                     {
                         // Delete all in selection
-                        ArrayList<DeletableListCell> cols = new ArrayList<>(selectedCells);
-                        animateOutToRight(cols, () -> columnsToHide.removeAll(listView.getSelectionModel().getSelectedItems()));
+                        deleteSelection(listView);
                     }
                     else
                     {
