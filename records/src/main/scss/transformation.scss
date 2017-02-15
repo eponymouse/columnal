@@ -1,8 +1,8 @@
 @import 'colors';
 
 .deletable-list-cell {
-    -fx-background-color: $list-background !important;
     -fx-padding: 0;
+    -fx-background-color: transparent;
 }
 .deletable-list-cell-content {
     -fx-padding: 3px;
@@ -26,18 +26,24 @@
 }
 
 
-.small-delete > .small-delete-circle {
-    -fx-fill: transparent;
+.small-delete-circle {
+    .small-delete > & {
+        -fx-fill: transparent;
+    }
+    .small-delete:hover > &, .deletable-list-cell:my_hover_sel .small-delete > & {
+        -fx-fill: red;
+    }
 }
-.small-delete > .small-delete-cross {
-    -fx-stroke: grey;
+
+.small-delete-cross {
     -fx-stroke-width: 2;
-}
-.small-delete:hover > .small-delete-circle,
-    .deletable-list-cell:my_hover_sel .small-delete > .small-delete-circle {
-    -fx-fill: red;
-}
-.small-delete:hover > .small-delete-cross,
-    .deletable-list-cell:my_hover_sel .small-delete > .small-delete-cross {
-    -fx-stroke: white;
+
+    .small-delete > & {
+        -fx-stroke: grey;
+
+    }
+    .small-delete:hover > &, .deletable-list-cell:my_hover_sel .small-delete > &,
+      .deletable-list-cell:selected & {
+        -fx-stroke: white;
+    }
 }

@@ -1,6 +1,12 @@
-$list-even: derive(white, -5%);
-$list-odd:  derive(white, -10%);
-$list-background: derive(white, -20%);
+/* General: */
+$focus-color: rgb(75, 54, 150);
+$faint-focus-color: rgba($focus-color, 0.25);
+
+/* Lists: */
+$list-even: derive(white, -4%);
+$list-odd:  derive(white, -8%);
+$list-background: derive(white, -12%);
 $list-selection-focused: rgb(75, 54, 150);
 $list-selection-unfocused: rgb(120, 118, 128);
 $list-selection-text: white;
+

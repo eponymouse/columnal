@@ -109,6 +109,7 @@ public class EditTransformationDialog
         });
         editor.set(existing == null ? Optional.empty() : Optional.of(existing));
         dialog.getDialogPane().setContent(pane);
+        dialog.getDialogPane().getStylesheets().add(Utility.getStylesheet("general.css"));
         dialog.getDialogPane().getStylesheets().add(Utility.getStylesheet("transformation.css"));
 
         //dialog.setOnShown(e -> org.scenicview.ScenicView.show(dialog.getDialogPane().getScene()));

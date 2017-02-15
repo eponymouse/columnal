@@ -1,0 +1,31 @@
+@import 'colors';
+
+.root {
+    -fx-font-family: "Noto Sans";
+    -fx-font-size: 13pt;
+
+    -fx-focus-color: $focus-color;
+    -fx-faint-focus-color: $faint-focus-color;
+}
+
+.list-view {
+    -fx-background-color: -fx-box-border, $list-background;
+}
+.list-view:focused {
+    -fx-background-color: -fx-faint-focus-color, -fx-focus-color, $list-background;
+}
+.list-view > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    &:empty {
+        -fx-background-color: transparent;
+    }
+    &:filled:selected {
+        -fx-background-color: $list-selection-unfocused;
+        -fx-text-fill: white;
+    }
+}
+.list-view:focused > .virtual-flow > .clipped-container > .sheet > .list-cell {
+    &:filled:selected {
+        -fx-background-color: $list-selection-focused;
+        -fx-text-fill: white;
+    }
+}
