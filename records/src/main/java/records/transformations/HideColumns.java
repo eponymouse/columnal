@@ -1,11 +1,14 @@
 package records.transformations;
 
+import annotation.userindex.qual.UnknownIfUserIndex;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.StringExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
+import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
@@ -16,6 +19,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.interning.qual.UnknownInterned;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
@@ -183,6 +187,9 @@ public class HideColumns extends Transformation
         private final ObservableList<ColumnId> columnsToHide;
         private final ListView<ColumnId> srcColumnList;
 
+        private final ObservableList<DeletableListCell> selectedCells;
+        private boolean hoverOverSelection = false;
+
         @OnThread(Tag.FXPlatform)
         public Editor(View view, TableManager mgr, @Nullable TableId tableId, @Nullable TableId srcTableId, @Nullable Table src, List<ColumnId> toHide)
         {
@@ -194,6 +201,7 @@ public class HideColumns extends Transformation
                     columnsToHide.add(col);
             });
             srcColumnList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
+            selectedCells = FXCollections.observableArrayList();
         }
 
         @Override
@@ -207,7 +215,7 @@ public class HideColumns extends Transformation
         {
             Button add = new Button(">>");
             ListView<ColumnId> hiddenColumns = new ListView<>(columnsToHide);
-            hiddenColumns.setCellFactory(lv -> new DeletableListCell());
+            hiddenColumns.setCellFactory(lv -> new DeletableListCell(lv));
             hiddenColumns.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
             add.setOnAction(e -> {
@@ -247,7 +255,7 @@ public class HideColumns extends Transformation
             private final Label label;
 
             @SuppressWarnings("initialization")
-            public DeletableListCell()
+            public DeletableListCell(ListView<ColumnId> listView)
             {
                 getStyleClass().add("deletable-list-cell");
                 button = new SmallDeleteButton();
@@ -255,7 +263,7 @@ public class HideColumns extends Transformation
                     if (isSelected())
                     {
                         // Delete all in selection
-                        // TODO (and do highlights for all delete buttons in selection on hover)
+                        columnsToHide.removeAll(listView.getSelectionModel().getSelectedItems());
                     }
                     else
                     {
@@ -263,9 +271,43 @@ public class HideColumns extends Transformation
                         columnsToHide.remove(getItem());
                     }
                 });
+                button.setOnHover(entered -> {
+                    if (isSelected())
+                    {
+                        hoverOverSelection = entered;
+                        // Set hover state on all (including us):
+                        for (DeletableListCell selectedCell : selectedCells)
+                        {
+                            selectedCell.updateHoverState(hoverOverSelection);
+                        }
+
+                    }
+                    // If not selected, nothing to do
+                });
                 label = new Label("");
                 BorderPane.setAlignment(label, Pos.CENTER_LEFT);
                 setGraphic(new BorderPane(label, null, button, null, null));
+            }
+
+            private void updateHoverState(boolean hovering)
+            {
+                pseudoClassStateChanged(PseudoClass.getPseudoClass("my_hover_sel"), hovering);
+            }
+
+            @Override
+            public void updateSelected(boolean selected)
+            {
+                if (selected)
+                {
+                    selectedCells.add(this);
+                    updateHoverState(hoverOverSelection);
+                }
+                else
+                {
+                    selectedCells.remove(this);
+                    updateHoverState(false);
+                }
+                super.updateSelected(selected);
             }
 
             @Override

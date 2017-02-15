@@ -1,6 +1,7 @@
 package utility.gui;
 
 import javafx.css.PseudoClass;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Circle;
 import javafx.scene.shape.LineTo;
@@ -9,6 +10,7 @@ import javafx.scene.shape.Path;
 import javafx.scene.shape.Shape;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 
 /**
@@ -36,10 +38,23 @@ public class SmallDeleteButton extends StackPane
         circle.setMouseTransparent(true);
         cross.setMouseTransparent(true);
         getChildren().addAll(circle, cross);
+        setOnMousePressed(MouseEvent::consume);
+        setOnMouseReleased(MouseEvent::consume);
+        setOnMouseClicked(MouseEvent::consume);
     }
 
     public void setOnAction(FXPlatformRunnable onAction)
     {
         setOnMouseClicked(e -> onAction.run());
+    }
+
+    /**
+     * Given action will be called with true on hover, and false on exit
+     * @param onHover
+     */
+    public void setOnHover(FXPlatformConsumer<Boolean> onHover)
+    {
+        setOnMouseEntered(e -> onHover.consume(true));
+        setOnMouseExited(e -> onHover.consume(false));
     }
 }
