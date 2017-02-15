@@ -1,0 +1,43 @@
+@import 'colors';
+
+.deletable-list-cell {
+    -fx-background-color: $list-background !important;
+    -fx-padding: 0;
+}
+.deletable-list-cell-content {
+    -fx-padding: 3px;
+
+    .deletable-list-cell:filled:even > & {
+        -fx-background-color: $list-even;
+    }
+    .deletable-list-cell:filled:odd > & {
+        -fx-background-color: $list-odd;
+    }
+    .deletable-list-cell:filled:selected > & {
+        -fx-background-color: $list-selection-unfocused;
+    }
+    .list-view:focused .deletable-list-cell:filled:selected > & {
+        -fx-background-color: $list-selection-focused;
+    }
+
+    .deletable-list-cell:filled:selected > & > .label {
+        -fx-text-fill: $list-selection-text;
+    }
+}
+
+
+.small-delete > .small-delete-circle {
+    -fx-fill: transparent;
+}
+.small-delete > .small-delete-cross {
+    -fx-stroke: grey;
+    -fx-stroke-width: 2;
+}
+.small-delete:hover > .small-delete-circle,
+    .deletable-list-cell:my_hover_sel .small-delete > .small-delete-circle {
+    -fx-fill: red;
+}
+.small-delete:hover > .small-delete-cross,
+    .deletable-list-cell:my_hover_sel .small-delete > .small-delete-cross {
+    -fx-stroke: white;
+}

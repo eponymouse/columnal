@@ -610,9 +610,15 @@ public class Utility
         });
     }
 
+    public static void log(String info, Exception e)
+    {
+        System.err.println(info);
+        e.printStackTrace(); // TODO
+    }
+
     public static void log(Exception e)
     {
-        e.printStackTrace(); // TODO
+        log("", e);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -641,7 +647,7 @@ public class Utility
         }
         catch (NullPointerException e)
         {
-            log(e);
+            log("Problem loading stylesheet: " + stylesheetName, e);
             return "";
         }
     }

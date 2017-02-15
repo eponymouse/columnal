@@ -195,6 +195,27 @@
                 </executions>
             </plugin>
 
+            <!-- Sass compiler -->
+            <plugin>
+                <groupId>nl.geodienstencentrum.maven</groupId>
+                <artifactId>sass-maven-plugin</artifactId>
+                <version>2.23</version>
+                <configuration>
+                    <sassSourceDirectory>${basedir}/src/main/scss</sassSourceDirectory>
+                    <destination>${project.build.directory}/classes</destination>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>generate-css</id>
+                        <phase>generate-resources</phase>
+                        <goals>
+                            <goal>update-stylesheets</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+
+
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.3</version>
