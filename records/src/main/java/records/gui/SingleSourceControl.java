@@ -43,6 +43,7 @@ public class SingleSourceControl extends HBox implements CompletionListener
     {
         this.mgr = mgr;
         this.curSelection = new SimpleObjectProperty<>(srcTableId);
+        getStyleClass().add("single-source-control");
         Label label = new Label("Source:");
         TextField selected = new TextField(srcTableId == null ? "" : srcTableId.getOutput());
         autoComplete = new AutoComplete(selected, s -> mgr.getAllTables().stream().filter(t -> t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.toList()), this, c -> false);

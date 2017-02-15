@@ -1,5 +1,24 @@
 @import 'colors';
 
+.transformation-list {
+    -fx-pref-width: 12em;
+}
+.transformation-info {
+    -fx-padding: 1em;
+}
+.transformation-title {
+    -fx-font-size: 250%;
+}
+.transformation-description {
+
+}
+
+.single-source-control {
+    -fx-alignment: baseline-left;
+    -fx-spacing: 0.5em;
+}
+
+
 .deletable-list-cell {
     -fx-padding: 0;
     -fx-background-color: transparent;

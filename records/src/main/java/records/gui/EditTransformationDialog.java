@@ -84,7 +84,8 @@ public class EditTransformationDialog
                 }
             });
         });
-        pane.setLeft(new VBox(new TextField(), filteredListView));
+        filteredListView.getStyleClass().add("transformation-list");
+        pane.setLeft(filteredListView);
         ReadOnlyObjectProperty<TransformationInfo> selectedTransformation = filteredListView.getSelectionModel().selectedItemProperty();
         SimpleObjectProperty<Optional<TransformationEditor>> editor = new SimpleObjectProperty<>();
         Utility.addChangeListenerPlatform(selectedTransformation, trans ->
@@ -94,18 +95,29 @@ public class EditTransformationDialog
             else
                 editor.set(Optional.empty());
         });
-        BorderPane infoPane = new BorderPane();
+        VBox infoPane = new VBox();
+        infoPane.getStyleClass().add("transformation-info");
         Label title = new Label("");
+        title.getStyleClass().add("transformation-title");
         title.textProperty().bind(new DisplayTitleStringBinding(editor));
-        infoPane.setTop(title);
+        infoPane.getChildren().add(title);
+        Label description = new Label("");
+        description.getStyleClass().add("transformation-description");
+        infoPane.getChildren().add(description);
         pane.setCenter(infoPane);
 
         Utility.addChangeListenerPlatform(editor, ed ->
         {
+            if (infoPane.getChildren().size() > 2)
+                infoPane.getChildren().remove(2);
             if (ed == null || !ed.isPresent())
-                infoPane.setCenter(null);
+            {
+                // Leave out
+            }
             else
-                infoPane.setCenter(ed.get().getParameterDisplay(this::showError));
+            {
+                infoPane.getChildren().add(ed.get().getParameterDisplay(this::showError));
+            }
         });
         editor.set(existing == null ? Optional.empty() : Optional.of(existing));
         dialog.getDialogPane().setContent(pane);
