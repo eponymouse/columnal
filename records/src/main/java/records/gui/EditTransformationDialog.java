@@ -111,7 +111,7 @@ public class EditTransformationDialog
         dialog.getDialogPane().setContent(pane);
         dialog.getDialogPane().getStylesheets().add(Utility.getStylesheet("transformation.css"));
 
-        dialog.setOnShown(e -> org.scenicview.ScenicView.show(dialog.getDialogPane().getScene()));
+        //dialog.setOnShown(e -> org.scenicview.ScenicView.show(dialog.getDialogPane().getScene()));
 
         dialog.setResultConverter(new Callback<ButtonType, SimulationSupplier<Transformation>>()
         {

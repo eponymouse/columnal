@@ -1,6 +1,20 @@
 .deletable-list-cell {
-    -fx-content-display: right;
+    -fx-background-color: white !important;
+    -fx-padding: 0;
 }
+.deletable-list-cell:filled:even > .deletable-list-cell-content {
+    -fx-background-color: derive(white, -5%);
+}
+.deletable-list-cell:filled:odd > .deletable-list-cell-content {
+    -fx-background-color: derive(white, -10%);
+}
+.deletable-list-cell:filled:selected > .deletable-list-cell-content {
+    -fx-background-color: blue;
+}
+.deletable-list-cell-content {
+    -fx-padding: 3px;
+}
+
 .small-delete > .small-delete-circle {
     -fx-fill: transparent;
 }

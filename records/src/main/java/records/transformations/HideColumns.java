@@ -42,6 +42,7 @@ import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.SimulationSupplier;
 import utility.Utility;
+import utility.gui.SlidableListCell;
 import utility.gui.SmallDeleteButton;
 
 import java.io.File;
@@ -191,14 +192,14 @@ public class HideColumns extends Transformation
         private boolean hoverOverSelection = false;
 
         @OnThread(Tag.FXPlatform)
+        @SuppressWarnings("initialization")
         public Editor(View view, TableManager mgr, @Nullable TableId tableId, @Nullable TableId srcTableId, @Nullable Table src, List<ColumnId> toHide)
         {
             this.tableId = tableId;
             columnsToHide = FXCollections.observableArrayList(toHide);
             this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
             this.srcColumnList = getColumnListView(mgr, srcControl.tableIdProperty(), col -> {
-                if (!columnsToHide.contains(col))
-                    columnsToHide.add(col);
+                addAllItems(Collections.singletonList(col));
             });
             srcColumnList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             selectedCells = FXCollections.observableArrayList();
@@ -219,15 +220,23 @@ public class HideColumns extends Transformation
             hiddenColumns.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
 
             add.setOnAction(e -> {
-                for (ColumnId selected : srcColumnList.getSelectionModel().getSelectedItems())
-                {
-                    if (!columnsToHide.contains(selected))
-                        columnsToHide.add(selected);
-                }
+                ObservableList<ColumnId> selectedItems = srcColumnList.getSelectionModel().getSelectedItems();
+                addAllItems(selectedItems);
                 //sortHiddenColumns();
             });
 
             return new VBox(srcControl, new HBox(srcColumnList, add, hiddenColumns));
+        }
+
+        public void addAllItems(List<ColumnId> items)
+        {
+            for (ColumnId selected : items)
+            {
+                if (!columnsToHide.contains(selected))
+                {
+                    columnsToHide.add(selected);
+                }
+            }
         }
 
         @Override
@@ -249,7 +258,7 @@ public class HideColumns extends Transformation
             return srcControl.getTableIdOrNull();
         }
 
-        private class DeletableListCell extends ListCell<ColumnId>
+        private class DeletableListCell extends SlidableListCell<ColumnId>
         {
             private final SmallDeleteButton button;
             private final Label label;
@@ -263,12 +272,13 @@ public class HideColumns extends Transformation
                     if (isSelected())
                     {
                         // Delete all in selection
-                        columnsToHide.removeAll(listView.getSelectionModel().getSelectedItems());
+                        ArrayList<DeletableListCell> cols = new ArrayList<>(selectedCells);
+                        animateOutToRight(cols, () -> columnsToHide.removeAll(listView.getSelectionModel().getSelectedItems()));
                     }
                     else
                     {
                         // Just delete this one
-                        columnsToHide.remove(getItem());
+                        animateOutToRight(Collections.singletonList(this), () -> columnsToHide.remove(getItem()));
                     }
                 });
                 button.setOnHover(entered -> {
@@ -286,7 +296,9 @@ public class HideColumns extends Transformation
                 });
                 label = new Label("");
                 BorderPane.setAlignment(label, Pos.CENTER_LEFT);
-                setGraphic(new BorderPane(label, null, button, null, null));
+                BorderPane borderPane = new BorderPane(label, null, button, null, null);
+                borderPane.getStyleClass().add("deletable-list-cell-content");
+                setGraphic(borderPane);
             }
 
             private void updateHoverState(boolean hovering)
