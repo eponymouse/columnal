@@ -10,6 +10,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Priority;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -58,7 +59,10 @@ public class SingleSourceControl extends HBox implements CompletionListener
         });
         // TODO implement it
 
-        super.getChildren().addAll(label, selected, select);
+        label.setMinWidth(USE_PREF_SIZE);
+        select.setMinWidth(USE_PREF_SIZE);
+        HBox.setHgrow(selected, Priority.ALWAYS);
+        getChildren().addAll(label, selected, select);
     }
 
     public @Nullable TableId getTableIdOrNull()

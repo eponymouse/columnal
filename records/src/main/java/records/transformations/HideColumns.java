@@ -19,6 +19,8 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.interning.qual.UnknownInterned;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -222,6 +224,10 @@ public class HideColumns extends Transformation
         public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
             Button add = new Button(">>");
+            add.setMinWidth(Region.USE_PREF_SIZE);
+            VBox addWrapper = new VBox(add);
+            addWrapper.getStyleClass().add("add-wrapper");
+
             ListView<ColumnId> hiddenColumns = new ListView<>(columnsToHide);
             hiddenColumns.setCellFactory(lv -> new DeletableListCell(lv));
             hiddenColumns.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
@@ -238,7 +244,11 @@ public class HideColumns extends Transformation
                 //sortHiddenColumns();
             });
 
-            return new VBox(srcControl, new HBox(srcColumnList, add, hiddenColumns));
+            HBox.setHgrow(srcColumnList, Priority.ALWAYS);
+            HBox.setHgrow(hiddenColumns, Priority.ALWAYS);
+            HBox hBox = new HBox(srcColumnList, addWrapper, hiddenColumns);
+            hBox.getStyleClass().add("hide-columns-lists");
+            return new VBox(srcControl, hBox);
         }
 
         public void addAllItems(List<ColumnId> items)

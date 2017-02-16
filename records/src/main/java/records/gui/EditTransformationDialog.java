@@ -14,6 +14,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.stage.Modality;
@@ -117,7 +119,9 @@ public class EditTransformationDialog
             }
             else
             {
-                infoPane.getChildren().add(ed.get().getParameterDisplay(this::showError));
+                Pane parameterDisplay = ed.get().getParameterDisplay(this::showError);
+                VBox.setVgrow(parameterDisplay, Priority.ALWAYS);
+                infoPane.getChildren().add(parameterDisplay);
             }
         });
         editor.set(existing == null ? Optional.empty() : Optional.of(existing));
@@ -125,7 +129,7 @@ public class EditTransformationDialog
         dialog.getDialogPane().getStylesheets().add(Utility.getStylesheet("general.css"));
         dialog.getDialogPane().getStylesheets().add(Utility.getStylesheet("transformation.css"));
 
-        //dialog.setOnShown(e -> org.scenicview.ScenicView.show(dialog.getDialogPane().getScene()));
+        dialog.setOnShown(e -> org.scenicview.ScenicView.show(dialog.getDialogPane().getScene()));
 
         dialog.setResultConverter(new Callback<ButtonType, SimulationSupplier<Transformation>>()
         {
