@@ -15,6 +15,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
 import javafx.stage.Modality;
 import javafx.stage.Window;
 import javafx.util.Callback;
@@ -97,7 +98,7 @@ public class EditTransformationDialog
         });
         VBox infoPane = new VBox();
         infoPane.getStyleClass().add("transformation-info");
-        Label title = new Label("");
+        Text title = new Text("");
         title.getStyleClass().add("transformation-title");
         title.textProperty().bind(new DisplayTitleStringBinding(editor));
         infoPane.getChildren().add(title);
