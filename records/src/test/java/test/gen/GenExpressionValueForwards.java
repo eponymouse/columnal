@@ -157,7 +157,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                     columnRef(type),
                     () ->
                     {
-                        Number number = TestUtil.generateNumberV(r, gs);
+                        @Value Number number = TestUtil.generateNumberV(r, gs);
                         return literal(number, new NumericLiteral(number, displayInfo.getUnit()));
                     }
                 ), l(() -> {

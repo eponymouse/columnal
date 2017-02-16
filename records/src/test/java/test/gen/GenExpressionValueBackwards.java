@@ -697,7 +697,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
     private Expression makeMatch(int maxLevels, ExSupplier<Expression> makeCorrectOutcome, ExSupplier<Expression> makeOtherOutcome) throws InternalException, UserException
     {
         DataType t = makeType(r);
-        Object actual = makeValue(t);
+        @Value Object actual = makeValue(t);
         // Make a bunch of guards which won't fire:
         List<Function<MatchExpression, MatchClause>> clauses = new ArrayList<>(TestUtil.makeList(r, 0, 5, (ExSupplier<Optional<Function<MatchExpression, MatchClause>>>)() -> {
             // Generate a bunch which can't match the item:

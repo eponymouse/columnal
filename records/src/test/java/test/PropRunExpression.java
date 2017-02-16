@@ -1,5 +1,6 @@
 package test;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -39,7 +40,7 @@ public class PropRunExpression
             });
             for (int row = 0; row < src.value.size(); row++)
             {
-                Object actualValue = src.expression.getValue(row, new EvaluateState());
+                @Value Object actualValue = src.expression.getValue(row, new EvaluateState());
                 assertTrue("{{{" + src.expression.toString() + "}}} should have been " + TestUtil.toString(src.value.get(row)) + " but was " + TestUtil.toString(actualValue) + " columns: " + src.recordSet.getColumnIds().stream().map(Object::toString).collect(Collectors.joining(", ")) + " " + src.recordSet.debugGetVals(row),
                     Utility.compareValues(src.value.get(row), actualValue, new BigDecimal("0.000000001")) == 0);
             }
