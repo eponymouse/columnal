@@ -48,8 +48,8 @@ public class NotEqualExpression extends BinaryOpExpression
     @Override
     public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        Object lhsVal = lhs.getValue(rowIndex, state);
-        Object rhsVal = rhs.getValue(rowIndex, state);
+        @Value Object lhsVal = lhs.getValue(rowIndex, state);
+        @Value Object rhsVal = rhs.getValue(rowIndex, state);
         return Utility.value(0 != Utility.compareValues(lhsVal, rhsVal));
     }
 

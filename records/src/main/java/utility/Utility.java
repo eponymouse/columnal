@@ -235,8 +235,8 @@ public class Utility
         {
             if (i >= b.size())
                 return 1; // A was larger
-            Object ax = a.get(i);
-            Object bx = b.get(i);
+            @Value Object ax = a.get(i);
+            @Value Object bx = b.get(i);
             int cmp = compareValues(ax, bx, epsilon);
             if (cmp != 0)
                 return cmp;
@@ -256,8 +256,8 @@ public class Utility
         {
             if (i >= b.size())
                 return 1; // A was larger
-            Object ax = a.get(i);
-            Object bx = b.get(i);
+            @Value Object ax = a.get(i);
+            @Value Object bx = b.get(i);
             int cmp = compareValues(ax, bx, epsilon);
             if (cmp != 0)
                 return cmp;
@@ -294,8 +294,8 @@ public class Utility
             cmp = Integer.compare(at.getTagIndex(), bt.getTagIndex());
             if (cmp != 0)
                 return cmp;
-            Object a2 = at.getInner();
-            Object b2 = bt.getInner();
+            @Value Object a2 = at.getInner();
+            @Value Object b2 = bt.getInner();
             if (a2 != null && b2 != null)
                 return compareValues(a2, b2, epsilon);
             return 0; // Assume bx null too, if types match.

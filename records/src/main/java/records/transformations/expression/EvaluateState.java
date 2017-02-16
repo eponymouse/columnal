@@ -37,7 +37,7 @@ public class EvaluateState
 
     public @Value Object get(String varName) throws InternalException
     {
-        Object value = variables.get(varName);
+        @Value Object value = variables.get(varName);
         if (value == null)
             throw new InternalException("Trying to access undeclared variable: \"" + varName + "\"");
         return value;

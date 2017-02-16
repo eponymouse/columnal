@@ -246,7 +246,7 @@ public class MatchExpression extends Expression
         @OnThread(Tag.Simulation)
         public @Nullable EvaluateState match(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException
         {
-            Object expected = expression.getValue(rowIndex, state);
+            @Value Object expected = expression.getValue(rowIndex, state);
             if (Utility.compareValues(expected, value) == 0)
                 return state;
             else
@@ -428,7 +428,7 @@ public class MatchExpression extends Expression
     public @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         // It's type checked so can just copy first clause:
-        Object value = expression.getValue(rowIndex, state);
+        @Value Object value = expression.getValue(rowIndex, state);
         for (MatchClause clause : clauses)
         {
             EvaluateState newState = clause.matches(value, state, rowIndex);
