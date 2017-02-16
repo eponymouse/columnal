@@ -1,8 +1,6 @@
 package records.transformations;
 
-import annotation.qual.Value;
 import javafx.beans.binding.BooleanExpression;
-import javafx.beans.binding.StringExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -14,43 +12,26 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.CalculatedNumericColumn;
-import records.data.CalculatedStringColumn;
-import records.data.CalculatedTaggedColumn;
 import records.data.Column;
 import records.data.ColumnId;
-import records.data.ColumnStorage;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitor;
-import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.NumberInfo;
-import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
-import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
-import records.data.datatype.DataTypeValue.GetValue;
-import records.data.datatype.TypeId;
 import records.error.FunctionInt;
 import records.error.InternalException;
-import records.error.ParseException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.grammar.BasicLexer;
-import records.grammar.ExpressionLexer;
-import records.grammar.ExpressionParser;
 import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.SplitByContext;
 import records.grammar.TransformationParser.SummaryColContext;
 import records.grammar.TransformationParser.SummaryContext;
-import records.grammar.TransformationParser.SummaryTypeContext;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.loadsave.OutputBuilder;
@@ -58,7 +39,6 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
@@ -66,9 +46,6 @@ import utility.Utility;
 
 import javax.validation.constraints.NotNull;
 import java.io.File;
-import java.math.BigDecimal;
-import java.time.temporal.Temporal;
-import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -77,10 +54,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
-import java.util.TreeSet;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * Created by neil on 21/10/2016.
@@ -423,9 +396,9 @@ public class SummaryStatistics extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FX) StringExpression displayTitle()
+        public String getDisplayTitle()
         {
-            return new ReadOnlyStringWrapper("Basic Statistics");
+            return "Basic Statistics";
         }
 
         @Override

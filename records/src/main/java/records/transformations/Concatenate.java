@@ -3,7 +3,6 @@ package records.transformations;
 import annotation.qual.Value;
 import com.google.common.collect.Sets;
 import javafx.beans.binding.BooleanExpression;
-import javafx.beans.binding.StringExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.scene.control.Label;
@@ -326,9 +325,9 @@ public class Concatenate extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FX) StringExpression displayTitle()
+        public String getDisplayTitle()
         {
-            return new ReadOnlyStringWrapper("Concatenate");
+            return "Concatenate";
         }
 
         @Override

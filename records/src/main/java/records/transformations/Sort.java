@@ -2,12 +2,10 @@ package records.transformations;
 
 import annotation.qual.Value;
 import javafx.beans.binding.BooleanExpression;
-import javafx.beans.binding.StringExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -35,7 +33,6 @@ import records.data.datatype.DataTypeValue;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
-import records.grammar.BasicLexer;
 import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.OrderByContext;
@@ -331,9 +328,9 @@ public class Sort extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FX) StringExpression displayTitle()
+        public String getDisplayTitle()
         {
-            return new ReadOnlyStringWrapper("Sort");
+            return "Sort";
         }
 
         @Override

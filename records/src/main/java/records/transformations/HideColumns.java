@@ -1,18 +1,14 @@
 package records.transformations;
 
-import annotation.userindex.qual.UnknownIfUserIndex;
 import javafx.beans.binding.BooleanExpression;
-import javafx.beans.binding.StringExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.input.KeyCode;
@@ -22,7 +18,6 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
-import org.checkerframework.checker.interning.qual.UnknownInterned;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
@@ -215,9 +210,9 @@ public class HideColumns extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FX) StringExpression displayTitle()
+        public String getDisplayTitle()
         {
-            return new ReadOnlyStringWrapper("Hide");
+            return "Hide";
         }
 
         @Override

@@ -1,12 +1,9 @@
 package records.transformations;
 
 import javafx.beans.binding.BooleanExpression;
-import javafx.beans.binding.StringExpression;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -20,7 +17,6 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Column;
 import records.data.ColumnId;
 import records.data.Table;
 import records.data.TableId;
@@ -49,7 +45,7 @@ public abstract class TransformationEditor
      * The title to show at the top of the information display.
      */
     @OnThread(Tag.FX)
-    public abstract StringExpression displayTitle();
+    public abstract String getDisplayTitle();
 
     public abstract Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError);
 

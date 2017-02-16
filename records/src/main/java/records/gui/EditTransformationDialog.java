@@ -11,7 +11,6 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
@@ -24,7 +23,6 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Table;
 import records.data.TableId;
 import records.data.Transformation;
 import records.transformations.TransformationInfo;
@@ -194,13 +192,12 @@ public class EditTransformationDialog
         {
             this.selectedTransformation = selectedTransformation;
             super.bind(selectedTransformation);
-            // TODO bind against display title too
         }
 
         @Override
         protected String computeValue()
         {
-            return (selectedTransformation.get() == null || !selectedTransformation.get().isPresent()) ? "" : selectedTransformation.get().get().displayTitle().get();
+            return (selectedTransformation.get() == null || !selectedTransformation.get().isPresent()) ? "" : selectedTransformation.get().get().getDisplayTitle();
         }
     }
 }

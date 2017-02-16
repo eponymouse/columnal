@@ -1,7 +1,6 @@
 package records.transformations;
 
 import javafx.beans.binding.BooleanExpression;
-import javafx.beans.binding.StringExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
@@ -389,9 +388,9 @@ public class Filter extends Transformation
         }
 
         @Override
-        public @OnThread(Tag.FX) StringExpression displayTitle()
+        public String getDisplayTitle()
         {
-            return new ReadOnlyStringWrapper("Filter");
+            return "Filter";
         }
 
         @Override
