@@ -12,8 +12,10 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.jetbrains.annotations.NotNull;
 import records.data.Column;
 import records.data.ColumnId;
@@ -107,7 +109,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
     /**
      * Current status of the field.
      */
-    private ObjectProperty<Status> status = new SimpleObjectProperty<>(Status.UNFINISHED);
+    private final ObjectProperty<Status> status = new SimpleObjectProperty<>(Status.UNFINISHED);
     /**
      * Permanent reference to list of contained nodes (for ExpressionNode.nodes)
      */
@@ -117,13 +119,12 @@ public class GeneralEntry extends LeafNode implements OperandNode
      */
     private final AutoComplete autoComplete;
 
-    @SuppressWarnings("initialization")
     public GeneralEntry(String content, Consecutive parent)
     {
         super(parent);
         bracketCompletion = new @Interned KeyShortcutCompletion("Bracketed expressions", '(');
         stringCompletion = new @Interned KeyShortcutCompletion("Text", '\"');
-        this.textField = new LeaveableTextField(this, parent);
+        this.textField = createLeaveableTextField();
         textField.setText(content);
         textField.getStyleClass().add("entry-field");
         Utility.sizeToFit(textField, null, null);
@@ -133,54 +134,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
         container = new VBox(typeLabel, new HBox(prefix, textField));
         container.getStyleClass().add("entry");
         this.nodes = FXCollections.observableArrayList(container);
-        this.autoComplete = new AutoComplete(textField, this::getSuggestions, new SimpleCompletionListener()
-        {
-            @Override
-            protected String selected(String currentText, Completion c, String rest)
-            {
-                if (c instanceof KeyShortcutCompletion)
-                {
-                    @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
-                    if (ksc == bracketCompletion)
-                        parent.replace(GeneralEntry.this, new Bracketed(Collections.<Function<Consecutive, OperandNode>>singletonList(e -> new GeneralEntry("", e).focusWhenShown()), parent, new Label("("), new Label(")")));
-                    else if (ksc == stringCompletion)
-                        parent.replace(GeneralEntry.this, new StringLiteralNode(parent).focusWhenShown());
-                    //else if (ksc == patternMatchCompletion)
-                        //parent.replace(GeneralEntry.this, new PatternMatchNode(parent).focusWhenShown());
-                }
-                else if (c instanceof FunctionCompletion)
-                {
-                    // What to do with rest != "" here? Don't allow? Skip to after args?
-                    FunctionCompletion fc = (FunctionCompletion)c;
-                    parent.replace(GeneralEntry.this, new FunctionNode(fc.function, parent).focusWhenShown());
-                }
-                else if (c instanceof TagCompletion)
-                {
-                    TagCompletion tc = (TagCompletion)c;
-                    parent.replace(GeneralEntry.this, new TagExpressionNode(parent, tc.typeName, tc.tagType).focusWhenShown());
-                }
-                else if (c instanceof GeneralCompletion)
-                {
-                    GeneralCompletion gc = (GeneralCompletion) c;
-                    completing = true;
-                    parent.setOperatorToRight(GeneralEntry.this, rest);
-                    status.setValue(gc.getType());
-                    if (gc instanceof SimpleCompletion)
-                    {
-                        prefix.setText(((SimpleCompletion)gc).prefix);
-                        return ((SimpleCompletion) gc).getCompletedText();
-                    }
-                    else // Numeric literal:
-                    {
-                        prefix.setText("");
-                        return currentText;
-                    }
-                }
-                else
-                    Utility.logStackTrace("Unsupported completion: " + c.getClass());
-                return textField.getText();
-            }
-        }, OperatorEntry::isOperatorAlphabet);
+        this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), OperatorEntry::isOperatorAlphabet);
 
         Utility.addChangeListenerPlatformNN(status, s -> {
             for (Status possibleStatus : Status.values())
@@ -202,7 +156,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
         textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), textField.getText().isEmpty());
     }
 
-    private String getTypeLabel(Status s)
+    private static String getTypeLabel(Status s)
     {
         switch (s)
         {
@@ -222,7 +176,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
         return "";
     }
 
-    private PseudoClass getPseudoClass(Status s)
+    private static PseudoClass getPseudoClass(Status s)
     {
         String pseudoClass;
         switch (s)
@@ -253,7 +207,8 @@ public class GeneralEntry extends LeafNode implements OperandNode
         return nodes;
     }
 
-    private List<Completion> getSuggestions(String text) throws UserException, InternalException
+    @RequiresNonNull({"bracketCompletion", "stringCompletion"})
+    private List<Completion> getSuggestions(@UnknownInitialization(LeafNode.class) GeneralEntry this, String text) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
         r.add(bracketCompletion);
@@ -322,7 +277,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
         return r;
     }
 
-    private void addAllFunctions(ArrayList<Completion> r)
+    private static void addAllFunctions(ArrayList<Completion> r)
     {
         for (FunctionDefinition function : FunctionList.FUNCTIONS)
         {
@@ -620,4 +575,56 @@ public class GeneralEntry extends LeafNode implements OperandNode
         return null;
     }
 
+    private class CompletionListener extends SimpleCompletionListener
+    {
+        public CompletionListener()
+        {
+        }
+
+        @Override
+        protected String selected(String currentText, Completion c, String rest)
+        {
+            if (c instanceof KeyShortcutCompletion)
+            {
+                @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
+                if (ksc == bracketCompletion)
+                    parent.replace(GeneralEntry.this, new Bracketed(Collections.<Function<Consecutive, OperandNode>>singletonList(e -> new GeneralEntry("", e).focusWhenShown()), parent, new Label("("), new Label(")")));
+                else if (ksc == stringCompletion)
+                    parent.replace(GeneralEntry.this, new StringLiteralNode(parent).focusWhenShown());
+                //else if (ksc == patternMatchCompletion)
+                    //parent.replace(GeneralEntry.this, new PatternMatchNode(parent).focusWhenShown());
+            }
+            else if (c instanceof FunctionCompletion)
+            {
+                // What to do with rest != "" here? Don't allow? Skip to after args?
+                FunctionCompletion fc = (FunctionCompletion)c;
+                parent.replace(GeneralEntry.this, new FunctionNode(fc.function, parent).focusWhenShown());
+            }
+            else if (c instanceof TagCompletion)
+            {
+                TagCompletion tc = (TagCompletion)c;
+                parent.replace(GeneralEntry.this, new TagExpressionNode(parent, tc.typeName, tc.tagType).focusWhenShown());
+            }
+            else if (c instanceof GeneralCompletion)
+            {
+                GeneralCompletion gc = (GeneralCompletion) c;
+                completing = true;
+                parent.setOperatorToRight(GeneralEntry.this, rest);
+                status.setValue(gc.getType());
+                if (gc instanceof SimpleCompletion)
+                {
+                    prefix.setText(((SimpleCompletion)gc).prefix);
+                    return ((SimpleCompletion) gc).getCompletedText();
+                }
+                else // Numeric literal:
+                {
+                    prefix.setText("");
+                    return currentText;
+                }
+            }
+            else
+                Utility.logStackTrace("Unsupported completion: " + c.getClass());
+            return textField.getText();
+        }
+    }
 }

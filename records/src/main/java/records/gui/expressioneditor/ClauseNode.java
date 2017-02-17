@@ -8,6 +8,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
@@ -247,13 +248,13 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
     }
 
     @Override
-    public void changed(ExpressionNode child)
+    public void changed(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
         parent.changed(this);
     }
 
     @Override
-    public void focusRightOf(ExpressionNode child)
+    public void focusRightOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
         if (child == outcome)
         {
@@ -285,7 +286,7 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
     }
 
     @Override
-    public void focusLeftOf(ExpressionNode child)
+    public void focusLeftOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
         if (child == outcome)
         {

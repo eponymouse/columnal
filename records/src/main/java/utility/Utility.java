@@ -69,6 +69,7 @@ import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.TokenStream;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -81,6 +82,9 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.BasicLexer;
 import records.gui.DisplayValue;
+import records.gui.expressioneditor.ExpressionNode;
+import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.OperatorEntry;
 import records.importers.ChoicePoint.Choice;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
@@ -769,6 +773,22 @@ public class Utility
         if (o instanceof Number)
             return (@Value Number)o;
         throw new InternalException("Expected number but found " + o.getClass());
+    }
+
+    // Like indexOf on lists, but uses only reference equality, and thus doesn't mind about initialization
+    public static <T> int indexOfRef(List<T> list, @UnknownInitialization T item)
+    {
+        for (int i = 0; i < list.size(); i++)
+        {
+            if (list.get(i) == item)
+                return i;
+        }
+        return -1;
+    }
+
+    public static <T> boolean containsRef(List<T> list, @UnknownInitialization T item)
+    {
+        return indexOfRef(list, item) != -1;
     }
 
     public static class ReadState

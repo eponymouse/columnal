@@ -5,6 +5,7 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.datatype.DataType;
@@ -43,7 +44,7 @@ public abstract class PatternMatchNode implements ExpressionParent, OperandNode
     public PatternMatchNode(ExpressionParent parent)
     {
         this.parent = parent;
-        this.source = new Consecutive(this, c -> new Label("match("), new Label(") with")).prompt("expression");
+        this.source = new Consecutive(this, new Label("match("), new Label(") with")).prompt("expression");
         this.clauses = FXCollections.observableArrayList();
         this.nodes = FXCollections.observableArrayList();
         this.childrenNodeListener = c -> {
@@ -122,13 +123,13 @@ public abstract class PatternMatchNode implements ExpressionParent, OperandNode
     }
 
     @Override
-    public void changed(ExpressionNode child)
+    public void changed(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
         parent.changed(this);
     }
 
     @Override
-    public void focusRightOf(ExpressionNode child)
+    public void focusRightOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
         if (child == source)
         {
@@ -136,7 +137,7 @@ public abstract class PatternMatchNode implements ExpressionParent, OperandNode
         }
         else
         {
-            int index = clauses.indexOf(child);
+            int index = Utility.indexOfRef(clauses, (ClauseNode)child);
             if (index != -1)
             {
                 if (index < clauses.size() - 1)
@@ -148,7 +149,7 @@ public abstract class PatternMatchNode implements ExpressionParent, OperandNode
     }
 
     @Override
-    public void focusLeftOf(ExpressionNode child)
+    public void focusLeftOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
         if (child == source)
         {
@@ -156,7 +157,7 @@ public abstract class PatternMatchNode implements ExpressionParent, OperandNode
         }
         else
         {
-            int index = clauses.indexOf(child);
+            int index = Utility.indexOfRef(clauses, (ClauseNode)child);
             if (index != -1)
             {
                 if (index > 0 )

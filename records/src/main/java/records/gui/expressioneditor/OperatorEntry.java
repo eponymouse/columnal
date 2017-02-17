@@ -6,8 +6,11 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
@@ -27,37 +30,19 @@ public class OperatorEntry extends LeafNode
 {
     private final TextField textField;
     private final ObservableList<Node> nodes;
-    private final AutoComplete autoComplete;
+    private final @MonotonicNonNull AutoComplete autoComplete;
     private final static List<String> OPERATORS = Arrays.asList("=", "<>", "+", "-", "*", "/", "&", "|", "<", "<=", ">", ">=", "?", "^", ",");
     private final static Set<Integer> ALPHABET = OPERATORS.stream().flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
-    @SuppressWarnings("initialization")
     public OperatorEntry(String content, Consecutive parent)
     {
         super(parent);
-        this.textField = new LeaveableTextField(this, parent);
+        this.textField = createLeaveableTextField();
         Utility.sizeToFit(textField, 5.0, 5.0);
         textField.getStyleClass().add("operator-field");
         this.nodes = FXCollections.observableArrayList(this.textField);
 
-        this.autoComplete = new AutoComplete(textField, this::getCompletions, new SimpleCompletionListener()
-        {
-            @Override
-            protected String selected(String currentText, Completion c, String rest)
-            {
-                if (c instanceof SimpleCompletion)
-                {
-                    parent.addOperandToRight(OperatorEntry.this, new GeneralEntry(rest, parent).focusWhenShown());
-                    return ((SimpleCompletion) c).operator;
-                }
-                else if (c instanceof KeyShortcutCompletion)
-                {
-                    parent.focusRightOf(OperatorEntry.this);
-                    return "";
-                }
-                return textField.getText();
-            }
-        }, c -> !isOperatorAlphabet(c));
+        this.autoComplete = new AutoComplete(textField, this::getCompletions, new CompletionListener(), c -> !isOperatorAlphabet(c));
 
         Utility.addChangeListenerPlatformNN(textField.textProperty(), text ->{
             parent.changed(OperatorEntry.this);
@@ -68,7 +53,7 @@ public class OperatorEntry extends LeafNode
         Utility.runAfter(() -> textField.setText(content));
     }
 
-    private List<Completion> getCompletions(String s)
+    private List<Completion> getCompletions(@UnknownInitialization(OperatorEntry.class) OperatorEntry this, String s)
     {
         ArrayList<Completion> r = new ArrayList<>();
         if (!parent.isTopLevel())
@@ -162,5 +147,28 @@ public class OperatorEntry extends LeafNode
     {
         textField.requestFocus();
         textField.positionCaret(side == Focus.LEFT ? 0 : textField.getLength());
+    }
+
+    private class CompletionListener extends SimpleCompletionListener
+    {
+        public CompletionListener()
+        {
+        }
+
+        @Override
+        protected String selected(String currentText, Completion c, String rest)
+        {
+            if (c instanceof SimpleCompletion)
+            {
+                parent.addOperandToRight(OperatorEntry.this, new GeneralEntry(rest, parent).focusWhenShown());
+                return ((SimpleCompletion) c).operator;
+            }
+            else if (c instanceof KeyShortcutCompletion)
+            {
+                parent.focusRightOf(OperatorEntry.this);
+                return "";
+            }
+            return textField.getText();
+        }
     }
 }

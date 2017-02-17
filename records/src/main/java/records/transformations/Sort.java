@@ -11,6 +11,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
@@ -335,6 +336,7 @@ public class Sort extends Transformation
                     addAllItems(columnListView.getSelectionModel().getSelectedItems());
                 }
             });
+            FXUtility.enableDragFrom(columnListView, "ColumnId", TransferMode.COPY);
         }
 
         private void addAllItems(List<ColumnId> items)
@@ -369,7 +371,7 @@ public class Sort extends Transformation
         public @OnThread(Tag.FXPlatform) Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
             HBox colsAndSort = new HBox();
-            // TODO need to handle changes in source table.
+            // TODO need to handle changes to source table.
             columnListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
             colsAndSort.getChildren().add(columnListView);
 
@@ -385,6 +387,9 @@ public class Sort extends Transformation
 
             ListView<Optional<ColumnId>> sortByView = FXUtility.readOnlyListView(sortBy, c -> !c.isPresent() ? "Original order" : c.get() + ", then if equal, by");
             colsAndSort.getChildren().add(sortByView);
+
+            //FXUtility.enableDragFrom();
+            //FXUtility.enableDragTo(sortByView, Optional::of, "ColumnId");
 
             ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData = FXCollections.observableArrayList();
             ObservableList<Pair<String, List<DisplayValue>>> destHeaderAndData = FXCollections.observableArrayList();

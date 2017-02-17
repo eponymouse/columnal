@@ -224,22 +224,33 @@ public class Filter extends Transformation
         private final @Nullable TableId thisTableId;
         private final SingleSourceControl srcControl;
         private final List<ColumnId> allColumns = new ArrayList<>();
-        private final TextField rawField;
         private final ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData;
         private final ObservableList<Pair<String, List<DisplayValue>>> destHeaderAndData;
         private final TableManager mgr;
         private final Expression expression;
+        private final ExpressionEditor expressionEditor;
 
+        @SuppressWarnings("initialization")
         @OnThread(Tag.FXPlatform)
         public Editor(View view, TableManager mgr, @Nullable TableId thisTableId, @Nullable TableId srcTableId, @Nullable Table src, Expression expression)
         {
             this.mgr = mgr;
             this.thisTableId = thisTableId;
             this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
-            this.rawField = new TextField("");
             this.srcHeaderAndData = FXCollections.observableArrayList();
             this.destHeaderAndData = FXCollections.observableArrayList();
             this.expression = expression;
+            this.expressionEditor = new ExpressionEditor(expression, srcControl.getTableOrNull(), DataType.BOOLEAN, mgr.getTypeManager(), e -> {
+                try
+                {
+                    updateExample(e);
+                }
+                catch (InternalException | UserException ex)
+                {
+                    Utility.log(ex);
+                    // TODO what should we show in interface?
+                }
+            });
         }
 
         @OnThread(Tag.FXPlatform)
@@ -396,18 +407,6 @@ public class Filter extends Transformation
         @Override
         public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
-            Utility.addChangeListenerPlatform(rawField.textProperty(), text -> {
-                try
-                {
-                    if (text != null)
-                        updateExample(Expression.parse(null, text, mgr.getTypeManager()));
-                }
-                catch (Exception e)
-                {
-                    // Never mind, don't update
-                    reportError.consume(e);
-                }
-            });
             try
             {
                 updateExample(new BooleanLiteral(true));
@@ -432,7 +431,8 @@ public class Filter extends Transformation
                     }
                 }
             };
-            return new VBox(rawField, new ExpressionEditor(null, srcControl.getTableOrNull(), DataType.BOOLEAN, mgr.getTypeManager(), updater).getContainer(), example);
+
+            return new VBox(expressionEditor.getContainer(), example);
         }
 
         @Override

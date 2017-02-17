@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
@@ -61,15 +62,15 @@ public interface ExpressionParent
     /**
      * Called to notify parent that the given child has changed its content.
      */
-    void changed(ExpressionNode child);
+    void changed(@UnknownInitialization(ExpressionNode.class) ExpressionNode child);
 
     /**
      * Focus the child to the right of the given child.
      */
-    void focusRightOf(ExpressionNode child);
+    void focusRightOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child);
 
     /**
      * Focus the child to the left of the given child.
      */
-    void focusLeftOf(ExpressionNode child);
+    void focusLeftOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child);
 }

@@ -14,6 +14,7 @@ import javafx.scene.shape.HLineTo;
 import javafx.scene.shape.MoveTo;
 import javafx.scene.shape.Path;
 import javafx.scene.shape.VLineTo;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.datatype.DataType;
@@ -59,7 +60,7 @@ public class FunctionNode implements ExpressionParent, OperandNode
             }
         };
         VBox vBox = ExpressionEditorUtil.withLabelAbove(functionName, "function", "function");
-        arguments = new Consecutive(this, c -> new HBox(vBox, new OpenBracketShape(c)), new Label(")"));
+        arguments = new Consecutive(this, new HBox(vBox, new OpenBracketShape()), new Label(")"));
 
         Utility.addChangeListenerPlatformNN(functionName.textProperty(), text -> {
             parent.changed(this);
@@ -156,20 +157,20 @@ public class FunctionNode implements ExpressionParent, OperandNode
     }
 
     @Override
-    public void changed(ExpressionNode child)
+    public void changed(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
         parent.changed(this);
     }
 
     @Override
-    public void focusRightOf(ExpressionNode child)
+    public void focusRightOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
         // It's bound to be arguments asking us, nothing beyond that:
         parent.focusRightOf(this);
     }
 
     @Override
-    public void focusLeftOf(ExpressionNode child)
+    public void focusLeftOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
         functionName.requestFocus();
         functionName.positionCaret(functionName.getLength());
@@ -220,7 +221,7 @@ public class FunctionNode implements ExpressionParent, OperandNode
     @SuppressWarnings("initialization")
     private static class OpenBracketShape extends AnchorPane
     {
-        public OpenBracketShape(Consecutive c)
+        public OpenBracketShape()
         {
             Label topLabel = new Label(" ");
             topLabel.getStyleClass().add("function-top");

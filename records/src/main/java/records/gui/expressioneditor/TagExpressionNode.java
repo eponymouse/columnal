@@ -5,6 +5,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
@@ -48,7 +49,7 @@ public class TagExpressionNode implements ExpressionParent, OperandNode
         if (tagType.getInner() == null)
             inner = null;
         else
-            inner = new Consecutive(this, c -> labelledField, null);
+            inner = new Consecutive(this, labelledField, null);
 
         if (inner == null)
             nodes = FXCollections.observableArrayList(labelledField);
@@ -106,19 +107,19 @@ public class TagExpressionNode implements ExpressionParent, OperandNode
     }
 
     @Override
-    public void changed(ExpressionNode child)
+    public void changed(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
         parent.changed(this);
     }
 
     @Override
-    public void focusRightOf(ExpressionNode child)
+    public void focusRightOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
         parent.focusRightOf(this);
     }
 
     @Override
-    public void focusLeftOf(ExpressionNode child)
+    public void focusLeftOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
         tagNameField.positionCaret(tagNameField.getLength());
         tagNameField.requestFocus();

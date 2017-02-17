@@ -2,6 +2,8 @@ package records.gui.expressioneditor;
 
 import javafx.scene.Node;
 import javafx.scene.layout.FlowPane;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.Table;
@@ -10,6 +12,7 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
+import records.transformations.expression.InvalidExpression;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -26,11 +29,10 @@ public class ExpressionEditor extends Consecutive
     private final FlowPane container;
     private final @Nullable DataType type;
     private final @Nullable Table srcTable;
-    private final FXPlatformConsumer<@Nullable Expression> onChange;
+    private final FXPlatformConsumer<@NonNull Expression> onChange;
     private final TypeManager typeManager;
 
-    @SuppressWarnings("initialization")
-    public ExpressionEditor(@Nullable Expression startingValue, @Nullable Table srcTable, @Nullable DataType type, TypeManager typeManager, FXPlatformConsumer<@Nullable Expression> onChange)
+    public ExpressionEditor(@Nullable Expression startingValue, @Nullable Table srcTable, @Nullable DataType type, TypeManager typeManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
         super(null, null, null);
         this.container = new FlowPane();
@@ -44,7 +46,8 @@ public class ExpressionEditor extends Consecutive
         Utility.listen(nodes(), c -> {
             container.getChildren().setAll(nodes());
         });
-        this.onChange = onChange;
+        this.onChange = onChangeHandler;
+
         //Utility.onNonNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
     }
 
@@ -88,17 +91,23 @@ public class ExpressionEditor extends Consecutive
     }
 
     @Override
-    public boolean isTopLevel()
+    public boolean isTopLevel(@UnknownInitialization(Consecutive.class) ExpressionEditor this)
     {
         return true;
     }
 
     @Override
-    protected void selfChanged()
+    protected void selfChanged(@UnknownInitialization(Consecutive.class) ExpressionEditor this)
     {
         // Can be null during initialisation
         if (onChange != null)
-            onChange.consume(toExpression(err -> {}));
+        {
+            @Nullable Expression expression = toExpression(err -> {});
+            if (expression != null)
+                onChange.consume(expression);
+            else
+                onChange.consume(new InvalidExpression());
+        }
     }
 
     @Override
