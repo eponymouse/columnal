@@ -40,6 +40,7 @@ import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -50,6 +51,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.function.Function;
 
@@ -265,6 +267,7 @@ public class HideColumns extends Transformation
             return new VBox(srcControl, hBox);
         }
 
+        @OnThread(Tag.FXPlatform)
         public void addAllItems(List<ColumnId> items)
         {
             for (ColumnId selected : items)
@@ -274,6 +277,14 @@ public class HideColumns extends Transformation
                     columnsToHide.add(selected);
                 }
             }
+            ObservableList<ColumnId> srcList = srcColumnList.getItems();
+            columnsToHide.sort(Comparator.<ColumnId, Pair<Integer, ColumnId>>comparing(col -> {
+                // If it's in the original, we sort by original position
+                // Otherwise we put it at the top (which will be -1 in original, which
+                // works out neatly) and sort by name.
+                int srcIndex = srcList.indexOf(col);
+                return new Pair<Integer, ColumnId>(srcIndex, col);
+            }, Pair.comparator()));
         }
 
         @Override

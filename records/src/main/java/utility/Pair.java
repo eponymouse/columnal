@@ -2,9 +2,11 @@ package utility;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.jetbrains.annotations.NotNull;
 import records.error.InternalException;
 import records.error.UserException;
 
+import java.util.Comparator;
 import java.util.function.Function;
 
 /**
@@ -66,4 +68,10 @@ public final class Pair<A, B>
     {
         return "(" + first + ", " + second + ")";
     }
+
+    public static <A extends Comparable<A>, B extends Comparable<B>> Comparator<Pair<A, B>> comparator()
+    {
+        return Comparator.<Pair<A, B>, A>comparing(Pair::getFirst).thenComparing(Pair::getSecond);
+    }
+
 }
