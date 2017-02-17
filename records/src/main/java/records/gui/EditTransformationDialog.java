@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -13,10 +14,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import javafx.stage.Window;
 import javafx.util.Callback;
@@ -30,7 +33,9 @@ import records.transformations.TransformationEditor;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformBiFunction;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformFunction;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.Workers;
@@ -100,11 +105,17 @@ public class EditTransformationDialog
         infoPane.getStyleClass().add("transformation-info");
         Text title = new Text("");
         title.getStyleClass().add("transformation-title");
-        title.textProperty().bind(new DisplayTitleStringBinding(editor));
-        infoPane.getChildren().add(title);
-        Label description = new Label("");
+        title.textProperty().bind(new SelectedTransformationStringBinding(editor, TransformationEditor::getDisplayTitle));
+        HBox titleWrapper = new HBox(new Label("\u219D"), title);
+        titleWrapper.getStyleClass().add("transformation-title-wrapper");
+        infoPane.getChildren().add(titleWrapper);
+        Text description = new Text("");
         description.getStyleClass().add("transformation-description");
-        infoPane.getChildren().add(description);
+        description.textProperty().bind(new SelectedTransformationStringBinding(editor, TransformationEditor::getDescription));
+        // TODO have a short version which you can expand into long version.
+        TextFlow textFlow = new TextFlow(description);
+        //textFlow.maxWidthProperty().bind(infoPane.widthProperty());
+        infoPane.getChildren().add(textFlow);
         pane.setCenter(infoPane);
 
         Utility.addChangeListenerPlatform(editor, ed ->
@@ -184,20 +195,23 @@ public class EditTransformationDialog
         }
     }
 
-    private static class DisplayTitleStringBinding extends StringBinding
+    private static class SelectedTransformationStringBinding extends StringBinding
     {
         private final ObjectExpression<Optional<TransformationEditor>> selectedTransformation;
+        private final FXPlatformFunction<TransformationEditor, String> getString;
 
-        public DisplayTitleStringBinding(ObjectExpression<Optional<TransformationEditor>> selectedTransformation)
+        public SelectedTransformationStringBinding(ObjectExpression<Optional<TransformationEditor>> selectedTransformation, FXPlatformFunction<TransformationEditor, String> getString)
         {
             this.selectedTransformation = selectedTransformation;
+            this.getString = getString;
             super.bind(selectedTransformation);
         }
 
         @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected String computeValue()
         {
-            return (selectedTransformation.get() == null || !selectedTransformation.get().isPresent()) ? "" : selectedTransformation.get().get().getDisplayTitle();
+            return (selectedTransformation.get() == null || !selectedTransformation.get().isPresent()) ? "" : getString.apply(selectedTransformation.get().get());
         }
     }
 }

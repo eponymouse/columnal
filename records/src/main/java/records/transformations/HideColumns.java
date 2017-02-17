@@ -18,6 +18,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
@@ -213,6 +214,12 @@ public class HideColumns extends Transformation
         public String getDisplayTitle()
         {
             return "Hide";
+        }
+
+        @Override
+        public @Localized String getDescription()
+        {
+            return getString("hide.description");
         }
 
         @Override

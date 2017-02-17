@@ -7,11 +7,15 @@
     -fx-padding: 0 1em 0 1em;
     -fx-fill-width: true;
 }
-.transformation-title {
+.transformation-title-wrapper {
     -fx-font-size: 200%;
+    /*-fx-padding: 0 0 0 2em;*/
+    .label {
+        -fx-text-fill: grey;
+    }
 }
 .transformation-description {
-
+    -fx-fill: grey;
 }
 
 .single-source-control {

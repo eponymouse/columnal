@@ -16,6 +16,9 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.StringConverter;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.Table;
@@ -34,6 +37,8 @@ import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 /**
  * Created by neil on 22/11/2016.
@@ -41,11 +46,48 @@ import java.util.List;
 @OnThread(Tag.FXPlatform)
 public abstract class TransformationEditor
 {
+    private static @MonotonicNonNull ResourceBundle resources;
+
+    private static @Nullable ResourceBundle getResources()
+    {
+        if (resources == null)
+        {
+            try
+            {
+                resources = ResourceBundle.getBundle("transformations");
+            }
+            catch (MissingResourceException e)
+            {
+                Utility.log(e);
+                return null;
+            }
+        }
+        return resources;
+    }
+
+    protected static @Localized String getString(@LocalizableKey String key)
+    {
+        ResourceBundle r = getResources();
+        if (r != null)
+        {
+            return r.getString(key);
+        }
+        else
+            return key; // Best we can do, if we can't find the labels file.
+    }
+
     /**
      * The title to show at the top of the information display.
      */
-    @OnThread(Tag.FX)
     public abstract String getDisplayTitle();
+
+    /**
+     * The description to show at the top of the information display.
+     */
+    public @Localized String getDescription()
+    {
+        return ""; // TODO make this abstract once I've written the descriptions.
+    }
 
     public abstract Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError);
 

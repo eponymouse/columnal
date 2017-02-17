@@ -14,6 +14,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -331,6 +332,12 @@ public class Sort extends Transformation
         public String getDisplayTitle()
         {
             return "Sort";
+        }
+
+        @Override
+        public @Localized String getDescription()
+        {
+            return getString("sort.description");
         }
 
         @Override
