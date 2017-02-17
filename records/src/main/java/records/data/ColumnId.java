@@ -4,13 +4,18 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
+import java.io.Serializable;
+
 /**
  * Created by neil on 14/11/2016.
+ *
+ * Serializable for interface reasons, for not saving to file
  */
 @OnThread(Tag.Any)
-public class ColumnId implements Comparable<ColumnId>
+public class ColumnId implements Comparable<ColumnId>, Serializable
 {
-    String columnId;
+    private static final long serialVersionUID = -6813720608766860501L;
+    private final String columnId;
 
     public ColumnId(String columnId)
     {
@@ -56,4 +61,6 @@ public class ColumnId implements Comparable<ColumnId>
     {
         return columnId.compareTo(o.columnId);
     }
+
+
 }

@@ -12,6 +12,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -41,6 +42,7 @@ import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.SimulationSupplier;
 import utility.Utility;
+import utility.gui.FXUtility;
 import utility.gui.SlidableListCell;
 import utility.gui.SmallDeleteButton;
 
@@ -49,6 +51,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Keeps all data as-is, but hides a given set of columns from the resulting
@@ -208,6 +211,7 @@ public class HideColumns extends Transformation
                     addAllItems(srcColumnList.getSelectionModel().getSelectedItems());
                 }
             });
+            FXUtility.enableDragFrom(srcColumnList, "ColumnId", TransferMode.COPY);
         }
 
         @Override
@@ -239,6 +243,14 @@ public class HideColumns extends Transformation
                     deleteSelection(hiddenColumns);
                 }
             });
+
+            FXUtility.enableDragTo(hiddenColumns, Collections.singletonMap(FXUtility.getTextDataFormat("ColumnId"), db -> {
+                @Nullable Object content = db.getContent(FXUtility.getTextDataFormat("ColumnId"));
+                if (content != null)
+                {
+                    addAllItems((List<ColumnId>)content);
+                }
+            }));
 
             add.setOnAction(e -> {
                 ObservableList<ColumnId> selectedItems = srcColumnList.getSelectionModel().getSelectedItems();
