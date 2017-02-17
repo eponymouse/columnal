@@ -1056,30 +1056,6 @@ public class Utility
         });
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static <T> ListView<@NonNull T> readOnlyListView(ObservableList<@NonNull T> content, Function<T, String> toString)
-    {
-        ListView<@NonNull T> listView = new ListView<>(content);
-        listView.setCellFactory((ListView<@NonNull T> lv) -> {
-            return new TextFieldListCell<>(new StringConverter<@NonNull T>()
-            {
-                @Override
-                public String toString(T t)
-                {
-                    return toString.apply(t);
-                }
-
-                @Override
-                public @NonNull T fromString(String string)
-                {
-                    throw new UnsupportedOperationException();
-                }
-            });
-        });
-        listView.setEditable(false);
-        return listView;
-    }
-
     public static class DescriptiveErrorListener extends BaseErrorListener
     {
         public final List<String> errors = new ArrayList<>();

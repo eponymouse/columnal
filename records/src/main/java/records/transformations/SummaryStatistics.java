@@ -2,7 +2,6 @@ package records.transformations;
 
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -43,6 +42,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import javax.validation.constraints.NotNull;
 import java.io.File;
@@ -440,8 +440,8 @@ public class SummaryStatistics extends Transformation
             buttons.getChildren().add(button);
             colsAndSummaries.getChildren().add(buttons);
 
-            ListView<Pair<ColumnId, SummaryType>> opListView = Utility.readOnlyListView(ops, op -> op.getFirst() + "." + op.getSecond().toString());
-            ListView<ColumnId> splitListView = Utility.readOnlyListView(splitBy, s -> s.toString());
+            ListView<Pair<ColumnId, SummaryType>> opListView = FXUtility.readOnlyListView(ops, op -> op.getFirst() + "." + op.getSecond().toString());
+            ListView<ColumnId> splitListView = FXUtility.readOnlyListView(splitBy, s -> s.toString());
             colsAndSummaries.getChildren().add(new VBox(opListView, splitListView));
             return colsAndSummaries;
         }

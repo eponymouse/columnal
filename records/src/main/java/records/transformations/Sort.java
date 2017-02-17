@@ -3,7 +3,6 @@ package records.transformations;
 import annotation.qual.Value;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -11,8 +10,10 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -48,6 +49,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -313,6 +315,7 @@ public class Sort extends Transformation
         private final BooleanProperty ready = new SimpleBooleanProperty(false);
         private final ListView<ColumnId> columnListView;
 
+        @SuppressWarnings("initialization")
         @OnThread(Tag.FXPlatform)
         private Editor(View view, TableManager mgr, @Nullable TableId thisTableId, @Nullable TableId srcTableId, List<ColumnId> sortBy)
         {
@@ -325,7 +328,22 @@ public class Sort extends Transformation
                 this.sortBy.add(Optional.of(c));
             }
             this.sortBy.add(Optional.empty());
-            columnListView = getColumnListView(mgr, srcControl.tableIdProperty(), null);
+            columnListView = getColumnListView(mgr, srcControl.tableIdProperty(), c -> addAllItems(Collections.singletonList(c)));
+            columnListView.setOnKeyPressed(e -> {
+                if (e.getCode() == KeyCode.ENTER)
+                {
+                    addAllItems(columnListView.getSelectionModel().getSelectedItems());
+                }
+            });
+        }
+
+        private void addAllItems(List<ColumnId> items)
+        {
+            for (ColumnId column : items)
+            {
+                if (!sortBy.contains(Optional.of(column)))
+                    sortBy.add(sortBy.size() - 1, Optional.of(column));
+            }
         }
 
         @Override
@@ -357,18 +375,15 @@ public class Sort extends Transformation
 
             VBox buttons = new VBox();
             Button button = new Button(">>");
+            button.setMinWidth(Region.USE_PREF_SIZE);
             button.setOnAction(e ->
             {
-                for (ColumnId column : columnListView.getSelectionModel().getSelectedItems())
-                {
-                    if (!sortBy.contains(Optional.of(column)))
-                        sortBy.add(sortBy.size() - 1, Optional.of(column));
-                }
+                addAllItems(columnListView.getSelectionModel().getSelectedItems());
             });
             buttons.getChildren().add(button);
             colsAndSort.getChildren().add(buttons);
 
-            ListView<Optional<ColumnId>> sortByView = Utility.readOnlyListView(sortBy, c -> !c.isPresent() ? "Original order" : c.get() + ", then if equal, by");
+            ListView<Optional<ColumnId>> sortByView = FXUtility.readOnlyListView(sortBy, c -> !c.isPresent() ? "Original order" : c.get() + ", then if equal, by");
             colsAndSort.getChildren().add(sortByView);
 
             ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData = FXCollections.observableArrayList();
