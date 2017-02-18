@@ -48,7 +48,6 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 
 /**
  * Anything which fits in a normal text field without special structure, that is:
@@ -131,10 +130,11 @@ public class GeneralEntry extends LeafNode implements OperandNode
         textField.getStyleClass().add("entry-field");
         Utility.sizeToFit(textField, null, null);
         typeLabel = new Label();
-        typeLabel.getStyleClass().add("entry-type");
+        typeLabel.getStyleClass().addAll("entry-type", "labelled-top");
         prefix = new Label();
         container = new VBox(typeLabel, new HBox(prefix, textField));
         container.getStyleClass().add("entry");
+        ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
         this.nodes = FXCollections.observableArrayList(container);
         this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), OperatorEntry::isOperatorAlphabet);
 

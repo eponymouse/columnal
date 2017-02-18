@@ -14,6 +14,7 @@ import records.transformations.expression.Expression;
 import utility.Pair;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * An interface for the parents of ExpressionNode to provide information
@@ -73,4 +74,10 @@ public interface ExpressionParent
      * Focus the child to the left of the given child.
      */
     void focusLeftOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child);
+
+    /**
+     * Gets the parent styles (for styling the top).  The first one is the outermost,
+     * the last one is the innermost.
+     */
+    Stream<String> getParentStyles();
 }

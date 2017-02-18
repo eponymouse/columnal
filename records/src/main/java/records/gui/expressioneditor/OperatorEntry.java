@@ -9,6 +9,8 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -35,6 +37,13 @@ import java.util.stream.Collectors;
  */
 public class OperatorEntry extends LeafNode
 {
+    /**
+     * The outermost container for the whole thing:
+     */
+    private final VBox container;
+    /**
+     * The text field for actually entering the operator.
+     */
     private final TextField textField;
     private final ObservableList<Node> nodes;
     private final @MonotonicNonNull AutoComplete autoComplete;
@@ -68,7 +77,12 @@ public class OperatorEntry extends LeafNode
         this.textField = createLeaveableTextField();
         Utility.sizeToFit(textField, 5.0, 5.0);
         textField.getStyleClass().add("operator-field");
-        this.nodes = FXCollections.observableArrayList(this.textField);
+        Label dummyLabel = new Label();
+        dummyLabel.getStyleClass().addAll("entry-type", "labelled-top");
+        ExpressionEditorUtil.setStyles(dummyLabel, parent.getParentStyles());
+        container = new VBox(dummyLabel, textField);
+        container.getStyleClass().add("entry");
+        this.nodes = FXCollections.observableArrayList(this.container);
 
         this.autoComplete = new AutoComplete(textField, this::getCompletions, new CompletionListener(), c -> !isOperatorAlphabet(c));
 

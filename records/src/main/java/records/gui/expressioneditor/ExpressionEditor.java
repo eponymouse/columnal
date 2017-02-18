@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -21,6 +22,8 @@ import utility.Utility;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 17/12/2016.
@@ -35,7 +38,7 @@ public class ExpressionEditor extends Consecutive
 
     public ExpressionEditor(Expression startingValue, @Nullable Table srcTable, @Nullable DataType type, TypeManager typeManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
-        super(null, null, null);
+        super(null, null, null, "");
         this.container = new FlowPane();
         this.typeManager = typeManager;
         container.getStyleClass().add("expression-editor");
@@ -136,4 +139,11 @@ public class ExpressionEditor extends Consecutive
     {
         return typeManager;
     }
+
+    @Override
+    public Stream<String> getParentStyles()
+    {
+        return Stream.empty();
+    }
+
 }

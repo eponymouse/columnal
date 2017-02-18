@@ -23,6 +23,7 @@ import utility.Utility;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 21/01/2017.
@@ -49,7 +50,7 @@ public class TagExpressionNode implements ExpressionParent, OperandNode
         if (tagType.getInner() == null)
             inner = null;
         else
-            inner = new Consecutive(this, labelledField, null);
+            inner = new Consecutive(this, labelledField, null, "tag");
 
         if (inner == null)
             nodes = FXCollections.observableArrayList(labelledField);
@@ -184,5 +185,11 @@ public class TagExpressionNode implements ExpressionParent, OperandNode
                 tagNameField.requestFocus();
             }
         }
+    }
+
+    @Override
+    public Stream<String> getParentStyles()
+    {
+        return parent.getParentStyles();
     }
 }

@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.collections.ObservableList;
+import javafx.geometry.Orientation;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -32,6 +33,7 @@ import utility.Utility;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 19/12/2016.
@@ -60,7 +62,7 @@ public class FunctionNode implements ExpressionParent, OperandNode
             }
         };
         VBox vBox = ExpressionEditorUtil.withLabelAbove(functionName, "function", "function");
-        arguments = new Consecutive(this, new HBox(vBox, new OpenBracketShape()), new Label(")"));
+        arguments = new Consecutive(this, new HBox(vBox, new OpenBracketShape()), new Label(""), "function");
 
         Utility.addChangeListenerPlatformNN(functionName.textProperty(), text -> {
             parent.changed(this);
@@ -173,9 +175,16 @@ public class FunctionNode implements ExpressionParent, OperandNode
         functionName.positionCaret(functionName.getLength());
     }
 
+    @Override
+    public Stream<String> getParentStyles()
+    {
+        return parent.getParentStyles();
+    }
+
+    private static final double aspectRatio = 0.5;
+
     private static class OpenBracketClipLeft extends Path
     {
-        private double aspectRatio = 0.2;
         @SuppressWarnings("initialization") // Need to annotate all the Shape API
         public OpenBracketClipLeft(ReadOnlyDoubleProperty heightProperty)
         {
@@ -197,8 +206,7 @@ public class FunctionNode implements ExpressionParent, OperandNode
 
     private static class OpenBracketClipRight extends Path
     {
-        private double aspectRatio = 0.2;
-        @SuppressWarnings("initialization")
+        @SuppressWarnings("initialization") // Need to annotate all the Shape API
         public OpenBracketClipRight(ReadOnlyDoubleProperty heightProperty)
         {
             getElements().addAll(
@@ -222,26 +230,72 @@ public class FunctionNode implements ExpressionParent, OperandNode
             Label topLabel = new Label(" ");
             topLabel.getStyleClass().add("function-top");
             TextField bottomField = new TextField("");
+            bottomField.getStyleClass().add("entry-field");
             bottomField.setMinWidth(2.0);
             bottomField.setPrefWidth(2.0);
             bottomField.setVisible(false);
-            VBox lhs = new VBox(topLabel, bottomField);
+            VBox lhs = new VBox(topLabel, bottomField) {
+                @Override
+                @OnThread(Tag.FX)
+                public Orientation getContentBias()
+                {
+                    return Orientation.VERTICAL;
+                }
+            };
             lhs.getStyleClass().add("function");
             lhs.setClip(new OpenBracketClipLeft(lhs.heightProperty()));
 
             Label topLabelRHS = new Label(" ");
             topLabelRHS.getStyleClass().add("function-top");
             TextField bottomFieldRHS = new TextField("");
+            bottomFieldRHS.getStyleClass().add("entry-field");
             bottomFieldRHS.setMinWidth(2.0);
             bottomFieldRHS.setPrefWidth(2.0);
             bottomFieldRHS.setVisible(false);
-            VBox rhs = new VBox(topLabelRHS, bottomFieldRHS);
+            VBox rhs = new VBox(topLabelRHS, bottomFieldRHS) {
+                @Override
+                @OnThread(Tag.FX)
+                public Orientation getContentBias()
+                {
+                    return Orientation.VERTICAL;
+                }
+            };
             rhs.getStyleClass().add("function");
             rhs.setClip(new OpenBracketClipRight(rhs.heightProperty()));
+
+            lhs.setMinWidth(USE_PREF_SIZE);
+            rhs.setMinWidth(USE_PREF_SIZE);
+            lhs.prefWidthProperty().bind(lhs.heightProperty().multiply(aspectRatio));
+            rhs.prefWidthProperty().bind(rhs.heightProperty().multiply(aspectRatio));
+
             getChildren().addAll(lhs, rhs);
             AnchorPane.setLeftAnchor(lhs, 0.0);
-            AnchorPane.setRightAnchor(lhs, 3.0);
+            AnchorPane.setRightAnchor(lhs, 2.0);
+            AnchorPane.setLeftAnchor(rhs, 2.0);
             AnchorPane.setRightAnchor(rhs, 0.0);
+            AnchorPane.setTopAnchor(lhs, 2.0);
+            AnchorPane.setTopAnchor(rhs, 2.0);
+        }
+
+        @Override
+        @OnThread(Tag.FX)
+        public Orientation getContentBias()
+        {
+            return Orientation.VERTICAL;
+        }
+
+        @Override
+        @OnThread(Tag.FX)
+        protected double computeMinWidth(double height)
+        {
+            return height * aspectRatio;
+        }
+
+        @Override
+        @OnThread(Tag.FX)
+        protected double computePrefWidth(double height)
+        {
+            return height * aspectRatio;
         }
     }
 }

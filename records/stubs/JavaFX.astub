@@ -53,6 +53,11 @@ class Pane
 {
     ObservableList<Node> getChildren() @UnknownInitialization;
 }
+class Region
+{
+    DoubleProperty prefWidthProperty() @UnknownInitialization;
+    DoubleProperty heightProperty() @UnknownInitialization;
+}
 
 package javafx.stage;
 class Window

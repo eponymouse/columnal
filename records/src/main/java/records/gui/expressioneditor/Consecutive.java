@@ -52,6 +52,7 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
     private final ObservableList<Node> nodes;
     // The boolean value is only used during updateListeners, will be true other times
     private final IdentityHashMap<ExpressionNode, Boolean> listeningTo = new IdentityHashMap<>();
+    private final String style;
     private @MonotonicNonNull ListChangeListener<Node> childrenNodeListener;
     protected final ObservableList<OperandNode> operands;
     protected final ObservableList<OperatorEntry> operators;
@@ -61,9 +62,10 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
     private @Nullable String prompt = null;
     protected final BooleanProperty atomicEdit;
 
-    public Consecutive(@Nullable ExpressionParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode)
+    public Consecutive(@Nullable ExpressionParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style)
     {
         this.parent = parent;
+        this.style = style;
         atomicEdit = new SimpleBooleanProperty(false);
         nodes = FXCollections.observableArrayList();
         operands = FXCollections.observableArrayList();
@@ -377,6 +379,12 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
             if (index != -1)
                 operands.get(index).focus(Focus.RIGHT);
         }
+    }
+
+    @Override
+    public Stream<String> getParentStyles()
+    {
+        return Stream.<String>concat(parent == null ? Stream.<String>empty() : parent.getParentStyles(), Stream.<String>of(style));
     }
 
     public List<Pair<String, @Nullable DataType>> getDeclaredVariables()
