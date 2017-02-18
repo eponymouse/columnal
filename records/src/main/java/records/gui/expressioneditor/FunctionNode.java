@@ -101,15 +101,12 @@ public class FunctionNode implements ExpressionParent, OperandNode
     }
 
     @Override
-    public @Nullable Expression toExpression(FXPlatformConsumer<Object> onError)
+    public Expression toExpression(FXPlatformConsumer<Object> onError)
     {
         // TODO keep track of whether function is known
         // TODO allow units (second optional consecutive)
-        @Nullable Expression argExp = arguments.toExpression(onError);
-        if (argExp != null)
-            return new CallExpression(functionName.getText(), Collections.emptyList(), argExp);
-        else
-            return null;
+        Expression argExp = arguments.toExpression(onError);
+        return new CallExpression(functionName.getText(), Collections.emptyList(), argExp);
     }
 
     // Focuses the arguments because we are only shown after they've chosen the function

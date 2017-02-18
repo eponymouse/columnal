@@ -196,23 +196,16 @@ public abstract class PatternMatchNode implements ExpressionParent, OperandNode
         return this;
     }
 
-    public @Nullable Expression toExpression(FXPlatformConsumer<Object> onError)
+    public Expression toExpression(FXPlatformConsumer<Object> onError)
     {
-        @Nullable Expression sourceExp = source.toExpression(onError);
-        boolean allClausesOk = true;
+        Expression sourceExp = source.toExpression(onError);
         List<Function<MatchExpression, MatchClause>> clauseExps = new ArrayList<>();
         for (ClauseNode clause : clauses)
         {
-            @Nullable Function<MatchExpression, MatchClause> exp = clause.toClauseExpression(onError);
-            if (exp != null)
-                clauseExps.add(exp);
-            else
-                allClausesOk = false;
+            Function<MatchExpression, MatchClause> exp = clause.toClauseExpression(onError);
+            clauseExps.add(exp);
         }
-        if (sourceExp != null && allClausesOk)
-            return new MatchExpression(sourceExp, clauseExps);
-        else
-            return null;
+        return new MatchExpression(sourceExp, clauseExps);
     }
 
     public @Nullable DataType getMatchType()

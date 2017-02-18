@@ -38,7 +38,7 @@ public @Interned interface OperandNode extends ExpressionNode
      * Saves this item to an Expression (AST-like item).  If there is a problem,
      * should call onError (1+ times) with problem, and return InvalidExpression if needed.
      */
-    public abstract @Nullable Expression toExpression(FXPlatformConsumer<Object> onError);
+    public abstract Expression toExpression(FXPlatformConsumer<Object> onError);
 
     /**
      * Focus appropriate item once this has been shown and return self-reference

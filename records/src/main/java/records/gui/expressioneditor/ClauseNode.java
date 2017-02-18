@@ -338,33 +338,16 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
         return false;
     }
 
-    public @Nullable Function<MatchExpression, MatchClause> toClauseExpression(FXPlatformConsumer<Object> onError)
+    public Function<MatchExpression, MatchClause> toClauseExpression(FXPlatformConsumer<Object> onError)
     {
         List<Function<MatchExpression, Pattern>> patterns = new ArrayList<>();
-        boolean allOk = true;
         for (Pair<Consecutive, Consecutive> match : matches)
         {
-            @Nullable Function<MatchExpression, PatternMatch> patExp = match.getFirst().toPattern();
-            @Nullable Expression matchExp = match.getSecond().toExpression(onError);
-            if (patExp != null && matchExp != null)
-            {
-                // For checker:
-                final @NonNull Function<MatchExpression, PatternMatch> patExp2 = patExp;
-                final @NonNull Expression matchExp2 = matchExp;
-
-                patterns.add(me -> new Pattern(patExp2.apply(me), matchExp2));
-            } else
-                allOk = false;
+            Function<MatchExpression, PatternMatch> patExp = match.getFirst().toPattern();
+            Expression matchExp = match.getSecond().toExpression(onError);
+            patterns.add(me -> new Pattern(patExp.apply(me), matchExp));
         }
-        final @Nullable Expression outcomeExp = this.outcome.toExpression(onError);
-
-        if (outcomeExp != null && allOk)
-        {
-            // For checker:
-            final @NonNull Expression outcomeExp2 = outcomeExp;
-            return me -> me.new MatchClause(Utility.<Function<MatchExpression, Pattern>, Pattern>mapList(patterns, f -> f.apply(me)), outcomeExp2);
-        }
-        else
-            return null;
+        Expression outcomeExp = this.outcome.toExpression(onError);
+        return me -> me.new MatchClause(Utility.<Function<MatchExpression, Pattern>, Pattern>mapList(patterns, f -> f.apply(me)), outcomeExp);
     }
 }

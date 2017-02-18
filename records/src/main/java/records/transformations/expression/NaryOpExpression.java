@@ -53,6 +53,7 @@ public abstract class NaryOpExpression extends Expression
     public String save(boolean topLevel)
     {
         StringBuilder s = new StringBuilder(topLevel ? "" : "(");
+        s.append(getSpecialPrefix());
         for (int i = 0; i < expressions.size(); i++)
         {
             if (i > 0)
@@ -62,6 +63,12 @@ public abstract class NaryOpExpression extends Expression
         if (!topLevel)
             s.append(")");
         return s.toString();
+    }
+
+    // Can be overridden by child classes to insert prefix before expression
+    protected String getSpecialPrefix()
+    {
+        return "";
     }
 
     protected abstract String saveOp(int index);

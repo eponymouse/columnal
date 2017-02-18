@@ -277,11 +277,11 @@ public class TestUtil
         return Utility.value(makeString(r, gs));
     }
 
-    public static String makeString(SourceOfRandomness r, GenerationStatus gs)
+    public static String makeString(SourceOfRandomness r, @Nullable GenerationStatus gs)
     {
         // Makes either totally random String from generator, or "awkward" string
         // with things likely to trip up parser
-        if (r.nextBoolean())
+        if (r.nextBoolean() && gs != null)
             return new StringGenerator().generate(r, gs);
         else
             return generateIdent(r);

@@ -19,9 +19,11 @@ import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
+import records.transformations.expression.InvalidOperatorExpression;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.PatternMatch;
 import records.transformations.expression.TimesExpression;
+import records.transformations.expression.UnfinishedExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -383,33 +385,39 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
         return this;
     }
 
-    private @Nullable List<String> getOperators(@UnknownInitialization(Consecutive.class) Consecutive this)
+    // If an expression is valid, it will always have a blank operator last, e.g.
+    // 1 + 2 + 3 <blankop>
+    // If has a non-blank operator last, there's a field beyond it that needs filling in
+    // (and once it is filled, there will be a blank operator beyond it), e.g.
+    // 1 + 2 + 3 * <blankfield>
+    // This method returns true, operators if valid, or false, operators if not
+    private Pair<Boolean, List<String>> getOperators(@UnknownInitialization(Consecutive.class) Consecutive this)
     {
         // If last operator not blank then can't be valid expression:
-        if (!operators.get(operators.size() - 1).get().isEmpty())
-            return null;
+        boolean lastBlank = operators.get(operators.size() - 1).get().isEmpty();
         // Knock off the last operator:
-        return Utility.<OperatorEntry, String>mapList(operators.subList(0, operators.size() - 1), op -> op.get());
+        return new Pair<>(lastBlank, Utility.<OperatorEntry, String>mapList(lastBlank ? operators.subList(0, operators.size() - 1) : operators, op -> op.get()));
     }
 
-    public @Nullable Expression toExpression(@UnknownInitialization(Consecutive.class) Consecutive this, FXPlatformConsumer<Object> onError)
+    public Expression toExpression(@UnknownInitialization(Consecutive.class) Consecutive this, FXPlatformConsumer<Object> onError)
     {
-        List<Expression> operandExps = new ArrayList<>();
-        this.operands.forEach(n -> {
-            Expression e = n.toExpression(onError);
-            if (e != null)
-                operandExps.add(e);
-        });
-        if (this.operands.size() != operandExps.size())
-            return null;
-        @Nullable List<String> ops = getOperators();
-        if (ops == null)
-            return null;
-        if (ops.isEmpty())
+        List<Expression> operandExps = Utility.mapList(operands, n -> n.toExpression(onError));
+        Pair<Boolean, List<String>> opsValid = getOperators();
+
+        if (!opsValid.getFirst())
+        {
+            // Add a dummy unfinished expression beyond last operator:
+            operandExps.add(new UnfinishedExpression(""));
+        }
+
+        List<String> ops = opsValid.getSecond();
+
+        if (ops.isEmpty()) // Must be valid in this case
         {
             // Only one operand:
             return operandExps.get(0);
         }
+
         if (ops.stream().allMatch(op -> op.equals("+") || op.equals("-")))
         {
             return new AddSubtractExpression(operandExps, Utility.<String, Op>mapList(ops, op -> op.equals("+") ? Op.ADD : Op.SUBTRACT));
@@ -429,7 +437,7 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
                 return new EqualExpression(operandExps.get(0), operandExps.get(1));
         }
 
-        return null; //TODO record errors, suggest fixes
+        return new InvalidOperatorExpression(operandExps, ops);
     }
 
     public @Nullable DataType inferType()
@@ -438,9 +446,9 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
     }
 
 
-    public @Nullable Function<MatchExpression, PatternMatch> toPattern()
+    public Function<MatchExpression, PatternMatch> toPattern()
     {
-        return null;
+        throw new RuntimeException("TODO");
     }
 
     // Done as an inner class to satisfy initialization checker

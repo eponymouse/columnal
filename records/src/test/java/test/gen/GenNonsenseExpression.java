@@ -26,6 +26,7 @@ import records.transformations.expression.ComparisonExpression.ComparisonOperato
 import records.transformations.expression.DivideExpression;
 import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
+import records.transformations.expression.InvalidOperatorExpression;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.NaryOpExpression;
 import records.transformations.expression.NotEqualExpression;
@@ -36,6 +37,7 @@ import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
 import records.transformations.expression.TimesExpression;
 import records.transformations.expression.TupleExpression;
+import records.transformations.expression.UnfinishedExpression;
 import records.transformations.expression.VarExpression;
 import test.DummyManager;
 import test.TestUtil;
@@ -112,7 +114,12 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> new CallExpression(TestUtil.generateVarName(r), TestUtil.makeList(r.nextInt(0, 2), new GenUnit(), r, gs), genDepth(true, r, depth + 1, gs)),
                 () -> new MatchExpression(genDepth(false, r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1))),
                 () -> new ArrayExpression(ImmutableList.copyOf(TestUtil.makeList(r, 0, 6, () -> genDepth(r, depth + 1, gs)))),
-                () -> new TupleExpression(ImmutableList.copyOf(TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs))))
+                () -> new TupleExpression(ImmutableList.copyOf(TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs)))),
+                () ->
+                {
+                    List<Expression> expressions = TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
+                    return new InvalidOperatorExpression(expressions, TestUtil.makeList(expressions.size() - 1, new GenRandomOp(), r, gs));
+                }
             )).get();
         }
     }
@@ -126,7 +133,8 @@ public class GenNonsenseExpression extends Generator<Expression>
                 new BooleanLiteral(r.nextBoolean()),
                 new StringLiteral(TestUtil.generateColumnId(r).getOutput()),
                 new ColumnReference(TestUtil.generateColumnId(r), ColumnReferenceType.CORRESPONDING_ROW),
-                new VarExpression(TestUtil.generateVarName(r))
+                new VarExpression(TestUtil.generateVarName(r)),
+                new UnfinishedExpression(TestUtil.makeString(r, null))
             ));
         }
         catch (UserException e)
@@ -208,5 +216,21 @@ public class GenNonsenseExpression extends Generator<Expression>
     private MatchExpression.Pattern shrinkPattern(SourceOfRandomness random, MatchExpression.Pattern p, MatchExpression ne)
     {
         return new MatchExpression.Pattern(p.getPattern(), null);
+    }
+
+    private class GenRandomOp extends Generator<String>
+    {
+        public GenRandomOp()
+        {
+            super(String.class);
+        }
+
+        @Override
+        public String generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+        {
+            return sourceOfRandomness.choose(Arrays.asList(
+                "<", ">", "+", "-", "*", "/", "<=", ">=", "=", "<>", "&", "|", "^", ","
+            ));
+        }
     }
 }

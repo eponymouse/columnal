@@ -64,7 +64,7 @@ public class StringLiteralNode extends LeafNode implements OperandNode
     }
 
     @Override
-    public @Nullable Expression toExpression(FXPlatformConsumer<Object> onError)
+    public Expression toExpression(FXPlatformConsumer<Object> onError)
     {
         return new records.transformations.expression.StringLiteral(textField.getText());
     }

@@ -138,7 +138,7 @@ public class TagExpressionNode implements ExpressionParent, OperandNode
     }
 
     @Override
-    public @Nullable Expression toExpression(FXPlatformConsumer<Object> onError)
+    public Expression toExpression(FXPlatformConsumer<Object> onError)
     {
         Expression innerExp;
         if (inner == null)
@@ -146,8 +146,6 @@ public class TagExpressionNode implements ExpressionParent, OperandNode
         else
         {
             innerExp = inner.toExpression(onError);
-            if (innerExp == null)
-                return null;
         }
         return new TagExpression(new Pair<>(typeName.getRaw(), tagType.getName()), innerExp);
     }

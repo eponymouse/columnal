@@ -12,12 +12,11 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
-import records.transformations.expression.InvalidExpression;
+import records.transformations.expression.InvalidOperatorExpression;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
@@ -102,11 +101,8 @@ public class ExpressionEditor extends Consecutive
         // Can be null during initialisation
         if (onChange != null)
         {
-            @Nullable Expression expression = toExpression(err -> {});
-            if (expression != null)
-                onChange.consume(expression);
-            else
-                onChange.consume(new InvalidExpression());
+            Expression expression = toExpression(err -> {});
+            onChange.consume(expression);
         }
     }
 

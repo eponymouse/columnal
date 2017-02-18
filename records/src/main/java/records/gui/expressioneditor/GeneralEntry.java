@@ -36,6 +36,7 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
+import records.transformations.expression.UnfinishedExpression;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import utility.ExFunction;
@@ -462,7 +463,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
     }
 
     @Override
-    public @Nullable Expression toExpression(FXPlatformConsumer<Object> onError)
+    public Expression toExpression(FXPlatformConsumer<Object> onError)
     {
         if (status.get() == Status.COLUMN_REFERENCE_SAME_ROW || status.get() == Status.COLUMN_REFERENCE_WHOLE)
         {
@@ -480,7 +481,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
                 }
                 catch (UserException e)
                 {
-                    return null;
+                    return new UnfinishedExpression(textField.getText().trim());
                 }
             }
             BooleanLiteralContext bool = parseOrNull(ExpressionParser::booleanLiteral);
@@ -490,7 +491,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
             }
         }
         // Unfinished:
-        return null;
+        return new UnfinishedExpression(textField.getText().trim());
     }
 
     private <T> @Nullable T parseOrNull(ExFunction<ExpressionParser, T> parse)
