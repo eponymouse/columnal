@@ -37,7 +37,7 @@ public class TagExpressionNode implements ExpressionParent, OperandNode
     private final ObservableList<Node> nodes;
     private final VBox labelledField;
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings("initialization") // Because LeaveableTextField gets marked uninitialized
     public TagExpressionNode(ExpressionParent parent, TypeId typeName, TagType<DataType> tagType)
     {
         this.parent = parent;

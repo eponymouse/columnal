@@ -26,40 +26,14 @@ public class StringLiteralNode extends LeafNode implements OperandNode
     private final AutoComplete autoComplete;
     private ObservableList<Node> nodes;
 
-    @SuppressWarnings("initialization")
     public StringLiteralNode(Consecutive parent)
     {
         super(parent);
-        textField = new LeaveableTextField(this, parent);
+        textField = createLeaveableTextField();
         nodes = FXCollections.observableArrayList(new Label("\u201C"), textField, new Label("\u201D"));
         // We need a completion so you can leave the field using tab/enter
         // Otherwise only right-arrow will get you out
-        Completion currentCompletion = new Completion()
-        {
-            @Override
-            public Pair<Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
-            {
-                return new Pair<>(null, currentText);
-            }
-
-            @Override
-            public boolean shouldShow(String input)
-            {
-                return true;
-            }
-
-            @Override
-            public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
-            {
-                return CompletionAction.SELECT;
-            }
-
-            @Override
-            public boolean features(String curInput, char character)
-            {
-                return true;
-            }
-        };
+        Completion currentCompletion = new EndStringCompletion();
         this.autoComplete = new AutoComplete(textField, s ->
         {
             return Collections.singletonList(currentCompletion);
@@ -119,6 +93,33 @@ public class StringLiteralNode extends LeafNode implements OperandNode
         else
         {
             textField.positionCaret(textField.getLength());
+        }
+    }
+
+    private static class EndStringCompletion extends Completion
+    {
+        @Override
+        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        {
+            return new Pair<>(null, currentText);
+        }
+
+        @Override
+        public boolean shouldShow(String input)
+        {
+            return true;
+        }
+
+        @Override
+        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        {
+            return CompletionAction.SELECT;
+        }
+
+        @Override
+        public boolean features(String curInput, char character)
+        {
+            return true;
         }
     }
 }

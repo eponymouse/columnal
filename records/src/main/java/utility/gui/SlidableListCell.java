@@ -28,7 +28,6 @@ public class SlidableListCell<T> extends ListCell<T>
     @OnThread(Tag.FX)
     protected final DoubleProperty xPosition = new SimpleDoubleProperty(0);
 
-    @SuppressWarnings("initialization")
     public SlidableListCell()
     {
         textProperty().addListener(c -> { throw new UnsupportedOperationException("SlidableListCell only supports graphic, not text.");});

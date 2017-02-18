@@ -9,6 +9,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
@@ -50,9 +51,8 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
     private final ObservableList<Node> nodes;
     // The boolean value is only used during updateListeners, will be true other times
     private final IdentityHashMap<ExpressionNode, Boolean> listeningTo = new IdentityHashMap<>();
-    private final ListChangeListener<Node> childrenNodeListener;
+    private @MonotonicNonNull ListChangeListener<Node> childrenNodeListener;
 
-    @SuppressWarnings("initialization")
     public ClauseNode(String rest, PatternMatchNode parent)
     {
         this.parent = parent;
@@ -60,21 +60,25 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
         this.mapsTo.getStyleClass().add("mapsto");
         this.matches = FXCollections.observableArrayList();
         this.nodes = FXCollections.observableArrayList();
-        this.childrenNodeListener = c -> {
-            updateNodes();
-        };
+        // Must initialize outcome first because updateNodes will use it:
+        this.outcome = makeConsecutive().prompt("value");
         Utility.listen(matches, c -> {
             updateNodes();
             updateListeners();
         });
-        // Must do outcome first because updateNodes will use it:
-        this.outcome = makeConsecutive().prompt("value");
         this.matches.add(new Pair<>(makeConsecutive().prompt("pattern"), makeConsecutive().prompt("condition")));
 
     }
 
-    private void updateListeners()
+    private void updateListeners(@UnknownInitialization(ClauseNode.class) ClauseNode this)
     {
+        if (childrenNodeListener == null)
+        {
+            this.childrenNodeListener = c -> {
+                updateNodes();
+            };
+        }
+
         // Make them all as old (false)
         listeningTo.replaceAll((e, b) -> false);
         // Merge new ones:
@@ -102,7 +106,7 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
         parent.changed(this);
     }
 
-    private void updateNodes()
+    private void updateNodes(@UnknownInitialization(ClauseNode.class) ClauseNode this)
     {
         List<Node> childrenNodes = new ArrayList<Node>(Stream.concat(
             matches.stream().flatMap(p -> Stream.concat(p.getFirst().nodes().stream(), p.getSecond().nodes().stream())),
@@ -110,8 +114,8 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
         nodes.setAll(childrenNodes);
     }
 
-    @NotNull
-    private Consecutive makeConsecutive()
+    @SuppressWarnings("initialization") // Because of Consecutive
+    private Consecutive makeConsecutive(@UnknownInitialization(Object.class) ClauseNode this)
     {
         return new Consecutive(this, null, null);
     }

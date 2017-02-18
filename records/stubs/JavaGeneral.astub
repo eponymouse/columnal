@@ -1,0 +1,12 @@
+import org.checkerframework.checker.nullness.qual.Nullable;
+
+package java.lang;
+class Object
+{
+    public boolean equals(@Nullable Object o);
+}
+package java.util;
+class List
+{
+    public void remove(@Nullable Object o);
+}

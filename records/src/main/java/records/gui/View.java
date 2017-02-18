@@ -20,6 +20,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.shape.QuadCurve;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
+import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
@@ -436,13 +437,19 @@ public class View extends StackPane
 
     public void edit(TableId existingTableId, TransformationEditor selectedEditor)
     {
-        EditTransformationDialog dialog = new EditTransformationDialog(getScene().getWindow(), this, selectedEditor);
+        EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, selectedEditor);
         showEditDialog(dialog, existingTableId);
+    }
+
+    @SuppressWarnings("nullness") // Can't be a View without an actual window
+    private Window getWindow()
+    {
+        return getScene().getWindow();
     }
 
     public void edit(Table src)
     {
-        EditTransformationDialog dialog = new EditTransformationDialog(getScene().getWindow(), this, src.getId());
+        EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, src.getId());
         showEditDialog(dialog, null);
     }
 

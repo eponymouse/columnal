@@ -407,7 +407,7 @@ public class MatchExpression extends Expression
     private final Expression expression;
     private final List<MatchClause> clauses;
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings("initialization") // Because we pass this to sub-clauses which we are creating.
     public MatchExpression(Expression expression, List<Function<MatchExpression, MatchClause>> clauses)
     {
         this.expression = expression;

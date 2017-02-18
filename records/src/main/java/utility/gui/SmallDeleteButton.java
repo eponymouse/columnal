@@ -23,7 +23,6 @@ public class SmallDeleteButton extends StackPane
     private final Shape circle;
     private final Shape cross;
 
-    @SuppressWarnings("initialization")
     public SmallDeleteButton()
     {
         circle = new Circle(8);

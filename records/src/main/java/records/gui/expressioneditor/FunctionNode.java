@@ -43,7 +43,7 @@ public class FunctionNode implements ExpressionParent, OperandNode
     private final ExpressionParent parent;
     private final FunctionDefinition function;
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings("initialization") // Because LeaveableTextField gets marked uninitialized
     public FunctionNode(FunctionDefinition function, ExpressionParent parent)
     {
         this.parent = parent;
@@ -179,7 +179,7 @@ public class FunctionNode implements ExpressionParent, OperandNode
     private static class OpenBracketClipLeft extends Path
     {
         private double aspectRatio = 0.2;
-        @SuppressWarnings("initialization")
+        @SuppressWarnings("initialization") // Need to annotate all the Shape API
         public OpenBracketClipLeft(ReadOnlyDoubleProperty heightProperty)
         {
             getElements().addAll(
@@ -218,7 +218,6 @@ public class FunctionNode implements ExpressionParent, OperandNode
         }
     }
 
-    @SuppressWarnings("initialization")
     private static class OpenBracketShape extends AnchorPane
     {
         public OpenBracketShape()

@@ -39,7 +39,7 @@ public class SingleSourceControl extends HBox implements CompletionListener
     private final TableManager mgr;
     private final AutoComplete autoComplete;
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings("initialization") // Because we pass this to AutoComplete
     public SingleSourceControl(View view, TableManager mgr, @Nullable TableId srcTableId)
     {
         this.mgr = mgr;
@@ -47,15 +47,20 @@ public class SingleSourceControl extends HBox implements CompletionListener
         getStyleClass().add("single-source-control");
         Label label = new Label("Source:");
         TextField selected = new TextField(srcTableId == null ? "" : srcTableId.getOutput());
-        autoComplete = new AutoComplete(selected, s -> mgr.getAllTables().stream().filter(t -> t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.toList()), this, c -> false);
+        autoComplete = new AutoComplete(selected, s -> mgr.getAllTables().stream().filter(t -> t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.<Completion>toList()), this, c -> false);
         Button select = new Button("Choose...");
         select.setOnAction(e -> {
-            Window window = getScene().getWindow();
-            window.hide(); // Or fold up?
-            view.pickTable(picked -> {
-                selected.setText(picked.getId().getOutput());
-                ((Stage)window).show();
-            });
+            if (getScene() != null && getScene().getWindow() != null)
+            {
+                Window window = getScene().getWindow();
+                window.hide(); // Or fold up?
+                view.pickTable(picked ->
+                {
+                    if (picked != null)
+                        selected.setText(picked.getId().getOutput());
+                    ((Stage) window).show();
+                });
+            }
         });
         // TODO implement it
 

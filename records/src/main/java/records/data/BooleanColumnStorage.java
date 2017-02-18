@@ -1,7 +1,9 @@
 package records.data;
 
 import annotation.qual.Value;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
@@ -26,11 +28,10 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
     private final DataTypeValue type;
     private final @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet;
 
-    @SuppressWarnings("initialization")
     public BooleanColumnStorage(@Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet)
     {
-        this.type = DataTypeValue.bool(this::getWithProgress);
         this.beforeGet = beforeGet;
+        this.type = DataTypeValue.bool(this::getWithProgress);
     }
 
     public BooleanColumnStorage()
@@ -38,7 +39,8 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
         this(null);
     }
 
-    private @Value Boolean getWithProgress(int i, @Nullable ProgressListener progressListener) throws UserException, InternalException
+    @RequiresNonNull({"data"})
+    private @Value Boolean getWithProgress(@UnknownInitialization(Object.class) BooleanColumnStorage this, int i, @Nullable ProgressListener progressListener) throws UserException, InternalException
     {
         if (beforeGet != null)
             beforeGet.accept(i, progressListener);
@@ -48,7 +50,7 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
     }
 
     @Override
-    public int filled()
+    public int filled(@UnknownInitialization(Object.class) BooleanColumnStorage this)
     {
         return length;
     }

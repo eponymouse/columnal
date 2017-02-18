@@ -4,6 +4,7 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableStringValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -13,7 +14,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.stage.Window;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.AutoComplete.Completion.CompletionAction;
@@ -52,7 +56,6 @@ public class AutoComplete extends PopupControl
      *                       no available completions with this character then we pick
      *                       the top one and move to next slot.
      */
-    @SuppressWarnings("initialization")
     public AutoComplete(TextField textField, ExFunction<String, List<Completion>> calculateCompletions, CompletionListener onSelect, Predicate<Character> inNextAlphabet)
     {
         this.textField = textField;
@@ -69,35 +72,14 @@ public class AutoComplete extends PopupControl
             }
         });
 
-        setSkin(new Skin<AutoComplete>()
-        {
-            @Override
-            @OnThread(Tag.FX)
-            public AutoComplete getSkinnable()
-            {
-                return AutoComplete.this;
-            }
-
-            @Override
-            @OnThread(Tag.FX)
-            public Node getNode()
-            {
-                return completions;
-            }
-
-            @Override
-            @OnThread(Tag.FX)
-            public void dispose()
-            {
-            }
-        });
+        setSkin(new AutoCompleteSkin());
 
         Utility.addChangeListenerPlatformNN(textField.focusedProperty(), focused -> {
             if (focused)
             {
                 Pair<Double, Double> pos = calculatePosition();
                 updateCompletions(calculateCompletions, textField.getText());
-                if (!isShowing())
+                if (!isShowing() && pos != null)
                     show(textField, pos.getFirst(), pos.getSecond());
             }
             else
@@ -176,7 +158,6 @@ public class AutoComplete extends PopupControl
             return change;
         }));
         setHideOnEscape(true);
-        setAutoFix(true);
         addEventFilter(javafx.scene.input.KeyEvent.KEY_PRESSED, e -> {
             if (e.getCode() == KeyCode.ESCAPE)
             {
@@ -201,7 +182,8 @@ public class AutoComplete extends PopupControl
         });
     }
 
-    private List<Completion> updateCompletions(ExFunction<String, List<Completion>> calculateCompletions, String text)
+    @RequiresNonNull({"completions"})
+    private List<Completion> updateCompletions(@UnknownInitialization(Object.class) AutoComplete this, ExFunction<String, List<Completion>> calculateCompletions, String text)
     {
         try
         {
@@ -216,18 +198,24 @@ public class AutoComplete extends PopupControl
     }
 
     @OnThread(Tag.FXPlatform)
-    private @Nullable Pair<Double, Double> calculatePosition()
+    @RequiresNonNull({"textField"})
+    private @Nullable Pair<Double, Double> calculatePosition(@UnknownInitialization(Object.class) AutoComplete this)
     {
         @Nullable Point2D textToScene = textField.localToScene(0, textField.getHeight());
-        if (textToScene == null || textField.getScene() == null || textField.getScene().getWindow() == null)
+        @Nullable Scene textFieldScene = textField.getScene();
+        if (textToScene == null || textFieldScene == null || textFieldScene == null)
+            return null;
+        @Nullable Window window = textFieldScene.getWindow();
+        if (window == null)
             return null;
         return new Pair<>(
-            textToScene.getX() + textField.getScene().getX() + textField.getScene().getWindow().getX(),
-            textToScene.getY() + textField.getScene().getY() + textField.getScene().getWindow().getY()
+            textToScene.getX() + textFieldScene.getX() + window.getX(),
+            textToScene.getY() + textFieldScene.getY() + window.getY()
         );
     }
 
-    private void updatePosition()
+    @RequiresNonNull({"textField"})
+    private void updatePosition(@UnknownInitialization(Object.class) AutoComplete this)
     {
         if (isShowing())
         {
@@ -387,5 +375,28 @@ public class AutoComplete extends PopupControl
         }
 
         protected abstract String selected(String currentText, Completion c, String rest);
+    }
+
+    private class AutoCompleteSkin implements Skin<AutoComplete>
+    {
+        @Override
+        @OnThread(Tag.FX)
+        public AutoComplete getSkinnable()
+        {
+            return AutoComplete.this;
+        }
+
+        @Override
+        @OnThread(Tag.FX)
+        public Node getNode()
+        {
+            return completions;
+        }
+
+        @Override
+        @OnThread(Tag.FX)
+        public void dispose()
+        {
+        }
     }
 }

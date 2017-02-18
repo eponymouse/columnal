@@ -40,7 +40,7 @@ public abstract class PatternMatchNode implements ExpressionParent, OperandNode
     private final IdentityHashMap<ExpressionNode, Boolean> listeningTo = new IdentityHashMap<>();
     private final ListChangeListener<Node> childrenNodeListener;
 
-    @SuppressWarnings("initialization")
+    @SuppressWarnings("initialization") // Because we pass this as the parent
     public PatternMatchNode(ExpressionParent parent)
     {
         this.parent = parent;
