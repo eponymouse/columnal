@@ -4,8 +4,13 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -15,6 +20,7 @@ import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.GeneralEntry.Status;
+import records.transformations.TransformationEditor;
 import utility.Pair;
 import utility.Utility;
 
@@ -32,8 +38,29 @@ public class OperatorEntry extends LeafNode
     private final TextField textField;
     private final ObservableList<Node> nodes;
     private final @MonotonicNonNull AutoComplete autoComplete;
-    private final static List<String> OPERATORS = Arrays.asList("=", "<>", "+", "-", "*", "/", "&", "|", "<", "<=", ">", ">=", "?", "^", ",");
-    private final static Set<Integer> ALPHABET = OPERATORS.stream().flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
+    private final static List<Pair<String, @LocalizableKey String>> OPERATORS = Arrays.asList(
+        opD("=", "op.equal"),
+        opD("<>", "op.notEqual"),
+        opD("+", "op.plus"),
+        opD("-", "op.minus"),
+        opD("*", "op.times"),
+        opD("/", "op.divide"),
+        opD("&", "op.and"),
+        opD("|", "op.or"),
+        opD("<", "op.lessThan"),
+        opD("<=", "op.lessThanOrEqual"),
+        opD(">", "op.greaterThan"),
+        opD(">=", "op.greaterThanOrEqual"),
+        opD("^", "op.raise"),
+        opD(",", "op.separator")
+    );
+
+    private static Pair<String, @LocalizableKey String> opD(String op, @LocalizableKey String key)
+    {
+        return new Pair<>(op, key);
+    }
+
+    private final static Set<Integer> ALPHABET = OPERATORS.stream().map(Pair::getFirst).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
     public OperatorEntry(String content, Consecutive parent)
     {
@@ -59,9 +86,9 @@ public class OperatorEntry extends LeafNode
         ArrayList<Completion> r = new ArrayList<>();
         if (!parent.isTopLevel())
             r.add(new KeyShortcutCompletion("End bracketed expressions", ')'));
-        for (String operator : OPERATORS)
+        for (Pair<String, @LocalizableKey String> operator : OPERATORS)
         {
-            r.add(new SimpleCompletion(operator));
+            r.add(new SimpleCompletion(operator.getFirst(), operator.getSecond()));
         }
         r.removeIf(c -> !c.shouldShow(s));
         return r;
@@ -104,16 +131,23 @@ public class OperatorEntry extends LeafNode
     private class SimpleCompletion extends Completion
     {
         private final String operator;
+        private final @Localized String description;
 
-        public SimpleCompletion(String operator)
+        public SimpleCompletion(String operator, @LocalizableKey String descriptionKey)
         {
             this.operator = operator;
+            this.description = TransformationEditor.getString(descriptionKey);
         }
 
         @Override
         public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(null, new ReadOnlyStringWrapper(operator));
+            Label description = new Label(this.description);
+            BorderPane.setAlignment(description, Pos.BOTTOM_RIGHT);
+            description.getStyleClass().add("operator-description");
+            Label mainLabel = new Label(operator);
+            BorderPane.setAlignment(mainLabel, Pos.BOTTOM_LEFT);
+            return new Pair<>(new BorderPane(description, null, null, null, mainLabel), new ReadOnlyStringWrapper(""));
         }
 
         @Override

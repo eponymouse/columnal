@@ -1,4 +1,6 @@
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.i18n.qual.UnknownLocalized;
 
 package java.lang;
 class Object
@@ -9,4 +11,9 @@ package java.util;
 class List
 {
     public void remove(@Nullable Object o);
+}
+package java.io;
+class PrintStream
+{
+    static void println(@UnknownLocalized @NonNull String s);
 }

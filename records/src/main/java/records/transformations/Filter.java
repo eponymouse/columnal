@@ -295,7 +295,7 @@ public class Filter extends Transformation
                 Map<Pair<@Nullable TableId, ColumnId>, @NonNull Formula> vars = new HashMap<>();
                 BooleanFormula f = (BooleanFormula)expression.toSolver(ctx.getFormulaManager(), src.getData(), vars);
 
-                System.out.println("Example: " + f.toString());
+                //System.out.println("Example: " + f.toString());
 
                 try (ProverEnvironment prover = ctx.newProverEnvironment(ProverOptions.GENERATE_MODELS)) {
                     prover.addConstraint(f);
@@ -309,7 +309,7 @@ public class Filter extends Transformation
 
 
                     boolean isUnsat = prover.isUnsat();
-                    System.out.println("Satisfiable: " + !isUnsat);
+                    //System.out.println("Satisfiable: " + !isUnsat);
                     if (!isUnsat) {
                         srcHeaderAndData.clear();
                         Model model = prover.getModel();
@@ -318,7 +318,7 @@ public class Filter extends Transformation
                             Object evaluated = model.evaluate(var.getValue());
                             if (evaluated != null)
                             {
-                                System.out.println("Variable " + var.getKey() + " = " + show(evaluated));
+                                //System.out.println("Variable " + var.getKey() + " = " + show(evaluated));
                                 srcHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(Utility.toDisplayValue(show(evaluated)))));
                                 destHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(Utility.toDisplayValue(show(evaluated)))));
                             }
@@ -336,7 +336,7 @@ public class Filter extends Transformation
                     }
 
                     boolean isUnsat = prover.isUnsat();
-                    System.out.println("Satisfiable negation: " + !isUnsat);
+                    //System.out.println("Satisfiable negation: " + !isUnsat);
                     if (!isUnsat) {
                         Model model = prover.getModel();
                         for (Entry<Pair<@Nullable TableId, ColumnId>, Formula> var : vars.entrySet())
@@ -344,7 +344,7 @@ public class Filter extends Transformation
                             Object evaluated = model.evaluate(var.getValue());
                             if (evaluated != null)
                             {
-                                System.out.println("Variable " + var.getKey() + " = " + show(model.evaluate(var.getValue())));
+                                //System.out.println("Variable " + var.getKey() + " = " + show(model.evaluate(var.getValue())));
                                 srcHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(Utility.toDisplayValue(show(evaluated)))));
                             }
                         }

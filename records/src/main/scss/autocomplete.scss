@@ -1,0 +1,7 @@
+.operator-description {
+    -fx-text-fill: grey;
+    -fx-font-size: 75%;
+    .list-cell:selected & {
+        -fx-text-fill: white;
+    }
+}

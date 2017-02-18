@@ -162,6 +162,7 @@
         </resources>
 
         <plugins>
+
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-dependency-plugin</artifactId>
@@ -228,9 +229,12 @@
                     <annotationProcessors>
                         <!-- Add all the checkers you want to enable here -->
                         <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
+                        <annotationProcessor>org.checkerframework.checker.i18n.I18nChecker</annotationProcessor>
+                        <!-- Disabled for speed: -->
                         <!-- <annotationProcessor>org.checkerframework.checker.interning.InterningChecker</annotationProcessor> -->
                         <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor>
-                        <annotationProcessor>annotation.userindex.UserIndexChecker</annotationProcessor>
+                        <!-- Disabled for speed: -->
+                        <!-- <annotationProcessor>annotation.userindex.UserIndexChecker</annotationProcessor> -->
                     </annotationProcessors>
                     <compilerArgs>
                         <!-- location of the annotated JDK, which comes from a Maven dependency -->
@@ -238,6 +242,7 @@
                         <arg>-AprintErrorStack</arg>
                         <arg>-AskipDefs=records.grammar.|one.util.</arg>
                         <arg>-Astubs=${basedir}/stubs</arg>
+                        <arg>-Apropfiles=/Users/neil/IdeaProjects/records/records/src/main/resources/transformations_en.properties:/Users/neil/IdeaProjects/records/records/src/main/resources/expression_en.properties</arg>
                         <arg>-Xplugin:threadchecker.TCPlugin</arg>
                     </compilerArgs>
                 </configuration>

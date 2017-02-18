@@ -614,6 +614,7 @@ public class Utility
         });
     }
 
+    @SuppressWarnings("i18n")
     public static void log(String info, Exception e)
     {
         System.err.println(info);

@@ -36,6 +36,7 @@ import utility.SimulationSupplier;
 import utility.Utility;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.MissingResourceException;
 import java.util.ResourceBundle;
@@ -46,15 +47,18 @@ import java.util.ResourceBundle;
 @OnThread(Tag.FXPlatform)
 public abstract class TransformationEditor
 {
-    private static @MonotonicNonNull ResourceBundle resources;
+    private static @MonotonicNonNull List<ResourceBundle> resources;
 
-    private static @Nullable ResourceBundle getResources()
+    private static @Nullable List<ResourceBundle> getResources()
     {
         if (resources == null)
         {
             try
             {
-                resources = ResourceBundle.getBundle("transformations");
+                resources = Arrays.asList(
+                    ResourceBundle.getBundle("transformations"),
+                    ResourceBundle.getBundle("expression")
+                );
             }
             catch (MissingResourceException e)
             {
@@ -65,15 +69,28 @@ public abstract class TransformationEditor
         return resources;
     }
 
-    protected static @Localized String getString(@LocalizableKey String key)
+    @SuppressWarnings("i18n") // Because we return key if there's an issue
+    public static @Localized String getString(@LocalizableKey String key)
     {
-        ResourceBundle r = getResources();
-        if (r != null)
+        @Nullable List<ResourceBundle> resources = getResources();
+        if (resources != null)
         {
-            return r.getString(key);
+            for (ResourceBundle r : resources)
+            {
+                try
+                {
+                    @Nullable String local = r.getString(key);
+                    if (local != null)
+                        return local;
+                }
+                catch (MissingResourceException e)
+                {
+                    // This is fine; just try the next one.
+                }
+            }
         }
-        else
-            return key; // Best we can do, if we can't find the labels file.
+
+        return key; // Best we can do, if we can't find the labels file.
     }
 
     /**

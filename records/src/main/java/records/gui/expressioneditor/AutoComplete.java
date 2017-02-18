@@ -62,6 +62,8 @@ public class AutoComplete extends PopupControl
         this.completions = new ListView<>();
         this.calculateCompletions = calculateCompletions;
 
+        completions.getStylesheets().add(Utility.getStylesheet("autocomplete.css"));
+
         completions.setCellFactory(lv -> {
             return new CompleteCell();
         });
