@@ -1,5 +1,7 @@
 package records.gui.expressioneditor;
 
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ListChangeListener.Change;
@@ -57,10 +59,12 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
     private final @Nullable Node suffixNode;
     private final @Nullable ExpressionParent parent;
     private @Nullable String prompt = null;
+    protected final BooleanProperty atomicEdit;
 
     public Consecutive(@Nullable ExpressionParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode)
     {
         this.parent = parent;
+        atomicEdit = new SimpleBooleanProperty(false);
         nodes = FXCollections.observableArrayList();
         operands = FXCollections.observableArrayList();
         operators = FXCollections.observableArrayList();
@@ -74,6 +78,14 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
         Utility.listen(operators, c -> {
             updateNodes();
             updateListeners();
+        });
+        Utility.addChangeListenerPlatformNN(atomicEdit, inProgress -> {
+            if (!inProgress)
+            {
+                // At end of edit:
+                updateNodes();
+                updateListeners();
+            }
         });
         initializeContent();
     }
@@ -94,13 +106,17 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
     @SuppressWarnings("initialization")
     protected void initializeContent(@UnknownInitialization(Consecutive.class) Consecutive this)
     {
-        // Must do operator first:
+        atomicEdit.set(true);
         operators.add(new OperatorEntry("", this));
         operands.add(new GeneralEntry("", Status.UNFINISHED, this));
+        atomicEdit.set(false);
     }
 
     private void updateListeners(@UnknownInitialization(Consecutive.class) Consecutive this)
     {
+        if (atomicEdit.get())
+            return;
+
         // Make them all as old (false)
         listeningTo.replaceAll((e, b) -> false);
         // Merge new ones:
@@ -133,6 +149,9 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
 
     private void updateNodes(@UnknownInitialization(Consecutive.class) Consecutive this)
     {
+        if (atomicEdit.get())
+            return;
+
         updatePrompt();
 
         List<Node> childrenNodes = new ArrayList<Node>();

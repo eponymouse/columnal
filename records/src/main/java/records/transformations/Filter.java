@@ -9,6 +9,7 @@ import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -405,6 +406,12 @@ public class Filter extends Transformation
         }
 
         @Override
+        public @Localized String getDescription()
+        {
+            return getString("filter.description");
+        }
+
+        @Override
         public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
             try
@@ -416,7 +423,7 @@ public class Filter extends Transformation
                 reportError.consume(e);
             }
 
-            Node example = createExplanation(srcHeaderAndData, destHeaderAndData, "Filter examines each row separately.  It evaluates the given expression for that row.  If the expression is true, the row is kept; if it's false, the row is removed.  For example, if you have a column called price, and you write\n@price >= 100\nas your expression then only rows where the price is 100 or higher will be kept.");
+            Node example = createExplanation(srcHeaderAndData, destHeaderAndData, "");
             FXPlatformConsumer<@Nullable Expression> updater = expression -> {
                 if (expression != null)
                 {

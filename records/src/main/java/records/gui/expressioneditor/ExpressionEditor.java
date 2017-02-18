@@ -58,9 +58,15 @@ public class ExpressionEditor extends Consecutive
     private void loadContent(@UnknownInitialization(ExpressionEditor.class) ExpressionEditor this, Expression startingValue)
     {
         Pair<List<FXPlatformFunction<Consecutive, OperandNode>>, List<FXPlatformFunction<Consecutive, OperatorEntry>>> items = startingValue.loadAsConsecutive();
-        // Must do operator first:
+        atomicEdit.set(true);
         operators.addAll(Utility.mapList(items.getSecond(), f -> f.apply(this)));
         operands.addAll(Utility.mapList(items.getFirst(), f -> f.apply(this)));
+        if (operators.size() == operands.size() - 1)
+        {
+            // Need a blank operator on the end:
+            operators.add(new OperatorEntry("", this));
+        }
+        atomicEdit.set(false);
     }
 
     @Override
