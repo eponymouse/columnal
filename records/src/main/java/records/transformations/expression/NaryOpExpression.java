@@ -6,8 +6,15 @@ import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.Bracketed;
+import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.OperatorEntry;
+import records.transformations.expression.AddSubtractExpression.Op;
 import utility.ExBiConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -126,5 +133,23 @@ public abstract class NaryOpExpression extends Expression
             types.add(expType);
         }
         return DataType.checkAllSame(types, s -> onError.accept(this, s));
+    }
+
+    @Override
+    public Pair<List<FXPlatformFunction<Consecutive, OperandNode>>, List<FXPlatformFunction<Consecutive, OperatorEntry>>> loadAsConsecutive()
+    {
+        List<FXPlatformFunction<Consecutive, OperatorEntry>> ops = new ArrayList<>();
+        for (int i = 0; i < expressions.size() - 1; i++) // TODO length is wrong for unfinished
+        {
+            int iFinal = i;
+            ops.add(c -> new OperatorEntry(saveOp(iFinal), c));
+        }
+        return new Pair<>(Utility.mapList(expressions, e -> e.loadAsSingle()), ops);
+    }
+
+    @Override
+    public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+    {
+        return c -> new Bracketed(Utility.mapList(expressions, e -> e.loadAsSingle()), c, null, null);
     }
 }

@@ -12,12 +12,16 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.GeneralEntry;
+import records.gui.expressioneditor.GeneralEntry.Status;
+import records.gui.expressioneditor.OperandNode;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -28,7 +32,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 11/12/2016.
  */
-public class VarExpression extends Expression
+public class VarExpression extends NonOperatorExpression
 {
     private final String varName;
 
@@ -76,6 +80,12 @@ public class VarExpression extends Expression
     public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
     {
         throw new UnimplementedException();
+    }
+
+    @Override
+    public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+    {
+        return c -> new GeneralEntry(varName, Status.VARIABLE_USE, c);
     }
 
     @Override

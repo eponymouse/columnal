@@ -5,6 +5,11 @@ import records.data.ColumnId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.GeneralEntry;
+import records.gui.expressioneditor.GeneralEntry.Status;
+import records.gui.expressioneditor.OperandNode;
+import utility.FXPlatformFunction;
 import utility.Pair;
 
 import java.util.Random;
@@ -14,7 +19,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 27/11/2016.
  */
-public abstract class Literal extends Expression
+public abstract class Literal extends NonOperatorExpression
 {
     @Override
     public Stream<ColumnId> allColumnNames()
@@ -33,4 +38,12 @@ public abstract class Literal extends Expression
     {
         return null;
     }
+
+    @Override
+    public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+    {
+        return c -> new GeneralEntry(editString(), Status.LITERAL, c);
+    }
+
+    protected abstract String editString();
 }

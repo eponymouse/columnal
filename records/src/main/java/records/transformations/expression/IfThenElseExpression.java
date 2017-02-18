@@ -12,9 +12,12 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.OperandNode;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -32,7 +35,7 @@ import java.util.stream.Stream;
  * to be lazy in the unused then/else part for situations like
  * if y <> 0 then x / y else 0
  */
-public class IfThenElseExpression extends Expression
+public class IfThenElseExpression extends NonOperatorExpression
 {
     private final Expression condition;
     private final Expression thenExpression;
@@ -98,6 +101,12 @@ public class IfThenElseExpression extends Expression
     public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
     {
         throw new UnimplementedException();
+    }
+
+    @Override
+    public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+    {
+        throw new RuntimeException("TODO");
     }
 
     @Override

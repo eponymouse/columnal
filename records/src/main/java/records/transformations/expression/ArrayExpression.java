@@ -15,9 +15,13 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.OperatorEntry;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -93,6 +97,18 @@ public class ArrayExpression extends Expression
     public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
     {
         throw new UnimplementedException();
+    }
+
+    @Override
+    public Pair<List<FXPlatformFunction<Consecutive, OperandNode>>, List<FXPlatformFunction<Consecutive, OperatorEntry>>> loadAsConsecutive()
+    {
+        throw new RuntimeException("TODO");
+    }
+
+    @Override
+    public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+    {
+        throw new RuntimeException("TODO");
     }
 
     @Override

@@ -14,11 +14,13 @@ import records.error.UserException;
 import records.transformations.expression.Expression;
 import records.transformations.expression.InvalidOperatorExpression;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Created by neil on 17/12/2016.
@@ -31,7 +33,7 @@ public class ExpressionEditor extends Consecutive
     private final FXPlatformConsumer<@NonNull Expression> onChange;
     private final TypeManager typeManager;
 
-    public ExpressionEditor(@Nullable Expression startingValue, @Nullable Table srcTable, @Nullable DataType type, TypeManager typeManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
+    public ExpressionEditor(Expression startingValue, @Nullable Table srcTable, @Nullable DataType type, TypeManager typeManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
         super(null, null, null);
         this.container = new FlowPane();
@@ -47,7 +49,24 @@ public class ExpressionEditor extends Consecutive
         });
         this.onChange = onChangeHandler;
 
+        loadContent(startingValue);
+
         //Utility.onNonNull(container.sceneProperty(), s -> org.scenicview.ScenicView.show(s));
+    }
+
+    @SuppressWarnings("initialization") // Because we pass ourselves as this
+    private void loadContent(@UnknownInitialization(ExpressionEditor.class) ExpressionEditor this, Expression startingValue)
+    {
+        Pair<List<FXPlatformFunction<Consecutive, OperandNode>>, List<FXPlatformFunction<Consecutive, OperatorEntry>>> items = startingValue.loadAsConsecutive();
+        // Must do operator first:
+        operators.addAll(Utility.mapList(items.getSecond(), f -> f.apply(this)));
+        operands.addAll(Utility.mapList(items.getFirst(), f -> f.apply(this)));
+    }
+
+    @Override
+    protected void initializeContent(@UnknownInitialization(Consecutive.class) ExpressionEditor this)
+    {
+        // Don't do default initialization
     }
 
     public Node getContainer()

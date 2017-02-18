@@ -64,16 +64,23 @@ public class NumericLiteral extends Literal
     public String save(boolean topLevel)
     {
         String num;
+        num = numberAsString();
+        if (unit == null || unit.equals(Unit.SCALAR))
+            return num;
+        else
+            return num + "{" + unit.toString() + "}";
+    }
+
+    private String numberAsString()
+    {
+        String num;
         if (value instanceof Double)
             num = String.format("%f", value.doubleValue());
         else if (value instanceof BigDecimal)
             num = ((BigDecimal)value).toPlainString();
         else
             num =  value.toString();
-        if (unit == null || unit.equals(Unit.SCALAR))
-            return num;
-        else
-            return num + "{" + unit.toString() + "}";
+        return num;
     }
 
     @Override
@@ -102,5 +109,11 @@ public class NumericLiteral extends Literal
     public int hashCode()
     {
         return value.hashCode() + 31 * type.hashCode();
+    }
+
+    @Override
+    protected String editString()
+    {
+        return numberAsString();
     }
 }

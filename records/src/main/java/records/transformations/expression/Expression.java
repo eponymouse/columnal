@@ -55,6 +55,9 @@ import records.grammar.ExpressionParser.TimesExpressionContext;
 import records.grammar.ExpressionParser.TupleExpressionContext;
 import records.grammar.ExpressionParser.VarRefContext;
 import records.grammar.ExpressionParserBaseVisitor;
+import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
@@ -67,6 +70,7 @@ import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.ExConsumer;
 import utility.ExFunction;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -139,6 +143,10 @@ public abstract class Expression
     {
         return Optional.empty();
     }
+
+    public abstract Pair<List<FXPlatformFunction<Consecutive,OperandNode>>, List<FXPlatformFunction<Consecutive,OperatorEntry>>> loadAsConsecutive();
+
+    public abstract FXPlatformFunction<Consecutive, OperandNode> loadAsSingle();
 
     private static class CompileExpression extends ExpressionParserBaseVisitor<Expression>
     {

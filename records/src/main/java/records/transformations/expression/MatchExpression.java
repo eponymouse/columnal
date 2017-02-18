@@ -14,10 +14,14 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.PatternMatchNode;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -32,7 +36,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 28/11/2016.
  */
-public class MatchExpression extends Expression
+public class MatchExpression extends NonOperatorExpression
 {
     public class MatchClause
     {
@@ -481,6 +485,12 @@ public class MatchExpression extends Expression
     public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
     {
         throw new UnimplementedException();
+    }
+
+    @Override
+    public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+    {
+        throw new RuntimeException("TODO");
     }
 
     @Override

@@ -1,7 +1,6 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -20,10 +19,15 @@ import records.data.datatype.TypeId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.GeneralEntry;
+import records.gui.expressioneditor.GeneralEntry.Status;
+import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 import utility.Utility.ListEx;
@@ -37,17 +41,29 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 25/11/2016.
  */
-public class ColumnReference extends Expression
+public class ColumnReference extends NonOperatorExpression
 {
     public static enum ColumnReferenceType
     {
         // Column is in same table as referring item, use the same row as that item
         // E.g. if doing a transform, score_percent = score / 100;
-        CORRESPONDING_ROW,
+        CORRESPONDING_ROW(Status.COLUMN_REFERENCE_SAME_ROW),
 
         // Column may or may not be in same table, use whole column as item,
         // e.g. if normalising, cost = cost {CORRESPONDING_ROW}/sum(cost{WHOLE_COLUMN})
-        WHOLE_COLUMN
+        WHOLE_COLUMN(Status.COLUMN_REFERENCE_WHOLE);
+
+        private final GeneralEntry.Status status;
+
+        private ColumnReferenceType(GeneralEntry.Status status)
+        {
+            this.status = status;
+        }
+
+        public GeneralEntry.Status getEntryStatus()
+        {
+            return status;
+        }
     }
     private final @Nullable TableId tableName;
     private final ColumnId columnName;
@@ -173,6 +189,12 @@ public class ColumnReference extends Expression
                 return columnVariables.computeIfAbsent(key, (Pair x) -> formulaManager.getBooleanFormulaManager().makeVariable(columnName.getOutput()));
             }
         });
+    }
+
+    @Override
+    public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+    {
+        return c -> new GeneralEntry(columnName.getRaw(), referenceType.getEntryStatus(), c);
     }
 
     @Override

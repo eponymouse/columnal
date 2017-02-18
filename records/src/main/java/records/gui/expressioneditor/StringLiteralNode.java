@@ -26,7 +26,7 @@ public class StringLiteralNode extends LeafNode implements OperandNode
     private final AutoComplete autoComplete;
     private ObservableList<Node> nodes;
 
-    public StringLiteralNode(Consecutive parent)
+    public StringLiteralNode(String initialValue, Consecutive parent)
     {
         super(parent);
         textField = createLeaveableTextField();
@@ -48,6 +48,7 @@ public class StringLiteralNode extends LeafNode implements OperandNode
         }, c -> false);
 
         Utility.addChangeListenerPlatformNN(textField.textProperty(), text -> parent.changed(this));
+        textField.setText(initialValue);
     }
 
     @Override

@@ -8,9 +8,20 @@ import records.data.datatype.DataType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.Bracketed;
+import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.OperatorEntry;
+import records.transformations.expression.AddSubtractExpression.Op;
 import utility.ExBiConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
+import utility.Utility;
 
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import java.util.Random;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -139,5 +150,17 @@ public abstract class BinaryOpExpression extends Expression
     public Expression getRHS()
     {
         return rhs;
+    }
+
+    @Override
+    public Pair<List<FXPlatformFunction<Consecutive, OperandNode>>, List<FXPlatformFunction<Consecutive, OperatorEntry>>> loadAsConsecutive()
+    {
+        return new Pair<>(Arrays.asList(lhs.loadAsSingle(), rhs.loadAsSingle()), Collections.singletonList(c -> new OperatorEntry(saveOp(), c)));
+    }
+
+    @Override
+    public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+    {
+        return c -> new Bracketed(Arrays.asList(lhs.loadAsSingle(), rhs.loadAsSingle()), c, null, null);
     }
 }

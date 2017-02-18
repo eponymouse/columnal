@@ -70,4 +70,10 @@ public class BooleanLiteral extends Literal
     {
         return (value ? 1 : 0);
     }
+
+    @Override
+    protected String editString()
+    {
+        return value.toString();
+    }
 }

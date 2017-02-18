@@ -9,11 +9,14 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.Expression;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
 import test.gen.GenNonsenseExpression;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -28,6 +31,15 @@ public class PropLoadSaveExpression
     public void testLoadSaveNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
         testLoadSave(expression);
+    }
+
+    @Property(trials = 2000)
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public void testEditNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
+    {
+        Expression edited = new ExpressionEditor(expression, null, null, DummyManager.INSTANCE.getTypeManager(), e -> {}).toExpression(e -> {});
+        assertEquals(expression, edited);
+        assertEquals(expression.save(true), edited.save(true));
     }
 
     @Property(trials = 1000)

@@ -14,6 +14,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.GeneralEntry.Status;
 import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.DivideExpression;
@@ -50,8 +51,8 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
     // The boolean value is only used during updateListeners, will be true other times
     private final IdentityHashMap<ExpressionNode, Boolean> listeningTo = new IdentityHashMap<>();
     private @MonotonicNonNull ListChangeListener<Node> childrenNodeListener;
-    private final ObservableList<OperandNode> operands;
-    private final ObservableList<OperatorEntry> operators;
+    protected final ObservableList<OperandNode> operands;
+    protected final ObservableList<OperatorEntry> operators;
     private final @Nullable Node prefixNode;
     private final @Nullable Node suffixNode;
     private final @Nullable ExpressionParent parent;
@@ -89,12 +90,13 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
         return childrenNodeListener;
     }
 
+    // Can be overridden in subclasses
     @SuppressWarnings("initialization")
-    private void initializeContent(@UnknownInitialization(Consecutive.class) Consecutive this)
+    protected void initializeContent(@UnknownInitialization(Consecutive.class) Consecutive this)
     {
         // Must do operator first:
         operators.add(new OperatorEntry("", this));
-        operands.add(new GeneralEntry("", this));
+        operands.add(new GeneralEntry("", Status.UNFINISHED, this));
     }
 
     private void updateListeners(@UnknownInitialization(Consecutive.class) Consecutive this)
@@ -211,7 +213,7 @@ public @Interned class Consecutive implements ExpressionParent, ExpressionNode
                 // Add new operator and new operand:
                 // Everything is keyed on operands size, so must add operator first:
                 operators.add(index, new OperatorEntry(operator, this));
-                operands.add(index+1, new GeneralEntry("", this).focusWhenShown());
+                operands.add(index+1, new GeneralEntry("", Status.UNFINISHED, this).focusWhenShown());
             }
         }
     }

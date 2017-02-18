@@ -14,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
+import records.gui.expressioneditor.GeneralEntry.Status;
 import utility.Pair;
 import utility.Utility;
 
@@ -160,7 +161,7 @@ public class OperatorEntry extends LeafNode
         {
             if (c instanceof SimpleCompletion)
             {
-                parent.addOperandToRight(OperatorEntry.this, new GeneralEntry(rest, parent).focusWhenShown());
+                parent.addOperandToRight(OperatorEntry.this, new GeneralEntry(rest, Status.UNFINISHED, parent).focusWhenShown());
                 return ((SimpleCompletion) c).operator;
             }
             else if (c instanceof KeyShortcutCompletion)

@@ -9,16 +9,21 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.TaggedValue;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.TagType;
 import records.data.datatype.TypeId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.TagExpressionNode;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.TypeState.TypeAndTagInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
 
 import java.util.ArrayList;
@@ -31,7 +36,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 10/12/2016.
  */
-public class TagExpression extends Expression
+public class TagExpression extends NonOperatorExpression
 {
     private final Pair<String, String> tagName;
     private final @Nullable Expression inner;
@@ -89,6 +94,12 @@ public class TagExpression extends Expression
     public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
     {
         throw new UnimplementedException();
+    }
+
+    @Override
+    public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+    {
+        throw new RuntimeException("TODO");
     }
 
     @Override

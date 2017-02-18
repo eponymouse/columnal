@@ -41,6 +41,7 @@ import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -120,7 +121,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
      */
     private final AutoComplete autoComplete;
 
-    public GeneralEntry(String content, Consecutive parent)
+    public GeneralEntry(String content, Status initialStatus, Consecutive parent)
     {
         super(parent);
         bracketCompletion = new @Interned KeyShortcutCompletion("Bracketed expressions", '(');
@@ -155,6 +156,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
             parent.changed(GeneralEntry.this);
         });
         textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), textField.getText().isEmpty());
+        status.setValue(initialStatus);
     }
 
     private static String getTypeLabel(Status s)
@@ -589,9 +591,9 @@ public class GeneralEntry extends LeafNode implements OperandNode
             {
                 @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
                 if (ksc == bracketCompletion)
-                    parent.replace(GeneralEntry.this, new Bracketed(Collections.<Function<Consecutive, OperandNode>>singletonList(e -> new GeneralEntry("", e).focusWhenShown()), parent, new Label("("), new Label(")")));
+                    parent.replace(GeneralEntry.this, new Bracketed(Collections.<FXPlatformFunction<Consecutive, OperandNode>>singletonList(e -> new GeneralEntry("", Status.UNFINISHED, e).focusWhenShown()), parent, new Label("("), new Label(")")));
                 else if (ksc == stringCompletion)
-                    parent.replace(GeneralEntry.this, new StringLiteralNode(parent).focusWhenShown());
+                    parent.replace(GeneralEntry.this, new StringLiteralNode("", parent).focusWhenShown());
                 //else if (ksc == patternMatchCompletion)
                     //parent.replace(GeneralEntry.this, new PatternMatchNode(parent).focusWhenShown());
             }

@@ -23,6 +23,9 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.AndExpression;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.ComparisonExpression;
@@ -44,6 +47,7 @@ import test.gen.GenUnit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -104,6 +108,18 @@ public class PropTypecheckIndividual
         public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
         {
             throw new InternalException("Testing");
+        }
+
+        @Override
+        public Pair<List<FXPlatformFunction<Consecutive, OperandNode>>, List<FXPlatformFunction<Consecutive, OperatorEntry>>> loadAsConsecutive()
+        {
+            throw new RuntimeException("Testing");
+        }
+
+        @Override
+        public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+        {
+            throw new RuntimeException("Testing");
         }
 
         @Override
