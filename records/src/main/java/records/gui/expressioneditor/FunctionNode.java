@@ -50,7 +50,7 @@ public class FunctionNode implements ExpressionParent, OperandNode
     private final FunctionDefinition function;
 
     @SuppressWarnings("initialization") // Because LeaveableTextField gets marked uninitialized
-    public FunctionNode(FunctionDefinition function, ConsecutiveBase parent)
+    public FunctionNode(FunctionDefinition function, @Nullable Expression argumentsExpression, ConsecutiveBase parent)
     {
         this.parent = parent;
         this.function = function;
@@ -66,7 +66,7 @@ public class FunctionNode implements ExpressionParent, OperandNode
             }
         };
         VBox vBox = ExpressionEditorUtil.withLabelAbove(functionName, "function", "function", this);
-        arguments = new ArgsConsecutive(vBox);
+        arguments = new ArgsConsecutive(vBox, argumentsExpression);
 
         Utility.addChangeListenerPlatformNN(functionName.textProperty(), text -> {
             parent.changed(this);
@@ -299,18 +299,18 @@ public class FunctionNode implements ExpressionParent, OperandNode
         private @Nullable ObservableObjectValue<@Nullable String> innerOpenStyle;
         private @Nullable ObservableObjectValue<@Nullable String> innerCloseStyle;
 
-        private ArgsConsecutive(VBox vBox, OpenBracketShape openBracket, OpenBracketShape closeBracket)
+        private ArgsConsecutive(VBox vBox, OpenBracketShape openBracket, OpenBracketShape closeBracket, @Nullable Expression args)
         {
-            super(FunctionNode.this, new HBox(vBox, openBracket), closeBracket, "function");
+            super(FunctionNode.this, new HBox(vBox, openBracket), closeBracket, "function", args == null ? null : args.loadAsConsecutive());
             this.openBracket = openBracket;
             this.closeBracket = closeBracket;
             closeBracket.prefHeightProperty().bind(openBracket.heightProperty());
             updateDisplay();
         }
 
-        public ArgsConsecutive(VBox vBox)
+        public ArgsConsecutive(VBox vBox, @Nullable Expression args)
         {
-            this(vBox, new OpenBracketShape(), new OpenBracketShape() {{setScaleX(-1);}});
+            this(vBox, new OpenBracketShape(), new OpenBracketShape() {{setScaleX(-1);}}, args);
         }
 
         @SuppressWarnings("initialization") // Because we use this as a listener

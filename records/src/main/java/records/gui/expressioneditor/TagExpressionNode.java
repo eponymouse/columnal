@@ -53,7 +53,7 @@ public class TagExpressionNode implements ExpressionParent, OperandNode
         if (tagType.getInner() == null)
             inner = null;
         else
-            inner = new Consecutive(this, labelledField, null, "tag");
+            inner = new Consecutive(this, labelledField, null, "tag", null);
 
         if (inner == null)
             nodes = FXCollections.observableArrayList(labelledField);

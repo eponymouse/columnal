@@ -6,7 +6,11 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.GeneralEntry.Status;
+import records.transformations.expression.Expression;
+import utility.FXPlatformFunction;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.Collections;
 import java.util.List;
@@ -19,11 +23,25 @@ public class Consecutive extends ConsecutiveBase
 {
     protected final ExpressionParent parent;
 
-    public Consecutive(ExpressionParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style)
+    @SuppressWarnings("initialization") // Because of loading
+    public Consecutive(ExpressionParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase, OperandNode>>, List<FXPlatformFunction<ConsecutiveBase, OperatorEntry>>> content)
     {
         super(prefixNode, suffixNode, style);
         this.parent = parent;
-        initializeContent();
+        if (content != null)
+        {
+            atomicEdit.set(true);
+            operands.addAll(Utility.mapList(content.getFirst(), f -> f.apply(this)));
+            operators.addAll(Utility.mapList(content.getSecond(), f -> f.apply(this)));
+            if (operators.size() == operands.size() - 1)
+            {
+                // Add the final blank operator:
+                operators.add(new OperatorEntry(this));
+            }
+            atomicEdit.set(false);
+        }
+        else
+            initializeContent();
     }
 
     protected void selfChanged(@UnknownInitialization(ConsecutiveBase.class) Consecutive this)

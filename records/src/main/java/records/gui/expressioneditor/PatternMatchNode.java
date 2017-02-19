@@ -44,7 +44,7 @@ public abstract class PatternMatchNode implements ExpressionParent, OperandNode
     public PatternMatchNode(ExpressionParent parent)
     {
         this.parent = parent;
-        this.source = new Consecutive(this, new Label("match("), new Label(") with"), "match").prompt("expression");
+        this.source = new Consecutive(this, new Label("match("), new Label(") with"), "match", null).prompt("expression");
         this.clauses = FXCollections.observableArrayList();
         this.nodes = FXCollections.observableArrayList();
         this.childrenNodeListener = c -> {

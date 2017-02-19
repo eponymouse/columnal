@@ -241,6 +241,17 @@ public class Filter extends Transformation
             this.srcHeaderAndData = FXCollections.observableArrayList();
             this.destHeaderAndData = FXCollections.observableArrayList();
             this.expression = expression;
+            // For testing:
+            try
+            {
+                expression = Expression.parse(null, "abs(true+false - 632+@column \"Date\")-62+\"hi\"", mgr.getTypeManager());
+                if (src != null)
+                    expression.check(src.getData(), mgr.getTypeState(), (e, s) -> {});
+            }
+            catch (InternalException | UserException e)
+            {
+                Utility.log(e);
+            }
             this.expressionEditor = new ExpressionEditor(expression, srcControl.getTableOrNull(), DataType.BOOLEAN, mgr.getTypeManager(), e -> {
                 try
                 {

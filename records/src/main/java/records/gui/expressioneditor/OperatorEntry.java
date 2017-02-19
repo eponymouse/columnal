@@ -71,10 +71,17 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
 
     private final static Set<Integer> ALPHABET = OPERATORS.stream().map(Pair::getFirst).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
-    public OperatorEntry(String content, ConsecutiveBase parent)
+    public OperatorEntry(ConsecutiveBase parent)
+    {
+        this("", false, parent);
+    }
+
+    public OperatorEntry(String content, boolean userEntered, ConsecutiveBase parent)
     {
         super(parent);
         this.textField = createLeaveableTextField();
+        if (!userEntered)
+            textField.setText(content); // Do before auto complete is on the field
         Utility.sizeToFit(textField, 5.0, 5.0);
         textField.getStyleClass().add("operator-field");
         Label dummyLabel = new Label();
@@ -90,9 +97,12 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
             parent.changed(OperatorEntry.this);
         });
 
-        // Do this after auto-complete is set up and we are set as part of parent,
-        // in case it finishes a completion:
-        Utility.runAfter(() -> textField.setText(content));
+        if (userEntered)
+        {
+            // Do this after auto-complete is set up and we are set as part of parent,
+            // in case it finishes a completion:
+            Utility.runAfter(() -> textField.setText(content));
+        }
     }
 
     private List<Completion> getCompletions(@UnknownInitialization(OperatorEntry.class) OperatorEntry this, String s)

@@ -116,7 +116,7 @@ public class ExpressionEditor extends ConsecutiveBase
         if (operators.size() == operands.size() - 1)
         {
             // Need a blank operator on the end:
-            operators.add(new OperatorEntry("", this));
+            operators.add(new OperatorEntry(this));
         }
         atomicEdit.set(false);
     }
@@ -194,7 +194,7 @@ public class ExpressionEditor extends ConsecutiveBase
     {
         clearSelection();
         // Can be null during initialisation
-        if (onChange != null)
+        if (onChange != null && !atomicEdit.get())
         {
             Expression expression = toExpression(err -> {});
             onChange.consume(expression);

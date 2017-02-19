@@ -140,7 +140,7 @@ public abstract class NaryOpExpression extends Expression
         for (int i = 0; i < expressions.size() - 1; i++) // TODO length is wrong for unfinished
         {
             int iFinal = i;
-            ops.add(c -> new OperatorEntry(saveOp(iFinal), c));
+            ops.add(c -> new OperatorEntry(saveOp(iFinal), false, c));
         }
         return new Pair<>(Utility.mapList(expressions, e -> e.loadAsSingle()), ops);
     }
@@ -148,6 +148,6 @@ public abstract class NaryOpExpression extends Expression
     @Override
     public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
     {
-        return c -> new Bracketed(Utility.mapList(expressions, e -> e.loadAsSingle()), c, null, null);
+        return c -> new Bracketed(c, null, null, loadAsConsecutive());
     }
 }

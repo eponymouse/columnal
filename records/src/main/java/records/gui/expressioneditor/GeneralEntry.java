@@ -637,7 +637,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
             {
                 @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
                 if (ksc == bracketCompletion)
-                    parent.replace(GeneralEntry.this, new Bracketed(Collections.<FXPlatformFunction<ConsecutiveBase, OperandNode>>singletonList(e -> new GeneralEntry("", Status.UNFINISHED, e).focusWhenShown()), parent, new Label("("), new Label(")")));
+                    parent.replace(GeneralEntry.this, new Bracketed(parent, new Label("("), new Label(")"), null));
                 else if (ksc == stringCompletion)
                     parent.replace(GeneralEntry.this, new StringLiteralNode("", parent).focusWhenShown());
                 //else if (ksc == patternMatchCompletion)
@@ -647,7 +647,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
             {
                 // What to do with rest != "" here? Don't allow? Skip to after args?
                 FunctionCompletion fc = (FunctionCompletion)c;
-                parent.replace(GeneralEntry.this, new FunctionNode(fc.function, parent).focusWhenShown());
+                parent.replace(GeneralEntry.this, new FunctionNode(fc.function, null, parent).focusWhenShown());
             }
             else if (c instanceof TagCompletion)
             {

@@ -3,6 +3,7 @@ package records.transformations.expression;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -16,6 +17,7 @@ import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.FunctionNode;
 import records.gui.expressioneditor.OperandNode;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionInstance;
@@ -108,7 +110,14 @@ public class CallExpression extends NonOperatorExpression
     @Override
     public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
     {
-        throw new RuntimeException("TODO");
+        // If successfully type-checked:
+        if (definition != null)
+        {
+            @NonNull FunctionDefinition definitionFinal = definition;
+            return c -> new FunctionNode(definitionFinal, param, c);
+        }
+        else
+            throw new RuntimeException("TODO bad function");
     }
 
     @Override

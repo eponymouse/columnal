@@ -109,7 +109,7 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
     protected void initializeContent(@UnknownInitialization(ConsecutiveBase.class)ConsecutiveBase this)
     {
         atomicEdit.set(true);
-        operators.add(new OperatorEntry("", this));
+        operators.add(new OperatorEntry(this));
         operands.add(new GeneralEntry("", Status.UNFINISHED, this));
         atomicEdit.set(false);
     }
@@ -220,9 +220,10 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         int index = Utility.indexOfRef(operators, rightOf);
         if (index != -1)
         {
-            // Everything is keyed on operands size, so must add operator first:
-            operators.add(index+1, new OperatorEntry("", this));
+            atomicEdit.set(true);
+            operators.add(index+1, new OperatorEntry(this));
             operands.add(index+1, operandNode);
+            atomicEdit.set(false);
         }
     }
 
@@ -235,9 +236,10 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
             if (!operators.get(index).fromBlankTo(operator))
             {
                 // Add new operator and new operand:
-                // Everything is keyed on operands size, so must add operator first:
-                operators.add(index, new OperatorEntry(operator, this));
+                atomicEdit.set(true);
+                operators.add(index, new OperatorEntry(operator, true, this));
                 operands.add(index+1, new GeneralEntry("", Status.UNFINISHED, this).focusWhenShown());
+                atomicEdit.set(false);
             }
         }
     }
@@ -318,7 +320,8 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
     @Override
     public void changed(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
-        selfChanged();
+        if (!atomicEdit.get())
+            selfChanged();
     }
 
     @Override

@@ -114,7 +114,7 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
     @SuppressWarnings("initialization") // Because of Consecutive
     private Consecutive makeConsecutive(@UnknownInitialization(Object.class) ClauseNode this)
     {
-        return new Consecutive(this, null, null, "clause");
+        return new Consecutive(this, null, null, "clause", null);
     }
 
     @Override

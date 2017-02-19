@@ -5,6 +5,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.transformations.expression.Expression;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.gui.FXUtility;
@@ -18,14 +19,9 @@ import java.util.stream.Stream;
  */
 public class Bracketed extends Consecutive implements OperandNode
 {
-    public Bracketed(List<FXPlatformFunction<ConsecutiveBase, OperandNode>> initial, ConsecutiveBase parent, @Nullable Node prefixNode, @Nullable Node suffixNode)
+    public Bracketed(ConsecutiveBase parent, @Nullable Node prefixNode, @Nullable Node suffixNode, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase, OperandNode>>, List<FXPlatformFunction<ConsecutiveBase, OperatorEntry>>> content)
     {
-        super(parent, prefixNode, suffixNode, "bracket");
-    }
-
-    @Override
-    protected void initializeContent(@UnknownInitialization(ConsecutiveBase.class) Bracketed this)
-    {
+        super(parent, prefixNode, suffixNode, "bracket", content);
     }
 
     @Override
