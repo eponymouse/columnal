@@ -4,7 +4,10 @@ import org.junit.Test;
 import records.data.ColumnId;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.AddSubtractExpression;
+import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.Expression;
@@ -13,6 +16,7 @@ import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StringLiteral;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 
 import static org.junit.Assert.assertEquals;
 
@@ -83,6 +87,21 @@ public class TestLoadSaveExpression
                 )
             ),
             "1403426927672136511427478267571691349056738827396 <> ((false <> 807027098579703254931175241526980987544176732399) <> false)"
+        );
+
+        assertBothWays(
+            new AddSubtractExpression(Arrays.asList(
+                new CallExpression("abs",
+                    new AddSubtractExpression(Arrays.asList(
+                        new BooleanLiteral(true),
+                        new BooleanLiteral(false),
+                        new NumericLiteral(632, null),
+                        new ColumnReference(new ColumnId("Date"), ColumnReferenceType.CORRESPONDING_ROW)),
+                        Arrays.asList(Op.ADD, Op.SUBTRACT, Op.ADD))),
+                new NumericLiteral(62, null),
+                new StringLiteral("hi")
+            ), Arrays.asList(Op.SUBTRACT, Op.ADD)),
+            "abs(true+false - 632+@column \"Date\")-62+\"hi\""
         );
     }
 
