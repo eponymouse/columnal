@@ -80,6 +80,7 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
     {
         super(parent);
         this.textField = createLeaveableTextField();
+        FXUtility.setPseudoclass(textField, "op-empty", content.isEmpty());
         if (!userEntered)
             textField.setText(content); // Do before auto complete is on the field
         Utility.sizeToFit(textField, 5.0, 5.0);
@@ -95,6 +96,7 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
 
         Utility.addChangeListenerPlatformNN(textField.textProperty(), text ->{
             parent.changed(OperatorEntry.this);
+            FXUtility.setPseudoclass(textField, "op-empty", text.isEmpty());
         });
 
         if (userEntered)
@@ -162,6 +164,12 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
     public void setHoverDropLeft(boolean selected)
     {
         FXUtility.setPseudoclass(container, "exp-hover-drop-left", selected);
+    }
+
+    @Override
+    public boolean isBlank()
+    {
+        return textField.getText().isEmpty();
     }
 
     private class SimpleCompletion extends Completion

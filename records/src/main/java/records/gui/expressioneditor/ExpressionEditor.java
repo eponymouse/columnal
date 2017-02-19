@@ -14,6 +14,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -44,14 +45,15 @@ public class ExpressionEditor extends ConsecutiveBase
 
     private @Nullable SelectionInfo selection;
     private @Nullable ConsecutiveChild curHoverDropTarget;
+    private boolean selectionLocked;
 
     private static class SelectionInfo
     {
         private final ConsecutiveBase parent;
-        private final OperandNode start;
-        private final OperandNode end;
+        private final ConsecutiveChild start;
+        private final ConsecutiveChild end;
 
-        private SelectionInfo(ConsecutiveBase parent, OperandNode start, OperandNode end)
+        private SelectionInfo(ConsecutiveBase parent, ConsecutiveChild start, ConsecutiveChild end)
         {
             this.parent = parent;
             this.start = start;
@@ -92,14 +94,20 @@ public class ExpressionEditor extends ConsecutiveBase
 
             @Override
             @SuppressWarnings("initialization")
-            public @OnThread(Tag.FXPlatform) void dragEnded(Dragboard dragboard, Point2D pointInScene)
+            public @OnThread(Tag.FXPlatform) boolean dragEnded(Dragboard dragboard, Point2D pointInScene)
             {
                 @Nullable Object o = dragboard.getContent(FXUtility.getTextDataFormat("Expression"));
-                if (o != null && o instanceof String)
+                if (o != null && o instanceof CopiedItems)
                 {
                     // We need to find the closest drop point
                     Pair<ConsecutiveChild, Double> nearest = findClosestDrop(pointInScene);
+                    // Now we need to add the content:
+                    //TODO work out if this is a null drag because everything would go to hell
+                    // (Look if drag destination is inside selection?)
+                    // Or can we stop it going to hell?
+                    return nearest.getFirst().getParent().insertBefore(nearest.getFirst(), (CopiedItems)o);
                 }
+                return false;
             }
         }));
 
@@ -224,9 +232,17 @@ public class ExpressionEditor extends ConsecutiveBase
         return this;
     }
 
+    public void setSelectionLocked(boolean selectionLocked)
+    {
+        this.selectionLocked = selectionLocked;
+    }
+
     @SuppressWarnings("initialization")
     public void ensureSelectionIncludes(@UnknownInitialization OperandNode src)
     {
+        if (selectionLocked)
+            return;
+
         if (selection != null)
         {
             // Check that span includes src:
@@ -242,6 +258,9 @@ public class ExpressionEditor extends ConsecutiveBase
 
     private void clearSelection(@UnknownInitialization(ConsecutiveBase.class) ExpressionEditor this)
     {
+        if (selectionLocked)
+            return;
+
         if (selection != null)
             selection.parent.markSelection(selection.start, selection.end, false);
         selection = null;
@@ -249,20 +268,26 @@ public class ExpressionEditor extends ConsecutiveBase
 
     public void selectOnly(OperandNode src)
     {
+        if (selectionLocked)
+            return;
+
         clearSelection();
         ensureSelectionIncludes(src);
     }
 
     public void extendSelectionTo(OperandNode node)
     {
+        if (selectionLocked)
+            return;
+
         if (selection != null && node.getParent() == selection.parent)
         {
             // The target might be ahead or behind or within the current selection.
             // We try with asking for ahead or behind.  If one is empty, choose the other
             // If both are non-empty, go from start to target:
-            OperandNode oldSelStart = selection.start;
-            List<OperandNode> startToTarget = selection.parent.getChildrenFromTo(oldSelStart, node);
-            OperandNode oldSelEnd = selection.end;
+            ConsecutiveChild oldSelStart = selection.start;
+            List<ConsecutiveChild> startToTarget = selection.parent.getChildrenFromTo(oldSelStart, node);
+            ConsecutiveChild oldSelEnd = selection.end;
             // Thus the rule is use startToTarget unless it's empty:
             if (!startToTarget.isEmpty())
             {
@@ -279,12 +304,23 @@ public class ExpressionEditor extends ConsecutiveBase
         }
     }
 
-    public @Nullable String getSelectionAsText()
+    public @Nullable CopiedItems getSelection()
     {
         if (selection != null)
         {
-            return selection.parent.toExpression(e -> {}, selection.start, selection.end).save(false);
+            return selection.parent.copyItems(selection.start, selection.end);
         }
         return null;
+    }
+
+    public void removeSelectedItems()
+    {
+        if (selectionLocked)
+            return;
+
+        if (selection != null)
+        {
+            selection.parent.removeItems(selection.start, selection.end);
+        }
     }
 }

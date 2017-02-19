@@ -258,13 +258,15 @@ public class HideColumns extends Transformation
                 }
 
                 @Override
-                public @OnThread(Tag.FXPlatform) void dragEnded(Dragboard db, Point2D pointInScene)
+                public @OnThread(Tag.FXPlatform) boolean dragEnded(Dragboard db, Point2D pointInScene)
                 {
                     @Nullable Object content = db.getContent(FXUtility.getTextDataFormat("ColumnId"));
-                    if (content != null)
+                    if (content != null && content instanceof List)
                     {
                         addAllItems((List<ColumnId>) content);
+                        return true;
                     }
+                    return false;
                 }
             }));
 

@@ -88,6 +88,6 @@ $default-color: rgb(240, 240, 240);
     -fx-padding: 1 3 1 1;
 }
 .entry-field:ps-empty, .entry-field:hover, .entry-field:focused,
-  .operator-field:hover, .operator-field:focused, .labelled-name:hover, .labelled-name:focused {
+  .operator-field:op-empty, .operator-field:hover, .operator-field:focused, .labelled-name:hover, .labelled-name:focused {
     -fx-border-color: grey;
 }

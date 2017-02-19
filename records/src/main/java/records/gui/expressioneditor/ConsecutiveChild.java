@@ -17,4 +17,6 @@ public interface ConsecutiveChild
     Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc);
 
     void setHoverDropLeft(boolean on);
+
+    default boolean isBlank() { return false; }
 }

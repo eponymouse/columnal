@@ -88,7 +88,7 @@ public class FXUtility
         void dragMoved(Point2D pointInScene);
 
         @OnThread(Tag.FXPlatform)
-        void dragEnded(Dragboard dragboard, Point2D pointInScene);
+        boolean dragEnded(Dragboard dragboard, Point2D pointInScene);
     }
 
     // Point is in Scene
@@ -109,14 +109,16 @@ public class FXUtility
             e.consume();
         });
         destination.setOnDragDropped(e -> {
+            boolean dropped = false;
             for (Entry<DataFormat, DragHandler> receiver : receivers.entrySet())
             {
                 if (e.getDragboard().hasContent(receiver.getKey()))
                 {
-                    receiver.getValue().dragEnded(e.getDragboard(), new Point2D(e.getSceneX(), e.getSceneY()));
+                    dropped = receiver.getValue().dragEnded(e.getDragboard(), new Point2D(e.getSceneX(), e.getSceneY()));
                 }
             }
-
+            if (dropped)
+                e.setDropCompleted(true);
         });
     }
 

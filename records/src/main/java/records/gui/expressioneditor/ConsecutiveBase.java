@@ -11,6 +11,7 @@ import javafx.scene.Node;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
@@ -18,6 +19,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.gui.expressioneditor.GeneralEntry.Status;
 import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.Op;
@@ -36,6 +38,7 @@ import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
@@ -43,6 +46,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -57,6 +61,9 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
     private final IdentityHashMap<ExpressionNode, Boolean> listeningTo = new IdentityHashMap<>();
     protected final String style;
     private @MonotonicNonNull ListChangeListener<Node> childrenNodeListener;
+    // The operands and operators are always exactly interleaved.
+    // The first item is operands.get(0), followed by operators.get(0),
+    // followed by operands.get(1), etc.
     protected final ObservableList<OperandNode> operands;
     protected final ObservableList<OperatorEntry> operators;
     private final @Nullable Node prefixNode;
@@ -477,18 +484,30 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
      * if there any problems (start or end not found, or end before start)
      */
     @Pure
-    public List<OperandNode> getChildrenFromTo(OperandNode start, OperandNode end)
+    public List<ConsecutiveChild> getChildrenFromTo(ConsecutiveChild start, ConsecutiveChild end)
     {
-        int a = operands.indexOf(start);
-        int b = operands.indexOf(end);
+        List<ConsecutiveChild> allChildren = getAllChildren();
+        int a = allChildren.indexOf(start);
+        int b = allChildren.indexOf(end);
         if (a == -1 || b == -1 || a > b)
             return Collections.emptyList();
-        return operands.subList(a, b + 1);
+        return allChildren.subList(a, b + 1);
     }
 
-    public void markSelection(OperandNode from, OperandNode to, boolean selected)
+    private List<ConsecutiveChild> getAllChildren()
     {
-        for (OperandNode n : getChildrenFromTo(from, to))
+        List<ConsecutiveChild> r = new ArrayList<>();
+        for (int i = 0; i < operands.size(); i++)
+        {
+            r.add(operands.get(i));
+            r.add(operators.get(i));
+        }
+        return r;
+    }
+
+    public void markSelection(ConsecutiveChild from, ConsecutiveChild to, boolean selected)
+    {
+        for (ConsecutiveChild n : getChildrenFromTo(from, to))
         {
             n.setSelected(selected);
         }
@@ -503,6 +522,192 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
     protected Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
     {
         return Stream.concat(operands.stream(), operators.stream()).map(n -> n.findClosestDrop(loc)).min(Comparator.comparing(Pair::getSecond)).get();
+    }
+
+    public @Nullable CopiedItems copyItems(ConsecutiveChild start, ConsecutiveChild end)
+    {
+        boolean startIsOp = false;
+        int startIndex = operands.indexOf(start);
+        if (startIndex == -1)
+        {
+            startIsOp = true;
+            startIndex = operators.indexOf(start);
+        }
+        boolean endIsOp = false;
+        int endIndex = operands.indexOf(end);
+        if (endIndex == -1)
+        {
+            endIndex = operators.indexOf(end);
+            endIsOp = false;
+        }
+
+        if (startIndex == -1 || endIndex == -1)
+            // Problem:
+            return null;
+
+        return new CopiedItems(
+            Utility.<OperandNode, String>mapList(operands.subList(startIsOp ? startIndex + 1 : startIndex, endIndex + 1), n -> n.toExpression(o -> {}).save(false)),
+            Utility.<OperatorEntry, String>mapList(operators.subList(startIndex, endIsOp ? endIndex + 1 : endIndex), o -> o.get()),
+            startIsOp);
+    }
+
+    public boolean insertBefore(ConsecutiveChild insertBefore, CopiedItems itemsToInsert)
+    {
+        // At the beginning and at the end, we may get a match (e.g. inserting an operator
+        // after an operand), or mismatch (inserting an operator after an operator)
+        // In the case of a mismatch, we must insert a blank of the other type to get it right.
+
+        atomicEdit.set(true);
+
+        @Nullable List<OperandNode> newOperands = loadOperands(itemsToInsert.operands);
+        List<OperatorEntry> newOperators = Utility.mapList(itemsToInsert.operators, o -> new OperatorEntry(o, false, this));
+        if (newOperands == null || Math.abs(newOperands.size() - newOperators.size()) > 1)
+            return false;
+
+        boolean endsWithOperator;
+        if (itemsToInsert.startsOnOperator)
+            endsWithOperator = itemsToInsert.operators.size() == itemsToInsert.operands.size() + 1;
+        else
+            endsWithOperator = itemsToInsert.operators.size() == itemsToInsert.operands.size();
+
+        if (insertBefore instanceof OperandNode)
+        {
+            int index = operands.indexOf(insertBefore);
+            if (index == -1)
+                return false;
+
+            // Inserting before operand, so to match we need operand first to take its place:
+            if (itemsToInsert.startsOnOperator)
+            {
+                // Mismatch!  Add an empty operand:
+                operands.add(index, new GeneralEntry("", Status.UNFINISHED, this));
+                // Adjust as we want to insert after:
+                index += 1;
+            }
+            // Now we are ok to insert at index:
+            operands.addAll(index, newOperands);
+            operators.addAll(index, newOperators);
+            // Tidy up the end, if needed.
+            // We inserted before an operand, so the end is messy if the inserted content
+            // didn't end with an operator
+            if (!endsWithOperator)
+            {
+                operators.add(index + newOperators.size(), new OperatorEntry(this));
+                checkForDoubleBlank(index + newOperators.size() + 1);
+            }
+        }
+        else
+        {
+            int index = operators.indexOf(insertBefore);
+            if (index == -1)
+                return false;
+            // Inserting before operator, so to match we need an operator first to take its place:
+            if (!itemsToInsert.startsOnOperator)
+            {
+                operators.add(index, new OperatorEntry(this));
+                // Adjust as we want to insert after:
+                index += 1;
+            }
+
+            // Now we are ok to insert at index for operators, adjusting for operands:
+            operands.addAll(index + 1, newOperands);
+            operators.addAll(index, newOperators);
+
+            // Tidy up the end, if needed.
+            // We inserted before an operator, so the end is messy if the inserted content
+            // didn't end with an operand
+            if (endsWithOperator)
+            {
+                operands.add(index + 1 + newOperands.size(), new GeneralEntry("", Status.UNFINISHED, this));
+                checkForDoubleBlank(index + 1 + newOperands.size() + 1);
+            }
+        }
+
+        atomicEdit.set(false);
+        return true;
+    }
+
+    private @Nullable List<OperandNode> loadOperands(List<String> savedOperands)
+    {
+        try
+        {
+            return Utility.mapListEx(savedOperands, raw -> Expression.parse(null, raw, getEditor().getTypeManager()).loadAsSingle().apply(this));
+        }
+        catch (UserException | InternalException e)
+        {
+            return null;
+        }
+    }
+
+    public void removeItems(ConsecutiveChild start, ConsecutiveChild end)
+    {
+        atomicEdit.set(true);
+        int startOperandIndex, startOperatorIndex;
+        int endOperandIndex, endOperatorIndex;
+        if (start instanceof OperatorEntry)
+        {
+            startOperatorIndex = operators.indexOf(start);
+            startOperandIndex = startOperatorIndex + 1;
+        }
+        else
+        {
+            startOperandIndex = operands.indexOf(start);
+            startOperatorIndex = startOperandIndex;
+        }
+        if (end instanceof OperatorEntry)
+        {
+            endOperatorIndex = operators.indexOf(end);
+            endOperandIndex = endOperatorIndex;
+        }
+        else
+        {
+            endOperandIndex = operands.indexOf(end);
+            endOperatorIndex = endOperandIndex - 1;
+        }
+        
+        operators.remove(startOperatorIndex, endOperatorIndex + 1);
+        operands.remove(startOperandIndex, endOperandIndex + 1);
+        
+        // There's three cases:
+        // - We begin and end with operator; need to add a new blank one after
+        // - We begin and end with operand; need to add a new blank one after
+        // - We begin and end with different; will be complete whichever way round it is
+        // However: if next to the blank operator/operand there is a blank operand/operator
+        // we can cancel the two out instead and remove them both.
+        if (start instanceof OperatorEntry && end instanceof OperatorEntry)
+        {
+            operators.add(startOperatorIndex, new OperatorEntry(this));
+            if (!checkForDoubleBlank(startOperatorIndex))
+                checkForDoubleBlank(startOperatorIndex + 1);
+        }
+        else if (!(start instanceof OperatorEntry) && !(end instanceof OperatorEntry))
+        {
+            operands.add(startOperandIndex, new GeneralEntry("", Status.UNFINISHED, this));
+            checkForDoubleBlank(startOperandIndex);
+        }
+        atomicEdit.set(false);
+    }
+
+    // Checks if operandIndex, and the operator before or after it, are blank
+    // If so, removes them and returns true.  If no double blank found, returns false
+    private boolean checkForDoubleBlank(int operandIndex)
+    {
+        if (operands.get(operandIndex).isBlank())
+        {
+            if (operandIndex > 0 && operators.get(operandIndex - 1).isBlank())
+            {
+                operands.remove(operandIndex);
+                operators.remove(operandIndex - 1);
+                return true;
+            }
+            else if (operandIndex < operators.size() && operators.get(operandIndex).isBlank())
+            {
+                operands.remove(operandIndex);
+                operators.remove(operandIndex);
+                return true;
+            }
+        }
+        return false;
     }
 
     // Done as an inner class to satisfy initialization checker

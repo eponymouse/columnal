@@ -335,6 +335,12 @@ public class GeneralEntry extends LeafNode implements OperandNode
     }
 
     @Override
+    public boolean isBlank()
+    {
+        return textField.getText().trim().isEmpty();
+    }
+
+    @Override
     public Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
     {
         return new Pair<>(this, FXUtility.distanceToLeft(container, loc));

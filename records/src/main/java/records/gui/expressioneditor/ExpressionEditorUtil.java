@@ -10,7 +10,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 import utility.gui.FXUtility;
 
+import java.io.Serializable;
 import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -37,17 +39,41 @@ public class ExpressionEditorUtil
         topLabel.getStyleClass().add(parentStyles.collect(Collectors.joining("-")) + "-child");
     }
 
+    public static class CopiedItems implements Serializable
+    {
+        private static final long serialVersionUID = 3245083225504039668L;
+        public final List<String> operands; // Expressions saved to string
+        public final List<String> operators; // Operators as raw string
+        public final boolean startsOnOperator;
+
+        public CopiedItems(List<String> operands, List<String> operators, boolean startsOnOperator)
+        {
+            this.operands = operands;
+            this.operators = operators;
+            this.startsOnOperator = startsOnOperator;
+        }
+    }
+
     @SuppressWarnings("initialization")
     public static void enableDragFrom(Label dragSource, @UnknownInitialization OperandNode src)
     {
         ExpressionEditor editor = src.getParent().getEditor();
         dragSource.setOnDragDetected(e -> {
-            @Nullable String selectionAsText = editor.getSelectionAsText();
+            @Nullable CopiedItems selection = editor.getSelection();
             editor.ensureSelectionIncludes(src);
-            if (selectionAsText != null)
+            if (selection != null)
             {
+                editor.setSelectionLocked(true);
                 Dragboard db = dragSource.startDragAndDrop(TransferMode.MOVE);
-                db.setContent(Collections.singletonMap(FXUtility.getTextDataFormat("Expression"), selectionAsText));
+                db.setContent(Collections.singletonMap(FXUtility.getTextDataFormat("Expression"), selection));
+            }
+            e.consume();
+        });
+        dragSource.setOnDragDone(e -> {
+            editor.setSelectionLocked(false);
+            if (e.getTransferMode() != null)
+            {
+                editor.removeSelectedItems();
             }
             e.consume();
         });
