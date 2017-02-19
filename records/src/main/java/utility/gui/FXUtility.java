@@ -1,11 +1,18 @@
 package utility.gui;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.ObjectExpression;
 import javafx.collections.ObservableList;
+import javafx.css.PseudoClass;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.control.ListView;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.VBox;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
@@ -13,6 +20,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformBiConsumer;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformFunction;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -74,24 +82,70 @@ public class FXUtility
             return new DataFormat(whole);
     }
 
-    public static <DEST> void enableDragTo(ListView<DEST> listView, Map<DataFormat, FXPlatformConsumer<Dragboard>> receivers)
+    public static interface DragHandler
     {
-        listView.setOnDragOver(e -> {
-            if (receivers.keySet().stream().anyMatch(e.getDragboard()::hasContent))
-            {
-                e.acceptTransferModes(TransferMode.COPY_OR_MOVE);
-            }
-            e.consume();
-        });
-        listView.setOnDragDropped(e -> {
-            for (Entry<DataFormat, FXPlatformConsumer<Dragboard>> receiver : receivers.entrySet())
+        @OnThread(Tag.FXPlatform)
+        void dragMoved(Point2D pointInScene);
+
+        @OnThread(Tag.FXPlatform)
+        void dragEnded(Dragboard dragboard, Point2D pointInScene);
+    }
+
+    // Point is in Scene
+    public static void enableDragTo(Node destination, Map<DataFormat, DragHandler> receivers)
+    {
+        destination.setOnDragOver(e -> {
+            boolean accepts = false;
+            for (Entry<DataFormat, DragHandler> receiver : receivers.entrySet())
             {
                 if (e.getDragboard().hasContent(receiver.getKey()))
                 {
-                    receiver.getValue().consume(e.getDragboard());
+                    accepts = true;
+                    receiver.getValue().dragMoved(new Point2D(e.getSceneX(), e.getSceneY()));
+                }
+            }
+            if (accepts)
+                e.acceptTransferModes(TransferMode.COPY_OR_MOVE);
+            e.consume();
+        });
+        destination.setOnDragDropped(e -> {
+            for (Entry<DataFormat, DragHandler> receiver : receivers.entrySet())
+            {
+                if (e.getDragboard().hasContent(receiver.getKey()))
+                {
+                    receiver.getValue().dragEnded(e.getDragboard(), new Point2D(e.getSceneX(), e.getSceneY()));
                 }
             }
 
         });
+    }
+
+    public static <T, R> ObjectExpression<R> mapBinding(ObjectExpression<T> original, FXPlatformFunction<T, R> extract)
+    {
+        return Bindings.createObjectBinding(() -> extract.apply(original.get()), original);
+    }
+
+    public static void setPseudoclass(Node node, String className, boolean on)
+    {
+        node.pseudoClassStateChanged(PseudoClass.getPseudoClass(className), on);
+    }
+
+    // What's the shortest distance from the point to the left-hand side of the node?
+    public static double distanceToLeft(Node node, Point2D pointInScene)
+    {
+        Bounds boundsInScene = node.localToScene(node.getBoundsInLocal());
+        if (pointInScene.getY() < boundsInScene.getMinY())
+        {
+            return Math.hypot(pointInScene.getX() - boundsInScene.getMinX(), pointInScene.getY() - boundsInScene.getMinY());
+        }
+        else if (pointInScene.getY() > boundsInScene.getMaxY())
+        {
+            return Math.hypot(pointInScene.getX() - boundsInScene.getMinX(), pointInScene.getY() - boundsInScene.getMaxY());
+        }
+        else
+        {
+            // On same vertical level as edge, so just use difference:
+            return Math.abs(pointInScene.getX() - boundsInScene.getMinX());
+        }
     }
 }

@@ -9,9 +9,8 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.StringLiteralNode;
 import records.loadsave.OutputBuilder;
@@ -21,8 +20,6 @@ import utility.Pair;
 import utility.Utility;
 
 import java.math.BigInteger;
-import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -84,7 +81,7 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+    public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
     {
         return c -> new StringLiteralNode(editString(), c);
     }

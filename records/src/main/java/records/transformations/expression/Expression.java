@@ -11,18 +11,13 @@ import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
-import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
-import records.data.TableManager;
 import records.data.datatype.DataType;
-import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
-import records.data.unit.Unit;
 import records.data.unit.UnitManager;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
@@ -55,7 +50,7 @@ import records.grammar.ExpressionParser.TimesExpressionContext;
 import records.grammar.ExpressionParser.TupleExpressionContext;
 import records.grammar.ExpressionParser.VarRefContext;
 import records.grammar.ExpressionParserBaseVisitor;
-import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.AddSubtractExpression.Op;
@@ -68,7 +63,6 @@ import records.transformations.expression.MatchExpression.PatternMatchExpression
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
-import utility.ExConsumer;
 import utility.ExFunction;
 import utility.FXPlatformFunction;
 import utility.Pair;
@@ -144,9 +138,9 @@ public abstract class Expression
         return Optional.empty();
     }
 
-    public abstract Pair<List<FXPlatformFunction<Consecutive,OperandNode>>, List<FXPlatformFunction<Consecutive,OperatorEntry>>> loadAsConsecutive();
+    public abstract Pair<List<FXPlatformFunction<ConsecutiveBase,OperandNode>>, List<FXPlatformFunction<ConsecutiveBase,OperatorEntry>>> loadAsConsecutive();
 
-    public abstract FXPlatformFunction<Consecutive, OperandNode> loadAsSingle();
+    public abstract FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle();
 
     private static class CompileExpression extends ExpressionParserBaseVisitor<Expression>
     {

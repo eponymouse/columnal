@@ -18,6 +18,8 @@ class Node
     void setOnMousePressed(EventHandler<? super MouseEvent> value) @UnknownInitialization;
     void setOnMouseReleased(EventHandler<? super MouseEvent> value) @UnknownInitialization;
     void setOnMouseClicked(EventHandler<? super MouseEvent> value) @UnknownInitialization;
+
+    void setScaleX(double x) @UnknownInitialization;
 }
 class Scene
 {

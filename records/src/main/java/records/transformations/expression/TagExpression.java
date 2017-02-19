@@ -9,15 +9,12 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.TaggedValue;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.TagType;
-import records.data.datatype.TypeId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.TagExpressionNode;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.TypeState.TypeAndTagInfo;
 import threadchecker.OnThread;
@@ -26,8 +23,6 @@ import utility.ExBiConsumer;
 import utility.FXPlatformFunction;
 import utility.Pair;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
@@ -97,7 +92,7 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+    public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
     {
         throw new RuntimeException("TODO");
     }

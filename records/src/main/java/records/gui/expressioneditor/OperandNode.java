@@ -1,7 +1,10 @@
 package records.gui.expressioneditor;
 
+import javafx.beans.binding.StringExpression;
+import javafx.beans.value.ObservableObjectValue;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
 import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
@@ -15,7 +18,7 @@ import java.util.List;
  * next to operators.  (Depends on type: some operands, like tagged operands,
  * may not have a useful type available.)
  */
-public @Interned interface OperandNode extends ExpressionNode
+public @Interned interface OperandNode extends ExpressionNode, ConsecutiveChild
 {
     /**
      * Gets the variables declared in this node.
@@ -45,4 +48,6 @@ public @Interned interface OperandNode extends ExpressionNode
      * (for chaining initialisation methods)
      */
     public OperandNode focusWhenShown();
+
+    public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner();
 }

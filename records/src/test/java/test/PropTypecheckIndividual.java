@@ -23,7 +23,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.AndExpression;
@@ -37,7 +37,6 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.expression.MatchExpression.PatternMatch;
-import records.transformations.expression.MatchExpression.PatternMatchConstructor;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.OrExpression;
 import records.transformations.expression.RaiseExpression;
@@ -111,13 +110,13 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public Pair<List<FXPlatformFunction<Consecutive, OperandNode>>, List<FXPlatformFunction<Consecutive, OperatorEntry>>> loadAsConsecutive()
+        public Pair<List<FXPlatformFunction<ConsecutiveBase, OperandNode>>, List<FXPlatformFunction<ConsecutiveBase, OperatorEntry>>> loadAsConsecutive()
         {
             throw new RuntimeException("Testing");
         }
 
         @Override
-        public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+        public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
         {
             throw new RuntimeException("Testing");
         }

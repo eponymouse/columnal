@@ -1,15 +1,17 @@
 package records.gui.expressioneditor;
 
-import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.binding.DoubleExpression;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableObjectValue;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
-import javafx.geometry.Orientation;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.CubicCurveTo;
 import javafx.scene.shape.HLineTo;
 import javafx.scene.shape.MoveTo;
@@ -30,8 +32,10 @@ import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -41,12 +45,12 @@ import java.util.stream.Stream;
 public class FunctionNode implements ExpressionParent, OperandNode
 {
     private final TextField functionName;
-    private final Consecutive arguments;
-    private final ExpressionParent parent;
+    private final ConsecutiveBase arguments;
+    private final ConsecutiveBase parent;
     private final FunctionDefinition function;
 
     @SuppressWarnings("initialization") // Because LeaveableTextField gets marked uninitialized
-    public FunctionNode(FunctionDefinition function, ExpressionParent parent)
+    public FunctionNode(FunctionDefinition function, ConsecutiveBase parent)
     {
         this.parent = parent;
         this.function = function;
@@ -61,8 +65,8 @@ public class FunctionNode implements ExpressionParent, OperandNode
                     super.forward();
             }
         };
-        VBox vBox = ExpressionEditorUtil.withLabelAbove(functionName, "function", "function");
-        arguments = new Consecutive(this, new HBox(vBox, new OpenBracketShape()), new Label(""), "function");
+        VBox vBox = ExpressionEditorUtil.withLabelAbove(functionName, "function", "function", this);
+        arguments = new ArgsConsecutive(vBox);
 
         Utility.addChangeListenerPlatformNN(functionName.textProperty(), text -> {
             parent.changed(this);
@@ -118,6 +122,30 @@ public class FunctionNode implements ExpressionParent, OperandNode
         return this;
     }
 
+    @Override
+    public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
+    {
+        return new ReadOnlyObjectWrapper<@Nullable String>("function-inner");
+    }
+
+    @Override
+    public ConsecutiveBase getParent()
+    {
+        return parent;
+    }
+
+    @Override
+    public void setSelected(boolean selected)
+    {
+        // TODO
+    }
+
+    @Override
+    public void setHoverDropLeft(boolean on)
+    {
+        FXUtility.setPseudoclass(nodes().get(0), "exp-hover-drop-left", on);
+    }
+
     //@Override
     //public @Nullable DataType getType(ExpressionNode child)
     //{
@@ -128,25 +156,13 @@ public class FunctionNode implements ExpressionParent, OperandNode
     @Override
     public List<Pair<DataType, List<String>>> getSuggestedContext(ExpressionNode child) throws InternalException, UserException
     {
-        return Utility.mapList(function.getLikelyArgTypes(getTypeManager().getUnitManager()), t -> new Pair<>(t, Collections.emptyList()));
-    }
-
-    @Override
-    public List<Column> getAvailableColumns()
-    {
-        return parent.getAvailableColumns();
+        return Utility.mapList(function.getLikelyArgTypes(getEditor().getTypeManager().getUnitManager()), t -> new Pair<>(t, Collections.emptyList()));
     }
 
     @Override
     public List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child)
     {
         return parent.getAvailableVariables(this);
-    }
-
-    @Override
-    public TypeManager getTypeManager() throws InternalException
-    {
-        return parent.getTypeManager();
     }
 
     @Override
@@ -181,33 +197,40 @@ public class FunctionNode implements ExpressionParent, OperandNode
         return parent.getParentStyles();
     }
 
-    private static final double aspectRatio = 0.5;
+    @Override
+    public ExpressionEditor getEditor()
+    {
+        return parent.getEditor();
+    }
 
-    private static class OpenBracketClipLeft extends Path
+    private static final double aspectRatio = 0.2;
+    public static final double BRACKET_WIDTH = 2.0;
+
+    private static class OpenBracketOuter extends Path
     {
         @SuppressWarnings("initialization") // Need to annotate all the Shape API
-        public OpenBracketClipLeft(ReadOnlyDoubleProperty heightProperty)
+        public OpenBracketOuter(DoubleExpression heightProperty)
         {
             getElements().addAll(
                 new MoveTo(0, 0),
-                new HLineTo() {{xProperty().bind(heightProperty.multiply(aspectRatio));}},
+                new HLineTo() {{xProperty().bind(heightProperty.multiply(aspectRatio).subtract(BRACKET_WIDTH));}},
                 new CubicCurveTo() {{
                     controlY2Property().bind(heightProperty);
                     yProperty().bind(heightProperty);
-                    xProperty().bind(heightProperty.multiply(aspectRatio));
+                    xProperty().bind(heightProperty.multiply(aspectRatio).subtract(BRACKET_WIDTH));
                 }},
                 new HLineTo(0),
                 new VLineTo(0)
             );
-            setFill(Color.BLACK);
+
             setStroke(null);
         }
     }
 
-    private static class OpenBracketClipRight extends Path
+    private static class OpenBracketInner extends Path
     {
         @SuppressWarnings("initialization") // Need to annotate all the Shape API
-        public OpenBracketClipRight(ReadOnlyDoubleProperty heightProperty)
+        public OpenBracketInner(DoubleExpression heightProperty)
         {
             getElements().addAll(
                 new MoveTo() {{xProperty().bind(heightProperty.multiply(aspectRatio));}},
@@ -218,84 +241,116 @@ public class FunctionNode implements ExpressionParent, OperandNode
                 }},
                 new VLineTo(0)
             );
-            setFill(Color.BLACK);
             setStroke(null);
         }
     }
 
-    private static class OpenBracketShape extends AnchorPane
+    private static class OpenBracketShape extends VBox
     {
+        public static final double TOP_GAP = 2.0;
+        private final Node rhs;
+
         public OpenBracketShape()
         {
             Label topLabel = new Label(" ");
             topLabel.getStyleClass().add("function-top");
+            topLabel.setVisible(false);
             TextField bottomField = new TextField("");
             bottomField.getStyleClass().add("entry-field");
             bottomField.setMinWidth(2.0);
             bottomField.setPrefWidth(2.0);
             bottomField.setVisible(false);
-            VBox lhs = new VBox(topLabel, bottomField) {
-                @Override
-                @OnThread(Tag.FX)
-                public Orientation getContentBias()
-                {
-                    return Orientation.VERTICAL;
-                }
-            };
-            lhs.getStyleClass().add("function");
-            lhs.setClip(new OpenBracketClipLeft(lhs.heightProperty()));
 
-            Label topLabelRHS = new Label(" ");
-            topLabelRHS.getStyleClass().add("function-top");
-            TextField bottomFieldRHS = new TextField("");
-            bottomFieldRHS.getStyleClass().add("entry-field");
-            bottomFieldRHS.setMinWidth(2.0);
-            bottomFieldRHS.setPrefWidth(2.0);
-            bottomFieldRHS.setVisible(false);
-            VBox rhs = new VBox(topLabelRHS, bottomFieldRHS) {
-                @Override
-                @OnThread(Tag.FX)
-                public Orientation getContentBias()
-                {
-                    return Orientation.VERTICAL;
-                }
-            };
-            rhs.getStyleClass().add("function");
-            rhs.setClip(new OpenBracketClipRight(rhs.heightProperty()));
 
-            lhs.setMinWidth(USE_PREF_SIZE);
-            rhs.setMinWidth(USE_PREF_SIZE);
-            lhs.prefWidthProperty().bind(lhs.heightProperty().multiply(aspectRatio));
-            rhs.prefWidthProperty().bind(rhs.heightProperty().multiply(aspectRatio));
+            Node lhs = new OpenBracketOuter(heightProperty().subtract(1.0));
+            lhs.getStyleClass().add("function-bracket");
+            rhs = new OpenBracketInner(heightProperty().subtract(TOP_GAP));
 
-            getChildren().addAll(lhs, rhs);
-            AnchorPane.setLeftAnchor(lhs, 0.0);
-            AnchorPane.setRightAnchor(lhs, 2.0);
-            AnchorPane.setLeftAnchor(rhs, 2.0);
-            AnchorPane.setRightAnchor(rhs, 0.0);
-            AnchorPane.setTopAnchor(lhs, 2.0);
-            AnchorPane.setTopAnchor(rhs, 2.0);
+            getChildren().addAll(topLabel, bottomField, lhs, rhs);
+            lhs.setManaged(false);
+            rhs.setManaged(false);
+            lhs.setLayoutX(0);
+            lhs.setLayoutY(TOP_GAP);
+            rhs.setLayoutX(BRACKET_WIDTH);
+            rhs.setLayoutY(TOP_GAP);
         }
 
-        @Override
         @OnThread(Tag.FX)
-        public Orientation getContentBias()
+        public void setInnerStyleBegin(@Nullable String style)
         {
-            return Orientation.VERTICAL;
-        }
-
-        @Override
-        @OnThread(Tag.FX)
-        protected double computeMinWidth(double height)
-        {
-            return height * aspectRatio;
+            if (style == null)
+                rhs.getStyleClass().clear();
+            else
+                rhs.getStyleClass().setAll(style);
         }
 
         @Override
         @OnThread(Tag.FX)
         protected double computePrefWidth(double height)
         {
-            return height * aspectRatio;
+            return (computePrefHeight(-1) - TOP_GAP) * aspectRatio + BRACKET_WIDTH;
         }
+    }
+
+    private class ArgsConsecutive extends Consecutive implements ChangeListener<@Nullable String>
+    {
+        private final OpenBracketShape openBracket;
+        private final OpenBracketShape closeBracket;
+        private @Nullable ObservableObjectValue<@Nullable String> innerOpenStyle;
+        private @Nullable ObservableObjectValue<@Nullable String> innerCloseStyle;
+
+        private ArgsConsecutive(VBox vBox, OpenBracketShape openBracket, OpenBracketShape closeBracket)
+        {
+            super(FunctionNode.this, new HBox(vBox, openBracket), closeBracket, "function");
+            this.openBracket = openBracket;
+            this.closeBracket = closeBracket;
+            closeBracket.prefHeightProperty().bind(openBracket.heightProperty());
+            updateDisplay();
+        }
+
+        public ArgsConsecutive(VBox vBox)
+        {
+            this(vBox, new OpenBracketShape(), new OpenBracketShape() {{setScaleX(-1);}});
+        }
+
+        @SuppressWarnings("initialization") // Because we use this as a listener
+        @OnThread(Tag.FXPlatform)
+        protected void updateDisplay(@UnknownInitialization(ConsecutiveBase.class) ArgsConsecutive this)
+        {
+            if (openBracket != null) // Can be in constructor
+            {
+                if (innerOpenStyle != null)
+                    innerOpenStyle.removeListener(this);
+                innerOpenStyle = operands.isEmpty() ? null : operands.get(0).getStyleWhenInner();
+                if (innerOpenStyle != null)
+                    innerOpenStyle.addListener(this);
+                openBracket.setInnerStyleBegin(innerOpenStyle == null ? null : innerOpenStyle.get());
+            }
+            if (closeBracket != null) // Can be in constructor
+            {
+                if (innerCloseStyle != null)
+                    innerCloseStyle.removeListener(this);
+                innerCloseStyle = operands.isEmpty() ? null : operands.get(operands.size() - 1).getStyleWhenInner();
+                if (innerCloseStyle != null)
+                    innerCloseStyle.addListener(this);
+                closeBracket.setInnerStyleBegin(innerCloseStyle == null ? null : innerCloseStyle.get());
+            }
+        }
+
+        @Override
+        @OnThread(Tag.FX)
+        public void changed(ObservableValue<? extends @Nullable String> observable, @Nullable String oldValue, @Nullable String newValue)
+        {
+            if (observable == innerOpenStyle && openBracket != null)
+                openBracket.setInnerStyleBegin(newValue);
+            if (observable == innerCloseStyle && closeBracket != null)
+                closeBracket.setInnerStyleBegin(newValue);
+        }
+    }
+
+    @Override
+    public Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
+    {
+        return Stream.of(new Pair<ConsecutiveChild, Double>(this, FXUtility.distanceToLeft(functionName, loc)), arguments.findClosestDrop(loc)).min(Comparator.comparing(Pair::getSecond)).get();
     }
 }

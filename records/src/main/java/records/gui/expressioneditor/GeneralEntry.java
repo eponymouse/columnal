@@ -3,10 +3,12 @@ package records.gui.expressioneditor;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -44,6 +46,7 @@ import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,12 +67,24 @@ public class GeneralEntry extends LeafNode implements OperandNode
 
     public static enum Status
     {
-        COLUMN_REFERENCE_SAME_ROW,
-        COLUMN_REFERENCE_WHOLE,
-        TAG /* if no inner */,
-        LITERAL /*number or bool, not string */,
-        VARIABLE_USE,
-        UNFINISHED;
+        COLUMN_REFERENCE_SAME_ROW("column-inner"),
+        COLUMN_REFERENCE_WHOLE("column-inner"),
+        TAG(null) /* if no inner */,
+        LITERAL(null) /*number or bool, not string */,
+        VARIABLE_USE(null),
+        UNFINISHED(null);
+
+        private final @Nullable String innerStyle;
+
+        private Status(@Nullable String innerStyle)
+        {
+            this.innerStyle = innerStyle;
+        }
+
+        public @Nullable String getStyleWhenInner()
+        {
+            return innerStyle;
+        }
     }
 
 
@@ -120,7 +135,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
      */
     private final AutoComplete autoComplete;
 
-    public GeneralEntry(String content, Status initialStatus, Consecutive parent)
+    public GeneralEntry(String content, Status initialStatus, ConsecutiveBase parent)
     {
         super(parent);
         bracketCompletion = new @Interned KeyShortcutCompletion("Bracketed expressions", '(');
@@ -131,6 +146,9 @@ public class GeneralEntry extends LeafNode implements OperandNode
         Utility.sizeToFit(textField, null, null);
         typeLabel = new Label();
         typeLabel.getStyleClass().addAll("entry-type", "labelled-top");
+        ExpressionEditor editor = parent.getEditor();
+        ExpressionEditorUtil.enableSelection(typeLabel, this);
+        ExpressionEditorUtil.enableDragFrom(typeLabel, this);
         prefix = new Label();
         container = new VBox(typeLabel, new HBox(prefix, textField));
         container.getStyleClass().add("entry");
@@ -139,10 +157,14 @@ public class GeneralEntry extends LeafNode implements OperandNode
         this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), OperatorEntry::isOperatorAlphabet);
 
         Utility.addChangeListenerPlatformNN(status, s -> {
+            // Need to beware that some status values may map to same pseudoclass:
+            // First turn all off:
             for (Status possibleStatus : Status.values())
             {
-                container.pseudoClassStateChanged(getPseudoClass(possibleStatus), possibleStatus == s);
+                container.pseudoClassStateChanged(getPseudoClass(possibleStatus), false);
             }
+            // Then turn on the one we want:
+            container.pseudoClassStateChanged(getPseudoClass(s), true);
             typeLabel.setText(getTypeLabel(s));
         });
         Utility.addChangeListenerPlatformNN(textField.textProperty(), t -> {
@@ -220,12 +242,12 @@ public class GeneralEntry extends LeafNode implements OperandNode
         addAllFunctions(r);
         r.add(new SimpleCompletion("", "true", "", Status.LITERAL));
         r.add(new SimpleCompletion("", "false", "", Status.LITERAL));
-        for (Column column : parent.getAvailableColumns())
+        for (Column column : parent.getEditor().getAvailableColumns())
         {
             r.add(new SimpleCompletion(ARROW_SAME_ROW, column.getName().getRaw(), " [value in this row]", Status.COLUMN_REFERENCE_SAME_ROW));
             r.add(new SimpleCompletion(ARROW_WHOLE, column.getName().getRaw(), " [whole column]", Status.COLUMN_REFERENCE_WHOLE));
         }
-        for (DataType dataType : parent.getTypeManager().getKnownTypes().values())
+        for (DataType dataType : parent.getEditor().getTypeManager().getKnownTypes().values())
         {
             for (TagType<DataType> tagType : dataType.getTagTypes())
             {
@@ -292,6 +314,30 @@ public class GeneralEntry extends LeafNode implements OperandNode
     {
         Utility.onNonNull(textField.sceneProperty(), scene -> focus(Focus.RIGHT));
         return this;
+    }
+
+    @Override
+    public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
+    {
+        return FXUtility.<Status, @Nullable String>mapBinding(status, Status::getStyleWhenInner);
+    }
+
+    @Override
+    public void setSelected(boolean selected)
+    {
+        FXUtility.setPseudoclass(container, "exp-selected", selected);
+    }
+
+    @Override
+    public void setHoverDropLeft(boolean selected)
+    {
+        FXUtility.setPseudoclass(container, "exp-hover-drop-left", selected);
+    }
+
+    @Override
+    public Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
+    {
+        return new Pair<>(this, FXUtility.distanceToLeft(container, loc));
     }
 
     private static abstract class GeneralCompletion extends Completion
@@ -591,7 +637,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
             {
                 @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
                 if (ksc == bracketCompletion)
-                    parent.replace(GeneralEntry.this, new Bracketed(Collections.<FXPlatformFunction<Consecutive, OperandNode>>singletonList(e -> new GeneralEntry("", Status.UNFINISHED, e).focusWhenShown()), parent, new Label("("), new Label(")")));
+                    parent.replace(GeneralEntry.this, new Bracketed(Collections.<FXPlatformFunction<ConsecutiveBase, OperandNode>>singletonList(e -> new GeneralEntry("", Status.UNFINISHED, e).focusWhenShown()), parent, new Label("("), new Label(")")));
                 else if (ksc == stringCompletion)
                     parent.replace(GeneralEntry.this, new StringLiteralNode("", parent).focusWhenShown());
                 //else if (ksc == patternMatchCompletion)

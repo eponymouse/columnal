@@ -2,7 +2,6 @@ package records.gui.expressioneditor;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.Multimap;
-import com.google.common.collect.Multimaps;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
@@ -12,7 +11,6 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
 import records.data.Column;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
@@ -29,7 +27,6 @@ import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
@@ -45,9 +42,9 @@ import java.util.stream.Stream;
 public abstract class ClauseNode implements ExpressionParent, ExpressionNode
 {
     private final PatternMatchNode parent;
-    private final ObservableList<Pair<Consecutive, Consecutive>> matches;
+    private final ObservableList<Pair<ConsecutiveBase, ConsecutiveBase>> matches;
     private final Label mapsTo;
-    private final Consecutive outcome;
+    private final ConsecutiveBase outcome;
     private final ObservableList<Node> nodes;
     // The boolean value is only used during updateListeners, will be true other times
     private final IdentityHashMap<ExpressionNode, Boolean> listeningTo = new IdentityHashMap<>();
@@ -82,7 +79,7 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
         // Make them all as old (false)
         listeningTo.replaceAll((e, b) -> false);
         // Merge new ones:
-        for (Pair<Consecutive, Consecutive> match : matches)
+        for (Pair<ConsecutiveBase, ConsecutiveBase> match : matches)
         {
             // No need to listen again if already present as we're already listening
             if (listeningTo.get(match.getFirst()) == null)
@@ -155,12 +152,6 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
     }*/
 
     @Override
-    public List<Column> getAvailableColumns()
-    {
-        return parent.getAvailableColumns();
-    }
-
-    @Override
     public List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child)
     {
         //TODO union of clause variables or just the clause variable for guard
@@ -168,7 +159,7 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
         ArrayList<Pair<String, @Nullable DataType>> vars = new ArrayList<>(parent.getAvailableVariables(this));
 
         Multimap<@NonNull String, @Nullable DataType> allClauseVars = null;
-        for (Pair<Consecutive, Consecutive> match : matches)
+        for (Pair<ConsecutiveBase, ConsecutiveBase> match : matches)
         {
             if (match.getFirst() == child)
                 return vars; // Matching side only has access to parent vars
@@ -240,12 +231,6 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
     }
 
     @Override
-    public TypeManager getTypeManager() throws InternalException
-    {
-        return parent.getTypeManager();
-    }
-
-    @Override
     public boolean isTopLevel()
     {
         return false;
@@ -267,7 +252,7 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
         else
         {
             boolean focusNext = false;
-            for (Pair<Consecutive, Consecutive> match : matches)
+            for (Pair<ConsecutiveBase, ConsecutiveBase> match : matches)
             {
                 if (focusNext)
                 {
@@ -299,9 +284,9 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
         else
         {
             boolean focusEarlier = false;
-            for (ListIterator<Pair<Consecutive, Consecutive>> iterator = matches.listIterator(); iterator.hasPrevious(); )
+            for (ListIterator<Pair<ConsecutiveBase, ConsecutiveBase>> iterator = matches.listIterator(); iterator.hasPrevious(); )
             {
-                Pair<Consecutive, Consecutive> match = iterator.previous();
+                Pair<ConsecutiveBase, ConsecutiveBase> match = iterator.previous();
                 if (focusEarlier)
                 {
                     match.getSecond().focus(Focus.RIGHT);
@@ -328,9 +313,9 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
         return this;
     }
 
-    public boolean isMatchNode(Consecutive consecutive)
+    public boolean isMatchNode(ConsecutiveBase consecutive)
     {
-        for (Pair<Consecutive, Consecutive> match : matches)
+        for (Pair<ConsecutiveBase, ConsecutiveBase> match : matches)
         {
             if (match.getFirst() == consecutive)
                 return true;
@@ -341,7 +326,7 @@ public abstract class ClauseNode implements ExpressionParent, ExpressionNode
     public Function<MatchExpression, MatchClause> toClauseExpression(FXPlatformConsumer<Object> onError)
     {
         List<Function<MatchExpression, Pattern>> patterns = new ArrayList<>();
-        for (Pair<Consecutive, Consecutive> match : matches)
+        for (Pair<ConsecutiveBase, ConsecutiveBase> match : matches)
         {
             Function<MatchExpression, PatternMatch> patExp = match.getFirst().toPattern();
             Expression matchExp = match.getSecond().toExpression(onError);

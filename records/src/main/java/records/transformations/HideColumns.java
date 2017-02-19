@@ -6,11 +6,13 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
@@ -44,6 +46,7 @@ import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.FXUtility.DragHandler;
 import utility.gui.SlidableListCell;
 import utility.gui.SmallDeleteButton;
 
@@ -246,11 +249,22 @@ public class HideColumns extends Transformation
                 }
             });
 
-            FXUtility.enableDragTo(hiddenColumns, Collections.singletonMap(FXUtility.getTextDataFormat("ColumnId"), db -> {
-                @Nullable Object content = db.getContent(FXUtility.getTextDataFormat("ColumnId"));
-                if (content != null)
+            FXUtility.enableDragTo(hiddenColumns, Collections.singletonMap(FXUtility.getTextDataFormat("ColumnId"), new DragHandler()
+            {
+                @Override
+                public @OnThread(Tag.FXPlatform) void dragMoved(Point2D pointInScene)
                 {
-                    addAllItems((List<ColumnId>)content);
+
+                }
+
+                @Override
+                public @OnThread(Tag.FXPlatform) void dragEnded(Dragboard db, Point2D pointInScene)
+                {
+                    @Nullable Object content = db.getContent(FXUtility.getTextDataFormat("ColumnId"));
+                    if (content != null)
+                    {
+                        addAllItems((List<ColumnId>) content);
+                    }
                 }
             }));
 

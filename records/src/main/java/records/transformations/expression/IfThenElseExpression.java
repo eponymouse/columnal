@@ -12,14 +12,13 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.FXPlatformFunction;
 import utility.Pair;
-import utility.Utility;
 
 import java.util.Map;
 import java.util.Random;
@@ -104,7 +103,7 @@ public class IfThenElseExpression extends NonOperatorExpression
     }
 
     @Override
-    public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+    public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
     {
         throw new RuntimeException("TODO");
     }

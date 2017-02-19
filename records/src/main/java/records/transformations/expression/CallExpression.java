@@ -4,7 +4,6 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.units.qual.C;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
@@ -16,7 +15,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionInstance;
@@ -25,17 +24,13 @@ import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.FXPlatformFunction;
 import utility.Pair;
-import utility.Utility;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
@@ -111,7 +106,7 @@ public class CallExpression extends NonOperatorExpression
     }
 
     @Override
-    public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+    public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
     {
         throw new RuntimeException("TODO");
     }

@@ -40,20 +40,10 @@ public interface ExpressionParent
     List<Pair<DataType, List<String>>> getSuggestedContext(ExpressionNode child) throws InternalException, UserException;
 
     /**
-     * Gets all the columns that the user could possibly enter.
-     */
-    List<Column> getAvailableColumns();
-
-    /**
      * Gets all the declared variables in scope at the given child
      * (from parent/grandparent/aunt nodes, not from the node itself).
      */
     List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child);
-
-    /**
-     * Gets the type manager
-     */
-    TypeManager getTypeManager() throws InternalException;
 
     /**
      * Is this expression at the topmost level?
@@ -80,4 +70,9 @@ public interface ExpressionParent
      * the last one is the innermost.
      */
     Stream<String> getParentStyles();
+
+    /**
+     * Gets the editor which contains this expression
+     */
+    ExpressionEditor getEditor();
 }

@@ -1,4 +1,9 @@
+@import 'colors';
+
+$selected-expression-border-color: $focus-color;
 $function-color: paleturquoise;
+$column-color: lightsteelblue;
+$default-color: rgb(240, 240, 240);
 
 .expression-editor {
     -fx-font-family: "Noto Sans";
@@ -7,41 +12,69 @@ $function-color: paleturquoise;
     -fx-alignment: bottom-left;
     -fx-row-valignment: bottom;
     -fx-vgap: 1px;
+    -fx-background-color: $default-color;
 }
 .mapsto {
     -fx-font-size: 140%;
     -fx-text-fill: #808080;
 }
 .labelled-top.function-child {
-    -fx-background-insets: 0 0 0 0, 1 0 0 0, 2 0 0 0;
-    -fx-background-color: $function-color, white, transparent;
+    -fx-border-width: 1 0 0 0;
+    -fx-border-insets: 0 0 0 0, 1 0 0 0;
+    -fx-border-style: solid inside;
+    -fx-border-color: $function-color, $default-color;
+}
+
+.column-inner {
+    -fx-fill: $column-color;
 }
 
 .entry-type, .labelled-top, .function-top {
     -fx-font-size: 8pt;
     -fx-cursor: hand;
     -fx-max-width: 9999.0;
+    -fx-background-color: rgba(128, 128, 128, 0.1);
 }
 .entry, .labelled {
     -fx-background-insets: 0;
     -fx-alignment: top-center;
     /*-fx-padding: 0 2 2 2;*/
     -fx-fill-width: true;
+    -fx-background: transparent;
 }
 .entry {
-    -fx-background-color: white;
+    -fx-background-color: transparent;
 }
 .entry:ps-column {
-    -fx-background-color: lightsteelblue;
-    -fx-background-radius: 0 3pt 0 3pt;
+    -fx-background-color: $column-color;
 }
-.entry:ps-literal {
-    -fx-background-color: white;
-    -fx-background-radius: 0;
+
+/* Must come later to have precendence: */
+.entry:exp-selected {
+     -fx-background-color: $selected-expression-border-color;
+     & .label, & .text-field {
+         -fx-text-fill: $focus-color-text;
+     }
 }
-.function {
+*:exp-hover-drop-left {
+    -fx-border-width: 0 0 0 2;
+    -fx-border-style: solid inside;
+    -fx-border-color: $focus-color;
+}
+
+.function-bracket {
+    -fx-background-color: $function-color;
+    -fx-fill: $function-color;
+}
+.function, .function-bracket {
     -fx-background-color: $function-color;
     -fx-background-radius: 0;
+
+    &:exp-selected {
+         -fx-background-color: $selected-expression-border-color;
+         -fx-fill: $selected-expression-border-color;
+         -fx-text-fill: $focus-color-text;
+    }
 }
 .tag {
     -fx-background-color: yellowgreen;

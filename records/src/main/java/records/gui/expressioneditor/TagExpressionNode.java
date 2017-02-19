@@ -1,14 +1,15 @@
 package records.gui.expressioneditor;
 
+import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
-import records.data.ColumnId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TypeId;
@@ -20,8 +21,10 @@ import records.transformations.expression.TagExpression;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -31,22 +34,22 @@ import java.util.stream.Stream;
 public class TagExpressionNode implements ExpressionParent, OperandNode
 {
     private final TextField tagNameField;
-    private final ExpressionParent parent;
+    private final ConsecutiveBase parent;
     private final TypeId typeName;
     private final TagType<DataType> tagType;
-    private final @Nullable Consecutive inner;
+    private final @Nullable ConsecutiveBase inner;
     private final ObservableList<Node> nodes;
     private final VBox labelledField;
 
     @SuppressWarnings("initialization") // Because LeaveableTextField gets marked uninitialized
-    public TagExpressionNode(ExpressionParent parent, TypeId typeName, TagType<DataType> tagType)
+    public TagExpressionNode(ConsecutiveBase parent, TypeId typeName, TagType<DataType> tagType)
     {
         this.parent = parent;
         this.typeName = typeName;
         this.tagType = tagType;
         this.tagNameField = new LeaveableTextField(this, this);
         tagNameField.setText(tagType.getName());
-        labelledField = ExpressionEditorUtil.withLabelAbove(tagNameField, "tag", "tag " + typeName.getRaw() + ":");
+        labelledField = ExpressionEditorUtil.withLabelAbove(tagNameField, "tag", "tag " + typeName.getRaw() + ":", this);
         if (tagType.getInner() == null)
             inner = null;
         else
@@ -84,21 +87,9 @@ public class TagExpressionNode implements ExpressionParent, OperandNode
     }
 
     @Override
-    public List<Column> getAvailableColumns()
-    {
-        return parent.getAvailableColumns();
-    }
-
-    @Override
     public List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child)
     {
         return parent.getAvailableVariables(this);
-    }
-
-    @Override
-    public TypeManager getTypeManager() throws InternalException
-    {
-        return parent.getTypeManager();
     }
 
     @Override
@@ -160,6 +151,30 @@ public class TagExpressionNode implements ExpressionParent, OperandNode
     }
 
     @Override
+    public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
+    {
+        return null;
+    }
+
+    @Override
+    public ConsecutiveBase getParent()
+    {
+        return parent;
+    }
+
+    @Override
+    public void setSelected(boolean selected)
+    {
+        // TODO
+    }
+
+    @Override
+    public void setHoverDropLeft(boolean on)
+    {
+        FXUtility.setPseudoclass(nodes().get(0), "exp-hover-drop-left", on);
+    }
+
+    @Override
     public ObservableList<Node> nodes()
     {
         return nodes;
@@ -191,5 +206,21 @@ public class TagExpressionNode implements ExpressionParent, OperandNode
     public Stream<String> getParentStyles()
     {
         return parent.getParentStyles();
+    }
+
+    @Override
+    public ExpressionEditor getEditor()
+    {
+        return parent.getEditor();
+    }
+
+    @Override
+    public Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
+    {
+        Pair<ConsecutiveChild, Double> us = new Pair<>(this, FXUtility.distanceToLeft(tagNameField, loc));
+        if (inner == null)
+            return us;
+        else
+            return Stream.of(us, inner.findClosestDrop(loc)).min(Comparator.comparing(Pair::getSecond)).get();
     }
 }

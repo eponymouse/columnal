@@ -12,7 +12,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.GeneralEntry;
 import records.gui.expressioneditor.GeneralEntry.Status;
 import records.gui.expressioneditor.OperandNode;
@@ -83,7 +83,7 @@ public class VarExpression extends NonOperatorExpression
     }
 
     @Override
-    public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+    public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
     {
         return c -> new GeneralEntry(varName, Status.VARIABLE_USE, c);
     }

@@ -32,7 +32,7 @@ import java.util.stream.Stream;
  */
 public abstract class PatternMatchNode implements ExpressionParent, OperandNode
 {
-    private final Consecutive source;
+    private final ConsecutiveBase source;
     private final ObservableList<ClauseNode> clauses;
     private ExpressionParent parent;
     private ObservableList<Node> nodes;
@@ -97,23 +97,11 @@ public abstract class PatternMatchNode implements ExpressionParent, OperandNode
     //}
 
     @Override
-    public List<Column> getAvailableColumns()
-    {
-        return parent.getAvailableColumns();
-    }
-
-    @Override
     public List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child)
     {
         // They are only asking for parent vars, and we don't affect those
         // ClauseNode takes care of the variables it introduces
         return parent.getAvailableVariables(this);
-    }
-
-    @Override
-    public TypeManager getTypeManager() throws InternalException
-    {
-        return parent.getTypeManager();
     }
 
     @Override

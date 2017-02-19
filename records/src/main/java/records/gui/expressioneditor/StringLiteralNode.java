@@ -1,8 +1,10 @@
 package records.gui.expressioneditor;
 
+import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -14,6 +16,7 @@ import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.Collections;
 
@@ -26,7 +29,7 @@ public class StringLiteralNode extends LeafNode implements OperandNode
     private final AutoComplete autoComplete;
     private ObservableList<Node> nodes;
 
-    public StringLiteralNode(String initialValue, Consecutive parent)
+    public StringLiteralNode(String initialValue, ConsecutiveBase parent)
     {
         super(parent);
         textField = createLeaveableTextField();
@@ -75,6 +78,30 @@ public class StringLiteralNode extends LeafNode implements OperandNode
     {
         Utility.onNonNull(textField.sceneProperty(), s -> focus(Focus.RIGHT));
         return this;
+    }
+
+    @Override
+    public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
+    {
+        return null;
+    }
+
+    @Override
+    public void setSelected(boolean selected)
+    {
+        // TODO
+    }
+
+    @Override
+    public void setHoverDropLeft(boolean on)
+    {
+        FXUtility.setPseudoclass(nodes().get(0), "exp-hover-drop-left", on);
+    }
+
+    @Override
+    public Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
+    {
+        return new Pair<>(this, FXUtility.distanceToLeft(nodes.get(0), loc));
     }
 
     @Override

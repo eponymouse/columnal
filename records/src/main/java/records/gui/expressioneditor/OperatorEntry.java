@@ -4,12 +4,12 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -17,7 +17,6 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
@@ -25,6 +24,7 @@ import records.gui.expressioneditor.GeneralEntry.Status;
 import records.transformations.TransformationEditor;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 /**
  * Created by neil on 17/12/2016.
  */
-public class OperatorEntry extends LeafNode
+public class OperatorEntry extends LeafNode implements ConsecutiveChild
 {
     /**
      * The outermost container for the whole thing:
@@ -71,7 +71,7 @@ public class OperatorEntry extends LeafNode
 
     private final static Set<Integer> ALPHABET = OPERATORS.stream().map(Pair::getFirst).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
-    public OperatorEntry(String content, Consecutive parent)
+    public OperatorEntry(String content, ConsecutiveBase parent)
     {
         super(parent);
         this.textField = createLeaveableTextField();
@@ -140,6 +140,18 @@ public class OperatorEntry extends LeafNode
         }
         else
             return false;
+    }
+
+    @Override
+    public void setSelected(boolean selected)
+    {
+        FXUtility.setPseudoclass(container, "exp-selected", selected);
+    }
+
+    @Override
+    public void setHoverDropLeft(boolean selected)
+    {
+        FXUtility.setPseudoclass(container, "exp-hover-drop-left", selected);
     }
 
     private class SimpleCompletion extends Completion
@@ -219,5 +231,11 @@ public class OperatorEntry extends LeafNode
             }
             return textField.getText();
         }
+    }
+
+    @Override
+    public Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
+    {
+        return new Pair<>(this, FXUtility.distanceToLeft(container, loc));
     }
 }

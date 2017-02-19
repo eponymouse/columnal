@@ -9,14 +9,12 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.TaggedValue;
 import records.data.datatype.DataType;
-import records.data.datatype.TypeId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.expressioneditor.Consecutive;
+import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
-import records.gui.expressioneditor.PatternMatchNode;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -488,7 +486,7 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public FXPlatformFunction<Consecutive, OperandNode> loadAsSingle()
+    public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
     {
         throw new RuntimeException("TODO");
     }
