@@ -59,8 +59,8 @@ public class ExpressionEditorUtil
     {
         ExpressionEditor editor = src.getParent().getEditor();
         dragSource.setOnDragDetected(e -> {
-            @Nullable CopiedItems selection = editor.getSelection();
             editor.ensureSelectionIncludes(src);
+            @Nullable CopiedItems selection = editor.getSelection();
             if (selection != null)
             {
                 editor.setSelectionLocked(true);
@@ -83,6 +83,9 @@ public class ExpressionEditorUtil
     public static void enableSelection(Label typeLabel, @UnknownInitialization OperandNode node)
     {
         typeLabel.setOnMouseClicked(e -> {
+            if (e.isDragDetect() || !e.isStillSincePress())
+                return;
+
             if (e.isShiftDown())
                 node.getParent().getEditor().extendSelectionTo(node);
             else
