@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -31,34 +32,17 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 21/01/2017.
  */
-public class TagExpressionNode implements ExpressionParent, OperandNode
+public class TagExpressionNode extends SurroundNode
 {
-    private final TextField tagNameField;
-    private final ConsecutiveBase parent;
     private final TypeId typeName;
     private final TagType<DataType> tagType;
-    private final @Nullable ConsecutiveBase inner;
-    private final ObservableList<Node> nodes;
-    private final VBox labelledField;
 
     @SuppressWarnings("initialization") // Because LeaveableTextField gets marked uninitialized
     public TagExpressionNode(ConsecutiveBase parent, TypeId typeName, TagType<DataType> tagType)
     {
-        this.parent = parent;
+        super(parent, "tag", "tag " + typeName.getRaw() + ":", tagType.getName(), tagType.getInner() != null, null);
         this.typeName = typeName;
         this.tagType = tagType;
-        this.tagNameField = new LeaveableTextField(this, this);
-        tagNameField.setText(tagType.getName());
-        labelledField = ExpressionEditorUtil.withLabelAbove(tagNameField, "tag", "tag " + typeName.getRaw() + ":", this);
-        if (tagType.getInner() == null)
-            inner = null;
-        else
-            inner = new Consecutive(this, labelledField, null, "tag", null);
-
-        if (inner == null)
-            nodes = FXCollections.observableArrayList(labelledField);
-        else
-            nodes = inner.nodes();
     }
 
     @Override
@@ -93,31 +77,6 @@ public class TagExpressionNode implements ExpressionParent, OperandNode
     }
 
     @Override
-    public boolean isTopLevel()
-    {
-        return false;
-    }
-
-    @Override
-    public void changed(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
-    {
-        parent.changed(this);
-    }
-
-    @Override
-    public void focusRightOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
-    {
-        parent.focusRightOf(this);
-    }
-
-    @Override
-    public void focusLeftOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
-    {
-        tagNameField.positionCaret(tagNameField.getLength());
-        tagNameField.requestFocus();
-    }
-
-    @Override
     public @Nullable DataType inferType()
     {
         return null;
@@ -133,94 +92,12 @@ public class TagExpressionNode implements ExpressionParent, OperandNode
     public Expression toExpression(FXPlatformConsumer<Object> onError)
     {
         Expression innerExp;
-        if (inner == null)
+        if (contents == null)
             innerExp = null;
         else
         {
-            innerExp = inner.toExpression(onError);
+            innerExp = contents.toExpression(onError);
         }
         return new TagExpression(new Pair<>(typeName.getRaw(), tagType.getName()), innerExp);
-    }
-
-    @Override
-    public OperandNode focusWhenShown()
-    {
-        if (inner != null)
-            inner.focus(Focus.LEFT);
-        return this;
-    }
-
-    @Override
-    public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
-    {
-        return null;
-    }
-
-    @Override
-    public ConsecutiveBase getParent()
-    {
-        return parent;
-    }
-
-    @Override
-    public void setSelected(boolean selected)
-    {
-        // TODO
-    }
-
-    @Override
-    public void setHoverDropLeft(boolean on)
-    {
-        FXUtility.setPseudoclass(nodes().get(0), "exp-hover-drop-left", on);
-    }
-
-    @Override
-    public ObservableList<Node> nodes()
-    {
-        return nodes;
-    }
-
-    @Override
-    public void focus(Focus side)
-    {
-        if (side == Focus.LEFT)
-        {
-            tagNameField.positionCaret(0);
-            tagNameField.requestFocus();
-        }
-        else
-        {
-            if (inner != null)
-            {
-                inner.focus(Focus.RIGHT);
-            }
-            else
-            {
-                tagNameField.positionCaret(tagNameField.getLength());
-                tagNameField.requestFocus();
-            }
-        }
-    }
-
-    @Override
-    public Stream<String> getParentStyles()
-    {
-        return parent.getParentStyles();
-    }
-
-    @Override
-    public ExpressionEditor getEditor()
-    {
-        return parent.getEditor();
-    }
-
-    @Override
-    public Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
-    {
-        Pair<ConsecutiveChild, Double> us = new Pair<>(this, FXUtility.distanceToLeft(tagNameField, loc));
-        if (inner == null)
-            return us;
-        else
-            return Stream.of(us, inner.findClosestDrop(loc)).min(Comparator.comparing(Pair::getSecond)).get();
     }
 }
