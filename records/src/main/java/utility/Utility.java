@@ -686,37 +686,6 @@ public class Utility
         }
     }
 
-    @OnThread(Tag.FX)
-    public static void sizeToFit(TextField tf, @Nullable Double minSizeFocused, @Nullable Double minSizeUnfocused)
-    {
-        // Partly taken from http://stackoverflow.com/a/25643696/412908:
-        // Set Max and Min Width to PREF_SIZE so that the TextField is always PREF
-        tf.setMinWidth(Region.USE_PREF_SIZE);
-        tf.setMaxWidth(Region.USE_PREF_SIZE);
-        tf.prefWidthProperty().bind(new DoubleBinding()
-        {
-            {
-                super.bind(tf.textProperty());
-                super.bind(tf.promptTextProperty());
-                super.bind(tf.fontProperty());
-                super.bind(tf.focusedProperty());
-            }
-            @Override
-            protected double computeValue()
-            {
-                Text text = new Text(tf.getText());
-                if (text.getText().isEmpty() && !tf.getPromptText().isEmpty())
-                    text.setText(tf.getPromptText());
-                text.setFont(tf.getFont()); // Set the same font, so the size is the same
-                double width = text.getLayoutBounds().getWidth() // This big is the Text in the TextField
-                    //+ tf.getPadding().getLeft() + tf.getPadding().getRight() // Add the padding of the TextField
-                    + tf.getInsets().getLeft() + + tf.getInsets().getRight()
-                    + 5d; // Add some spacing
-                return Math.max(tf.isFocused() ? (minSizeFocused == null ? 20 : minSizeFocused) : (minSizeUnfocused == null ? 20 : minSizeUnfocused), width);
-            }
-        });
-    }
-
     public static <T> Iterable<T> iterableStream(Stream<T> values)
     {
         return values::iterator;

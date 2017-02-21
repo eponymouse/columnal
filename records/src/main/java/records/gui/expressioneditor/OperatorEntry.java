@@ -83,7 +83,7 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
         FXUtility.setPseudoclass(textField, "op-empty", content.isEmpty());
         if (!userEntered)
             textField.setText(content); // Do before auto complete is on the field
-        Utility.sizeToFit(textField, 5.0, 5.0);
+        FXUtility.sizeToFit(textField, 5.0, 5.0);
         textField.getStyleClass().add("operator-field");
         Label dummyLabel = new Label();
         dummyLabel.getStyleClass().addAll("entry-type", "labelled-top");

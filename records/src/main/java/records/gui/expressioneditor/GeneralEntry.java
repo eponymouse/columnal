@@ -43,13 +43,11 @@ import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -64,6 +62,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
 {
     private static final String ARROW_SAME_ROW = "\u2192";
     private static final String ARROW_WHOLE = "\u2195";
+
 
     public static enum Status
     {
@@ -102,6 +101,11 @@ public class GeneralEntry extends LeafNode implements OperandNode
      * from AutoCompletion, hence we mark it @Interned to allow reference comparison.
      */
     private final @Interned KeyShortcutCompletion stringCompletion;
+
+    /**
+     * Shortcut for if-then-else
+     */
+    private final Completion ifCompletion;
     /**
      * Set to true while updating field with auto completion.  Allows us to avoid
      * certain listeners firing which should only fire when the user has made a change.
@@ -140,10 +144,36 @@ public class GeneralEntry extends LeafNode implements OperandNode
         super(parent);
         bracketCompletion = new @Interned KeyShortcutCompletion("Bracketed expressions", '(');
         stringCompletion = new @Interned KeyShortcutCompletion("Text", '\"');
+        ifCompletion = new Completion() {
+
+            @Override
+            public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+            {
+                return new Pair<>(null, new ReadOnlyStringWrapper("if _ then _ else _"));
+            }
+
+            @Override
+            public boolean shouldShow(String input)
+            {
+                return "if".startsWith(input);
+            }
+
+            @Override
+            public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+            {
+                return input.equals("if") ? (onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT) : CompletionAction.NONE;
+            }
+
+            @Override
+            public boolean features(String curInput, char character)
+            {
+                return (curInput.isEmpty() && "if".contains("" + character)) || (curInput.equals("i") && character == 'f');
+            }
+        };
         this.textField = createLeaveableTextField();
         textField.setText(content);
         textField.getStyleClass().add("entry-field");
-        Utility.sizeToFit(textField, null, null);
+        FXUtility.sizeToFit(textField, null, null);
         typeLabel = new Label();
         typeLabel.getStyleClass().addAll("entry-type", "labelled-top");
         ExpressionEditor editor = parent.getEditor();
@@ -232,12 +262,13 @@ public class GeneralEntry extends LeafNode implements OperandNode
         return nodes;
     }
 
-    @RequiresNonNull({"bracketCompletion", "stringCompletion"})
+    @RequiresNonNull({"bracketCompletion", "stringCompletion", "ifCompletion"})
     private List<Completion> getSuggestions(@UnknownInitialization(LeafNode.class) GeneralEntry this, String text) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
         r.add(bracketCompletion);
         r.add(stringCompletion);
+        r.add(ifCompletion);
         r.add(new NumericLiteralCompletion());
         addAllFunctions(r);
         r.add(new SimpleCompletion("", "true", "", Status.LITERAL));
@@ -648,6 +679,10 @@ public class GeneralEntry extends LeafNode implements OperandNode
                     parent.replace(GeneralEntry.this, new StringLiteralNode("", parent).focusWhenShown());
                 //else if (ksc == patternMatchCompletion)
                     //parent.replace(GeneralEntry.this, new PatternMatchNode(parent).focusWhenShown());
+            }
+            else if (c == ifCompletion)
+            {
+                parent.replace(GeneralEntry.this, new IfThenElseNode(parent));
             }
             else if (c instanceof FunctionCompletion)
             {

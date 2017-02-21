@@ -29,6 +29,8 @@ public @Interned interface OperandNode extends ExpressionNode, ConsecutiveChild
     }
 
     // TODO document this once it's used
+    // TODO: but what the hell was it for?  I think the idea was if you infer type
+    // of part of expression, you can work out expected type for another part.
     public abstract @Nullable DataType inferType();
 
     /**

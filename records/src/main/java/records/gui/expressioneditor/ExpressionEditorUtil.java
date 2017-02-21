@@ -24,6 +24,7 @@ public class ExpressionEditorUtil
     @NotNull
     protected static VBox withLabelAbove(TextField textField, String cssClass, String label, @UnknownInitialization OperandNode surrounding)
     {
+        FXUtility.sizeToFit(textField, 10.0, 10.0);
         textField.getStyleClass().addAll(cssClass + "-name", "labelled-name");
         Label typeLabel = new Label(label);
         typeLabel.getStyleClass().addAll(cssClass + "-top", "labelled-top");
@@ -32,6 +33,15 @@ public class ExpressionEditorUtil
         VBox vBox = new VBox(typeLabel, textField);
         vBox.getStyleClass().add(cssClass);
         return vBox;
+    }
+
+    @NotNull
+    protected static VBox keyword(String keyword, String cssClass, @UnknownInitialization OperandNode surrounding)
+    {
+        TextField t = new TextField(keyword);
+        t.setEditable(false);
+        t.setDisable(true);
+        return withLabelAbove(t, cssClass, "", surrounding);
     }
 
     public static void setStyles(Label topLabel, Stream<String> parentStyles)
