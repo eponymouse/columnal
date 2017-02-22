@@ -13,30 +13,28 @@ import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase;
-import records.gui.expressioneditor.GeneralEntry;
-import records.gui.expressioneditor.GeneralEntry.Status;
 import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.OperatorEntry;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.FXPlatformFunction;
 import utility.Pair;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * Created by neil on 11/12/2016.
+ * Created by neil on 22/02/2017.
  */
-public class VarExpression extends NonOperatorExpression
+public class VarDeclExpression extends NonOperatorExpression
 {
     private final String varName;
 
-    public VarExpression(String varName)
+    public VarDeclExpression(String varName)
     {
         this.varName = varName;
     }
@@ -44,24 +42,32 @@ public class VarExpression extends NonOperatorExpression
     @Override
     public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
-        Set<DataType> varType = state.findVarType(varName);
-        if (varType == null)
-        {
-            onError.accept(this, "Undeclared variable: \"" + varName + "\"");
+        // If normal check is called, something has gone wrong because we are only
+        // valid in a pattern
+        onError.accept(this, "Variable cannot be declared outside pattern match");
+        return null;
+    }
+
+    @Override
+    public @Nullable Pair<DataType, TypeState> checkAsPattern(DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    {
+        @Nullable TypeState newState = state.add(varName, srcType, s -> onError.accept(this, s));
+        if (newState == null)
             return null;
-        }
-        if (varType.size() > 1)
-        {
-            onError.accept(this, "Variable \"" + varName + "\" cannot be used because it may have different types: " + varType.stream().map(DataType::toString).collect(Collectors.toList()));
-            return null;
-        }
-        return varType.iterator().next();
+        else
+            return new Pair<>(srcType, newState);
+    }
+
+    @Override
+    public @OnThread(Tag.Simulation) @Nullable EvaluateState matchAsPattern(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException
+    {
+        return state.add(varName, value);
     }
 
     @Override
     public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        return state.get(varName);
+        throw new InternalException("Calling getValue on variable declaration (should only call matchAsPattern)");
     }
 
     @Override
@@ -73,7 +79,7 @@ public class VarExpression extends NonOperatorExpression
     @Override
     public String save(boolean topLevel)
     {
-        return varName;
+        return "@newvar " + varName;
     }
 
     @Override
@@ -85,7 +91,7 @@ public class VarExpression extends NonOperatorExpression
     @Override
     public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
     {
-        return c -> new GeneralEntry(varName, Status.VARIABLE_USE, c);
+        throw new RuntimeException("TODO");
     }
 
     @Override
@@ -106,7 +112,7 @@ public class VarExpression extends NonOperatorExpression
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
 
-        VarExpression that = (VarExpression) o;
+        VarDeclExpression that = (VarDeclExpression) o;
 
         return varName.equals(that.varName);
     }

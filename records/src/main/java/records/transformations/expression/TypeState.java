@@ -1,7 +1,10 @@
 package records.transformations.expression;
 
+import com.google.common.collect.MapDifference;
+import com.google.common.collect.Maps;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
@@ -11,6 +14,7 @@ import records.error.UserException;
 import records.loadsave.OutputBuilder;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
+import utility.ExBiConsumer;
 import utility.ExConsumer;
 import utility.Pair;
 
@@ -64,7 +68,18 @@ public class TypeState
         return new TypeState(copy, typeManager, unitManager);
     }
 
-    // Merges a set of type states from different pattern guards
+    /**
+     *  Merges a set of type states from different pattern guards.
+     *
+     *  The semantics here are that duplicate variables are allowed, if they refer to a variable
+     *  with the same type. (e.g. @case (4, x) @orcase (6, x))  If they have a different type,
+     *  it's an error.
+     *
+     *  This is different semantics to the union function, which does not permit variables with
+     *  the same name (this may be a bit confusing: intersect does allow duplicates, but union
+     *  does not!)
+     */
+
     public static TypeState intersect(List<TypeState> typeStates) throws InternalException, UserException
     {
         Map<String, Set<DataType>> mergedVars = new HashMap<>(typeStates.get(0).variables);
@@ -151,5 +166,59 @@ public class TypeState
     public UnitManager getUnitManager()
     {
         return unitManager;
+    }
+
+    /**
+     * Merges a set of TypeState items which came from the same original typestate,
+     * but got passed to different sub expressions in a single pattern (e.g. in a tuple pattern match),
+     * and now needed to be merged.
+     *
+     * Performs some checks and puts them back together.
+     *
+     * @param typeStates
+     * @return Null if there is a user-triggered problem (in which case onError will have been called)
+     */
+    @Pure
+    public static @Nullable TypeState union(TypeState original, ExConsumer<String> onError, TypeState... typeStates) throws InternalException, UserException
+    {
+        if (typeStates.length == 0)
+            throw new InternalException("Attempted to merge type states of zero size");
+        else if (typeStates.length == 1)
+            return typeStates[0];
+
+        Map<String, Set<DataType>> allNewVars = new HashMap<>();
+
+        for (TypeState typeState : typeStates)
+        {
+            // TypeManager and UnitManager should be constant:
+            if (typeState.typeManager != original.typeManager)
+                throw new InternalException("Type manager changed between different type states");
+            if (typeState.unitManager != original.unitManager)
+                throw new InternalException("Unit manager changed between different type states");
+            // Functions shouldn't have changed:
+            if (!typeState.functions.equals(original.functions))
+                throw new InternalException("Functions changed between different type states");
+            // Variables: we first remove all the variables which already existed
+            // What is left must not overlap
+            MapDifference<String, Set<DataType>> diff = Maps.difference(typeState.variables, original.variables);
+            if (!diff.entriesOnlyOnRight().isEmpty())
+                throw new InternalException("Altered type state is missing some original variables: " + diff.entriesOnlyOnRight());
+            if (!diff.entriesDiffering().isEmpty())
+                throw new InternalException("Altered type state has altered original variables: " + diff.entriesOnlyOnRight());
+
+            // Now diff new vars with other new vars:
+            diff = Maps.difference(diff.entriesOnlyOnLeft(), allNewVars);
+            if (!diff.entriesDiffering().isEmpty() || !diff.entriesInCommon().isEmpty())
+            {
+                // TODO ideally offer a quick fix to rename and add an equality check in guard
+                onError.accept("Duplicate variables in different parts of pattern: " + diff.entriesDiffering().keySet() + " " + diff.entriesInCommon().keySet());
+                return null;
+            }
+            // Record the new vars (shouldn't overlap):
+            allNewVars.putAll(diff.entriesOnlyOnLeft());
+        }
+        // Shouldn't be any overlap given earlier checks:
+        allNewVars.putAll(original.variables);
+        return new TypeState(allNewVars, original.typeManager, original.unitManager);
     }
 }

@@ -7,15 +7,15 @@ import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
-import records.data.TaggedValue;
 import records.data.datatype.DataType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.ClauseNode;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
-import records.loadsave.OutputBuilder;
+import records.gui.expressioneditor.PatternMatchNode;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
@@ -120,229 +120,20 @@ public class MatchExpression extends NonOperatorExpression
             result = 31 * result + outcome.hashCode();
             return result;
         }
-    }
 
-    public class PatternMatchConstructor implements PatternMatch
-    {
-        private final String typeName;
-        private final String constructor;
-        private final @Nullable PatternMatch subPattern;
-        private int tagIndex = -1;
-
-        public PatternMatchConstructor(String typeName, String constructor, @Nullable PatternMatch subPattern)
+        @OnThread(Tag.FXPlatform)
+        public ClauseNode load(PatternMatchNode parent)
         {
-            this.typeName = typeName;
-            this.constructor = constructor;
-            this.subPattern = subPattern;
+            return new ClauseNode(parent, new Pair<List<Pair<Expression, @Nullable Expression>>, Expression>(Utility.<Pattern, Pair<Expression, @Nullable Expression>>mapList(patterns, p -> p.load()), outcome));
         }
-
-        @Override
-        public @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
-        {
-            if (!srcType.isTagged())
-            {
-                onError.accept(MatchExpression.this, "Pattern has constructor, but match source is not a tagged type");
-            }
-            Pair<Integer, @Nullable DataType> foundAndInner = srcType.unwrapTag(constructor);
-            if (foundAndInner.getFirst() == -1)
-            {
-                onError.accept(MatchExpression.this, "Match source type " + srcType + " has no constructor named: " + constructor);
-                return null;
-            }
-            else
-            {
-                this.tagIndex = foundAndInner.getFirst();
-                @Nullable DataType inner = foundAndInner.getSecond();
-                if ((subPattern != null) && inner != null)
-                    return subPattern.check(data, state, onError, inner);
-                if (subPattern != null && inner == null)
-                {
-                    onError.accept(MatchExpression.this, "Constructor " + constructor + " has no inner data, yet found inner pattern");
-                    return null;
-                }
-                if (subPattern == null && inner != null)
-                {
-                    onError.accept(MatchExpression.this, "Constructor " + constructor + " has inner data, yet found no inner pattern");
-                    return null;
-                }
-                return state;
-            }
-        }
-
-        @Override
-        public @Nullable EvaluateState match(int rowIndex, @Value Object val, EvaluateState state) throws InternalException, UserException
-        {
-            if (val instanceof TaggedValue)
-            {
-                TaggedValue p = (TaggedValue)val;
-                @Nullable @Value Object innerValue = p.getInner();
-                if ((p.getTagIndex()) == tagIndex)
-                {
-                    if (subPattern == null && innerValue == null)
-                        return state;
-                    else if (subPattern != null && innerValue != null)
-                        return subPattern.match(rowIndex, innerValue, state);
-                    if (subPattern == null && innerValue != null)
-                        throw new InternalException("Pattern match had inner value but no inner pattern");
-                    else //if (subPattern != null && innerValue == null)
-                        throw new InternalException("Pattern match had inner pattern but no inner value");
-                }
-                else
-                    return null;
-            }
-            throw new InternalException("Unexpected type; should be integer for tag index but was " + val.getClass());
-        }
-
-        @Override
-        public String save()
-        {
-            return "$ \\" + OutputBuilder.quotedIfNecessary(typeName) + ":" + OutputBuilder.quotedIfNecessary(constructor) + (subPattern == null ? "" : (":" + subPattern.save()));
-        }
-
-        @Override
-        public boolean equals(@Nullable Object o)
-        {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            PatternMatchConstructor that = (PatternMatchConstructor)o;
-
-            if (!constructor.equals(that.constructor)) return false;
-            return subPattern != null ? subPattern.equals(that.subPattern) : that.subPattern == null;
-
-        }
-
-        @Override
-        public int hashCode()
-        {
-            int result = constructor.hashCode();
-            result = 31 * result + (subPattern != null ? subPattern.hashCode() : 0);
-            return result;
-        }
-    }
-
-    public static class PatternMatchExpression implements PatternMatch
-    {
-        private final Expression expression;
-
-        public PatternMatchExpression(Expression expression)
-        {
-            this.expression = expression;
-        }
-
-        @Override
-        public @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
-        {
-            @Nullable DataType ourType = expression.check(data, state, onError);
-            if (ourType == null)
-                return null;
-            if (DataType.checkSame(srcType, ourType, s -> onError.accept(expression, s)) == null)
-            {
-                onError.accept(expression, "Type mismatch in pattern: source type is " + srcType + " pattern type is: " + ourType);
-                return null;
-            }
-            return state; // Expression doesn't modify the type state
-        }
-
-        @Override
-        @OnThread(Tag.Simulation)
-        public @Nullable EvaluateState match(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException
-        {
-            @Value Object expected = expression.getValue(rowIndex, state);
-            if (Utility.compareValues(expected, value) == 0)
-                return state;
-            else
-                return null;
-        }
-
-        @Override
-        public String save()
-        {
-            return expression.save(false);
-        }
-
-        @Override
-        public boolean equals(@Nullable Object o)
-        {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            PatternMatchExpression that = (PatternMatchExpression)o;
-
-            return expression.equals(that.expression);
-
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return expression.hashCode();
-        }
-    }
-
-    public class PatternMatchVariable implements PatternMatch
-    {
-        private final String varName;
-
-        public PatternMatchVariable(String varName)
-        {
-            this.varName = varName;
-        }
-
-        @Override
-        public @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws UserException, InternalException
-        {
-            // Variable always type checks against anything
-            return state.add(varName, srcType, err -> onError.accept(MatchExpression.this, err));
-        }
-
-        @Override
-        public EvaluateState match(int rowIndex, @Value Object value, EvaluateState state) throws InternalException
-        {
-            return state.add(varName, value);
-        }
-
-        @Override
-        public String save()
-        {
-            return "$" + OutputBuilder.quotedIfNecessary(varName);
-        }
-
-        @Override
-        public boolean equals(@Nullable Object o)
-        {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            PatternMatchVariable that = (PatternMatchVariable)o;
-
-            return varName.equals(that.varName);
-
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return varName.hashCode();
-        }
-    }
-
-    public static interface PatternMatch
-    {
-        @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException;
-
-        @OnThread(Tag.Simulation)
-        @Nullable EvaluateState match(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException;
-
-        String save();
     }
 
     public static class Pattern
     {
-        private final PatternMatch pattern;
+        private final Expression pattern;
         private final @Nullable Expression guard;
 
-        public Pattern(PatternMatch pattern, @Nullable Expression guard)
+        public Pattern(Expression pattern, @Nullable Expression guard)
         {
             this.pattern = pattern;
             this.guard = guard;
@@ -350,24 +141,28 @@ public class MatchExpression extends NonOperatorExpression
 
         public @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
         {
-            TypeState rhsState = pattern.check(data, state, onError, srcType);
+            @Nullable Pair<DataType, TypeState> rhsState = pattern.checkAsPattern(srcType, data, state, onError);
             if (rhsState == null)
                 return null;
+            if (DataType.checkSame(rhsState.getFirst(), srcType, s -> onError.accept(pattern, s)) == null)
+                return null;
+
             if (guard != null)
             {
-                @Nullable DataType type = guard.check(data, rhsState, onError);
+                @Nullable DataType type = guard.check(data, rhsState.getSecond(), onError);
                 if (type == null || !DataType.BOOLEAN.equals(type))
                 {
                     onError.accept(guard, "Pattern guards must have boolean type, found: " + (type == null ? " error" : type));
                 }
             }
-            return rhsState;
+            return rhsState.getSecond();
         }
 
+        // Returns non-null if it matched, null if it didn't match.
         @OnThread(Tag.Simulation)
         public @Nullable EvaluateState match(@Value Object value, int rowIndex, EvaluateState state) throws InternalException, UserException
         {
-            @Nullable EvaluateState newState = pattern.match(rowIndex, value, state);
+            @Nullable EvaluateState newState = pattern.matchAsPattern(rowIndex, value, state);
             if (newState == null)
                 return null;
             if (guard != null && !guard.getBoolean(rowIndex, newState, null))
@@ -377,10 +172,10 @@ public class MatchExpression extends NonOperatorExpression
 
         public String save()
         {
-            return pattern.save() + (guard == null ? "" : " @given " + guard.save(false));
+            return pattern.save(false) + (guard == null ? "" : " @given " + guard.save(false));
         }
 
-        public PatternMatch getPattern()
+        public Expression getPattern()
         {
             return pattern;
         }
@@ -403,6 +198,12 @@ public class MatchExpression extends NonOperatorExpression
             int result = pattern.hashCode();
             result = 31 * result + (guard != null ? guard.hashCode() : 0);
             return result;
+        }
+
+        // Load pattern and guard
+        public Pair<Expression, @Nullable Expression> load()
+        {
+            return new Pair<>(pattern, guard);
         }
     }
 
@@ -488,7 +289,7 @@ public class MatchExpression extends NonOperatorExpression
     @Override
     public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
     {
-        throw new RuntimeException("TODO");
+        return c -> new PatternMatchNode(c, new Pair<>(expression, clauses));
     }
 
     @Override

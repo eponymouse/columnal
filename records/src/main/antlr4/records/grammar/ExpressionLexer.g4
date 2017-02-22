@@ -32,6 +32,7 @@ ELSE : '@else';
 PATTERN : '$';
 CASEGUARD: '@given';
 FUNCTION : '@function';
+NEWVAR : '@newvar';
 CONSTRUCTOR : '\\';
 RAISEDTO : '^';
 COMMA: ',';

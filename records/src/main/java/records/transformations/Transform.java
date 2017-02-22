@@ -2,7 +2,6 @@ package records.transformations;
 
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.scene.layout.Pane;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;

@@ -13,7 +13,8 @@ booleanLiteral : TRUE | FALSE;
 
 varRef  : UNQUOTED_IDENT;
 
-terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef;
+// newVariable only valid in pattern matches, but that's done in semantic check, not syntactic:
+terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef | newVariable;
 
 // Could have units in ops:
 //plusMinusExpression :  expression PLUS_MINUS UNIT? expression (PLUS_MINUS expression)*;
@@ -42,18 +43,16 @@ callExpression : functionName UNIT* OPEN_BRACKET (topLevelExpression | expressio
 tupleExpression : OPEN_BRACKET expression (COMMA expression)+ CLOSE_BRACKET;
 arrayExpression : OPEN_SQUARE (expression (COMMA expression)*)? CLOSE_SQUARE;
 
-newVariable : PATTERN UNQUOTED_IDENT;
+newVariable : NEWVAR UNQUOTED_IDENT;
 typeName : STRING | UNQUOTED_IDENT;
 constructorName : STRING | UNQUOTED_IDENT;
-patternTuple : PATTERN tupleExpression;
-patternMatch : PATTERN constructor (COLON patternMatch)? | newVariable | expression;
-pattern : patternMatch (CASEGUARD expression)?;
+pattern : expression (CASEGUARD expression)?;
 
 /* Single argument, matched once as variable name or tuple pattern */
-functionArg : (newVariable | patternTuple) COLON expression;
+// functionArg : (newVariable | patternTuple) COLON expression;
 /* Single argument, matched by multiple cases (equivalent to FUNCTION x : @match x) */
-functionCase : matchClause+;
-function: FUNCTION (functionArg | functionCase);
+// functionCase : matchClause+;
+//function: FUNCTION (functionArg | functionCase);
 
 matchClause : CASE pattern (ORCASE pattern)* THEN expression;
 match : MATCH expression matchClause+;

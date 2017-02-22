@@ -40,7 +40,6 @@ import records.grammar.ExpressionParser.NotEqualExpressionContext;
 import records.grammar.ExpressionParser.NumericLiteralContext;
 import records.grammar.ExpressionParser.OrExpressionContext;
 import records.grammar.ExpressionParser.PatternContext;
-import records.grammar.ExpressionParser.PatternMatchContext;
 import records.grammar.ExpressionParser.PlusMinusExpressionContext;
 import records.grammar.ExpressionParser.RaisedExpressionContext;
 import records.grammar.ExpressionParser.StringLiteralContext;
@@ -58,8 +57,6 @@ import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
-import records.transformations.expression.MatchExpression.PatternMatch;
-import records.transformations.expression.MatchExpression.PatternMatchExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
@@ -98,6 +95,19 @@ public abstract class Expression
     // Checks that all used variable names and column references are defined,
     // and that types check.  Return null if any problems
     public abstract @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException;
+
+    // Like check, but for patterns.  For many expressions this is same as check,
+    // unless you are a new-variable declaration or can have one beneath you.
+    // If you override this, you should also override matchAsPattern
+    public @Nullable Pair<DataType, TypeState> checkAsPattern(DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    {
+        // By default, check as normal, and return same TypeState:
+        @Nullable DataType type = check(data, state, onError);
+        if (type == null || DataType.checkSame(srcType, type, s -> onError.accept(this, s)) == null)
+            return null;
+        else
+            return new Pair<>(type, state);
+    }
 
     @OnThread(Tag.Simulation)
     public abstract @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException;
@@ -141,6 +151,19 @@ public abstract class Expression
     public abstract Pair<List<FXPlatformFunction<ConsecutiveBase,OperandNode>>, List<FXPlatformFunction<ConsecutiveBase,OperatorEntry>>> loadAsConsecutive();
 
     public abstract FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle();
+
+    // Vaguely similar to getValue, but instead checks if the expression matches the given value
+    // For many expressions, matching means equality, but if a new-variable item is involved
+    // it's not necessarily plain equality.
+    // Given that the expression has type-checked, you can assume the value is of the same type
+    // as the current expression (and throw an InternalException if not)
+    // If you override this, you should also override checkAsPattern
+    @OnThread(Tag.Simulation)
+    public @Nullable EvaluateState matchAsPattern(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException
+    {
+        @Value Object ourValue = getValue(rowIndex, state);
+        return Utility.compareValues(value, ourValue) == 0 ? state : null;
+    }
 
     private static class CompileExpression extends ExpressionParserBaseVisitor<Expression>
     {
@@ -290,7 +313,7 @@ public abstract class Expression
         @Override
         public Expression visitVarRef(VarRefContext ctx)
         {
-            return new VarExpression(ctx.getText());
+            return new VarUseExpression(ctx.getText());
         }
 
         @Override
@@ -326,39 +349,14 @@ public abstract class Expression
                     List<Pattern> patterns = new ArrayList<>();
                     for (PatternContext patternContext : matchClauseContext.pattern())
                     {
-                        @Nullable ExpressionContext guardExpression = patternContext.expression();
+                        @Nullable ExpressionContext guardExpression = patternContext.expression().size() < 2 ? null : patternContext.expression(1);
                         @Nullable Expression guard = guardExpression == null ? null : visitExpression(guardExpression);
-                        try
-                        {
-                            patterns.add(new Pattern(processPatternMatch(me, patternContext.patternMatch()), guard));
-                        }
-                        catch (InternalException e)
-                        {
-                            throw new RuntimeException(e);
-                        }
+                        patterns.add(new Pattern(visitExpression(patternContext.expression(0)), guard));
                     }
                     return me.new MatchClause(patterns, visitExpression(matchClauseContext.expression()));
                 });
             }
             return new MatchExpression(visitExpression(ctx.expression()), clauses);
-        }
-
-        private PatternMatch processPatternMatch(MatchExpression me, PatternMatchContext ctx) throws InternalException
-        {
-            if (ctx.constructor() != null)
-            {
-                PatternMatchContext subPattern = ctx.patternMatch();
-                return me.new PatternMatchConstructor(ctx.constructor().typeName().getText(), ctx.constructor().constructorName().getText(), subPattern == null ? null : processPatternMatch(me, subPattern));
-            }
-            else if (ctx.newVariable() != null)
-            {
-                return me.new PatternMatchVariable(ctx.newVariable().getText().substring(1));
-            }
-            else if (ctx.expression() != null)
-            {
-                return new PatternMatchExpression(visitExpression(ctx.expression()));
-            }
-            throw new RuntimeException("Unknown case in processPatternMatch");
         }
 
         @Override

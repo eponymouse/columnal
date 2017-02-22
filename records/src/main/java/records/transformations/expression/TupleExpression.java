@@ -23,6 +23,7 @@ import utility.ExBiConsumer;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.ListEx;
 
 import java.util.List;
 import java.util.Map;
@@ -58,6 +59,57 @@ public class TupleExpression extends Expression
         }
         types = ImmutableList.copyOf(typeArray);
         return DataType.tuple(types);
+    }
+
+    @Override
+    public @Nullable Pair<DataType, TypeState> checkAsPattern(DataType srcType, RecordSet data, final TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    {
+        if (!srcType.isTuple())
+        {
+            onError.accept(this, "Cannot match non-tuple type " + srcType + " against a tuple pattern");
+            return null;
+        }
+        if (srcType.getMemberType().size() != members.size())
+        {
+            onError.accept(this, "Cannot match tuple of size " + srcType.getMemberType().size() + " against tuple pattern of size " + members.size());
+            return null;
+        }
+
+        @NonNull DataType[] typeArray = new DataType[members.size()];
+        @NonNull TypeState[] typeStates = new TypeState[members.size()];
+        for (int i = 0; i < typeArray.length; i++)
+        {
+            @Nullable Pair<DataType, TypeState> t = members.get(i).checkAsPattern(srcType.getMemberType().get(i), data, state, onError);
+            if (t == null)
+                return null;
+            typeArray[i] = t.getFirst();
+            typeStates[i] = t.getSecond();
+        }
+        types = ImmutableList.copyOf(typeArray);
+        @Nullable TypeState endState = TypeState.union(state, s -> onError.accept(this, s), typeStates);
+        if (endState == null)
+            return null;
+        return new Pair<>(DataType.tuple(types), endState);
+    }
+
+    @Override
+    public @Nullable EvaluateState matchAsPattern(int rowIndex, @Value Object value, final EvaluateState state) throws InternalException, UserException
+    {
+        if (value instanceof Object[])
+        {
+            Object[] tuple = (Object[]) value;
+            if (tuple.length != members.size())
+                throw new InternalException("Mismatch in tuple size, type is " + members.size() + " but found " + tuple.length);
+            @Nullable EvaluateState curState = state;
+            for (int i = 0; i < tuple.length; i++)
+            {
+                curState = members.get(i).matchAsPattern(rowIndex, value, curState);
+                if (curState == null)
+                    return null;
+            }
+            return curState;
+        }
+        throw new InternalException("Expected tuple but found " + value.getClass());
     }
 
     @Override

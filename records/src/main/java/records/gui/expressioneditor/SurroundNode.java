@@ -71,7 +71,7 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode
         };
         head.setText(startingHead);
         this.cssClass = cssClass;
-        VBox vBox = ExpressionEditorUtil.withLabelAbove(head, this.cssClass, headLabel, this);
+        VBox vBox = ExpressionEditorUtil.withLabelAbove(head, this.cssClass, headLabel, this, getParentStyles());
         noInnerNodes = FXCollections.observableArrayList();
         if (hasInner)
             contents = new ContentConsecutive(vBox, startingContent);

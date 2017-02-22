@@ -3,8 +3,6 @@ package test.gen;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
-import com.pholser.junit.quickcheck.generator.Generator;
-import com.pholser.junit.quickcheck.generator.java.time.ZoneOffsetGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -49,15 +47,14 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
-import records.transformations.expression.MatchExpression.PatternMatch;
-import records.transformations.expression.MatchExpression.PatternMatchExpression;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.OrExpression;
 import records.transformations.expression.StringLiteral;
 import records.transformations.expression.TagExpression;
 import records.transformations.expression.TupleExpression;
-import records.transformations.expression.VarExpression;
+import records.transformations.expression.VarDeclExpression;
+import records.transformations.expression.VarUseExpression;
 import test.DummyManager;
 import test.TestUtil;
 import threadchecker.OnThread;
@@ -85,17 +82,11 @@ import java.time.temporal.TemporalField;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
-import static test.TestUtil.distinctTypes;
-import static test.TestUtil.generateNumber;
-import static test.TestUtil.generateNumberV;
-import static test.TestUtil.generateTableIdPair;
 
 /**
  * Generates expressions and resulting values by working backwards.
@@ -718,13 +709,13 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
         }).stream().<Function<MatchExpression, MatchClause>>flatMap(o -> o.isPresent() ? Stream.<Function<MatchExpression, MatchClause>>of(o.get()) : Stream.<Function<MatchExpression, MatchClause>>empty()).collect(Collectors.<Function<MatchExpression, MatchClause>>toList()));
         Expression correctOutcome = makeCorrectOutcome.get();
         List<ExFunction<MatchExpression, Pattern>> patterns = new ArrayList<>(makeNonMatchingPatterns(maxLevels - 1, t, actual));
-        Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> match = makePatternMatch(maxLevels - 1, t, actual);
+        Pair<Expression, @Nullable Expression> match = makePatternMatch(maxLevels - 1, t, actual);
         patterns.add(r.nextInt(0, patterns.size()), me -> {
             @Nullable Expression guard = r.nextBoolean() ? null : make(DataType.BOOLEAN, true, maxLevels - 1);
             @Nullable Expression extraGuard = match.getSecond();
             if (extraGuard != null)
                 guard = (guard == null ? extraGuard : new AndExpression(Arrays.asList(guard, extraGuard)));
-            return new Pattern(match.getFirst().apply(me), guard);
+            return new Pattern(match.getFirst(), guard);
         });
         clauses.add(r.nextInt(0, clauses.size()), me -> {
             try
@@ -741,27 +732,27 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
 
     // Pattern and an optional guard
     @NotNull
-    private Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> makePatternMatch(int maxLevels, DataType t, Object actual)
+    private Pair<Expression, @Nullable Expression> makePatternMatch(int maxLevels, DataType t, Object actual)
     {
         try
         {
             if (t.isTagged() && r.nextBoolean())
             {
                 TaggedValue p = (TaggedValue) actual;
-                return t.apply(new SpecificDataTypeVisitor<Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression>>()
+                return t.apply(new SpecificDataTypeVisitor<Pair<Expression, @Nullable Expression>>()
                 {
                     @Override
-                    public Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> tagged(TypeId typeName, List<TagType<DataType>> tagTypes) throws InternalException, UserException
+                    public Pair<Expression, @Nullable Expression> tagged(TypeId typeName, List<TagType<DataType>> tagTypes) throws InternalException, UserException
                     {
                         TagType<DataType> tagType = tagTypes.get(p.getTagIndex());
                         @Nullable DataType inner = tagType.getInner();
                         if (inner == null)
-                            return new Pair<>(me -> me.new PatternMatchConstructor(typeName.getRaw(), tagType.getName(), null), null);
+                            return new Pair<>(new TagExpression(new Pair<>(typeName.getRaw(), tagType.getName()), null), null);
                         @Nullable Object innerValue = p.getInner();
                         if (innerValue == null)
                             throw new InternalException("Type says inner value but is null");
-                        Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> subPattern = makePatternMatch(maxLevels, inner, innerValue);
-                        return new Pair<>(me -> me.new PatternMatchConstructor(typeName.getRaw(), tagType.getName(), subPattern.getFirst().apply(me)), subPattern.getSecond());
+                        Pair<Expression, @Nullable Expression> subPattern = makePatternMatch(maxLevels, inner, innerValue);
+                        return new Pair<>(new TagExpression(new Pair<>(typeName.getRaw(), tagType.getName()), subPattern.getFirst()), subPattern.getSecond());
                     }
                 });
 
@@ -769,10 +760,10 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             else if (r.nextBoolean()) // Do equals but using variable + guard
             {
                 String varName = "var" + nextVar++;
-                return new Pair<>(me -> me.new PatternMatchVariable(varName), new EqualExpression(new VarExpression(varName), make(t, actual, maxLevels)));
+                return new Pair<>(new VarDeclExpression(varName), new EqualExpression(new VarUseExpression(varName), make(t, actual, maxLevels)));
             }
             Expression expression = make(t, actual, maxLevels);
-            return new Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression>(me -> new PatternMatchExpression(expression), null);
+            return new Pair<Expression, @Nullable Expression>(expression, null);
         }
         catch (InternalException | UserException e)
         {
@@ -788,7 +779,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
         {
             return TestUtil.<ExFunction<MatchExpression, Pattern>>makeList(r, 1, 4, () ->
             {
-                Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression> match = r.choose(Arrays.<ExSupplier<Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression>>>asList(
+                Pair<Expression, @Nullable Expression> match = r.choose(Arrays.<ExSupplier<Pair<Expression, @Nullable Expression>>>asList(
                     () ->
                     {
                         @Value Object nonMatchingValue;
@@ -809,7 +800,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 if (extraGuard != null)
                     guard = (guard == null ? extraGuard : new AndExpression(Arrays.asList(guard, extraGuard)));
                 @Nullable Expression guardFinal = guard;
-                return (ExFunction<MatchExpression, Pattern>)((MatchExpression me) -> new Pattern(match.getFirst().apply(me), guardFinal));
+                return (ExFunction<MatchExpression, Pattern>)((MatchExpression me) -> new Pattern(match.getFirst(), guardFinal));
             });
         }
         catch (CantMakeNonMatching e)

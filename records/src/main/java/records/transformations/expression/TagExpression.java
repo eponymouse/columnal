@@ -63,9 +63,49 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
+    public @Nullable Pair<DataType, TypeState> checkAsPattern(DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    {
+        @Nullable TypeAndTagInfo typeAndIndex = state.findTaggedType(tagName, err -> onError.accept(this, err));
+        if (typeAndIndex == null)
+            return null;
+        index = typeAndIndex.tagIndex;
+
+        @Nullable Pair<DataType, TypeState> typeAndState = (inner == null || typeAndIndex.innerType == null) ? null : inner.checkAsPattern(typeAndIndex.innerType, data, state, onError);
+        if (typeAndState != null)
+            innerDerivedType = typeAndState.getFirst();
+        // We must not pass nulls to checkSame as that counts as failed checking, not optional items
+        if ((inner == null && typeAndIndex.innerType == null && typeAndState == null) ||
+            (inner != null && typeAndIndex.innerType != null && typeAndState != null && DataType.checkSame(typeAndIndex.innerType, innerDerivedType, err -> onError.accept(this, err)) != null))
+        {
+            return new Pair<>(typeAndIndex.wholeType, typeAndState == null ? state : typeAndState.getSecond());
+        }
+        else
+            return null;
+    }
+
+    @Override
     public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         return new TaggedValue(index, inner == null ? null : inner.getValue(rowIndex, state));
+    }
+
+    @Override
+    @OnThread(Tag.Simulation)
+    public @Nullable EvaluateState matchAsPattern(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException
+    {
+        if (value instanceof TaggedValue)
+        {
+            TaggedValue themTagged = (TaggedValue) value;
+            int theirIndex = themTagged.getTagIndex();
+            if (index != theirIndex)
+                return null;
+            if (inner == null)
+                return state; // Nothing further
+            if (themTagged.getInner() == null)
+                throw new InternalException("Type says inner type should be present but is instead null: " + this.inner);
+            return inner.matchAsPattern(rowIndex, themTagged.getInner(), state);
+        }
+        throw new InternalException("Expected TaggedValue but found: " + value.getClass());
     }
 
     @Override

@@ -24,6 +24,7 @@ import utility.ExBiConsumer;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.ListEx;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -36,7 +37,10 @@ import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 /**
- * Created by neil on 12/01/2017.
+ * An array expression like [0, x, 3].  This could be called an array literal, but didn't want to confuse
+ * as the items in the array don't have to be literals.  But this expression is for constructing
+ * arrays of a known length from a fixed set of expressions (like [0, y] but not just "xs" which happens
+ * to be of array type).
  */
 public class ArrayExpression extends Expression
 {
@@ -68,6 +72,59 @@ public class ArrayExpression extends Expression
         if (type == null)
             return null;
         return DataType.array(type);
+    }
+
+    @Override
+    public @Nullable Pair<DataType, TypeState> checkAsPattern(DataType srcType, RecordSet data, final TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    {
+        if (!srcType.isArray())
+        {
+            onError.accept(this, "Cannot match non-array type " + srcType + " against an array");
+            return null;
+        }
+        DataType innerType = srcType.getMemberType().get(0);
+
+        // Empty array - special case:
+        if (items.isEmpty())
+            return new Pair<>(DataType.array(), state);
+        @NonNull DataType[] typeArray = new DataType[items.size()];
+        @NonNull TypeState[] typeStates = new TypeState[items.size()];
+        for (int i = 0; i < typeArray.length; i++)
+        {
+            @Nullable Pair<DataType, TypeState> t = items.get(i).checkAsPattern(innerType, data, state, onError);
+            if (t == null)
+                return null;
+            typeArray[i] = t.getFirst();
+            typeStates[i] = t.getSecond();
+        }
+        this.type = DataType.checkAllSame(Arrays.asList(typeArray), s -> onError.accept(this, s));
+        _test_originalTypes = Arrays.asList(typeArray);
+        if (type == null)
+            return null;
+        @Nullable TypeState endState = TypeState.union(state, s -> onError.accept(this, s), typeStates);
+        if (endState == null)
+            return null;
+        return new Pair<>(DataType.array(type), endState);
+    }
+
+    @Override
+    public @OnThread(Tag.Simulation) @Nullable EvaluateState matchAsPattern(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException
+    {
+        if (value instanceof ListEx)
+        {
+            ListEx list = (ListEx)value;
+            if (list.size() != items.size())
+                return null; // Not an exception, just means the value has different size to the pattern, so can't match
+            @Nullable EvaluateState curState = state;
+            for (int i = 0; i < items.size(); i++)
+            {
+                curState = items.get(i).matchAsPattern(rowIndex, value, curState);
+                if (curState == null)
+                    return null;
+            }
+            return curState;
+        }
+        throw new InternalException("Expected array but found " + value.getClass());
     }
 
     @Override

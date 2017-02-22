@@ -2,11 +2,9 @@ package records.transformations;
 
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
-import javafx.scene.control.TextField;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -244,7 +242,7 @@ public class Filter extends Transformation
             // For testing:
             try
             {
-                expression = Expression.parse(null, "abs(true+false - 632+@column \"Date\")-62+\"hi\"", mgr.getTypeManager());
+                expression = Expression.parse(null, "abs(true+false - 632+@column \"Date\" + (@match 63 @case 5 @then true))-62+\"hi\"", mgr.getTypeManager());
                 if (src != null)
                     expression.check(src.getData(), mgr.getTypeState(), (e, s) -> {});
             }

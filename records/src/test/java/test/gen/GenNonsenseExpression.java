@@ -5,12 +5,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.TableManager;
-import records.data.datatype.TypeId;
-import records.data.unit.Unit;
-import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.Op;
@@ -38,10 +33,9 @@ import records.transformations.expression.TagExpression;
 import records.transformations.expression.TimesExpression;
 import records.transformations.expression.TupleExpression;
 import records.transformations.expression.UnfinishedExpression;
-import records.transformations.expression.VarExpression;
-import test.DummyManager;
+import records.transformations.expression.VarDeclExpression;
+import records.transformations.expression.VarUseExpression;
 import test.TestUtil;
-import test.TestUtil.Expression_Mgr;
 import utility.Pair;
 import utility.Utility;
 
@@ -51,7 +45,6 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Generates arbitrary expression which probably won't type check.
@@ -133,7 +126,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 new BooleanLiteral(r.nextBoolean()),
                 new StringLiteral(TestUtil.generateColumnId(r).getOutput()),
                 new ColumnReference(TestUtil.generateColumnId(r), ColumnReferenceType.CORRESPONDING_ROW),
-                new VarExpression(TestUtil.generateVarName(r)),
+                new VarUseExpression(TestUtil.generateVarName(r)),
                 new UnfinishedExpression(TestUtil.makeString(r, null))
             ));
         }
@@ -153,16 +146,16 @@ public class GenNonsenseExpression extends Generator<Expression>
         return new MatchExpression.Pattern(genPatternMatch(e, r, gs, depth), r.nextBoolean() ? null : genDepth(r, depth, gs));
     }
 
-    private MatchExpression.PatternMatch genPatternMatch(MatchExpression e, SourceOfRandomness r, GenerationStatus gs, int depth)
+    private Expression genPatternMatch(MatchExpression e, SourceOfRandomness r, GenerationStatus gs, int depth)
     {
-        return r.choose(Arrays.<Supplier<MatchExpression.PatternMatch>>asList(
-            () -> new MatchExpression.PatternMatchExpression(genDepth(false, r, depth, gs)),
-            () -> e.new PatternMatchVariable(TestUtil.makeUnquotedIdent(r, gs)),
+        return r.choose(Arrays.<Supplier<Expression>>asList(
+            () -> genDepth(false, r, depth, gs),
+            () -> new VarDeclExpression(TestUtil.makeUnquotedIdent(r, gs)),
             () ->
             {
                 String typeName = TestUtil.makeNonEmptyString(r, gs);
                 String constructorName = TestUtil.makeNonEmptyString(r, gs);
-                return e.new PatternMatchConstructor(typeName, constructorName, r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1));
+                return new TagExpression(new Pair<>(typeName, constructorName), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1));
             }
         )).get();
     }

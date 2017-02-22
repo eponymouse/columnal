@@ -812,7 +812,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
             else if (r.nextBoolean()) // Do equals but using variable + guard
             {
                 String varName = "var" + nextVar++;
-                return new Pair<>(me -> me.new PatternMatchVariable(varName), new EqualExpression(new VarExpression(varName), make(t, actual, maxLevels)));
+                return new Pair<>(me -> me.new PatternMatchVariable(varName), new EqualExpression(new VarUseExpression(varName), make(t, actual, maxLevels)));
             }
             Expression expression = make(t, actual, maxLevels);
             return new Pair<Function<MatchExpression, PatternMatch>, @Nullable Expression>(me -> new PatternMatchExpression(expression), null);

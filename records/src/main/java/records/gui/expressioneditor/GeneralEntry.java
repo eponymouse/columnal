@@ -103,9 +103,15 @@ public class GeneralEntry extends LeafNode implements OperandNode
     private final @Interned KeyShortcutCompletion stringCompletion;
 
     /**
-     * Shortcut for if-then-else
+     * Completion for if-then-else
      */
     private final Completion ifCompletion;
+
+    /**
+     * Completion for match expressions
+     */
+    private final Completion matchCompletion;
+
     /**
      * Set to true while updating field with auto completion.  Allows us to avoid
      * certain listeners firing which should only fire when the user has made a change.
@@ -144,32 +150,8 @@ public class GeneralEntry extends LeafNode implements OperandNode
         super(parent);
         bracketCompletion = new @Interned KeyShortcutCompletion("Bracketed expressions", '(');
         stringCompletion = new @Interned KeyShortcutCompletion("Text", '\"');
-        ifCompletion = new Completion() {
-
-            @Override
-            public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
-            {
-                return new Pair<>(null, new ReadOnlyStringWrapper("if _ then _ else _"));
-            }
-
-            @Override
-            public boolean shouldShow(String input)
-            {
-                return "if".startsWith(input);
-            }
-
-            @Override
-            public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
-            {
-                return input.equals("if") ? (onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT) : CompletionAction.NONE;
-            }
-
-            @Override
-            public boolean features(String curInput, char character)
-            {
-                return (curInput.isEmpty() && "if".contains("" + character)) || (curInput.equals("i") && character == 'f');
-            }
-        };
+        ifCompletion = new KeywordCompletion("if");
+        matchCompletion = new KeywordCompletion("match");
         this.textField = createLeaveableTextField();
         textField.setText(content);
         textField.getStyleClass().add("entry-field");
@@ -262,13 +244,14 @@ public class GeneralEntry extends LeafNode implements OperandNode
         return nodes;
     }
 
-    @RequiresNonNull({"bracketCompletion", "stringCompletion", "ifCompletion"})
+    @RequiresNonNull({"bracketCompletion", "stringCompletion", "ifCompletion", "matchCompletion"})
     private List<Completion> getSuggestions(@UnknownInitialization(LeafNode.class) GeneralEntry this, String text) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
         r.add(bracketCompletion);
         r.add(stringCompletion);
         r.add(ifCompletion);
+        r.add(matchCompletion);
         r.add(new NumericLiteralCompletion());
         addAllFunctions(r);
         r.add(new SimpleCompletion("", "true", "", Status.LITERAL));
@@ -591,6 +574,40 @@ public class GeneralEntry extends LeafNode implements OperandNode
         }
     }
 
+    private static class KeywordCompletion extends Completion
+    {
+        private final String keyword;
+
+        private KeywordCompletion(String keyword)
+        {
+            this.keyword = keyword;
+        }
+
+        @Override
+        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        {
+            return new Pair<>(null, new ReadOnlyStringWrapper(keyword));
+        }
+
+        @Override
+        public boolean shouldShow(String input)
+        {
+            return keyword.startsWith(input);
+        }
+
+        @Override
+        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        {
+            return input.equals(keyword) ? (onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT) : CompletionAction.NONE;
+        }
+
+        @Override
+        public boolean features(String curInput, char character)
+        {
+            return keyword.startsWith(curInput) && keyword.substring(curInput.length()).contains("" + character);
+        }
+    }
+
     private class TagCompletion extends Completion
     {
         private final TagType<DataType> tagType;
@@ -683,6 +700,10 @@ public class GeneralEntry extends LeafNode implements OperandNode
             else if (c == ifCompletion)
             {
                 parent.replace(GeneralEntry.this, new IfThenElseNode(parent));
+            }
+            else if (c == matchCompletion)
+            {
+                parent.replace(GeneralEntry.this, new PatternMatchNode(parent, null));
             }
             else if (c instanceof FunctionCompletion)
             {

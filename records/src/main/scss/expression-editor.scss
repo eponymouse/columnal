@@ -2,6 +2,7 @@
 
 $selected-expression-border-color: $focus-color;
 $function-color: paleturquoise;
+$match-color: lightpink;
 $column-color: lightsteelblue;
 $default-color: rgb(240, 240, 240);
 
@@ -18,11 +19,24 @@ $default-color: rgb(240, 240, 240);
     -fx-font-size: 140%;
     -fx-text-fill: #808080;
 }
-.labelled-top.function-child {
-    -fx-border-width: 1 0 0 0;
-    -fx-border-insets: 0 0 0 0, 1 0 0 0;
-    -fx-border-style: solid inside;
-    -fx-border-color: $function-color, $default-color;
+
+$parent-colors: (function, $function-color), (match, $match-color);
+
+@each $parent-type, $parent-color in $parent-colors {
+    .labelled-top.#{$parent-type}-child {
+        -fx-border-width: 1 0 0 0;
+        -fx-border-insets: 0 0 0 0, 1 0 0 0;
+        -fx-border-style: solid inside;
+        -fx-border-color: $parent-color, $default-color;
+    }
+    @each $subparent-type, $subparent-color in $parent-colors {
+        .labelled-top.#{$parent-type}-#{$subparent-type}-child {
+            -fx-border-width: 1 0 0 0;
+            -fx-border-insets: 0 0 0 0, 1 0 0 0, 2 0 0 0;
+            -fx-border-style: solid inside;
+            -fx-border-color: $parent-color, $subparent-color, $default-color;
+        }
+    }
 }
 
 .column-inner {

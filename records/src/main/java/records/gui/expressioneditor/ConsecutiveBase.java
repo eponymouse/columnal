@@ -28,7 +28,6 @@ import records.transformations.expression.EqualExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.InvalidOperatorExpression;
 import records.transformations.expression.MatchExpression;
-import records.transformations.expression.MatchExpression.PatternMatch;
 import records.transformations.expression.TimesExpression;
 import records.transformations.expression.UnfinishedExpression;
 import threadchecker.OnThread;
@@ -471,12 +470,6 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
     public @Nullable DataType inferType()
     {
         return null; //TODO
-    }
-
-
-    public Function<MatchExpression, PatternMatch> toPattern()
-    {
-        throw new RuntimeException("TODO");
     }
 
     /**

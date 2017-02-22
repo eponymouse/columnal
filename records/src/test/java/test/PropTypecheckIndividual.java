@@ -36,7 +36,7 @@ import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.Pattern;
-import records.transformations.expression.MatchExpression.PatternMatch;
+import records.transformations.expression.NonOperatorExpression;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.OrExpression;
 import records.transformations.expression.RaiseExpression;
@@ -357,7 +357,7 @@ public class PropTypecheckIndividual
         }
     }
 
-    private static class DummyPatternMatch implements PatternMatch
+    private static class DummyPatternMatch extends NonOperatorExpression
     {
         private final DataType expected;
 
@@ -367,21 +367,69 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
+        public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
         {
-            return DataType.checkSame(srcType, expected, s -> {}) != null ? state : null;
+            throw new InternalException("Should not be called");
         }
 
         @Override
-        public @OnThread(Tag.Simulation) @Nullable EvaluateState match(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException
+        public @Nullable Pair<DataType, TypeState> checkAsPattern(DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
         {
-            throw new UnimplementedException();
+            return DataType.checkSame(srcType, expected, s -> {}) != null ? new Pair<>(srcType, state) : null;
         }
 
         @Override
-        public String save()
+        public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
         {
-            return "TEST";
+            throw new InternalException("Should not be called");
+        }
+
+        @Override
+        public Stream<ColumnId> allColumnNames()
+        {
+            return Stream.empty();
+        }
+
+        @Override
+        public String save(boolean topLevel)
+        {
+            return "";
+        }
+
+        @Override
+        public Formula toSolver(FormulaManager formulaManager, RecordSet src, Map<Pair<@Nullable TableId, ColumnId>, Formula> columnVariables) throws InternalException, UserException
+        {
+            throw new RuntimeException("N/A");
+        }
+
+        @Override
+        public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
+        {
+            throw new RuntimeException("N/A");
+        }
+
+        @Override
+        public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
+        {
+            return Stream.empty();
+        }
+
+        @Override
+        public @Nullable Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
+        {
+            return null;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            return false;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return 0;
         }
     }
 }

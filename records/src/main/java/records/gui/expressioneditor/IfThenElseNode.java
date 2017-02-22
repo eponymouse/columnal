@@ -49,9 +49,9 @@ public class IfThenElseNode implements OperandNode, ExpressionParent
         this.parent = parent;
         nodes = FXCollections.observableArrayList();
 
-        ifLabel = ExpressionEditorUtil.keyword("if", "if-keyword", this);
-        thenLabel = ExpressionEditorUtil.keyword("then", "if-keyword", this);
-        elseLabel = ExpressionEditorUtil.keyword("else", "if-keyword", this);
+        ifLabel = ExpressionEditorUtil.keyword("if", "if-keyword", this, getParentStyles());
+        thenLabel = ExpressionEditorUtil.keyword("then", "if-keyword", this, getParentStyles());
+        elseLabel = ExpressionEditorUtil.keyword("else", "if-keyword", this, getParentStyles());
 
         condition = new Consecutive(this, ifLabel, null, "if-condition", null);
         thenPart = new Consecutive(this, thenLabel, null, "if-then", null);

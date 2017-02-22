@@ -22,26 +22,30 @@ import java.util.stream.Stream;
 public class ExpressionEditorUtil
 {
     @NotNull
-    protected static VBox withLabelAbove(TextField textField, String cssClass, String label, @UnknownInitialization OperandNode surrounding)
+    protected static VBox withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization OperandNode surrounding, Stream<String> parentStyles)
     {
         FXUtility.sizeToFit(textField, 10.0, 10.0);
         textField.getStyleClass().addAll(cssClass + "-name", "labelled-name");
         Label typeLabel = new Label(label);
         typeLabel.getStyleClass().addAll(cssClass + "-top", "labelled-top");
-        enableSelection(typeLabel, surrounding);
-        enableDragFrom(typeLabel, surrounding);
+        if (surrounding != null)
+        {
+            enableSelection(typeLabel, surrounding);
+            enableDragFrom(typeLabel, surrounding);
+        }
+        setStyles(typeLabel, parentStyles);
         VBox vBox = new VBox(typeLabel, textField);
         vBox.getStyleClass().add(cssClass);
         return vBox;
     }
 
     @NotNull
-    protected static VBox keyword(String keyword, String cssClass, @UnknownInitialization OperandNode surrounding)
+    protected static VBox keyword(String keyword, String cssClass, @Nullable @UnknownInitialization OperandNode surrounding, Stream<String> parentStyles)
     {
         TextField t = new TextField(keyword);
         t.setEditable(false);
         t.setDisable(true);
-        return withLabelAbove(t, cssClass, "", surrounding);
+        return withLabelAbove(t, cssClass, "", surrounding, parentStyles);
     }
 
     public static void setStyles(Label topLabel, Stream<String> parentStyles)
