@@ -71,5 +71,4 @@ public class FunctionNode extends SurroundNode
     {
         return parent.getAvailableVariables(this);
     }
-
 }

@@ -19,4 +19,8 @@ public interface ConsecutiveChild
     void setHoverDropLeft(boolean on);
 
     default boolean isBlank() { return false; }
+
+    void focusChanged();
+
+    boolean isFocused();
 }

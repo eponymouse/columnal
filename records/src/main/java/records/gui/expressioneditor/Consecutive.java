@@ -33,12 +33,9 @@ public class Consecutive extends ConsecutiveBase
             atomicEdit.set(true);
             operands.addAll(Utility.mapList(content.getFirst(), f -> f.apply(this)));
             operators.addAll(Utility.mapList(content.getSecond(), f -> f.apply(this)));
-            if (operators.size() == operands.size() - 1)
-            {
-                // Add the final blank operator:
-                operators.add(new OperatorEntry(this));
-            }
             atomicEdit.set(false);
+            // Get rid of anything which would go if you got focus and lost it again:
+            focusChanged();
         }
         else
             initializeContent();

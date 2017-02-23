@@ -248,6 +248,12 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
     }
 
     @Override
+    public boolean isFocused()
+    {
+        return source.childIsFocused() || clauses.stream().anyMatch(c -> c.isFocused());
+    }
+
+    @Override
     public ConsecutiveBase getParent()
     {
         return parent;
@@ -276,5 +282,15 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
     public void setHoverDropLeft(boolean on)
     {
         //TODO
+    }
+
+    @Override
+    public void focusChanged()
+    {
+        source.focusChanged();
+        for (ClauseNode clause : clauses)
+        {
+            clause.focusChanged();
+        }
     }
 }

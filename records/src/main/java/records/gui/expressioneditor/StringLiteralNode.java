@@ -87,6 +87,12 @@ public class StringLiteralNode extends LeafNode implements OperandNode
     }
 
     @Override
+    public boolean isFocused()
+    {
+        return textField.isFocused();
+    }
+
+    @Override
     public void setSelected(boolean selected)
     {
         // TODO
@@ -96,6 +102,12 @@ public class StringLiteralNode extends LeafNode implements OperandNode
     public void setHoverDropLeft(boolean on)
     {
         FXUtility.setPseudoclass(nodes().get(0), "exp-hover-drop-left", on);
+    }
+
+    @Override
+    public void focusChanged()
+    {
+        // Nothing to do
     }
 
     @Override

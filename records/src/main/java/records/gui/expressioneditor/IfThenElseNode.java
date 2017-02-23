@@ -102,6 +102,14 @@ public class IfThenElseNode implements OperandNode, ExpressionParent
     }
 
     @Override
+    public void focusChanged()
+    {
+        condition.focusChanged();
+        thenPart.focusChanged();
+        elsePart.focusChanged();
+    }
+
+    @Override
     public ObservableList<Node> nodes()
     {
         return nodes;
@@ -148,6 +156,12 @@ public class IfThenElseNode implements OperandNode, ExpressionParent
     public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
     {
         return new ReadOnlyStringWrapper("if-inner");
+    }
+
+    @Override
+    public boolean isFocused()
+    {
+        return condition.childIsFocused() || thenPart.childIsFocused() || elsePart.childIsFocused();
     }
 
     @Override

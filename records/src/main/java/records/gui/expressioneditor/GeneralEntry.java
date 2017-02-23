@@ -158,6 +158,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
         textField.setText(content);
         textField.getStyleClass().add("entry-field");
         FXUtility.sizeToFit(textField, null, null);
+        parent.getEditor().registerFocusable(textField);
         typeLabel = new Label();
         typeLabel.getStyleClass().addAll("entry-type", "labelled-top");
         ExpressionEditor editor = parent.getEditor();
@@ -340,6 +341,12 @@ public class GeneralEntry extends LeafNode implements OperandNode
     }
 
     @Override
+    public boolean isFocused()
+    {
+        return textField.isFocused();
+    }
+
+    @Override
     public void setSelected(boolean selected)
     {
         FXUtility.setPseudoclass(container, "exp-selected", selected);
@@ -355,6 +362,12 @@ public class GeneralEntry extends LeafNode implements OperandNode
     public boolean isBlank()
     {
         return textField.getText().trim().isEmpty();
+    }
+
+    @Override
+    public void focusChanged()
+    {
+        // Nothing to do
     }
 
     @Override

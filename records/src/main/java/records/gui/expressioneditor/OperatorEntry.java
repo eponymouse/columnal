@@ -174,6 +174,17 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
         return textField.getText().isEmpty();
     }
 
+    @Override
+    public void focusChanged()
+    {
+        // Nothing to be done
+    }
+
+    public boolean isFocused()
+    {
+        return textField.isFocused();
+    }
+
     private class SimpleCompletion extends Completion
     {
         private final String operator;

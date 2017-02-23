@@ -61,9 +61,31 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
     private final IdentityHashMap<ExpressionNode, Boolean> listeningTo = new IdentityHashMap<>();
     protected final String style;
     private @MonotonicNonNull ListChangeListener<Node> childrenNodeListener;
-    // The operands and operators are always exactly interleaved.
-    // The first item is operands.get(0), followed by operators.get(0),
-    // followed by operands.get(1), etc.
+    /**
+     * The operands and operators are always exactly interleaved.
+     * The first item is operands.get(0), followed by operators.get(0),
+     * followed by operands.get(1), etc.
+     *
+     * If X stands for any operand and ? for any operator, you can have:
+     *   X
+     *   X ?
+     *   X ? X
+     *   X ? X ?
+     *   and so on.  So operators is always same size as operands, or one smaller.
+     *
+     * There can be blanks in the middle, but there should only be blanks on the end
+     * if that item is focused.  So if X* means blank and ?* means blank, you're allowed:
+     *    X* ?* X
+     * if the focus is in the first operand or first operator.  But as soon as it is in
+     * the first non-blank, the previous items should be removed.  Similarly at the end:
+     *    X ?*
+     * is allowed if the focus is in the last slot.  The following operand is only added
+     * once the user has filled in the operator, giving:
+     *    X ? X*
+     * In this case, the last operator is left even when focus is lost, because it's guaranteed
+     * the expression is invalid without ther operand being filled in.  Same logic applies to:
+     *    X* ? X
+     */
     protected final ObservableList<OperandNode> operands;
     protected final ObservableList<OperatorEntry> operators;
     private final @Nullable Node prefixNode;
@@ -160,10 +182,12 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         updatePrompt();
 
         List<Node> childrenNodes = new ArrayList<Node>();
-        for (int i = 0; i < operands.size(); i++)
+        for (int i = 0; i < Math.max(operands.size(), operators.size()); i++)
         {
-            childrenNodes.addAll(operands.get(i).nodes());
-            childrenNodes.addAll(operators.get(i).nodes());
+            if (i < operands.size())
+                childrenNodes.addAll(operands.get(i).nodes());
+            if (i < operators.size())
+                childrenNodes.addAll(operators.get(i).nodes());
         }
         if (this.prefixNode != null)
             childrenNodes.add(0, this.prefixNode);
@@ -410,7 +434,7 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
     private Pair<Boolean, List<String>> getOperators(@UnknownInitialization(ConsecutiveBase.class)ConsecutiveBase this, int firstIndex, int lastIndex)
     {
         // If last operator not blank then can't be valid expression:
-        boolean lastBlank = operators.get(operators.size() - 1).get().isEmpty();
+        boolean lastBlank = !operators.isEmpty() && operators.get(operators.size() - 1).get().isEmpty();
         // Knock off the last operator:
         return new Pair<>(lastBlank, Utility.<OperatorEntry, String>mapList(lastBlank ? operators.subList(0, operators.size() - 1) : operators, op -> op.get()));
     }
@@ -491,10 +515,12 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
     private List<ConsecutiveChild> getAllChildren()
     {
         List<ConsecutiveChild> r = new ArrayList<>();
-        for (int i = 0; i < operands.size(); i++)
+        for (int i = 0; i < Math.max(operands.size(), operators.size()); i++)
         {
-            r.add(operands.get(i));
-            r.add(operators.get(i));
+            if (i < operands.size())
+                r.add(operands.get(i));
+            if (i < operators.size())
+                r.add(operators.get(i));
         }
         return r;
     }
@@ -732,5 +758,54 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
             consecutive.updateNodes();
             consecutive.updateListeners();
         }
+    }
+
+    public void focusChanged()
+    {
+        // Remove pair of (blank operand, blank operator) at start if neither have focus:
+        while (operands.size() > 1 && operators.size() > 0 &&
+            operands.get(0).isBlank() && !operands.get(0).isFocused() &&
+            operators.get(0).isBlank() && !operators.get(0).isFocused())
+        {
+            atomicEdit.set(true);
+            operands.remove(0);
+            operators.remove(0);
+            atomicEdit.set(false);
+        }
+        // Remove final operand or operator while blank&unfocused:
+        boolean lastOperandBlank;
+        while (
+            (lastOperandBlank = (operands.size() > 1 && operands.get(operands.size() - 1).isBlank() && !operands.get(operands.size() - 1).isFocused() && operands.size() > operators.size()))
+            ||
+            (/* lastOperatorBlank =*/ (operators.size() > 0 && operators.get(operators.size() - 1).isBlank() && !operators.get(operators.size() - 1).isFocused() && operators.size() == operators.size()))
+        )
+        {
+            // Given the way they are assigned, lastOperatorBlank is only set if lastOperandBlank is false
+            // (They can't both be true anyway, if you look at the conditions)
+            if (lastOperandBlank)
+            {
+                operands.remove(operands.size() - 1);
+            }
+            else // lastOperatorBlank must be true, if you look at the logic, otherwise while would have terminated
+            {
+                operators.remove(operators.size() - 1);
+            }
+        }
+
+        // Must also tell remaining children to update (shouldn't interact with above calculation
+        // because updating should not make a field return isBlank==true, that should only be returned
+        // by unstructured/leaf operands, and only structured/branch operands should respond to this):
+        for (ConsecutiveChild consecutiveChild : getAllChildren())
+        {
+            consecutiveChild.focusChanged();
+        }
+    }
+
+    // We deliberately don't directly override OperandNode's isFocused,
+    // because then it would be too easily to forget to override it a subclass
+    // children, which may have other fields which could be focused
+    protected boolean childIsFocused()
+    {
+        return getAllChildren().stream().anyMatch(c -> c.isFocused());
     }
 }

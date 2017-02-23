@@ -52,4 +52,9 @@ public @Interned interface OperandNode extends ExpressionNode, ConsecutiveChild
     public OperandNode focusWhenShown();
 
     public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner();
+
+    /**
+     * Is focus in this operand (or one of its children)?
+     */
+    public boolean isFocused();
 }

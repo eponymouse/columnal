@@ -7,15 +7,13 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Column;
+import org.jetbrains.annotations.NotNull;
 import records.data.datatype.DataType;
-import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
@@ -25,7 +23,6 @@ import records.transformations.expression.MatchExpression.Pattern;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -64,13 +61,27 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
         this.matches = FXCollections.observableArrayList();
         this.nodes = FXCollections.observableArrayList();
         // Must initialize outcome first because updateNodes will use it:
-        this.outcome = makeConsecutive("\u2794").prompt("value");
+        this.outcome = makeConsecutive("\u2794", patternsAndGuardsToOutcome == null ? null : patternsAndGuardsToOutcome.getSecond()).prompt("value");
         Utility.listen(matches, c -> {
             updateNodes();
             updateListeners();
         });
-        this.matches.add(new Pair<>(makeConsecutive("case").prompt("pattern"), makeConsecutive("where").prompt("condition")));
+        if (patternsAndGuardsToOutcome == null)
+            this.matches.add(makeNewCase(null, null));
+        else
+        {
+            for (Pair<Expression, @Nullable Expression> caseAndGuard : patternsAndGuardsToOutcome.getFirst())
+            {
+                this.matches.add(makeNewCase(caseAndGuard.getFirst(), caseAndGuard.getSecond()));
+            }
+        }
 
+    }
+
+    @NotNull
+    private Pair<ConsecutiveBase, @Nullable ConsecutiveBase> makeNewCase(@Nullable Expression caseExpression, @Nullable Expression guardExpression)
+    {
+        return new Pair<>(makeConsecutive("case", caseExpression).prompt("pattern"), guardExpression == null ? null : makeConsecutive("where", guardExpression).prompt("condition"));
     }
 
     private void updateListeners(@UnknownInitialization(ClauseNode.class) ClauseNode this)
@@ -119,9 +130,9 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
     }
 
     @SuppressWarnings("initialization") // Because of Consecutive
-    private Consecutive makeConsecutive(@UnknownInitialization(Object.class) ClauseNode this, @Nullable String prefix)
+    private Consecutive makeConsecutive(@UnknownInitialization(Object.class)ClauseNode this, @Nullable String prefix, @Nullable Expression startingContent)
     {
-        return new Consecutive(this, prefix == null ? null : ExpressionEditorUtil.keyword(prefix, "match", parent, getParentStyles()), null, "match", null);
+        return new Consecutive(this, prefix == null ? null : ExpressionEditorUtil.keyword(prefix, "match", parent, getParentStyles()), null, "match", startingContent == null ? null : startingContent.loadAsConsecutive());
     }
 
     @Override
@@ -407,5 +418,21 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
                 match.getSecond().setSelected(selected);
         }
         outcome.setSelected(selected);
+    }
+
+    public void focusChanged()
+    {
+        for (Pair<ConsecutiveBase, @Nullable ConsecutiveBase> match : matches)
+        {
+            match.getFirst().focusChanged();
+            if (match.getSecond() != null)
+                match.getSecond().focusChanged();
+        }
+        outcome.focusChanged();
+    }
+
+    public boolean isFocused()
+    {
+        return outcome.childIsFocused() || matches.stream().anyMatch((Pair<ConsecutiveBase, @Nullable ConsecutiveBase> m) -> m.getFirst().childIsFocused() || (m.getSecond() != null && m.getSecond().childIsFocused()));
     }
 }

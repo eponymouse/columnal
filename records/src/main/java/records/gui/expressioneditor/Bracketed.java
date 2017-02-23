@@ -38,6 +38,12 @@ public class Bracketed extends Consecutive implements OperandNode
     }
 
     @Override
+    public boolean isFocused()
+    {
+        return childIsFocused();
+    }
+
+    @Override
     public ConsecutiveBase getParent()
     {
         // Safe cast, given that our constructor requires ConsecutiveBase:

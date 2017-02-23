@@ -340,4 +340,17 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode
                 closeBracket.setInnerStyleBegin(newValue);
         }
     }
+
+    @Override
+    public boolean isFocused()
+    {
+        return head.isFocused() || (contents != null && contents.childIsFocused());
+    }
+
+    @Override
+    public void focusChanged()
+    {
+        if (contents != null)
+            contents.focusChanged();
+    }
 }

@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.TextField;
 import javafx.scene.input.Dragboard;
 import javafx.scene.layout.FlowPane;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -46,6 +47,16 @@ public class ExpressionEditor extends ConsecutiveBase
     private @Nullable SelectionInfo selection;
     private @Nullable ConsecutiveChild curHoverDropTarget;
     private boolean selectionLocked;
+
+    public void registerFocusable(TextField textField)
+    {
+        Utility.addChangeListenerPlatformNN(textField.focusedProperty(), focus -> {
+            if (!focus)
+            {
+                focusChanged();
+            }
+        });
+    }
 
     private static class SelectionInfo
     {
