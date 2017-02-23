@@ -97,7 +97,7 @@ public class ExpressionEditorUtil
     public static void enableSelection(Label typeLabel, @UnknownInitialization OperandNode node)
     {
         typeLabel.setOnMouseClicked(e -> {
-            if (e.isDragDetect() || !e.isStillSincePress())
+            if (!e.isStillSincePress())
                 return;
 
             if (e.isShiftDown())
