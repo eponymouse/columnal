@@ -75,7 +75,7 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(DataType srcType, RecordSet data, final TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, final TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
         if (!srcType.isArray())
         {
@@ -91,7 +91,7 @@ public class ArrayExpression extends Expression
         @NonNull TypeState[] typeStates = new TypeState[items.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable Pair<DataType, TypeState> t = items.get(i).checkAsPattern(innerType, data, state, onError);
+            @Nullable Pair<DataType, TypeState> t = items.get(i).checkAsPattern(varAllowed, innerType, data, state, onError);
             if (t == null)
                 return null;
             typeArray[i] = t.getFirst();

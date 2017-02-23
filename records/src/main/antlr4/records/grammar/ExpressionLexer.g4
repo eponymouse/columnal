@@ -11,7 +11,8 @@ CLOSE_SQUARE : ']';
 UNIT : '{' ~'}'* '}'
   { String orig = getText(); setText(orig.substring(1, orig.length() - 1)); };
 
-PLUS_MINUS: [+-];
+PLUS_MINUS: '+-';
+ADD_OR_SUBTRACT: [+-];
 TIMES: '*';
 DIVIDE: '/';
 AND: '&';
@@ -20,6 +21,7 @@ EQUALITY : '=';
 NON_EQUALITY : '<>';
 LESS_THAN: '<=' | '<';
 GREATER_THAN: '>=' | '>';
+MATCHES: '~';
 COLUMN : '@column';
 WHOLECOLUMN: '@wholecolumn';
 MATCH : '@match';
@@ -33,6 +35,7 @@ PATTERN : '$';
 CASEGUARD: '@given';
 FUNCTION : '@function';
 NEWVAR : '@newvar';
+ANY: '@any';
 CONSTRUCTOR : '\\';
 RAISEDTO : '^';
 COMMA: ',';
@@ -42,7 +45,7 @@ NUMBER : [+-]? [0-9]+ ('.' [0-9]+)?;
 TRUE: 'true';
 FALSE: 'false';
 
-UNQUOTED_IDENT : ~[ \t\n\r"()[\]@+-/*&|=?:;~$!<>\\]+ {utility.Utility.validUnquoted(getText())}?;
+UNQUOTED_IDENT : ~[ \t\n\r"()[\]@+-/*&|=?:;~$!<>\\~]+ {utility.Utility.validUnquoted(getText())}?;
 
 
 

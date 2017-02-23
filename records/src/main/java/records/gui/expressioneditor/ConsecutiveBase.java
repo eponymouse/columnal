@@ -35,6 +35,7 @@ import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -701,6 +702,18 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
             }
         }
         return false;
+    }
+
+    public void setSelected(boolean selected)
+    {
+        if (prefixNode != null)
+            FXUtility.setPseudoclass(prefixNode, "exp-selected", selected);
+        if (suffixNode != null)
+            FXUtility.setPseudoclass(suffixNode, "exp-selected", selected);
+        for (ConsecutiveChild consecutiveChild : getAllChildren())
+        {
+            consecutiveChild.setSelected(selected);
+        }
     }
 
     // Done as an inner class to satisfy initialization checker

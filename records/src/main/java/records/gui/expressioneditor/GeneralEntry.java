@@ -70,6 +70,8 @@ public class GeneralEntry extends LeafNode implements OperandNode
         COLUMN_REFERENCE_WHOLE("column-inner"),
         TAG(null) /* if no inner */,
         LITERAL(null) /*number or bool, not string */,
+        ANY(null) /* Pattern match "any" item */,
+        VARIABLE_DECL(null) /* Declare new variable in pattern */,
         VARIABLE_USE(null),
         UNFINISHED(null);
 
@@ -254,6 +256,7 @@ public class GeneralEntry extends LeafNode implements OperandNode
         r.add(matchCompletion);
         r.add(new NumericLiteralCompletion());
         addAllFunctions(r);
+        r.add(new SimpleCompletion("", "any", "", Status.ANY));
         r.add(new SimpleCompletion("", "true", "", Status.LITERAL));
         r.add(new SimpleCompletion("", "false", "", Status.LITERAL));
         for (Column column : parent.getEditor().getAvailableColumns())

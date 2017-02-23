@@ -3,6 +3,7 @@
 $selected-expression-border-color: $focus-color;
 $function-color: paleturquoise;
 $match-color: lightpink;
+$if-color: yellowgreen;
 $column-color: lightsteelblue;
 $default-color: rgb(240, 240, 240);
 
@@ -20,9 +21,19 @@ $default-color: rgb(240, 240, 240);
     -fx-text-fill: #808080;
 }
 
-$parent-colors: (function, $function-color), (match, $match-color);
+$parent-colors: (function, $function-color), (match, $match-color), (if, $if-color);
 
 @each $parent-type, $parent-color in $parent-colors {
+    .#{$parent-type} {
+        -fx-background-color: $parent-color;
+    }
+    .#{$parent-type}:exp-selected {
+         -fx-background-color: $selected-expression-border-color;
+         & .label, & .text-field {
+             -fx-text-fill: $focus-color-text;
+         }
+    }
+
     .labelled-top.#{$parent-type}-child {
         -fx-border-width: 1 0 0 0;
         -fx-border-insets: 0 0 0 0, 1 0 0 0;
@@ -32,9 +43,9 @@ $parent-colors: (function, $function-color), (match, $match-color);
     @each $subparent-type, $subparent-color in $parent-colors {
         .labelled-top.#{$parent-type}-#{$subparent-type}-child {
             -fx-border-width: 1 0 0 0;
-            -fx-border-insets: 0 0 0 0, 1 0 0 0, 2 0 0 0;
+            -fx-border-insets: 0 0 0 0, 1 0 0 0, 2 0 0 0, 3 0 0 0;
             -fx-border-style: solid inside;
-            -fx-border-color: $parent-color, $subparent-color, $default-color;
+            -fx-border-color: $parent-color, $default-color, $subparent-color, $default-color;
         }
     }
 }
@@ -83,12 +94,9 @@ $parent-colors: (function, $function-color), (match, $match-color);
 .function, .function-bracket {
     -fx-background-color: $function-color;
     -fx-background-radius: 0;
-
-    &:exp-selected {
-         -fx-background-color: $selected-expression-border-color;
-         -fx-fill: $selected-expression-border-color;
-         -fx-text-fill: $focus-color-text;
-    }
+}
+.function-bracket:exp-selected {
+     -fx-fill: $selected-expression-border-color;
 }
 .tag {
     -fx-background-color: yellowgreen;

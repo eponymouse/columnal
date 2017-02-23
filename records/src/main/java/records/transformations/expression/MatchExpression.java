@@ -141,7 +141,7 @@ public class MatchExpression extends NonOperatorExpression
 
         public @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
         {
-            @Nullable Pair<DataType, TypeState> rhsState = pattern.checkAsPattern(srcType, data, state, onError);
+            @Nullable Pair<DataType, TypeState> rhsState = pattern.checkAsPattern(true, srcType, data, state, onError);
             if (rhsState == null)
                 return null;
             if (DataType.checkSame(rhsState.getFirst(), srcType, s -> onError.accept(pattern, s)) == null)

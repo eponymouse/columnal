@@ -135,7 +135,8 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode
     @Override
     public void setSelected(boolean selected)
     {
-        // TODO
+        if (contents != null)
+            contents.setSelected(selected);
     }
 
     @Override

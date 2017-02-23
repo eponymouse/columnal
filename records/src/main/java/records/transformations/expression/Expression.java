@@ -22,6 +22,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
+import records.grammar.ExpressionParser.AddSubtractExpressionContext;
 import records.grammar.ExpressionParser.AndExpressionContext;
 import records.grammar.ExpressionParser.ArrayExpressionContext;
 import records.grammar.ExpressionParser.BooleanLiteralContext;
@@ -40,7 +41,6 @@ import records.grammar.ExpressionParser.NotEqualExpressionContext;
 import records.grammar.ExpressionParser.NumericLiteralContext;
 import records.grammar.ExpressionParser.OrExpressionContext;
 import records.grammar.ExpressionParser.PatternContext;
-import records.grammar.ExpressionParser.PlusMinusExpressionContext;
 import records.grammar.ExpressionParser.RaisedExpressionContext;
 import records.grammar.ExpressionParser.StringLiteralContext;
 import records.grammar.ExpressionParser.TableIdContext;
@@ -99,7 +99,7 @@ public abstract class Expression
     // Like check, but for patterns.  For many expressions this is same as check,
     // unless you are a new-variable declaration or can have one beneath you.
     // If you override this, you should also override matchAsPattern
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varDeclAllowed, DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
         // By default, check as normal, and return same TypeState:
         @Nullable DataType type = check(data, state, onError);
@@ -245,9 +245,9 @@ public abstract class Expression
         }
 
         @Override
-        public Expression visitPlusMinusExpression(PlusMinusExpressionContext ctx)
+        public Expression visitAddSubtractExpression(AddSubtractExpressionContext ctx)
         {
-            return new AddSubtractExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), Utility.<TerminalNode, Op>mapList(ctx.PLUS_MINUS(), op -> op.getText().equals("+") ? Op.ADD : Op.SUBTRACT));
+            return new AddSubtractExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), Utility.<TerminalNode, Op>mapList(ctx.ADD_OR_SUBTRACT(), op -> op.getText().equals("+") ? Op.ADD : Op.SUBTRACT));
         }
 
         @Override

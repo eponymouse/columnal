@@ -61,7 +61,9 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
         opD(">", "op.greaterThan"),
         opD(">=", "op.greaterThanOrEqual"),
         opD("^", "op.raise"),
-        opD(",", "op.separator")
+        opD(",", "op.separator"),
+        opD("~", "op.matches"),
+        opD("\u00B1", "op.plusminus")
     );
 
     private static Pair<String, @LocalizableKey String> opD(String op, @LocalizableKey String key)

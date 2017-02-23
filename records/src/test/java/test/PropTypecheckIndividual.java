@@ -21,7 +21,6 @@ import records.data.datatype.DataType.NumberInfo;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
@@ -373,7 +372,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable Pair<DataType, TypeState> checkAsPattern(DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+        public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
         {
             return DataType.checkSame(srcType, expected, s -> {}) != null ? new Pair<>(srcType, state) : null;
         }

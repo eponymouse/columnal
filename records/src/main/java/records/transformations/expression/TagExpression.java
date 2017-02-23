@@ -63,14 +63,14 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
         @Nullable TypeAndTagInfo typeAndIndex = state.findTaggedType(tagName, err -> onError.accept(this, err));
         if (typeAndIndex == null)
             return null;
         index = typeAndIndex.tagIndex;
 
-        @Nullable Pair<DataType, TypeState> typeAndState = (inner == null || typeAndIndex.innerType == null) ? null : inner.checkAsPattern(typeAndIndex.innerType, data, state, onError);
+        @Nullable Pair<DataType, TypeState> typeAndState = (inner == null || typeAndIndex.innerType == null) ? null : inner.checkAsPattern(varAllowed, typeAndIndex.innerType, data, state, onError);
         if (typeAndState != null)
             innerDerivedType = typeAndState.getFirst();
         // We must not pass nulls to checkSame as that counts as failed checking, not optional items

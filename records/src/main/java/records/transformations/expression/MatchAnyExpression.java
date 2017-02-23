@@ -13,6 +13,8 @@ import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.GeneralEntry;
+import records.gui.expressioneditor.GeneralEntry.Status;
 import records.gui.expressioneditor.OperandNode;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -26,49 +28,23 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
- * Created by neil on 22/02/2017.
+ * Created by neil on 23/02/2017.
  */
-public class VarDeclExpression extends NonOperatorExpression
+public class MatchAnyExpression extends NonOperatorExpression
 {
-    private final String varName;
-
-    public VarDeclExpression(String varName)
-    {
-        this.varName = varName;
-    }
-
     @Override
     public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern
-        onError.accept(this, "Variable cannot be declared outside pattern match");
+        onError.accept(this, "Any cannot be declared outside pattern match");
         return null;
-    }
-
-    @Override
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varDeclAllowed, DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
-    {
-        if (!varDeclAllowed)
-            return null; // We are a variable declaration, so clearly not allowed!
-
-        @Nullable TypeState newState = state.add(varName, srcType, s -> onError.accept(this, s));
-        if (newState == null)
-            return null;
-        else
-            return new Pair<>(srcType, newState);
-    }
-
-    @Override
-    public @OnThread(Tag.Simulation) @Nullable EvaluateState matchAsPattern(int rowIndex, @Value Object value, EvaluateState state) throws InternalException, UserException
-    {
-        return state.add(varName, value);
     }
 
     @Override
     public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        throw new InternalException("Calling getValue on variable declaration (should only call matchAsPattern)");
+        throw new InternalException("Calling getValue on \"any\" pattern (should only call matchAsPattern)");
     }
 
     @Override
@@ -80,7 +56,7 @@ public class VarDeclExpression extends NonOperatorExpression
     @Override
     public String save(boolean topLevel)
     {
-        return "@newvar " + varName;
+        return "@any";
     }
 
     @Override
@@ -92,7 +68,7 @@ public class VarDeclExpression extends NonOperatorExpression
     @Override
     public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
     {
-        throw new RuntimeException("TODO");
+        return c -> new GeneralEntry("any", Status.ANY, c);
     }
 
     @Override
@@ -110,17 +86,12 @@ public class VarDeclExpression extends NonOperatorExpression
     @Override
     public boolean equals(@Nullable Object o)
     {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        VarDeclExpression that = (VarDeclExpression) o;
-
-        return varName.equals(that.varName);
+        return o instanceof MatchAnyExpression;
     }
 
     @Override
     public int hashCode()
     {
-        return varName.hashCode();
+        return 0;
     }
 }

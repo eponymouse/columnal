@@ -256,7 +256,11 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
     @Override
     public void setSelected(boolean selected)
     {
-        // TODO
+        source.setSelected(selected);
+        for (ClauseNode clause : clauses)
+        {
+            clause.setSelected(selected);
+        }
     }
 
     @Override

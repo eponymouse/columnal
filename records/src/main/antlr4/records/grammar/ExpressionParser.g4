@@ -13,15 +13,17 @@ booleanLiteral : TRUE | FALSE;
 
 varRef  : UNQUOTED_IDENT;
 
+any : ANY;
+
 // newVariable only valid in pattern matches, but that's done in semantic check, not syntactic:
-terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef | newVariable;
+terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef | newVariable | any;
 
 // Could have units in ops:
 //plusMinusExpression :  expression PLUS_MINUS UNIT? expression (PLUS_MINUS expression)*;
 //timesExpression :  expression TIMES UNIT? expression (TIMES expression)*;
 //divideExpression :  expression DIVIDE UNIT? expression;
 
-plusMinusExpression :  expression (PLUS_MINUS expression)+;
+addSubtractExpression :  expression (ADD_OR_SUBTRACT expression)+;
 timesExpression :  expression (TIMES expression)+;
 divideExpression :  expression DIVIDE expression;
 raisedExpression : expression RAISEDTO expression;
@@ -31,8 +33,10 @@ lessThanExpression :  expression (LESS_THAN expression)+;
 greaterThanExpression :  expression (GREATER_THAN expression)+;
 andExpression :  expression (AND expression)+;
 orExpression :  expression (OR expression)+;
+matchesExpression : expression MATCHES expression;
 ifThenElseExpression : IF expression THEN expression ELSE expression;
-compoundExpression : plusMinusExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | ifThenElseExpression;
+plusMinusPattern : expression PLUS_MINUS expression;
+compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | matchesExpression | plusMinusPattern | ifThenElseExpression;
 
 constructor : CONSTRUCTOR typeName COLON constructorName;
 tagExpression : constructor (COLON expression)?;

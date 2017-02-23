@@ -23,7 +23,6 @@ import utility.ExBiConsumer;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
-import utility.Utility.ListEx;
 
 import java.util.List;
 import java.util.Map;
@@ -62,7 +61,7 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(DataType srcType, RecordSet data, final TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, final TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
     {
         if (!srcType.isTuple())
         {
@@ -79,7 +78,7 @@ public class TupleExpression extends Expression
         @NonNull TypeState[] typeStates = new TypeState[members.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable Pair<DataType, TypeState> t = members.get(i).checkAsPattern(srcType.getMemberType().get(i), data, state, onError);
+            @Nullable Pair<DataType, TypeState> t = members.get(i).checkAsPattern(varAllowed, srcType.getMemberType().get(i), data, state, onError);
             if (t == null)
                 return null;
             typeArray[i] = t.getFirst();

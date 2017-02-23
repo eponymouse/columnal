@@ -49,7 +49,6 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
     private final VBox caseLabel;
     // Each item here is a pattern + guard pair.  You can have one or more in a clause:
     private final ObservableList<Pair<ConsecutiveBase, @Nullable ConsecutiveBase>> matches;
-    private final Label mapsTo;
     // This is the body of the clause:
     private final ConsecutiveBase outcome;
     private final ObservableList<Node> nodes;
@@ -61,18 +60,16 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
     public ClauseNode(PatternMatchNode parent, @Nullable Pair<List<Pair<Expression, @Nullable Expression>>, Expression> patternsAndGuardsToOutcome)
     {
         this.parent = parent;
-        this.caseLabel = ExpressionEditorUtil.keyword("case", "case", null, getParentStyles());
-        this.mapsTo = new Label("\u2794");
-        this.mapsTo.getStyleClass().add("mapsto");
+        this.caseLabel = ExpressionEditorUtil.keyword("case", "case", parent, getParentStyles());
         this.matches = FXCollections.observableArrayList();
         this.nodes = FXCollections.observableArrayList();
         // Must initialize outcome first because updateNodes will use it:
-        this.outcome = makeConsecutive().prompt("value");
+        this.outcome = makeConsecutive("\u2794").prompt("value");
         Utility.listen(matches, c -> {
             updateNodes();
             updateListeners();
         });
-        this.matches.add(new Pair<>(makeConsecutive().prompt("pattern"), makeConsecutive().prompt("condition")));
+        this.matches.add(new Pair<>(makeConsecutive("case").prompt("pattern"), makeConsecutive("where").prompt("condition")));
 
     }
 
@@ -117,14 +114,14 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
     {
         List<Node> childrenNodes = new ArrayList<Node>(Stream.concat(
             matches.stream().flatMap((Pair<ConsecutiveBase, @Nullable ConsecutiveBase> p) -> Stream.concat(p.getFirst().nodes().stream(), p.getSecond() == null ? Stream.<@NonNull Node>empty() : p.getSecond().nodes().stream())),
-            Stream.concat(Stream.of(mapsTo), outcome.nodes().stream())).collect(Collectors.<Node>toList()));
+            outcome.nodes().stream()).collect(Collectors.<Node>toList()));
         nodes.setAll(childrenNodes);
     }
 
     @SuppressWarnings("initialization") // Because of Consecutive
-    private Consecutive makeConsecutive(@UnknownInitialization(Object.class) ClauseNode this)
+    private Consecutive makeConsecutive(@UnknownInitialization(Object.class) ClauseNode this, @Nullable String prefix)
     {
-        return new Consecutive(this, null, null, "clause", null);
+        return new Consecutive(this, prefix == null ? null : ExpressionEditorUtil.keyword(prefix, "match", parent, getParentStyles()), null, "match", null);
     }
 
     @Override
@@ -345,7 +342,8 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
     @Override
     public Stream<String> getParentStyles()
     {
-        return Stream.concat(parent.getParentStyles(), Stream.of("match"));
+        return parent.getParentStyles();
+        //return Stream.concat(parent.getParentStyles(), Stream.of("match"));
     }
 
     @Override
@@ -398,5 +396,16 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
         }
         Expression outcomeExp = this.outcome.toExpression(onError);
         return me -> me.new MatchClause(Utility.<Function<MatchExpression, Pattern>, Pattern>mapList(patterns, f -> f.apply(me)), outcomeExp);
+    }
+
+    public void setSelected(boolean selected)
+    {
+        for (Pair<ConsecutiveBase, @Nullable ConsecutiveBase> match : matches)
+        {
+            match.getFirst().setSelected(selected);
+            if (match.getSecond() != null)
+                match.getSecond().setSelected(selected);
+        }
+        outcome.setSelected(selected);
     }
 }
