@@ -392,11 +392,7 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
                     parentFocusLeftOfThis();
                 else
                 {
-                    atomicEdit.set(true);
-                    operands.add(0, new GeneralEntry("", Status.UNFINISHED, this)
-                        .focusWhenShown());
-                    operators.add(0, new OperatorEntry(this));
-                    atomicEdit.set(false);
+                    addBlankAtLeft();
                 }
             }
         }
@@ -406,6 +402,15 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
             if (index != -1)
                 operands.get(index).focus(Focus.RIGHT);
         }
+    }
+
+    private void addBlankAtLeft()
+    {
+        atomicEdit.set(true);
+        operands.add(0, new GeneralEntry("", Status.UNFINISHED, this)
+            .focusWhenShown());
+        operators.add(0, new OperatorEntry(this));
+        atomicEdit.set(false);
     }
 
     protected abstract void parentFocusLeftOfThis();
@@ -764,6 +769,18 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         {
             consecutiveChild.setSelected(selected);
         }
+    }
+
+    /**
+     * Focuses a blank slot on the left of the expression, either an existing
+     * blank, or a new specially created blank
+     */
+    public void focusBlankAtLeft()
+    {
+        if (operands.get(0).isBlank())
+            operands.get(0).focus(Focus.LEFT);
+        else
+            addBlankAtLeft();
     }
 
     // Done as an inner class to satisfy initialization checker

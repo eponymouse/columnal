@@ -11,6 +11,7 @@ class Parent
 
 class Node
 {
+    void setCursor(Cursor c) @UnknownInitialization;
     void setClip(@Nullable Node a);
     ObservableList<String> getStyleClass() @UnknownInitialization;
     @Nullable Scene getScene() @UnknownInitialization;

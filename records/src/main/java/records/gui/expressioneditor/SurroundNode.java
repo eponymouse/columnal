@@ -8,6 +8,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -266,6 +267,12 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode
             lhs.setLayoutY(TOP_GAP);
             rhs.setLayoutX(BRACKET_WIDTH);
             rhs.setLayoutY(TOP_GAP);
+
+            setCursor(Cursor.TEXT);
+            setOnMouseClicked(e -> {
+                if (contents != null)
+                    contents.focusBlankAtLeft();
+            });
         }
 
         @OnThread(Tag.FX)
