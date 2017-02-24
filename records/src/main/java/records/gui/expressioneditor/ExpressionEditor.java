@@ -50,12 +50,15 @@ public class ExpressionEditor extends ConsecutiveBase
 
     public void registerFocusable(TextField textField)
     {
+        // We now do this using scene's focus owner
+        /*
         Utility.addChangeListenerPlatformNN(textField.focusedProperty(), focus -> {
             if (!focus)
             {
                 focusChanged();
             }
         });
+        */
     }
 
     private static class SelectionInfo
@@ -87,6 +90,13 @@ public class ExpressionEditor extends ConsecutiveBase
             container.getChildren().setAll(nodes());
         });
         this.onChange = onChangeHandler;
+        Utility.addChangeListenerPlatform(container.sceneProperty(), scene -> {
+            // We should only ever be added to one scene, but we will also get removed from it
+            if (scene != null)
+            {
+                Utility.addChangeListenerPlatform(scene.focusOwnerProperty(), owner -> focusChanged());
+            }
+        });
 
         loadContent(startingValue);
 

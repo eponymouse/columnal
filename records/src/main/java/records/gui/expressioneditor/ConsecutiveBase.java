@@ -385,9 +385,22 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
             if (index > 0)
                 operators.get(index - 1).focus(Focus.RIGHT);
             else
-                parentFocusLeftOfThis();
+            {
+                // index is zero.  If we are blank then we do go to parent's left
+                // If we aren't blank, we make a new blank before us:
+                if (operands.get(0).isBlank())
+                    parentFocusLeftOfThis();
+                else
+                {
+                    atomicEdit.set(true);
+                    operands.add(0, new GeneralEntry("", Status.UNFINISHED, this)
+                        .focusWhenShown());
+                    operators.add(0, new OperatorEntry(this));
+                    atomicEdit.set(false);
+                }
+            }
         }
-        else
+        else if (child instanceof OperatorEntry && Utility.containsRef(operators, (OperatorEntry)child))
         {
             int index = Utility.indexOfRef(operators, (OperatorEntry)child);
             if (index != -1)
@@ -513,7 +526,7 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         return allChildren.subList(a, b + 1);
     }
 
-    private List<ConsecutiveChild> getAllChildren()
+    private List<ConsecutiveChild> getAllChildren(@UnknownInitialization(ConsecutiveBase.class) ConsecutiveBase this)
     {
         return interleaveOperandsAndOperators(operands, operators);
     }
@@ -771,7 +784,7 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         }
     }
 
-    public void focusChanged()
+    public void focusChanged(@UnknownInitialization(ConsecutiveBase.class) ConsecutiveBase this)
     {
         atomicEdit.set(true);
         removeBlanks(operands, operators, true);
