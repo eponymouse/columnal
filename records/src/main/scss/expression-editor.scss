@@ -102,7 +102,7 @@ $parent-colors: (function, $function-color), (match, $match-color), (if, $if-col
     -fx-background-color: yellowgreen;
     -fx-background-radius: 0;
 }
-.entry-field, .operator-field, .labelled-name {
+.entry-field, .labelled-name {
     -fx-background-insets: 0;
     -fx-background-color: transparent;
     -fx-border-width: 1;
@@ -110,6 +110,6 @@ $parent-colors: (function, $function-color), (match, $match-color), (if, $if-col
     -fx-padding: 1 3 1 1;
 }
 .entry-field:ps-empty, .entry-field:hover, .entry-field:focused,
-  .operator-field:op-empty, .operator-field:hover, .operator-field:focused, .labelled-name:hover, .labelled-name:focused {
+  .operator-name:op-empty, .labelled-name:hover, .labelled-name:focused {
     -fx-border-color: grey;
 }

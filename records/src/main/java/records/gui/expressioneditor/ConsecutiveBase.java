@@ -590,29 +590,22 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
 
     public @Nullable CopiedItems copyItems(ConsecutiveChild start, ConsecutiveChild end)
     {
-        boolean startIsOp = false;
-        int startIndex = operands.indexOf(start);
-        if (startIndex == -1)
-        {
-            startIsOp = true;
-            startIndex = operators.indexOf(start);
-        }
-        boolean endIsOp = false;
-        int endIndex = operands.indexOf(end);
-        if (endIndex == -1)
-        {
-            endIndex = operators.indexOf(end);
-            endIsOp = false;
-        }
+        List<ConsecutiveChild> all = getAllChildren();
+        boolean startIsOperator = start instanceof OperatorEntry;
+        int startIndex = all.indexOf(start);
+        int endIndex = all.indexOf(end);
 
         if (startIndex == -1 || endIndex == -1)
             // Problem:
             return null;
 
         return new CopiedItems(
-            Utility.<OperandNode, String>mapList(operands.subList(startIsOp ? startIndex + 1 : startIndex, endIndex + 1), n -> n.toExpression(o -> {}).save(false)),
-            Utility.<OperatorEntry, String>mapList(operators.subList(startIndex, endIsOp ? endIndex + 1 : endIndex), o -> o.get()),
-            startIsOp);
+            Utility.<ConsecutiveChild, String>mapList(all.subList(startIndex, endIndex + 1), child -> {
+                if (child instanceof OperatorEntry)
+                    return ((OperatorEntry)child).get();
+                else
+                    return ((OperandNode)child).toExpression(o -> {}).save(false);
+            }), startIsOperator);
     }
 
     public boolean insertBefore(ConsecutiveChild insertBefore, CopiedItems itemsToInsert)
@@ -621,18 +614,18 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         // after an operand), or mismatch (inserting an operator after an operator)
         // In the case of a mismatch, we must insert a blank of the other type to get it right.
         atomicEdit.set(true);
-        List<ConsecutiveChild> all = interleaveOperandsAndOperators(operands, operators);
 
-        @Nullable List<OperandNode> newOperands = loadOperands(itemsToInsert.operands);
-        List<OperatorEntry> newOperators = Utility.mapList(itemsToInsert.operators, o -> new OperatorEntry(o, false, this));
-        if (newOperands == null || Math.abs(newOperands.size() - newOperators.size()) > 1)
+        @Nullable Pair<List<OperandNode>, List<OperatorEntry>> loaded = loadItems(itemsToInsert);
+        if (loaded == null)
             return false;
+        List<OperandNode> newOperands = loaded.getFirst();
+        List<OperatorEntry> newOperators = loaded.getSecond();
 
         boolean endsWithOperator;
         if (itemsToInsert.startsOnOperator)
-            endsWithOperator = itemsToInsert.operators.size() == itemsToInsert.operands.size() + 1;
+            endsWithOperator = newOperators.size() == newOperands.size() + 1;
         else
-            endsWithOperator = itemsToInsert.operators.size() == itemsToInsert.operands.size();
+            endsWithOperator = newOperators.size() == newOperands.size();
 
         // If it starts with an operator and you're inserting before an operand, add an extra blank operand
 
@@ -688,16 +681,31 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         return true;
     }
 
-    private @Nullable List<OperandNode> loadOperands(List<String> savedOperands)
+    private @Nullable Pair<List<OperandNode>, List<OperatorEntry>> loadItems(CopiedItems copiedItems)
     {
+        List<OperandNode> operands = new ArrayList<>();
+        List<OperatorEntry> operators = new ArrayList<>();
         try
         {
-            return Utility.mapListEx(savedOperands, raw -> Expression.parse(null, raw, getEditor().getTypeManager()).loadAsSingle().apply(this));
+            for (int i = 0; i < copiedItems.items.size(); i++)
+            {
+                // First: is it even?  If it's even and we start on operator then it's an operator
+                // Equally, if it's odd and we didn't start on operator, then it's an operator.
+                if (((i & 1) == 0) == copiedItems.startsOnOperator)
+                {
+                    operators.add(new OperatorEntry(copiedItems.items.get(i), false, this));
+                }
+                else
+                {
+                    operands.add(Expression.parse(null, copiedItems.items.get(i), getEditor().getTypeManager()).loadAsSingle().apply(this));
+                }
+            }
         }
         catch (UserException | InternalException e)
         {
             return null;
         }
+        return new Pair<>(operands, operators);
     }
 
     public void removeItems(ConsecutiveChild start, ConsecutiveChild end)

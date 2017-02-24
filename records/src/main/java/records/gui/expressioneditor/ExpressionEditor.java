@@ -253,7 +253,7 @@ public class ExpressionEditor extends ConsecutiveBase
     }
 
     @SuppressWarnings("initialization")
-    public void ensureSelectionIncludes(@UnknownInitialization OperandNode src)
+    public void ensureSelectionIncludes(@UnknownInitialization ConsecutiveChild src)
     {
         if (selectionLocked)
             return;
@@ -281,7 +281,7 @@ public class ExpressionEditor extends ConsecutiveBase
         selection = null;
     }
 
-    public void selectOnly(OperandNode src)
+    public void selectOnly(ConsecutiveChild src)
     {
         if (selectionLocked)
             return;
@@ -290,7 +290,7 @@ public class ExpressionEditor extends ConsecutiveBase
         ensureSelectionIncludes(src);
     }
 
-    public void extendSelectionTo(OperandNode node)
+    public void extendSelectionTo(ConsecutiveChild node)
     {
         if (selectionLocked)
             return;

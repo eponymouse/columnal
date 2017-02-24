@@ -22,7 +22,7 @@ import java.util.stream.Stream;
 public class ExpressionEditorUtil
 {
     @NotNull
-    protected static VBox withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization OperandNode surrounding, Stream<String> parentStyles)
+    protected static VBox withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild surrounding, Stream<String> parentStyles)
     {
         FXUtility.sizeToFit(textField, 10.0, 10.0);
         textField.getStyleClass().addAll(cssClass + "-name", "labelled-name");
@@ -56,20 +56,23 @@ public class ExpressionEditorUtil
     public static class CopiedItems implements Serializable
     {
         private static final long serialVersionUID = 3245083225504039668L;
-        public final List<String> operands; // Expressions saved to string
-        public final List<String> operators; // Operators as raw string
+        /**
+         * Expressions are saved to string, operators are there as the raw string
+         * They strictly alternate (operand-operator-operand etc) and the boolean
+         * tracks whether first one was an operator (otherwise: operand)
+         */
+        public final List<String> items;
         public final boolean startsOnOperator;
 
-        public CopiedItems(List<String> operands, List<String> operators, boolean startsOnOperator)
+        public CopiedItems(List<String> items, boolean startsOnOperator)
         {
-            this.operands = operands;
-            this.operators = operators;
+            this.items = items;
             this.startsOnOperator = startsOnOperator;
         }
     }
 
     @SuppressWarnings("initialization")
-    public static void enableDragFrom(Label dragSource, @UnknownInitialization OperandNode src)
+    public static void enableDragFrom(Label dragSource, @UnknownInitialization ConsecutiveChild src)
     {
         ExpressionEditor editor = src.getParent().getEditor();
         dragSource.setOnDragDetected(e -> {
@@ -94,7 +97,7 @@ public class ExpressionEditorUtil
     }
 
     @SuppressWarnings("initialization")
-    public static void enableSelection(Label typeLabel, @UnknownInitialization OperandNode node)
+    public static void enableSelection(Label typeLabel, @UnknownInitialization ConsecutiveChild node)
     {
         typeLabel.setOnMouseClicked(e -> {
             if (!e.isStillSincePress())
