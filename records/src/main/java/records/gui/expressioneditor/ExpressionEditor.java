@@ -116,7 +116,11 @@ public class ExpressionEditor extends ConsecutiveBase
                     //TODO work out if this is a null drag because everything would go to hell
                     // (Look if drag destination is inside selection?)
                     // Or can we stop it going to hell?
-                    return nearest.getFirst().getParent().insertBefore(nearest.getFirst(), (CopiedItems)o);
+                    boolean dropped = nearest.getFirst().getParent().insertBefore(nearest.getFirst(), (CopiedItems) o);
+                    // Tidy up any blanks:
+                    if (dropped)
+                        nearest.getFirst().getParent().focusChanged();
+                    return dropped;
                 }
                 return false;
             }

@@ -37,6 +37,7 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -514,15 +515,58 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
 
     private List<ConsecutiveChild> getAllChildren()
     {
-        List<ConsecutiveChild> r = new ArrayList<>();
-        for (int i = 0; i < Math.max(operands.size(), operators.size()); i++)
+        return interleaveOperandsAndOperators(operands, operators);
+    }
+
+    /**
+     * Produces a list which interleaves the operands and operators together.  Note that
+     * the returned list is a *live mirror* of the lists.  Any removals from the returned list
+     * will affect the originals.  Additions are not permitted.
+     *
+     * If you let the lists get into an inconsistent state (e.g. remove one operand from the middle)
+     * then you'll get undefined behaviour.
+     *
+     * @param operands
+     * @param operators
+     * @return
+     */
+
+    private static List<ConsecutiveChild> interleaveOperandsAndOperators(List<OperandNode> operands, List<OperatorEntry> operators)
+    {
+        return new AbstractList<ConsecutiveChild>()
         {
-            if (i < operands.size())
-                r.add(operands.get(i));
-            if (i < operators.size())
-                r.add(operators.get(i));
-        }
-        return r;
+            @Override
+            public ConsecutiveChild get(int index)
+            {
+                return ((index & 1) == 0) ? operands.get(index >> 1) : operators.get(index >> 1);
+            }
+
+            @Override
+            public int size()
+            {
+                return operands.size() + operators.size();
+            }
+
+            @Override
+            public ConsecutiveChild remove(int index)
+            {
+                if ((index & 1) == 0)
+                    return operands.remove(index >> 1);
+                else
+                    return operators.remove(index >> 1);
+            }
+
+            // We presume that they intend to add operatorentry at odd indexes
+            // and operator at even indexes
+            @Override
+            public void add(int index, ConsecutiveChild element)
+            {
+                if ((index & 1) == 0)
+                    operands.add(index >> 1, (OperandNode) element);
+                else
+                    operators.add(index >> 1, (OperatorEntry) element);
+            }
+        };
     }
 
     public void markSelection(ConsecutiveChild from, ConsecutiveChild to, boolean selected)
@@ -576,8 +620,8 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         // At the beginning and at the end, we may get a match (e.g. inserting an operator
         // after an operand), or mismatch (inserting an operator after an operator)
         // In the case of a mismatch, we must insert a blank of the other type to get it right.
-
         atomicEdit.set(true);
+        List<ConsecutiveChild> all = interleaveOperandsAndOperators(operands, operators);
 
         @Nullable List<OperandNode> newOperands = loadOperands(itemsToInsert.operands);
         List<OperatorEntry> newOperators = Utility.mapList(itemsToInsert.operators, o -> new OperatorEntry(o, false, this));
@@ -590,58 +634,55 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         else
             endsWithOperator = itemsToInsert.operators.size() == itemsToInsert.operands.size();
 
+        // If it starts with an operator and you're inserting before an operand, add an extra blank operand
+
         if (insertBefore instanceof OperandNode)
         {
             int index = operands.indexOf(insertBefore);
             if (index == -1)
                 return false;
 
-            // Inserting before operand, so to match we need operand first to take its place:
+            // If it starts with an operator and you're inserting before an operand, add an extra blank operand
             if (itemsToInsert.startsOnOperator)
             {
-                // Mismatch!  Add an empty operand:
-                operands.add(index, new GeneralEntry("", Status.UNFINISHED, this));
-                // Adjust as we want to insert after:
-                index += 1;
+                newOperands.add(0, new GeneralEntry("", Status.UNFINISHED, this));
             }
-            // Now we are ok to insert at index:
-            operands.addAll(index, newOperands);
-            operators.addAll(index, newOperators);
-            // Tidy up the end, if needed.
-            // We inserted before an operand, so the end is messy if the inserted content
+            // We are inserting before an operand, so the end is messy if the inserted content
             // didn't end with an operator
             if (!endsWithOperator)
             {
-                operators.add(index + newOperators.size(), new OperatorEntry(this));
-                checkForDoubleBlank(index + newOperators.size() + 1);
+                newOperators.add(new OperatorEntry(this));
             }
+
+            // We will have an operand first, that one goes at index:
+            operands.addAll(index, newOperands);
+            // Operator at index follows operand at index:
+            operators.addAll(index, newOperators);
+
         }
         else
         {
             int index = operators.indexOf(insertBefore);
             if (index == -1)
                 return false;
+
             // Inserting before operator, so to match we need an operator first to take its place:
             if (!itemsToInsert.startsOnOperator)
             {
-                operators.add(index, new OperatorEntry(this));
-                // Adjust as we want to insert after:
-                index += 1;
+                newOperators.add(0, new OperatorEntry(this));
             }
-
-            // Now we are ok to insert at index for operators, adjusting for operands:
-            operands.addAll(index + 1, newOperands);
-            operators.addAll(index, newOperators);
-
-            // Tidy up the end, if needed.
-            // We inserted before an operator, so the end is messy if the inserted content
-            // didn't end with an operand
+            // Inserting before operator, so we need to end with operand:
             if (endsWithOperator)
             {
-                operands.add(index + 1 + newOperands.size(), new GeneralEntry("", Status.UNFINISHED, this));
-                checkForDoubleBlank(index + 1 + newOperands.size() + 1);
+                newOperands.add(new GeneralEntry("", Status.UNFINISHED, this));
             }
+
+            // Now we are ok to insert at index for operators, but must adjust for operands:
+            operators.addAll(index, newOperators);
+            operands.addAll(index + 1, newOperands);
         }
+
+        removeBlanks(operands, operators, false);
 
         atomicEdit.set(false);
         return true;
@@ -662,31 +703,17 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
     public void removeItems(ConsecutiveChild start, ConsecutiveChild end)
     {
         atomicEdit.set(true);
-        int startOperandIndex, startOperatorIndex;
-        int endOperandIndex, endOperatorIndex;
-        if (start instanceof OperatorEntry)
+        int startIndex;
+        int endIndex;
+        List<ConsecutiveChild> all = interleaveOperandsAndOperators(operands, operators);
+        startIndex = all.indexOf(start);
+        endIndex = all.indexOf(end);
+        if (startIndex != -1 && endIndex != -1)
         {
-            startOperatorIndex = operators.indexOf(start);
-            startOperandIndex = startOperatorIndex + 1;
+            // Important to go backwards so that the indexes don't get screwed up:
+            for (int i = endIndex; i >= startIndex; i--)
+                all.remove(i);
         }
-        else
-        {
-            startOperandIndex = operands.indexOf(start);
-            startOperatorIndex = startOperandIndex;
-        }
-        if (end instanceof OperatorEntry)
-        {
-            endOperatorIndex = operators.indexOf(end);
-            endOperandIndex = endOperatorIndex;
-        }
-        else
-        {
-            endOperandIndex = operands.indexOf(end);
-            endOperatorIndex = endOperandIndex - 1;
-        }
-        
-        operators.remove(startOperatorIndex, endOperatorIndex + 1);
-        operands.remove(startOperandIndex, endOperandIndex + 1);
         
         // There's three cases:
         // - We begin and end with operator; need to add a new blank one after
@@ -696,38 +723,14 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         // we can cancel the two out instead and remove them both.
         if (start instanceof OperatorEntry && end instanceof OperatorEntry)
         {
-            operators.add(startOperatorIndex, new OperatorEntry(this));
-            if (!checkForDoubleBlank(startOperatorIndex))
-                checkForDoubleBlank(startOperatorIndex + 1);
+            all.add(startIndex, new OperatorEntry(this));
         }
         else if (!(start instanceof OperatorEntry) && !(end instanceof OperatorEntry))
         {
-            operands.add(startOperandIndex, new GeneralEntry("", Status.UNFINISHED, this));
-            checkForDoubleBlank(startOperandIndex);
+            all.add(startIndex, new GeneralEntry("", Status.UNFINISHED, this));
         }
+        removeBlanks(operands, operators, true);
         atomicEdit.set(false);
-    }
-
-    // Checks if operandIndex, and the operator before or after it, are blank
-    // If so, removes them and returns true.  If no double blank found, returns false
-    private boolean checkForDoubleBlank(int operandIndex)
-    {
-        if (operands.get(operandIndex).isBlank())
-        {
-            if (operandIndex > 0 && operators.get(operandIndex - 1).isBlank())
-            {
-                operands.remove(operandIndex);
-                operators.remove(operandIndex - 1);
-                return true;
-            }
-            else if (operandIndex < operators.size() && operators.get(operandIndex).isBlank())
-            {
-                operands.remove(operandIndex);
-                operators.remove(operandIndex);
-                return true;
-            }
-        }
-        return false;
     }
 
     public void setSelected(boolean selected)
@@ -762,35 +765,9 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
 
     public void focusChanged()
     {
-        // Remove pair of (blank operand, blank operator) at start if neither have focus:
-        while (operands.size() > 1 && operators.size() > 0 &&
-            operands.get(0).isBlank() && !operands.get(0).isFocused() &&
-            operators.get(0).isBlank() && !operators.get(0).isFocused())
-        {
-            atomicEdit.set(true);
-            operands.remove(0);
-            operators.remove(0);
-            atomicEdit.set(false);
-        }
-        // Remove final operand or operator while blank&unfocused:
-        boolean lastOperandBlank;
-        while (
-            (lastOperandBlank = (operands.size() > 1 && operands.get(operands.size() - 1).isBlank() && !operands.get(operands.size() - 1).isFocused() && operands.size() > operators.size()))
-            ||
-            (/* lastOperatorBlank =*/ (operators.size() > 0 && operators.get(operators.size() - 1).isBlank() && !operators.get(operators.size() - 1).isFocused() && operators.size() == operators.size()))
-        )
-        {
-            // Given the way they are assigned, lastOperatorBlank is only set if lastOperandBlank is false
-            // (They can't both be true anyway, if you look at the conditions)
-            if (lastOperandBlank)
-            {
-                operands.remove(operands.size() - 1);
-            }
-            else // lastOperatorBlank must be true, if you look at the logic, otherwise while would have terminated
-            {
-                operators.remove(operators.size() - 1);
-            }
-        }
+        atomicEdit.set(true);
+        removeBlanks(operands, operators, true);
+        atomicEdit.set(false);
 
         // Must also tell remaining children to update (shouldn't interact with above calculation
         // because updating should not make a field return isBlank==true, that should only be returned
@@ -798,6 +775,55 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         for (ConsecutiveChild consecutiveChild : getAllChildren())
         {
             consecutiveChild.focusChanged();
+        }
+    }
+
+    /**
+     * This method goes through the given list of operands and operators, and modifies them
+     * *in place* to remove unnecessary harmless blanks.  It's static to avoid accidentally
+     * modifying members.
+     *
+     * The rules are: any consecutive pair of operator and operand will get removed (it doesn't really
+     * matter which ones if there's > 2 consecutive blanks; if there's an odd number you'll always
+     * be left with one, and if even, all will be removed anyway).  And finally, a single blank item
+     * on the end by itself will get removed.  (A blank pair or more on the end would already have been
+     * removed by the first check.)
+     *
+     * @param operands
+     * @param operators
+     * @param accountForFocus If they are focused, should they be kept in (true: yes, keep; false: no, remove)
+     */
+    private static void removeBlanks(List<OperandNode> operands, List<OperatorEntry> operators, boolean accountForFocus)
+    {
+        List<ConsecutiveChild> all = interleaveOperandsAndOperators(operands, operators);
+
+        // We check for blanks on the second of the pair, as it makes the index checks easier
+        // Hence we only need start at 1:
+        int index = 1;
+        while (index < all.size())
+        {
+            if (all.get(index - 1).isBlank() && (!accountForFocus || !all.get(index - 1).isFocused()) &&
+                all.get(index).isBlank() && (!accountForFocus || !all.get(index).isFocused()))
+            {
+                // Both are blank, so remove:
+                // Important to remove later one first so as to not mess with the indexing:
+                all.remove(index);
+                all.remove(index - 1);
+                // In this case we don't want to change index, as we want to assess the next
+                // pair
+            }
+            else
+                index += 1; // Only if they weren't removed do we advance
+        }
+
+        // Remove final operand or operator if blank&unfocused:
+        if (!all.isEmpty())
+        {
+            ConsecutiveChild last = all.get(all.size() - 1);
+            if (last.isBlank() && (!accountForFocus || !last.isFocused()))
+            {
+                all.remove(all.size() - 1);
+            }
         }
     }
 
