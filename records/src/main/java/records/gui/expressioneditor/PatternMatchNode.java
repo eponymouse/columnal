@@ -217,16 +217,16 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
         return this;
     }
 
-    public Expression toExpression(FXPlatformConsumer<Object> onError)
+    public Expression toExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
     {
-        Expression sourceExp = source.toExpression(onError);
+        Expression sourceExp = source.toExpression(errorDisplayer, onError);
         List<Function<MatchExpression, MatchClause>> clauseExps = new ArrayList<>();
         for (ClauseNode clause : clauses)
         {
-            Function<MatchExpression, MatchClause> exp = clause.toClauseExpression(onError);
+            Function<MatchExpression, MatchClause> exp = clause.toClauseExpression(errorDisplayer, onError);
             clauseExps.add(exp);
         }
-        return new MatchExpression(sourceExp, clauseExps);
+        return errorDisplayer.record(this, new MatchExpression(sourceExp, clauseExps));
     }
 
     public @Nullable DataType getMatchType()
@@ -292,5 +292,11 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
         {
             clause.focusChanged();
         }
+    }
+
+    @Override
+    public void showError(String error)
+    {
+        source.showError(error);
     }
 }

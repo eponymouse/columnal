@@ -45,12 +45,12 @@ public class FunctionNode extends SurroundNode
 
     @SuppressWarnings("nullness") // contents is known to be non-null.
     @Override
-    public Expression toExpression(FXPlatformConsumer<Object> onError)
+    public Expression toExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         // TODO keep track of whether function is known
         // TODO allow units (second optional consecutive)
-        Expression argExp = contents.toExpression(onError);
-        return new CallExpression(head.getText(), Collections.emptyList(), argExp);
+        Expression argExp = contents.toExpression(errorDisplayer, onError);
+        return errorDisplayer.record(this, new CallExpression(head.getText(), Collections.emptyList(), argExp));
     }
 
     //@Override

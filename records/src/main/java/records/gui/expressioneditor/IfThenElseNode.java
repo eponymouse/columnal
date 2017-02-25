@@ -32,7 +32,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 21/02/2017.
  */
-public class IfThenElseNode implements OperandNode, ExpressionParent
+public class IfThenElseNode implements OperandNode, ExpressionParent, ErrorDisplayer
 {
     private final ConsecutiveBase parent;
     private final ObservableList<Node> nodes;
@@ -139,9 +139,9 @@ public class IfThenElseNode implements OperandNode, ExpressionParent
     }
 
     @Override
-    public Expression toExpression(FXPlatformConsumer<Object> onError)
+    public Expression toExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
     {
-        return new IfThenElseExpression(condition.toExpression(onError), thenPart.toExpression(onError), elsePart.toExpression(onError));
+        return errorDisplayer.record(this, new IfThenElseExpression(condition.toExpression(errorDisplayer, onError), thenPart.toExpression(errorDisplayer, onError), elsePart.toExpression(errorDisplayer, onError)));
     }
 
     @Override
@@ -223,5 +223,11 @@ public class IfThenElseNode implements OperandNode, ExpressionParent
     public ExpressionEditor getEditor()
     {
         return parent.getEditor();
+    }
+
+    @Override
+    public void showError(String error)
+    {
+        condition.showError(error);
     }
 }

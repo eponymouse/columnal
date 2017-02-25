@@ -11,6 +11,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 import records.data.Column;
 import records.data.Table;
+import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
@@ -40,7 +41,7 @@ public class ExpressionEditor extends ConsecutiveBase
     private final @Nullable DataType type;
     private final @Nullable Table srcTable;
     private final FXPlatformConsumer<@NonNull Expression> onChange;
-    private final TypeManager typeManager;
+    private final TableManager tableManager;
 
     // Selections take place within one consecutive and go from one operand to another (inclusive):
 
@@ -75,11 +76,11 @@ public class ExpressionEditor extends ConsecutiveBase
         }
     }
 
-    public ExpressionEditor(Expression startingValue, @Nullable Table srcTable, @Nullable DataType type, TypeManager typeManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
+    public ExpressionEditor(Expression startingValue, @Nullable Table srcTable, @Nullable DataType type, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
         super( null, null, "");
         this.container = new FlowPane();
-        this.typeManager = typeManager;
+        this.tableManager = tableManager;
         container.getStyleClass().add("expression-editor");
         Utility.ensureFontLoaded("NotoSans-Regular.ttf");
         container.getStylesheets().add(Utility.getStylesheet("expression-editor.css"));
@@ -146,11 +147,6 @@ public class ExpressionEditor extends ConsecutiveBase
         atomicEdit.set(true);
         operators.addAll(Utility.mapList(items.getSecond(), f -> f.apply(this)));
         operands.addAll(Utility.mapList(items.getFirst(), f -> f.apply(this)));
-        if (operators.size() == operands.size() - 1)
-        {
-            // Need a blank operator on the end:
-            operators.add(new OperatorEntry(this));
-        }
         atomicEdit.set(false);
     }
 
@@ -227,10 +223,35 @@ public class ExpressionEditor extends ConsecutiveBase
     {
         clearSelection();
         // Can be null during initialisation
-        if (onChange != null && !atomicEdit.get())
+        if (!atomicEdit.get())
         {
-            Expression expression = toExpression(err -> {});
-            onChange.consume(expression);
+            ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord();
+            Expression expression = toExpression(errorDisplayers, err -> {});
+            if (onChange != null)
+            {
+                onChange.consume(expression);
+            }
+            try
+            {
+                if (srcTable != null && tableManager != null)
+                {
+                    expression.check(srcTable.getData(), tableManager.getTypeState(), (e, s) ->
+                    {
+                        if (!errorDisplayers.showError(e, s))
+                        {
+                            // Show it on us, then:
+                            showError(s);
+                        }
+                    });
+                }
+            }
+            catch (InternalException | UserException e)
+            {
+                Utility.log(e);
+                String msg = e.getLocalizedMessage();
+                if (msg != null)
+                    showError(msg);
+            }
         }
     }
 
@@ -242,7 +263,7 @@ public class ExpressionEditor extends ConsecutiveBase
 
     public TypeManager getTypeManager() throws InternalException
     {
-        return typeManager;
+        return tableManager.getTypeManager();
     }
 
     @Override

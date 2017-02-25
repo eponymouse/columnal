@@ -89,15 +89,15 @@ public class TagExpressionNode extends SurroundNode
     }
 
     @Override
-    public Expression toExpression(FXPlatformConsumer<Object> onError)
+    public Expression toExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         Expression innerExp;
         if (contents == null)
             innerExp = null;
         else
         {
-            innerExp = contents.toExpression(onError);
+            innerExp = contents.toExpression(errorDisplayer, onError);
         }
-        return new TagExpression(new Pair<>(typeName.getRaw(), tagType.getName()), innerExp);
+        return errorDisplayer.record(this, new TagExpression(new Pair<>(typeName.getRaw(), tagType.getName()), innerExp));
     }
 }

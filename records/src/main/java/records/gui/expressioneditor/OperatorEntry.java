@@ -86,7 +86,7 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
         if (!userEntered)
             textField.setText(content); // Do before auto complete is on the field
         FXUtility.sizeToFit(textField, 5.0, 5.0);
-        container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, parent.getParentStyles());
+        container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, parent.getParentStyles()).getFirst();
         container.getStyleClass().add("entry");
         this.nodes = FXCollections.observableArrayList(this.container);
 

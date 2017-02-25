@@ -891,6 +891,7 @@ public class DataType
                 @Override
                 public @Nullable DataType differentKind(DataType a, DataType b) throws InternalException, UserException
                 {
+                    onError.accept("Type mismatch: " + a + " vs " + b);
                     return null;
                 }
             });

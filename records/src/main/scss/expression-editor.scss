@@ -27,6 +27,9 @@ $parent-colors: (function, $function-color), (match, $match-color), (if, $if-col
     .#{$parent-type} {
         -fx-background-color: $parent-color;
     }
+    .#{$parent-type}:exp-error {
+        -fx-background-color: red;
+    }
     .#{$parent-type}:exp-selected {
          -fx-background-color: $selected-expression-border-color;
          & .label, & .text-field {
@@ -72,6 +75,9 @@ $parent-colors: (function, $function-color), (match, $match-color), (if, $if-col
 }
 .entry:ps-column {
     -fx-background-color: $column-color;
+}
+.entry:exp-error {
+    -fx-background-color: red;
 }
 
 /* Must come later to have precendence: */

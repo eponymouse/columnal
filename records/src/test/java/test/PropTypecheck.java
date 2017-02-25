@@ -37,6 +37,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -84,7 +85,10 @@ public class PropTypecheck
     {
         for (Expression expression : src.expressionFailures)
         {
-            assertNull(src.getDisplay(expression), expression.check(src.recordSet, TestUtil.typeState(), (e, s) -> {}));
+            AtomicBoolean errorReported = new AtomicBoolean(false);
+            assertNull(src.getDisplay(expression), expression.check(src.recordSet, TestUtil.typeState(), (e, s) -> {errorReported.set(true);}));
+            // If it was null, an error should also have been reported:
+            assertTrue(src.getDisplay(expression), errorReported.get());
         }
     }
 

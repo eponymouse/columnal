@@ -8,6 +8,8 @@ import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
+import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.gui.FXUtility;
 
 import java.io.Serializable;
@@ -21,8 +23,17 @@ import java.util.stream.Stream;
  */
 public class ExpressionEditorUtil
 {
+    /**
+     * Returns
+     * @param textField
+     * @param cssClass
+     * @param label
+     * @param surrounding
+     * @param parentStyles
+     * @return A pair of the VBox to display, and an action which can be used to show/clear an error on it (clear by passing null)
+     */
     @NotNull
-    protected static VBox withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild surrounding, Stream<String> parentStyles)
+    protected static Pair<VBox, FXPlatformConsumer<@Nullable String>> withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild surrounding, Stream<String> parentStyles)
     {
         FXUtility.sizeToFit(textField, 10.0, 10.0);
         textField.getStyleClass().addAll(cssClass + "-name", "labelled-name");
@@ -36,7 +47,14 @@ public class ExpressionEditorUtil
         setStyles(typeLabel, parentStyles);
         VBox vBox = new VBox(typeLabel, textField);
         vBox.getStyleClass().add(cssClass);
-        return vBox;
+        return new Pair<>(vBox, (@Nullable String s) -> {
+            setError(vBox, s);
+        });
+    }
+
+    public static void setError(VBox vBox, @Nullable String s)
+    {
+        FXUtility.setPseudoclass(vBox, "exp-error", s != null);
     }
 
     @NotNull
@@ -45,7 +63,7 @@ public class ExpressionEditorUtil
         TextField t = new TextField(keyword);
         t.setEditable(false);
         t.setDisable(true);
-        return withLabelAbove(t, cssClass, "", surrounding, parentStyles);
+        return withLabelAbove(t, cssClass, "", surrounding, parentStyles).getFirst();
     }
 
     public static void setStyles(Label topLabel, Stream<String> parentStyles)

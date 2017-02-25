@@ -55,7 +55,7 @@ import java.util.stream.Stream;
  * does not extend it because Consecutive by itself is not a valid
  * operand.  For that, use Bracketed.
  */
-public @Interned abstract class ConsecutiveBase implements ExpressionParent, ExpressionNode
+public @Interned abstract class ConsecutiveBase implements ExpressionParent, ExpressionNode, ErrorDisplayer
 {
     private final ObservableList<Node> nodes;
     // The boolean value is only used during updateListeners, will be true other times
@@ -118,6 +118,7 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
                 // At end of edit:
                 updateNodes();
                 updateListeners();
+                selfChanged();
             }
         });
     }
@@ -444,26 +445,22 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         return this;
     }
 
-    // If an expression is valid, it will always have a blank operator last, e.g.
-    // 1 + 2 + 3 <blankop>
-    // If has a non-blank operator last, there's a field beyond it that needs filling in
-    // (and once it is filled, there will be a blank operator beyond it), e.g.
-    // 1 + 2 + 3 * <blankfield>
-    // This method returns true, operators if valid, or false, operators if not
+    // If an expression is valid, it will not have an operator last, e.g.
+    // 1 + 2 + 3 +
+    // If has an operator last, there's a missing operand
+    // This method returns true, operators if last is not an operator (i.e. if expression is valid), or false, operators if last is an operator
     private Pair<Boolean, List<String>> getOperators(@UnknownInitialization(ConsecutiveBase.class)ConsecutiveBase this, int firstIndex, int lastIndex)
     {
-        // If last operator not blank then can't be valid expression:
-        boolean lastBlank = !operators.isEmpty() && operators.get(operators.size() - 1).get().isEmpty();
-        // Knock off the last operator:
-        return new Pair<>(lastBlank, Utility.<OperatorEntry, String>mapList(lastBlank ? operators.subList(0, operators.size() - 1) : operators, op -> op.get()));
+        boolean lastOp = operators.size() == operands.size();
+        return new Pair<>(!lastOp, Utility.<OperatorEntry, String>mapList(operators, op -> op.get()));
     }
 
-    public Expression toExpression(@UnknownInitialization(ConsecutiveBase.class)ConsecutiveBase this, FXPlatformConsumer<Object> onError)
+    public Expression toExpression(@UnknownInitialization(ConsecutiveBase.class)ConsecutiveBase this, ErrorDisplayerRecord errorDisplayers, FXPlatformConsumer<Object> onError)
     {
-        return toExpression(onError, operands.get(0), operands.get(operands.size() - 1));
+        return toExpression(errorDisplayers, onError, operands.get(0), operands.get(operands.size() - 1));
     }
 
-    public Expression toExpression(@UnknownInitialization(ConsecutiveBase.class)ConsecutiveBase this, FXPlatformConsumer<Object> onError, OperandNode first, OperandNode last)
+    public Expression toExpression(@UnknownInitialization(ConsecutiveBase.class) ConsecutiveBase this, ErrorDisplayerRecord errorDisplayers, FXPlatformConsumer<Object> onError, OperandNode first, OperandNode last)
     {
         int firstIndex = operands.indexOf(first);
         int lastIndex = operands.indexOf(last);
@@ -472,13 +469,13 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
             firstIndex = 0;
             lastIndex = operands.size() - 1;
         }
-        List<Expression> operandExps = Utility.mapList(operands.subList(firstIndex, lastIndex + 1), n -> n.toExpression(onError));
+        List<Expression> operandExps = Utility.mapList(operands.subList(firstIndex, lastIndex + 1), n -> n.toExpression(errorDisplayers, onError));
         Pair<Boolean, List<String>> opsValid = getOperators(firstIndex, lastIndex);
 
         if (!opsValid.getFirst())
         {
             // Add a dummy unfinished expression beyond last operator:
-            operandExps.add(new UnfinishedExpression(""));
+            operandExps.add(errorDisplayers.record(this, new UnfinishedExpression("")));
         }
 
         List<String> ops = opsValid.getSecond();
@@ -491,24 +488,24 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
 
         if (ops.stream().allMatch(op -> op.equals("+") || op.equals("-")))
         {
-            return new AddSubtractExpression(operandExps, Utility.<String, Op>mapList(ops, op -> op.equals("+") ? Op.ADD : Op.SUBTRACT));
+            return errorDisplayers.record(this, new AddSubtractExpression(operandExps, Utility.<String, Op>mapList(ops, op -> op.equals("+") ? Op.ADD : Op.SUBTRACT)));
         }
         else if (ops.stream().allMatch(op -> op.equals("*")))
         {
-            return new TimesExpression(operandExps);
+            return errorDisplayers.record(this, new TimesExpression(operandExps));
         }
         else if (ops.stream().allMatch(op -> op.equals("/")))
         {
             if (operandExps.size() == 2)
-                return new DivideExpression(operandExps.get(0), operandExps.get(1));
+                return errorDisplayers.record(this, new DivideExpression(operandExps.get(0), operandExps.get(1)));
         }
         else if (ops.stream().allMatch(op -> op.equals("=")))
         {
             if (operandExps.size() == 2)
-                return new EqualExpression(operandExps.get(0), operandExps.get(1));
+                return errorDisplayers.record(this, new EqualExpression(operandExps.get(0), operandExps.get(1)));
         }
 
-        return new InvalidOperatorExpression(operandExps, ops);
+        return errorDisplayers.record(this, new InvalidOperatorExpression(operandExps, ops));
     }
 
     public @Nullable DataType inferType()
@@ -622,7 +619,7 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
                 if (child instanceof OperatorEntry)
                     return ((OperatorEntry)child).get();
                 else
-                    return ((OperandNode)child).toExpression(o -> {}).save(false);
+                    return ((OperandNode)child).toExpression(new ErrorDisplayerRecord(), o -> {}).save(false);
             }), startIsOperator);
     }
 
@@ -693,7 +690,7 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
             operands.addAll(index + 1, newOperands);
         }
 
-        removeBlanks(operands, operators, false);
+        removeBlanks(operands, operators, false, null);
 
         atomicEdit.set(false);
         return true;
@@ -755,7 +752,7 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         {
             all.add(startIndex, new GeneralEntry("", Status.UNFINISHED, this));
         }
-        removeBlanks(operands, operators, true);
+        removeBlanks(operands, operators, true, null);
         atomicEdit.set(false);
     }
 
@@ -803,9 +800,7 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
 
     public void focusChanged(@UnknownInitialization(ConsecutiveBase.class) ConsecutiveBase this)
     {
-        atomicEdit.set(true);
-        removeBlanks(operands, operators, true);
-        atomicEdit.set(false);
+        removeBlanks(operands, operators, true, atomicEdit);
 
         // Must also tell remaining children to update (shouldn't interact with above calculation
         // because updating should not make a field return isBlank==true, that should only be returned
@@ -831,8 +826,11 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
      * @param operators
      * @param accountForFocus If they are focused, should they be kept in (true: yes, keep; false: no, remove)
      */
-    private static void removeBlanks(List<OperandNode> operands, List<OperatorEntry> operators, boolean accountForFocus)
+    private static void removeBlanks(List<OperandNode> operands, List<OperatorEntry> operators, boolean accountForFocus, @Nullable BooleanProperty atomicEdit)
     {
+        // Note on atomicEdit: we set to true if we modify, and set to false once at the end,
+        // which will do nothing if we never edited
+
         List<ConsecutiveChild> all = interleaveOperandsAndOperators(operands, operators);
 
         // We check for blanks on the second of the pair, as it makes the index checks easier
@@ -843,6 +841,8 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
             if (all.get(index - 1).isBlank() && (!accountForFocus || !all.get(index - 1).isFocused()) &&
                 all.get(index).isBlank() && (!accountForFocus || !all.get(index).isFocused()))
             {
+                if (atomicEdit != null)
+                    atomicEdit.set(true);
                 // Both are blank, so remove:
                 // Important to remove later one first so as to not mess with the indexing:
                 all.remove(index);
@@ -860,9 +860,14 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
             ConsecutiveChild last = all.get(all.size() - 1);
             if (last.isBlank() && (!accountForFocus || !last.isFocused()))
             {
+                if (atomicEdit != null)
+                    atomicEdit.set(true);
                 all.remove(all.size() - 1);
             }
         }
+
+        if (atomicEdit != null)
+            atomicEdit.set(false);
     }
 
     // We deliberately don't directly override OperandNode's isFocused,
@@ -871,5 +876,11 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
     protected boolean childIsFocused()
     {
         return getAllChildren().stream().anyMatch(c -> c.isFocused());
+    }
+
+    @Override
+    public void showError(@UnknownInitialization(ConsecutiveBase.class) ConsecutiveBase this, String error)
+    {
+        operands.get(0).showError(error);
     }
 }

@@ -67,7 +67,7 @@ public class IfThenElseExpression extends NonOperatorExpression
         @Nullable DataType jointType = DataType.checkSame(thenType, elseType, s -> onError.accept(this, s));
         if (jointType == null)
         {
-            onError.accept(condition, "Expected same type in then and else, but was " + thenType + " and " + elseType);
+            onError.accept(elseExpression, "Expected same type in then and else, but was " + thenType + " and " + elseType);
             return null;
         }
         return jointType;

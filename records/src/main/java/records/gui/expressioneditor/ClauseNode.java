@@ -396,16 +396,16 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
         return false;
     }
 
-    public Function<MatchExpression, MatchClause> toClauseExpression(FXPlatformConsumer<Object> onError)
+    public Function<MatchExpression, MatchClause> toClauseExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         List<Function<MatchExpression, Pattern>> patterns = new ArrayList<>();
         for (Pair<ConsecutiveBase, @Nullable ConsecutiveBase> match : matches)
         {
-            Expression patExp = match.getFirst().toExpression(onError);
-            @Nullable Expression matchExp = match.getSecond() == null ? null : match.getSecond().toExpression(onError);
+            Expression patExp = match.getFirst().toExpression(errorDisplayer, onError);
+            @Nullable Expression matchExp = match.getSecond() == null ? null : match.getSecond().toExpression(errorDisplayer, onError);
             patterns.add(me -> new Pattern(patExp, matchExp));
         }
-        Expression outcomeExp = this.outcome.toExpression(onError);
+        Expression outcomeExp = this.outcome.toExpression(errorDisplayer, onError);
         return me -> me.new MatchClause(Utility.<Function<MatchExpression, Pattern>, Pattern>mapList(patterns, f -> f.apply(me)), outcomeExp);
     }
 

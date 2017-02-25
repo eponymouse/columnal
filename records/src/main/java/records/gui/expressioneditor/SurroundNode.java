@@ -25,6 +25,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -38,7 +39,7 @@ import java.util.stream.Stream;
  * (head is function name), tag expressions (head is tag name).
  *
  */
-public abstract class SurroundNode implements ExpressionParent, OperandNode
+public abstract class SurroundNode implements ExpressionParent, OperandNode, ErrorDisplayer
 {
     public static final double BRACKET_WIDTH = 2.0;
     private static final double aspectRatio = 0.2;
@@ -49,6 +50,7 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode
     // Only used if contents is null.  We don't make this nullable if contents is present,
     // mainly because it makes all the nullness checks a pain.
     private final ObservableList<Node> noInnerNodes;
+    private final FXPlatformConsumer<@Nullable String> showError;
 
     @SuppressWarnings("initialization")
     public SurroundNode(ConsecutiveBase parent, String cssClass, @Localized String headLabel, String startingHead, boolean hasInner, @Nullable Expression startingContent)
@@ -72,7 +74,9 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode
         };
         head.setText(startingHead);
         this.cssClass = cssClass;
-        VBox vBox = ExpressionEditorUtil.withLabelAbove(head, this.cssClass, headLabel, this, getParentStyles());
+        Pair<VBox, FXPlatformConsumer<@Nullable String>> vBoxAndErrorShow = ExpressionEditorUtil.withLabelAbove(head, this.cssClass, headLabel, this, getParentStyles());
+        VBox vBox = vBoxAndErrorShow.getFirst();
+        this.showError = vBoxAndErrorShow.getSecond();
         noInnerNodes = FXCollections.observableArrayList();
         if (hasInner)
             contents = new ContentConsecutive(vBox, startingContent);
@@ -359,5 +363,11 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode
     {
         if (contents != null)
             contents.focusChanged();
+    }
+
+    @Override
+    public void showError(String error)
+    {
+        showError.consume(error);
     }
 }

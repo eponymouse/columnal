@@ -68,9 +68,9 @@ public class StringLiteralNode extends LeafNode implements OperandNode
     }
 
     @Override
-    public Expression toExpression(FXPlatformConsumer<Object> onError)
+    public Expression toExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
     {
-        return new records.transformations.expression.StringLiteral(textField.getText());
+        return errorDisplayer.record(this, new records.transformations.expression.StringLiteral(textField.getText()));
     }
 
     @Override
@@ -134,6 +134,12 @@ public class StringLiteralNode extends LeafNode implements OperandNode
         {
             textField.positionCaret(textField.getLength());
         }
+    }
+
+    @Override
+    public void showError(String error)
+    {
+        // TODO
     }
 
     private static class EndStringCompletion extends Completion

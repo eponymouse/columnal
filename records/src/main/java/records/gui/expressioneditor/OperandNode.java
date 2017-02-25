@@ -11,6 +11,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 
 /**
@@ -18,7 +19,7 @@ import java.util.List;
  * next to operators.  (Depends on type: some operands, like tagged operands,
  * may not have a useful type available.)
  */
-public @Interned interface OperandNode extends ExpressionNode, ConsecutiveChild
+public @Interned interface OperandNode extends ExpressionNode, ConsecutiveChild, ErrorDisplayer
 {
     /**
      * Gets the variables declared in this node.
@@ -40,10 +41,14 @@ public @Interned interface OperandNode extends ExpressionNode, ConsecutiveChild
     public abstract OperandNode prompt(String prompt);
 
     /**
-     * Saves this item to an Expression (AST-like item).  If there is a problem,
+     * Saves this item to an Expression (AST-like item).  Should also record who is responsible
+     * for displaying the errors for a given expression (matched by reference).
+     *
+     * If there is a problem,
      * should call onError (1+ times) with problem, and return InvalidExpression if needed.
+     *
      */
-    public abstract Expression toExpression(FXPlatformConsumer<Object> onError);
+    public abstract Expression toExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError);
 
     /**
      * Focus appropriate item once this has been shown and return self-reference

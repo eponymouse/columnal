@@ -9,6 +9,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.ErrorDisplayerRecord;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.Expression;
 import test.gen.ExpressionValue;
@@ -37,7 +38,7 @@ public class PropLoadSaveExpression
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void testEditNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
-        Expression edited = new ExpressionEditor(expression, null, null, DummyManager.INSTANCE.getTypeManager(), e -> {}).toExpression(e -> {});
+        Expression edited = new ExpressionEditor(expression, null, null, DummyManager.INSTANCE, e -> {}).toExpression(new ErrorDisplayerRecord(), e -> {});
         assertEquals(expression, edited);
         assertEquals(expression.save(true), edited.save(true));
     }

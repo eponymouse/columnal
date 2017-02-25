@@ -58,11 +58,10 @@ import java.util.List;
  *   - Partial function name (until later transformed to function call)
  *   - Variable reference.
  */
-public class GeneralEntry extends LeafNode implements OperandNode
+public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplayer
 {
     private static final String ARROW_SAME_ROW = "\u2192";
     private static final String ARROW_WHOLE = "\u2195";
-
 
     public static enum Status
     {
@@ -547,11 +546,11 @@ public class GeneralEntry extends LeafNode implements OperandNode
     }
 
     @Override
-    public Expression toExpression(FXPlatformConsumer<Object> onError)
+    public Expression toExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         if (status.get() == Status.COLUMN_REFERENCE_SAME_ROW || status.get() == Status.COLUMN_REFERENCE_WHOLE)
         {
-            return new ColumnReference(new ColumnId(textField.getText()), status.get() == Status.COLUMN_REFERENCE_SAME_ROW ? ColumnReferenceType.CORRESPONDING_ROW : ColumnReferenceType.WHOLE_COLUMN);
+            return errorDisplayer.record(this, new ColumnReference(new ColumnId(textField.getText()), status.get() == Status.COLUMN_REFERENCE_SAME_ROW ? ColumnReferenceType.CORRESPONDING_ROW : ColumnReferenceType.WHOLE_COLUMN));
         }
         else if (status.get() == Status.LITERAL)
         {
@@ -561,21 +560,21 @@ public class GeneralEntry extends LeafNode implements OperandNode
                 //TODO support units
                 try
                 {
-                    return new NumericLiteral(Utility.parseNumber(number.getText()), null);
+                    return errorDisplayer.record(this, new NumericLiteral(Utility.parseNumber(number.getText()), null));
                 }
                 catch (UserException e)
                 {
-                    return new UnfinishedExpression(textField.getText().trim());
+                    return errorDisplayer.record(this, new UnfinishedExpression(textField.getText().trim()));
                 }
             }
             BooleanLiteralContext bool = parseOrNull(ExpressionParser::booleanLiteral);
             if (bool != null)
             {
-                return new BooleanLiteral(bool.getText().equals("true"));
+                return errorDisplayer.record(this, new BooleanLiteral(bool.getText().equals("true")));
             }
         }
         // Unfinished:
-        return new UnfinishedExpression(textField.getText().trim());
+        return errorDisplayer.record(this, new UnfinishedExpression(textField.getText().trim()));
     }
 
     private <T> @Nullable T parseOrNull(ExFunction<ExpressionParser, T> parse)
@@ -753,5 +752,12 @@ public class GeneralEntry extends LeafNode implements OperandNode
                 Utility.logStackTrace("Unsupported completion: " + c.getClass());
             return textField.getText();
         }
+    }
+
+
+    @Override
+    public void showError(String error)
+    {
+        ExpressionEditorUtil.setError(container, error);
     }
 }

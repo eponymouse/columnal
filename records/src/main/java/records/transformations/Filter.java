@@ -250,7 +250,7 @@ public class Filter extends Transformation
             {
                 Utility.log(e);
             }
-            this.expressionEditor = new ExpressionEditor(expression, srcControl.getTableOrNull(), DataType.BOOLEAN, mgr.getTypeManager(), e -> {
+            this.expressionEditor = new ExpressionEditor(expression, srcControl.getTableOrNull(), DataType.BOOLEAN, mgr, e -> {
                 try
                 {
                     updateExample(e);
