@@ -33,6 +33,7 @@ import records.grammar.ExpressionParser.NumericLiteralContext;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
+import records.gui.expressioneditor.ExpressionEditorUtil.ErrorUpdater;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -62,6 +63,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
 {
     private static final String ARROW_SAME_ROW = "\u2192";
     private static final String ARROW_WHOLE = "\u2195";
+
 
     public static enum Status
     {
@@ -146,6 +148,8 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
      */
     private final AutoComplete autoComplete;
 
+    private final ErrorUpdater errorUpdater;
+
     public GeneralEntry(String content, Status initialStatus, ConsecutiveBase parent)
     {
         super(parent);
@@ -166,6 +170,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
         prefix = new Label();
         container = new VBox(typeLabel, new HBox(prefix, textField));
         container.getStyleClass().add("entry");
+        this.errorUpdater = ExpressionEditorUtil.installErrorShower(container, textField);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
         this.nodes = FXCollections.observableArrayList(container);
         this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), OperatorEntry::isOperatorAlphabet);
@@ -759,5 +764,6 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
     public void showError(String error)
     {
         ExpressionEditorUtil.setError(container, error);
+        errorUpdater.setMessage(error);
     }
 }

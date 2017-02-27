@@ -1,15 +1,31 @@
 package records.gui.expressioneditor;
 
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleStringProperty;
+import javafx.beans.property.StringProperty;
+import javafx.beans.value.ChangeListener;
+import javafx.geometry.Bounds;
+import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.PopupControl;
+import javafx.scene.control.Skin;
+import javafx.scene.control.SkinBase;
+import javafx.scene.control.Skinnable;
 import javafx.scene.control.TextField;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.VBox;
+import javafx.stage.PopupWindow.AnchorLocation;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.jetbrains.annotations.NotNull;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.io.Serializable;
@@ -47,9 +63,157 @@ public class ExpressionEditorUtil
         setStyles(typeLabel, parentStyles);
         VBox vBox = new VBox(typeLabel, textField);
         vBox.getStyleClass().add(cssClass);
+        ErrorUpdater errorShower = installErrorShower(vBox, textField);
         return new Pair<>(vBox, (@Nullable String s) -> {
             setError(vBox, s);
+            errorShower.setMessage(s);
         });
+    }
+
+    // Needs to listen to in the message, the focus of the text field, and changes
+    // in the mouse position
+    public static class ErrorUpdater
+    {
+        private final TextField textField;
+        private final SimpleStringProperty message = new SimpleStringProperty("");
+        private final VBox vBox;
+        private @Nullable PopupControl popup = null;
+        private boolean focused = false;
+        private boolean hovering = false;
+
+        @SuppressWarnings("initialization")
+        public ErrorUpdater(VBox vBox, TextField textField)
+        {
+            this.vBox = vBox;
+            this.textField = textField;
+            Utility.addChangeListenerPlatformNN(textField.focusedProperty(), this::textFieldFocusChanged);
+            Utility.addChangeListenerPlatformNN(vBox.hoverProperty(), this::mouseHoverStatusChanged);
+        }
+
+        private static class ErrorMessagePopup extends PopupControl
+        {
+            @SuppressWarnings("initialization")
+            public ErrorMessagePopup(StringProperty msg)
+            {
+                Label label = new Label();
+                label.getStyleClass().add("expression-error-popup");
+                label.textProperty().bind(msg);
+                setSkin(new Skin<ErrorMessagePopup>()
+                {
+                    @Override
+                    @OnThread(Tag.FX)
+                    public ErrorMessagePopup getSkinnable()
+                    {
+                        return ErrorMessagePopup.this;
+                    }
+
+                    @Override
+                    @OnThread(Tag.FX)
+                    public Node getNode()
+                    {
+                        return label;
+                    }
+
+                    @Override
+                    @OnThread(Tag.FX)
+                    public void dispose()
+                    {
+                    }
+                });
+            }
+        }
+
+        private void show()
+        {
+            // Shouldn't be non-null already, but just in case:
+            if (popup != null)
+            {
+                hide();
+            }
+            if (vBox.getScene() != null)
+            {
+                Bounds screenBounds = vBox.localToScreen(vBox.getBoundsInLocal());
+                popup = new ErrorMessagePopup(message);
+                popup.setAnchorLocation(AnchorLocation.CONTENT_BOTTOM_LEFT);
+                popup.show(vBox, screenBounds.getMinX(), screenBounds.getMinY());
+            }
+        }
+
+        @RequiresNonNull("popup")
+        // Can't have an ensuresnull check
+        private void hide()
+        {
+            popup.hide();
+            popup = null;
+        }
+
+        public void mouseHoverStatusChanged(boolean newHovering)
+        {
+            if (newHovering)
+            {
+                if (popup == null && !message.get().isEmpty())
+                {
+                    show();
+                }
+            }
+            else
+            {
+                // If mouse leaves, then we hide only if not focused:
+                if (!focused && popup != null)
+                {
+                    hide();
+                }
+            }
+            this.hovering = newHovering;
+        }
+
+        public void textFieldFocusChanged(boolean newFocused)
+        {
+            if (newFocused)
+            {
+                System.out.println("Focused, message is " + message.get() + " popup " + popup);
+                if (!message.get().isEmpty())
+                {
+                    show();
+                }
+            }
+            else
+            {
+                // If focus leaves, then even if you are still hovering, we hide:
+                if (popup != null)
+                {
+                    hide();
+                }
+            }
+            this.focused = newFocused;
+        }
+
+        public void setMessage(@Nullable String newMsg)
+        {
+            if (newMsg == null)
+            {
+                message.setValue("");
+                // Hide the popup:
+                if (popup != null)
+                {
+                    hide();
+                }
+            }
+            else
+            {
+                message.set(newMsg);
+                // If we are focused or hovering already, now need to show message
+                if (focused || hovering)
+                {
+                    show();
+                }
+            }
+        }
+    }
+
+    public static ErrorUpdater installErrorShower(VBox vBox, TextField textField)
+    {
+        return new ErrorUpdater(vBox, textField);
     }
 
     public static void setError(VBox vBox, @Nullable String s)

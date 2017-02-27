@@ -119,3 +119,14 @@ $parent-colors: (function, $function-color), (match, $match-color), (if, $if-col
   .operator-name:op-empty, .labelled-name:hover, .labelled-name:focused {
     -fx-border-color: grey;
 }
+
+.expression-error-popup {
+    -fx-background-color: darkred;
+    -fx-background-radius: 7px;
+    -fx-border-color: white;
+    -fx-border-width: 2px;
+    -fx-border-radius: 5px;
+    -fx-text-fill: white;
+    -fx-label-padding: 3px;
+    -fx-effect: dropshadow(two-pass-box, #404040, 8px, 0.4, 2, 2);
+}
