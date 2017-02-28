@@ -212,7 +212,7 @@ public class PropDateFunctions
         {
             @Nullable Pair<FunctionInstance, DataType> instance = function.typeCheck(Collections.emptyList(), srcType, s ->
             {
-                throw new RuntimeException(new UserException(s));
+                throw new RuntimeException(new UserException("Checking " + function.getName() + " with " + srcType + ": " + s));
             }, mgr);
             assertNotNull(instance);
             return instance.getFirst().getValue(0, src);

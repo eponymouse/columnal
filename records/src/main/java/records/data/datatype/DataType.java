@@ -810,7 +810,27 @@ public class DataType
             throw new InternalException("Requesting date/time info for non-date/time type: " + this);
     }
 
+    public static enum TypeRelation
+    {
+        /**
+         * When you have two types which should be the same, but neither is more right
+         * than the other, e.g. if you have "a = b", then a and b should be same type,
+         * but neither is known to be right.
+         */
+        SYMMETRIC,
+        /**
+         * The first type, A, is the expected one, so if they don't match, B is wrong.
+         */
+        EXPECTED_A;
+    }
+
     public static @Nullable DataType checkSame(@Nullable DataType a, @Nullable DataType b, ExConsumer<String> onError) throws UserException, InternalException
+    {
+        return checkSame(a, b, TypeRelation.SYMMETRIC, onError);
+    }
+
+
+    public static @Nullable DataType checkSame(@Nullable DataType a, @Nullable DataType b, TypeRelation relation, ExConsumer<String> onError) throws UserException, InternalException
     {
         if (a == null || b == null)
             return null;
@@ -891,7 +911,16 @@ public class DataType
                 @Override
                 public @Nullable DataType differentKind(DataType a, DataType b) throws InternalException, UserException
                 {
-                    onError.accept("Type mismatch: " + a + " vs " + b);
+                    switch (relation)
+                    {
+                        case SYMMETRIC:
+                            onError.accept("Type mismatch: " + a + " vs " + b);
+                            break;
+                        case EXPECTED_A:
+                            onError.accept("Expected type " + a + " but was " + b);
+                            break;
+                    }
+
                     return null;
                 }
             });

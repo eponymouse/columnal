@@ -2,6 +2,7 @@ package records.transformations.function;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.TypeRelation;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.ExConsumer;
@@ -40,7 +41,7 @@ public class FunctionType
             @Override
             public @Nullable DataType checkType(DataType actualType, ExConsumer<String> onError) throws InternalException, UserException
             {
-                if (DataType.checkSame(paramType, actualType, onError) != null)
+                if (DataType.checkSame(paramType, actualType, TypeRelation.EXPECTED_A, onError) != null)
                     return returnType;
                 return null;
             }
