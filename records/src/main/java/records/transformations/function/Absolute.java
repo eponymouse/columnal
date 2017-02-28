@@ -8,6 +8,7 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.TransformationEditor;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
 import utility.ExConsumer;

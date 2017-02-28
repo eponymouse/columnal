@@ -35,7 +35,7 @@ public class ToDateTime extends ToTemporalFunction
     private static List<List<DateTimeFormatter>> FORMATS = new ArrayList<>();
 
     @Override
-    protected List<FunctionType> getOverloads(UnitManager mgr)
+    public List<FunctionType> getOverloads(UnitManager mgr)
     {
         ArrayList<FunctionType> r = new ArrayList<>(fromString());
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));

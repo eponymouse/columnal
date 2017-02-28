@@ -1,5 +1,6 @@
 package records.transformations.function;
 
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TypeRelation;
@@ -12,6 +13,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 /**
  * Function types are a lot like Java.  You can overload a function
@@ -51,6 +53,18 @@ public class FunctionType
             {
                 return paramType;
             }
+
+            @Override
+            public @Localized String getParamDisplay()
+            {
+                return paramType.getSafeHeaderDisplay();
+            }
+
+            @Override
+            public @Localized String getReturnDisplay()
+            {
+                return returnType.getSafeHeaderDisplay();
+            }
         };
     }
 
@@ -72,11 +86,37 @@ public class FunctionType
         return typeMatcher.getLikelyParamType();
     }
 
+    /**
+     * Gets the text to display when showing information about the argument type in the GUI.
+     */
+    public @Localized String getParamDisplay()
+    {
+        return typeMatcher.getParamDisplay();
+    }
+
+    /**
+     * Gets the text to display when showing information about the return type in the GUI.
+     */
+    public @Localized String getReturnDisplay()
+    {
+        return typeMatcher.getReturnDisplay();
+    }
+
     public static interface TypeMatcher
     {
         public @Nullable DataType checkType(DataType paramType, ExConsumer<String> onError) throws InternalException, UserException;
 
         public @Nullable DataType getLikelyParamType();
+
+        /**
+         * Gets the text to display when showing information about the parameter type in the GUI.
+         */
+        public @Localized String getParamDisplay();
+
+        /**
+         * Gets the text to display when showing information about the return type in the GUI.
+         */
+        public @Localized String getReturnDisplay();
     }
 
     public static class ExactType implements TypeMatcher
@@ -99,8 +139,24 @@ public class FunctionType
         {
             return exactType;
         }
+
+        @Override
+        public @Localized String getParamDisplay()
+        {
+            return exactType.getSafeHeaderDisplay();
+        }
+
+        @Override
+        public @Localized String getReturnDisplay()
+        {
+            return exactType.getSafeHeaderDisplay();
+        }
     }
 
+    /**
+     * Matches an array with the given inner type, and has a return type of the inner type
+     * (not the original array type).
+     */
     public static class ArrayType implements TypeMatcher
     {
         private final TypeMatcher matchInner;
@@ -136,8 +192,24 @@ public class FunctionType
             else
                 return null;
         }
+
+        @Override
+        public @Localized String getParamDisplay()
+        {
+            return "[" + matchInner.getParamDisplay() + "]";
+        }
+
+        @Override
+        public @Localized String getReturnDisplay()
+        {
+            return matchInner.getReturnDisplay();
+        }
     }
 
+    /**
+     * Matches a given tuple type, and returns the type corresponding to the specific element
+     * of the tuple.
+     */
     public static class TupleType implements TypeMatcher
     {
         private final List<TypeMatcher> matchInner;
@@ -182,6 +254,18 @@ public class FunctionType
             }
             return DataType.tuple(r);
         }
+
+        @Override
+        public @Localized String getParamDisplay()
+        {
+            return "(" + matchInner.stream().map(TypeMatcher::getParamDisplay).collect(Collectors.joining(", ")) + ")";
+        }
+
+        @Override
+        public @Localized String getReturnDisplay()
+        {
+            return matchInner.get(reducesTo).getReturnDisplay();
+        }
     }
 
     /**
@@ -204,6 +288,18 @@ public class FunctionType
         {
             return DataType.NUMBER;
         }
+
+        @Override
+        public @Localized String getParamDisplay()
+        {
+            return DataType.NUMBER.getSafeHeaderDisplay();
+        }
+
+        @Override
+        public @Localized String getReturnDisplay()
+        {
+            return DataType.NUMBER.getSafeHeaderDisplay();
+        }
     }
 
     public static class AnyType implements TypeMatcher
@@ -219,6 +315,18 @@ public class FunctionType
         public @Nullable DataType getLikelyParamType()
         {
             return null;
+        }
+
+        @Override
+        public @Localized String getParamDisplay()
+        {
+            return "any";
+        }
+
+        @Override
+        public @Localized String getReturnDisplay()
+        {
+            return "any";
         }
     }
 }

@@ -261,7 +261,7 @@ public class ExpressionEditor extends ConsecutiveBase
         return Collections.emptyList();
     }
 
-    public TypeManager getTypeManager() throws InternalException
+    public TypeManager getTypeManager()
     {
         return tableManager.getTypeManager();
     }

@@ -14,6 +14,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -24,6 +26,7 @@ import records.data.ColumnId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TypeId;
+import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
@@ -42,6 +45,7 @@ import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.UnfinishedExpression;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
+import records.transformations.function.FunctionType;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -251,7 +255,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
         return nodes;
     }
 
-    @RequiresNonNull({"bracketCompletion", "stringCompletion", "ifCompletion", "matchCompletion"})
+    @RequiresNonNull({"bracketCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "parent"})
     private List<Completion> getSuggestions(@UnknownInitialization(LeafNode.class) GeneralEntry this, String text) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
@@ -324,11 +328,12 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
         return r;
     }
 
-    private static void addAllFunctions(ArrayList<Completion> r)
+    @RequiresNonNull("parent")
+    private void addAllFunctions(@UnknownInitialization(LeafNode.class) GeneralEntry this, ArrayList<Completion> r)
     {
         for (FunctionDefinition function : FunctionList.FUNCTIONS)
         {
-            r.add(new FunctionCompletion(function));
+            r.add(new FunctionCompletion(function, parent.getEditor().getTypeManager().getUnitManager()));
         }
     }
 
@@ -440,10 +445,12 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
     public static class FunctionCompletion extends Completion
     {
         private final FunctionDefinition function;
+        private final UnitManager unitManager;
 
-        public FunctionCompletion(FunctionDefinition function)
+        public FunctionCompletion(FunctionDefinition function, UnitManager unitManager)
         {
             this.function = function;
+            this.unitManager = unitManager;
         }
 
         @Override
@@ -477,6 +484,33 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
         public boolean features(String curInput, char character)
         {
             return function.getName().contains("" + character);
+        }
+
+        @Override
+        public @Nullable Node getFurtherDetails()
+        {
+            Text functionName = new Text(function.getName() + "\n");
+            functionName.getStyleClass().add("function-info-name");
+            Text shortDescription = new Text(function.getShortDescription() + "\n");
+            functionName.getStyleClass().add("function-info-short-description");
+            List<Text> overloads = new ArrayList<>();
+            try
+            {
+                List<FunctionType> overloadTypes = function.getOverloads(unitManager);
+                for (FunctionType functionType : overloadTypes)
+                {
+                    Text overload = new Text(functionType.getParamDisplay() + " -> " + functionType.getReturnDisplay() + "\n");
+                    overloads.add(overload);
+                }
+            }
+            catch (InternalException | UserException e)
+            {
+                Utility.log(e);
+            }
+            TextFlow textFlow = new TextFlow(functionName, shortDescription);
+            textFlow.getChildren().addAll(overloads);
+            textFlow.getStyleClass().add("function-info");
+            return textFlow;
         }
     }
 

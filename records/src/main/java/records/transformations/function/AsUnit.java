@@ -10,6 +10,7 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.TransformationEditor;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
 import utility.ExConsumer;
@@ -62,7 +63,7 @@ public class AsUnit extends FunctionDefinition
     }
 
     @Override
-    protected List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
+    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
     {
         throw new InternalException("Overloads inapplicable to astype");
     }

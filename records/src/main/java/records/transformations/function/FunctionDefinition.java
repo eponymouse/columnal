@@ -1,11 +1,13 @@
 package records.transformations.function;
 
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.TransformationEditor;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
 import utility.ExConsumer;
@@ -24,10 +26,12 @@ import java.util.stream.Collectors;
 public abstract class FunctionDefinition
 {
     private final String name;
+    private final @Localized String shortDescription;
 
     public FunctionDefinition(String name)
     {
         this.name = name;
+        this.shortDescription = TransformationEditor.getString(name + ".short");
     }
 
     public @Nullable Pair<FunctionInstance, DataType> typeCheck(List<Unit> units, DataType param, ExConsumer<String> onError, UnitManager mgr) throws InternalException, UserException
@@ -79,7 +83,7 @@ public abstract class FunctionDefinition
         }).get(0));
     }
 
-    protected abstract List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException;
+    public abstract List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException;
 
     /**
      * For auto-completion; what are common argument types for this function?
@@ -95,5 +99,10 @@ public abstract class FunctionDefinition
                 r.add(t);
         }
         return r;
+    }
+
+    public @Localized String getShortDescription()
+    {
+        return shortDescription;
     }
 }

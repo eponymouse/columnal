@@ -130,3 +130,15 @@ $parent-colors: (function, $function-color), (match, $match-color), (if, $if-col
     -fx-label-padding: 3px;
     -fx-effect: dropshadow(two-pass-box, #404040, 8px, 0.4, 2, 2);
 }
+
+.function-info {
+    -fx-background-color: rgb(210, 210, 210);
+
+    & .function-info-name {
+        -fx-font-size: 200%;
+        -fx-fill: black;
+    }
+    & .function-info-short-description {
+        -fx-fill: rgb(40, 40, 40);
+    }
+}

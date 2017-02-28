@@ -30,7 +30,7 @@ abstract class SingleNumericInOutFunction extends FunctionDefinition
     }
 
     @Override
-    protected List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
+    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
     {
         return Collections.singletonList(new FunctionType(this::makeInstance, new NumberAnyUnit()));
     }

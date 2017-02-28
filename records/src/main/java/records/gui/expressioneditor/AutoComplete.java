@@ -14,6 +14,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.control.TextFormatter;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.BorderPane;
 import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -40,6 +41,7 @@ public class AutoComplete extends PopupControl
     private final TextField textField;
     private final ExFunction<String, List<Completion>> calculateCompletions;
     private final ListView<Completion> completions;
+    private BorderPane container;
 
     /**
      *
@@ -60,6 +62,7 @@ public class AutoComplete extends PopupControl
     {
         this.textField = textField;
         this.completions = new ListView<>();
+        container = new BorderPane(null, null, null, null, completions);
         this.calculateCompletions = calculateCompletions;
 
         completions.getStylesheets().add(Utility.getStylesheet("autocomplete.css"));
@@ -71,6 +74,18 @@ public class AutoComplete extends PopupControl
             if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY)
             {
                 textField.setText(onSelect.doubleClick(textField.getText(), completions.getSelectionModel().getSelectedItem()));
+            }
+        });
+
+        Utility.addChangeListenerPlatform(completions.getSelectionModel().selectedItemProperty(), selected -> {
+            if (selected != null)
+            {
+                @Nullable Node furtherDetails = selected.getFurtherDetails();
+                container.setCenter(furtherDetails);
+            }
+            else
+            {
+                container.setCenter(null);
             }
         });
 
@@ -264,6 +279,15 @@ public class AutoComplete extends PopupControl
          * the current input?
          */
         public abstract boolean features(String curInput, char character);
+
+        /**
+         * Gets the details to show to the right of the list.  If null, nothing
+         * is shown to the right.
+         */
+        public @Nullable Node getFurtherDetails()
+        {
+            return null;
+        }
     }
 
 
@@ -392,7 +416,7 @@ public class AutoComplete extends PopupControl
         @OnThread(Tag.FX)
         public Node getNode()
         {
-            return completions;
+            return container;
         }
 
         @Override

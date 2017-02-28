@@ -47,9 +47,11 @@ import java.util.ResourceBundle;
 @OnThread(Tag.FXPlatform)
 public abstract class TransformationEditor
 {
+    @OnThread(value = Tag.Any, requireSynchronized = true)
     private static @MonotonicNonNull List<ResourceBundle> resources;
 
-    private static @Nullable List<ResourceBundle> getResources()
+    @OnThread(Tag.Any)
+    private static synchronized @Nullable List<ResourceBundle> getResources()
     {
         if (resources == null)
         {
@@ -57,7 +59,8 @@ public abstract class TransformationEditor
             {
                 resources = Arrays.asList(
                     ResourceBundle.getBundle("transformations"),
-                    ResourceBundle.getBundle("expression")
+                    ResourceBundle.getBundle("expression"),
+                    ResourceBundle.getBundle("function")
                 );
             }
             catch (MissingResourceException e)
@@ -70,12 +73,13 @@ public abstract class TransformationEditor
     }
 
     @SuppressWarnings("i18n") // Because we return key if there's an issue
+    @OnThread(Tag.Any)
     public static @Localized String getString(@LocalizableKey String key)
     {
-        @Nullable List<ResourceBundle> resources = getResources();
-        if (resources != null)
+        @Nullable List<ResourceBundle> res = getResources();
+        if (res != null)
         {
-            for (ResourceBundle r : resources)
+            for (ResourceBundle r : res)
             {
                 try
                 {

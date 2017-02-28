@@ -2,6 +2,7 @@ package records.data.datatype;
 
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -522,6 +523,19 @@ public class DataType
         }
     }
 
+    @OnThread(Tag.Any)
+    public @Localized String getSafeHeaderDisplay()
+    {
+        try
+        {
+            return getHeaderDisplay();
+        }
+        catch (InternalException | UserException e)
+        {
+            Utility.log(e);
+            return "ERR";
+        }
+    }
 
     @OnThread(Tag.Any)
     public String getHeaderDisplay() throws UserException, InternalException

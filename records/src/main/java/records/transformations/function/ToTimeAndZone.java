@@ -36,7 +36,7 @@ public class ToTimeAndZone extends ToTemporalFunction
     }
 
     @Override
-    protected List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
+    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
     {
         ArrayList<FunctionType> r = new ArrayList<>(fromString());
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
