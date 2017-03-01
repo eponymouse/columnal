@@ -1,8 +1,7 @@
 package records.transformations.function;
 
 import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -12,7 +11,6 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
 import records.transformations.function.FunctionType.ArrayType;
 import records.transformations.function.FunctionType.NumberAnyUnit;
-import utility.ExConsumer;
 import utility.Pair;
 
 import java.util.Collections;
@@ -25,15 +23,15 @@ import java.util.Random;
  */
 public abstract class SingleNumericSummaryFunction extends FunctionDefinition
 {
-    public SingleNumericSummaryFunction(String name)
+    public SingleNumericSummaryFunction(String name, @LocalizableKey String shortDescripKey)
     {
-        super(name);
+        super(name, shortDescripKey);
     }
 
     @Override
     public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
     {
-        return Collections.singletonList(new FunctionType(this::makeInstance, new ArrayType(new NumberAnyUnit())));
+        return Collections.singletonList(new FunctionType(this::makeInstance, new ArrayType(new NumberAnyUnit()), null /* No need if only one overload */));
     }
 
     protected abstract FunctionInstance makeInstance();

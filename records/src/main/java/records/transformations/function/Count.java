@@ -27,13 +27,13 @@ public class Count extends FunctionDefinition
 {
     public Count()
     {
-        super("count");
+        super("count", "count.short");
     }
 
     @Override
     public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
     {
-        return Collections.singletonList(new FunctionType(Instance::new, DataType.NUMBER, DataType.array()));
+        return Collections.singletonList(new FunctionType(Instance::new, DataType.NUMBER, DataType.array(), null));
     }
 
     @Override

@@ -15,7 +15,7 @@ public class Mean extends SingleNumericSummaryFunction
 {
     public Mean()
     {
-        super("average");
+        super("average", "average.short");
     }
 
     @Override

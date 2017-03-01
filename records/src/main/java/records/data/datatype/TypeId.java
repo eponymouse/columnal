@@ -1,5 +1,6 @@
 package records.data.datatype;
 
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -47,7 +48,8 @@ public class TypeId
         return typeId;
     }
 
-    public String getRaw()
+    @SuppressWarnings("i18n")
+    public @Localized String getRaw()
     {
         return typeId;
     }

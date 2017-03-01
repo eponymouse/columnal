@@ -1,5 +1,7 @@
 package records.transformations.function;
 
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.unit.Unit;
@@ -24,15 +26,15 @@ import java.util.Random;
  */
 abstract class SingleNumericInOutFunction extends FunctionDefinition
 {
-    SingleNumericInOutFunction(String name)
+    SingleNumericInOutFunction(String name, @LocalizableKey String shortDescripKey)
     {
-        super(name);
+        super(name, shortDescripKey);
     }
 
     @Override
     public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
     {
-        return Collections.singletonList(new FunctionType(this::makeInstance, new NumberAnyUnit()));
+        return Collections.singletonList(new FunctionType(this::makeInstance, new NumberAnyUnit(), null));
     }
 
     protected abstract FunctionInstance makeInstance();

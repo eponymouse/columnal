@@ -1,5 +1,6 @@
 package records.transformations.function;
 
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -28,10 +29,10 @@ public abstract class FunctionDefinition
     private final String name;
     private final @Localized String shortDescription;
 
-    public FunctionDefinition(String name)
+    public FunctionDefinition(String name, @LocalizableKey String shortDescriptionKey)
     {
         this.name = name;
-        this.shortDescription = TransformationEditor.getString(name + ".short");
+        this.shortDescription = TransformationEditor.getString(shortDescriptionKey);
     }
 
     public @Nullable Pair<FunctionInstance, DataType> typeCheck(List<Unit> units, DataType param, ExConsumer<String> onError, UnitManager mgr) throws InternalException, UserException

@@ -27,7 +27,7 @@ public class Absolute extends SingleNumericInOutFunction
 {
     public Absolute()
     {
-        super("abs");
+        super("abs", "abs.short");
     }
 
     @Override

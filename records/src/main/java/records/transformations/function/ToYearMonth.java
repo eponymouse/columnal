@@ -1,8 +1,6 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -27,20 +25,20 @@ public class ToYearMonth extends ToTemporalFunction
 {
     public ToYearMonth()
     {
-        super("dateym");
+        super("dateym", "dateym.short");
     }
 
     @Override
     public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
     {
-        ArrayList<FunctionType> r = new ArrayList<>(fromString());
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY))));
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
+        ArrayList<FunctionType> r = new ArrayList<>(fromString("dateym.string"));
+        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), "dateym.ymd"));
+        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), "dateym.datetime"));
+        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "dateym.datetimez"));
         r.add(new FunctionType(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
             DataType.number(new NumberInfo(mgr.loadUse("year"), 0)),
             DataType.number(new NumberInfo(mgr.loadUse("month"), 0))
-        )));
+        ), "dateym.year_month"));
         return r;
     }
 

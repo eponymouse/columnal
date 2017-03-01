@@ -1,7 +1,6 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -20,7 +19,6 @@ import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 
 import static records.transformations.function.ToTemporalFunction.F.DAY;
@@ -36,7 +34,7 @@ public class ToDate extends ToTemporalFunction
 {
     public ToDate()
     {
-        super("date");
+        super("date", "date.short");
     }
 
     public static List<List<DateTimeFormatter>> FORMATS = Arrays.asList(
@@ -54,23 +52,23 @@ public class ToDate extends ToTemporalFunction
         l(m("-", DAY, MONTH_NUM, YEAR4), m("-", MONTH_NUM, DAY, YEAR4)), // dd-MM-yyyy or MM-dd-yyyy
         l(m(".", DAY, MONTH_NUM, YEAR4), m(".", MONTH_NUM, DAY, YEAR4)), // dd.MM.yyyy or MM.dd.yyyy
 
-        l(m("/", DAY, MONTH_NUM, YEAR2), m("/", MONTH_NUM, DAY, YEAR2)), // dd/MM/yyyy or MM/dd/yyyy
-        l(m("-", DAY, MONTH_NUM, YEAR2), m("-", MONTH_NUM, DAY, YEAR2)), // dd-MM-yyyy or MM-dd-yyyy
-        l(m(".", DAY, MONTH_NUM, YEAR2), m(".", MONTH_NUM, DAY, YEAR2)) // dd.MM.yyyy or MM.dd.yyyy
+        l(m("/", DAY, MONTH_NUM, YEAR2), m("/", MONTH_NUM, DAY, YEAR2)), // dd/MM/yy or MM/dd/yy
+        l(m("-", DAY, MONTH_NUM, YEAR2), m("-", MONTH_NUM, DAY, YEAR2)), // dd-MM-yy or MM-dd-yy
+        l(m(".", DAY, MONTH_NUM, YEAR2), m(".", MONTH_NUM, DAY, YEAR2)) // dd.MM.yy or MM.dd.yy
     );
 
     @Override
     public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
     {
-        ArrayList<FunctionType> r = new ArrayList<>(fromString());
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
-        r.add(new FunctionType(FromYearMonth_Day::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), DataType.number(new NumberInfo(mgr.loadUse("day"), 0)))));
+        ArrayList<FunctionType> r = new ArrayList<>(fromString("date.string"));
+        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), "date.datetime"));
+        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "date.datetimez"));
+        r.add(new FunctionType(FromYearMonth_Day::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), DataType.number(new NumberInfo(mgr.loadUse("day"), 0))), "date.ym_d"));
         r.add(new FunctionType(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
             DataType.number(new NumberInfo(mgr.loadUse("year"), 0)),
             DataType.number(new NumberInfo(mgr.loadUse("month"), 0)),
             DataType.number(new NumberInfo(mgr.loadUse("day"), 0))
-        )));
+        ), "date.y_m_d"));
         return r;
     }
 

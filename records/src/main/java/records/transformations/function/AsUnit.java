@@ -31,7 +31,7 @@ public class AsUnit extends FunctionDefinition
 {
     public AsUnit()
     {
-        super("as");
+        super("as", "as.short");
     }
 
     @Override

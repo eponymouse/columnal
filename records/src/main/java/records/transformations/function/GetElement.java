@@ -24,14 +24,14 @@ public class GetElement extends FunctionDefinition
 {
     public GetElement()
     {
-        super("element");
+        super("element", "element.short");
     }
 
     // Takes parameters: column/array, index
     @Override
     public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
     {
-        return Collections.singletonList(new FunctionType(Instance::new, new TupleType(0, new ArrayType(new AnyType()), new ExactType(DataType.NUMBER))));
+        return Collections.singletonList(new FunctionType(Instance::new, new TupleType(0, new ArrayType(new AnyType()), new ExactType(DataType.NUMBER)), null));
     }
 
     private static class Instance extends FunctionInstance
