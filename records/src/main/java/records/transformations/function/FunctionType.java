@@ -31,19 +31,19 @@ public class FunctionType
 {
     private final TypeMatcher typeMatcher;
     private final Supplier<FunctionInstance> makeInstance;
-    private final @Nullable @Localized String overloadDescription;
+    private final @Nullable @LocalizableKey String overloadDescriptionKey;
 
     public FunctionType(Supplier<FunctionInstance> makeInstance, TypeMatcher typeMatcher, @Nullable @LocalizableKey String descriptionKey)
     {
         this.makeInstance = makeInstance;
         this.typeMatcher = typeMatcher;
-        this.overloadDescription = descriptionKey == null ? null : TransformationEditor.getString(descriptionKey);
+        this.overloadDescriptionKey = descriptionKey;
     }
 
     public FunctionType(Supplier<FunctionInstance> makeInstance, DataType returnType, DataType paramType, @Nullable @LocalizableKey String descriptionKey)
     {
         this.makeInstance = makeInstance;
-        this.overloadDescription = descriptionKey == null ? null : TransformationEditor.getString(descriptionKey);
+        this.overloadDescriptionKey = descriptionKey;
         this.typeMatcher = new TypeMatcher()
         {
             @Override
@@ -110,14 +110,14 @@ public class FunctionType
     }
 
     /**
-     * Gets the text which describes this particular overload of the function.
+     * Gets the localization key for the text which describes this particular overload of the function.
      * If no text is available for this overload (common when there is only one overload
      * of a function) then null is returned, and nothing should be displayed.
      */
     @Pure
-    public @Nullable @Localized String getOverloadDescription()
+    public @Nullable @LocalizableKey String getOverloadDescriptionKey()
     {
-        return overloadDescription;
+        return overloadDescriptionKey;
     }
 
     public static interface TypeMatcher

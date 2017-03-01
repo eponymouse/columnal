@@ -37,6 +37,7 @@ import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorUpdater;
+import records.transformations.TransformationEditor;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
@@ -489,11 +490,14 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
         @Override
         public @Nullable Node getFurtherDetails()
         {
+            TextFlow textFlow = new TextFlow();
             Text functionName = new Text(function.getName() + "\n");
             functionName.getStyleClass().add("function-info-name");
-            Text shortDescription = new Text(function.getShortDescription() + "\n");
-            functionName.getStyleClass().add("function-info-short-description");
-            List<Text> overloads = new ArrayList<>();
+            textFlow.getChildren().add(functionName);
+            textFlow.getChildren().addAll(
+                TransformationEditor.makeTextLine(function.getShortDescriptionKey(), "function-info-short-description")
+            );
+            List<Node> overloads = new ArrayList<>();
             try
             {
                 List<FunctionType> overloadTypes = function.getOverloads(unitManager);
@@ -502,11 +506,9 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
                     Text overloadType = new Text(functionType.getParamDisplay() + " -> " + functionType.getReturnDisplay() + "\n");
                     overloadType.getStyleClass().add("function-info-overload-type");
                     overloads.add(overloadType);
-                    if (functionType.getOverloadDescription() != null)
+                    if (functionType.getOverloadDescriptionKey() != null)
                     {
-                        Text overloadDescription = new Text(functionType.getOverloadDescription() + "\n");
-                        overloadDescription.getStyleClass().add("function-info-overload-description");
-                        overloads.add(overloadDescription);
+                        overloads.addAll(TransformationEditor.makeTextLine(functionType.getOverloadDescriptionKey(), "function-info-overload-description"));
                     }
                 }
             }
@@ -514,7 +516,6 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
             {
                 Utility.log(e);
             }
-            TextFlow textFlow = new TextFlow(functionName, shortDescription);
             textFlow.getChildren().addAll(overloads);
             textFlow.getStyleClass().add("function-info");
             return textFlow;
