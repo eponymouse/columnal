@@ -499,8 +499,15 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
                 List<FunctionType> overloadTypes = function.getOverloads(unitManager);
                 for (FunctionType functionType : overloadTypes)
                 {
-                    Text overload = new Text(functionType.getParamDisplay() + " -> " + functionType.getReturnDisplay() + "\n");
-                    overloads.add(overload);
+                    Text overloadType = new Text(functionType.getParamDisplay() + " -> " + functionType.getReturnDisplay() + "\n");
+                    overloadType.getStyleClass().add("function-info-overload-type");
+                    overloads.add(overloadType);
+                    if (functionType.getOverloadDescription() != null)
+                    {
+                        Text overloadDescription = new Text(functionType.getOverloadDescription() + "\n");
+                        overloadDescription.getStyleClass().add("function-info-overload-description");
+                        overloads.add(overloadDescription);
+                    }
                 }
             }
             catch (InternalException | UserException e)

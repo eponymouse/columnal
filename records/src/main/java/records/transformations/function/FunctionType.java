@@ -3,6 +3,7 @@ package records.transformations.function;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TypeRelation;
 import records.error.InternalException;
@@ -106,6 +107,17 @@ public class FunctionType
     public @Localized String getReturnDisplay()
     {
         return typeMatcher.getReturnDisplay();
+    }
+
+    /**
+     * Gets the text which describes this particular overload of the function.
+     * If no text is available for this overload (common when there is only one overload
+     * of a function) then null is returned, and nothing should be displayed.
+     */
+    @Pure
+    public @Nullable @Localized String getOverloadDescription()
+    {
+        return overloadDescription;
     }
 
     public static interface TypeMatcher
