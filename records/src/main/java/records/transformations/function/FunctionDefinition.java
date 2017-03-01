@@ -44,9 +44,10 @@ public abstract class FunctionDefinition
 
         List<FunctionType> types = getOverloads(mgr);
         List<Pair<DataType, FunctionType>> possibilities = new ArrayList<>();
+        List<String> errors = new ArrayList<>();
         for (FunctionType functionType : types)
         {
-            DataType t = functionType.checkType(param, onError);
+            DataType t = functionType.checkType(param, errors::add);
             if (t != null)
             {
                 possibilities.add(new Pair<>(t, functionType));
@@ -55,7 +56,7 @@ public abstract class FunctionDefinition
 
         if (possibilities.size() == 0)
         {
-            onError.accept("Function " + getName() + " cannot accept parameter of type " + param);
+            onError.accept("Function " + getName() + " cannot accept parameter of type " + param + "\nOverloads:\n" + errors.stream().collect(Collectors.joining("\n")));
             return null;
         }
         if (possibilities.size() > 1)
