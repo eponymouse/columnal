@@ -55,6 +55,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 /**
  * Created by neil on 21/10/2016.
@@ -210,7 +211,7 @@ public class SummaryStatistics extends Transformation
                 ErrorRecorderStorer errors = new ErrorRecorderStorer();
                 @Nullable DataType type = expression.check(src, mgr.getTypeState(), errors);
                 if (type == null)
-                    throw new UserException(errors.getAllErrors().findFirst().orElse("Unknown type error"));
+                    throw new UserException((@NonNull String)errors.getAllErrors().findFirst().orElse("Unknown type error"));
                 @NonNull DataType typeFinal = type;
                 columns.add(rs -> typeFinal.makeCalculatedColumn(rs, e.getKey(), i -> expression.getValue(i, new EvaluateState())));
             }

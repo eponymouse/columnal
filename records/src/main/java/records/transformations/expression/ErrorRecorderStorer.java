@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.ExConsumer;
@@ -22,7 +23,7 @@ public class ErrorRecorderStorer implements ErrorRecorder
         errorMessages.add(error);
     }
 
-    public Stream<String> getAllErrors()
+    public Stream<@NonNull String> getAllErrors()
     {
         return errorMessages.stream();
     }

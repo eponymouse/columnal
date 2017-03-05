@@ -230,7 +230,7 @@
                         <!-- Add all the checkers you want to enable here -->
                         <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
                         <!-- Disabled for speed: -->
-                        <annotationProcessor>org.checkerframework.checker.i18n.I18nChecker</annotationProcessor>
+                        <!-- <annotationProcessor>org.checkerframework.checker.i18n.I18nChecker</annotationProcessor> -->
                         <!-- Disabled for speed: -->
                         <!-- <annotationProcessor>org.checkerframework.checker.interning.InterningChecker</annotationProcessor> -->
                         <!-- Disabled for speed: -->

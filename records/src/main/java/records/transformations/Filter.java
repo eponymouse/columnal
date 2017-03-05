@@ -164,7 +164,7 @@ public class Filter extends Transformation
                 if (checked != null)
                     type = checked;
                 else
-                    throw new UserException(errors.getAllErrors().findFirst().orElse("Unknown type error"));
+                    throw new UserException((@NonNull String)errors.getAllErrors().findFirst().orElse("Unknown type error"));
 
             }
             if (type == null)
@@ -246,7 +246,7 @@ public class Filter extends Transformation
             // For testing:
             try
             {
-                expression = Expression.parse(null, "abs(true+false - 632+@column \"Date\" + (@match 63 @case 5 @then true))-62+\"hi\"", mgr.getTypeManager());
+                expression = Expression.parse(null, "abs(true + false - 632 + @column \"Date\" + (@match 63 @case 5 @then true)) - 62 + \"hi\"", mgr.getTypeManager());
                 if (src != null)
                     expression.check(src.getData(), mgr.getTypeState(), (e, s, q) -> {});
             }

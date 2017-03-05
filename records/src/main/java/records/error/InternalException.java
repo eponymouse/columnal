@@ -1,8 +1,5 @@
 package records.error;
 
-import threadchecker.OnThread;
-import threadchecker.Tag;
-
 /**
  * Created by neil on 22/10/2016.
  */
