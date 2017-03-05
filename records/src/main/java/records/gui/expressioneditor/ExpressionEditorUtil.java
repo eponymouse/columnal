@@ -21,6 +21,7 @@ import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.jetbrains.annotations.NotNull;
+import records.transformations.expression.ErrorRecorder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -49,7 +50,7 @@ public class ExpressionEditorUtil
      * @return A pair of the VBox to display, and an action which can be used to show/clear an error on it (clear by passing null)
      */
     @NotNull
-    protected static Pair<VBox, FXPlatformConsumer<@Nullable String>> withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild surrounding, Stream<String> parentStyles)
+    protected static Pair<VBox, ErrorDisplayer> withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild surrounding, Stream<String> parentStyles)
     {
         FXUtility.sizeToFit(textField, 10.0, 10.0);
         textField.getStyleClass().addAll(cssClass + "-name", "labelled-name");
@@ -64,9 +65,9 @@ public class ExpressionEditorUtil
         VBox vBox = new VBox(typeLabel, textField);
         vBox.getStyleClass().add(cssClass);
         ErrorUpdater errorShower = installErrorShower(vBox, textField);
-        return new Pair<>(vBox, (@Nullable String s) -> {
+        return new Pair<>(vBox, (String s, List<ErrorRecorder.QuickFix> q) -> {
             setError(vBox, s);
-            errorShower.setMessage(s);
+            errorShower.setMessageAndFixes(s, q);
         });
     }
 
@@ -188,8 +189,9 @@ public class ExpressionEditorUtil
             this.focused = newFocused;
         }
 
-        public void setMessage(@Nullable String newMsg)
+        public void setMessageAndFixes(@Nullable String newMsg, List<ErrorRecorder.QuickFix> quickFixes)
         {
+            // TODO show the fixes, too
             if (newMsg == null)
             {
                 message.setValue("");

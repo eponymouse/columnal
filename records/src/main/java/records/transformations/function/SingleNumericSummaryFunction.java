@@ -31,7 +31,7 @@ public abstract class SingleNumericSummaryFunction extends FunctionDefinition
     }
 
     @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
+    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
     {
         return Collections.singletonList(new FunctionType(this::makeInstance, new ArrayType(new NumberAnyUnit())));
     }

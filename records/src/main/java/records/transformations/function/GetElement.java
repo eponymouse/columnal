@@ -29,7 +29,7 @@ public class GetElement extends FunctionDefinition
 
     // Takes parameters: column/array, index
     @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
+    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
     {
         return Collections.singletonList(new FunctionType(Instance::new, new TupleType(0, new ArrayType(new AnyType()), new ExactType(DataType.NUMBER))));
     }

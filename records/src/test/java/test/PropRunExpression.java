@@ -7,6 +7,7 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.ErrorRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
@@ -33,10 +34,9 @@ public class PropRunExpression
     {
         try
         {
-            src.expression.check(src.recordSet, TestUtil.typeState(), (e, s) ->
-            {
-                throw new InternalException(s);
-            });
+            ErrorRecorderStorer errors = new ErrorRecorderStorer();
+            src.expression.check(src.recordSet, TestUtil.typeState(), errors);
+            errors.withFirst(s -> {throw new InternalException(s);});
             for (int row = 0; row < src.value.size(); row++)
             {
                 @Value Object actualValue = src.expression.getValue(row, new EvaluateState());

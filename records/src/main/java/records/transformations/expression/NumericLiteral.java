@@ -40,7 +40,7 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError)
+    public DataType check(RecordSet data, TypeState state, ErrorRecorder onError)
     {
         return type;
     }

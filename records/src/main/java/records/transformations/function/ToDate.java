@@ -60,16 +60,16 @@ public class ToDate extends ToTemporalFunction
     );
 
     @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
+    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
     {
         ArrayList<FunctionType> r = new ArrayList<>(fromString());
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
-        r.add(new FunctionType(FromYearMonth_Day::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), DataType.number(new NumberInfo(mgr.loadUse("day"), 0)))));
+        r.add(new FunctionType(FromYearMonth_Day::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), DataType.number(new NumberInfo(mgr.loadBuiltIn("day"), 0)))));
         r.add(new FunctionType(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
-            DataType.number(new NumberInfo(mgr.loadUse("year"), 0)),
-            DataType.number(new NumberInfo(mgr.loadUse("month"), 0)),
-            DataType.number(new NumberInfo(mgr.loadUse("day"), 0))
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("year"), 0)),
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("month"), 0)),
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("day"), 0))
         )));
         return r;
     }

@@ -25,21 +25,9 @@ import records.error.UserException;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
-import records.transformations.expression.AndExpression;
-import records.transformations.expression.ArrayExpression;
-import records.transformations.expression.ComparisonExpression;
+import records.transformations.expression.*;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
-import records.transformations.expression.DivideExpression;
-import records.transformations.expression.EqualExpression;
-import records.transformations.expression.EvaluateState;
-import records.transformations.expression.Expression;
-import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.Pattern;
-import records.transformations.expression.NonOperatorExpression;
-import records.transformations.expression.NotEqualExpression;
-import records.transformations.expression.OrExpression;
-import records.transformations.expression.RaiseExpression;
-import records.transformations.expression.TypeState;
 import test.gen.GenDataType;
 import test.gen.GenUnit;
 import threadchecker.OnThread;
@@ -79,7 +67,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+        public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
         {
             return type;
         }
@@ -170,12 +158,12 @@ public class PropTypecheckIndividual
         boolean same = DataType.checkSame(a, b, s -> {}) != null;
         Assume.assumeThat(same, Matchers.equalTo(false));
 
-        assertEquals(null, new EqualExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
-        assertEquals(DataType.BOOLEAN, new EqualExpression(new DummyExpression(a), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
-        assertEquals(DataType.BOOLEAN, new EqualExpression(new DummyExpression(b), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
-        assertEquals(null, new NotEqualExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
-        assertEquals(DataType.BOOLEAN, new NotEqualExpression(new DummyExpression(a), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
-        assertEquals(DataType.BOOLEAN, new NotEqualExpression(new DummyExpression(b), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
+        assertEquals(null, new EqualExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
+        assertEquals(DataType.BOOLEAN, new EqualExpression(new DummyExpression(a), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
+        assertEquals(DataType.BOOLEAN, new EqualExpression(new DummyExpression(b), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
+        assertEquals(null, new NotEqualExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
+        assertEquals(DataType.BOOLEAN, new NotEqualExpression(new DummyExpression(a), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
+        assertEquals(DataType.BOOLEAN, new NotEqualExpression(new DummyExpression(b), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
     }
 
     @Property
@@ -186,13 +174,13 @@ public class PropTypecheckIndividual
             // Will actually type-check
             Unit aOverB = a.getNumberInfo().getUnit().divide(b.getNumberInfo().getUnit());
             Unit bOverA = b.getNumberInfo().getUnit().divide(a.getNumberInfo().getUnit());
-            assertEquals(DataType.number(new NumberInfo(aOverB, 0)), new DivideExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
-            assertEquals(DataType.number(new NumberInfo(bOverA, 0)), new DivideExpression(new DummyExpression(b), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
+            assertEquals(DataType.number(new NumberInfo(aOverB, 0)), new DivideExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
+            assertEquals(DataType.number(new NumberInfo(bOverA, 0)), new DivideExpression(new DummyExpression(b), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
         }
         else
         {
-            assertEquals(null, new DivideExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
-            assertEquals(null, new DivideExpression(new DummyExpression(b), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
+            assertEquals(null, new DivideExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
+            assertEquals(null, new DivideExpression(new DummyExpression(b), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
         }
     }
 
@@ -209,14 +197,14 @@ public class PropTypecheckIndividual
             // Add once more as length increases:
             types.add(a);
             // All a should type check:
-            assertEquals(DataType.array(a), new ArrayExpression(Utility.mapListExI(types, DummyExpression::new)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
+            assertEquals(DataType.array(a), new ArrayExpression(Utility.mapListExI(types, DummyExpression::new)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
 
             for (int i = 0; i <= length; i++)
             {
                 // Once we add b in, should fail to type check:
                 List<DataType> badTypes = new ArrayList<>(types);
                 badTypes.add(i, b);
-                assertEquals(null, new ArrayExpression(Utility.mapListExI(badTypes, DummyExpression::new)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
+                assertEquals(null, new ArrayExpression(Utility.mapListExI(badTypes, DummyExpression::new)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
             }
         }
     }
@@ -226,8 +214,8 @@ public class PropTypecheckIndividual
     public void testRaiseNonNumeric(@From(GenDataType.class) DataType a) throws UserException, InternalException
     {
         Assume.assumeFalse(a.isNumber());
-        assertEquals(null, new RaiseExpression(new DummyExpression(a), new DummyExpression(DataType.NUMBER)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
-        assertEquals(null, new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s) -> {}));
+        assertEquals(null, new RaiseExpression(new DummyExpression(a), new DummyExpression(DataType.NUMBER)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
+        assertEquals(null, new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
     }
 
     @Property
@@ -345,7 +333,7 @@ public class PropTypecheckIndividual
 
     private static @Nullable DataType check(Expression e) throws UserException, InternalException
     {
-        return e.check(new DummyRecordSet(), TestUtil.typeState(), (ex, s) -> {});
+        return e.check(new DummyRecordSet(), TestUtil.typeState(), (ex, s, q) -> {});
     }
 
     private static class DummyRecordSet extends KnownLengthRecordSet
@@ -366,13 +354,13 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+        public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
         {
             throw new InternalException("Should not be called");
         }
 
         @Override
-        public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+        public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
         {
             return DataType.checkSame(srcType, expected, s -> {}) != null ? new Pair<>(srcType, state) : null;
         }

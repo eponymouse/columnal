@@ -120,7 +120,7 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Nullable
-    protected DataType checkAllOperandsSameType(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    protected DataType checkAllOperandsSameType(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         List<DataType> types = new ArrayList<>();
         for (Expression expression : expressions)
@@ -130,7 +130,7 @@ public abstract class NaryOpExpression extends Expression
                 return null;
             types.add(expType);
         }
-        return DataType.checkAllSame(types, s -> onError.accept(this, s));
+        return DataType.checkAllSame(types, onError.recordError(this));
     }
 
     @Override

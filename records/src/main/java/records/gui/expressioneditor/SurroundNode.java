@@ -22,6 +22,7 @@ import javafx.scene.shape.VLineTo;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.transformations.expression.ErrorRecorder;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -31,6 +32,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.Comparator;
+import java.util.List;
 import java.util.stream.Stream;
 
 /**
@@ -50,7 +52,7 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode, Err
     // Only used if contents is null.  We don't make this nullable if contents is present,
     // mainly because it makes all the nullness checks a pain.
     private final ObservableList<Node> noInnerNodes;
-    private final FXPlatformConsumer<@Nullable String> showError;
+    private final ErrorDisplayer showError;
 
     @SuppressWarnings("initialization")
     public SurroundNode(ConsecutiveBase parent, String cssClass, @Localized String headLabel, String startingHead, boolean hasInner, @Nullable Expression startingContent)
@@ -74,7 +76,7 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode, Err
         };
         head.setText(startingHead);
         this.cssClass = cssClass;
-        Pair<VBox, FXPlatformConsumer<@Nullable String>> vBoxAndErrorShow = ExpressionEditorUtil.withLabelAbove(head, this.cssClass, headLabel, this, getParentStyles());
+        Pair<VBox, ErrorDisplayer> vBoxAndErrorShow = ExpressionEditorUtil.withLabelAbove(head, this.cssClass, headLabel, this, getParentStyles());
         VBox vBox = vBoxAndErrorShow.getFirst();
         this.showError = vBoxAndErrorShow.getSecond();
         noInnerNodes = FXCollections.observableArrayList();
@@ -366,8 +368,8 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode, Err
     }
 
     @Override
-    public void showError(String error)
+    public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
     {
-        showError.consume(error);
+        showError.showError(error, quickFixes);
     }
 }

@@ -36,7 +36,7 @@ public class ToDateTimeZone extends ToTemporalFunction
     private static List<List<DateTimeFormatter>> FORMATS = new ArrayList<>();
 
     @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
+    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
     {
         ArrayList<FunctionType> r = new ArrayList<>(fromString());
         r.add(new FunctionType(DT_Z::new, DataType.date(getResultType()),

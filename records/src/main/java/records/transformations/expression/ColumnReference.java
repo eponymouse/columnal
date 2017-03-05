@@ -83,7 +83,7 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         column = data.getColumn(columnName);
         switch (referenceType)

@@ -3,17 +3,16 @@ package records.gui.expressioneditor;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.ErrorRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.IfThenElseExpression;
 import threadchecker.OnThread;
@@ -226,8 +225,8 @@ public class IfThenElseNode implements OperandNode, ExpressionParent, ErrorDispl
     }
 
     @Override
-    public void showError(String error)
+    public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
     {
-        condition.showError(error);
+        condition.showError(error, quickFixes);
     }
 }

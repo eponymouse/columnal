@@ -33,11 +33,11 @@ import java.util.stream.Stream;
 public class MatchAnyExpression extends NonOperatorExpression
 {
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern
-        onError.accept(this, "Any cannot be declared outside pattern match");
+        onError.recordError(this, "Any cannot be declared outside pattern match");
         return null;
     }
 

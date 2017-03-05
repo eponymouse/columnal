@@ -27,6 +27,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -56,7 +57,7 @@ public class TypeState
         this.unitManager = unitManager;
     }
 
-    public @Nullable TypeState add(String varName, DataType type, ExConsumer<String> error) throws InternalException, UserException
+    public @Nullable TypeState add(String varName, DataType type, Consumer<String> error)
     {
         HashMap<String, Set<DataType>> copy = new HashMap<>(variables);
         if (copy.containsKey(varName))
@@ -80,7 +81,7 @@ public class TypeState
      *  does not!)
      */
 
-    public static TypeState intersect(List<TypeState> typeStates) throws InternalException, UserException
+    public static TypeState intersect(List<TypeState> typeStates)
     {
         Map<String, Set<DataType>> mergedVars = new HashMap<>(typeStates.get(0).variables);
         for (int i = 1; i < typeStates.size(); i++)
@@ -142,7 +143,7 @@ public class TypeState
         }
     }
 
-    public @Nullable TypeAndTagInfo findTaggedType(Pair<String, String> tagName, ExConsumer<String> onError) throws InternalException, UserException
+    public @Nullable TypeAndTagInfo findTaggedType(Pair<String, String> tagName, Consumer<String> onError) throws InternalException
     {
         String typeName = tagName.getFirst();
         @Nullable DataType type;
@@ -179,7 +180,7 @@ public class TypeState
      * @return Null if there is a user-triggered problem (in which case onError will have been called)
      */
     @Pure
-    public static @Nullable TypeState union(TypeState original, ExConsumer<String> onError, TypeState... typeStates) throws InternalException, UserException
+    public static @Nullable TypeState union(TypeState original, Consumer<String> onError, TypeState... typeStates) throws InternalException
     {
         if (typeStates.length == 0)
             throw new InternalException("Attempted to merge type states of zero size");

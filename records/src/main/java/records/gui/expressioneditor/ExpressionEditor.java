@@ -8,7 +8,6 @@ import javafx.scene.layout.FlowPane;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
 import records.data.Column;
 import records.data.Table;
 import records.data.TableManager;
@@ -20,7 +19,6 @@ import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformBiConsumer;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.Pair;
@@ -235,12 +233,12 @@ public class ExpressionEditor extends ConsecutiveBase
             {
                 if (srcTable != null && tableManager != null)
                 {
-                    expression.check(srcTable.getData(), tableManager.getTypeState(), (e, s) ->
+                    expression.check(srcTable.getData(), tableManager.getTypeState(), (e, s, q) ->
                     {
-                        if (!errorDisplayers.showError(e, s))
+                        if (!errorDisplayers.showError(e, s, q))
                         {
                             // Show it on us, then:
-                            showError(s);
+                            showError(s, q);
                         }
                     });
                 }
@@ -250,7 +248,7 @@ public class ExpressionEditor extends ConsecutiveBase
                 Utility.log(e);
                 String msg = e.getLocalizedMessage();
                 if (msg != null)
-                    showError(msg);
+                    showError(msg, Collections.emptyList());
             }
         }
     }

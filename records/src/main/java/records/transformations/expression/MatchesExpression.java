@@ -48,7 +48,7 @@ public class MatchesExpression extends BinaryOpExpression
 
     // Must use checkAsPattern on RHS, not check:
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         lhsType = lhs.check(data, state, onError);
         if (lhsType == null)
@@ -62,7 +62,7 @@ public class MatchesExpression extends BinaryOpExpression
     }
 
     @Override
-    protected @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    protected @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         // If we get this far, the RHS pattern must have matched the LHS expression
         // So we just return our type, which is boolean:

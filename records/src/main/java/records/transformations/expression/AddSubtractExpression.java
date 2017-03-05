@@ -73,7 +73,7 @@ public class AddSubtractExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         type = checkAllOperandsSameType(data, state, onError);
         return type;

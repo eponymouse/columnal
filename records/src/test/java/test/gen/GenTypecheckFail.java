@@ -77,7 +77,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         ExpressionValue valid = gen.generate(r, generationStatus);
         try
         {
-            if (null == valid.expression.check(valid.recordSet, TestUtil.typeState(), (e, s) ->
+            if (null == valid.expression.check(valid.recordSet, TestUtil.typeState(), (e, s, q) ->
             {
                 // Throw an exception because the *original* should type-check, before
                 // we come to it and try to turn it into a failure:

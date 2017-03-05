@@ -36,8 +36,9 @@ public class InvalidOperatorExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
+        // TODO give error and quick fix (bracketing)
         return null; // Invalid expressions can't type check
     }
 

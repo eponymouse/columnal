@@ -12,6 +12,7 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -41,7 +42,7 @@ public class FunctionType
         this.typeMatcher = new TypeMatcher()
         {
             @Override
-            public @Nullable DataType checkType(DataType actualType, ExConsumer<String> onError) throws InternalException, UserException
+            public @Nullable DataType checkType(DataType actualType, Consumer<String> onError) throws InternalException, UserException
             {
                 if (DataType.checkSame(paramType, actualType, TypeRelation.EXPECTED_A, onError) != null)
                     return returnType;
@@ -73,7 +74,7 @@ public class FunctionType
         return makeInstance.get();
     }
 
-    public @Nullable DataType checkType(DataType paramType, ExConsumer<String> onError) throws InternalException, UserException
+    public @Nullable DataType checkType(DataType paramType, Consumer<String> onError) throws InternalException, UserException
     {
         return typeMatcher.checkType(paramType, onError);
     }
@@ -104,7 +105,7 @@ public class FunctionType
 
     public static interface TypeMatcher
     {
-        public @Nullable DataType checkType(DataType paramType, ExConsumer<String> onError) throws InternalException, UserException;
+        public @Nullable DataType checkType(DataType paramType, Consumer<String> onError) throws InternalException, UserException;
 
         public @Nullable DataType getLikelyParamType();
 
@@ -129,7 +130,7 @@ public class FunctionType
         }
 
         @Override
-        public @Nullable DataType checkType(DataType paramType, ExConsumer<String> onError) throws InternalException, UserException
+        public @Nullable DataType checkType(DataType paramType, Consumer<String> onError) throws InternalException, UserException
         {
             return DataType.checkSame(exactType, paramType, onError);
         }
@@ -167,7 +168,7 @@ public class FunctionType
         }
 
         @Override
-        public @Nullable DataType checkType(DataType paramType, ExConsumer<String> onError) throws InternalException, UserException
+        public @Nullable DataType checkType(DataType paramType, Consumer<String> onError) throws InternalException, UserException
         {
             if (paramType.isArray())
             {
@@ -222,7 +223,7 @@ public class FunctionType
         }
 
         @Override
-        public @Nullable DataType checkType(DataType paramType, ExConsumer<String> onError) throws InternalException, UserException
+        public @Nullable DataType checkType(DataType paramType, Consumer<String> onError) throws InternalException, UserException
         {
             if (paramType.isTuple() && paramType.getMemberType().size() == matchInner.size())
             {
@@ -274,7 +275,7 @@ public class FunctionType
     public static class NumberAnyUnit implements TypeMatcher
     {
         @Override
-        public @Nullable DataType checkType(DataType paramType, ExConsumer<String> onError) throws InternalException, UserException
+        public @Nullable DataType checkType(DataType paramType, Consumer<String> onError) throws InternalException, UserException
         {
             if (paramType.isNumber())
                 return paramType;
@@ -306,7 +307,7 @@ public class FunctionType
     {
 
         @Override
-        public @Nullable DataType checkType(DataType paramType, ExConsumer<String> onError) throws InternalException, UserException
+        public @Nullable DataType checkType(DataType paramType, Consumer<String> onError) throws InternalException, UserException
         {
             return paramType;
         }

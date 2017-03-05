@@ -37,12 +37,8 @@ import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorUpdater;
-import records.transformations.expression.BooleanLiteral;
-import records.transformations.expression.ColumnReference;
+import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.expression.Expression;
-import records.transformations.expression.NumericLiteral;
-import records.transformations.expression.UnfinishedExpression;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import records.transformations.function.FunctionType;
@@ -503,7 +499,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
                     overloads.add(overload);
                 }
             }
-            catch (InternalException | UserException e)
+            catch (InternalException e)
             {
                 Utility.log(e);
             }
@@ -795,9 +791,9 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
 
 
     @Override
-    public void showError(String error)
+    public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
     {
         ExpressionEditorUtil.setError(container, error);
-        errorUpdater.setMessage(error);
+        errorUpdater.setMessageAndFixes(error, quickFixes);
     }
 }

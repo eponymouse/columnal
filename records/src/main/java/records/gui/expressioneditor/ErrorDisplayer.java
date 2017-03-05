@@ -1,9 +1,15 @@
 package records.gui.expressioneditor;
 
+import records.transformations.expression.ErrorRecorder;
+
+import java.util.List;
+
 /**
- * Created by neil on 24/02/2017.
+ * An interface implemented by an expression editor component which can display
+ * an error and accompanying quick fixes.
  */
 public interface ErrorDisplayer
 {
-    public void showError(String error);
+    // TODO make the String @Localized
+    public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes);
 }

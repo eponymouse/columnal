@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -34,7 +35,7 @@ public abstract class FunctionDefinition
         this.shortDescription = TransformationEditor.getString(name + ".short");
     }
 
-    public @Nullable Pair<FunctionInstance, DataType> typeCheck(List<Unit> units, DataType param, ExConsumer<String> onError, UnitManager mgr) throws InternalException, UserException
+    public @Nullable Pair<FunctionInstance, DataType> typeCheck(List<Unit> units, DataType param, Consumer<String> onError, UnitManager mgr) throws InternalException, UserException
     {
         if (!units.isEmpty())
         {
@@ -84,7 +85,7 @@ public abstract class FunctionDefinition
         }).get(0));
     }
 
-    public abstract List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException;
+    public abstract List<FunctionType> getOverloads(UnitManager mgr) throws InternalException;
 
     /**
      * For auto-completion; what are common argument types for this function?

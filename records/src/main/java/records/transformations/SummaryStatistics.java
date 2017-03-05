@@ -34,6 +34,7 @@ import records.grammar.TransformationParser.SummaryContext;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.ErrorRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
@@ -206,9 +207,10 @@ public class SummaryStatistics extends Transformation
             for (Entry<ColumnId, SummaryType> e : summaries.entrySet())
             {
                 Expression expression = e.getValue().summaryExpression;
-                @Nullable DataType type = expression.check(src, mgr.getTypeState(), (ee, s) -> {throw new UserException(s);});
+                ErrorRecorderStorer errors = new ErrorRecorderStorer();
+                @Nullable DataType type = expression.check(src, mgr.getTypeState(), errors);
                 if (type == null)
-                    throw new InternalException("Type check error"); // Should already have thrown!
+                    throw new UserException(errors.getAllErrors().findFirst().orElse("Unknown type error"));
                 @NonNull DataType typeFinal = type;
                 columns.add(rs -> typeFinal.makeCalculatedColumn(rs, e.getKey(), i -> expression.getValue(i, new EvaluateState())));
             }

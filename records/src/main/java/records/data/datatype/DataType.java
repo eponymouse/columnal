@@ -838,13 +838,13 @@ public class DataType
         EXPECTED_A;
     }
 
-    public static @Nullable DataType checkSame(@Nullable DataType a, @Nullable DataType b, ExConsumer<String> onError) throws UserException, InternalException
+    public static @Nullable DataType checkSame(@Nullable DataType a, @Nullable DataType b, Consumer<String> onError) throws UserException, InternalException
     {
         return checkSame(a, b, TypeRelation.SYMMETRIC, onError);
     }
 
 
-    public static @Nullable DataType checkSame(@Nullable DataType a, @Nullable DataType b, TypeRelation relation, ExConsumer<String> onError) throws UserException, InternalException
+    public static @Nullable DataType checkSame(@Nullable DataType a, @Nullable DataType b, TypeRelation relation, Consumer<String> onError) throws UserException, InternalException
     {
         if (a == null || b == null)
             return null;
@@ -969,7 +969,7 @@ public class DataType
     }
 
 
-    public static <T extends DataType> @Nullable DataType checkAllSame(List<T> types, ExConsumer<String> onError) throws InternalException, UserException
+    public static <T extends DataType> @Nullable DataType checkAllSame(List<T> types, Consumer<String> onError) throws InternalException, UserException
     {
         if (types.isEmpty())
             throw new InternalException("Cannot type-check empty list of types");

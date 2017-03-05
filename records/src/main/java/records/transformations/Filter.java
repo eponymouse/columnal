@@ -47,6 +47,7 @@ import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.ErrorRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
@@ -158,9 +159,12 @@ public class Filter extends Transformation
             {
                 // Must set it before, in case it throws:
                 typeChecked = true;
-                @Nullable DataType checked = filterExpression.check(data, getTypeState(), (e, s) -> {throw new UserException(s);});
+                ErrorRecorderStorer errors = new ErrorRecorderStorer();
+                @Nullable DataType checked = filterExpression.check(data, getTypeState(), errors);
                 if (checked != null)
                     type = checked;
+                else
+                    throw new UserException(errors.getAllErrors().findFirst().orElse("Unknown type error"));
 
             }
             if (type == null)
@@ -244,7 +248,7 @@ public class Filter extends Transformation
             {
                 expression = Expression.parse(null, "abs(true+false - 632+@column \"Date\" + (@match 63 @case 5 @then true))-62+\"hi\"", mgr.getTypeManager());
                 if (src != null)
-                    expression.check(src.getData(), mgr.getTypeState(), (e, s) -> {});
+                    expression.check(src.getData(), mgr.getTypeState(), (e, s, q) -> {});
             }
             catch (InternalException | UserException e)
             {
@@ -269,7 +273,7 @@ public class Filter extends Transformation
             @Nullable Table src = srcControl.getTableOrNull();
             if (src == null)
                 return;
-            if (expression.check(src.getData(), mgr.getTypeState(), (e, s) -> {}) == null)
+            if (expression.check(src.getData(), mgr.getTypeState(), (e, s, q) -> {}) == null)
                 return;
 
             if (allColumns.isEmpty())

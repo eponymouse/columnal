@@ -43,11 +43,11 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    protected @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    protected @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern
-        onError.accept(this, "Plus-minus cannot be declared outside pattern match");
+        onError.recordError(this, "Plus-minus cannot be declared outside pattern match");
         return null;
     }
 
@@ -58,11 +58,11 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         if (!srcType.isNumber())
         {
-            onError.accept(this, "Cannot match non-number type " + srcType + " against plus-minus pattern");
+            onError.recordError(this, "Cannot match non-number type " + srcType + " against plus-minus pattern");
             return null;
         }
         // We don't do checkAsPattern on LHS or RHS.  LHS needs to be specific number value,
@@ -76,15 +76,15 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
 
         if (!lhsType.isNumber())
         {
-            onError.accept(this, "Left-hand side of +- operator must be number, but found: " + lhsType);
+            onError.recordError(this, "Left-hand side of +- operator must be number, but found: " + lhsType);
             return null;
         }
         if (!rhsType.isNumber())
         {
-            onError.accept(this, "Right-hand side of +- operator must be number, but found: " + rhsType);
+            onError.recordError(this, "Right-hand side of +- operator must be number, but found: " + rhsType);
             return null;
         }
-        DataType combined = DataType.checkAllSame(Arrays.asList(srcType, lhsType, rhsType), s -> onError.accept(this, s));
+        DataType combined = DataType.checkAllSame(Arrays.asList(srcType, lhsType, rhsType), onError.recordError(this));
         if (combined == null)
             return null;
         else

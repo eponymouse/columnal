@@ -53,7 +53,7 @@ public class RaiseExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    protected @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         final @NonNull DataType lhsTypeFinal = lhsType;
         if (lhsType.equals(DataType.NUMBER) && rhsType.equals(DataType.NUMBER))
@@ -62,13 +62,13 @@ public class RaiseExpression extends BinaryOpExpression
         // Otherwise it's units on LHS or RHS.  Can't be RHS:
         if (!rhsType.equals(DataType.NUMBER))
         {
-            onError.accept(rhs, "Can't raise to a power which is non-numeric or has non-scalar unit");
+            onError.recordError(rhs, "Can't raise to a power which is non-numeric or has non-scalar unit");
             return null;
         }
         // RHS scalar, so must be LHS with units:
         if (!lhsType.isNumber())
         {
-            onError.accept(lhs, "Can't raise non-number to a power");
+            onError.recordError(lhs, "Can't raise non-number to a power");
             return null;
         }
         Optional<Rational> rhsPower = rhs.constantFold();
@@ -79,7 +79,7 @@ public class RaiseExpression extends BinaryOpExpression
             boolean denominatorOne = r.getDen().equals(BigInteger.ONE);
             if (!numeratorOne && !denominatorOne)
             {
-                onError.accept(this, "Cannot raise non-scalar number to a power other than an integer, or reciprocal of an integer");
+                onError.recordError(this, "Cannot raise non-scalar number to a power other than an integer, or reciprocal of an integer");
                 return null;
             }
             else if (numeratorOne && denominatorOne)
@@ -100,14 +100,14 @@ public class RaiseExpression extends BinaryOpExpression
             }
             catch (ArithmeticException e)
             {
-                onError.accept(rhs, "Power is too large to track the units");
+                onError.recordError(rhs, "Power is too large to track the units");
                 return null;
             }
 
         }
         else
         {
-            onError.accept(this, "Cannot raise non-scalar number to a non-constant power (units would be unknown)");
+            onError.recordError(this, "Cannot raise non-scalar number to a non-constant power (units would be unknown)");
             return null;
         }
 

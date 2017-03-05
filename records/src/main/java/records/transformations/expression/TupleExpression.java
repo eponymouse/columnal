@@ -46,7 +46,7 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         @NonNull DataType[] typeArray = new DataType[members.size()];
         for (int i = 0; i < typeArray.length; i++)
@@ -61,16 +61,16 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, final TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, final TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         if (!srcType.isTuple())
         {
-            onError.accept(this, "Cannot match non-tuple type " + srcType + " against a tuple pattern");
+            onError.recordError(this, "Cannot match non-tuple type " + srcType + " against a tuple pattern");
             return null;
         }
         if (srcType.getMemberType().size() != members.size())
         {
-            onError.accept(this, "Cannot match tuple of size " + srcType.getMemberType().size() + " against tuple pattern of size " + members.size());
+            onError.recordError(this, "Cannot match tuple of size " + srcType.getMemberType().size() + " against tuple pattern of size " + members.size());
             return null;
         }
 
@@ -85,7 +85,7 @@ public class TupleExpression extends Expression
             typeStates[i] = t.getSecond();
         }
         types = ImmutableList.copyOf(typeArray);
-        @Nullable TypeState endState = TypeState.union(state, s -> onError.accept(this, s), typeStates);
+        @Nullable TypeState endState = TypeState.union(state, onError.recordError(this), typeStates);
         if (endState == null)
             return null;
         return new Pair<>(DataType.tuple(types), endState);

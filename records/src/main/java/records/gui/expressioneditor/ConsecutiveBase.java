@@ -11,25 +11,16 @@ import javafx.scene.Node;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
 import records.data.datatype.DataType;
-import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.gui.expressioneditor.GeneralEntry.Status;
-import records.transformations.expression.AddSubtractExpression;
+import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.Op;
-import records.transformations.expression.DivideExpression;
-import records.transformations.expression.EqualExpression;
-import records.transformations.expression.Expression;
-import records.transformations.expression.InvalidOperatorExpression;
-import records.transformations.expression.MatchExpression;
-import records.transformations.expression.TimesExpression;
-import records.transformations.expression.UnfinishedExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -39,15 +30,12 @@ import utility.gui.FXUtility;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -879,8 +867,8 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
     }
 
     @Override
-    public void showError(@UnknownInitialization(ConsecutiveBase.class) ConsecutiveBase this, String error)
+    public void showError(@UnknownInitialization(ConsecutiveBase.class) ConsecutiveBase this, String error, List<ErrorRecorder.QuickFix> quickFixes)
     {
-        operands.get(0).showError(error);
+        operands.get(0).showError(error, quickFixes);
     }
 }

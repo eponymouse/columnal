@@ -86,7 +86,7 @@ public class PropTypecheck
         for (Expression expression : src.expressionFailures)
         {
             AtomicBoolean errorReported = new AtomicBoolean(false);
-            assertNull(src.getDisplay(expression), expression.check(src.recordSet, TestUtil.typeState(), (e, s) -> {errorReported.set(true);}));
+            assertNull(src.getDisplay(expression), expression.check(src.recordSet, TestUtil.typeState(), (e, s, q) -> {errorReported.set(true);}));
             // If it was null, an error should also have been reported:
             assertTrue(src.getDisplay(expression), errorReported.get());
         }
@@ -97,7 +97,7 @@ public class PropTypecheck
     public void propTypeCheckSucceed(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {
         StringBuilder b = new StringBuilder();
-        @Nullable DataType checked = src.expression.check(src.recordSet, TestUtil.typeState(), (e, s) ->
+        @Nullable DataType checked = src.expression.check(src.recordSet, TestUtil.typeState(), (e, s, q) ->
         {
             b.append("Err in " + e + ": " + s);
         });

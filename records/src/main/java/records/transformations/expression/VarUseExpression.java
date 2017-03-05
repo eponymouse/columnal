@@ -42,17 +42,17 @@ public class VarUseExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         Set<DataType> varType = state.findVarType(varName);
         if (varType == null)
         {
-            onError.accept(this, "Undeclared variable: \"" + varName + "\"");
+            onError.recordError(this, "Undeclared variable: \"" + varName + "\"");
             return null;
         }
         if (varType.size() > 1)
         {
-            onError.accept(this, "Variable \"" + varName + "\" cannot be used because it may have different types: " + varType.stream().map(DataType::toString).collect(Collectors.toList()));
+            onError.recordError(this, "Variable \"" + varName + "\" cannot be used because it may have different types: " + varType.stream().map(DataType::toString).collect(Collectors.toList()));
             return null;
         }
         return varType.iterator().next();

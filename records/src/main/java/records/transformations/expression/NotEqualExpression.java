@@ -38,9 +38,9 @@ public class NotEqualExpression extends BinaryOpExpression
     }
 
     @Override
-    public @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
-        if (DataType.checkSame(lhsType, rhsType, err -> onError.accept(this, err)) == null)
+        if (DataType.checkSame(lhsType, rhsType, onError.recordError(this)) == null)
             return null;
         return DataType.BOOLEAN;
     }

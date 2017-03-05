@@ -49,14 +49,14 @@ public class IfThenElseExpression extends NonOperatorExpression
 
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         @Nullable DataType conditionType = condition.check(data, state, onError);
         if (conditionType == null)
             return null;
-        if (DataType.checkSame(DataType.BOOLEAN, conditionType, s -> onError.accept(this, s)) == null)
+        if (DataType.checkSame(DataType.BOOLEAN, conditionType, onError.recordError(this)) == null)
         {
-            onError.accept(condition, "Expected boolean type in condition but was " + conditionType);
+            onError.recordError(condition, "Expected boolean type in condition but was " + conditionType);
             return null;
         }
         @Nullable DataType thenType = thenExpression.check(data, state, onError);
@@ -64,10 +64,10 @@ public class IfThenElseExpression extends NonOperatorExpression
         if (thenType == null || elseType == null)
             return null;
 
-        @Nullable DataType jointType = DataType.checkSame(thenType, elseType, s -> onError.accept(this, s));
+        @Nullable DataType jointType = DataType.checkSame(thenType, elseType, onError.recordError(this));
         if (jointType == null)
         {
-            onError.accept(elseExpression, "Expected same type in then and else, but was " + thenType + " and " + elseType);
+            onError.recordError(elseExpression, "Expected same type in then and else, but was " + thenType + " and " + elseType);
             return null;
         }
         return jointType;

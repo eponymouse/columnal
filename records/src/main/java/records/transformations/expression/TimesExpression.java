@@ -65,7 +65,7 @@ public class TimesExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         Unit runningUnit = Unit.SCALAR;
         int minDP = 0;
@@ -76,7 +76,7 @@ public class TimesExpression extends NaryOpExpression
                 return null;
             if (!expType.isNumber())
             {
-                onError.accept(expression, "Non-numeric type in multiplication expression: " + expType);
+                onError.recordError(expression, "Non-numeric type in multiplication expression: " + expType);
                 return null;
             }
             NumberInfo numberInfo = expType.getNumberInfo();

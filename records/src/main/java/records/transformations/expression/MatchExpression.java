@@ -57,13 +57,13 @@ public class MatchExpression extends NonOperatorExpression
             return outcome;
         }
 
-        public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
+        public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError, DataType srcType) throws InternalException, UserException
         {
             List<TypeState> rhsStates = new ArrayList<>();
             if (patterns.isEmpty())
             {
                 // Probably a test generation error:
-                onError.accept(MatchExpression.this, "Clause with no patterns");
+                onError.recordError(MatchExpression.this, "Clause with no patterns");
                 return null;
             }
             for (Pattern p : patterns)
@@ -139,12 +139,12 @@ public class MatchExpression extends NonOperatorExpression
             this.guard = guard;
         }
 
-        public @Nullable TypeState check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError, DataType srcType) throws InternalException, UserException
+        public @Nullable TypeState check(RecordSet data, TypeState state, ErrorRecorder onError, DataType srcType) throws InternalException, UserException
         {
             @Nullable Pair<DataType, TypeState> rhsState = pattern.checkAsPattern(true, srcType, data, state, onError);
             if (rhsState == null)
                 return null;
-            if (DataType.checkSame(rhsState.getFirst(), srcType, s -> onError.accept(pattern, s)) == null)
+            if (DataType.checkSame(rhsState.getFirst(), srcType, onError.recordError(pattern)) == null)
                 return null;
 
             if (guard != null)
@@ -152,7 +152,7 @@ public class MatchExpression extends NonOperatorExpression
                 @Nullable DataType type = guard.check(data, rhsState.getSecond(), onError);
                 if (type == null || !DataType.BOOLEAN.equals(type))
                 {
-                    onError.accept(guard, "Pattern guards must have boolean type, found: " + (type == null ? " error" : type));
+                    onError.recordError(guard, "Pattern guards must have boolean type, found: " + (type == null ? " error" : type));
                 }
             }
             return rhsState.getSecond();
@@ -257,7 +257,7 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         // Need to check several things:
         //   - That all of the patterns have the same type as the expression being matched
@@ -277,7 +277,7 @@ public class MatchExpression extends NonOperatorExpression
             outcomeTypes.add(type);
         }
 
-        return DataType.checkAllSame(outcomeTypes, err -> onError.accept(this, err));
+        return DataType.checkAllSame(outcomeTypes, onError.recordError(this));
     }
 
     @Override

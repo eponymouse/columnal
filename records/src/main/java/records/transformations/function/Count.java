@@ -31,7 +31,7 @@ public class Count extends FunctionDefinition
     }
 
     @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
+    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
     {
         return Collections.singletonList(new FunctionType(Instance::new, DataType.NUMBER, DataType.array()));
     }

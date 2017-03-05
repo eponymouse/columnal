@@ -51,17 +51,17 @@ public class DivideExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    protected @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         // You can divide any number by any other number
         if (!lhsType.isNumber())
         {
-            onError.accept(lhs, "Non-numeric type in numerator");
+            onError.recordError(lhs, "Non-numeric type in numerator");
             return null;
         }
         if (!rhsType.isNumber())
         {
-            onError.accept(rhs, "Non-numeric type in denominator");
+            onError.recordError(rhs, "Non-numeric type in denominator");
             return null;
         }
         NumberInfo numberInfoLHS = lhsType.getNumberInfo();

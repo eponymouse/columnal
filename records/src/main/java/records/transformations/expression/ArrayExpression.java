@@ -54,7 +54,7 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         // Empty array - special case:
         if (items.isEmpty())
@@ -67,7 +67,7 @@ public class ArrayExpression extends Expression
                 return null;
             typeArray[i] = t;
         }
-        this.type = DataType.checkAllSame(Arrays.asList(typeArray), s -> onError.accept(this, s));
+        this.type = DataType.checkAllSame(Arrays.asList(typeArray), onError.recordError(this));
         _test_originalTypes = Arrays.asList(typeArray);
         if (type == null)
             return null;
@@ -75,11 +75,11 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, final TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, final TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         if (!srcType.isArray())
         {
-            onError.accept(this, "Cannot match non-array type " + srcType + " against an array");
+            onError.recordError(this, "Cannot match non-array type " + srcType + " against an array");
             return null;
         }
         DataType innerType = srcType.getMemberType().get(0);
@@ -97,11 +97,11 @@ public class ArrayExpression extends Expression
             typeArray[i] = t.getFirst();
             typeStates[i] = t.getSecond();
         }
-        this.type = DataType.checkAllSame(Arrays.asList(typeArray), s -> onError.accept(this, s));
         _test_originalTypes = Arrays.asList(typeArray);
+        this.type = DataType.checkAllSame(Arrays.asList(typeArray), onError.recordError(this));
         if (type == null)
             return null;
-        @Nullable TypeState endState = TypeState.union(state, s -> onError.accept(this, s), typeStates);
+        @Nullable TypeState endState = TypeState.union(state, onError.recordError(this), typeStates);
         if (endState == null)
             return null;
         return new Pair<>(DataType.array(type), endState);

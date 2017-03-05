@@ -104,7 +104,7 @@ public abstract class BinaryOpExpression extends Expression
     public abstract BinaryOpExpression copy(@Nullable Expression replaceLHS, @Nullable Expression replaceRHS);
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         lhsType = lhs.check(data, state, onError);
         rhsType = rhs.check(data, state, onError);
@@ -114,7 +114,7 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected abstract @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException;
+    protected abstract @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException;
 
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()

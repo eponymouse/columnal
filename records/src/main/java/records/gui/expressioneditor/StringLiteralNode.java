@@ -12,6 +12,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
+import records.transformations.expression.ErrorRecorder;
 import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -19,6 +20,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.Collections;
+import java.util.List;
 
 /**
  * Created by neil on 20/12/2016.
@@ -137,7 +139,7 @@ public class StringLiteralNode extends LeafNode implements OperandNode
     }
 
     @Override
-    public void showError(String error)
+    public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
     {
         // TODO
     }

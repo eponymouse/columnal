@@ -45,16 +45,16 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
-        @Nullable TypeAndTagInfo typeAndIndex = state.findTaggedType(tagName, err -> onError.accept(this, err));
+        @Nullable TypeAndTagInfo typeAndIndex = state.findTaggedType(tagName, onError.recordError(this));
         if (typeAndIndex == null)
             return null;
         index = typeAndIndex.tagIndex;
 
         innerDerivedType = inner == null ? null : inner.check(data, state, onError);
         // We must not pass nulls to checkSame as that counts as failed checking, not optional items
-        if ((inner == null && typeAndIndex.innerType == null) || DataType.checkSame(typeAndIndex.innerType, innerDerivedType, err -> onError.accept(this, err)) != null)
+        if ((inner == null && typeAndIndex.innerType == null) || DataType.checkSame(typeAndIndex.innerType, innerDerivedType, onError.recordError(this)) != null)
         {
             return typeAndIndex.wholeType;
         }
@@ -63,9 +63,9 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
-        @Nullable TypeAndTagInfo typeAndIndex = state.findTaggedType(tagName, err -> onError.accept(this, err));
+        @Nullable TypeAndTagInfo typeAndIndex = state.findTaggedType(tagName, onError.recordError(this));
         if (typeAndIndex == null)
             return null;
         index = typeAndIndex.tagIndex;
@@ -75,7 +75,7 @@ public class TagExpression extends NonOperatorExpression
             innerDerivedType = typeAndState.getFirst();
         // We must not pass nulls to checkSame as that counts as failed checking, not optional items
         if ((inner == null && typeAndIndex.innerType == null && typeAndState == null) ||
-            (inner != null && typeAndIndex.innerType != null && typeAndState != null && DataType.checkSame(typeAndIndex.innerType, innerDerivedType, err -> onError.accept(this, err)) != null))
+            (inner != null && typeAndIndex.innerType != null && typeAndState != null && DataType.checkSame(typeAndIndex.innerType, innerDerivedType, onError.recordError(this)) != null))
         {
             return new Pair<>(typeAndIndex.wholeType, typeAndState == null ? state : typeAndState.getSecond());
         }

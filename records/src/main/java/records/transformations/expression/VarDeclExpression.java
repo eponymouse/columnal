@@ -38,21 +38,21 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern
-        onError.accept(this, "Variable cannot be declared outside pattern match");
+        onError.recordError(this, "Variable cannot be declared outside pattern match");
         return null;
     }
 
     @Override
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varDeclAllowed, DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varDeclAllowed, DataType srcType, RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         if (!varDeclAllowed)
             return null; // We are a variable declaration, so clearly not allowed!
 
-        @Nullable TypeState newState = state.add(varName, srcType, s -> onError.accept(this, s));
+        @Nullable TypeState newState = state.add(varName, srcType, onError.recordError(this));
         if (newState == null)
             return null;
         else

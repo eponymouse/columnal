@@ -61,7 +61,7 @@ public class CallExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         @Nullable FunctionDefinition def = state.findFunction(functionName).orElse(null);
         if (def == null)
@@ -70,7 +70,7 @@ public class CallExpression extends NonOperatorExpression
         @Nullable DataType paramType = param.check(data, state, onError);
         if (paramType == null)
             return null;
-        @Nullable Pair<FunctionInstance, DataType> checked = definition.typeCheck(units, paramType, s -> onError.accept(this, s), state.getUnitManager());
+        @Nullable Pair<FunctionInstance, DataType> checked = definition.typeCheck(units, paramType, onError.recordError(this), state.getUnitManager());
         if (checked == null)
             return null;
         this.instance = checked.getFirst();

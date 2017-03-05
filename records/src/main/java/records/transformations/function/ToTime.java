@@ -48,16 +48,16 @@ public class ToTime extends ToTemporalFunction
     );
 
     @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException, UserException
+    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
     {
         ArrayList<FunctionType> r = new ArrayList<>(fromString());
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))));
         r.add(new FunctionType(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
-            DataType.number(new NumberInfo(mgr.loadUse("hour"), 0)),
-            DataType.number(new NumberInfo(mgr.loadUse("min"), 0)),
-            DataType.number(new NumberInfo(mgr.loadUse("s"), 0))
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("hour"), 0)),
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("min"), 0)),
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("s"), 0))
         )));
         return r;
     }

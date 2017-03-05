@@ -100,7 +100,7 @@ public class Transform extends Transformation
 
             for (Entry<ColumnId, Expression> newCol : toCalculate.entrySet())
             {
-                @Nullable DataType type = newCol.getValue().check(srcRecordSet, mgr.getTypeState(), (e, s) ->
+                @Nullable DataType type = newCol.getValue().check(srcRecordSet, mgr.getTypeState(), (e, s, q) ->
                 {
                     error = s;
                 });

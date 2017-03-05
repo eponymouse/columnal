@@ -44,12 +44,12 @@ public class AndExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         for (Expression expression : expressions)
         {
             DataType type = expression.check(data, state, onError);
-            if (DataType.checkSame(DataType.BOOLEAN, type, s -> onError.accept(expression, s)) == null)
+            if (DataType.checkSame(DataType.BOOLEAN, type, onError.recordError(expression)) == null)
                 return null;
         }
         return DataType.BOOLEAN;

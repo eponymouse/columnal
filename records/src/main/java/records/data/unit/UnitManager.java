@@ -103,6 +103,20 @@ public class UnitManager
         return new UnitDeclaration(new SingleUnit(defined, description, prefix, suffix), equiv);
     }
 
+    // Like loadUse, but any UserException is treated as an InternalException
+    // since we expect the unit to be present.
+    public Unit loadBuiltIn(String text) throws InternalException
+    {
+        try
+        {
+            return loadUse(text);
+        }
+        catch (UserException e)
+        {
+            throw new InternalException(e.getMessage() == null ? "Unknown unit error" : e.getMessage());
+        }
+    }
+
     public Unit loadUse(String text) throws UserException, InternalException
     {
         if (text.startsWith("{") && text.endsWith("}"))

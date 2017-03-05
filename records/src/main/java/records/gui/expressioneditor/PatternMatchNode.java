@@ -7,15 +7,13 @@ import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Column;
 import records.data.datatype.DataType;
-import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.ErrorRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.MatchExpression;
 import records.transformations.expression.MatchExpression.MatchClause;
@@ -295,8 +293,8 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
     }
 
     @Override
-    public void showError(String error)
+    public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
     {
-        source.showError(error);
+        source.showError(error, quickFixes);
     }
 }

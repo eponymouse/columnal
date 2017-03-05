@@ -94,16 +94,16 @@ public abstract class Expression
 
     // Checks that all used variable names and column references are defined,
     // and that types check.  Return null if any problems
-    public abstract @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException;
+    public abstract @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException;
 
     // Like check, but for patterns.  For many expressions this is same as check,
     // unless you are a new-variable declaration or can have one beneath you.
     // If you override this, you should also override matchAsPattern
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varDeclAllowed, DataType srcType, RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varDeclAllowed, DataType srcType, RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         // By default, check as normal, and return same TypeState:
         @Nullable DataType type = check(data, state, onError);
-        if (type == null || DataType.checkSame(srcType, type, s -> onError.accept(this, s)) == null)
+        if (type == null || DataType.checkSame(srcType, type, s -> onError.recordError(this, s)) == null)
             return null;
         else
             return new Pair<>(type, state);

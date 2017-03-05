@@ -41,9 +41,9 @@ public class UnfinishedExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ExBiConsumer<Expression, String> onError) throws UserException, InternalException
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
-        onError.accept(this, "Incomplete expression");
+        onError.recordError(this, "Incomplete expression");
         return null; // Unfinished expressions can't type check
     }
 
