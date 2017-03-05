@@ -19,13 +19,30 @@
         <processor name="org.checkerframework.checker.guieffect.GuiEffectChecker" />
         <processor name="org.checkerframework.checker.interning.InterningChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
-        <processorPath useClasspath="false">
+        <processorPath>
           <entry name="$PROJECT_DIR$/records/checker-dist/checker.jar" />
           <entry name="J" />
           <entry name="/intellij-projects/bluej/threadchecker/pluginclasses" />
           <entry name="J" />
           <entry name="/intellij-projects/bluej/threadchecker/classes" />
         </processorPath>
+      </profile>
+      <profile name="Maven default annotation processors profile" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <module name="parsers" />
+      </profile>
+      <profile name="Annotation profile for utility" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <option name="printErrorStack" value="" />
+        <option name="propfiles" value="/Users/neil/IdeaProjects/records/records/src/main/resources/transformations_en.properties:/Users/neil/IdeaProjects/records/records/src/main/resources/expression_en.properties:/Users/neil/IdeaProjects/records/records/src/main/resources/function_en.properties" />
+        <option name="skipDefs" value="records.grammar.|one.util." />
+        <option name="stubs" value="C:\Users\neil\IdeaProjects\records\records\utility/../stubs" />
+        <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <module name="utility" />
       </profile>
       <profile name="Annotation profile for records" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
@@ -34,16 +51,19 @@
         <option name="printErrorStack" value="" />
         <option name="propfiles" value="/Users/neil/IdeaProjects/records/records/src/main/resources/transformations_en.properties:/Users/neil/IdeaProjects/records/records/src/main/resources/expression_en.properties:/Users/neil/IdeaProjects/records/records/src/main/resources/function_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\IdeaProjects\records\records/stubs" />
+        <option name="stubs" value="C:\Users\neil\IdeaProjects\records\records\app/../stubs" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
-        <module name="records" />
+        <module name="app" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="app" target="1.8" />
+      <module name="parsers" target="1.8" />
       <module name="records" target="1.8" />
+      <module name="utility" target="1.8" />
     </bytecodeTargetLevel>
   </component>
   <component name="JavacSettings">
-    <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$MAVEN_REPOSITORY$/org/checkerframework/jdk8/2.1.5/jdk8-2.1.5.jar -Xlint:unchecked -Xplugin:threadchecker.TCPlugin" />
+    <option name="ADDITIONAL_OPTIONS_STRING" value="-Xbootclasspath/p:$MAVEN_REPOSITORY$/org/checkerframework/jdk8/2.1.7/jdk8-2.1.7.jar -Xlint:unchecked -Xplugin:threadchecker.TCPlugin" />
   </component>
 </project>

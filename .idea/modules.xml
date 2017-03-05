@@ -2,7 +2,10 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
+      <module fileurl="file://$PROJECT_DIR$/records/app/app.iml" filepath="$PROJECT_DIR$/records/app/app.iml" />
+      <module fileurl="file://$PROJECT_DIR$/records/parsers/parsers.iml" filepath="$PROJECT_DIR$/records/parsers/parsers.iml" />
       <module fileurl="file://$PROJECT_DIR$/records/records.iml" filepath="$PROJECT_DIR$/records/records.iml" />
+      <module fileurl="file://$PROJECT_DIR$/records/utility/utility.iml" filepath="$PROJECT_DIR$/records/utility/utility.iml" />
     </modules>
   </component>
 </project>
