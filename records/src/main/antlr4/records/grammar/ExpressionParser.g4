@@ -10,13 +10,14 @@ columnRef : columnRefType (tableId COLON)? columnId;
 numericLiteral : NUMBER UNIT?;
 stringLiteral : STRING;
 booleanLiteral : TRUE | FALSE;
+unfinished : UNFINISHED STRING;
 
 varRef  : UNQUOTED_IDENT;
 
 any : ANY;
 
 // newVariable only valid in pattern matches, but that's done in semantic check, not syntactic:
-terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef | newVariable | any;
+terminal : columnRef | numericLiteral | stringLiteral | booleanLiteral | varRef | newVariable | any | unfinished;
 
 // Could have units in ops:
 //plusMinusExpression :  expression PLUS_MINUS UNIT? expression (PLUS_MINUS expression)*;
