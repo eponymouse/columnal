@@ -1,7 +1,6 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -30,7 +29,7 @@ public class ToDateTimeZone extends ToTemporalFunction
 {
     public ToDateTimeZone()
     {
-        super("datetimez");
+        super("datetimez", "datetimez.short");
     }
 
     private static List<List<DateTimeFormatter>> FORMATS = new ArrayList<>();
@@ -38,15 +37,15 @@ public class ToDateTimeZone extends ToTemporalFunction
     @Override
     public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
     {
-        ArrayList<FunctionType> r = new ArrayList<>(fromString());
+        ArrayList<FunctionType> r = new ArrayList<>(fromString("datetimez.string"));
         r.add(new FunctionType(DT_Z::new, DataType.date(getResultType()),
-            DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), DataType.TEXT)));
+            DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), DataType.TEXT), "datetimez.datetime_string"));
         r.add(new FunctionType(D_T_Z::new, DataType.date(getResultType()), DataType.tuple(
             DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
-            DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT)));
+            DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT), "datetimez.ymd_time_string"));
         r.add(new FunctionType(D_TZ::new, DataType.date(getResultType()), DataType.tuple(
             DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
-            DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)))));
+            DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))), "datetimez.ymd_timez"));
         return r;
     }
 

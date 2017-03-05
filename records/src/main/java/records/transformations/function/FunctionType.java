@@ -1,11 +1,14 @@
 package records.transformations.function;
 
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TypeRelation;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.TransformationEditor;
 import utility.ExConsumer;
 import utility.Utility;
 
@@ -29,16 +32,19 @@ public class FunctionType
 {
     private final TypeMatcher typeMatcher;
     private final Supplier<FunctionInstance> makeInstance;
+    private final @Nullable @LocalizableKey String overloadDescriptionKey;
 
-    public FunctionType(Supplier<FunctionInstance> makeInstance, TypeMatcher typeMatcher)
+    public FunctionType(Supplier<FunctionInstance> makeInstance, TypeMatcher typeMatcher, @Nullable @LocalizableKey String descriptionKey)
     {
         this.makeInstance = makeInstance;
         this.typeMatcher = typeMatcher;
+        this.overloadDescriptionKey = descriptionKey;
     }
 
-    public FunctionType(Supplier<FunctionInstance> makeInstance, DataType returnType, DataType paramType)
+    public FunctionType(Supplier<FunctionInstance> makeInstance, DataType returnType, DataType paramType, @Nullable @LocalizableKey String descriptionKey)
     {
         this.makeInstance = makeInstance;
+        this.overloadDescriptionKey = descriptionKey;
         this.typeMatcher = new TypeMatcher()
         {
             @Override
@@ -67,6 +73,7 @@ public class FunctionType
                 return returnType.getSafeHeaderDisplay();
             }
         };
+
     }
 
     public FunctionInstance getFunction()
@@ -101,6 +108,17 @@ public class FunctionType
     public @Localized String getReturnDisplay()
     {
         return typeMatcher.getReturnDisplay();
+    }
+
+    /**
+     * Gets the localization key for the text which describes this particular overload of the function.
+     * If no text is available for this overload (common when there is only one overload
+     * of a function) then null is returned, and nothing should be displayed.
+     */
+    @Pure
+    public @Nullable @LocalizableKey String getOverloadDescriptionKey()
+    {
+        return overloadDescriptionKey;
     }
 
     public static interface TypeMatcher
@@ -195,6 +213,7 @@ public class FunctionType
         }
 
         @Override
+        @SuppressWarnings("i18n") // Due to brackets
         public @Localized String getParamDisplay()
         {
             return "[" + matchInner.getParamDisplay() + "]";
@@ -257,6 +276,7 @@ public class FunctionType
         }
 
         @Override
+        @SuppressWarnings("i18n") // Due to brackets
         public @Localized String getParamDisplay()
         {
             return "(" + matchInner.stream().map(TypeMatcher::getParamDisplay).collect(Collectors.joining(", ")) + ")";
@@ -319,15 +339,17 @@ public class FunctionType
         }
 
         @Override
+        @SuppressWarnings("i18n") // Generic variable
         public @Localized String getParamDisplay()
         {
-            return "any";
+            return "T";
         }
 
         @Override
+        @SuppressWarnings("i18n") // Generic variable
         public @Localized String getReturnDisplay()
         {
-            return "any";
+            return "T";
         }
     }
 }

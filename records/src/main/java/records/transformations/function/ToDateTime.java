@@ -1,7 +1,6 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -19,7 +18,6 @@ import java.time.format.DateTimeFormatterBuilder;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 
 /**
@@ -29,7 +27,7 @@ public class ToDateTime extends ToTemporalFunction
 {
     public ToDateTime()
     {
-        super("datetime");
+        super("datetime", "datetime.short");
     }
 
     private static List<List<DateTimeFormatter>> FORMATS = new ArrayList<>();
@@ -37,9 +35,9 @@ public class ToDateTime extends ToTemporalFunction
     @Override
     public List<FunctionType> getOverloads(UnitManager mgr)
     {
-        ArrayList<FunctionType> r = new ArrayList<>(fromString());
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
-        r.add(new FunctionType(DateAndTimeInstance::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)))));
+        ArrayList<FunctionType> r = new ArrayList<>(fromString("datetime.string"));
+        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)),"datetime.datetimez"));
+        r.add(new FunctionType(DateAndTimeInstance::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY))), "datetime.ymd_time"));
         return r;
     }
 

@@ -1,22 +1,14 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
-import records.data.unit.Unit;
-import records.data.unit.UnitManager;
-import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
-import records.transformations.expression.Expression;
-import records.transformations.expression.Expression._test_TypeVary;
-import utility.ExConsumer;
 import utility.Pair;
-import utility.Utility;
 
 import java.time.DateTimeException;
 import java.time.Year;
@@ -34,7 +26,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Random;
 import java.util.stream.Collectors;
 
 /**
@@ -42,9 +33,9 @@ import java.util.stream.Collectors;
  */
 public abstract class ToTemporalFunction extends FunctionDefinition
 {
-    public ToTemporalFunction(String name)
+    public ToTemporalFunction(String name, @LocalizableKey String shortDescripKey)
     {
-        super(name);
+        super(name, shortDescripKey);
     }
 
     static DateTimeFormatter m(String sep, F... items)
@@ -107,10 +98,10 @@ public abstract class ToTemporalFunction extends FunctionDefinition
         return Arrays.asList(args);
     }
 
-    List<FunctionType> fromString()
+    List<FunctionType> fromString(@LocalizableKey String descripKey)
     {
         return Arrays.asList(
-            new FunctionType(FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT)
+            new FunctionType(FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT, descripKey)
             //new FunctionType(FromStringInstance::new, DataType.date(getResultType()), DataType.tuple(DataType.TEXT, DataType.TEXT))
         );
     }

@@ -524,6 +524,7 @@ public class DataType
     }
 
     @OnThread(Tag.Any)
+    @SuppressWarnings("i18n") // Because of the "ERR"
     public @Localized String getSafeHeaderDisplay()
     {
         try
@@ -538,7 +539,8 @@ public class DataType
     }
 
     @OnThread(Tag.Any)
-    public String getHeaderDisplay() throws UserException, InternalException
+    @SuppressWarnings("i18n")
+    public @Localized String getHeaderDisplay() throws UserException, InternalException
     {
         return apply(new DataTypeVisitor<String>()
         {

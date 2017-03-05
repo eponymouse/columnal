@@ -20,7 +20,7 @@ public class Round extends SingleNumericInOutFunction
 {
     public Round()
     {
-        super("round");
+        super("round", "round.short");
     }
 
     @Override

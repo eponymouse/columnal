@@ -1,7 +1,6 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import records.data.datatype.DataType;
@@ -11,10 +10,8 @@ import records.data.datatype.DataType.NumberInfo;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import utility.ExConsumer;
 import utility.Utility;
 
-import java.math.BigDecimal;
 import java.time.LocalTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
@@ -39,7 +36,7 @@ public class ToTime extends ToTemporalFunction
 {
     public ToTime()
     {
-        super("time");
+        super("time", "time.short");
     }
 
     public static List<DateTimeFormatter> FORMATS = Arrays.asList(
@@ -50,15 +47,15 @@ public class ToTime extends ToTemporalFunction
     @Override
     public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
     {
-        ArrayList<FunctionType> r = new ArrayList<>(fromString());
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))));
+        ArrayList<FunctionType> r = new ArrayList<>(fromString("time.string"));
+        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), "time.datetime"));
+        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "time.datetimez"));
+        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)), "time.timez"));
         r.add(new FunctionType(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
             DataType.number(new NumberInfo(mgr.loadBuiltIn("hour"), 0)),
             DataType.number(new NumberInfo(mgr.loadBuiltIn("min"), 0)),
             DataType.number(new NumberInfo(mgr.loadBuiltIn("s"), 0))
-        )));
+        ), "time.h_m_s"));
         return r;
     }
 

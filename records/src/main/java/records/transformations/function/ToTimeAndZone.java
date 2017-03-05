@@ -1,12 +1,9 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.data.datatype.DataType.NumberInfo;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -32,16 +29,16 @@ public class ToTimeAndZone extends ToTemporalFunction
 
     public ToTimeAndZone()
     {
-        super("timez");
+        super("timez", "timez.short");
     }
 
     @Override
     public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
     {
-        ArrayList<FunctionType> r = new ArrayList<>(fromString());
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
+        ArrayList<FunctionType> r = new ArrayList<>(fromString("timez.string"));
+        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "timez.datetimez"));
         r.add(new FunctionType(T_Z::new, DataType.date(getResultType()),
-            DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT)));
+            DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT), "timez.time_string"));
         return r;
     }
 

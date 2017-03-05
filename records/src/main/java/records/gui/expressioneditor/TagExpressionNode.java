@@ -17,6 +17,7 @@ import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.TransformationEditor;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TagExpression;
 import utility.FXPlatformConsumer;
@@ -37,10 +38,10 @@ public class TagExpressionNode extends SurroundNode
     private final TypeId typeName;
     private final TagType<DataType> tagType;
 
-    @SuppressWarnings("initialization") // Because LeaveableTextField gets marked uninitialized
+    @SuppressWarnings({"initialization", "i18n"}) // Because LeaveableTextField gets marked uninitialized, and because of header
     public TagExpressionNode(ConsecutiveBase parent, TypeId typeName, TagType<DataType> tagType)
     {
-        super(parent, "tag", "tag " + typeName.getRaw() + ":", tagType.getName(), tagType.getInner() != null, null);
+        super(parent, "tag", TransformationEditor.getString("tag") + " " + typeName.getRaw(), tagType.getName(), tagType.getInner() != null, null);
         this.typeName = typeName;
         this.tagType = tagType;
     }

@@ -230,7 +230,7 @@
                         <!-- Add all the checkers you want to enable here -->
                         <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
                         <!-- Disabled for speed: -->
-                        <!-- <annotationProcessor>org.checkerframework.checker.i18n.I18nChecker</annotationProcessor> -->
+                        <annotationProcessor>org.checkerframework.checker.i18n.I18nChecker</annotationProcessor>
                         <!-- Disabled for speed: -->
                         <!-- <annotationProcessor>org.checkerframework.checker.interning.InterningChecker</annotationProcessor> -->
                         <!-- Disabled for speed: -->
@@ -244,7 +244,7 @@
                         <arg>-AprintErrorStack</arg>
                         <arg>-AskipDefs=records.grammar.|one.util.</arg>
                         <arg>-Astubs=${basedir}/stubs</arg>
-                        <arg>-Apropfiles=/Users/neil/IdeaProjects/records/records/src/main/resources/transformations_en.properties:/Users/neil/IdeaProjects/records/records/src/main/resources/expression_en.properties</arg>
+                        <arg>-Apropfiles=/Users/neil/IdeaProjects/records/records/src/main/resources/transformations_en.properties:/Users/neil/IdeaProjects/records/records/src/main/resources/expression_en.properties:/Users/neil/IdeaProjects/records/records/src/main/resources/function_en.properties</arg>
                         <arg>-Xplugin:threadchecker.TCPlugin</arg>
                     </compilerArgs>
                 </configuration>

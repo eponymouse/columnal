@@ -5,9 +5,13 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Bounds;
 import javafx.scene.Node;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.PopupControl;
+import javafx.scene.control.Skin;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldListCell;
@@ -15,6 +19,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.PopupWindow.AnchorLocation;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -57,6 +62,7 @@ public abstract class TransformationEditor
         {
             try
             {
+                // Each of these corresponds to a <name>_en.properties file in the resources directory
                 resources = Arrays.asList(
                     ResourceBundle.getBundle("transformations"),
                     ResourceBundle.getBundle("expression"),
@@ -72,6 +78,11 @@ public abstract class TransformationEditor
         return resources;
     }
 
+    /**
+     * Given a localization key (LHS in labels files), returns the localized value (RHS in labels files)
+     *
+     * If the key is not found, the key itself is returned as the string
+     */
     @SuppressWarnings("i18n") // Because we return key if there's an issue
     @OnThread(Tag.Any)
     public static @Localized String getString(@LocalizableKey String key)
@@ -95,6 +106,78 @@ public abstract class TransformationEditor
         }
 
         return key; // Best we can do, if we can't find the labels file.
+    }
+
+    /**
+     * In the simple case, takes a localization key and returns a singleton list with a Text
+     * item containg the corresponding localization value + "\n"
+     *
+     * If the localization value contains any substitutions like ${date}, then that is transformed
+     * into a hover-over definition and/or hyperlink, and thus multiple nodes may be returned.
+     */
+    @SuppressWarnings("i18n") // Because of substring processing
+    public static List<Node> makeTextLine(@LocalizableKey String key, String styleclass)
+    {
+        ArrayList<Node> r = new ArrayList<>();
+        @Localized String original = getString(key);
+        @Localized String remaining = original;
+        for (int subst = remaining.indexOf("${"); subst != -1; subst = remaining.indexOf("${"))
+        {
+            int endSubst = remaining.indexOf("}", subst);
+            String target = remaining.substring(subst + 2, endSubst);
+            String before = remaining.substring(0, subst);
+            r.add(new Text(before));
+            Hyperlink link = new Hyperlink(target);
+            Utility.addChangeListenerPlatformNN(link.hoverProperty(), new FXPlatformConsumer<Boolean>()
+                {
+                    private @Nullable PopupControl info;
+                    @Override
+                    public @OnThread(Tag.FXPlatform) void consume(Boolean hovering)
+                    {
+                        if (hovering && info == null)
+                        {
+                            info = new PopupControl();
+                            PopupControl ctrl = info;
+                            Label label = new Label("More info on " + target);
+                            ctrl.setSkin(new Skin<PopupControl>()
+                            {
+                                @Override
+                                public PopupControl getSkinnable()
+                                {
+                                    return ctrl;
+                                }
+
+                                @Override
+                                public Node getNode()
+                                {
+                                    return label;
+                                }
+
+                                @Override
+                                public void dispose()
+                                {
+                                }
+                            });
+                            Bounds bounds = link.localToScreen(link.getBoundsInLocal());
+                            ctrl.setAnchorLocation(AnchorLocation.CONTENT_BOTTOM_LEFT);
+                            ctrl.show(link, bounds.getMinX(), bounds.getMinY());
+                        }
+                        else if (!hovering && info != null)
+                        {
+                            info.hide();
+                            info = null;
+                        }
+                    }
+                });
+                r.add(link);
+            remaining = remaining.substring(endSubst + 1);
+        }
+        r.add(new Text(remaining + "\n"));
+        for (Node node : r)
+        {
+            node.getStyleClass().add(styleclass);
+        }
+        return r;
     }
 
     /**
