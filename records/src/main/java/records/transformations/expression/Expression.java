@@ -34,6 +34,7 @@ import records.grammar.ExpressionParser.DivideExpressionContext;
 import records.grammar.ExpressionParser.ExpressionContext;
 import records.grammar.ExpressionParser.GreaterThanExpressionContext;
 import records.grammar.ExpressionParser.IfThenElseExpressionContext;
+import records.grammar.ExpressionParser.InvalidOpExpressionContext;
 import records.grammar.ExpressionParser.LessThanExpressionContext;
 import records.grammar.ExpressionParser.MatchClauseContext;
 import records.grammar.ExpressionParser.MatchContext;
@@ -381,6 +382,12 @@ public abstract class Expression
         public Expression visitNewVariable(ExpressionParser.NewVariableContext ctx)
         {
             return new VarDeclExpression(ctx.UNQUOTED_IDENT().getText());
+        }
+
+        @Override
+        public Expression visitInvalidOpExpression(InvalidOpExpressionContext ctx)
+        {
+            return new InvalidOperatorExpression(Utility.mapList(ctx.expression(), c -> visitExpression(c)), Utility.mapList(ctx.anyOperator(), op -> op.getText()));
         }
 
         public Expression visitChildren(RuleNode node) {

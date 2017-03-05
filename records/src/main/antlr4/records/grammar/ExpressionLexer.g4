@@ -37,6 +37,7 @@ FUNCTION : '@function';
 NEWVAR : '@newvar';
 ANY : '@any';
 UNFINISHED : '@unfinished';
+INVALIDOPS : '@invalidops';
 CONSTRUCTOR : '@tag';
 RAISEDTO : '^';
 COMMA: ',';
