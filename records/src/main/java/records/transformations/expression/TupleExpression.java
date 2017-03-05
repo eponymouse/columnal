@@ -102,7 +102,7 @@ public class TupleExpression extends Expression
             @Nullable EvaluateState curState = state;
             for (int i = 0; i < tuple.length; i++)
             {
-                curState = members.get(i).matchAsPattern(rowIndex, value, curState);
+                curState = members.get(i).matchAsPattern(rowIndex, tuple[i], curState);
                 if (curState == null)
                     return null;
             }
