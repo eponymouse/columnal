@@ -79,14 +79,20 @@ public class ArrayExpression extends Expression
     {
         if (!srcType.isArray())
         {
-            onError.recordError(this, "Cannot match non-array type " + srcType + " against an array");
+            onError.recordError(this, "Cannot match non-list type " + srcType + " against a list");
             return null;
         }
-        DataType innerType = srcType.getMemberType().get(0);
-
         // Empty array - special case:
         if (items.isEmpty())
             return new Pair<>(DataType.array(), state);
+
+        if (srcType.getMemberType().isEmpty())
+        {
+            onError.recordError(this, "Cannot match empty list against non-empty list");
+            return null;
+        }
+
+        DataType innerType = srcType.getMemberType().get(0);
         @NonNull DataType[] typeArray = new DataType[items.size()];
         @NonNull TypeState[] typeStates = new TypeState[items.size()];
         for (int i = 0; i < typeArray.length; i++)

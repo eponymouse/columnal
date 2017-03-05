@@ -580,7 +580,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 @Nullable DataType innerFinal = inner;
                 return termDeep(maxLevels, type, l(columnRef(type)), l(() ->
                 {
-                    int length = r.nextInt(0, 12);
+                    int length = r.nextInt(1, 12);
                     // Each outer list item is one row in the final set of expression values
                     // Each inner list is an entire array.
                     List<List<@Value Object>> values = GenExpressionValueForwards.this.<List<@Value Object>>replicateM(ArrayList<@Value Object>::new);
