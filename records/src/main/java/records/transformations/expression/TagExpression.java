@@ -53,13 +53,29 @@ public class TagExpression extends NonOperatorExpression
         index = typeAndIndex.tagIndex;
 
         innerDerivedType = inner == null ? null : inner.check(data, state, onError);
-        // We must not pass nulls to checkSame as that counts as failed checking, not optional items
-        if ((inner == null && typeAndIndex.innerType == null) || DataType.checkSame(typeAndIndex.innerType, innerDerivedType, onError.recordError(this)) != null)
+        // We must not pass nulls to checkSame if inner is empty, as that counts as failed checking, not optional items:
+        boolean innerExpAndTypeBlank = inner == null && typeAndIndex.innerType == null;
+        if (innerExpAndTypeBlank)
+            return typeAndIndex.wholeType;
+        // If inner expression is null, it's meant to be there:
+        if (inner == null)
+        {
+            onError.recordError(this, "Tag " + tagName.getFirst() + ":" + tagName.getSecond() + " requires value, but none given");
+            return null;
+        }
+        if (typeAndIndex.innerType == null)
+        {
+            onError.recordError(this, "Tag " + tagName.getFirst() + ":" + tagName.getSecond() + " has no inner value, but one was given");
+            return null;
+        }
+        if (innerExpAndTypeBlank || DataType.checkSame(typeAndIndex.innerType, innerDerivedType, onError.recordError(this)) != null)
         {
             return typeAndIndex.wholeType;
         }
         else
+        {
             return null;
+        }
     }
 
     @Override

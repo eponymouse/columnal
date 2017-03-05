@@ -2,6 +2,7 @@ package test;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.generator.Ctor;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
@@ -79,7 +80,7 @@ public class PropTypecheck
         }
     }
 
-    @Property(trials = 1000)
+    @Property(trials = 1000, shrink = true, maxShrinks = 1000)
     @SuppressWarnings("nullness")
     public void propTypeCheckFail(@From(GenTypecheckFail.class) GenTypecheckFail.TypecheckInfo src) throws InternalException, UserException
     {
@@ -88,7 +89,7 @@ public class PropTypecheck
             AtomicBoolean errorReported = new AtomicBoolean(false);
             assertNull(src.getDisplay(expression), expression.check(src.recordSet, TestUtil.typeState(), (e, s, q) -> {errorReported.set(true);}));
             // If it was null, an error should also have been reported:
-            assertTrue(src.getDisplay(expression), errorReported.get());
+            assertTrue(src.getDisplay(expression) + "\n\n(failure from original: " + src.getDisplay(src.original) + ")", errorReported.get());
         }
     }
 

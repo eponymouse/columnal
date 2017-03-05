@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.RecordSet;
@@ -39,17 +40,19 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         super(TypecheckInfo.class);
     }
 
-    public class TypecheckInfo
+    public static class TypecheckInfo
     {
         public final Expression original;
         public final RecordSet recordSet;
         public final List<Expression> expressionFailures;
+        public final GenExpressionValueForwards gen;
 
-        public TypecheckInfo(Expression original, RecordSet recordSet, List<Expression> expressionFailures)
+        public TypecheckInfo(Expression original, RecordSet recordSet, List<Expression> expressionFailures, GenExpressionValueForwards gen)
         {
             this.original = original;
             this.recordSet = recordSet;
             this.expressionFailures = expressionFailures;
+            this.gen = gen;
         }
 
         public String getDisplay(Expression expression) throws InternalException, UserException
@@ -75,16 +78,31 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
     {
         GenExpressionValueForwards gen = new GenExpressionValueForwards();
         ExpressionValue valid = gen.generate(r, generationStatus);
+        Expression expression = valid.expression;
         try
         {
-            if (null == valid.expression.check(valid.recordSet, TestUtil.typeState(), (e, s, q) ->
+            if (null == expression.check(valid.recordSet, TestUtil.typeState(), (e, s, q) ->
             {
                 // Throw an exception because the *original* should type-check, before
                 // we come to it and try to turn it into a failure:
-                throw new RuntimeException("Original did not type check: " + valid.expression + " because " + s);
-            })) throw new RuntimeException("Original did not type check: " + valid.expression);
+                throw new RuntimeException("Original did not type check: " + expression + " because " + s);
+            })) throw new RuntimeException("Original did not type check: " + expression);
+        }
+        catch (InternalException | UserException | RuntimeException e)
+        {
+            e.printStackTrace();
+            throw new RuntimeException(e);
+        }
+        return getTypecheckInfo(r, gen, expression);
+    }
 
-            List<Expression> failures = valid.expression._test_allMutationPoints().map(p -> {
+    @SuppressWarnings("nullness") // Some problem with Collectors.toList
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
+    private static TypecheckInfo getTypecheckInfo(final SourceOfRandomness r, final GenExpressionValueForwards gen, Expression expression)
+    {
+        try
+        {
+            List<Expression> failures = expression._test_allMutationPoints().<@Nullable Expression>map(p -> {
                 try
                 {
                     @Nullable Expression failedCopy = p.getFirst()._test_typeFailure(r.toJDKRandom(), new _test_TypeVary()
@@ -161,7 +179,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                     else
                     {
                         Expression failedFull = p.getSecond().apply(failedCopy);
-                        if (failedFull.toString().equals(valid.expression.toString()))
+                        if (failedFull.toString().equals(expression.toString()))
                         {
                             System.err.println("Error in GenTypecheckFail: converted expression to itself");
                         }
@@ -172,14 +190,14 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                 {
                     throw new RuntimeException(e);
                 }
-            }).filter(p -> p != null).collect(Collectors.toList());
+            }).<@NonNull Expression>filter(p -> p != null).collect(Collectors.toList());
 
             //for (Expression failure : failures)
             //{
             //    System.err.println("Transformed " + valid.expression + " into failure " + failure);
             //}
 
-            return new TypecheckInfo(valid.expression, gen.getRecordSet(), failures);
+            return new TypecheckInfo(expression, gen.getRecordSet(), failures, gen);
         }
         catch (InternalException | UserException | RuntimeException e)
         {
@@ -188,12 +206,20 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         }
     }
 
-    private DataType pickType(SourceOfRandomness r)
+    @Override
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
+    public List<TypecheckInfo> doShrink(SourceOfRandomness random, TypecheckInfo larger)
+    {
+        return larger.original._test_childMutationPoints().map(Pair::getFirst)
+            .map(e -> getTypecheckInfo(random, larger.gen, e)).collect(Collectors.<TypecheckInfo>toList());
+    }
+
+    private static DataType pickType(SourceOfRandomness r)
     {
         return GenExpressionValueBackwards.makeType(r);
     }
 
-    private DataType pickTypeOtherThan(@Nullable DataType type, SourceOfRandomness r) throws InternalException, UserException
+    private static DataType pickTypeOtherThan(@Nullable DataType type, SourceOfRandomness r) throws InternalException, UserException
     {
         DataType picked;
         do
@@ -204,7 +230,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         return picked;
     }
 
-    private DataType pickNonNumericType(SourceOfRandomness r)
+    private static DataType pickNonNumericType(SourceOfRandomness r)
     {
         DataType picked;
         do

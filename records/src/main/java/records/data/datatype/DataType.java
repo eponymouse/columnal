@@ -855,7 +855,13 @@ public class DataType
                 @Override
                 public @Nullable DataType number(DataType a, DataType b, NumberInfo displayInfoA, NumberInfo displayInfoB) throws InternalException, UserException
                 {
-                    return displayInfoA.sameType(displayInfoB) ? a : null;
+                    if (displayInfoA.sameType(displayInfoB))
+                        return a;
+                    else
+                    {
+                        onError.accept("Differing number types: " + displayInfoA + " vs " + displayInfoB);
+                        return null;
+                    }
                 }
 
                 @Override
@@ -867,7 +873,21 @@ public class DataType
                 @Override
                 public @Nullable DataType date(DataType a, DataType b, DateTimeInfo dateTimeInfoA, DateTimeInfo dateTimeInfoB) throws InternalException, UserException
                 {
-                    return dateTimeInfoA.sameType(dateTimeInfoB) ? a : null;
+                    if (dateTimeInfoA.sameType(dateTimeInfoB))
+                        return a;
+                    else
+                    {
+                        switch (relation)
+                        {
+                            case SYMMETRIC:
+                                onError.accept("Types differ: " + dateTimeInfoA + " vs " + dateTimeInfoB);
+                                break;
+                            case EXPECTED_A:
+                                onError.accept("Expected type " + dateTimeInfoA + " but found " + dateTimeInfoB);
+                                break;
+                        }
+                        return null;
+                    }
                 }
 
                 @Override
@@ -885,14 +905,39 @@ public class DataType
                     // two types the same type?  It should be enough to compare type names usually, but because
                     // of the tricks we pull in testing, we also check tags for sanity:
                     boolean same = typeNameA.equals(typeNameB) && tagsA.equals(tagsB);
-                    return same ? a : null;
+                    if (same)
+                        return a;
+                    else
+                    {
+                        switch (relation)
+                        {
+                            case SYMMETRIC:
+                                onError.accept("Types differ: " + typeNameA + " vs " + typeNameB);
+                                break;
+                            case EXPECTED_A:
+                                onError.accept("Expected type " + typeNameA + " but found " + typeNameB);
+                                break;
+                        }
+                        return null;
+                    }
                 }
 
                 @Override
                 public @Nullable DataType tuple(DataType a, DataType b, List<DataType> innerA, List<DataType> innerB) throws InternalException, UserException
                 {
                     if (innerA.size() != innerB.size())
+                    {
+                        switch (relation)
+                        {
+                            case SYMMETRIC:
+                                onError.accept("Tuples differ in size: " + innerA.size() + " vs " + innerB.size());
+                                break;
+                            case EXPECTED_A:
+                                onError.accept("Expected tuple of size " + innerA.size() + " but found " + innerB.size());
+                                break;
+                        }
                         return null;
+                    }
                     List<DataType> innerR = new ArrayList<>();
                     for (int i = 0; i < innerA.size(); i++)
                     {

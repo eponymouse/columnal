@@ -26,4 +26,10 @@ public class ExpressionValue
         this.recordSet = recordSet;
         this.expression = expression;
     }
+
+    @Override
+    public String toString()
+    {
+        return "Type: " + type + " Expression: " + expression;
+    }
 }
