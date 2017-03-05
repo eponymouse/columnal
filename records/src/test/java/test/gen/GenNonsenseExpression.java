@@ -160,55 +160,11 @@ public class GenNonsenseExpression extends Generator<Expression>
         )).get();
     }
 
+    @SuppressWarnings("nullness") // Some problem with Collectors.toList
     @Override
     public List<Expression> doShrink(SourceOfRandomness random, Expression larger)
     {
-        ArrayList<Expression> alt = new ArrayList<>();
-        alt.add(genTerminal(random));
-        if (larger instanceof BinaryOpExpression)
-        {
-            BinaryOpExpression e = (BinaryOpExpression) larger;
-            alt.add(e.copy(null, genTerminal(random)));
-            alt.add(e.copy(genTerminal(random), null));
-            alt.add(e.getLHS());
-            alt.add(e.getRHS());
-        }
-        else if (larger instanceof MatchExpression)
-        {
-            MatchExpression e = (MatchExpression)larger;
-            alt.add(e.getExpression());
-            for (Expression shrunk : doShrink(random, e.getExpression()))
-                alt.add(new MatchExpression(shrunk, Utility.<MatchExpression.MatchClause, Function<MatchExpression, MatchExpression.MatchClause>>mapList(e.getClauses(), c -> c::copy)));
-            alt.add(new MatchExpression(e.getExpression(), e.getClauses().stream().<Function<MatchExpression, MatchExpression.MatchClause>>map((MatchExpression.MatchClause c) -> {
-                alt.add(c.getOutcome());
-                return (MatchExpression ne) -> ne.new MatchClause(Utility.<MatchExpression.Pattern, MatchExpression.Pattern>mapList(c.getPatterns(), p -> shrinkPattern(random, p, ne)), random.choose(doShrink(random, c.getOutcome())));
-            }).collect(Collectors.<Function<MatchExpression, MatchExpression.MatchClause>>toList())));
-        }
-        else if (larger instanceof NaryOpExpression)
-        {
-            NaryOpExpression e = (NaryOpExpression)larger;
-            int size = e.getChildren().size();
-            for (int i = 0; i < size; i++)
-            {
-                int iFinal = i;
-                // TODO make copy with one less:
-                //if (size > 2)
-                    //alt.add(e.copy));
-                alt.add(e.getChildren().get(i));
-            }
-        }
-        else if (larger instanceof TagExpression)
-        {
-            @Nullable Expression inner = ((TagExpression) larger).getInner();
-            if (inner != null)
-                alt.add(inner);
-        }
-        return alt;
-    }
-
-    private MatchExpression.Pattern shrinkPattern(SourceOfRandomness random, MatchExpression.Pattern p, MatchExpression ne)
-    {
-        return new MatchExpression.Pattern(p.getPattern(), null);
+        return larger._test_childMutationPoints().map(Pair::getFirst).collect(Collectors.toList());
     }
 
     private class GenRandomOp extends Generator<String>
