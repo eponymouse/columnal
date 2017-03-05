@@ -124,7 +124,7 @@ public class ArrayExpression extends Expression
             @Nullable EvaluateState curState = state;
             for (int i = 0; i < items.size(); i++)
             {
-                curState = items.get(i).matchAsPattern(rowIndex, value, curState);
+                curState = items.get(i).matchAsPattern(rowIndex, list.get(i), curState);
                 if (curState == null)
                     return null;
             }
