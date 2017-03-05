@@ -101,7 +101,7 @@ public class TestLoadSaveExpression
                 new NumericLiteral(62, null),
                 new StringLiteral("hi")
             ), Arrays.asList(Op.SUBTRACT, Op.ADD)),
-            "abs(true+false - 632+@column \"Date\")-62+\"hi\""
+            "abs(true + false - 632 + @column Date) - 62 + \"hi\""
         );
     }
 

@@ -67,3 +67,5 @@ bracketedMatch : OPEN_BRACKET match CLOSE_BRACKET;
 // tagExpression doesn't need brackets because the constructor means it's identifiable from its left token
 expression : bracketedCompound | terminal | bracketedMatch | callExpression | tupleExpression | arrayExpression | tagExpression;
 topLevelExpression : compoundExpression | match | expression /* includes terminal */;
+
+completeExpression: topLevelExpression EOF;

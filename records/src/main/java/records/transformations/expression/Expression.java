@@ -131,7 +131,7 @@ public abstract class Expression
         {
             return Utility.parseAsOne(src.replace("\r", "").replace("\n", ""), ExpressionLexer::new, ExpressionParser::new, p ->
             {
-                return new CompileExpression(typeManager).visit(p.topLevelExpression());
+                return new CompileExpression(typeManager).visit(p.completeExpression());
             });
         }
         catch (RuntimeException e)

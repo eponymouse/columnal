@@ -542,6 +542,13 @@ public class TestUtil
             this.mgr = mgr;
             this.transformation = transformation;
         }
+
+        @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true) // Only for testing anyway
+        public String toString()
+        {
+            return transformation.toString();
+        }
     }
 
     public static class Expression_Mgr

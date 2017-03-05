@@ -57,7 +57,7 @@ public class InvalidOperatorExpression extends NaryOpExpression
     @Override
     protected String getSpecialPrefix()
     {
-        return "@invalidops";
+        return "@invalidops ";
     }
 
     @Override
