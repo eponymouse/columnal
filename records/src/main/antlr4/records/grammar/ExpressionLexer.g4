@@ -22,6 +22,7 @@ NON_EQUALITY : '<>';
 LESS_THAN: '<=' | '<';
 GREATER_THAN: '>=' | '>';
 MATCHES: '~';
+BACKSLASH: '\\';
 COLUMN : '@column';
 WHOLECOLUMN: '@wholecolumn';
 MATCH : '@match';
@@ -36,7 +37,7 @@ FUNCTION : '@function';
 NEWVAR : '@newvar';
 ANY : '@any';
 UNFINISHED : '@unfinished';
-CONSTRUCTOR : '\\';
+CONSTRUCTOR : '@tag';
 RAISEDTO : '^';
 COMMA: ',';
 

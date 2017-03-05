@@ -39,7 +39,7 @@ ifThenElseExpression : IF expression THEN expression ELSE expression;
 plusMinusPattern : expression PLUS_MINUS expression;
 compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | matchesExpression | plusMinusPattern | ifThenElseExpression;
 
-constructor : CONSTRUCTOR typeName COLON constructorName;
+constructor : CONSTRUCTOR typeName BACKSLASH constructorName;
 tagExpression : constructor (COLON expression)?;
 
 functionName : UNQUOTED_IDENT;

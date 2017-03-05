@@ -29,15 +29,37 @@ import java.util.function.Function;
 import java.util.stream.Stream;
 
 /**
- * Created by neil on 10/12/2016.
+ * An expression with a tagged type's tag (e.g. "Just" or "Nothing"), followed
+ * optionally by an inner expression.
  */
 public class TagExpression extends NonOperatorExpression
 {
+    /**
+     * The tag: first item is the type name, second item is the tag name
+     */
     private final Pair<String, String> tagName;
+    /**
+     * The inner expression.  May be empty if it's just a nullary tag name.
+     */
     private final @Nullable Expression inner;
+    /**
+     * During type-checking, we store the index of the tag if we successfully
+     * find the type and tag that we match
+     */
     private int index;
+    /**
+     * During type-checking, if we have an inner expression, we store the type
+     * which we figured out for it
+     */
     private @Nullable DataType innerDerivedType;
 
+    /**
+     *
+     * @param tagName The (type name, tag name) of the tag this expression refers to.
+     *                It is not guaranteed to be a valid type/tag combination;
+     *                that is checked later during type-checking
+     * @param inner   The optional inner expression for this tag expression.
+     */
     public TagExpression(Pair<String, String> tagName, @Nullable Expression inner)
     {
         this.tagName = tagName;
@@ -47,7 +69,9 @@ public class TagExpression extends NonOperatorExpression
     @Override
     public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
+        // First step is to the find the tag
         @Nullable TypeAndTagInfo typeAndIndex = state.findTaggedType(tagName, onError.recordError(this));
+        // Not found; nothing more we can do:
         if (typeAndIndex == null)
             return null;
         index = typeAndIndex.tagIndex;
@@ -134,7 +158,7 @@ public class TagExpression extends NonOperatorExpression
     public String save(boolean topLevel)
     {
         @Nullable String typeName = tagName.getFirst();
-        String tag = "\\" + OutputBuilder.quotedIfNecessary(typeName) + ":" + OutputBuilder.quotedIfNecessary(tagName.getSecond());
+        String tag = "@tag " + OutputBuilder.quotedIfNecessary(typeName) + "\\" + OutputBuilder.quotedIfNecessary(tagName.getSecond());
         if (inner == null)
             return tag;
         else
