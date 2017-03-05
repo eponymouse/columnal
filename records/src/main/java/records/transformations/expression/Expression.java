@@ -377,6 +377,12 @@ public abstract class Expression
             return new UnfinishedExpression(ctx.STRING().getText());
         }
 
+        @Override
+        public Expression visitNewVariable(ExpressionParser.NewVariableContext ctx)
+        {
+            return new VarDeclExpression(ctx.UNQUOTED_IDENT().getText());
+        }
+
         public Expression visitChildren(RuleNode node) {
             @Nullable Expression result = this.defaultResult();
             int n = node.getChildCount();
