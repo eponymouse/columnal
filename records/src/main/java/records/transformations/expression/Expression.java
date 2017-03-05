@@ -371,6 +371,12 @@ public abstract class Expression
             return new TupleExpression(ImmutableList.copyOf(Utility.mapList(ctx.expression(), c -> visitExpression(c))));
         }
 
+        @Override
+        public Expression visitUnfinished(ExpressionParser.UnfinishedContext ctx)
+        {
+            return new UnfinishedExpression(ctx.STRING().getText());
+        }
+
         public Expression visitChildren(RuleNode node) {
             @Nullable Expression result = this.defaultResult();
             int n = node.getChildCount();
@@ -383,7 +389,7 @@ public abstract class Expression
                 result = this.aggregateResult(result, childResult);
             }
             if (result == null)
-                throw new RuntimeException("No rules matched for " + node.getText());
+                throw new RuntimeException("No CompileExpression rules matched for " + node.getText());
             else
                 return result;
         }
