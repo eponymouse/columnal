@@ -804,6 +804,6 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
     public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
     {
         ExpressionEditorUtil.setError(container, error);
-        errorUpdater.setMessageAndFixes(error, quickFixes);
+        errorUpdater.setMessageAndFixes(new Pair<>(error, quickFixes));
     }
 }

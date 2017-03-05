@@ -294,7 +294,7 @@ public abstract class TransformationEditor
             Pair<String, List<DisplayValue>> h = headerAndData.get(i);
             TableColumn<List<DisplayValue>, DisplayValue> column = new TableColumn<List<DisplayValue>, DisplayValue>(h.getFirst());
             int colIndex = i;
-            column.setCellValueFactory(cdf -> new ReadOnlyObjectWrapper(cdf.getValue().get(colIndex)));
+            column.setCellValueFactory(cdf -> new ReadOnlyObjectWrapper<>(cdf.getValue().get(colIndex)));
             t.getColumns().add(column);
         }
     }

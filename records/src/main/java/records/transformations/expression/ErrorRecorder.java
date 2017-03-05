@@ -50,5 +50,9 @@ public interface ErrorRecorder
             this.title = title;
             this.fixedReplacement = fixedReplacement;
         }
+
+        public @Localized String getTitle() {
+            return title;
+        }
     }
 }

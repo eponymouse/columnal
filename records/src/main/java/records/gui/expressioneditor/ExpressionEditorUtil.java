@@ -1,20 +1,22 @@
 package records.gui.expressioneditor;
 
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanBinding;
+import javafx.beans.binding.ListBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.PopupControl;
-import javafx.scene.control.Skin;
-import javafx.scene.control.SkinBase;
-import javafx.scene.control.Skinnable;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.PopupWindow.AnchorLocation;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
@@ -67,7 +69,7 @@ public class ExpressionEditorUtil
         ErrorUpdater errorShower = installErrorShower(vBox, textField);
         return new Pair<>(vBox, (String s, List<ErrorRecorder.QuickFix> q) -> {
             setError(vBox, s);
-            errorShower.setMessageAndFixes(s, q);
+            errorShower.setMessageAndFixes(new Pair<>(s, q));
         });
     }
 
@@ -77,6 +79,7 @@ public class ExpressionEditorUtil
     {
         private final TextField textField;
         private final SimpleStringProperty message = new SimpleStringProperty("");
+        private final ObservableList<ErrorRecorder.QuickFix> quickFixes = FXCollections.observableArrayList();
         private final VBox vBox;
         private @Nullable PopupControl popup = null;
         private boolean focused = false;
@@ -93,12 +96,32 @@ public class ExpressionEditorUtil
 
         private static class ErrorMessagePopup extends PopupControl
         {
+            private final BooleanBinding hasFixes;
+
             @SuppressWarnings("initialization")
-            public ErrorMessagePopup(StringProperty msg)
+            public ErrorMessagePopup(StringProperty msg, ObservableList<ErrorRecorder.QuickFix> quickFixes)
             {
-                Label label = new Label();
-                label.getStyleClass().add("expression-error-popup");
-                label.textProperty().bind(msg);
+                Label errorLabel = new Label();
+                errorLabel.getStyleClass().add("expression-error-popup");
+                errorLabel.textProperty().bind(msg);
+
+                ListView<ErrorRecorder.QuickFix> fixList = new ListView<>(quickFixes);
+                // Keep reference to prevent GC:
+                hasFixes = Bindings.isEmpty(quickFixes).not();
+                fixList.visibleProperty().bind(hasFixes);
+
+                fixList.setCellFactory(lv -> new ListCell<ErrorRecorder.QuickFix>() {
+                    @Override
+                    @OnThread(Tag.FX)
+                    protected void updateItem(ErrorRecorder.QuickFix item, boolean empty) {
+                        super.updateItem(item, empty);
+                        setText("");
+                        setGraphic(empty ? null : new TextFlow(new Text(item.getTitle())));
+                    }
+                });
+
+                VBox container = new VBox(errorLabel, fixList);
+
                 setSkin(new Skin<ErrorMessagePopup>()
                 {
                     @Override
@@ -112,7 +135,7 @@ public class ExpressionEditorUtil
                     @OnThread(Tag.FX)
                     public Node getNode()
                     {
-                        return label;
+                        return container;
                     }
 
                     @Override
@@ -134,7 +157,7 @@ public class ExpressionEditorUtil
             if (vBox.getScene() != null)
             {
                 Bounds screenBounds = vBox.localToScreen(vBox.getBoundsInLocal());
-                popup = new ErrorMessagePopup(message);
+                popup = new ErrorMessagePopup(message, quickFixes);
                 popup.setAnchorLocation(AnchorLocation.CONTENT_BOTTOM_LEFT);
                 popup.show(vBox, screenBounds.getMinX(), screenBounds.getMinY());
             }
@@ -189,12 +212,12 @@ public class ExpressionEditorUtil
             this.focused = newFocused;
         }
 
-        public void setMessageAndFixes(@Nullable String newMsg, List<ErrorRecorder.QuickFix> quickFixes)
+        public void setMessageAndFixes(@Nullable Pair<String, List<ErrorRecorder.QuickFix>> newMsgAndFixes)
         {
-            // TODO show the fixes, too
-            if (newMsg == null)
+            if (newMsgAndFixes == null)
             {
                 message.setValue("");
+                quickFixes.clear();
                 // Hide the popup:
                 if (popup != null)
                 {
@@ -203,7 +226,8 @@ public class ExpressionEditorUtil
             }
             else
             {
-                message.set(newMsg);
+                message.set(newMsgAndFixes.getFirst());
+                quickFixes.setAll(newMsgAndFixes.getSecond());
                 // If we are focused or hovering already, now need to show message
                 if (focused || hovering)
                 {
