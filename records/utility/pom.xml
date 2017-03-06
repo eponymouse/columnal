@@ -112,8 +112,8 @@
                         <arg>-Xbootclasspath/p:${annotatedJdk}</arg>
                         <arg>-AprintErrorStack</arg>
                         <arg>-AskipDefs=records.grammar.|one.util.</arg>
-                        <arg>-Astubs=${basedir}/../stubs</arg>
-                        <arg>-Apropfiles=/Users/neil/IdeaProjects/records/records/src/main/resources/transformations_en.properties:/Users/neil/IdeaProjects/records/records/src/main/resources/expression_en.properties:/Users/neil/IdeaProjects/records/records/src/main/resources/function_en.properties</arg>
+                        <arg>-Astubs=/Users/neil/intellij/records/records/stubs</arg>
+                        <arg>-Apropfiles=/Users/neil/intellij/records/records/app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/function_en.properties</arg>
                         <arg>-Xplugin:threadchecker.TCPlugin</arg>
                     </compilerArgs>
                 </configuration>
