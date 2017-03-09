@@ -1077,33 +1077,36 @@ public class DataType
             @Override
             public FunctionInt<RecordSet, Column> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return null;
+                return rs -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Utility.mapListEx(value, Utility::valueTemporal));
             }
 
             @Override
             public FunctionInt<RecordSet, Column> bool() throws InternalException, UserException
             {
-                return rs -> new MemoryBooleanColumn(rs, columnId, Utility.mapListEx(value, Utility::valueString));
+                return rs -> new MemoryBooleanColumn(rs, columnId, Utility.mapListEx(value, Utility::valueBoolean));
             }
 
             @Override
             public FunctionInt<RecordSet, Column> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return null;
+                return rs -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Utility.mapListEx(value, Utility::valueTagged));
             }
 
             @Override
             public FunctionInt<RecordSet, Column> tuple(List<DataType> inner) throws InternalException, UserException
             {
-                return null;
+                return rs -> new MemoryTupleColumn(rs, columnId, inner, Utility.mapListEx(value, t -> Utility.valueTuple(t, inner.size())));
             }
 
             @Override
-            public FunctionInt<RecordSet, Column> array(DataType inner) throws InternalException, UserException
+            public FunctionInt<RecordSet, Column> array(@Nullable DataType inner) throws InternalException, UserException
             {
-                return null;
+                if (inner == null)
+                    throw new UserException("Cannot create column with empty array type");
+                DataType innerFinal = inner;
+                return rs -> new MemoryArrayColumn(rs, columnId, innerFinal, Utility.mapListEx(value, Utility::valueList));
             }
-        })
+        });
     }
 
     @OnThread(Tag.Simulation)

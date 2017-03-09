@@ -10,6 +10,7 @@ import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.net.URL;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -675,6 +676,34 @@ public class Utility
         throw new InternalException("Expected number but found " + o.getClass());
     }
 
+    public static @Value Boolean valueBoolean(@Value Object o) throws InternalException
+    {
+        if (o instanceof Boolean)
+            return (@Value Boolean)o;
+        throw new InternalException("Expected boolean but found " + o.getClass());
+    }
+
+    public static @Value String valueString(@Value Object o) throws InternalException
+    {
+        if (o instanceof String)
+            return (@Value String)o;
+        throw new InternalException("Expected text but found " + o.getClass());
+    }
+
+    public static @Value TemporalAccessor valueTemporal(@Value Object o) throws InternalException
+    {
+        if (o instanceof TemporalAccessor)
+            return (@Value TemporalAccessor)o;
+        throw new InternalException("Expected temporal but found " + o.getClass());
+    }
+
+    public static @Value TaggedValue valueTagged(@Value Object o) throws InternalException
+    {
+        if (o instanceof TaggedValue)
+            return (@Value TaggedValue)o;
+        throw new InternalException("Expected tagged value but found " + o.getClass());
+    }
+
     // Like indexOf on lists, but uses only reference equality, and thus doesn't mind about initialization
     public static <T> int indexOfRef(List<T> list, @UnknownInitialization T item)
     {
@@ -689,6 +718,14 @@ public class Utility
     public static <T> boolean containsRef(List<T> list, @UnknownInitialization T item)
     {
         return indexOfRef(list, item) != -1;
+    }
+
+    public static <T> List<T> replicate(int length, T value)
+    {
+        List<T> r = new ArrayList<T>();
+        for (int i = 0; i < length; i++)
+            r.add(value);
+        return r;
     }
 
     public static class ReadState

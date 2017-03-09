@@ -90,7 +90,7 @@ public class ImmediateDataSource extends DataSource
         {
             allColumns.add(rs -> column.getType().makeImmediateColumn(column.getName()).apply(rs));
         }
-        allColumns.add(rs -> newColumnType.makeImmediateColumn(new ColumnId(newColumnName), newColumnValue).apply(rs));
+        allColumns.add(rs -> newColumnType.makeImmediateColumn(new ColumnId(newColumnName), Utility.replicate(data.getLength(), newColumnValue)).apply(rs));
         return new ImmediateDataSource(getManager(), getId(), new KnownLengthRecordSet(allColumns, data.getLength()));
     }
 
