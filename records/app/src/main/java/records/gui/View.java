@@ -57,15 +57,11 @@ import java.util.concurrent.atomic.AtomicInteger;
  * Created by neil on 18/10/2016.
  */
 @OnThread(Tag.FXPlatform)
-public class View extends StackPane
+public class View extends StackPane implements TableManager.TableManagerListener
 {
     private static final double DEFAULT_SPACE = 150.0;
 
     private final ObservableMap<Transformation, Overlays> overlays;
-    @OnThread(value = Tag.Any,requireSynchronized = true)
-    private final List<DataSource> sources = new ArrayList<>();
-    @OnThread(value = Tag.Any,requireSynchronized = true)
-    private final List<Transformation> transformations = new ArrayList<>();
     private final TableManager tableManager;
     private final Pane mainPane;
     // We want a display that dims everything except the hovered-over table
@@ -90,13 +86,13 @@ public class View extends StackPane
             }
 
             @Override
-            public @OnThread(Tag.FXPlatform) void saveTable(String s)
+            public @OnThread(Tag.Simulation) void saveTable(String s)
             {
                 super.saveTable(s);
                 getNext();
             }
 
-            @OnThread(Tag.FXPlatform)
+            @OnThread(Tag.Simulation)
             private void getNext()
             {
                 if (it.hasNext())
@@ -104,26 +100,40 @@ public class View extends StackPane
                     it.next().save(destination, this);
                 }
                 else
-                    then.consume(getCompleteFile());
+                {
+                    String completeFile = getCompleteFile();
+                    Platform.runLater(() -> then.consume(completeFile));
+                }
             }
         };
-        new Fetcher(getAllTables()).getNext();
+        Workers.onWorkerThread("Saving", () ->
+        {
+            new Fetcher(getAllTables()).getNext();
+        });
     }
 
     @OnThread(Tag.Any)
     @NonNull
     private synchronized List<Table> getAllTables()
     {
-        List<Table> all = new ArrayList<>();
-        all.addAll(sources);
-        all.addAll(transformations);
-        return all;
+        return tableManager.getAllTables();
     }
 
     @OnThread(Tag.Any)
     public TableManager getManager()
     {
         return tableManager;
+    }
+
+    @Override
+    @OnThread(Tag.Simulation)
+    public void removeTable(Table t)
+    {
+        Platform.runLater(() ->
+        {
+            overlays.remove(t); // Listener removes them from display
+            mainPane.getChildren().remove(t.getDisplay());
+        });
     }
 
     @OnThread(Tag.FXPlatform)
@@ -199,7 +209,7 @@ public class View extends StackPane
     @SuppressWarnings({"initialization", "keyfor", "interning", "userindex", "valuetype"})
     public View() throws InternalException, UserException
     {
-        tableManager = new TableManager();
+        tableManager = new TableManager(this);
         mainPane = new Pane();
         pickPaneMouse = new Pane();
         pickPaneDisplay = new Pane();
@@ -270,36 +280,34 @@ public class View extends StackPane
         return picked;
     }
 
+    @OnThread(Tag.Any)
     public void addSource(DataSource data)
     {
-        synchronized (this)
-        {
-            sources.add(data);
-        }
-        addDisplay(new TableDisplay(this, data), null);
+        Platform.runLater(() -> {
+            addDisplay(new TableDisplay(this, data), null);
+        });
     }
 
-    public TableDisplay addTransformation(Transformation transformation)
+    @OnThread(Tag.Any)
+    public void addTransformation(Transformation transformation)
     {
-        synchronized (this)
+        Platform.runLater(() ->
         {
-            transformations.add(transformation);
-        }
-        TableDisplay tableDisplay = new TableDisplay(this, transformation);
-        addDisplay(tableDisplay, getTableDisplayOrNull(transformation.getSources().get(0)));
+            TableDisplay tableDisplay = new TableDisplay(this, transformation);
+            addDisplay(tableDisplay, getTableDisplayOrNull(transformation.getSources().get(0)));
 
-        List<TableDisplay> sourceDisplays = new ArrayList<>();
-        for (TableId t : transformation.getSources())
-        {
-            TableDisplay td = getTableDisplayOrNull(t);
-            if (td != null)
-                sourceDisplays.add(td);
-        }
-        overlays.put(transformation, new Overlays(sourceDisplays, transformation.getTransformationLabel(), tableDisplay, () -> {
-            View.this.edit(transformation.getId(), transformation.edit(View.this));
-        }));
-
-        return tableDisplay;
+            List<TableDisplay> sourceDisplays = new ArrayList<>();
+            for (TableId t : transformation.getSources())
+            {
+                TableDisplay td = getTableDisplayOrNull(t);
+                if (td != null)
+                    sourceDisplays.add(td);
+            }
+            overlays.put(transformation, new Overlays(sourceDisplays, transformation.getTransformationLabel(), tableDisplay, () ->
+            {
+                View.this.edit(transformation.getId(), transformation.edit(View.this));
+            }));
+        });
     }
 
     private void addDisplay(TableDisplay tableDisplay, @Nullable TableDisplay alignToRightOf)
@@ -319,119 +327,6 @@ public class View extends StackPane
             return null;
         else
             return table.getDisplay();
-    }
-
-    public void add(@Nullable TableId replaceTableId, Transformation transformation) throws InternalException, UserException
-    {
-        Map<TableId, List<TableId>> edges = new HashMap<>();
-        HashSet<TableId> affected = new HashSet<>();
-        affected.add(transformation.getId());
-        if (replaceTableId != null)
-            affected.add(replaceTableId);
-        HashSet<TableId> allIds = new HashSet<>();
-        synchronized (this)
-        {
-            for (Table t : sources)
-                allIds.add(t.getId());
-            for (Transformation t : transformations)
-            {
-                allIds.add(t.getId());
-                edges.put(t.getId(), t.getSources());
-            }
-        }
-        allIds.addAll(affected);
-        List<TableId> linearised = GraphUtility.lineariseDAG(allIds, edges, affected);
-
-        // Find first affected:
-        int processFrom = affected.stream().mapToInt(linearised::indexOf).min().orElse(-1);
-        // If it's not in affected itself, serialise it:
-        List<String> reRun = new ArrayList<>();
-        AtomicInteger toSave = new AtomicInteger(1); // Keep one extra until we've lined up all jobs
-        CompletableFuture<List<String>> savedToReRun = new CompletableFuture<>();
-        for (int i = processFrom; i < linearised.size(); i++)
-        {
-            if (!affected.contains(linearised.get(i)))
-            {
-                // Add job:
-                toSave.incrementAndGet();
-                removeAndSerialise(linearised.get(i), new BlankSaver()
-                {
-                    // Ignore types and units because they are all already loaded
-                    @Override
-                    public @OnThread(Tag.FXPlatform) void saveTable(String script)
-                    {
-                        reRun.add(script);
-                        if (toSave.decrementAndGet() == 0)
-                        {
-                            // Saved all of them
-                            savedToReRun.complete(reRun);
-                        }
-                    }
-                });
-            }
-        }
-        if (toSave.decrementAndGet() == 0) // Remove extra; can complete now when hits zero
-        {
-            savedToReRun.complete(reRun);
-        }
-
-        synchronized (this)
-        {
-            if (replaceTableId != null)
-                removeAndSerialise(replaceTableId, new BlankSaver());
-        }
-        addTransformation(transformation);
-
-        savedToReRun.thenAccept(ss -> {
-            Utility.alertOnErrorFX_(() -> reAddAll(ss));
-        });
-    }
-
-    private void reAddAll(List<String> scripts) throws UserException, InternalException
-    {
-        for (String script : scripts)
-        {
-            Workers.onWorkerThread("Re-running affected table", () -> Utility.alertOnError_(() -> {
-                Transformation transformation = TransformationManager.getInstance().loadOne(tableManager, script);
-                Platform.runLater(() -> addTransformation(transformation));
-            }));
-
-        }
-    }
-
-    private void removeAndSerialise(TableId tableId, Saver then)
-    {
-        Table removed = null;
-        synchronized (this)
-        {
-            for (Iterator<DataSource> iterator = sources.iterator(); iterator.hasNext(); )
-            {
-                Table t = iterator.next();
-                if (t.getId().equals(tableId))
-                {
-                    iterator.remove();
-                    removed = t;
-                    break;
-                }
-            }
-            if (removed == null)
-                for (Iterator<Transformation> iterator = transformations.iterator(); iterator.hasNext(); )
-                {
-                    Transformation t = iterator.next();
-                    if (t.getId().equals(tableId))
-                    {
-                        iterator.remove();
-                        overlays.remove(t); // Listener removes them from display
-                        removed = t;
-                        break;
-                    }
-                }
-        }
-        if (removed != null)
-        {
-            mainPane.getChildren().remove(removed.getDisplay());
-            removed.save(null, then);
-        }
     }
 
     public void edit(TableId existingTableId, TransformationEditor selectedEditor)
@@ -455,7 +350,7 @@ public class View extends StackPane
     private void showEditDialog(EditTransformationDialog dialog, @Nullable TableId replaceOnOK)
     {
         // add will re-run any dependencies:
-        dialog.show(optNewTable -> optNewTable.ifPresent(t -> Utility.alertOnErrorFX_(() -> add(replaceOnOK, t))));
+        dialog.show(optNewTable -> optNewTable.ifPresent(t -> Workers.onWorkerThread("Updating tables", () -> Utility.alertOnError_(() -> tableManager.edit(replaceOnOK, t)))));
     }
 
     @Override

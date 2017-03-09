@@ -339,7 +339,7 @@ public class PropTypecheckIndividual
     {
         public DummyRecordSet() throws InternalException, UserException
         {
-            super("Dummy", Collections.emptyList(), 0);
+            super(Collections.emptyList(), 0);
         }
     }
 

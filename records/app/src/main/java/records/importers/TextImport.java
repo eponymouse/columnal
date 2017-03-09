@@ -109,7 +109,7 @@ public class TextImport
         }
 
 
-        RecordSet rs = new RecordSet(textFile.getName(), columns)
+        RecordSet rs = new RecordSet(columns)
         {
             protected int rowCount = -1;
 

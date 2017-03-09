@@ -107,7 +107,7 @@ public class HideColumns extends Transformation
             if (shownColumns.isEmpty())
                 throw new UserException("Cannot hide all columns");
 
-            theResult = new RecordSet("Hidden", Utility.mapList(shownColumns, c -> rs -> new Column(rs)
+            theResult = new RecordSet(Utility.mapList(shownColumns, c -> rs -> new Column(rs)
             {
                 @Override
                 public @OnThread(Tag.Any) ColumnId getName()
@@ -152,7 +152,8 @@ public class HideColumns extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) List<TableId> getSources()
+    @OnThread(Tag.Any)
+    public List<TableId> getSources()
     {
         return Collections.singletonList(srcTableId);
     }
@@ -170,7 +171,7 @@ public class HideColumns extends Transformation
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
+    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination)
     {
         OutputBuilder b = new OutputBuilder();
         for (ColumnId c : hideIds)

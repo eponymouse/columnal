@@ -17,6 +17,7 @@ import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import records.data.RecordSet;
 import records.data.Table;
+import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -25,9 +26,15 @@ import utility.Utility;
 import utility.Workers;
 
 import java.util.ArrayList;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * Created by neil on 18/10/2016.
+ * A pane which displays a table.  This includes the faux title bar
+ * of the table which you can use to drag it around, the buttons in
+ * the title bar for manipulation, and the display of the data itself.
+ *
+ * Primarily, this class is responsible for the moving and resizing within
+ * the display.  The data is handled by the inner class TableDataDisplay.
  */
 @OnThread(Tag.FXPlatform)
 public class TableDisplay extends BorderPane
@@ -46,6 +53,8 @@ public class TableDisplay extends BorderPane
     private boolean resizeRight;
     private boolean resizeTop;
     private boolean resizeBottom;
+    @OnThread(Tag.Any)
+    private final AtomicReference<Bounds> mostRecentBounds;
 
     @OnThread(Tag.Any)
     public RecordSet getRecordSet()
@@ -135,23 +144,29 @@ public class TableDisplay extends BorderPane
         HBox.setHgrow(spacer, Priority.ALWAYS);
         Button addButton = new Button("+");
         addButton.setOnAction(e -> {
-            /*
-            try
-            {
-                //SummaryStatistics.withGUICreate(rs, r -> parent.add(new Table(parent, r.getResult())));
-            }
-            catch (Exception ex)
-            {
-                ex.printStackTrace();
-                // TODO tell user
-            }
-            */
             parent.edit(getTable());
         });
 
         Label title = new Label(table.getId().getOutput());
         Utility.addStyleClass(title, "table-title");
-        HBox header = new HBox(title, spacer, addButton);
+        HBox header = new HBox(title, spacer);
+        if (table.showAddColumnButton())
+        {
+            Button addColumnButton = new Button("Add Column");
+            addColumnButton.setOnAction(e -> {
+                // TODO show a dialog to prompt for these values:
+                Workers.onWorkerThread("Adding column", () ->
+                {
+                    Utility.alertOnError_(() ->
+                    {
+                        Table newTable = table.addColumn("NewCol", DataType.NUMBER, 0);
+                        parent.getManager().edit(table.getId(), newTable);
+                    });
+                });
+            });
+            header.getChildren().add(addColumnButton);
+        }
+        header.getChildren().add(addButton);
         Utility.addStyleClass(header, "table-header");
         setTop(header);
 
@@ -211,6 +226,9 @@ public class TableDisplay extends BorderPane
         setOnMousePressed(onPressed);
         setOnMouseDragged(e -> dragResize(e.getSceneX(), e.getSceneY()));
         setOnMouseReleased(e -> { resizing = false; });
+
+        mostRecentBounds = new AtomicReference<>(getBoundsInParent());
+        Utility.addChangeListenerPlatformNN(boundsInParentProperty(), mostRecentBounds::set);
     }
 
     private boolean dragResize(double sceneX, double sceneY)
@@ -239,5 +257,11 @@ public class TableDisplay extends BorderPane
             return true;
         }
         return false;
+    }
+
+    @OnThread(Tag.Any)
+    public Bounds getPosition()
+    {
+        return mostRecentBounds.get();
     }
 }

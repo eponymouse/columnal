@@ -1,16 +1,21 @@
 package records.data;
 
-import javafx.application.Platform;
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
+import records.error.FunctionInt;
+import records.error.InternalException;
+import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
-import utility.Workers;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by neil on 09/11/2016.
@@ -38,7 +43,7 @@ public class ImmediateDataSource extends DataSource
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void save(@Nullable File destination, Saver then)
+    public @OnThread(Tag.Simulation) void save(@Nullable File destination, Saver then)
     {
         //dataSourceImmedate : DATA tableId BEGIN NEWLINE;
         //immediateDataLine : ITEM+ NEWLINE;
@@ -46,7 +51,7 @@ public class ImmediateDataSource extends DataSource
 
         OutputBuilder b = new OutputBuilder();
         b.t(MainLexer.DATA).id(getId()).t(MainLexer.FORMAT).begin().nl();
-        Utility.alertOnErrorFX_(() ->
+        Utility.alertOnError_(() ->
         {
             for (Column c : data.getColumns())
             {
@@ -55,24 +60,38 @@ public class ImmediateDataSource extends DataSource
             }
         });
         b.end().t(MainLexer.FORMAT).nl();
-        Workers.onWorkerThread("Fetching data for save", () -> {
-            Utility.alertOnError_(() -> {
-                b.t(MainLexer.VALUES).begin().nl();
-                for (int i = 0; data.indexValid(i); i++)
-                {
-                    b.indent();
-                    for (Column c : data.getColumns())
-                        b.data(c.getType(), i);
-                    b.nl();
-                }
-            });
-            Platform.runLater(() -> {
-                b.end().t(MainLexer.VALUES).nl();
-                savePosition(b);
-                b.end().id(getId()).nl();
-                then.saveTable(b.toString());
-            });
+        Utility.alertOnError_(() -> {
+            b.t(MainLexer.VALUES).begin().nl();
+            for (int i = 0; data.indexValid(i); i++)
+            {
+                b.indent();
+                for (Column c : data.getColumns())
+                    b.data(c.getType(), i);
+                b.nl();
+            }
         });
+        b.end().t(MainLexer.VALUES).nl();
+        savePosition(b);
+        b.end().id(getId()).nl();
+        then.saveTable(b.toString());
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) boolean showAddColumnButton()
+    {
+        return true;
+    }
+
+    @Override
+    public Table addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException, UserException
+    {
+        List<FunctionInt<RecordSet, Column>> allColumns = new ArrayList<>();
+        for (Column column : data.getColumns())
+        {
+            allColumns.add(rs -> column.getType().makeImmediateColumn(column.getName()).apply(rs));
+        }
+        allColumns.add(rs -> newColumnType.makeImmediateColumn(new ColumnId(newColumnName), newColumnValue).apply(rs));
+        return new ImmediateDataSource(getManager(), getId(), new KnownLengthRecordSet(allColumns, data.getLength()));
     }
 
     @Override

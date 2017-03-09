@@ -75,7 +75,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                     ExBiFunction<Integer, RecordSet, Column> col = genColumn.generate(r, generationStatus);
                     columns.add(rs -> col.apply(length, rs));
                 }
-                tables.add(new ImmediateDataSource(mgr, new KnownLengthRecordSet("Title " + t, columns, length)));
+                tables.add(new ImmediateDataSource(mgr, new KnownLengthRecordSet(columns, length)));
             }
             return new ImmediateData_Mgr(mgr, tables);
         }

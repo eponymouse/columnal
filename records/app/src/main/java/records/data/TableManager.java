@@ -1,5 +1,6 @@
 package records.data;
 
+import javafx.application.Platform;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -17,19 +18,17 @@ import records.transformations.TransformationManager;
 import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.GraphUtility;
 import utility.Utility;
 import utility.Workers;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 14/11/2016.
@@ -39,11 +38,17 @@ public class TableManager
 {
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private final Map<TableId, List<Table>> usedIds = new HashMap<>();
+    @OnThread(value = Tag.Any,requireSynchronized = true)
+    private final List<DataSource> sources = new ArrayList<>();
+    @OnThread(value = Tag.Any,requireSynchronized = true)
+    private final List<Transformation> transformations = new ArrayList<>();
     private final UnitManager unitManager;
     private final TypeManager typeManager;
+    private final TableManagerListener listener;
 
-    public TableManager() throws UserException, InternalException
+    public TableManager(TableManagerListener listener) throws UserException, InternalException
     {
+        this.listener = listener;
         this.unitManager = new UnitManager();;
         this.typeManager = new TypeManager(unitManager);
     }
@@ -86,6 +91,14 @@ public class TableManager
     private synchronized void record(@UnknownInitialization(Object.class) Table table, TableId id)
     {
         usedIds.computeIfAbsent(id, x -> new ArrayList<>()).add(table);
+        if (table instanceof DataSource)
+        {
+            sources.add((DataSource)table);
+        }
+        else if (table instanceof Transformation)
+        {
+            transformations.add((Transformation)table);
+        }
     }
 
     // Throws a UserException if already in use, otherwise registers it as used.
@@ -174,7 +187,7 @@ public class TableManager
         return typeManager;
     }
 
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Simulation)
     public void save(@Nullable File destination, Saver saver) throws InternalException, UserException
     {
         // TODO save units
@@ -197,8 +210,158 @@ public class TableManager
         }
     }
 
-    public synchronized Collection<Table> getAllTables()
+    public synchronized List<Table> getAllTables()
     {
-        return usedIds.values().stream().flatMap(Collection::stream).collect(Collectors.<@NonNull Table>toList());
+        return Stream.<Table>concat(sources.stream(), transformations.stream()).collect(Collectors.<Table>toList());
+    }
+
+    /**
+     * When you edit a table, we must update all dependent tables.  The way we do this
+     * is to work out what all the dependent tables *are*, then save them as a script.
+     * Then all dependent tables are removed, and the edited table is replaced.
+     * The saved scripts are then re-run with the new data (which may mean they
+     * contain errors where they did not before)
+     *
+     * @param replaceTableId
+     * @param replacement
+     * @throws InternalException
+     * @throws UserException
+     */
+    @OnThread(Tag.Simulation)
+    public void edit(@Nullable TableId replaceTableId, Table replacement) throws InternalException, UserException
+    {
+        Map<TableId, List<TableId>> edges = new HashMap<>();
+        HashSet<TableId> affected = new HashSet<>();
+        affected.add(replacement.getId());
+        if (replaceTableId != null)
+            affected.add(replaceTableId);
+        HashSet<TableId> allIds = new HashSet<>();
+        synchronized (this)
+        {
+            for (Table t : sources)
+                allIds.add(t.getId());
+            for (Transformation t : transformations)
+            {
+                allIds.add(t.getId());
+                edges.put(t.getId(), t.getSources());
+            }
+        }
+        allIds.addAll(affected);
+        List<TableId> linearised = GraphUtility.lineariseDAG(allIds, edges, affected);
+
+        // Find first affected:
+        int processFrom = affected.stream().mapToInt(linearised::indexOf).min().orElse(-1);
+        // If it's not in affected itself, serialise it:
+        List<String> reRun = new ArrayList<>();
+        AtomicInteger toSave = new AtomicInteger(1); // Keep one extra until we've lined up all jobs
+        CompletableFuture<List<String>> savedToReRun = new CompletableFuture<>();
+        for (int i = processFrom; i < linearised.size(); i++)
+        {
+            if (!affected.contains(linearised.get(i)))
+            {
+                // Add job:
+                toSave.incrementAndGet();
+                removeAndSerialise(linearised.get(i), new Table.BlankSaver()
+                {
+                    // Ignore types and units because they are all already loaded
+                    @Override
+                    public @OnThread(Tag.Simulation) void saveTable(String script)
+                    {
+                        reRun.add(script);
+                        if (toSave.decrementAndGet() == 0)
+                        {
+                            // Saved all of them
+                            savedToReRun.complete(reRun);
+                        }
+                    }
+                });
+            }
+        }
+        if (toSave.decrementAndGet() == 0) // Remove extra; can complete now when hits zero
+        {
+            savedToReRun.complete(reRun);
+        }
+
+        synchronized (this)
+        {
+            if (replaceTableId != null)
+                removeAndSerialise(replaceTableId, new Table.BlankSaver());
+        }
+        registerId(replacement.getId(), replacement);
+
+        savedToReRun.thenAccept(ss -> {
+            Utility.alertOnError_(() -> reAddAll(ss));
+        });
+    }
+
+    /**
+     * Removes the given table, saving a script to reproduce it
+     * in the given Saver.
+     */
+    @OnThread(Tag.Simulation)
+    private void removeAndSerialise(TableId tableId, Saver then)
+    {
+        Table removed = null;
+        synchronized (this)
+        {
+            for (Iterator<DataSource> iterator = sources.iterator(); iterator.hasNext(); )
+            {
+                Table t = iterator.next();
+                if (t.getId().equals(tableId))
+                {
+                    iterator.remove();
+                    removed = t;
+                    break;
+                }
+            }
+            if (removed == null)
+                for (Iterator<Transformation> iterator = transformations.iterator(); iterator.hasNext(); )
+                {
+                    Transformation t = iterator.next();
+                    if (t.getId().equals(tableId))
+                    {
+                        iterator.remove();
+
+                        removed = t;
+                        break;
+                    }
+                }
+        }
+        if (removed != null)
+        {
+            listener.removeTable(removed);
+            removed.save(null, then);
+        }
+    }
+
+    /**
+     * Re-runs the list of scripts to re-insert a set of transformations.
+     *
+     * They will be re-run in order, so it is important to pass them in
+     * an order where each item only depends on those before it in the list.
+     */
+    @OnThread(Tag.Simulation)
+    private void reAddAll(List<String> scripts) throws UserException, InternalException
+    {
+        for (String script : scripts)
+        {
+            Utility.alertOnError_(() -> {
+                Transformation transformation = TransformationManager.getInstance().loadOne(this, script);
+                listener.addTransformation(transformation);
+            });
+
+        }
+    }
+
+    public void addSource(DataSource ds)
+    {
+        registerId(ds.getId(), ds);
+    }
+
+    public static interface TableManagerListener
+    {
+        public void removeTable(Table t);
+
+        public void addTransformation(Transformation transformation);
     }
 }

@@ -169,7 +169,7 @@ public class Sort extends Transformation
                 });
             }
 
-            theResult = new RecordSet("Sorted", columns)
+            theResult = new RecordSet(columns)
             {
                 @Override
                 public boolean indexValid(int index) throws UserException, InternalException
@@ -272,7 +272,8 @@ public class Sort extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) List<TableId> getSources()
+    @OnThread(Tag.Any)
+    public List<TableId> getSources()
     {
         return Collections.singletonList(srcTableId);
     }
@@ -568,7 +569,7 @@ public class Sort extends Transformation
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
+    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination)
     {
         OutputBuilder b = new OutputBuilder();
         for (ColumnId c : originalSortBy)

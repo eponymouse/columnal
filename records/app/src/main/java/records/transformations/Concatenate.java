@@ -181,7 +181,7 @@ public class Concatenate extends Transformation
                 ends.add(totalLength);
             }
             List<Table> tablesFinal = tables;
-            rs = new KnownLengthRecordSet("", Utility.<Entry<ColumnId, DataType>, FunctionInt<RecordSet, Column>>mapList(new ArrayList<>(prevColumns.entrySet()), (Entry<ColumnId, DataType> oldC) -> new FunctionInt<RecordSet, Column>()
+            rs = new KnownLengthRecordSet(Utility.<Entry<ColumnId, DataType>, FunctionInt<RecordSet, Column>>mapList(new ArrayList<>(prevColumns.entrySet()), (Entry<ColumnId, DataType> oldC) -> new FunctionInt<RecordSet, Column>()
             {
                 @Override
                 @OnThread(Tag.Simulation)
@@ -246,7 +246,8 @@ public class Concatenate extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) List<TableId> getSources()
+    @OnThread(Tag.Any)
+    public List<TableId> getSources()
     {
         return sources;
     }
@@ -264,7 +265,7 @@ public class Concatenate extends Transformation
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
+    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination)
     {
         return missingValues.entrySet().stream().map((Entry<ColumnId, Pair<DataType, Optional<@Value Object>>> e) ->
         {

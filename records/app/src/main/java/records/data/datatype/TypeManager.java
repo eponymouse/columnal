@@ -203,7 +203,7 @@ public class TypeManager
         return Collections.unmodifiableMap(knownTypes);
     }
 
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Simulation)
     public void save(Saver saver) throws InternalException, UserException
     {
         Map<@NonNull DataType, Collection<DataType>> incomingRefs = new HashMap<>();

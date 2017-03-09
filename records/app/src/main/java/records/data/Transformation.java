@@ -1,13 +1,15 @@
 package records.data;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
+import records.error.InternalException;
 import records.grammar.MainLexer;
 import records.gui.View;
 import records.loadsave.OutputBuilder;
 import records.transformations.TransformationEditor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
 
 import java.io.File;
 import java.util.List;
@@ -26,7 +28,7 @@ public abstract class Transformation extends Table
     @OnThread(Tag.FXPlatform)
     public abstract String getTransformationLabel();
 
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Any)
     public abstract List<TableId> getSources();
 
     @OnThread(Tag.FXPlatform)
@@ -34,7 +36,7 @@ public abstract class Transformation extends Table
 
 
     @Override
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Simulation)
     public final void save(@Nullable File destination, Saver then)
     {
         OutputBuilder b = new OutputBuilder();
@@ -54,7 +56,7 @@ public abstract class Transformation extends Table
     @OnThread(Tag.Any)
     protected abstract String getTransformationName();
 
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Any)
     protected abstract List<String> saveDetail(@Nullable File destination);
 
     // hashCode and equals must be implemented properly (used for testing).
@@ -80,30 +82,43 @@ public abstract class Transformation extends Table
     protected abstract boolean transformationEquals(Transformation obj);
 
     // Mainly for testing:
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public String toString()
     {
         StringBuilder b = new StringBuilder();
         save(null, new Saver()
         {
             @Override
-            public @OnThread(Tag.FXPlatform) void saveTable(String tableSrc)
+            public @OnThread(Tag.Simulation) void saveTable(String tableSrc)
             {
                 b.append(tableSrc);
             }
 
             @Override
-            public @OnThread(Tag.FXPlatform) void saveUnit(String unitSrc)
+            public @OnThread(Tag.Simulation) void saveUnit(String unitSrc)
             {
                 b.append(unitSrc);
             }
 
             @Override
-            public @OnThread(Tag.FXPlatform) void saveType(String typeSrc)
+            public @OnThread(Tag.Simulation) void saveType(String typeSrc)
             {
                 b.append(typeSrc);
             }
         });
         return b.toString();
+    }
+
+    @Override
+    @OnThread(Tag.FXPlatform)
+    public boolean showAddColumnButton()
+    {
+        return false;
+    }
+
+    @Override
+    public Table addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException
+    {
+        throw new InternalException("Called addColumn despite showAddColumnButton returning false for type " + getClass());
     }
 }

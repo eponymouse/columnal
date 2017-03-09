@@ -48,7 +48,7 @@ public abstract class RecordSet
     private final List<Column> columns;
 
     @SuppressWarnings("initialization")
-    public RecordSet(String title, List<? extends FunctionInt<RecordSet, ? extends Column>> columns) throws InternalException, UserException
+    public RecordSet(List<? extends FunctionInt<RecordSet, ? extends Column>> columns) throws InternalException, UserException
     {
         this.columns = new ArrayList<>();
         Set<ColumnId> colNames = new HashSet<>();

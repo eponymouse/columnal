@@ -138,7 +138,7 @@ public class HTMLImport
 
             vals = null; // Make sure we don't keep a reference
             // Not because we null it, but because we make it non-final.
-            results.add(new ImmediateDataSource(mgr, new KnownLengthRecordSet(htmlFile.getName(), columns, len)));
+            results.add(new ImmediateDataSource(mgr, new KnownLengthRecordSet(columns, len)));
 
         }
         return results;

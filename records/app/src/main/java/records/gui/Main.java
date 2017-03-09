@@ -17,6 +17,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import records.data.DataSource;
+import records.data.EditableRecordSet;
+import records.data.ImmediateDataSource;
 import records.error.InternalException;
 import records.error.UserException;
 import records.importers.HTMLImport;
@@ -55,6 +57,22 @@ public class Main extends Application
 
         View v = new View();
         Menu menu = new Menu("Data");
+        MenuItem manualItem = new MenuItem("New");
+        menu.getItems().add(manualItem);
+        manualItem.setOnAction(e -> {
+            Workers.onWorkerThread("Create new table", () -> {
+                try
+                {
+                    EditableRecordSet rs = new EditableRecordSet(Collections.emptyList());
+                    ImmediateDataSource ds = new ImmediateDataSource(v.getManager(), rs);
+                    Platform.runLater(() -> v.getManager().addSource(ds));
+                }
+                catch (InternalException | UserException ex)
+                {
+                    showError(ex);
+                }
+            });
+        });
         MenuItem importItem = new MenuItem("Text");
         importItem.setOnAction(e -> {
             FileChooser fc = new FileChooser();
@@ -71,7 +89,7 @@ public class Main extends Application
                     catch (InternalException | UserException | IOException ex)
                     {
                         ex.printStackTrace();
-                        Platform.runLater(() -> new Alert(AlertType.ERROR, ex.getMessage() == null ? "" : ex.getMessage(), ButtonType.OK).showAndWait());
+                        showError(ex);
                     }
                 });
             }
@@ -94,7 +112,7 @@ public class Main extends Application
                     catch (IOException | InternalException | UserException ex)
                     {
                         ex.printStackTrace();
-                        Platform.runLater(() -> new Alert(AlertType.ERROR, ex.getMessage() == null ? "" : ex.getMessage(), ButtonType.OK).showAndWait());
+                        showError(ex);
                     }
                 });
             }
@@ -115,7 +133,7 @@ public class Main extends Application
             }
             catch (IOException | InternalException | UserException ex)
             {
-                ex.printStackTrace();
+                showError(ex);
             }
         });
 
@@ -139,6 +157,12 @@ public class Main extends Application
         primaryStage.setHeight(800);
         primaryStage.show();
         //org.scenicview.ScenicView.show(primaryStage.getScene());
+    }
+
+    @OnThread(Tag.Simulation)
+    private void showError(Exception ex)
+    {
+        Platform.runLater(() -> new Alert(AlertType.ERROR, ex.getMessage() == null ? "" : ex.getMessage(), ButtonType.OK).showAndWait());
     }
 
     // TODO pass -XX:AutoBoxCacheMax= parameter on execution

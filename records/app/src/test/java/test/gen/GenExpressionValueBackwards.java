@@ -134,7 +134,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
     @OnThread(Tag.Simulation)
     public KnownLengthRecordSet getRecordSet() throws InternalException, UserException
     {
-        return new KnownLengthRecordSet("", this.columns, 1);
+        return new KnownLengthRecordSet(this.columns, 1);
     }
 
     // Only valid after calling generate

@@ -110,7 +110,7 @@ public class Transform extends Transformation
                 columns.add(rs -> typeFinal.makeCalculatedColumn(rs, newCol.getKey(), index -> newCol.getValue().getValue(index, new EvaluateState())));
             }
 
-            theResult = new RecordSet("Transformed", columns)
+            theResult = new RecordSet(columns)
             {
                 @Override
                 public boolean indexValid(int index) throws UserException, InternalException
@@ -143,7 +143,8 @@ public class Transform extends Transformation
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) List<TableId> getSources()
+    @OnThread(Tag.Any)
+    public List<TableId> getSources()
     {
         return Collections.singletonList(srcTableId);
     }
@@ -161,7 +162,7 @@ public class Transform extends Transformation
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
+    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination)
     {
         return newColumns.entrySet().stream().map(entry -> {
             OutputBuilder b = new OutputBuilder();

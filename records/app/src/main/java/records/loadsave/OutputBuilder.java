@@ -19,16 +19,14 @@ import records.error.UserException;
 import records.grammar.MainLexer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExBiFunction;
-import utility.FXPlatformSupplier;
-import utility.Pair;
-import utility.Utility;
+import utility.*;
 
 import java.math.BigDecimal;
 import java.nio.file.Path;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -124,6 +122,7 @@ public class OutputBuilder
     }
 
     // Outputs a quoted absolute path
+    @OnThread(Tag.Any)
     public synchronized OutputBuilder path(Path path)
     {
         cur().add(quoted(path.toFile().getAbsolutePath()));
@@ -276,8 +275,8 @@ public class OutputBuilder
     }
 
     // Outputs the set of lines between @BEGIN/@END tags
-    @OnThread(Tag.FXPlatform)
-    public synchronized void inner(FXPlatformSupplier<List<String>> genDetail)
+    @OnThread(Tag.Simulation)
+    public synchronized void inner(Supplier<List<String>> genDetail)
     {
         begin().nl();
         for (String line : genDetail.get())
@@ -309,6 +308,7 @@ public class OutputBuilder
         return ws(" ");
     }
 
+    @OnThread(Tag.Any)
     public OutputBuilder end()
     {
         return raw("@END");

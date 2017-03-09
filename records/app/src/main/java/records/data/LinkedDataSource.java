@@ -1,6 +1,9 @@
 package records.data;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
+import records.error.InternalException;
 import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
@@ -33,7 +36,7 @@ public class LinkedDataSource extends DataSource
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) void save(@Nullable File destination, Saver then)
+    public @OnThread(Tag.Simulation) void save(@Nullable File destination, Saver then)
     {
         //dataSourceLinkHeader : DATA tableId LINKED importType filePath NEWLINE;
         OutputBuilder b = new OutputBuilder();
@@ -41,6 +44,19 @@ public class LinkedDataSource extends DataSource
         b.path(destination == null ? this.path.toPath() : destination.toPath().relativize(this.path.toPath()));
         b.nl();
         then.saveTable(b.toString());
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) boolean showAddColumnButton()
+    {
+        // TODO show it, and prompt to transform to non-linked table
+        return false;
+    }
+
+    @Override
+    public Table addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException
+    {
+        throw new InternalException("Should not try to add column to linked data source");
     }
 
     @Override

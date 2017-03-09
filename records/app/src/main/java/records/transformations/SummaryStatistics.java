@@ -215,7 +215,7 @@ public class SummaryStatistics extends Transformation
                 columns.add(rs -> typeFinal.makeCalculatedColumn(rs, e.getKey(), i -> expression.getValue(i, new EvaluateState())));
             }
 
-            theResult = new RecordSet("Summary", columns)
+            theResult = new RecordSet(columns)
             {
                 @Override
                 public boolean indexValid(int index) throws UserException
@@ -544,7 +544,7 @@ public class SummaryStatistics extends Transformation
     }
 
     @Override
-    protected @OnThread(Tag.FXPlatform) List<String> saveDetail(@Nullable File destination)
+    protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination)
     {
         OutputBuilder b = new OutputBuilder();
         for (Entry<ColumnId, SummaryType> entry : summaries.entrySet())
@@ -569,7 +569,7 @@ public class SummaryStatistics extends Transformation
     }
 
     @Override
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Any)
     public List<TableId> getSources()
     {
         return Collections.singletonList(srcTableId);

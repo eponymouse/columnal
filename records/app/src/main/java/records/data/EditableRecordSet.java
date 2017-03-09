@@ -7,27 +7,26 @@ import records.error.UserException;
 import java.util.List;
 
 /**
- * Created by neil on 07/12/2016.
+ * Created by neil on 08/03/2017.
  */
-public class KnownLengthRecordSet extends RecordSet
+public class EditableRecordSet extends RecordSet
 {
-    private final int length;
+    private int curLength = 1;
 
-    public KnownLengthRecordSet(List<FunctionInt<RecordSet, Column>> columns, int length) throws InternalException, UserException
+    public EditableRecordSet(List<? extends FunctionInt<RecordSet, ? extends Column>> columns) throws InternalException, UserException
     {
         super(columns);
-        this.length = length;
     }
 
     @Override
     public boolean indexValid(int index) throws UserException, InternalException
     {
-        return index < length;
+        return index < curLength;
     }
 
     @Override
     public int getLength() throws UserException, InternalException
     {
-        return length;
+        return curLength;
     }
 }

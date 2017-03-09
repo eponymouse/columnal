@@ -1058,6 +1058,55 @@ public class DataType
     }
 
     @OnThread(Tag.Simulation)
+    public FunctionInt<RecordSet, Column> makeImmediateColumn(ColumnId columnId, List<@Value Object> value) throws InternalException, UserException
+    {
+        return apply(new DataTypeVisitor<FunctionInt<RecordSet, Column>>()
+        {
+            @Override
+            public FunctionInt<RecordSet, Column> number(NumberInfo displayInfo) throws InternalException, UserException
+            {
+                return rs -> new MemoryNumericColumn(rs, columnId, displayInfo, Utility.mapListEx(value, Utility::valueNumber));
+            }
+
+            @Override
+            public FunctionInt<RecordSet, Column> text() throws InternalException, UserException
+            {
+                return rs -> new MemoryStringColumn(rs, columnId, Utility.mapListEx(value, Utility::valueString));
+            }
+
+            @Override
+            public FunctionInt<RecordSet, Column> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            {
+                return null;
+            }
+
+            @Override
+            public FunctionInt<RecordSet, Column> bool() throws InternalException, UserException
+            {
+                return rs -> new MemoryBooleanColumn(rs, columnId, Utility.mapListEx(value, Utility::valueString));
+            }
+
+            @Override
+            public FunctionInt<RecordSet, Column> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            {
+                return null;
+            }
+
+            @Override
+            public FunctionInt<RecordSet, Column> tuple(List<DataType> inner) throws InternalException, UserException
+            {
+                return null;
+            }
+
+            @Override
+            public FunctionInt<RecordSet, Column> array(DataType inner) throws InternalException, UserException
+            {
+                return null;
+            }
+        })
+    }
+
+    @OnThread(Tag.Simulation)
     public ColumnMaker<?> makeImmediateColumn(ColumnId columnId) throws InternalException, UserException
     {
         return apply(new DataTypeVisitor<ColumnMaker<?>>()
@@ -1299,7 +1348,7 @@ public class DataType
     }
 
     // If topLevelDeclaration is false, save a reference (matters for tagged types)
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Any)
     public OutputBuilder save(OutputBuilder b, boolean topLevelDeclaration) throws InternalException
     {
         apply(new DataTypeVisitorEx<UnitType, InternalException>()
@@ -1355,7 +1404,7 @@ public class DataType
             }
 
             @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
             public UnitType tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, InternalException
             {
                 b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
@@ -1378,7 +1427,7 @@ public class DataType
             }
 
             @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
             public UnitType tuple(List<DataType> inner) throws InternalException, InternalException
             {
                 b.t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
@@ -1395,7 +1444,7 @@ public class DataType
             }
 
             @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
             public UnitType array(@Nullable DataType inner) throws InternalException, InternalException
             {
                 b.t(FormatLexer.OPEN_SQUARE, FormatLexer.VOCABULARY);

@@ -153,7 +153,7 @@ public abstract class DataSource extends Table
 
         public LoadedRecordSet(List<ColumnMaker<?>> columns, DataSourceImmediateContext immed, List<Pair<ColumnId, DataType>> format) throws InternalException, UserException
         {
-            super("Data", columns);
+            super(columns);
             length = loadData(immed.detail(), row ->
             {
                 for (int i = 0; i < format.size(); i++)
