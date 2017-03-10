@@ -544,7 +544,7 @@ public class TestUtil
         }
 
         @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true) // Only for testing anyway
+        @OnThread(value = Tag.Simulation, ignoreParent = true) // Only for testing anyway
         public String toString()
         {
             return transformation.toString();

@@ -36,7 +36,7 @@ import static org.junit.Assert.assertEquals;
 public class PropLoadSaveTransformation
 {
     @Property(trials = 1000)
-    @OnThread(value = Tag.FXPlatform,ignoreParent = true)
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public void testLoadSaveTransformation(@From(GenTableManager.class) TableManager mgr1, @From(GenTableManager.class) TableManager mgr2, @From(GenNonsenseTransformation.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         String saved = save(original.mgr);
@@ -61,30 +61,27 @@ public class PropLoadSaveTransformation
         }
     }
 
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Simulation)
     private static String save(TableManager original) throws ExecutionException, InterruptedException, InvocationTargetException
     {
         // This thread is only pretend running on FXPlatform, but sets off some
         // code which actually runs on the fx platform thread:
         CompletableFuture<String> f = new CompletableFuture<>();
-        SwingUtilities.invokeAndWait(() -> new JFXPanel());
-        Utility.runAfter(() -> {
-            try
-            {
-                original.save(null, new FullSaver() {
-                    @Override
-                    public @OnThread(Tag.FXPlatform) void saveTable(String tableSrc)
-                    {
-                        super.saveTable(tableSrc);
-                        f.complete(getCompleteFile());
-                    }
-                });
-            }
-            catch (Throwable t)
-            {
-                f.complete("");
-            }
-        });
+        try
+        {
+            original.save(null, new FullSaver() {
+                @Override
+                public @OnThread(Tag.Simulation) void saveTable(String tableSrc)
+                {
+                    super.saveTable(tableSrc);
+                    f.complete(getCompleteFile());
+                }
+            });
+        }
+        catch (Throwable t)
+        {
+            f.complete("");
+        }
         return f.get();
     }
 

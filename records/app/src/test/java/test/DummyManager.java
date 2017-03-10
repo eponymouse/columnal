@@ -1,6 +1,8 @@
 package test;
 
+import records.data.Table;
 import records.data.TableManager;
+import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
 
@@ -26,6 +28,19 @@ public class DummyManager extends TableManager
 
     public DummyManager() throws InternalException, UserException
     {
-        super();
+        super(new TableManagerListener()
+        {
+            @Override
+            public void removeTable(Table t)
+            {
+
+            }
+
+            @Override
+            public void addTransformation(Transformation transformation)
+            {
+
+            }
+        });
     };
 }

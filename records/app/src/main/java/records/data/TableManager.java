@@ -117,7 +117,7 @@ public class TableManager
         return new TypeState(unitManager, typeManager);
     }
 
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Simulation)
     public List<Table> loadAll(String completeSrc) throws UserException, InternalException
     {
         FileContext file = Utility.parseAsOne(completeSrc, MainLexer::new, MainParser::new, p -> p.file());
@@ -125,42 +125,38 @@ public class TableManager
         typeManager.loadTypeDecls(file.types());
         List<Table> loaded = new ArrayList<>();
         List<Exception> exceptions = new ArrayList<>();
+        // TODO Don't need future any more now that this is all one thread
         CompletableFuture<Object> allDone = new CompletableFuture<>();
         int total = file.table().size();
         for (TableContext tableContext : file.table())
         {
-            // No race hazards here because worker thread will serialise:
             if (tableContext.dataSource() != null)
             {
-                Workers.onWorkerThread("Loading table", () -> {
-                    try
-                    {
-                        loaded.add(DataSource.loadOne(this, tableContext));
-                    }
-                    catch (InternalException | UserException e)
-                    {
-                        Utility.log(e);
-                        exceptions.add(e);
-                    }
-                    if (loaded.size() + exceptions.size() == total)
-                        allDone.complete(new Object());
-                });
+                try
+                {
+                    loaded.add(DataSource.loadOne(this, tableContext));
+                }
+                catch (InternalException | UserException e)
+                {
+                    Utility.log(e);
+                    exceptions.add(e);
+                }
+                if (loaded.size() + exceptions.size() == total)
+                    allDone.complete(new Object());
             }
             else if (tableContext.transformation() != null)
             {
-                Workers.onWorkerThread("Loading table", () -> {
-                    try
-                    {
-                        loaded.add(TransformationManager.getInstance().loadOne(this, tableContext));
-                    }
-                    catch (InternalException | UserException e)
-                    {
-                        Utility.log(e);
-                        exceptions.add(e);
-                    }
-                    if (loaded.size() + exceptions.size() == total)
-                        allDone.complete(new Object());
-                });
+                try
+                {
+                    loaded.add(TransformationManager.getInstance().loadOne(this, tableContext));
+                }
+                catch (InternalException | UserException e)
+                {
+                    Utility.log(e);
+                    exceptions.add(e);
+                }
+                if (loaded.size() + exceptions.size() == total)
+                    allDone.complete(new Object());
             }
         }
         try

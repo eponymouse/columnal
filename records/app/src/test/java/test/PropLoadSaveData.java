@@ -30,7 +30,7 @@ import static org.junit.Assert.assertEquals;
 public class PropLoadSaveData
 {
     @Property(trials = 30)
-    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
     public void testImmediate(@From(GenTableManager.class) TableManager mgr1, @From(GenTableManager.class) TableManager mgr2, @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         String saved = save(original.mgr);
@@ -55,31 +55,29 @@ public class PropLoadSaveData
         }
     }
 
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.Simulation)
     private static String save(TableManager tableManager) throws ExecutionException, InterruptedException, InvocationTargetException
     {
         // This thread is only pretend running on FXPlatform, but sets off some
         // code which actually runs on the fx platform thread:
         CompletableFuture<String> f = new CompletableFuture<>();
-        SwingUtilities.invokeAndWait(() -> new JFXPanel());
-        Utility.runAfter(() -> {
-            try
-            {
-                tableManager.save(null, new FullSaver() {
-                    @Override
-                    public @OnThread(Tag.FXPlatform) void saveTable(String tableSrc)
-                    {
-                        super.saveTable(tableSrc);
-                        f.complete(getCompleteFile());
-                    }
-                });
-            }
-            catch (Throwable t)
-            {
-                t.printStackTrace();
-                f.complete("");
-            }
-        });
+
+        try
+        {
+            tableManager.save(null, new FullSaver() {
+                @Override
+                public @OnThread(Tag.Simulation) void saveTable(String tableSrc)
+                {
+                    super.saveTable(tableSrc);
+                    f.complete(getCompleteFile());
+                }
+            });
+        }
+        catch (Throwable t)
+        {
+            t.printStackTrace();
+            f.complete("");
+        }
         return f.get();
     }
 }
