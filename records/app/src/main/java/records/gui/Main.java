@@ -65,7 +65,7 @@ public class Main extends Application
                 {
                     EditableRecordSet rs = new EditableRecordSet(Collections.emptyList());
                     ImmediateDataSource ds = new ImmediateDataSource(v.getManager(), rs);
-                    Platform.runLater(() -> v.getManager().addSource(ds));
+                    v.getManager().addSource(ds);
                 }
                 catch (InternalException | UserException ex)
                 {

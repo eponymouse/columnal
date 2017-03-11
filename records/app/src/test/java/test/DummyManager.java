@@ -1,5 +1,6 @@
 package test;
 
+import records.data.DataSource;
 import records.data.Table;
 import records.data.TableManager;
 import records.data.Transformation;
@@ -32,6 +33,12 @@ public class DummyManager extends TableManager
         {
             @Override
             public void removeTable(Table t)
+            {
+
+            }
+
+            @Override
+            public void addSource(DataSource dataSource)
             {
 
             }

@@ -154,7 +154,7 @@ public class TableDisplay extends BorderPane
         {
             Button addColumnButton = new Button("Add Column");
             addColumnButton.setOnAction(e -> {
-                // TODO show a dialog to prompt for these values:
+                // TODO show a dialog to prompt for the name and type:
                 Workers.onWorkerThread("Adding column", () ->
                 {
                     Utility.alertOnError_(() ->

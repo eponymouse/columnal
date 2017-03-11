@@ -284,6 +284,10 @@ public class TableManager
                 removeAndSerialise(replaceTableId, new Table.BlankSaver());
         }
         registerId(replacement.getId(), replacement);
+        if (replacement instanceof DataSource)
+            listener.addSource((DataSource) replacement);
+        else
+            listener.addTransformation((Transformation) replacement);
 
         savedToReRun.thenAccept(ss -> {
             Utility.alertOnError_(() -> reAddAll(ss));
@@ -349,14 +353,18 @@ public class TableManager
         }
     }
 
+    @OnThread(Tag.Simulation)
     public void addSource(DataSource ds)
     {
         registerId(ds.getId(), ds);
+        listener.addSource(ds);
     }
 
     public static interface TableManagerListener
     {
         public void removeTable(Table t);
+
+        public void addSource(DataSource dataSource);
 
         public void addTransformation(Transformation transformation);
     }

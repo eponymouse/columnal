@@ -281,6 +281,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     }
 
     @OnThread(Tag.Any)
+    @Override
     public void addSource(DataSource data)
     {
         Platform.runLater(() -> {
@@ -289,6 +290,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     }
 
     @OnThread(Tag.Any)
+    @Override
     public void addTransformation(Transformation transformation)
     {
         Platform.runLater(() ->
