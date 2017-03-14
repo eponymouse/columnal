@@ -7,6 +7,8 @@ import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.TaggedValue;
@@ -57,6 +59,18 @@ public class MemoryTaggedColumn extends Column
             }
         });
         return new MemoryTaggedColumn(rs, title, typeName, tags, storage.getShrunk(shrunkLength));
+    }
+
+    @Override
+    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
+    {
+        return storage.storeValue(writtenValue);
+    }
+
+    @Override
+    public void addRow() throws InternalException, UserException
+    {
+        storage.addRow();
     }
 
     public void add(TaggedValue taggedValue) throws InternalException

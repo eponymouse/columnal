@@ -1,13 +1,17 @@
 package records.data;
 
+import javafx.application.Platform;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableCell;
 import javafx.scene.control.TableColumn;
 
+import javafx.scene.control.cell.TextFieldTableCell;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.text.Text;
+import javafx.util.StringConverter;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -16,9 +20,13 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayValue;
+import records.gui.DisplayValueBase;
+import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.Utility;
+import utility.Workers;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -63,22 +71,39 @@ public abstract class RecordSet
     }
 
     @OnThread(Tag.FXPlatform)
-    public final List<TableColumn<Integer, DisplayValue>> getDisplayColumns()
+    public final List<TableColumn<Integer, DisplayValueBase>> getDisplayColumns() throws InternalException, UserException
     {
-        Function<@NonNull Column, @NonNull TableColumn<Integer, DisplayValue>> makeDisplayColumn = data ->
+        ExFunction<@NonNull Column, @NonNull TableColumn<Integer, DisplayValueBase>> makeDisplayColumn = data ->
         {
-            TableColumn<Integer, DisplayValue> c = new TableColumn<>(data.getName().toString());
-            c.setCellValueFactory(cdf -> data.getDisplay(cdf.getValue()));
+            TableColumn<Integer, DisplayValueBase> c = new TableColumn<>(data.getName().toString());
+            c.setEditable(data.isEditable());
+            // If last row is index 8, we add an integer -9 (note the minus) afterwards
+            // to indicate a special "add more data" row.
+            c.setCellValueFactory(cdf -> cdf.getValue() < 0 ? new ReadOnlyObjectWrapper<DisplayValueBase>(DisplayValue.getAddDataItem(-cdf.getValue())) : data.getDisplay(cdf.getValue()));
+            DataType.StringConvBase converter = data.getType().makeConverter();
             c.setCellFactory(col -> {
-                return new TableCell<Integer, DisplayValue>() {
+                return new TextFieldTableCell<Integer, DisplayValueBase>(converter) {
                     @Override
                     @OnThread(Tag.FX)
-                    protected void updateItem(DisplayValue item, boolean empty)
+                    public void updateItem(DisplayValueBase itemBase, boolean empty)
                     {
-                        super.updateItem(item, empty);
+                        super.updateItem(itemBase, empty);
+                        if (!(itemBase instanceof DisplayValueBase))
+                        {
+                            // Shouldn't happen, but prevent an exception in case:
+                            setText("ERR:DVB");
+                            setGraphic(null);
+                            return;
+                        }
+                        DisplayValue item = (DisplayValue)itemBase;
                         if (item == null)
                         {
                             setText("");
+                            setGraphic(null);
+                        }
+                        else if (item.isAddExtraRowItem())
+                        {
+                            setText("Add more data...");
                             setGraphic(null);
                         }
                         else if (item.getNumber() != null)
@@ -110,6 +135,36 @@ public abstract class RecordSet
                             setText(item.toString());
                         }
                     }
+
+                    @Override
+                    @OnThread(Tag.FX)
+                    public void startEdit()
+                    {
+                        super.startEdit();
+                        converter.setRowIndex(getIndex());
+                    }
+
+                    @Override
+                    @OnThread(Tag.FX)
+                    public void commitEdit(DisplayValueBase writtenValue)
+                    {
+                        // We will have been passed an EnteredDisplayValue
+                        // We must store the value then pass a DisplayValue
+                        // to the parent for actual display
+                        Workers.onWorkerThread("Storing value " + writtenValue, () ->
+                        {
+                            Utility.alertOnError_(() ->
+                            {
+                                // If we're editing the special extra row, extend all columns first:
+                                if (writtenValue.getRowIndex() == data.getLength())
+                                {
+                                    addRow();
+                                }
+                                DisplayValue readableValue = data.storeValue((EnteredDisplayValue) writtenValue);
+                                Platform.runLater(() -> super.commitEdit(readableValue));
+                            });
+                        });
+                    }
                 };
             });
             c.setSortable(false);
@@ -119,7 +174,16 @@ public abstract class RecordSet
             });
             return c;
         };
-        return Utility.mapList(columns, makeDisplayColumn);
+        return Utility.mapListEx(columns, makeDisplayColumn);
+    }
+
+    private void addRow() throws UserException, InternalException
+    {
+        for (Column c : columns)
+        {
+            c.addRow();
+        }
+        // TODO notify displays, re-run dependents
     }
 
     @OnThread(Tag.Any)

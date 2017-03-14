@@ -31,6 +31,8 @@ import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.SplitByContext;
 import records.grammar.TransformationParser.SummaryColContext;
 import records.grammar.TransformationParser.SummaryContext;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.loadsave.OutputBuilder;

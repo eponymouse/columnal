@@ -11,7 +11,10 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.FetchException;
 import records.error.InternalException;
+import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
@@ -463,5 +466,17 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     public NumberInfo getDisplayInfo()
     {
         return displayInfo;
+    }
+
+    @Override
+    public DisplayValue storeValue(EnteredDisplayValue writtenValue)
+    {
+        throw new UnimplementedException();
+    }
+
+    @Override
+    public void addRow() throws InternalException, UserException
+    {
+        addByte((byte)0);
     }
 }

@@ -7,6 +7,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -97,14 +98,33 @@ public class TableDisplay extends BorderPane
         public TableDataDisplay(RecordSet recordSet)
         {
             super();
-            getColumns().setAll(recordSet.getDisplayColumns());
+            try
+            {
+                getColumns().setAll(recordSet.getDisplayColumns());
+            }
+            catch (InternalException | UserException e)
+            {
+                setPlaceholder(new Label(e.getLocalizedMessage()));
+            }
+            setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
+            boolean expandable = getColumns().stream().allMatch(TableColumn::isEditable);
             Workers.onWorkerThread("Determining row count", () -> {
                 ArrayList<Integer> indexesToAdd = new ArrayList<Integer>();
                 Utility.alertOnError_(() -> {
                     for (int i = 0; i < INITIAL_LOAD; i++)
+                    {
                         if (recordSet.indexValid(i))
+                        {
                             indexesToAdd.add(Integer.valueOf(i));
-
+                        }
+                        else if (recordSet.indexValid(i - 1))
+                        {
+                            // This is the first row after.  If all columns are editable,
+                            // add a false row which indicates that the data can be expanded:
+                            if (expandable)
+                                indexesToAdd.add(Integer.valueOf(-i));
+                        }
+                    }
                 });
                 // TODO when user causes a row to be shown, load LOAD_CHUNK entries
                 // afterwards.
@@ -159,7 +179,7 @@ public class TableDisplay extends BorderPane
                 {
                     Utility.alertOnError_(() ->
                     {
-                        Table newTable = table.addColumn("NewCol", DataType.NUMBER, 0);
+                        Table newTable = table.addColumn("NewCol", DataType.TEXT, "");
                         parent.getManager().edit(table.getId(), newTable);
                     });
                 });

@@ -5,6 +5,8 @@ import records.data.datatype.DataTypeValue;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -95,5 +97,11 @@ public abstract class TextFileColumn<S extends ColumnStorage<?>> extends Column
     public final ColumnId getName()
     {
         return columnName;
+    }
+
+    @Override
+    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
+    {
+        throw new InternalException("Cannot edit data which is linked to a text file");
     }
 }

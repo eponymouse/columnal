@@ -4,6 +4,8 @@ import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -63,5 +65,17 @@ public class MemoryNumericColumn extends Column
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
         return new MemoryNumericColumn(rs, title, storage.getDisplayInfo(), storage._test_getShrunk(shrunkLength));
+    }
+
+    @Override
+    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
+    {
+        return storage.storeValue(writtenValue);
+    }
+
+    @Override
+    public void addRow() throws InternalException, UserException
+    {
+        storage.addRow();
     }
 }

@@ -3,6 +3,8 @@ package records.data;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -47,5 +49,17 @@ public class MemoryStringColumn extends Column
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
         return new MemoryStringColumn(rs, title, storage._test_getShrunk(shrunkLength));
+    }
+
+    @Override
+    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
+    {
+        return storage.storeValue(writtenValue);
+    }
+
+    @Override
+    public void addRow() throws InternalException, UserException
+    {
+        storage.addRow();
     }
 }

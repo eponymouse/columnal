@@ -9,6 +9,8 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
@@ -69,6 +71,26 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
     public DataTypeValue getType()
     {
         return type;
+    }
+
+    @Override
+    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
+    {
+        boolean value;
+        switch (writtenValue.getString())
+        {
+            case "true": value = true; break;
+            case "false": value = false; break;
+            default: throw new UserException("Invalid boolean value: \"" + writtenValue.getString() + "\"");
+        }
+        data.set(writtenValue.getRowIndex(), value);
+        return DataTypeUtility.display(writtenValue.getRowIndex(), getType(), value);
+    }
+
+    @Override
+    public void addRow() throws InternalException, UserException
+    {
+        add(false);
     }
 
     public List<Boolean> getShrunk(int shrunkLength)

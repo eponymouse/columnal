@@ -2,6 +2,7 @@ package records.data.datatype;
 
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
+import javafx.util.StringConverter;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -23,6 +24,9 @@ import records.data.NumericColumnStorage;
 import records.data.RecordSet;
 import records.data.StringColumnStorage;
 import records.data.TaggedColumnStorage;
+import records.gui.DisplayValue;
+import records.gui.DisplayValueBase;
+import records.gui.EnteredDisplayValue;
 import utility.TaggedValue;
 import records.data.TemporalColumnStorage;
 import records.data.TupleColumnStorage;
@@ -266,7 +270,6 @@ public class DataType
             }
         });
     }
-
     // Flattened ADT.  kind is the head tag, other bits are null/non-null depending:
     public static enum Kind {NUMBER, TEXT, DATETIME, BOOLEAN, TAGGED, TUPLE, ARRAY }
     final Kind kind;
@@ -1031,6 +1034,7 @@ public class DataType
 
     public static class ColumnMaker<C extends Column> implements FunctionInt<RecordSet, Column>
     {
+        private boolean editable = false;
         private @Nullable C column;
         private final FunctionInt<RecordSet, C> makeColumn;
         private final ExBiConsumer<C, ItemContext> loadData;
@@ -1045,6 +1049,8 @@ public class DataType
         public final Column apply(RecordSet rs) throws InternalException, UserException
         {
             column = makeColumn.apply(rs);
+            if (editable)
+                column.markEditable();
             return column;
         }
 
@@ -1054,6 +1060,12 @@ public class DataType
             if (column == null)
                 throw new InternalException("Calling loadRow before column creation");
             loadData.accept(column, ctx);
+        }
+
+        public ColumnMaker<?> markEditable()
+        {
+            editable = true;
+            return this;
         }
     }
 
@@ -1656,5 +1668,33 @@ public class DataType
         R array(T a, T b, @Nullable DataType innerA, @Nullable DataType innerB) throws InternalException, UserException;
 
         R differentKind(T a, T b) throws InternalException, UserException;
+    }
+
+    public static abstract class StringConvBase extends StringConverter<DisplayValueBase>
+    {
+        protected int rowIndex;
+
+        public void setRowIndex(int rowIndex)
+        {
+            this.rowIndex = rowIndex;
+        }
+
+        @Override
+        public String toString(DisplayValueBase object)
+        {
+            return object.getEditString();
+        }
+    }
+
+    public StringConvBase makeConverter()
+    {
+        return new StringConvBase()
+        {
+            @Override
+            public DisplayValueBase fromString(String string)
+            {
+                return new EnteredDisplayValue(rowIndex, string);
+            }
+        };
     }
 }

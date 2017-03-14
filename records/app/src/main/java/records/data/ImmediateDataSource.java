@@ -88,9 +88,14 @@ public class ImmediateDataSource extends DataSource
         List<FunctionInt<RecordSet, Column>> allColumns = new ArrayList<>();
         for (Column column : data.getColumns())
         {
-            allColumns.add(rs -> column.getType().makeImmediateColumn(column.getName()).apply(rs));
+            allColumns.add(rs -> {
+                Column copiedColumn = column.getType().makeImmediateColumn(column.getName()).apply(rs);
+                if (column.isEditable())
+                    copiedColumn.markEditable();
+                return copiedColumn;
+            });
         }
-        allColumns.add(rs -> newColumnType.makeImmediateColumn(new ColumnId(newColumnName), Utility.replicate(data.getLength(), newColumnValue)).apply(rs));
+        allColumns.add(rs -> newColumnType.makeImmediateColumn(new ColumnId(newColumnName), Utility.replicate(data.getLength(), newColumnValue)).apply(rs).markEditable());
         return new ImmediateDataSource(getManager(), getId(), new KnownLengthRecordSet(allColumns, data.getLength()));
     }
 

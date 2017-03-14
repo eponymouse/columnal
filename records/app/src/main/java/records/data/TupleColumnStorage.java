@@ -7,6 +7,10 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
+import records.error.UnimplementedException;
+import records.error.UserException;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
@@ -79,5 +83,17 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
     public DataTypeValue getType()
     {
         return type;
+    }
+
+    @Override
+    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
+    {
+        throw new UnimplementedException();
+    }
+
+    @Override
+    public void addRow() throws InternalException, UserException
+    {
+        throw new UnimplementedException();
     }
 }

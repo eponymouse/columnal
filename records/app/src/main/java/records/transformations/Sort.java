@@ -41,6 +41,7 @@ import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.OrderByContext;
 import records.grammar.TransformationParser.SortContext;
 import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.loadsave.OutputBuilder;
@@ -533,12 +534,12 @@ public class Sort extends Transformation
                 List<DisplayValue> sortedCol = new ArrayList<>();
                 for (List<@Value Object> row : data)
                 {
-                    sortedCol.add(DataTypeUtility.display(exampleColumnTypes.get(i), row.get(i)));
+                    sortedCol.add(DataTypeUtility.display(-1, exampleColumnTypes.get(i), row.get(i)));
                 }
                 List<DisplayValue> unsortedCol = new ArrayList<>();
                 for (List<@Value Object> row : unsorted)
                 {
-                    unsortedCol.add(DataTypeUtility.display(exampleColumnTypes.get(i), row.get(i)));
+                    unsortedCol.add(DataTypeUtility.display(-1, exampleColumnTypes.get(i), row.get(i)));
                 }
                 destCols.add(new Pair<>(exampleColumns.get(i).getName().toString(), sortedCol));
                 srcCols.add(new Pair<>(exampleColumns.get(i).getName().toString(), unsortedCol));

@@ -44,6 +44,7 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.gui.expressioneditor.ExpressionEditor;
@@ -334,8 +335,8 @@ public class Filter extends Transformation
                             if (evaluated != null)
                             {
                                 //System.out.println("Variable " + var.getKey() + " = " + show(evaluated));
-                                srcHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(DataTypeUtility.toDisplayValue(show(evaluated)))));
-                                destHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(DataTypeUtility.toDisplayValue(show(evaluated)))));
+                                srcHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(DataTypeUtility.toDisplayValue(-1, show(evaluated)))));
+                                destHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(DataTypeUtility.toDisplayValue(-1, show(evaluated)))));
                             }
                         }
                     }
@@ -360,7 +361,7 @@ public class Filter extends Transformation
                             if (evaluated != null)
                             {
                                 //System.out.println("Variable " + var.getKey() + " = " + show(model.evaluate(var.getValue())));
-                                srcHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(DataTypeUtility.toDisplayValue(show(evaluated)))));
+                                srcHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(DataTypeUtility.toDisplayValue(-1, show(evaluated)))));
                             }
                         }
                     }

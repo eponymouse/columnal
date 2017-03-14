@@ -3,6 +3,8 @@ package records.data;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -125,7 +127,7 @@ public abstract class CalculatedColumn extends Column
         return name;
     }
 
-/*
+    /*
     private static abstract class PrimitiveCalculatedColumn<T> extends CalculatedColumn
     {
         protected ColumnStorage<T> cache;

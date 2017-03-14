@@ -60,7 +60,7 @@ public class DisplayCache
     }
 
     @OnThread(Tag.FXPlatform)
-    public final ObservableValue<DisplayValue> getDisplay(int index)
+    public final ObservableValue<DisplayValueBase> getDisplay(int index)
     {
         if (displayCacheItems == null)
             displayCacheItems = new HashMap<>(INITIAL_DISPLAY_CACHE_SIZE);
@@ -71,7 +71,7 @@ public class DisplayCache
                 return item.display;
         }
 
-        SimpleObjectProperty<DisplayValue> v = new SimpleObjectProperty<>(new DisplayValue(QUEUED, 0));
+        SimpleObjectProperty<DisplayValueBase> v = new SimpleObjectProperty<>(new DisplayValue(index, QUEUED, 0));
         ValueLoader loader = new ValueLoader(index, v);
         Workers.onWorkerThread("Value load for display: " + index, loader);
 
@@ -121,9 +121,9 @@ public class DisplayCache
     {
         public final long age;
         public final ValueLoader loader;
-        public final SimpleObjectProperty<DisplayValue> display;
+        public final SimpleObjectProperty<DisplayValueBase> display;
 
-        public DisplayCacheItem(long age, SimpleObjectProperty<DisplayValue> display, ValueLoader loader)
+        public DisplayCacheItem(long age, SimpleObjectProperty<DisplayValueBase> display, ValueLoader loader)
         {
             this.age = age;
             this.display = display;
@@ -135,14 +135,14 @@ public class DisplayCache
     private class ValueLoader implements Worker
     {
         private final int originalIndex;
-        private final SimpleObjectProperty<DisplayValue> v;
+        private final SimpleObjectProperty<DisplayValueBase> v;
         @OnThread(value = Tag.Any, requireSynchronized = true)
         private long originalFinished;
         @OnThread(value = Tag.Any, requireSynchronized = true)
         private long us;
 
         @OnThread(Tag.FXPlatform)
-        public ValueLoader(int index, SimpleObjectProperty<DisplayValue> v)
+        public ValueLoader(int index, SimpleObjectProperty<DisplayValueBase> v)
         {
             this.originalIndex = index;
             this.v = v;
@@ -153,7 +153,7 @@ public class DisplayCache
             try
             {
                 ProgressListener prog = d -> {
-                    Platform.runLater(() -> v.setValue(new DisplayValue(GETTING, d)));
+                    Platform.runLater(() -> v.setValue(new DisplayValue(originalIndex, GETTING, d)));
                 };
                 DisplayValue val = getDisplayValue(column.getType(), originalIndex, prog);
                 Platform.runLater(() -> v.setValue(val));
@@ -162,7 +162,7 @@ public class DisplayCache
             {
                 Platform.runLater(() -> {
                     String msg = e.getLocalizedMessage();
-                    v.setValue(new DisplayValue(msg == null ? "ERROR" : msg, true));
+                    v.setValue(new DisplayValue(originalIndex, msg == null ? "ERROR" : msg, true));
                 });
             }
         }
@@ -176,14 +176,14 @@ public class DisplayCache
                             @OnThread(Tag.Simulation)
                             public DisplayValue number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
                             {
-                                return new DisplayValue(g.getWithProgress(index, prog), displayInfo.getUnit(), displayInfo.getMinimumDP());
+                                return new DisplayValue(originalIndex, g.getWithProgress(index, prog), displayInfo.getUnit(), displayInfo.getMinimumDP());
                             }
 
                             @Override
                             @OnThread(Tag.Simulation)
                             public DisplayValue text(GetValue<@Value String> g) throws InternalException, UserException
                             {
-                                return new DisplayValue(g.getWithProgress(index, prog));
+                                return new DisplayValue(originalIndex, g.getWithProgress(index, prog));
                             }
 
                             @Override
@@ -196,20 +196,20 @@ public class DisplayCache
                                 if (DataType.canFitInOneNumeric(tagTypes))
                                 {
                                     if (inner == null)
-                                        return new DisplayValue(tagType.getName());
+                                        return new DisplayValue(originalIndex, tagType.getName());
                                     else
                                         return inner.applyGet(this);
                                 }
                                 else
                                 {
-                                    return new DisplayValue(tagType.getName() + (inner == null ? "" : (" " + inner.applyGet(this))));
+                                    return new DisplayValue(originalIndex, tagType.getName() + (inner == null ? "" : (" " + inner.applyGet(this))));
                                 }
                             }
 
                             @Override
                             public DisplayValue tuple(List<DataTypeValue> types) throws InternalException, UserException
                             {
-                                return DisplayValue.tuple(Utility.mapListEx(types, t -> t.applyGet(this)));
+                                return DisplayValue.tuple(originalIndex, Utility.mapListEx(types, t -> t.applyGet(this)));
                             }
 
                             @Override
@@ -221,19 +221,19 @@ public class DisplayCache
                                 {
                                     values.add(getDisplayValue(details.getSecond(), i, prog));
                                 }
-                                return DisplayValue.array(values);
+                                return DisplayValue.array(originalIndex, values);
                             }
 
                             @Override
                             public DisplayValue bool(GetValue<@Value Boolean> g) throws InternalException, UserException
                             {
-                                return new DisplayValue(g.getWithProgress(index, prog));
+                                return new DisplayValue(originalIndex, g.getWithProgress(index, prog));
                             }
 
                             @Override
                             public DisplayValue date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
                             {
-                                return new DisplayValue(g.getWithProgress(index, prog));
+                                return new DisplayValue(originalIndex, g.getWithProgress(index, prog));
                             }
                         });
         }
@@ -242,7 +242,7 @@ public class DisplayCache
         public synchronized void queueMoved(long finished, long lastQueued)
         {
             double progress = (double)(finished - originalFinished) / (double)(us - originalFinished);
-            Platform.runLater(() -> v.setValue(new DisplayValue(QUEUED, progress)));
+            Platform.runLater(() -> v.setValue(new DisplayValue(originalIndex, QUEUED, progress)));
         }
 
         @Override

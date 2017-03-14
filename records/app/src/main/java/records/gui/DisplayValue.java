@@ -1,16 +1,11 @@
 package records.gui;
 
-import org.checkerframework.checker.lock.qual.GuardSatisfied;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.unit.Unit;
-import threadchecker.OnThread;
 
-import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -21,7 +16,7 @@ import java.util.stream.Collectors;
  *  - Successfully loaded (with a String which is what to show in the cell)
  *  - Unsuccessful (with a String giving an error description)
  */
-public class DisplayValue
+public class DisplayValue extends DisplayValueBase
 {
     public static enum ProgressState
     {
@@ -37,30 +32,32 @@ public class DisplayValue
     private final double loading; // If -1, use String
     private final @Nullable String show;
     private final boolean isError; // Highlight the string differently.
+    private final boolean isAddExtraRowItem; // The "Add more data" row
 
     /**
      * Create successfully loaded item with text
      */
-    public DisplayValue(String val)
+    public DisplayValue(int rowIndex, String val)
     {
-        this(val, false);
+        this(rowIndex, val, false);
     }
 
-    public DisplayValue(TemporalAccessor temporal)
+    public DisplayValue(int rowIndex, TemporalAccessor temporal)
     {
-        this(temporal.toString());
+        this(rowIndex, temporal.toString());
     }
 
-    public DisplayValue(boolean b)
+    public DisplayValue(int rowIndex, boolean b)
     {
-        this(Boolean.toString(b));
+        this(rowIndex, Boolean.toString(b));
     }
 
     /**
      * Create successfully loaded item with number
      */
-    public DisplayValue(Number val, Unit unit, int minimumDecimalPlaces)
+    public DisplayValue(int rowIndex, Number val, Unit unit, int minimumDecimalPlaces)
     {
+        super(rowIndex);
         number = val;
         this.unit = unit;
         this.minimumDecimalPlaces = minimumDecimalPlaces;
@@ -68,13 +65,15 @@ public class DisplayValue
         state = null;
         loading = -1;
         isError = false;
+        isAddExtraRowItem = false;
     }
 
     /**
      * Creating loading-in-progress item (param is progress, 0 to 1)
      */
-    public DisplayValue(ProgressState state, double d)
+    public DisplayValue(int rowIndex, ProgressState state, double d)
     {
+        super(rowIndex);
         number = null;
         minimumDecimalPlaces = 0;
         this.state = state;
@@ -82,13 +81,15 @@ public class DisplayValue
         loading = d;
         show = null;
         isError = false;
+        isAddExtraRowItem = false;
     }
 
     /**
      * Create error item (if err is true; err being false is same as single-arg constructor).
      */
-    public DisplayValue(String s, boolean err)
+    public DisplayValue(int rowIndex, String s, boolean err)
     {
+        super(rowIndex);
         unit = Unit.SCALAR;
         number = null;
         minimumDecimalPlaces = 0;
@@ -96,6 +97,30 @@ public class DisplayValue
         isError = err;
         loading = -1;
         state = null;
+        isAddExtraRowItem = false;
+    }
+
+    /**
+     * Special constructor for the "add more data" row.
+     */
+    private DisplayValue(int rowIndex)
+    {
+        super(rowIndex);
+        number = null;
+        minimumDecimalPlaces = 0;
+        this.state = null;
+        this.unit = Unit.SCALAR;
+        loading = -1;
+        show = null;
+        isError = false;
+        isAddExtraRowItem = true;
+    }
+
+    @Override
+    public String getEditString()
+    {
+        //TODO: implement this properly
+        return toString();
     }
 
     @Pure
@@ -117,7 +142,7 @@ public class DisplayValue
     }
 
     @SuppressWarnings("nullness")
-    public static DisplayValue tuple(List<DisplayValue> displays)
+    public static DisplayValue tuple(int rowIndex, List<DisplayValue> displays)
     {
         boolean allLoaded = true;
         double loadingProgress = 0;
@@ -135,16 +160,16 @@ public class DisplayValue
         }
         if (allLoaded)
         {
-            return new DisplayValue("(" + displays.stream().map(d -> d.show).collect(Collectors.joining(", ")) + ")", false);
+            return new DisplayValue(rowIndex, "(" + displays.stream().map(d -> d.show).collect(Collectors.joining(", ")) + ")", false);
         }
         else
         {
-            return new DisplayValue(ProgressState.GETTING, loadingProgress / (double)displays.size());
+            return new DisplayValue(rowIndex, ProgressState.GETTING, loadingProgress / (double)displays.size());
         }
     }
 
     @SuppressWarnings("nullness")
-    public static DisplayValue array(List<DisplayValue> displays)
+    public static DisplayValue array(int rowIndex, List<DisplayValue> displays)
     {
         boolean allLoaded = true;
         double loadingProgress = 0;
@@ -162,12 +187,23 @@ public class DisplayValue
         }
         if (allLoaded)
         {
-            return new DisplayValue("[" + displays.stream().map(d -> d.show).collect(Collectors.joining(", ")) + "]", false);
+            return new DisplayValue(rowIndex, "[" + displays.stream().map(d -> d.show).collect(Collectors.joining(", ")) + "]", false);
         }
         else
         {
-            return new DisplayValue(ProgressState.GETTING, loadingProgress / (double)displays.size());
+            return new DisplayValue(rowIndex, ProgressState.GETTING, loadingProgress / (double)displays.size());
         }
+    }
+
+    // The item showing text like "add row" at bottom of table
+    public static DisplayValue getAddDataItem(int rowIndex)
+    {
+        return new DisplayValue(rowIndex);
+    }
+
+    public boolean isAddExtraRowItem()
+    {
+        return isAddExtraRowItem;
     }
 
     @Override
@@ -175,7 +211,14 @@ public class DisplayValue
     public String toString()
     {
         if (loading == -1)
-            return show == null ? number.toString() : show;
+        {
+            if (isAddExtraRowItem)
+                return "";
+            else if (show == null)
+                return number.toString();
+            else
+                return show;
+        }
         else
             return state.toString() + ": " + loading;
     }

@@ -102,45 +102,32 @@ public class DataTypeUtility
         });
     }
 
-    public static List<List<DisplayValue>> displayAll(List<DataType> columnTypes, List<List<List<Object>>> dataRows) throws InternalException, UserException
-    {
-        List<List<DisplayValue>> r = new ArrayList<>();
-        for (List<List<Object>> dataRow : dataRows)
-        {
-            List<DisplayValue> row = new ArrayList<>();
-            for (int i = 0; i < columnTypes.size(); i++)
-                row.add(display(columnTypes.get(i), dataRow.get(i)));
-            r.add(row);
-        }
-        return r;
-    }
-
-    public static DisplayValue display(DataType dataType, Object object) throws UserException, InternalException
+    public static DisplayValue display(int rowIndex, DataType dataType, @Value Object object) throws UserException, InternalException
     {
         return dataType.apply(new DataTypeVisitor<DisplayValue>()
         {
             @Override
             public DisplayValue number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return new DisplayValue((Number)object, displayInfo.getUnit(), displayInfo.getMinimumDP());
+                return new DisplayValue(rowIndex, (Number)object, displayInfo.getUnit(), displayInfo.getMinimumDP());
             }
 
             @Override
             public DisplayValue text() throws InternalException, UserException
             {
-                return new DisplayValue((String)object);
+                return new DisplayValue(rowIndex, (String)object);
             }
 
             @Override
             public DisplayValue bool() throws InternalException, UserException
             {
-                return new DisplayValue((Boolean)object);
+                return new DisplayValue(rowIndex, (Boolean)object);
             }
 
             @Override
             public DisplayValue date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return new DisplayValue((Temporal) object);
+                return new DisplayValue(rowIndex, (Temporal) object);
             }
 
             @Override
@@ -152,13 +139,13 @@ public class DataTypeUtility
                 if (DataType.canFitInOneNumeric(tagTypes))
                 {
                     if (inner == null)
-                        return new DisplayValue(tagType.getName());
+                        return new DisplayValue(rowIndex, tagType.getName());
                     else
                         return inner.apply(this);
                 }
                 else
                 {
-                    return new DisplayValue(tagType.getName() + (inner == null ? "" : (" " + inner.apply(this))));
+                    return new DisplayValue(rowIndex, tagType.getName() + (inner == null ? "" : (" " + inner.apply(this))));
                 }
             }
 
@@ -171,19 +158,19 @@ public class DataTypeUtility
                 List<DisplayValue> innerDisplay = new ArrayList<>();
                 for (int i = 0; i < array.length; i++)
                 {
-                    innerDisplay.add(display(inner.get(i), array[i]));
+                    innerDisplay.add(display(rowIndex, inner.get(i), array[i]));
                 }
-                return DisplayValue.tuple(innerDisplay);
+                return DisplayValue.tuple(rowIndex, innerDisplay);
             }
 
             @Override
             public DisplayValue array(@Nullable DataType inner) throws InternalException, UserException
             {
                 if (inner == null)
-                    return DisplayValue.array(Collections.emptyList());
+                    return DisplayValue.array(rowIndex, Collections.emptyList());
                 @NonNull DataType innerFinal = inner;
                 List<Object> list = (List<Object>)object;
-                return DisplayValue.array(Utility.mapListEx(list, o -> display(innerFinal, o)));
+                return DisplayValue.array(rowIndex, Utility.mapListEx(list, o -> display(rowIndex, innerFinal, o)));
             }
         });
     }
@@ -357,14 +344,14 @@ public class DataTypeUtility
         };
     }
 
-    public static DisplayValue toDisplayValue(@Value Object o)
+    public static DisplayValue toDisplayValue(int rowIndex, @Value Object o)
     {
         if (o instanceof Boolean)
-            return new DisplayValue((Boolean)o);
+            return new DisplayValue(rowIndex, (Boolean)o);
         else if (o instanceof Number)
-            return new DisplayValue((Number)o, Unit.SCALAR, 0);
+            return new DisplayValue(rowIndex, (Number)o, Unit.SCALAR, 0);
         else if (o instanceof String)
-            return new DisplayValue((String)o);
+            return new DisplayValue(rowIndex, (String)o);
         throw new RuntimeException("Unexpected toDisplayValue type: " + o.getClass());
     }
 }

@@ -3,7 +3,10 @@ package records.data;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
+import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -50,6 +53,18 @@ public class MemoryTupleColumn extends Column
         MemoryTupleColumn shrunk = new MemoryTupleColumn(rs, title, storage.getType().getMemberType());
         shrunk.storage.addAll(storage._test_getShrunk(shrunkLength));
         return shrunk;
+    }
+
+    @Override
+    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
+    {
+        return storage.storeValue(writtenValue);
+    }
+
+    @Override
+    public void addRow() throws InternalException, UserException
+    {
+        storage.addRow();
     }
 
     public void add(Object[] tuple) throws InternalException

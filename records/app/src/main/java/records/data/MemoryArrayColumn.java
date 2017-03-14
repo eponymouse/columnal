@@ -4,6 +4,8 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility.ListEx;
@@ -45,6 +47,18 @@ public class MemoryArrayColumn extends Column
     {
         MemoryArrayColumn shrunk = new MemoryArrayColumn(rs, title, storage.getType().getMemberType().get(0), storage._test_getShrunk(shrunkLength));
         return shrunk;
+    }
+
+    @Override
+    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
+    {
+        return storage.storeValue(writtenValue);
+    }
+
+    @Override
+    public void addRow() throws InternalException, UserException
+    {
+        storage.addRow();
     }
 
     public void add(ListEx listEx) throws InternalException

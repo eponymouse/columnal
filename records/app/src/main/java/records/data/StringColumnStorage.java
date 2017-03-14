@@ -8,12 +8,15 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DumbObjectPool;
 import utility.ExBiConsumer;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -80,5 +83,18 @@ public class StringColumnStorage implements ColumnStorage<String>
             dataType = DataTypeValue.text((i, prog) -> get(i, prog));
         }
         return dataType;
+    }
+
+    @Override
+    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
+    {
+        values.set(writtenValue.getRowIndex(), pool.pool(writtenValue.getString()));
+        return new DisplayValue(writtenValue.getRowIndex(), writtenValue.getString());
+    }
+
+    @Override
+    public void addRow() throws InternalException, UserException
+    {
+        addAll(Collections.singletonList(""));
     }
 }

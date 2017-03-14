@@ -30,7 +30,7 @@ public class Workers
         @OnThread(Tag.Simulation)
         public default void queueMoved(long finished, long lastQueued) {};
         // Don't do too much here; the lock is held!
-        @OnThread(Tag.FXPlatform)
+        @OnThread(Tag.FX)
         public default void addedToQueue(long finished, long us) {};
     }
 
@@ -114,13 +114,13 @@ public class Workers
         thread.start();
     }
 
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.FX)
     public static void onWorkerThread(String title, Worker runnable)
     {
         onWorkerThread(title, runnable, 0);
     }
 
-    @OnThread(Tag.FXPlatform)
+    @OnThread(Tag.FX)
     public static void onWorkerThread(String title, Worker runnable, long delay)
     {
         int numAhead;

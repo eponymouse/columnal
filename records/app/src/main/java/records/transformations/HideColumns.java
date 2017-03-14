@@ -35,6 +35,8 @@ import records.error.UserException;
 import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.HideColumnsContext;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.loadsave.OutputBuilder;

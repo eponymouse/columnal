@@ -1,10 +1,15 @@
 package records.data;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
+import records.error.UnimplementedException;
+import records.error.UserException;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
@@ -85,5 +90,30 @@ public class ArrayColumnStorage implements ColumnStorage<ListEx>
     public DataTypeValue getType()
     {
         return type;
+    }
+
+    @Override
+    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
+    {
+        throw new UnimplementedException();
+    }
+
+    @Override
+    public void addRow() throws InternalException, UserException
+    {
+        add(new ListEx()
+        {
+            @Override
+            public int size() throws InternalException, UserException
+            {
+                return 0;
+            }
+
+            @Override
+            public @Value Object get(int index) throws InternalException, UserException
+            {
+                throw new InternalException("Asking for item in empty array");
+            }
+        });
     }
 }

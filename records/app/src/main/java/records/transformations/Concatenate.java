@@ -32,6 +32,8 @@ import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.ConcatMissingColumnContext;
 import records.grammar.TransformationParser.ConcatMissingContext;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import records.gui.View;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;

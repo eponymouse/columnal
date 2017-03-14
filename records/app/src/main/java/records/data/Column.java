@@ -11,6 +11,8 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayCache;
 import records.gui.DisplayValue;
+import records.gui.DisplayValueBase;
+import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -52,6 +54,8 @@ import java.util.Optional;
 @OnThread(Tag.Simulation)
 public abstract class Column
 {
+    @OnThread(Tag.Any)
+    private boolean editable;
     protected final RecordSet recordSet;
 
     protected Column(RecordSet recordSet)
@@ -64,7 +68,7 @@ public abstract class Column
     private DisplayCache displayCache;
 
     @OnThread(Tag.FXPlatform)
-    public final ObservableValue<DisplayValue> getDisplay(int index)
+    public final ObservableValue<DisplayValueBase> getDisplay(int index)
     {
         if (displayCache == null)
             displayCache = new DisplayCache(this);
@@ -121,10 +125,42 @@ public abstract class Column
         return recordSet.getLength();
     }
 
+    /**
+     * Marks the column as having editable values in the interface.
+     * Intended for use directly after constructor as a builder pattern
+     * (You must at least call this before it is made visible in interface,
+     * as isEditable is only called once at beginning, and not checked again).
+     */
+    @OnThread(Tag.Any)
+    public final Column markEditable()
+    {
+        editable = true;
+        return this;
+    }
+
+    @OnThread(Tag.Any)
+    public final boolean isEditable()
+    {
+        return editable;
+    }
+
     // For testing: return copy of column with length trimmed to shrunkLength
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
         throw new RuntimeException("Unshrinkable!");
+    }
+
+    /**
+     * For editable columns.  If editing is not possible, throw an exception.
+     */
+    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
+    {
+        throw new InternalException("Cannot edit results of transformation");
+    }
+
+    public void addRow() throws InternalException, UserException
+    {
+        throw new InternalException("Cannot edit results of transformation");
     }
 
     public static interface ProgressListener

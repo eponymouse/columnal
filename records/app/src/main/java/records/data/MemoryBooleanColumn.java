@@ -2,6 +2,9 @@ package records.data;
 
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
+import records.error.UserException;
+import records.gui.DisplayValue;
+import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -41,6 +44,18 @@ public class MemoryBooleanColumn extends Column
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException
     {
         return new MemoryBooleanColumn(rs, title, storage.getShrunk(shrunkLength));
+    }
+
+    @Override
+    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
+    {
+        return storage.storeValue(writtenValue);
+    }
+
+    @Override
+    public void addRow() throws InternalException, UserException
+    {
+        storage.addRow();
     }
 
     public void add(boolean b) throws InternalException
