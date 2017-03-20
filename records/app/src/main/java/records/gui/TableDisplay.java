@@ -91,13 +91,14 @@ public class TableDisplay extends BorderPane
     }
 
     @OnThread(Tag.FXPlatform)
-    private static class TableDataDisplay extends TableView<Integer>
+    private static class TableDataDisplay extends TableView<Integer> implements RecordSet.RecordSetListener
     {
         @SuppressWarnings("initialization")
         @UIEffect
         public TableDataDisplay(RecordSet recordSet)
         {
             super();
+            recordSet.setListener(this);
             try
             {
                 getColumns().setAll(recordSet.getDisplayColumns());
@@ -117,12 +118,12 @@ public class TableDisplay extends BorderPane
                         {
                             indexesToAdd.add(Integer.valueOf(i));
                         }
-                        else if (recordSet.indexValid(i - 1))
+                        else if (i == 0 || recordSet.indexValid(i - 1))
                         {
                             // This is the first row after.  If all columns are editable,
                             // add a false row which indicates that the data can be expanded:
                             if (expandable)
-                                indexesToAdd.add(Integer.valueOf(-i));
+                                indexesToAdd.add(Integer.valueOf(i == 0 ? Integer.MIN_VALUE : -i));
                         }
                     }
                 });
@@ -130,6 +131,19 @@ public class TableDisplay extends BorderPane
                 // afterwards.
                 Platform.runLater(() -> getItems().addAll(indexesToAdd));
             });
+
+        }
+
+        @Override
+        @OnThread(Tag.FXPlatform)
+        public void rowAddedAtEnd()
+        {
+            // If our table has 3 real rows and is editable, it will have integers:
+            // 0, 1, 2, -3
+            // What we want to do is insert item 3 at position 3, to get:
+            // 0, 1, 2, 3, -4
+            getItems().set(getItems().size() - 1, Integer.valueOf(getItems().size() - 1));
+            getItems().add(Integer.valueOf(- getItems().size()));
 
         }
     }

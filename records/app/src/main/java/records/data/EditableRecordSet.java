@@ -1,8 +1,11 @@
 package records.data;
 
+import javafx.application.Platform;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
+import threadchecker.OnThread;
 
 import java.util.List;
 
@@ -11,11 +14,12 @@ import java.util.List;
  */
 public class EditableRecordSet extends RecordSet
 {
-    private int curLength = 1;
+    private int curLength;
 
-    public EditableRecordSet(List<? extends FunctionInt<RecordSet, ? extends Column>> columns) throws InternalException, UserException
+    public EditableRecordSet(List<? extends FunctionInt<RecordSet, ? extends Column>> columns, int length) throws InternalException, UserException
     {
         super(columns);
+        this.curLength = length;
     }
 
     @Override
@@ -28,5 +32,21 @@ public class EditableRecordSet extends RecordSet
     public int getLength() throws UserException, InternalException
     {
         return curLength;
+    }
+
+    @Override
+    protected void addRow() throws UserException, InternalException
+    {
+        for (Column c : getColumns())
+        {
+            c.addRow();
+        }
+        curLength += 1;
+        if (listener != null)
+        {
+            RecordSetListener listenerFinal = listener;
+            Platform.runLater(() -> listenerFinal.rowAddedAtEnd());
+        }
+        // TODO re-run dependents
     }
 }

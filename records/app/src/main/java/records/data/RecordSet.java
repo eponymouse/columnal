@@ -38,7 +38,8 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 /**
- * A RecordSet is a collection of columns.
+ * A RecordSet is a collection of columns.  It is the nitty gritty data part
+ * of Table, which deals with wider book-keeping.
  *
  * RecordSet assumptions:
  *
@@ -54,6 +55,9 @@ public abstract class RecordSet
 {
     @OnThread(Tag.Any)
     private final List<Column> columns;
+
+    @OnThread(Tag.FXPlatform)
+    protected @Nullable RecordSetListener listener;
 
     @SuppressWarnings("initialization")
     public RecordSet(List<? extends FunctionInt<RecordSet, ? extends Column>> columns) throws InternalException, UserException
@@ -79,7 +83,10 @@ public abstract class RecordSet
             c.setEditable(data.isEditable());
             // If last row is index 8, we add an integer -9 (note the minus) afterwards
             // to indicate a special "add more data" row.
-            c.setCellValueFactory(cdf -> cdf.getValue() < 0 ? new ReadOnlyObjectWrapper<DisplayValueBase>(DisplayValue.getAddDataItem(-cdf.getValue())) : data.getDisplay(cdf.getValue()));
+            c.setCellValueFactory(cdf ->
+                    cdf.getValue() < 0 ?
+                            new ReadOnlyObjectWrapper<DisplayValueBase>(DisplayValue.getAddDataItem(cdf.getValue() == Integer.MIN_VALUE ? 0 : -cdf.getValue())) :
+                            data.getDisplay(cdf.getValue()));
             DataType.StringConvBase converter = data.getType().makeConverter();
             c.setCellFactory(col -> {
                 return new TextFieldTableCell<Integer, DisplayValueBase>(converter) {
@@ -177,13 +184,9 @@ public abstract class RecordSet
         return Utility.mapListEx(columns, makeDisplayColumn);
     }
 
-    private void addRow() throws UserException, InternalException
+    protected void addRow() throws UserException, InternalException
     {
-        for (Column c : columns)
-        {
-            c.addRow();
-        }
-        // TODO notify displays, re-run dependents
+        throw new InternalException("Cannot extend length of data table; not editable");
     }
 
     @OnThread(Tag.Any)
@@ -308,5 +311,17 @@ public abstract class RecordSet
         // It's bad performance but semantically valid to not compare the column
         // values here.  Lots of hash code collisions but that's valid.
         return result;
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public void setListener(RecordSetListener listener)
+    {
+        this.listener = listener;
+    }
+
+    public static interface RecordSetListener
+    {
+        @OnThread(Tag.FXPlatform)
+        public void rowAddedAtEnd();
     }
 }

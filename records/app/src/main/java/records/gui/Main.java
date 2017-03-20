@@ -63,7 +63,7 @@ public class Main extends Application
             Workers.onWorkerThread("Create new table", () -> {
                 try
                 {
-                    EditableRecordSet rs = new EditableRecordSet(Collections.emptyList());
+                    EditableRecordSet rs = new EditableRecordSet(Collections.emptyList(), 0);
                     ImmediateDataSource ds = new ImmediateDataSource(v.getManager(), rs);
                     v.getManager().addSource(ds);
                 }

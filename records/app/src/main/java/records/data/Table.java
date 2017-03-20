@@ -25,7 +25,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- * Created by neil on 09/11/2016.
+ * A Table is a wrapper for a RecordSet which keeps various metadata
+ * on where the data originates from, and details about displaying it.
  */
 public abstract class Table
 {

@@ -160,9 +160,10 @@ public class DisplayCache
             }
             catch (UserException | InternalException e)
             {
+                e.printStackTrace();
                 Platform.runLater(() -> {
                     String msg = e.getLocalizedMessage();
-                    v.setValue(new DisplayValue(originalIndex, msg == null ? "ERROR" : msg, true));
+                    v.setValue(new DisplayValue(originalIndex, msg == null ? "ERROR" : ("ERR:" + msg), true));
                 });
             }
         }

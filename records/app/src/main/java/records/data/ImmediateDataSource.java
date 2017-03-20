@@ -96,7 +96,7 @@ public class ImmediateDataSource extends DataSource
             });
         }
         allColumns.add(rs -> newColumnType.makeImmediateColumn(new ColumnId(newColumnName), Utility.replicate(data.getLength(), newColumnValue)).apply(rs).markEditable());
-        return new ImmediateDataSource(getManager(), getId(), new KnownLengthRecordSet(allColumns, data.getLength()));
+        return new ImmediateDataSource(getManager(), getId(), new EditableRecordSet(allColumns, data.getLength()));
     }
 
     @Override
