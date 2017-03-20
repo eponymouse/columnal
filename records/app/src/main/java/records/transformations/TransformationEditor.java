@@ -66,7 +66,8 @@ public abstract class TransformationEditor
                 resources = Arrays.asList(
                     ResourceBundle.getBundle("transformations"),
                     ResourceBundle.getBundle("expression"),
-                    ResourceBundle.getBundle("function")
+                    ResourceBundle.getBundle("function"),
+                    ResourceBundle.getBundle("newcolumn")
                 );
             }
             catch (MissingResourceException e)

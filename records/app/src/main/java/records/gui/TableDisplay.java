@@ -23,10 +23,12 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.Utility;
 import utility.Workers;
 
 import java.util.ArrayList;
+import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -189,14 +191,19 @@ public class TableDisplay extends BorderPane
             Button addColumnButton = new Button("Add Column");
             addColumnButton.setOnAction(e -> {
                 // TODO show a dialog to prompt for the name and type:
-                Workers.onWorkerThread("Adding column", () ->
+                NewColumnDialog dialog = new NewColumnDialog();
+                Optional<NewColumnDialog.NewColumnDetails> choice = dialog.showAndWait();
+                if (choice.isPresent())
                 {
-                    Utility.alertOnError_(() ->
+                    Workers.onWorkerThread("Adding column", () ->
                     {
-                        Table newTable = table.addColumn("NewCol", DataType.TEXT, "");
-                        parent.getManager().edit(table.getId(), newTable);
+                        Utility.alertOnError_(() ->
+                        {
+                            Table newTable = table.addColumn(choice.get().name, choice.get().type, choice.get().defaultValue);
+                            parent.getManager().edit(table.getId(), newTable);
+                        });
                     });
-                });
+                }
             });
             header.getChildren().add(addColumnButton);
         }

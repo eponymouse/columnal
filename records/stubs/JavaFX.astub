@@ -28,6 +28,11 @@ class Scene
 }
 
 package javafx.scene.control;
+class Dialog
+{
+    DialogPane getDialogPane() @UnknownInitialization;
+    void setResultConverter(Callback a) @UnknownInitialization;
+}
 class TableView
 {
     //@UnderInitialization(TableView.class) List getItems();
