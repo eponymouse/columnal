@@ -12,6 +12,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="library" name="Maven: org.antlr:antlr4:4.5.3" level="project" />
     <orderEntry type="module" module-name="utility" />
+    <orderEntry type="library" name="Maven: org.controlsfx:controlsfx:8.40.12" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:java-smt:1.0.1" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:common:0.3000-38-gcdb252b" level="project" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:19.0" level="project" />

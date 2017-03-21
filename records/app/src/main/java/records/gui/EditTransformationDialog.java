@@ -140,13 +140,11 @@ public class EditTransformationDialog
 
         dialog.setOnShown(e -> org.scenicview.ScenicView.show(dialog.getDialogPane().getScene()));
 
-        dialog.setResultConverter(new Callback<ButtonType, SimulationSupplier<Transformation>>()
+        dialog.setResultConverter(new Callback<ButtonType, @Nullable SimulationSupplier<Transformation>>()
         {
             @Override
-            @Nullable
-            @SuppressWarnings("nullness")
             @OnThread(Tag.FXPlatform)
-            public SimulationSupplier<Transformation> call(ButtonType bt)
+            public @Nullable SimulationSupplier<Transformation> call(ButtonType bt)
             {
                 if (bt.equals(ButtonType.OK))
                 {

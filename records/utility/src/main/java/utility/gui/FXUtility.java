@@ -8,6 +8,7 @@ import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.Control;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.control.cell.TextFieldListCell;
@@ -20,9 +21,13 @@ import javafx.scene.text.Text;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.controlsfx.validation.ValidationResult;
 import org.jetbrains.annotations.NotNull;
+import records.error.InternalException;
+import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExRunnable;
 import utility.FXPlatformBiConsumer;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
@@ -117,6 +122,24 @@ public class FXUtility
                 return Math.max(tf.isFocused() ? (minSizeFocused == null ? 20 : minSizeFocused) : (minSizeUnfocused == null ? 20 : minSizeUnfocused), width);
             }
         });
+    }
+
+    @OnThread(Tag.FX)
+    public static ValidationResult validate(Control target, ExRunnable action)
+    {
+        try
+        {
+            action.run();
+            return new ValidationResult();
+        }
+        catch (InternalException e)
+        {
+            return ValidationResult.fromError(target, "Internal Error: " + e.getLocalizedMessage());
+        }
+        catch (UserException e)
+        {
+            return ValidationResult.fromError(target, e.getLocalizedMessage());
+        }
     }
 
     public static interface DragHandler

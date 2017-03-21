@@ -191,7 +191,7 @@ public class TableDisplay extends BorderPane
             Button addColumnButton = new Button("Add Column");
             addColumnButton.setOnAction(e -> {
                 // TODO show a dialog to prompt for the name and type:
-                NewColumnDialog dialog = new NewColumnDialog();
+                NewColumnDialog dialog = new NewColumnDialog(parent.getManager().getTypeManager());
                 Optional<NewColumnDialog.NewColumnDetails> choice = dialog.showAndWait();
                 if (choice.isPresent())
                 {

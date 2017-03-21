@@ -28,10 +28,14 @@ class Scene
 }
 
 package javafx.scene.control;
-class Dialog
+class Dialog<T>
 {
     DialogPane getDialogPane() @UnknownInitialization;
-    void setResultConverter(Callback a) @UnknownInitialization;
+    void setResultConverter(Callback<ButtonType, @Nullable T> a) @UnknownInitialization;
+}
+class ComboBox<T>
+{
+    ObjectProperty<@Nullable T> valueProperty();
 }
 class TableView
 {
