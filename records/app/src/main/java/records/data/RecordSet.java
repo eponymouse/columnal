@@ -95,7 +95,7 @@ public abstract class RecordSet
                     public void updateItem(DisplayValueBase itemBase, boolean empty)
                     {
                         super.updateItem(itemBase, empty);
-                        if (!(itemBase instanceof DisplayValueBase))
+                        if (itemBase != null && !(itemBase instanceof DisplayValueBase))
                         {
                             // Shouldn't happen, but prevent an exception in case:
                             setText("ERR:DVB");
