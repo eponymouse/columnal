@@ -4,8 +4,12 @@ import annotation.qual.Value;
 import javafx.scene.control.*;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.util.Callback;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.transformations.TransformationEditor;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 /**
  * Created by neil on 20/03/2017.
@@ -28,8 +32,18 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
         textType.setToggleGroup(typeGroup);
         contents.getChildren().add(textType);
 
-        setResultConverter(bt -> {
-            return new NewColumnDetails(name.getText(), typeGroup.getSelectedToggle() == numberType ? DataType.NUMBER : DataType.TEXT, "");
+        setResultConverter(new Callback<ButtonType, NewColumnDetails>()
+        {
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            @SuppressWarnings("nullness") // Because we are allowed to return null here, but hard to make a stub for that.
+            public @Nullable NewColumnDetails call(ButtonType bt)
+            {
+                if (bt == ButtonType.OK)
+                    return new NewColumnDetails(name.getText(), typeGroup.getSelectedToggle() == numberType ? DataType.NUMBER : DataType.TEXT, "");
+                else
+                    return null;
+            }
         });
 
         getDialogPane().setContent(contents);
