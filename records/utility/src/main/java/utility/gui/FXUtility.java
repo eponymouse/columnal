@@ -28,6 +28,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExRunnable;
+import utility.ExSupplier;
 import utility.FXPlatformBiConsumer;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;

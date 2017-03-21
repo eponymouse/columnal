@@ -52,6 +52,7 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
     private final ValidationSupport validationSupport = new ValidationSupport();
     private final TextField defaultValue;
 
+    @OnThread(Tag.FXPlatform)
     public NewColumnDialog(TypeManager typeManager)
     {
         contents = new VBox();
@@ -59,12 +60,11 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
         contents.getChildren().add(new HBox(new Label(TransformationEditor.getString("newcolumn.name")), name));
         contents.getChildren().add(new Separator());
         typeGroup = new ToggleGroup();
-        TextField units = new TextField("");
-        numberSelected = addType("type.number", new NumberTypeBinding(units, typeManager), new Label(TransformationEditor.getString("newcolumn.number.units")), units);
+        ErrorableTextField<Unit> units = new ErrorableTextField<Unit>(unitSrc ->
+            ErrorableTextField.validate(() -> typeManager.getUnitManager().loadUse(unitSrc))
+        );
+        numberSelected = addType("type.number", new NumberTypeBinding(units.valueProperty(), typeManager), new Label(TransformationEditor.getString("newcolumn.number.units")), units.getNode());
         units.disableProperty().bind(numberSelected.not());
-        validationSupport.registerValidator(units, (Control c, String unitSrc) -> {
-            return FXUtility.validate(units, () -> typeManager.getUnitManager().loadUse(unitSrc));
-        });
         addType("type.text", new ReadOnlyObjectWrapper<>(DataType.TEXT));
         addType("type.boolean", new ReadOnlyObjectWrapper<>(DataType.BOOLEAN));
         ComboBox<DataType> dateTimeComboBox = new ComboBox<>();
@@ -144,28 +144,23 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
 
     private static class NumberTypeBinding extends ObjectBinding<@Nullable DataType>
     {
-        private @NonNull final TextField units;
+        private final @NonNull ObjectBinding<@Nullable Unit> units;
         private final TypeManager typeManager;
 
-        public NumberTypeBinding(@NonNull TextField units, TypeManager typeManager)
+        public NumberTypeBinding(@NonNull ObjectBinding<@Nullable Unit> units, TypeManager typeManager)
         {
             this.units = units;
             this.typeManager = typeManager;
-            super.bind(units.textProperty());
+            super.bind(units);
         }
 
         @Override
         protected @Nullable DataType computeValue()
         {
-            try
-            {
-                return DataType.number(new NumberInfo(typeManager.getUnitManager().loadUse(units.getText()), 0));
-            }
-            catch (InternalException | UserException e)
-            {
-                // TODO: display the error
+            Unit u = units.get();
+            if (u == null)
                 return null;
-            }
+            return DataType.number(new NumberInfo(u, 0));
         }
     }
 }
