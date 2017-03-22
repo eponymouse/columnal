@@ -35,6 +35,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplier;
+import utility.Pair;
 import utility.UnitType;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -54,7 +55,7 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
 
     private final IdentityHashMap<Toggle, ObservableValue<@Nullable DataType>> types = new IdentityHashMap<>();
     private final ValidationSupport validationSupport = new ValidationSupport();
-    private final TextField defaultValue;
+    private final Pair<Node, ObservableValue<?>> defaultValue;
 
 
     @OnThread(Tag.FXPlatform)
@@ -82,8 +83,18 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
 
         dateSelected = addType("type.datetime", dateTimeComboBox.valueProperty(), dateTimeComboBox);
         dateTimeComboBox.disableProperty().bind(dateSelected.not());
-        defaultValue = new TextField();
-        contents.getChildren().addAll(new Separator(), new HBox(new Label(TransformationEditor.getString("newcolumn.defaultvalue")), defaultValue));
+        Pair<Node, ObservableValue<?>> defVal;
+        try
+        {
+            defVal = DataTypeGUI.getEditorFor(DataType.NUMBER);
+        }
+        catch (InternalException e)
+        {
+            Utility.log(e);
+            defVal = new Pair<>(new Label("Internal Error"), new ReadOnlyObjectWrapper<@Nullable Object>(null));
+        }
+        defaultValue = defVal;
+        contents.getChildren().addAll(new Separator(), new HBox(new Label(TransformationEditor.getString("newcolumn.defaultvalue")), defaultValue.getFirst()));
         //validationSupport.registerValidator(defaultValue, )
         // TODO: tagged, tuple, array
 
