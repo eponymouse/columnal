@@ -23,6 +23,8 @@ import org.controlsfx.control.decoration.Decorator;
 import org.controlsfx.control.decoration.StyleClassDecoration;
 import org.controlsfx.validation.ValidationSupport;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
@@ -48,10 +50,12 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
     private final ToggleGroup typeGroup;
     private final VBox contents;
     // Stored as a field to prevent GC:
-    private final BooleanBinding numberSelected;
+    private final BooleanBinding numberSelected, dateSelected;
+
     private final IdentityHashMap<Toggle, ObservableValue<@Nullable DataType>> types = new IdentityHashMap<>();
     private final ValidationSupport validationSupport = new ValidationSupport();
     private final TextField defaultValue;
+
 
     @OnThread(Tag.FXPlatform)
     public NewColumnDialog(TypeManager typeManager)
@@ -69,7 +73,15 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
         addType("type.text", new ReadOnlyObjectWrapper<>(DataType.TEXT));
         addType("type.boolean", new ReadOnlyObjectWrapper<>(DataType.BOOLEAN));
         ComboBox<DataType> dateTimeComboBox = new ComboBox<>();
-        addType("type.datetime", dateTimeComboBox.valueProperty(), dateTimeComboBox);
+        dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)));
+        dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)));
+        dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)));
+        dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)));
+        dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)));
+        dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)));
+
+        dateSelected = addType("type.datetime", dateTimeComboBox.valueProperty(), dateTimeComboBox);
+        dateTimeComboBox.disableProperty().bind(dateSelected.not());
         defaultValue = new TextField();
         contents.getChildren().addAll(new Separator(), new HBox(new Label(TransformationEditor.getString("newcolumn.defaultvalue")), defaultValue));
         //validationSupport.registerValidator(defaultValue, )

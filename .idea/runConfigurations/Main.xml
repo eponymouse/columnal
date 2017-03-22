@@ -15,6 +15,8 @@
     <RunnerSettings RunnerId="JProfiler">
       <option name="WINDOW" value="false" />
     </RunnerSettings>
-    <method />
+    <method>
+      <option name="Maven.BeforeRunTask" enabled="true" file="C:\Users\neil\intellij\records\records\app/pom.xml" goal="sass:update-stylesheets" />
+    </method>
   </configuration>
 </component>
