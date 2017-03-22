@@ -2,16 +2,23 @@ package records.gui;
 
 import javafx.beans.Observable;
 import javafx.beans.binding.ObjectBinding;
+import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExSupplier;
 import utility.FXPlatformFunction;
+import utility.Utility;
+import utility.gui.FXUtility;
 
 
 /**
@@ -25,12 +32,26 @@ public class ErrorableTextField<T>
 {
     private final TextField field = new TextField();
     private final FXPlatformFunction<String, ConversionResult<T>> converter;
-    private final ObjectBinding<@Nullable T> value;
+    private final ObjectProperty<ConversionResult<T>> converted;
+    private final ObjectExpression<@Nullable T> value;
+    private final ObjectExpression<String> error;
 
-    public ErrorableTextField(FXPlatformFunction<String, ConversionResult<T>> converter, Observable... conversionDependencies)
+    public ErrorableTextField(FXPlatformFunction<String, ConversionResult<T>> converter, ObservableValue... conversionDependencies)
     {
+        field.getStyleClass().add("errorable-text-field");
         this.converter = converter;
-        this.value = new ValueBinding<T>(field, converter, conversionDependencies);
+        this.converted = new SimpleObjectProperty<>(converter.apply(""));
+        Utility.addChangeListenerPlatformNN(field.textProperty(), s -> converted.setValue(converter.apply(s)));
+        for (ObservableValue dependency : conversionDependencies)
+        {
+            Utility.addChangeListenerPlatform(dependency, o -> converted.setValue(converter.apply(field.getText())));
+        }
+        this.value = FXUtility.<ConversionResult<T>, @Nullable T>mapBindingEager(converted, ConversionResult::getValue);
+        this.error = FXUtility.<ConversionResult<T>, String>mapBindingEager(converted, ConversionResult::getError);
+        Utility.addChangeListenerPlatform(error, err -> {
+            FXUtility.setPseudoclass(field, "has-error", err != null);
+            // TODO show a tooltip
+        });
     }
 
     public BooleanProperty disableProperty()
@@ -38,7 +59,7 @@ public class ErrorableTextField<T>
         return field.disableProperty();
     }
 
-    public ObjectBinding<@Nullable T> valueProperty()
+    public ObjectExpression<@Nullable T> valueProperty()
     {
         return value;
     }
@@ -52,7 +73,7 @@ public class ErrorableTextField<T>
     {
         private final boolean success;
         private final @Nullable T value;
-        private final @Nullable Object error;
+        private final @Nullable String error;
 
         private ConversionResult(T value)
         {
@@ -72,6 +93,12 @@ public class ErrorableTextField<T>
         {
             return value;
         }
+
+        @Pure
+        public @Nullable String getError()
+        {
+            return error;
+        }
     }
 
     public static <T> ConversionResult<T> validate(ExSupplier<T> getValue)
@@ -87,29 +114,6 @@ public class ErrorableTextField<T>
         catch (UserException e)
         {
             return new ConversionResult<T>(e.getLocalizedMessage());
-        }
-    }
-
-    private static class ValueBinding<T> extends ObjectBinding<@Nullable T>
-    {
-        private final TextField field;
-        private final FXPlatformFunction<String, ConversionResult<T>> converter;
-
-        public ValueBinding(TextField field, FXPlatformFunction<String, ConversionResult<T>> converter, Observable... conversionDependencies)
-        {
-            this.field = field;
-            this.converter = converter;
-            super.bind(field.textProperty());
-            super.bind(conversionDependencies);
-        }
-
-        @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        protected @Nullable T computeValue()
-        {
-            ConversionResult<T> result = converter.apply(field.getText());
-            // TODO if result is an error, display it
-            return result.getValue();
         }
     }
 }

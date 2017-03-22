@@ -29,3 +29,8 @@
         -fx-text-fill: white;
     }
 }
+
+.errorable-text-field:has-error {
+   -fx-border-color: red;
+   -fx-border-width: 2px;
+}

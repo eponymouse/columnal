@@ -2,7 +2,11 @@ package utility.gui;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
+import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
@@ -183,9 +187,16 @@ public class FXUtility
         });
     }
 
-    public static <T, R> ObjectExpression<R> mapBinding(ObjectExpression<T> original, FXPlatformFunction<T, R> extract)
+    public static <T, R> ObjectBinding<R> mapBindingLazy(ObservableObjectValue<T> original, FXPlatformFunction<T, R> extract)
     {
         return Bindings.createObjectBinding(() -> extract.apply(original.get()), original);
+    }
+
+    public static <T, R> ObjectExpression<R> mapBindingEager(ObservableObjectValue<T> original, FXPlatformFunction<T, R> extract)
+    {
+        ObjectProperty<R> binding = new SimpleObjectProperty<>();
+        Utility.addChangeListenerPlatformNN(original, x -> binding.setValue(extract.apply(x)));
+        return binding;
     }
 
     public static void setPseudoclass(Node node, String className, boolean on)

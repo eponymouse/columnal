@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
+import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableValue;
@@ -76,6 +77,7 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
 
         setResultConverter(this::makeResult);
 
+        getDialogPane().getStylesheets().add(Utility.getStylesheet("general.css"));
         getDialogPane().setContent(contents);
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
         getDialogPane().lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, e -> {
@@ -144,10 +146,10 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
 
     private static class NumberTypeBinding extends ObjectBinding<@Nullable DataType>
     {
-        private final @NonNull ObjectBinding<@Nullable Unit> units;
+        private final @NonNull ObjectExpression<@Nullable Unit> units;
         private final TypeManager typeManager;
 
-        public NumberTypeBinding(@NonNull ObjectBinding<@Nullable Unit> units, TypeManager typeManager)
+        public NumberTypeBinding(@NonNull ObjectExpression<@Nullable Unit> units, TypeManager typeManager)
         {
             this.units = units;
             this.typeManager = typeManager;

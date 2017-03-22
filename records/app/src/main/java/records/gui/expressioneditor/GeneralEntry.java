@@ -345,7 +345,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
     @Override
     public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
     {
-        return FXUtility.<Status, @Nullable String>mapBinding(status, Status::getStyleWhenInner);
+        return FXUtility.<Status, @Nullable String>mapBindingLazy(status, Status::getStyleWhenInner);
     }
 
     @Override
