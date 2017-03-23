@@ -272,7 +272,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
             r.add(new SimpleCompletion(ARROW_SAME_ROW, column.getName().getRaw(), " [value in this row]", Status.COLUMN_REFERENCE_SAME_ROW));
             r.add(new SimpleCompletion(ARROW_WHOLE, column.getName().getRaw(), " [whole column]", Status.COLUMN_REFERENCE_WHOLE));
         }
-        for (DataType dataType : parent.getEditor().getTypeManager().getKnownTypes().values())
+        for (DataType dataType : parent.getEditor().getTypeManager().getKnownTaggedTypes().values())
         {
             for (TagType<DataType> tagType : dataType.getTagTypes())
             {

@@ -6,6 +6,7 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
 import javafx.scene.Node;
@@ -21,6 +22,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
@@ -32,6 +34,7 @@ import utility.Utility;
 
 import java.util.HashMap;
 import java.util.IdentityHashMap;
+import java.util.Map.Entry;
 
 /**
  * Created by neil on 20/03/2017.
@@ -79,10 +82,23 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
         dateTimeComboBox.getSelectionModel().selectFirst();
         dateSelected = addType("type.datetime", dateTimeComboBox.valueProperty(), dateTimeComboBox);
         dateTimeComboBox.disableProperty().bind(dateSelected.not());
+
+        ComboBox<DataType> taggedComboBox = new ComboBox<>();
+        Button newTaggedTypeButton = new Button(TransformationEditor.getString("type.tagged.new"));
+        // TODO wire this up to show a new tagged type dialog
+        addType("type.tagged", taggedComboBox.valueProperty(), taggedComboBox, newTaggedTypeButton);
+        for (Entry<TypeId, DataType> taggedType : typeManager.getKnownTaggedTypes().entrySet())
+        {
+            taggedComboBox.getItems().add(taggedType.getValue());
+        }
+        taggedComboBox.getSelectionModel().selectFirst();
+
+
+
         contents.getChildren().addAll(new Separator(), new HBox(new Label(TransformationEditor.getString("newcolumn.defaultvalue")), getCurrentDefaultValueEditor().getFirst()));
         int defaultValueContentsIndex = contents.getChildren().size() - 1;
-        //validationSupport.registerValidator(defaultValue, )
-        // TODO: tagged, tuple, array
+
+        // TODO: tuple, array
 
         typeGroup.selectedToggleProperty().addListener(c -> {
             Pair<Node, ObservableValue<? extends @Value @Nullable Object>> editor = getCurrentDefaultValueEditor();
@@ -111,17 +127,7 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
 
     private static Pair<Node, ObservableValue<? extends @Value @Nullable Object>> makeEditor(DataType dataType)
     {
-        Pair<Node, ObservableValue<? extends @Value @Nullable Object>> defVal;
-        try
-        {
-            defVal = DataTypeGUI.getEditorFor(dataType);
-        }
-        catch (InternalException e)
-        {
-            Utility.log(e);
-            defVal = new Pair<>(new Label("Internal Error"), new ReadOnlyObjectWrapper<@Nullable Object>(null));
-        }
-        return defVal;
+        return DataTypeGUI.getEditorFor(dataType);
     }
 
     @RequiresNonNull({"name", "types", "typeGroup"})
