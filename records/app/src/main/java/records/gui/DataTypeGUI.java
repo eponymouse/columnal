@@ -1,8 +1,11 @@
 package records.gui;
 
 import annotation.qual.Value;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableValue;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -15,6 +18,7 @@ import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.TypeId;
 import records.error.InternalException;
+import records.transformations.TransformationEditor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -62,7 +66,12 @@ public class DataTypeGUI
             @OnThread(Tag.FXPlatform)
             public Pair<Node, ObservableValue<? extends @Value @Nullable Object>> bool() throws InternalException
             {
-                return new Pair<>(new Label("TODO"), new ReadOnlyObjectWrapper<>(""));
+                SimpleBooleanProperty value = new SimpleBooleanProperty(true);
+                Label label = new Label();
+                label.setCursor(Cursor.HAND);
+                label.textProperty().bind(Bindings.when(value).then(TransformationEditor.getString("dataedit.bool.true")).otherwise(TransformationEditor.getString("dataedit.bool.false")));
+                label.setOnMouseClicked(e -> value.set(!value.get()));
+                return new Pair<>(label, value);
             }
 
             @Override
