@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
@@ -36,7 +37,7 @@ import java.util.stream.Stream;
 public class ExpressionEditor extends ConsecutiveBase
 {
     private final FlowPane container;
-    private final @Nullable DataType type;
+    private final ObservableObjectValue<@Nullable DataType> type;
     private final @Nullable Table srcTable;
     private final FXPlatformConsumer<@NonNull Expression> onChange;
     private final TableManager tableManager;
@@ -74,7 +75,7 @@ public class ExpressionEditor extends ConsecutiveBase
         }
     }
 
-    public ExpressionEditor(Expression startingValue, @Nullable Table srcTable, @Nullable DataType type, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
+    public ExpressionEditor(Expression startingValue, @Nullable Table srcTable, ObservableObjectValue<@Nullable DataType> type, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
         super( null, null, "");
         this.container = new FlowPane();

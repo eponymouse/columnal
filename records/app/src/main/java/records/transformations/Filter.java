@@ -2,6 +2,7 @@ package records.transformations;
 
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
@@ -257,7 +258,7 @@ public class Filter extends Transformation
             {
                 Utility.log(e);
             }
-            this.expressionEditor = new ExpressionEditor(expression, srcControl.getTableOrNull(), DataType.BOOLEAN, mgr, e -> {
+            this.expressionEditor = new ExpressionEditor(expression, srcControl.getTableOrNull(), new ReadOnlyObjectWrapper<>(DataType.BOOLEAN), mgr, e -> {
                 try
                 {
                     updateExample(e);

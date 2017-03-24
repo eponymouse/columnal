@@ -3,7 +3,10 @@ package test;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
+import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -37,7 +40,7 @@ public class PropLoadSaveExpression
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void testEditNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
-        Expression edited = new ExpressionEditor(expression, null, null, DummyManager.INSTANCE, e -> {}).toExpression(new ErrorDisplayerRecord(), e -> {});
+        Expression edited = new ExpressionEditor(expression, null, new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.INSTANCE, e -> {}).toExpression(new ErrorDisplayerRecord(), e -> {});
         assertEquals(expression, edited);
         assertEquals(expression.save(true), edited.save(true));
     }
