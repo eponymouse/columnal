@@ -102,6 +102,7 @@ public class TypeSelectionPane
         Button extendTupleButton = new Button(TransformationEditor.getString("type.tuple.more"));
         Button shrinkTupleButton = new Button(TransformationEditor.getString("type.tuple.less"));
         ObservableList<ObservableObjectValue<@Nullable DataType>> tupleTypes = FXCollections.observableArrayList();
+        ObservableList<Label> commas = FXCollections.observableArrayList();
         FlowPane tupleTypesPane = new FlowPane(new Label("("), new HBox(new Label(")"), shrinkTupleButton, extendTupleButton));
         ObjectProperty<@Nullable DataType> tupleType = new SimpleObjectProperty<>(null);
         tupleTypes.addListener((ListChangeListener<? super @UnknownKeyFor ObservableObjectValue<@UnknownKeyFor @Nullable DataType>>) (ListChangeListener.Change<? extends ObservableObjectValue<@UnknownKeyFor @Nullable DataType>> c) -> {
@@ -115,6 +116,12 @@ public class TypeSelectionPane
             }
             tupleType.setValue(DataType.tuple(types));
         });
+        commas.addListener((ListChangeListener<? super @UnknownKeyFor Label>) c -> {
+            for (int i = 0; i < commas.size(); i++)
+            {
+                commas.get(i).setText(i == commas.size() - 1 ? "" : ",");
+            }
+        });
         tupleNotSelected = addType("type.tuple", tupleType,  tupleTypesPane);
         extendTupleButton.disableProperty().bind(tupleNotSelected);
         shrinkTupleButton.disableProperty().bind(tupleNotSelected);
@@ -123,12 +130,15 @@ public class TypeSelectionPane
             Pair<Button, ObservableObjectValue<@Nullable DataType>> typeButton = makeTypeButton(typeManager);
             typeButton.getFirst().disableProperty().bind(tupleNotSelected);
             tupleTypes.add(typeButton.getSecond());
-            tupleTypesPane.getChildren().add(tupleTypesPane.getChildren().size() - 1, new HBox(typeButton.getFirst(), new Label(",")));
+            Label comma = new Label(",");
+            commas.add(comma);
+            tupleTypesPane.getChildren().add(tupleTypesPane.getChildren().size() - 1, new HBox(typeButton.getFirst(), comma));
         };
         FXPlatformRunnable removeTupleType = () -> {
             // Can't make it size < 2:
             if (tupleTypes.size() > 2)
             {
+                commas.remove(commas.size() - 1);
                 tupleTypes.remove(tupleTypes.size() - 1);
                 // Final item is bracket; remove the one before that:
                 tupleTypesPane.getChildren().remove(tupleTypesPane.getChildren().size() - 2);
