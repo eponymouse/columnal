@@ -47,12 +47,10 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
         contents.getChildren().add(new Separator());
         contents.getChildren().add(typeSelectionPane.getNode());
         contents.getChildren().addAll(new Separator(), new HBox(new Label(TransformationEditor.getString("newcolumn.defaultvalue")), defaultValueEditor.getContainer()));
-        int defaultValueContentsIndex = contents.getChildren().size() - 1;
-
-        // TODO: tuple, array
 
         setResultConverter(this::makeResult);
 
+        setResizable(true);
         getDialogPane().getStylesheets().add(Utility.getStylesheet("general.css"));
         getDialogPane().setContent(contents);
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
