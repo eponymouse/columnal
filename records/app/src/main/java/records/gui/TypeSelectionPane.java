@@ -9,9 +9,9 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.RadioButton;
 import javafx.scene.control.Toggle;
@@ -47,8 +47,8 @@ public class TypeSelectionPane
     private final ToggleGroup typeGroup;
     private final VBox contents;
     private final SimpleObjectProperty<@Nullable DataType> selectedType = new SimpleObjectProperty<>(DataType.NUMBER);
-    // Stored as a field to prevent GC:
-    private final BooleanBinding numberSelected, dateSelected;
+    // Stored as fields to prevent GC:
+    private final BooleanBinding numberSelected, dateSelected, listSelected;
     private final IdentityHashMap<Toggle, ObservableValue<@Nullable DataType>> types = new IdentityHashMap<>();
 
     public TypeSelectionPane(TypeManager typeManager)
@@ -83,6 +83,20 @@ public class TypeSelectionPane
             taggedComboBox.getItems().add(taggedType.getValue());
         }
         taggedComboBox.getSelectionModel().selectFirst();
+
+        Button listSubTypeButton = new Button(TransformationEditor.getString("type.select"));
+        SimpleObjectProperty<@Nullable DataType> listSubType = new SimpleObjectProperty<>(null);
+        listSubTypeButton.setOnAction(e -> {
+            Scene scene = contents.getScene();
+            @Nullable DataType newValue = new TypeDialog(scene == null ? null : scene.getWindow(), typeManager).showAndWait().orElse(null);
+            // Don't overwrite existing one if they cancelled:
+            if (newValue != null)
+                listSubType.setValue(newValue);
+            @Nullable DataType dataType = listSubType.get();
+            listSubTypeButton.setText(dataType == null ? TransformationEditor.getString("type.select") : dataType.toString());
+        });
+        listSelected = addType("type.list.of", listSubType, listSubTypeButton);
+        listSubTypeButton.disableProperty().bind(listSelected.not());
 
         Utility.addChangeListenerPlatformNN(typeGroup.selectedToggleProperty(), toggle -> {
             updateSelectedType();

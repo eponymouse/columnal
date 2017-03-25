@@ -30,6 +30,8 @@ class Scene
 package javafx.scene.control;
 class Dialog<T>
 {
+    void initModality(Modality m) @UnknownInitialization;
+    void initOwner(Window w) @UnknownInitialization;
     DialogPane getDialogPane() @UnknownInitialization;
     void setResultConverter(Callback<ButtonType, @Nullable T> a) @UnknownInitialization;
 }
