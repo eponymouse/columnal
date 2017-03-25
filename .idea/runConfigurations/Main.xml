@@ -16,7 +16,7 @@
       <option name="WINDOW" value="false" />
     </RunnerSettings>
     <method>
-      <option name="Maven.BeforeRunTask" enabled="true" file="C:\Users\neil\intellij\records\records\app/pom.xml" goal="sass:update-stylesheets" />
+      <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/records/app/pom.xml" goal="sass:update-stylesheets" />
     </method>
   </configuration>
 </component>

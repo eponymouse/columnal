@@ -61,7 +61,7 @@ public class TypeSelectionPane
     private final VBox contents;
     private final SimpleObjectProperty<@Nullable DataType> selectedType = new SimpleObjectProperty<>(DataType.NUMBER);
     // Stored as fields to prevent GC.  We store not because we bind disable to it:
-    private final BooleanBinding numberNotSelected, dateNotSelected, tupleNotSelected, listNotSelected;
+    private final BooleanBinding numberNotSelected, dateNotSelected, taggedNotSelected, tupleNotSelected, listNotSelected;
     private final IdentityHashMap<Toggle, ObservableValue<@Nullable DataType>> types = new IdentityHashMap<>();
 
     public TypeSelectionPane(TypeManager typeManager)
@@ -90,12 +90,14 @@ public class TypeSelectionPane
         ComboBox<DataType> taggedComboBox = new ComboBox<>();
         Button newTaggedTypeButton = new Button(TransformationEditor.getString("type.tagged.new"));
         // TODO wire this up to show a new tagged type dialog
-        addType("type.tagged", taggedComboBox.valueProperty(), taggedComboBox, newTaggedTypeButton);
+        taggedNotSelected = addType("type.tagged", taggedComboBox.valueProperty(), taggedComboBox, newTaggedTypeButton);
         for (Entry<TypeId, DataType> taggedType : typeManager.getKnownTaggedTypes().entrySet())
         {
             taggedComboBox.getItems().add(taggedType.getValue());
         }
         taggedComboBox.getSelectionModel().selectFirst();
+        taggedComboBox.disableProperty().bind(taggedNotSelected);
+        newTaggedTypeButton.disableProperty().bind(taggedNotSelected);
 
         Button extendTupleButton = new Button(TransformationEditor.getString("type.tuple.more"));
         Button shrinkTupleButton = new Button(TransformationEditor.getString("type.tuple.less"));
