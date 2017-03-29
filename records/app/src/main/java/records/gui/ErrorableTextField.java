@@ -99,6 +99,16 @@ public class ErrorableTextField<T>
         {
             return error;
         }
+
+        public static <T> ConversionResult<T> success(T value)
+        {
+            return new ConversionResult<T>(value);
+        }
+
+        public static <T> ConversionResult<T> error(String error)
+        {
+            return new ConversionResult<T>(error);
+        }
     }
 
     public static <T> ConversionResult<T> validate(ExSupplier<T> getValue)

@@ -86,7 +86,7 @@ public abstract class TransformationEditor
      */
     @SuppressWarnings("i18n") // Because we return key if there's an issue
     @OnThread(Tag.Any)
-    public static @Localized String getString(@LocalizableKey String key)
+    public static @Localized String getString(@LocalizableKey String key, String... values)
     {
         @Nullable List<ResourceBundle> res = getResources();
         if (res != null)
@@ -97,7 +97,15 @@ public abstract class TransformationEditor
                 {
                     @Nullable String local = r.getString(key);
                     if (local != null)
+                    {
+                        if (values.length == 0)
+                            return local;
+                        for (int i = 0; i < values.length; i++)
+                        {
+                            local = local.replace("$" + (i+1), values[i]);
+                        }
                         return local;
+                    }
                 }
                 catch (MissingResourceException e)
                 {

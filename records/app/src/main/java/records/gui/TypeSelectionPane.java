@@ -89,7 +89,9 @@ public class TypeSelectionPane
 
         ComboBox<DataType> taggedComboBox = new ComboBox<>();
         Button newTaggedTypeButton = new Button(TransformationEditor.getString("type.tagged.new"));
-        // TODO wire this up to show a new tagged type dialog
+        newTaggedTypeButton.setOnAction(e -> {
+            new EditTaggedTypeDialog(typeManager).showAndWait();
+        });
         taggedNotSelected = addType("type.tagged", taggedComboBox.valueProperty(), taggedComboBox, newTaggedTypeButton);
         for (Entry<TypeId, DataType> taggedType : typeManager.getKnownTaggedTypes().entrySet())
         {
