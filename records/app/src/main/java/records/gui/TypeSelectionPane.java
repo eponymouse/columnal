@@ -68,6 +68,8 @@ public class TypeSelectionPane
     {
         typeGroup = new ToggleGroup();
         contents = new VBox();
+        contents.getStylesheets().add(Utility.getStylesheet("type-selection-pane.css"));
+        contents.getStyleClass().add("type-selection-pane");
 
         ErrorableTextField<Unit> units = new ErrorableTextField<Unit>(unitSrc ->
             ErrorableTextField.validate(() -> typeManager.getUnitManager().loadUse(unitSrc))
@@ -201,7 +203,7 @@ public class TypeSelectionPane
     {
         RadioButton radioButton = new RadioButton(TransformationEditor.getString(typeKey));
         radioButton.setToggleGroup(typeGroup);
-        HBox hbox = new HBox(radioButton);
+        HBox hbox = new Row(radioButton);
         hbox.getChildren().addAll(furtherDetails);
         contents.getChildren().add(hbox);
         types.put(radioButton, calculateType);

@@ -1,0 +1,10 @@
+.label, .text-field, .hbox-row {
+    -fx-alignment: baseline-left;
+}
+/* This needs to be top left to make it work with baseline-left: */
+.radio-button {
+    -fx-alignment: top-left;
+}
+.hbox-row {
+    -fx-spacing: 1em;
+}

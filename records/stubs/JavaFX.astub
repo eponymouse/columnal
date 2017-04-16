@@ -35,6 +35,7 @@ class Dialog<T>
     void initOwner(Window w) @UnknownInitialization;
     DialogPane getDialogPane() @UnknownInitialization;
     void setResultConverter(Callback<ButtonType, @Nullable T> a) @UnknownInitialization;
+    void setOnShown(EventHandler<DialogEvent> e) @UnknownInitialization;
 }
 class ComboBox<T>
 {

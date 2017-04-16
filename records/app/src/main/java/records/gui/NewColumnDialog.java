@@ -11,6 +11,7 @@ import javafx.scene.control.Separator;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -40,10 +41,12 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
     public NewColumnDialog(TableManager tableManager)
     {
         contents = new VBox();
+        contents.getStyleClass().add("new-column-content");
         name = new TextField();
         typeSelectionPane = new TypeSelectionPane(tableManager.getTypeManager());
         defaultValueEditor = new ExpressionEditor(new NumericLiteral(0, null), null, typeSelectionPane.selectedType(), tableManager, e -> {});
-        contents.getChildren().add(new HBox(new Label(TransformationEditor.getString("newcolumn.name")), name));
+        Label nameLabel = new Label(TransformationEditor.getString("newcolumn.name"));
+        contents.getChildren().add(new Row(nameLabel, name));
         contents.getChildren().add(new Separator());
         contents.getChildren().add(typeSelectionPane.getNode());
         contents.getChildren().addAll(new Separator(), new HBox(new Label(TransformationEditor.getString("newcolumn.defaultvalue")), defaultValueEditor.getContainer()));
@@ -51,13 +54,20 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
         setResultConverter(this::makeResult);
 
         setResizable(true);
-        getDialogPane().getStylesheets().add(Utility.getStylesheet("general.css"));
+        getDialogPane().getStylesheets().addAll(
+                Utility.getStylesheet("general.css"),
+                Utility.getStylesheet("dialogs.css"),
+                Utility.getStylesheet("new-column-dialog.css")
+        );
         getDialogPane().setContent(contents);
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
         getDialogPane().lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, e -> {
             if (getSelectedType() == null)
                 e.consume();
         });
+
+        initModality(Modality.NONE);
+        setOnShown(e -> org.scenicview.ScenicView.show(getDialogPane().getScene()));
     }
 
     @RequiresNonNull({"typeSelectionPane"})
