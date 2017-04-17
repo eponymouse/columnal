@@ -37,11 +37,7 @@ import records.transformations.TransformationEditor;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
-import utility.GraphUtility;
-import utility.Utility;
-import utility.Workers;
+import utility.*;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -74,7 +70,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     private @Nullable FXPlatformConsumer<@Nullable Table> onPick;
 
     // Does not write to that destination, just uses it for relative paths
-    public void save(@Nullable File destination, FXPlatformConsumer<String> then)
+    public void save(@Nullable File destination, SimulationConsumer<String> then)
     {
         class Fetcher extends FullSaver
         {
@@ -102,7 +98,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
                 else
                 {
                     String completeFile = getCompleteFile();
-                    Platform.runLater(() -> then.consume(completeFile));
+                    Utility.alertOnError_(() -> then.consume(completeFile));
                 }
             }
         };
