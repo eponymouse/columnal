@@ -16,6 +16,7 @@ import javafx.scene.input.DataFormat;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
+import org.apache.commons.io.FileUtils;
 import records.data.DataSource;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
@@ -23,6 +24,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.importers.HTMLImport;
 import records.importers.TextImport;
+import records.transformations.TransformationEditor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -65,7 +67,6 @@ public class Main extends Application
                 {
                     EditableRecordSet rs = new EditableRecordSet(Collections.emptyList(), 0);
                     ImmediateDataSource ds = new ImmediateDataSource(v.getManager(), rs);
-                    v.getManager().addSource(ds);
                 }
                 catch (InternalException | UserException ex)
                 {
@@ -124,6 +125,23 @@ public class Main extends Application
                 Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, s)));
         });
         menu.getItems().add(saveItem);
+        MenuItem saveAsItem = new MenuItem(TransformationEditor.getString("main.saveas"));
+        saveAsItem.setOnAction(e -> {
+            FileChooser fc = new FileChooser();
+            File dest = fc.showSaveDialog(primaryStage);
+            v.save(dest, content -> Utility.alertOnErrorFX_(() ->
+            {
+                try
+                {
+                    FileUtils.writeStringToFile(dest, content, "UTF-8");
+                }
+                catch (IOException ex)
+                {
+                    throw new UserException("Error writing file", ex);
+                }
+            }));
+        });
+        menu.getItems().add(saveAsItem);
         /*
         Workers.onWorkerThread("Example import", () -> {
             try

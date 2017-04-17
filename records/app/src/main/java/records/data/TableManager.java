@@ -73,6 +73,7 @@ public class TableManager
     }
 
     // Generates a new unused ID and registers it.
+    @OnThread(Tag.Simulation)
     public synchronized TableId getNextFreeId(@UnknownInitialization(Object.class) Table table)
     {
         TableId id;
@@ -88,20 +89,24 @@ public class TableManager
 
     // We are given initialising table, but we store as if it is initialised:
     @SuppressWarnings("initialization")
+    @OnThread(Tag.Simulation)
     private synchronized void record(@UnknownInitialization(Object.class) Table table, TableId id)
     {
         usedIds.computeIfAbsent(id, x -> new ArrayList<>()).add(table);
         if (table instanceof DataSource)
         {
             sources.add((DataSource)table);
+            listener.addSource((DataSource) table);
         }
         else if (table instanceof Transformation)
         {
             transformations.add((Transformation)table);
+            listener.addTransformation((Transformation)table);
         }
     }
 
     // Throws a UserException if already in use, otherwise registers it as used.
+    @OnThread(Tag.Simulation)
     public synchronized void registerId(TableId tableId, @UnknownInitialization(Object.class) Table table)
     {
         record(table, tableId);
@@ -284,10 +289,6 @@ public class TableManager
                 removeAndSerialise(replaceTableId, new Table.BlankSaver());
         }
         registerId(replacement.getId(), replacement);
-        if (replacement instanceof DataSource)
-            listener.addSource((DataSource) replacement);
-        else
-            listener.addTransformation((Transformation) replacement);
 
         savedToReRun.thenAccept(ss -> {
             Utility.alertOnError_(() -> reAddAll(ss));
@@ -351,13 +352,6 @@ public class TableManager
             });
 
         }
-    }
-
-    @OnThread(Tag.Simulation)
-    public void addSource(DataSource ds)
-    {
-        registerId(ds.getId(), ds);
-        listener.addSource(ds);
     }
 
     public static interface TableManagerListener

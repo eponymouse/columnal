@@ -67,6 +67,7 @@ public abstract class TransformationEditor
                     ResourceBundle.getBundle("transformations"),
                     ResourceBundle.getBundle("expression"),
                     ResourceBundle.getBundle("function"),
+                    ResourceBundle.getBundle("main"),
                     ResourceBundle.getBundle("newcolumn")
                 );
             }
