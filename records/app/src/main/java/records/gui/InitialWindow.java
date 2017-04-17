@@ -1,9 +1,7 @@
 package records.gui;
 
 import javafx.scene.Scene;
-import javafx.scene.control.Button;
-import javafx.scene.control.Label;
-import javafx.scene.control.ListView;
+import javafx.scene.control.*;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
@@ -15,10 +13,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
-import utility.gui.FXUtility;
-import utility.gui.HButton;
-import utility.gui.HLabel;
-import utility.gui.TranslationUtility;
+import utility.gui.*;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,29 +27,45 @@ public class InitialWindow
     public static void show(Stage stage)
     {
         VBox content = new VBox();
-        //TODO menu bar at the top
-        Button newButton = new HButton("initial.new", () -> Utility.alertOnErrorFX_(() -> MainWindow.show(null)));
-        Button openButton = new HButton("initial.open", () -> {
-            File src = new FileChooser().showOpenDialog(stage);
-            if (src != null)
-            {
-                try
-                {
-                    MainWindow.show(FileUtils.readFileToString(src, "UTF-8"));
-                    // Only hide us if the load and show completed successfully:
-                    stage.hide();
-                }
-                catch (IOException | InternalException | UserException ex)
-                {
-                    FXUtility.logAndShowErrorFX("error.readingfile", ex);
-                }
-            }
-        });
+        MenuBar menuBar = new MenuBar(
+            GUI.menu("menu.project",
+                GUI.menuItem("menu.project.new", () -> newProject()),
+                GUI.menuItem("menu.project.open", () -> chooseAndOpenProject(stage))
+            )
+        );
+        menuBar.setUseSystemMenuBar(true);
+        Button newButton = GUI.button("initial.new", () -> newProject());
+        Button openButton = GUI.button("initial.open", () -> chooseAndOpenProject(stage));
         content.getChildren().addAll(
-                new VBox(new HLabel("initial.new.title", "initial.heading"), newButton, new Label("From there you can import existing data (CSV files, etc)")),
-                new VBox(new HLabel("initial.open.title", "initial.heading"), openButton, new ListView<>())
+                menuBar,
+                new VBox(GUI.label("initial.new.title", "initial.heading"), newButton, new Label("From there you can import existing data (CSV files, etc)")),
+                new VBox(GUI.label("initial.open.title", "initial.heading"), openButton, new ListView<>())
         );
         stage.setScene(new Scene(content));
         stage.show();
+    }
+
+    private static void chooseAndOpenProject(Stage stage)
+    {
+        File src = new FileChooser().showOpenDialog(stage);
+        if (src != null)
+        {
+            try
+            {
+                MainWindow.show(FileUtils.readFileToString(src, "UTF-8"));
+                // Only hide us if the load and show completed successfully:
+                stage.hide();
+            }
+            catch (IOException | InternalException | UserException ex)
+            {
+                FXUtility.logAndShowErrorFX("error.readingfile", ex);
+            }
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private static void newProject()
+    {
+        Utility.alertOnErrorFX_(() -> MainWindow.show(null));
     }
 }

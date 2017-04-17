@@ -62,6 +62,10 @@ class PopupControl
 {
     void setSkin(Skin<?> value) @UnknownInitialization;
 }
+class Menu
+{
+    Menu(@NonNull String text, @Nullable Node graphic, @NonNull MenuItem... menuItems);
+}
 
 package javafx.scene.layout;
 class BorderPane

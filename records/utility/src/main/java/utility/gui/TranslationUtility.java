@@ -6,6 +6,7 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
+import javafx.scene.input.KeyCombination;
 import javafx.scene.text.Text;
 import javafx.stage.PopupWindow.AnchorLocation;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -15,6 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.*;
@@ -89,6 +91,19 @@ public class TranslationUtility
         }
 
         return key; // Best we can do, if we can't find the labels file.
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static Pair<@Localized String, @Nullable KeyCombination> getStringAndShortcut(@LocalizableKey String key)
+    {
+        String original = getString(key);
+        int atIndex = original.indexOf("@");
+        if (atIndex != -1)
+        {
+            return new Pair<>(original.substring(0, atIndex), null /*TODO*/);
+        }
+        else
+            return new Pair<>(original, null);
     }
 
     /**
