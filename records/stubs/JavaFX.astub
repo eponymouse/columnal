@@ -38,6 +38,10 @@ class Dialog<T>
     void setOnShown(EventHandler<DialogEvent> e) @UnknownInitialization;
     void setTitle(String s) @UnknownInitialization;
 }
+class Button
+{
+    void setOnAction(@NonNull EventHandler<ActionEvent> ev) @UnknownInitialization;
+}
 class ComboBox<T>
 {
     ObjectProperty<@Nullable T> valueProperty();
@@ -93,6 +97,12 @@ class PopupWindow
     void setAnchorY(final double value) @UnknownInitialization;
     void setHideOnEscape(boolean value) @UnknownInitialization;
     void hide() @UnknownInitialization;
+}
+class FileChooser
+{
+    @Nullable File showOpenDialog(Window w);
+    @Nullable List<@NonNull File> showOpenMultipleDialog(Window w);
+    @Nullable File showSaveDialog(Window w);
 }
 
 package org.scenicview;

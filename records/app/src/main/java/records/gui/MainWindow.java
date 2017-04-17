@@ -36,11 +36,11 @@ import java.util.Collections;
 @OnThread(Tag.FXPlatform)
 public class MainWindow
 {
-    private final View v;
-
-    public MainWindow(Stage stage, @Nullable String src) throws UserException, InternalException
+    // If src is null, make new
+    public static void show(@Nullable String src) throws UserException, InternalException
     {
-        v = new View();
+        View v = new View();
+        Stage stage = new Stage();
 
         Menu menu = new Menu("Data");
         MenuItem manualItem = new MenuItem("New");
@@ -64,11 +64,12 @@ public class MainWindow
             File chosen = fc.showOpenDialog(stage);
             if (chosen != null)
             {
+                @NonNull File chosenFinal = chosen;
                 Workers.onWorkerThread("GuessFormat data", () ->
                 {
                     try
                     {
-                        TextImport.importTextFile(v.getManager(), chosen, rs ->
+                        TextImport.importTextFile(v.getManager(), chosenFinal, rs ->
                                 Utility.alertOnErrorFX_(() -> v.addSource(rs)));
                     }
                     catch (InternalException | UserException | IOException ex)
@@ -85,11 +86,12 @@ public class MainWindow
             File chosen = fc.showOpenDialog(stage);
             if (chosen != null)
             {
+                @NonNull File chosenFinal = chosen;
                 Workers.onWorkerThread("GuessFormat data", () ->
                 {
                     try
                     {
-                        for (DataSource rs : HTMLImport.importHTMLFile(v.getManager(), chosen))
+                        for (DataSource rs : HTMLImport.importHTMLFile(v.getManager(), chosenFinal))
                         {
                             Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.addSource(rs)));
                         }
@@ -108,13 +110,16 @@ public class MainWindow
         openItem.setOnAction(e -> {
             FileChooser fc = new FileChooser();
             File open = fc.showOpenDialog(stage);
-            try
+            if (open != null)
             {
-                new MainWindow(new Stage(), FileUtils.readFileToString(open, "UTF-8"));
-            }
-            catch (IOException | UserException | InternalException ex)
-            {
-                showErrorFX(ex);
+                try
+                {
+                    MainWindow.show(FileUtils.readFileToString(open, "UTF-8"));
+                }
+                catch (IOException | UserException | InternalException ex)
+                {
+                    showErrorFX(ex);
+                }
             }
         });
         menu.getItems().add(openItem);
@@ -129,11 +134,14 @@ public class MainWindow
         saveAsItem.setOnAction(e -> {
             FileChooser fc = new FileChooser();
             File dest = fc.showSaveDialog(stage);
-            v.save(dest, content ->
+            if (dest == null)
+                return;
+            @NonNull File destFinal = dest;
+            v.save(destFinal, content ->
             {
                 try
                 {
-                    FileUtils.writeStringToFile(dest, content, "UTF-8");
+                    FileUtils.writeStringToFile(destFinal, content, "UTF-8");
                 }
                 catch (IOException ex)
                 {

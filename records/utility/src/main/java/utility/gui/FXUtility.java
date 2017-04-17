@@ -12,9 +12,8 @@ import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.control.Control;
-import javafx.scene.control.ListView;
-import javafx.scene.control.TextField;
+import javafx.scene.control.*;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.cell.TextFieldListCell;
 import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
@@ -23,6 +22,8 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.util.StringConverter;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.validation.ValidationResult;
@@ -221,5 +222,12 @@ public class FXUtility
             // On same vertical level as edge, so just use difference:
             return Math.abs(pointInScene.getX() - boundsInScene.getMinX());
         }
+    }
+
+    public static void logAndShowErrorFX(@LocalizableKey String actionKey, Exception ex)
+    {
+        @OnThread(Tag.Any) @Localized String actionString = TranslationUtility.getString(actionKey);
+        Utility.log(actionString, ex);
+        new Alert(AlertType.ERROR, actionString + "\n" + (ex.getLocalizedMessage() == null ? "" : ex.getLocalizedMessage()), ButtonType.OK).showAndWait();
     }
 }
