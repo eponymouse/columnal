@@ -41,7 +41,6 @@ import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.OrderByContext;
 import records.grammar.TransformationParser.SortContext;
 import records.gui.DisplayValue;
-import records.gui.EnteredDisplayValue;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.loadsave.OutputBuilder;
@@ -52,6 +51,7 @@ import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -359,7 +359,7 @@ public class Sort extends Transformation
         @Override
         public @Localized String getDescription()
         {
-            return getString("sort.description");
+            return TranslationUtility.getString("sort.description");
         }
 
         @Override

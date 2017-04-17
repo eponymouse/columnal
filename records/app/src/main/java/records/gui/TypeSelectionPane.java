@@ -30,7 +30,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
-import org.jetbrains.annotations.NotNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -38,12 +37,12 @@ import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.transformations.TransformationEditor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -74,7 +73,7 @@ public class TypeSelectionPane
         ErrorableTextField<Unit> units = new ErrorableTextField<Unit>(unitSrc ->
             ErrorableTextField.validate(() -> typeManager.getUnitManager().loadUse(unitSrc))
         );
-        numberNotSelected = addType("type.number", new NumberTypeBinding(units.valueProperty(), typeManager), new Label(TransformationEditor.getString("newcolumn.number.units")), units.getNode());
+        numberNotSelected = addType("type.number", new NumberTypeBinding(units.valueProperty(), typeManager), new Label(TranslationUtility.getString("newcolumn.number.units")), units.getNode());
         units.disableProperty().bind(numberNotSelected);
         addType("type.text", new ReadOnlyObjectWrapper<>(DataType.TEXT));
         addType("type.boolean", new ReadOnlyObjectWrapper<>(DataType.BOOLEAN));
@@ -90,7 +89,7 @@ public class TypeSelectionPane
         dateTimeComboBox.disableProperty().bind(dateNotSelected);
 
         ComboBox<DataType> taggedComboBox = new ComboBox<>();
-        Button newTaggedTypeButton = new Button(TransformationEditor.getString("type.tagged.new"));
+        Button newTaggedTypeButton = new Button(TranslationUtility.getString("type.tagged.new"));
         newTaggedTypeButton.setOnAction(e -> {
             new EditTaggedTypeDialog(typeManager).showAndWait();
         });
@@ -103,8 +102,8 @@ public class TypeSelectionPane
         taggedComboBox.disableProperty().bind(taggedNotSelected);
         newTaggedTypeButton.disableProperty().bind(taggedNotSelected);
 
-        Button extendTupleButton = new Button(TransformationEditor.getString("type.tuple.more"));
-        Button shrinkTupleButton = new Button(TransformationEditor.getString("type.tuple.less"));
+        Button extendTupleButton = new Button(TranslationUtility.getString("type.tuple.more"));
+        Button shrinkTupleButton = new Button(TranslationUtility.getString("type.tuple.less"));
         ObservableList<ObservableObjectValue<@Nullable DataType>> tupleTypes = FXCollections.observableArrayList();
         ObservableList<Label> commas = FXCollections.observableArrayList();
         FlowPane tupleTypesPane = new FlowPane(new Label("("), new HBox(new Label(")"), shrinkTupleButton, extendTupleButton));
@@ -167,7 +166,7 @@ public class TypeSelectionPane
     @RequiresNonNull("contents")
     private Pair<Button, ObservableObjectValue<@Nullable DataType>> makeTypeButton(@UnknownInitialization(Object.class) TypeSelectionPane this, TypeManager typeManager)
     {
-        Button listSubTypeButton = new Button(TransformationEditor.getString("type.select"));
+        Button listSubTypeButton = new Button(TranslationUtility.getString("type.select"));
         SimpleObjectProperty<@Nullable DataType> listSubType = new SimpleObjectProperty<>(null);
         listSubTypeButton.setOnAction(e -> {
             Scene scene = contents.getScene();
@@ -176,7 +175,7 @@ public class TypeSelectionPane
             if (newValue != null)
                 listSubType.setValue(newValue);
             @Nullable DataType dataType = listSubType.get();
-            listSubTypeButton.setText(dataType == null ? TransformationEditor.getString("type.select") : dataType.toString());
+            listSubTypeButton.setText(dataType == null ? TranslationUtility.getString("type.select") : dataType.toString());
         });
         return new Pair<>(listSubTypeButton, listSubType);
     }
@@ -201,7 +200,7 @@ public class TypeSelectionPane
     @RequiresNonNull({"contents", "typeGroup", "types"})
     private BooleanBinding addType(@UnderInitialization(Object.class) TypeSelectionPane this, @LocalizableKey String typeKey, ObservableValue<@Nullable DataType> calculateType, Node... furtherDetails)
     {
-        RadioButton radioButton = new RadioButton(TransformationEditor.getString(typeKey));
+        RadioButton radioButton = new RadioButton(TranslationUtility.getString(typeKey));
         radioButton.setToggleGroup(typeGroup);
         HBox hbox = new Row(radioButton);
         hbox.getChildren().addAll(furtherDetails);

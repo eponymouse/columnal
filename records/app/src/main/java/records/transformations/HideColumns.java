@@ -35,8 +35,6 @@ import records.error.UserException;
 import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.HideColumnsContext;
-import records.gui.DisplayValue;
-import records.gui.EnteredDisplayValue;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.loadsave.OutputBuilder;
@@ -50,6 +48,7 @@ import utility.gui.FXUtility;
 import utility.gui.FXUtility.DragHandler;
 import utility.gui.SlidableListCell;
 import utility.gui.SmallDeleteButton;
+import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -229,7 +228,7 @@ public class HideColumns extends Transformation
         @Override
         public @Localized String getDescription()
         {
-            return getString("hide.description");
+            return TranslationUtility.getString("hide.description");
         }
 
         @Override

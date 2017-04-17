@@ -45,7 +45,6 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.DisplayValue;
-import records.gui.EnteredDisplayValue;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.gui.expressioneditor.ExpressionEditor;
@@ -59,6 +58,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
+import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.math.BigInteger;
@@ -425,7 +425,7 @@ public class Filter extends Transformation
         @Override
         public @Localized String getDescription()
         {
-            return getString("filter.description");
+            return TranslationUtility.getString("filter.description");
         }
 
         @Override

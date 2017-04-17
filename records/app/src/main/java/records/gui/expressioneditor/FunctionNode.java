@@ -4,13 +4,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.TransformationEditor;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.Expression;
 import records.transformations.function.FunctionDefinition;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.TranslationUtility;
 
 import java.util.Collections;
 import java.util.List;
@@ -25,7 +25,7 @@ public class FunctionNode extends SurroundNode
     @SuppressWarnings("initialization") // Because LeaveableTextField gets marked uninitialized
     public FunctionNode(FunctionDefinition function, @Nullable Expression argumentsExpression, ConsecutiveBase parent)
     {
-        super(parent, "function", TransformationEditor.getString("function"), function.getName(), true, argumentsExpression);
+        super(parent, "function", TranslationUtility.getString("function"), function.getName(), true, argumentsExpression);
         this.function = function;
     }
 

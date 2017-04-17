@@ -20,16 +20,15 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.importers.HTMLImport;
 import records.importers.TextImport;
-import records.transformations.TransformationEditor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 import utility.Workers;
+import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
-import java.util.Optional;
 
 /**
  * Created by neil on 17/04/2017.
@@ -105,7 +104,7 @@ public class MainWindow
         });
         menu.getItems().addAll(importItem, importHTMLItem);
 
-        MenuItem openItem = new MenuItem(TransformationEditor.getString("main.open"));
+        MenuItem openItem = new MenuItem(TranslationUtility.getString("main.open"));
         openItem.setOnAction(e -> {
             FileChooser fc = new FileChooser();
             File open = fc.showOpenDialog(stage);
@@ -126,7 +125,7 @@ public class MainWindow
                     Platform.runLater(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, s))));
         });
         menu.getItems().add(saveItem);
-        MenuItem saveAsItem = new MenuItem(TransformationEditor.getString("main.saveas"));
+        MenuItem saveAsItem = new MenuItem(TranslationUtility.getString("main.saveas"));
         saveAsItem.setOnAction(e -> {
             FileChooser fc = new FileChooser();
             File dest = fc.showSaveDialog(stage);

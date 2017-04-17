@@ -37,7 +37,6 @@ import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorUpdater;
-import records.transformations.TransformationEditor;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.*;
@@ -50,6 +49,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -493,7 +493,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
             functionName.getStyleClass().add("function-info-name");
             textFlow.getChildren().add(functionName);
             textFlow.getChildren().addAll(
-                TransformationEditor.makeTextLine(function.getShortDescriptionKey(), "function-info-short-description")
+                TranslationUtility.makeTextLine(function.getShortDescriptionKey(), "function-info-short-description")
             );
             List<Node> overloads = new ArrayList<>();
             try
@@ -506,7 +506,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
                     overloads.add(overloadType);
                     if (functionType.getOverloadDescriptionKey() != null)
                     {
-                        overloads.addAll(TransformationEditor.makeTextLine(functionType.getOverloadDescriptionKey(), "function-info-overload-description"));
+                        overloads.addAll(TranslationUtility.makeTextLine(functionType.getOverloadDescriptionKey(), "function-info-overload-description"));
                     }
                 }
             }

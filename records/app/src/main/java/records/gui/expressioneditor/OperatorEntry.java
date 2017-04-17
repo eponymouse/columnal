@@ -21,10 +21,10 @@ import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.GeneralEntry.Status;
-import records.transformations.TransformationEditor;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -189,7 +189,7 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
         public SimpleCompletion(String operator, @LocalizableKey String descriptionKey)
         {
             this.operator = operator;
-            this.description = TransformationEditor.getString(descriptionKey);
+            this.description = TranslationUtility.getString(descriptionKey);
         }
 
         @Override

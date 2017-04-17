@@ -1,6 +1,5 @@
 package records.gui;
 
-import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
@@ -11,13 +10,10 @@ import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
-import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
-import records.transformations.TransformationEditor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
-import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -44,7 +40,7 @@ public class EditTaggedTypeDialog extends Dialog<Void>
             if (typeManager.lookupType(name) == null)
                 return ErrorableTextField.ConversionResult.success(name);
             else
-                return ErrorableTextField.ConversionResult.<@NonNull String>error(TransformationEditor.getString("taggedtype.exists", name));
+                return ErrorableTextField.ConversionResult.<@NonNull String>error(TranslationUtility.getString("taggedtype.exists", name));
         });
 
 
@@ -76,7 +72,7 @@ public class EditTaggedTypeDialog extends Dialog<Void>
                 // TODO check if tag name is valid
                 return ErrorableTextField.ConversionResult.<@NonNull String>error("TODO: check tag name validity");
             });
-            addSubType = new Button(TransformationEditor.getString("taggedtype.addsubtype"));
+            addSubType = new Button(TranslationUtility.getString("taggedtype.addsubtype"));
             addSubType.setOnAction(e -> {
                 // Show dialog to pick type:
                 @Nullable Scene scene = getScene();

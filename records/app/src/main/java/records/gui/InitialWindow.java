@@ -8,9 +8,9 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
-import records.transformations.TransformationEditor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.gui.TranslationUtility;
 
 /**
  * Created by neil on 17/04/2017.
@@ -22,8 +22,8 @@ public class InitialWindow
     {
         BorderPane content = new BorderPane();
         //TODO menu bar at the top
-        Button newButton = new Button(TransformationEditor.getString("initial.new"));
-        Button openButton = new Button(TransformationEditor.getString("initial.open"));
+        Button newButton = new Button(TranslationUtility.getString("initial.new"));
+        Button openButton = new Button(TranslationUtility.getString("initial.open"));
         TilePane tilePane = new TilePane(
                 new VBox(new Label("Create New"), newButton, new Label("From there you can import existing data (CSV files, etc)")),
                 new VBox(new Label("Open Existing"), openButton, new ListView<>())

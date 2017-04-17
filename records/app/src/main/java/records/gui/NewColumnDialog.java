@@ -1,9 +1,7 @@
 package records.gui;
 
 import annotation.qual.Value;
-import javafx.beans.value.ObservableValue;
 import javafx.event.ActionEvent;
-import javafx.scene.Node;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
@@ -19,12 +17,11 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.gui.expressioneditor.ExpressionEditor;
-import records.transformations.TransformationEditor;
 import records.transformations.expression.NumericLiteral;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 import utility.Utility;
+import utility.gui.TranslationUtility;
 
 /**
  * Created by neil on 20/03/2017.
@@ -40,17 +37,17 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
     @OnThread(Tag.FXPlatform)
     public NewColumnDialog(TableManager tableManager)
     {
-        setTitle(TransformationEditor.getString("newcolumn.title"));
+        setTitle(TranslationUtility.getString("newcolumn.title"));
         contents = new VBox();
         contents.getStyleClass().add("new-column-content");
         name = new TextField();
         typeSelectionPane = new TypeSelectionPane(tableManager.getTypeManager());
         defaultValueEditor = new ExpressionEditor(new NumericLiteral(0, null), null, typeSelectionPane.selectedType(), tableManager, e -> {});
-        Label nameLabel = new Label(TransformationEditor.getString("newcolumn.name"));
+        Label nameLabel = new Label(TranslationUtility.getString("newcolumn.name"));
         contents.getChildren().add(new Row(nameLabel, name));
         contents.getChildren().add(new Separator());
         contents.getChildren().add(typeSelectionPane.getNode());
-        contents.getChildren().addAll(new Separator(), new HBox(new Label(TransformationEditor.getString("newcolumn.defaultvalue")), defaultValueEditor.getContainer()));
+        contents.getChildren().addAll(new Separator(), new HBox(new Label(TranslationUtility.getString("newcolumn.defaultvalue")), defaultValueEditor.getContainer()));
 
         setResultConverter(this::makeResult);
 
