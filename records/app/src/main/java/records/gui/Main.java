@@ -124,11 +124,12 @@ public class Main extends Application
                 Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, s)));
         });
         menu.getItems().add(saveItem);
+        /*
         Workers.onWorkerThread("Example import", () -> {
             try
             {
                 DataSource rs = HTMLImport.importHTMLFile(v.getManager(), new File("S:\\Downloads\\Report_10112016.xls")).get(0);
-                    //TextImport.importTextFile(new File(/*"J:\\price\\farm-output-jun-2016.txt"*/"J:\\price\\detailed.txt"));
+                    //TextImport.importTextFile(new File("J:\\price\\farm-output-jun-2016.txt"  "J:\\price\\detailed.txt"));
                 Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.addSource(rs)));
             }
             catch (IOException | InternalException | UserException ex)
@@ -136,6 +137,7 @@ public class Main extends Application
                 showError(ex);
             }
         });
+        */
 
         ScrollPane scrollPane = new ScrollPane(v);
 

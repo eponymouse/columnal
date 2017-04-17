@@ -40,6 +40,7 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
     @OnThread(Tag.FXPlatform)
     public NewColumnDialog(TableManager tableManager)
     {
+        setTitle(TransformationEditor.getString("newcolumn.title"));
         contents = new VBox();
         contents.getStyleClass().add("new-column-content");
         name = new TextField();
