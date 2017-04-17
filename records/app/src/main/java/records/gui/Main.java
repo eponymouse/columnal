@@ -43,7 +43,7 @@ public class Main extends Application
     @OnThread(value = Tag.FXPlatform,ignoreParent = true)
     public void start(final Stage primaryStage) throws Exception
     {
-        new MainWindow(primaryStage, null);
+        InitialWindow.show(primaryStage);
     }
 
 
