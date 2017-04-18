@@ -1,7 +1,11 @@
 package utility.gui;
 
+import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -44,5 +48,19 @@ public class GUI
         if (stringAndShortcut.getSecond() != null)
             item.setAccelerator(stringAndShortcut.getSecond());
         return item;
+    }
+
+    public static VBox vbox(String styleClass, Node... contents)
+    {
+        VBox vBox = new VBox(contents);
+        vBox.getStyleClass().add(styleClass);
+        return vBox;
+    }
+
+    public static Node labelWrap(@LocalizableKey String contentKey, String... styleClasses)
+    {
+        TextFlow textFlow = new TextFlow(new Text(TranslationUtility.getString(contentKey)));
+        textFlow.getStyleClass().addAll(styleClasses);
+        return textFlow;
     }
 }

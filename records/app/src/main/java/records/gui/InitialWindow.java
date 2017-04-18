@@ -26,7 +26,6 @@ public class InitialWindow
 {
     public static void show(Stage stage)
     {
-        VBox content = new VBox();
         MenuBar menuBar = new MenuBar(
             GUI.menu("menu.project",
                 GUI.menuItem("menu.project.new", () -> newProject()),
@@ -36,13 +35,15 @@ public class InitialWindow
         menuBar.setUseSystemMenuBar(true);
         Button newButton = GUI.button("initial.new", () -> newProject());
         Button openButton = GUI.button("initial.open", () -> chooseAndOpenProject(stage));
-        content.getChildren().addAll(
-                menuBar,
-                new VBox(GUI.label("initial.new.title", "initial.heading"), newButton, new Label("From there you can import existing data (CSV files, etc)")),
-                new VBox(GUI.label("initial.open.title", "initial.heading"), openButton, new ListView<>())
+        VBox content = GUI.vbox("initial-content",
+                GUI.vbox("initial-section-new", GUI.label("initial.new.title", "initial-heading"), newButton, GUI.labelWrap("initial.new.detail")),
+                GUI.vbox("initial-section-open", GUI.label("initial.open.title", "initial-heading"), openButton, GUI.label("initial.open.recent"), new ListView<>())
         );
-        stage.setScene(new Scene(content));
+        Scene scene = new Scene(new BorderPane(content, menuBar, null, null, null));
+        scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("initial"));
+        stage.setScene(scene);
         stage.show();
+        org.scenicview.ScenicView.show(scene);
     }
 
     private static void chooseAndOpenProject(Stage stage)

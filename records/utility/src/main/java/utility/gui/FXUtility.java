@@ -39,13 +39,12 @@ import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.Utility;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
 import java.util.function.Function;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 17/02/2017.
@@ -146,6 +145,25 @@ public class FXUtility
         {
             return ValidationResult.fromError(target, e.getLocalizedMessage());
         }
+    }
+
+    /**
+     * Gets a list of stylesheets to add to a Scene.  Automatically adds
+     * general.css if not present.  Each name can either be a full filename (e.g. initial.css)
+     * or a stem (e.g. initial); the .css extension is added automatically if not present.
+     *
+     * @param stylesheetNames
+     * @return A list ready to pass to Scene#getStylesheets().addAll()
+     */
+    public static List<String> getSceneStylesheets(String... stylesheetNames)
+    {
+        return Stream.concat(
+                   Stream.of("general.css"),
+                   Arrays.stream(stylesheetNames).map(s -> s.endsWith(".css") ? s : (s + ".css"))
+                 )
+                 .distinct()
+                 .map(Utility::getStylesheet)
+                 .collect(Collectors.<String>toList());
     }
 
     public static interface DragHandler
