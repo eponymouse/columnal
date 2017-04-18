@@ -24,6 +24,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 import utility.Workers;
+import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
@@ -37,10 +38,11 @@ import java.util.Collections;
 public class MainWindow
 {
     // If src is null, make new
-    public static void show(@Nullable String src) throws UserException, InternalException
+    public static void show(File destinationFile, @Nullable String src) throws UserException, InternalException
     {
-        View v = new View();
+        View v = new View(destinationFile);
         Stage stage = new Stage();
+        stage.titleProperty().bind(v.titleProperty());
 
         Menu menu = new Menu("Data");
         MenuItem manualItem = new MenuItem("New");
@@ -54,7 +56,7 @@ public class MainWindow
                 }
                 catch (InternalException | UserException ex)
                 {
-                    showError(ex);
+                    FXUtility.logAndShowError("newtable.error", ex);
                 }
             });
         });
@@ -74,8 +76,7 @@ public class MainWindow
                     }
                     catch (InternalException | UserException | IOException ex)
                     {
-                        ex.printStackTrace();
-                        showError(ex);
+                        FXUtility.logAndShowError("import.text.error", ex);
                     }
                 });
             }
@@ -98,8 +99,7 @@ public class MainWindow
                     }
                     catch (IOException | InternalException | UserException ex)
                     {
-                        ex.printStackTrace();
-                        showError(ex);
+                        FXUtility.logAndShowError("import.html.error", ex);
                     }
                 });
             }
@@ -114,40 +114,31 @@ public class MainWindow
             {
                 try
                 {
-                    MainWindow.show(FileUtils.readFileToString(open, "UTF-8"));
+                    MainWindow.show(open, FileUtils.readFileToString(open, "UTF-8"));
                 }
                 catch (IOException | UserException | InternalException ex)
                 {
-                    showErrorFX(ex);
+                    FXUtility.logAndShowError("open.error", ex);
                 }
             }
         });
         menu.getItems().add(openItem);
 
+        /*
         MenuItem saveItem = new MenuItem("Save to Clipboard");
         saveItem.setOnAction(e -> {
             v.save(null, s ->
                     Platform.runLater(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, s))));
         });
         menu.getItems().add(saveItem);
+        */
         MenuItem saveAsItem = new MenuItem(TranslationUtility.getString("main.saveas"));
         saveAsItem.setOnAction(e -> {
             FileChooser fc = new FileChooser();
             File dest = fc.showSaveDialog(stage);
             if (dest == null)
                 return;
-            @NonNull File destFinal = dest;
-            v.save(destFinal, content ->
-            {
-                try
-                {
-                    FileUtils.writeStringToFile(destFinal, content, "UTF-8");
-                }
-                catch (IOException ex)
-                {
-                    showError(ex);
-                }
-            });
+            v.setDiskFileAndSave(dest);
         });
         menu.getItems().add(saveAsItem);
         /*
@@ -194,15 +185,4 @@ public class MainWindow
         //org.scenicview.ScenicView.show(stage.getScene());
     }
 
-
-    @OnThread(Tag.Simulation)
-    private static void showError(Exception ex)
-    {
-        Platform.runLater(() -> showErrorFX(ex));
-    }
-
-    private static void showErrorFX(Exception ex)
-    {
-        new Alert(AlertType.ERROR, ex.getMessage() == null ? "" : ex.getMessage(), ButtonType.OK).showAndWait();
-    }
 }

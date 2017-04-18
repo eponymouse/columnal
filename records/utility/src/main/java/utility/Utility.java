@@ -56,6 +56,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.gui.FXUtility;
 
 /**
  * Created by neil on 20/10/2016.
@@ -1119,5 +1120,29 @@ public class Utility
     public static <T> void listen(ObservableList<T> list, FXPlatformConsumer<ListChangeListener.Change<? extends T>> listener)
     {
         list.addListener(listener::consume);
+    }
+
+    public static File getAutoSaveDirectory() throws IOException
+    {
+        File dir = new File(new File(System.getProperty("user.home"), ".records"), "autosave");
+        dir.mkdirs();
+        if (!dir.exists() || !dir.isDirectory())
+        {
+            throw new IOException("Cannot create auto-save directory.");
+        }
+        return dir;
+    }
+
+    public static File getNewAutoSaveFile() throws IOException
+    {
+        File autoSaveDir = getAutoSaveDirectory();
+        for (int i = 1; ;i++)
+        {
+            File next = new File(autoSaveDir, "Untitled-" + i);
+            if (next.createNewFile())
+            {
+                return next;
+            }
+        }
     }
 }

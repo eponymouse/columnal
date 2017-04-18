@@ -1,5 +1,6 @@
 package utility.gui;
 
+import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -32,12 +33,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExRunnable;
-import utility.ExSupplier;
-import utility.FXPlatformBiConsumer;
-import utility.FXPlatformConsumer;
-import utility.FXPlatformFunction;
-import utility.Utility;
+import utility.*;
 
 import java.util.*;
 import java.util.Map.Entry;
@@ -242,10 +238,15 @@ public class FXUtility
         }
     }
 
-    public static void logAndShowErrorFX(@LocalizableKey String actionKey, Exception ex)
+    @OnThread(Tag.Any)
+    public static void logAndShowError(@LocalizableKey String actionKey, Exception ex)
     {
         @OnThread(Tag.Any) @Localized String actionString = TranslationUtility.getString(actionKey);
         Utility.log(actionString, ex);
-        new Alert(AlertType.ERROR, actionString + "\n" + (ex.getLocalizedMessage() == null ? "" : ex.getLocalizedMessage()), ButtonType.OK).showAndWait();
+        FXPlatformRunnable runAlert = () -> new Alert(AlertType.ERROR, actionString + "\n" + (ex.getLocalizedMessage() == null ? "" : ex.getLocalizedMessage()), ButtonType.OK).showAndWait();
+        if (Platform.isFxApplicationThread())
+            ((Runnable)runAlert::run).run();
+        else
+            Platform.runLater(runAlert::run);
     }
 }

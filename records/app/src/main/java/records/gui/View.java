@@ -1,6 +1,9 @@
 package records.gui;
 
 import javafx.application.Platform;
+import javafx.beans.binding.ObjectExpression;
+import javafx.beans.binding.StringBinding;
+import javafx.beans.binding.StringExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.SimpleObjectProperty;
@@ -21,6 +24,7 @@ import javafx.scene.shape.QuadCurve;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.stage.Window;
+import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
@@ -38,8 +42,10 @@ import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
+import utility.gui.FXUtility;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -68,10 +74,12 @@ public class View extends StackPane implements TableManager.TableManagerListener
     private final Pane pickPaneDisplay;
     private final ObjectProperty<@Nullable Table> currentPick;
     private @Nullable FXPlatformConsumer<@Nullable Table> onPick;
+    @OnThread(Tag.FXPlatform)
+    private final ObjectProperty<File> diskFile;
 
-    // Does not write to that destination, just uses it for relative paths
-    public void save(@Nullable File destination, SimulationConsumer<String> then)
+    private void save()
     {
+        File dest = diskFile.get();
         class Fetcher extends FullSaver
         {
             private final Iterator<Table> it;
@@ -93,12 +101,19 @@ public class View extends StackPane implements TableManager.TableManagerListener
             {
                 if (it.hasNext())
                 {
-                    it.next().save(destination, this);
+                    it.next().save(dest, this);
                 }
                 else
                 {
                     String completeFile = getCompleteFile();
-                    Utility.alertOnError_(() -> then.consume(completeFile));
+                    try
+                    {
+                        FileUtils.writeStringToFile(dest, completeFile, "UTF-8");
+                    }
+                    catch (IOException ex)
+                    {
+                        FXUtility.logAndShowError("save.error", ex);
+                    }
                 }
             }
         };
@@ -130,6 +145,12 @@ public class View extends StackPane implements TableManager.TableManagerListener
             overlays.remove(t); // Listener removes them from display
             mainPane.getChildren().remove(t.getDisplay());
         });
+    }
+
+    public void setDiskFileAndSave(File newDest)
+    {
+        diskFile.set(newDest);
+        save();
     }
 
     @OnThread(Tag.FXPlatform)
@@ -203,8 +224,9 @@ public class View extends StackPane implements TableManager.TableManagerListener
 
     // The type of the listener really throws off the checkers so suppress them all:
     @SuppressWarnings({"initialization", "keyfor", "interning", "userindex", "valuetype"})
-    public View() throws InternalException, UserException
+    public View(File location) throws InternalException, UserException
     {
+        diskFile = new SimpleObjectProperty<>(location);
         tableManager = new TableManager(this);
         mainPane = new Pane();
         pickPaneMouse = new Pane();
@@ -367,6 +389,11 @@ public class View extends StackPane implements TableManager.TableManagerListener
 
         getChildren().addAll(pickPaneDisplay, pickPaneMouse);
         onPick = whenPicked;
+    }
+
+    public ObjectExpression<String> titleProperty()
+    {
+        return FXUtility.mapBindingLazy(diskFile, f -> f.getName() + " [" + f.getParent() + "]");
     }
 }
 

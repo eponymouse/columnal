@@ -21,6 +21,8 @@ import utility.SimulationSupplier;
 import utility.Utility;
 
 import javax.swing.SwingUtilities;
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -95,9 +97,11 @@ public class PropLoadSaveTransformation
             View view;
             try
             {
-                view = new View();
+                File tempFile = File.createTempFile("rec", "tmp");
+                tempFile.deleteOnExit();
+                view = new View(tempFile);
             }
-            catch (InternalException | UserException e)
+            catch (InternalException | UserException | IOException e)
             {
                 throw new RuntimeException(e);
             }

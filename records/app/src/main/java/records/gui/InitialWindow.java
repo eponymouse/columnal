@@ -8,6 +8,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -28,12 +29,12 @@ public class InitialWindow
     {
         MenuBar menuBar = new MenuBar(
             GUI.menu("menu.project",
-                GUI.menuItem("menu.project.new", () -> newProject()),
+                GUI.menuItem("menu.project.new", () -> newProject(stage)),
                 GUI.menuItem("menu.project.open", () -> chooseAndOpenProject(stage))
             )
         );
         menuBar.setUseSystemMenuBar(true);
-        Button newButton = GUI.button("initial.new", () -> newProject());
+        Button newButton = GUI.button("initial.new", () -> newProject(stage));
         Button openButton = GUI.button("initial.open", () -> chooseAndOpenProject(stage));
         VBox content = GUI.vbox("initial-content",
                 GUI.vbox("initial-section-new", GUI.label("initial.new.title", "initial-heading"), newButton, GUI.labelWrap("initial.new.detail")),
@@ -53,20 +54,34 @@ public class InitialWindow
         {
             try
             {
-                MainWindow.show(FileUtils.readFileToString(src, "UTF-8"));
+                MainWindow.show(src, FileUtils.readFileToString(src, "UTF-8"));
                 // Only hide us if the load and show completed successfully:
                 stage.hide();
             }
             catch (IOException | InternalException | UserException ex)
             {
-                FXUtility.logAndShowErrorFX("error.readingfile", ex);
+                FXUtility.logAndShowError("error.readingfile", ex);
             }
         }
     }
 
     @OnThread(Tag.FXPlatform)
-    private static void newProject()
+    private static void newProject(Stage parent)
     {
-        Utility.alertOnErrorFX_(() -> MainWindow.show(null));
+        Utility.alertOnErrorFX_(() ->
+        {
+            @Nullable File dest;
+            try
+            {
+                dest = Utility.getNewAutoSaveFile();
+            }
+            catch (IOException e)
+            {
+                FXUtility.logAndShowError("new.autosave.error", e);
+                dest = new FileChooser().showOpenDialog(parent);
+            }
+            if (dest != null)
+                MainWindow.show(dest, null);
+        });
     }
 }
