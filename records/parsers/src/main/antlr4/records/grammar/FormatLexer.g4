@@ -21,7 +21,7 @@ TYPE : 'TYPE';
 WS : ( ' ' | '\t' )+ -> skip;
 
 CONS: ':';
-QUOTED_CONSTRUCTOR : ('\\' STRING) { String orig = getText(); setText(utility.GrammarUtility.processEscapes(orig.substring(1))); };
+QUOTED_CONSTRUCTOR : ('\\' STRING) { String orig = getText(); setText(GrammarUtility.processEscapes(orig.substring(1))); };
 UNQUOTED_CONSTRUCTOR : ('\\' ~[ \t\r\n:"]+) { setText(getText().substring(1)); };
 OPEN_BRACKET : '(';
 CLOSE_BRACKET : ')';

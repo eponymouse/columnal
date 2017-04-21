@@ -1,4 +1,4 @@
-package utility;
+package records.grammar;
 
 /**
  * Created by neil on 08/02/2017.

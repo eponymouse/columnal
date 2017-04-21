@@ -16,6 +16,7 @@ import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.GrammarUtility;
 import records.grammar.MainLexer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -151,7 +152,7 @@ public class OutputBuilder
     @OnThread(Tag.Any)
     public static String quotedIfNecessary(String s)
     {
-        if (Utility.validUnquoted(s))
+        if (GrammarUtility.validUnquoted(s))
             return s;
         else
             return quoted(s);
