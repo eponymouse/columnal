@@ -36,9 +36,11 @@ public class InitialWindow
         menuBar.setUseSystemMenuBar(true);
         Button newButton = GUI.button("initial.new", () -> newProject(stage));
         Button openButton = GUI.button("initial.open", () -> chooseAndOpenProject(stage));
+        ListView<File> mruListView = new ListView<>();
+        mruListView.setItems(Utility.getRecentFilesList());
         VBox content = GUI.vbox("initial-content",
                 GUI.vbox("initial-section-new", GUI.label("initial.new.title", "initial-heading"), newButton, GUI.labelWrap("initial.new.detail")),
-                GUI.vbox("initial-section-open", GUI.label("initial.open.title", "initial-heading"), openButton, GUI.label("initial.open.recent"), new ListView<>())
+                GUI.vbox("initial-section-open", GUI.label("initial.open.title", "initial-heading"), openButton, GUI.label("initial.open.recent"), mruListView)
         );
         Scene scene = new Scene(new BorderPane(content, menuBar, null, null, null));
         scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("initial"));
@@ -55,6 +57,7 @@ public class InitialWindow
             try
             {
                 MainWindow.show(src, FileUtils.readFileToString(src, "UTF-8"));
+                Utility.usedFile(src);
                 // Only hide us if the load and show completed successfully:
                 stage.hide();
             }

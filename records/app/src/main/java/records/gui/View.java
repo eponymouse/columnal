@@ -151,6 +151,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     {
         diskFile.set(newDest);
         save();
+        Utility.usedFile(newDest);
     }
 
     @OnThread(Tag.FXPlatform)

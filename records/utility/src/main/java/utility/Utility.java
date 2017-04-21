@@ -10,6 +10,7 @@ import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.net.URL;
+import java.nio.file.*;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,6 +30,7 @@ import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.Styleable;
@@ -47,10 +49,11 @@ import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.TokenStream;
+import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.*;
 import org.checkerframework.dataflow.qual.Pure;
+import org.jetbrains.annotations.NotNull;
 import org.sosy_lab.common.rationals.Rational;
 import records.error.InternalException;
 import records.error.UserException;
@@ -64,6 +67,9 @@ import utility.gui.FXUtility;
 public class Utility
 {
     private static final Set<String> loadedFonts = new HashSet<>();
+    @OnThread(Tag.FXPlatform)
+    private static @MonotonicNonNull ObservableList<File> mruList;
+    public static final String MRU_FILE_NAME = "recent.mru";
 
     public static <T, R> List<@NonNull R> mapList(List<@NonNull T> list, Function<@NonNull T, @NonNull R> func)
     {
@@ -729,6 +735,19 @@ public class Utility
         return r;
     }
 
+    @OnThread(Tag.FXPlatform)
+    public static void usedFile(File src)
+    {
+        getRecentFilesList();
+
+        // This may cause multiple file writes of MRU, but we can live with that:
+        mruList.removeAll(src);
+        mruList.removeAll(src.getAbsoluteFile());
+        mruList.add(0, src);
+        while (mruList.size() > 15)
+            mruList.remove(mruList.size() - 1);
+    }
+
     public static class ReadState
     {
         public long startFrom;
@@ -1124,11 +1143,22 @@ public class Utility
 
     public static File getAutoSaveDirectory() throws IOException
     {
-        File dir = new File(new File(System.getProperty("user.home"), ".records"), "autosave");
+        File dir = new File(getStorageDirectory(), "autosave");
         dir.mkdirs();
         if (!dir.exists() || !dir.isDirectory())
         {
-            throw new IOException("Cannot create auto-save directory.");
+            throw new IOException("Cannot create auto-save directory: " + dir.getAbsolutePath());
+        }
+        return dir;
+    }
+
+    private static File getStorageDirectory() throws IOException
+    {
+        File dir = new File(System.getProperty("user.home"), ".records");
+        dir.mkdirs();
+        if (!dir.exists() || !dir.isDirectory())
+        {
+            throw new IOException("Cannot create profile directory: " + dir.getAbsolutePath());
         }
         return dir;
     }
@@ -1143,6 +1173,110 @@ public class Utility
             {
                 return next;
             }
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    @EnsuresNonNull("mruList")
+    public static @NonNull ObservableList<File> getRecentFilesList()
+    {
+        if (mruList != null)
+            return mruList;
+        try
+        {
+            mruList = FXCollections.observableArrayList();
+            reloadMRU();
+            // After loading, add the listener:
+            Utility.listen(mruList, c -> {
+                try
+                {
+                    FileUtils.writeLines(new File(getStorageDirectory(), MRU_FILE_NAME), "UTF-8", Utility.mapList(c.getList(), File::getAbsoluteFile));
+                }
+                catch (IOException e)
+                {
+                    Utility.log(e);
+                }
+            });
+
+            // From http://stackoverflow.com/questions/16251273/can-i-watch-for-single-file-change-with-watchservice-not-the-whole-directory
+            final Path path = getStorageDirectory().toPath();
+            Thread t = new Thread(() -> {
+                try (final WatchService watchService = FileSystems.getDefault().newWatchService())
+                {
+                    final WatchKey watchKey = path.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
+
+                    // Because mruList is monotonic non-null and is non-null
+                    // at the start of the enclosing method, this is true:
+                    assert mruList != null : "@AssumeAssertion(nullness)";
+                    watchMRU(watchService);
+                }
+                catch (IOException e)
+                {
+                    // No need to tell user, we just won't have the list
+                    Utility.log(e);
+                }
+            });
+            t.setDaemon(true);
+            t.start();
+        }
+        catch (IOException e)
+        {
+            // No need to tell user, we just won't have the list
+            Utility.log(e);
+            mruList = FXCollections.observableArrayList();
+        }
+        return mruList;
+    }
+
+    @RequiresNonNull("mruList")
+    private static void watchMRU(WatchService watchService)
+    {
+        while (true)
+        {
+            try
+            {
+                final WatchKey wk = watchService.take();
+                for (WatchEvent<?> event : wk.pollEvents())
+                {
+                    //we only register "ENTRY_MODIFY" so the context is always a Path.
+                    final Path changed = (Path) event.context();
+                    if (changed != null && changed.endsWith(MRU_FILE_NAME))
+                    {
+                        Platform.runLater(() -> {
+                            // Because mruList is monotonic non-null and is non-null
+                            // at the start of the enclosing method, this is true:
+                            assert mruList != null : "@AssumeAssertion(nullness)";
+                            reloadMRU();
+                        });
+                    }
+                }
+                // reset the key
+                boolean valid = wk.reset();
+                if (!valid)
+                {
+                    // Just stop watching:
+                    return;
+                }
+            }
+            catch (InterruptedException e)
+            {
+                // Go round again...
+            }
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    @RequiresNonNull("mruList")
+    private static void reloadMRU()
+    {
+        try
+        {
+            List<String> content = FileUtils.readLines(new File(getStorageDirectory(), MRU_FILE_NAME), "UTF-8");
+            mruList.setAll(Utility.mapList(content, File::new));
+        }
+        catch (IOException e)
+        {
+            Utility.log(e);
         }
     }
 }
