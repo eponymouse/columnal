@@ -19,7 +19,7 @@ CLOSE_ROUND : ')';
 OPEN_SQUARE : '[';
 CLOSE_SQUARE : ']';
 
-UNQUOTED_IDENT : ~[ \t\n\r"()@+-/*&|=?:;~$!<>\\,[\]]+ {utility.Utility.validUnquoted(getText())}?;
+UNQUOTED_IDENT : ~[ \t\n\r"()@+-/*&|=?:;~$!<>\\,[\]]+ {utility.GrammarUtility.validUnquoted(getText())}?;
 
 
 
