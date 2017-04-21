@@ -15,6 +15,7 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataTypeUtility;
+import records.grammar.GrammarUtility;
 import utility.TaggedValue;
 import records.data.Transformation;
 import records.data.datatype.DataType;
@@ -305,7 +306,7 @@ public class TestUtil
         {
             s = makeString(r, gs);
         }
-        while (!Utility.validUnquoted(s));
+        while (!GrammarUtility.validUnquoted(s));
         return s;
     }
 
@@ -397,7 +398,7 @@ public class TestUtil
         {
             s = generateIdent(r);
         }
-        while (!Utility.validUnquoted(s));
+        while (!GrammarUtility.validUnquoted(s));
         return s;
     }
 
