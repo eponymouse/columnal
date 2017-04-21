@@ -25,6 +25,7 @@ import threadchecker.Tag;
 import utility.Utility;
 import utility.Workers;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
@@ -41,8 +42,20 @@ public class MainWindow
     public static void show(File destinationFile, @Nullable String src) throws UserException, InternalException
     {
         View v = new View(destinationFile);
-        Stage stage = new Stage();
+        final Stage stage = new Stage();
         stage.titleProperty().bind(v.titleProperty());
+
+        MenuBar menuBar = new MenuBar(
+            GUI.menu("menu.project",
+                GUI.menuItem("menu.project.new", () -> InitialWindow.newProject(stage)),
+                GUI.menuItem("menu.project.open", () -> InitialWindow.chooseAndOpenProject(stage)),
+                new DummySaveMenuItem(),
+                GUI.menuItem("menu.project.saveAs", () -> {/*TODO*/}),
+                GUI.menuItem("menu.project.close", () -> {/*TODO*/}),
+                GUI.menuItem("menu.exit", () -> {/* TODO View.closeAll();*/})
+            )
+            //TODO data menu
+        );
 
         Menu menu = new Menu("Data");
         MenuItem manualItem = new MenuItem("New");
@@ -168,7 +181,7 @@ public class MainWindow
             }
         });
 
-        BorderPane root = new BorderPane(scrollPane, new MenuBar(menu), null, null, null);
+        BorderPane root = new BorderPane(scrollPane, menuBar, null, null, null);
         Scene scene = new Scene(root);
         scene.getStylesheets().add(Utility.getStylesheet("mainview.css"));
         stage.setScene(scene);
@@ -185,4 +198,8 @@ public class MainWindow
         //org.scenicview.ScenicView.show(stage.getScene());
     }
 
+    private static class DummySaveMenuItem extends MenuItem
+    {
+        //TODO
+    }
 }

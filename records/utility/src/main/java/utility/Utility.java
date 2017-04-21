@@ -1271,8 +1271,16 @@ public class Utility
     {
         try
         {
-            List<String> content = FileUtils.readLines(new File(getStorageDirectory(), MRU_FILE_NAME), "UTF-8");
-            mruList.setAll(Utility.mapList(content, File::new));
+            File mruFile = new File(getStorageDirectory(), MRU_FILE_NAME);
+            if (mruFile.exists())
+            {
+                List<String> content = FileUtils.readLines(mruFile, "UTF-8");
+                mruList.setAll(Utility.mapList(content, File::new));
+            }
+            else
+            {
+                mruList.clear();
+            }
         }
         catch (IOException e)
         {

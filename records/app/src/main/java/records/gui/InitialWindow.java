@@ -46,12 +46,12 @@ public class InitialWindow
         scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("initial"));
         stage.setScene(scene);
         stage.show();
-        org.scenicview.ScenicView.show(scene);
+        //org.scenicview.ScenicView.show(scene);
     }
 
-    private static void chooseAndOpenProject(Stage stage)
+    public static void chooseAndOpenProject(Stage parent)
     {
-        File src = new FileChooser().showOpenDialog(stage);
+        File src = new FileChooser().showOpenDialog(parent);
         if (src != null)
         {
             try
@@ -59,7 +59,7 @@ public class InitialWindow
                 MainWindow.show(src, FileUtils.readFileToString(src, "UTF-8"));
                 Utility.usedFile(src);
                 // Only hide us if the load and show completed successfully:
-                stage.hide();
+                parent.hide();
             }
             catch (IOException | InternalException | UserException ex)
             {
@@ -69,7 +69,7 @@ public class InitialWindow
     }
 
     @OnThread(Tag.FXPlatform)
-    private static void newProject(Stage parent)
+    public static void newProject(Stage parent)
     {
         Utility.alertOnErrorFX_(() ->
         {
