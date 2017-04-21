@@ -8,6 +8,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
@@ -46,6 +47,7 @@ import utility.gui.FXUtility;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -76,6 +78,8 @@ public class View extends StackPane implements TableManager.TableManagerListener
     private @Nullable FXPlatformConsumer<@Nullable Table> onPick;
     @OnThread(Tag.FXPlatform)
     private final ObjectProperty<File> diskFile;
+    // Null means modified since last save
+    private final ObjectProperty<@Nullable Instant> lastSaveTime = new SimpleObjectProperty<>(null);
 
     private void save()
     {
@@ -109,6 +113,8 @@ public class View extends StackPane implements TableManager.TableManagerListener
                     try
                     {
                         FileUtils.writeStringToFile(dest, completeFile, "UTF-8");
+                        Instant now = Instant.now();
+                        Platform.runLater(() -> lastSaveTime.setValue(now));
                     }
                     catch (IOException ex)
                     {
@@ -142,6 +148,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     {
         Platform.runLater(() ->
         {
+            save();
             overlays.remove(t); // Listener removes them from display
             mainPane.getChildren().remove(t.getDisplay());
         });
@@ -152,6 +159,11 @@ public class View extends StackPane implements TableManager.TableManagerListener
         diskFile.set(newDest);
         save();
         Utility.usedFile(newDest);
+    }
+
+    public ObservableObjectValue<@Nullable Instant> lastSaveTime()
+    {
+        return lastSaveTime;
     }
 
     @OnThread(Tag.FXPlatform)
@@ -305,6 +317,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     {
         Platform.runLater(() -> {
             addDisplay(new TableDisplay(this, data), null);
+            save();
         });
     }
 
@@ -328,6 +341,8 @@ public class View extends StackPane implements TableManager.TableManagerListener
             {
                 View.this.edit(transformation.getId(), transformation.edit(View.this));
             }));
+
+            save();
         });
     }
 

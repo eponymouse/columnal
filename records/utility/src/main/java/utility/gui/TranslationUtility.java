@@ -1,5 +1,10 @@
 package utility.gui;
 
+import javafx.beans.*;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringBinding;
+import javafx.beans.binding.StringExpression;
+import javafx.beans.value.ObservableStringValue;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
 import javafx.scene.control.Hyperlink;
@@ -24,6 +29,7 @@ import records.grammar.AcceleratorParser.AcceleratorContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.Utility;
 
@@ -124,6 +130,8 @@ public class TranslationUtility
                                 modifiers.add(KeyCombination.SHORTCUT_DOWN);
                             if (ctx.ALT_MODIFIER() != null)
                                 modifiers.add(KeyCombination.ALT_DOWN);
+                            if (ctx.SHIFT_MODIFIER() != null)
+                                modifiers.add(KeyCombination.SHIFT_DOWN);
                             return new KeyCharacterCombination(ctx.KEY().getText(), modifiers.toArray(new Modifier[0]));
                         }
                     }.visit(p.accelerator());
@@ -213,5 +221,28 @@ public class TranslationUtility
             node.getStyleClass().add(styleclass);
         }
         return r;
+    }
+
+    /**
+     * Like getString, but lets the substitutions be dynamic.  If they change,
+     * the returned binding will be updated.
+     */
+    @OnThread(Tag.FXPlatform)
+    public static @Localized StringBinding bindString(@LocalizableKey String key, ObservableStringValue firstValue, ObservableStringValue... moreValues)
+    {
+        List<ObservableStringValue> values = new ArrayList<>();
+        values.add(firstValue);
+        values.addAll(Arrays.asList(moreValues));
+        // This gets it without substitution:
+        String unsub = getString(key);
+        FXPlatformSupplier<String> update = () -> {
+            String sub = unsub;
+            for (int i = 0; i < values.size(); i++)
+            {
+                sub = sub.replace("$" + (i+1), values.get(i).get());
+            }
+            return sub;
+        };
+        return Bindings.createStringBinding(update::get, values.<javafx.beans.Observable>toArray(new javafx.beans.Observable[0]));
     }
 }

@@ -1,6 +1,12 @@
 package records.gui;
 
 import javafx.application.Platform;
+import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.StringBinding;
+import javafx.beans.binding.StringExpression;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
@@ -11,6 +17,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
@@ -30,6 +37,7 @@ import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.io.IOException;
+import java.time.Instant;
 import java.util.Collections;
 
 /**
@@ -49,30 +57,18 @@ public class MainWindow
             GUI.menu("menu.project",
                 GUI.menuItem("menu.project.new", () -> InitialWindow.newProject(stage)),
                 GUI.menuItem("menu.project.open", () -> InitialWindow.chooseAndOpenProject(stage)),
-                new DummySaveMenuItem(),
+                new DummySaveMenuItem(v),
                 GUI.menuItem("menu.project.saveAs", () -> {/*TODO*/}),
                 GUI.menuItem("menu.project.close", () -> {/*TODO*/}),
                 GUI.menuItem("menu.exit", () -> {/* TODO View.closeAll();*/})
+            ),
+            GUI.menu("menu.data",
+                GUI.menuItem("menu.data.new", () -> newTable(v))
             )
-            //TODO data menu
         );
 
         Menu menu = new Menu("Data");
-        MenuItem manualItem = new MenuItem("New");
-        menu.getItems().add(manualItem);
-        manualItem.setOnAction(e -> {
-            Workers.onWorkerThread("Create new table", () -> {
-                try
-                {
-                    EditableRecordSet rs = new EditableRecordSet(Collections.emptyList(), 0);
-                    ImmediateDataSource ds = new ImmediateDataSource(v.getManager(), rs);
-                }
-                catch (InternalException | UserException ex)
-                {
-                    FXUtility.logAndShowError("newtable.error", ex);
-                }
-            });
-        });
+
         MenuItem importItem = new MenuItem("Text");
         importItem.setOnAction(e -> {
             FileChooser fc = new FileChooser();
@@ -198,8 +194,45 @@ public class MainWindow
         //org.scenicview.ScenicView.show(stage.getScene());
     }
 
+    private static void newTable(View v)
+    {
+        Workers.onWorkerThread("Create new table", () -> {
+            try
+            {
+                EditableRecordSet rs = new EditableRecordSet(Collections.emptyList(), 0);
+                ImmediateDataSource ds = new ImmediateDataSource(v.getManager(), rs);
+            }
+            catch (InternalException | UserException ex)
+            {
+                FXUtility.logAndShowError("newtable.error", ex);
+            }
+        });
+    }
+
     private static class DummySaveMenuItem extends MenuItem
     {
-        //TODO
+        private final ObjectProperty<Object> dummyNowBinding = new SimpleObjectProperty<>(new Object());
+        private final @OnThread(Tag.FXPlatform) @Localized StringBinding text;
+
+        @OnThread(Tag.FXPlatform)
+        public DummySaveMenuItem(View view)
+        {
+            setDisable(true);
+            text = Bindings.createStringBinding(() ->
+            {
+                @Nullable Instant lastSave = view.lastSaveTime().get();
+                if (lastSave == null)
+                    return TranslationUtility.getString("menu.project.modified");
+                else
+                    return "" + (Instant.now().getEpochSecond() - lastSave.getEpochSecond());
+            }, view.lastSaveTime(), dummyNowBinding);
+            // Invalidating this binding on show will force re-evaluation of the time gap:
+            FXUtility.onceNotNull(parentMenuProperty(), menu -> menu.addEventHandler(Menu.ON_SHOWING, e -> {
+                text.invalidate();
+            }));
+            textProperty().bind(TranslationUtility.bindString("menu.project.save", text));
+        }
+
+
     }
 }

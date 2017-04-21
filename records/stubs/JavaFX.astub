@@ -66,6 +66,14 @@ class Menu
 {
     Menu(@NonNull String text, @Nullable Node graphic, @NonNull MenuItem... menuItems);
 }
+class MenuItem
+{
+    void setDisable(boolean b) @UnknownInitialization;
+    void setOnMenuValidation(EventHandler e) @UnknownInitialization;
+    void addEventHandler(EventType t, EventHandler e) @UnknownInitialization;
+    StringProperty textProperty() @UnknownInitialization;
+    ReadOnlyObjectProperty parentMenuProperty() @UnknownInitialization;
+}
 
 package javafx.scene.layout;
 class BorderPane

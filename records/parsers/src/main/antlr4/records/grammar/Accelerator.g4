@@ -3,5 +3,6 @@ grammar Accelerator;
 KEY : ('a'..'z');
 SHORTCUT_MODIFIER : 'C-';
 ALT_MODIFIER : 'A-';
+SHIFT_MODIFIER : 'S-';
 
-accelerator : SHORTCUT_MODIFIER? ALT_MODIFIER? KEY;
+accelerator : SHORTCUT_MODIFIER? ALT_MODIFIER? SHIFT_MODIFIER? KEY;

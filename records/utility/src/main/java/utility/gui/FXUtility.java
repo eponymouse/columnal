@@ -7,7 +7,9 @@ import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableObjectValue;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
@@ -248,5 +250,32 @@ public class FXUtility
             ((Runnable)runAlert::run).run();
         else
             Platform.runLater(runAlert::run);
+    }
+
+    /**
+     * Runs the given action once, either now or in the future, at the earliest
+     * point that the item becomes non-null
+     */
+    public static <T> void onceNotNull(ObservableObjectValue<T> obsValue, FXPlatformConsumer<@NonNull T> action)
+    {
+        T initial = obsValue.get();
+        if (initial != null)
+            action.consume(initial);
+        else
+        {
+            obsValue.addListener(new ChangeListener<T>()
+            {
+                @Override
+                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+                public void changed(ObservableValue<? extends T> a, T b, T newVal)
+                {
+                    if (newVal != null)
+                    {
+                        action.consume(newVal);
+                        obsValue.removeListener(this);
+                    }
+                }
+            });
+        }
     }
 }
