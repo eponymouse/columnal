@@ -29,13 +29,29 @@ public class InitialWindow
     {
         MenuBar menuBar = new MenuBar(
             GUI.menu("menu.project",
-                GUI.menuItem("menu.project.new", () -> newProject(stage)),
-                GUI.menuItem("menu.project.open", () -> chooseAndOpenProject(stage))
+                GUI.menuItem("menu.project.new", () -> {
+                    newProject(stage);
+                    stage.hide();
+                }),
+                GUI.menuItem("menu.project.open", () -> {
+                    chooseAndOpenProject(stage);
+                    stage.hide();
+                }),
+                GUI.menuItem("menu.exit", () -> {
+                    MainWindow.closeAll();
+                    stage.hide();
+                })
             )
         );
         menuBar.setUseSystemMenuBar(true);
-        Button newButton = GUI.button("initial.new", () -> newProject(stage));
-        Button openButton = GUI.button("initial.open", () -> chooseAndOpenProject(stage));
+        Button newButton = GUI.button("initial.new", () -> {
+            newProject(stage);
+            stage.hide();
+        });
+        Button openButton = GUI.button("initial.open", () -> {
+            chooseAndOpenProject(stage);
+            stage.hide();
+        });
         ListView<File> mruListView = new ListView<>();
         mruListView.setItems(Utility.getRecentFilesList());
         VBox content = GUI.vbox("initial-content",

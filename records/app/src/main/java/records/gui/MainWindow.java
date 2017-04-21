@@ -39,6 +39,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 
 /**
  * Created by neil on 17/04/2017.
@@ -46,12 +47,15 @@ import java.util.Collections;
 @OnThread(Tag.FXPlatform)
 public class MainWindow
 {
+    private final static IdentityHashMap<View, Stage> views = new IdentityHashMap<>();
+
     // If src is null, make new
     public static void show(File destinationFile, @Nullable String src) throws UserException, InternalException
     {
         View v = new View(destinationFile);
         final Stage stage = new Stage();
         stage.titleProperty().bind(v.titleProperty());
+        views.put(v, stage);
 
         MenuBar menuBar = new MenuBar(
             GUI.menu("menu.project",
@@ -60,7 +64,7 @@ public class MainWindow
                 new DummySaveMenuItem(v),
                 GUI.menuItem("menu.project.saveAs", () -> {/*TODO*/}),
                 GUI.menuItem("menu.project.close", () -> {/*TODO*/}),
-                GUI.menuItem("menu.exit", () -> {/* TODO View.closeAll();*/})
+                GUI.menuItem("menu.exit", () -> {closeAll();})
             ),
             GUI.menu("menu.data",
                 GUI.menuItem("menu.data.new", () -> newTable(v))
@@ -192,6 +196,14 @@ public class MainWindow
 
         stage.show();
         //org.scenicview.ScenicView.show(stage.getScene());
+    }
+
+    public static void closeAll()
+    {
+        views.forEach((v, s) -> {
+            v.ensureSaved();
+            s.hide();
+        });
     }
 
     private static void newTable(View v)

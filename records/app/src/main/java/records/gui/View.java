@@ -166,6 +166,11 @@ public class View extends StackPane implements TableManager.TableManagerListener
         return lastSaveTime;
     }
 
+    public void ensureSaved()
+    {
+        //TODO
+    }
+
     @OnThread(Tag.FXPlatform)
     private static class Overlays
     {
