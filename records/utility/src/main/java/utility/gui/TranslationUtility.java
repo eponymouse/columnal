@@ -6,13 +6,21 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
+import javafx.scene.input.KeyCharacterCombination;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyCombination.Modifier;
 import javafx.scene.text.Text;
 import javafx.stage.PopupWindow.AnchorLocation;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.error.InternalException;
+import records.error.UserException;
+import records.grammar.AcceleratorBaseVisitor;
+import records.grammar.AcceleratorLexer;
+import records.grammar.AcceleratorParser;
+import records.grammar.AcceleratorParser.AcceleratorContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -96,11 +104,37 @@ public class TranslationUtility
     @OnThread(Tag.FXPlatform)
     public static Pair<@Localized String, @Nullable KeyCombination> getStringAndShortcut(@LocalizableKey String key)
     {
+
         String original = getString(key);
         int atIndex = original.indexOf("@");
         if (atIndex != -1)
         {
-            return new Pair<>(original.substring(0, atIndex), null /*TODO*/);
+            @Nullable KeyCombination shortcut = null;
+            try
+            {
+                shortcut = Utility.<@Nullable KeyCombination, AcceleratorParser>parseAsOne(original.substring(atIndex + 1), AcceleratorLexer::new, AcceleratorParser::new, p ->
+                {
+                    return new AcceleratorBaseVisitor<@Nullable KeyCombination>()
+                    {
+                        @Override
+                        public @Nullable KeyCombination visitAccelerator(AcceleratorContext ctx)
+                        {
+                            List<Modifier> modifiers = new ArrayList<>();
+                            if (ctx.SHORTCUT_MODIFIER() != null)
+                                modifiers.add(KeyCombination.SHORTCUT_DOWN);
+                            if (ctx.ALT_MODIFIER() != null)
+                                modifiers.add(KeyCombination.ALT_DOWN);
+                            return new KeyCharacterCombination(ctx.KEY().getText(), modifiers.toArray(new Modifier[0]));
+                        }
+                    }.visit(p.accelerator());
+                });
+            }
+            catch (InternalException | UserException e)
+            {
+                // No need to tell the user, it's an internal error:
+                Utility.log(e);
+            }
+            return new Pair<>(original.substring(0, atIndex), shortcut);
         }
         else
             return new Pair<>(original, null);
