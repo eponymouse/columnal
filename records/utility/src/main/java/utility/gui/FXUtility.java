@@ -24,6 +24,9 @@ import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
+import javafx.stage.Stage;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -37,6 +40,8 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
 
+import java.io.File;
+import java.io.FileReader;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Consumer;
@@ -164,6 +169,11 @@ public class FXUtility
                  .collect(Collectors.<String>toList());
     }
 
+    public static ExtensionFilter getProjectExtensionFilter()
+    {
+        return new ExtensionFilter(TranslationUtility.getString("extension.projects"), "*.rec");
+    }
+
     public static interface DragHandler
     {
         @OnThread(Tag.FXPlatform)
@@ -278,4 +288,29 @@ public class FXUtility
             });
         }
     }
+
+    /**
+     * Choose a file.  The tag is used to store and recall the last
+     * used directory for this type of file choice.
+     * @param tag
+     * @return
+     */
+    public static @Nullable File chooseFileOpen(@LocalizableKey String titleKey, String tag, Stage parent, ExtensionFilter... extensionFilters)
+    {
+        FileChooser fc = new FileChooser();
+        fc.setTitle(TranslationUtility.getString(titleKey));
+        String initialDir = Utility.getProperty("recentdirs.txt", tag);
+        if (initialDir != null)
+            fc.setInitialDirectory(new File(initialDir));
+        fc.getExtensionFilters().setAll(extensionFilters);
+        File file = fc.showOpenDialog(parent);
+        if (file != null)
+        {
+            @Nullable String parentDir = file.getAbsoluteFile().getParent();
+            if (parentDir != null)
+                Utility.setProperty("recentdirs.txt", tag, parentDir);
+        }
+        return file;
+    }
+
 }

@@ -4,6 +4,8 @@ import java.io.BufferedInputStream;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Array;
@@ -15,9 +17,12 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.Properties;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -1131,7 +1136,8 @@ public class Utility
         return dir;
     }
 
-    private static File getStorageDirectory() throws IOException
+    //package-visible
+    static File getStorageDirectory() throws IOException
     {
         File dir = new File(System.getProperty("user.home"), ".records");
         dir.mkdirs();
@@ -1265,5 +1271,47 @@ public class Utility
         {
             Utility.log(e);
         }
+    }
+
+
+    // All loaded properties (each one is stored in a separate file)
+    private static Map<String, Properties> properties = new HashMap<>();
+
+    public static @Nullable String getProperty(String fileName, String propertyName)
+    {
+        Properties props = getPropertiesFile(fileName);
+        return props.getProperty(propertyName);
+    }
+
+    public static void setProperty(String fileName, String propertyName, String value)
+    {
+        Properties props = getPropertiesFile(fileName);
+        props.setProperty(propertyName, value);
+        try
+        {
+            props.store(new FileWriter(new File(Utility.getStorageDirectory(), fileName)), "");
+        }
+        catch (IOException e)
+        {
+            Utility.log(e);
+        }
+    }
+
+    private static Properties getPropertiesFile(String fileName)
+    {
+        return properties.computeIfAbsent(fileName, f -> {
+            Properties p = new Properties();
+            try
+            {
+                File propFile = new File(Utility.getStorageDirectory(), fileName);
+                if (propFile.exists())
+                    p.load(new FileReader(propFile));
+            }
+            catch (IOException e)
+            {
+                Utility.log(e);
+            }
+            return p;
+        });
     }
 }

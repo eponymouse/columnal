@@ -15,6 +15,7 @@ import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -184,8 +185,10 @@ public class MainWindow
 
     private static void importText(View v, Stage stage)
     {
-        FileChooser fc = new FileChooser();
-        File chosen = fc.showOpenDialog(stage);
+        @Nullable File chosen = FXUtility.chooseFileOpen("data.import.dialogTitle", "dataOpen", stage,
+            new ExtensionFilter(TranslationUtility.getString("data.import.type.text"), "*.txt", "*.csv"),
+            new ExtensionFilter(TranslationUtility.getString("extension.allfiles"), "*.*")
+        );
         if (chosen != null)
         {
             @NonNull File chosenFinal = chosen;

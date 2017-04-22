@@ -67,7 +67,7 @@ public class InitialWindow
 
     public static void chooseAndOpenProject(Stage parent)
     {
-        File src = new FileChooser().showOpenDialog(parent);
+        File src = FXUtility.chooseFileOpen("project.open.dialogTitle", "projectOpen", parent, FXUtility.getProjectExtensionFilter());
         if (src != null)
         {
             try
@@ -97,7 +97,7 @@ public class InitialWindow
             catch (IOException e)
             {
                 FXUtility.logAndShowError("new.autosave.error", e);
-                dest = new FileChooser().showOpenDialog(parent);
+                dest = new FileChooser().showSaveDialog(parent);
             }
             if (dest != null)
                 MainWindow.show(dest, null);
