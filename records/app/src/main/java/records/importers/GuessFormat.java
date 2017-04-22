@@ -188,7 +188,7 @@ public class GuessFormat
         return new SeparatorChoice(separator);
     }
 
-    public static ChoicePoint<TextFormat> guessTextFormat(UnitManager mgr, List<String> initial)
+    public static ChoicePoint<HeaderRowChoice, TextFormat> guessTextFormat(UnitManager mgr, List<String> initial)
     {
         List<Choice> headerRowChoices = new ArrayList<>();
         for (int headerRows = 0; headerRows < Math.min(MAX_HEADER_ROWS, initial.size() - 1); headerRows++)
@@ -373,7 +373,8 @@ public class GuessFormat
 
     public static void guessTextFormatGUI_Then(UnitManager mgr, List<String> initial, Consumer<TextFormat> then)
     {
-        ChoicePoint<TextFormat> choicePoints = guessTextFormat(mgr, initial);
+        ChoicePoint<?, TextFormat> choicePoints = guessTextFormat(mgr, initial);
+        System.err.println(choicePoints);
         // TODO show GUI, apply them
         // TODO include choice of link or copy.
     }

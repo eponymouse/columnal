@@ -8,6 +8,7 @@ import com.pholser.junit.quickcheck.generator.java.time.LocalTimeGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
@@ -513,20 +514,22 @@ public class TestUtil
         }
     }
 
-    public static <R> R pick(ChoicePoint<R> choicePoint, ChoicePick... picks) throws InternalException, UserException
+    public static <C extends Choice, R> @NonNull R pick(ChoicePoint<C, R> choicePoint, ChoicePick<C>... picks) throws InternalException, UserException
     {
-        Class<?> choicePointClass = choicePoint._test_getChoiceClass();
+        Class<?> choicePointClass = choicePoint.getChoiceClass();
         if (choicePointClass == null)
         {
             return choicePoint.get();
         }
         else
         {
-            for (ChoicePick pick : picks)
+            for (ChoicePick<C> pick : picks)
             {
                 if (pick.theClass.equals(choicePointClass))
                 {
-                    return TestUtil.<R>pick(choicePoint.select(pick.choice), picks);
+                    ChoicePoint<Choice, R> selected = (ChoicePoint<Choice, R>) choicePoint.select(pick.choice);
+                    @NonNull R picked = pick(selected, (ChoicePick<Choice>[]) picks);
+                    return picked;
                 }
             }
             throw new RuntimeException("No suitable choice for class: " + choicePointClass);

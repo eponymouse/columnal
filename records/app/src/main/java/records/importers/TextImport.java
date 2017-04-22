@@ -57,7 +57,7 @@ public class TextImport
     }
 
     @OnThread(Tag.Simulation)
-    public static ChoicePoint<DataSource> _test_importTextFile(TableManager mgr, File textFile) throws IOException, InternalException, UserException
+    public static ChoicePoint<?, DataSource> _test_importTextFile(TableManager mgr, File textFile) throws IOException, InternalException, UserException
     {
         List<String> initial = getInitial(textFile);
         return GuessFormat.guessTextFormat(mgr.getUnitManager(), initial).then(format -> {

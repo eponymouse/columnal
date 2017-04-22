@@ -41,7 +41,7 @@ public class PropFormat
     {
         String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
         String format = formatAndData.format.toString();
-        ChoicePoint<TextFormat> formatChoicePoint = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), formatAndData.content);
+        ChoicePoint<?, TextFormat> formatChoicePoint = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), formatAndData.content);
         ChoicePick[] picks = new ChoicePick[] {
             new ChoicePick<HeaderRowChoice>(HeaderRowChoice.class, new HeaderRowChoice(formatAndData.format.headerRows)),
             new ChoicePick<SeparatorChoice>(SeparatorChoice.class, new SeparatorChoice("" + formatAndData.format.separator)),
