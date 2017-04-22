@@ -56,18 +56,28 @@ public class MainWindow
         final Stage stage = new Stage();
         stage.titleProperty().bind(v.titleProperty());
         views.put(v, stage);
+        stage.setOnHidden(e -> {
+            views.remove(v);
+        });
 
         MenuBar menuBar = new MenuBar(
             GUI.menu("menu.project",
                 GUI.menuItem("menu.project.new", () -> InitialWindow.newProject(stage)),
                 GUI.menuItem("menu.project.open", () -> InitialWindow.chooseAndOpenProject(stage)),
                 new DummySaveMenuItem(v),
-                GUI.menuItem("menu.project.saveAs", () -> {/*TODO*/}),
-                GUI.menuItem("menu.project.close", () -> {/*TODO*/}),
+                GUI.menuItem("menu.project.saveAs", () -> {
+                    FileChooser fc = new FileChooser();
+                    File dest = fc.showSaveDialog(stage);
+                    if (dest == null)
+                        return;
+                    v.setDiskFileAndSave(dest);
+                }),
+                GUI.menuItem("menu.project.close", () -> {stage.hide();}),
                 GUI.menuItem("menu.exit", () -> {closeAll();})
             ),
             GUI.menu("menu.data",
-                GUI.menuItem("menu.data.new", () -> newTable(v))
+                GUI.menuItem("menu.data.new", () -> newTable(v)),
+                GUI.menuItem("menu.data.import", () -> importText(v, stage))
             )
         );
 
@@ -75,24 +85,7 @@ public class MainWindow
 
         MenuItem importItem = new MenuItem("Text");
         importItem.setOnAction(e -> {
-            FileChooser fc = new FileChooser();
-            File chosen = fc.showOpenDialog(stage);
-            if (chosen != null)
-            {
-                @NonNull File chosenFinal = chosen;
-                Workers.onWorkerThread("GuessFormat data", () ->
-                {
-                    try
-                    {
-                        TextImport.importTextFile(v.getManager(), chosenFinal, rs ->
-                                Utility.alertOnErrorFX_(() -> v.addSource(rs)));
-                    }
-                    catch (InternalException | UserException | IOException ex)
-                    {
-                        FXUtility.logAndShowError("import.text.error", ex);
-                    }
-                });
-            }
+            importText(v, stage);
         });
         MenuItem importHTMLItem = new MenuItem("HTML");
         importHTMLItem.setOnAction(e -> {
@@ -145,15 +138,6 @@ public class MainWindow
         });
         menu.getItems().add(saveItem);
         */
-        MenuItem saveAsItem = new MenuItem(TranslationUtility.getString("main.saveas"));
-        saveAsItem.setOnAction(e -> {
-            FileChooser fc = new FileChooser();
-            File dest = fc.showSaveDialog(stage);
-            if (dest == null)
-                return;
-            v.setDiskFileAndSave(dest);
-        });
-        menu.getItems().add(saveAsItem);
         /*
         Workers.onWorkerThread("Example import", () -> {
             try
@@ -196,6 +180,28 @@ public class MainWindow
 
         stage.show();
         //org.scenicview.ScenicView.show(stage.getScene());
+    }
+
+    private static void importText(View v, Stage stage)
+    {
+        FileChooser fc = new FileChooser();
+        File chosen = fc.showOpenDialog(stage);
+        if (chosen != null)
+        {
+            @NonNull File chosenFinal = chosen;
+            Workers.onWorkerThread("GuessFormat data", () ->
+            {
+                try
+                {
+                    TextImport.importTextFile(v.getManager(), chosenFinal, rs ->
+                            Utility.alertOnErrorFX_(() -> v.addSource(rs)));
+                }
+                catch (InternalException | UserException | IOException ex)
+                {
+                    FXUtility.logAndShowError("import.text.error", ex);
+                }
+            });
+        }
     }
 
     public static void closeAll()

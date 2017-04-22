@@ -374,6 +374,7 @@ public class GuessFormat
     public static void guessTextFormatGUI_Then(UnitManager mgr, List<String> initial, Consumer<TextFormat> then)
     {
         ChoicePoint<TextFormat> choicePoints = guessTextFormat(mgr, initial);
-        // TODO show GUI, apply then
+        // TODO show GUI, apply them
+        // TODO include choice of link or copy.
     }
 }

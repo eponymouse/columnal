@@ -118,7 +118,7 @@ public class TranslationUtility
             @Nullable KeyCombination shortcut = null;
             try
             {
-                shortcut = Utility.<@Nullable KeyCombination, AcceleratorParser>parseAsOne(original.substring(atIndex + 1), AcceleratorLexer::new, AcceleratorParser::new, p ->
+                shortcut = Utility.<@Nullable KeyCombination, AcceleratorParser>parseAsOne(original.substring(atIndex + 1).trim(), AcceleratorLexer::new, AcceleratorParser::new, p ->
                 {
                     return new AcceleratorBaseVisitor<@Nullable KeyCombination>()
                     {
