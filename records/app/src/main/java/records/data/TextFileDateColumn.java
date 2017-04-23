@@ -1,5 +1,6 @@
 package records.data;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.error.InternalException;
 import threadchecker.OnThread;
@@ -24,7 +25,7 @@ public class TextFileDateColumn extends TextFileColumn<TemporalColumnStorage>
     private final TemporalQuery<? extends Temporal> query;
 
     @SuppressWarnings("initialization")
-    public TextFileDateColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, ColumnId columnName, int columnIndex, DateTimeInfo dateTimeInfo, DateTimeFormatter dateTimeFormatter, TemporalQuery query) throws InternalException
+    public TextFileDateColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte @Nullable [] sep, ColumnId columnName, int columnIndex, DateTimeInfo dateTimeInfo, DateTimeFormatter dateTimeFormatter, TemporalQuery query) throws InternalException
     {
         super(recordSet, textFile, initialFilePosition, sep, columnName, columnIndex);
         setStorage(new TemporalColumnStorage(dateTimeInfo, (index, prog) -> fillUpTo(index)));

@@ -71,7 +71,7 @@ public class GenFormattedData extends Generator<FormatAndData>
                     line.append(r.nextBoolean() ? "" : numericColumnType.unit.getDisplayPrefix());
                     long value = r.nextLong();
 
-                    line.append(String.format(format.separator == ',' ? "%d" : "%,d", value));
+                    line.append(String.format(",".equals(format.separator) ? "%d" : "%,d", value));
                     if (numericColumnType.minDP > 0)
                     {
                         String decimalDigs = String.format("%0" + numericColumnType.minDP + "d", Math.abs(r.nextInt())).substring(0, numericColumnType.minDP);

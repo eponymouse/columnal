@@ -21,7 +21,7 @@ public class TextFileNumericColumn extends TextFileColumn<NumericColumnStorage>
     private final @Nullable UnaryOperator<String> processString;
 
     @SuppressWarnings("initialization")
-    public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte sep, ColumnId columnName, int columnIndex, NumberInfo numberInfo, @Nullable UnaryOperator<String> processString) throws InternalException, UserException
+    public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte @Nullable [] sep, ColumnId columnName, int columnIndex, NumberInfo numberInfo, @Nullable UnaryOperator<String> processString) throws InternalException, UserException
     {
         super(recordSet, textFile, fileStartPosition, sep, columnName, columnIndex);
         setStorage(new NumericColumnStorage(numberInfo, (index, prog) -> fillUpTo(index)));

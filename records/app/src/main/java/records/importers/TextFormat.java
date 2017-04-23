@@ -4,6 +4,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -11,15 +12,16 @@ import java.util.stream.Collectors;
  */
 public class TextFormat extends Format
 {
-    public char separator;
+    // null means no separator; just one big column
+    public @Nullable String separator;
 
-    public TextFormat(Format copyFrom, char separator)
+    public TextFormat(Format copyFrom, @Nullable String separator)
     {
         super(copyFrom);
         this.separator = separator;
     }
 
-    public TextFormat(int headerRows, List<ColumnInfo> columnTypes, char separator)
+    public TextFormat(int headerRows, List<ColumnInfo> columnTypes, @Nullable String separator)
     {
         super(headerRows, columnTypes);
         this.separator = separator;
@@ -34,7 +36,7 @@ public class TextFormat extends Format
 
         TextFormat that = (TextFormat) o;
 
-        return separator == that.separator;
+        return Objects.equals(separator, that.separator);
 
     }
 
@@ -42,7 +44,7 @@ public class TextFormat extends Format
     public int hashCode()
     {
         int result = super.hashCode();
-        result = 31 * result + (int) separator;
+        result = 31 * result + (separator == null ? 0 : separator.hashCode());
         return result;
     }
 

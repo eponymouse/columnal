@@ -1,6 +1,7 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeValue;
 import records.error.FetchException;
 import records.error.InternalException;
@@ -23,7 +24,7 @@ import java.util.ArrayList;
 public abstract class TextFileColumn<S extends ColumnStorage<?>> extends Column
 {
     protected final File textFile;
-    protected final byte sep;
+    protected final byte @Nullable [] sep;
     protected final int columnIndex;
     private final ColumnId columnName;
     protected ReadState lastFilePosition;
@@ -32,7 +33,7 @@ public abstract class TextFileColumn<S extends ColumnStorage<?>> extends Column
     private S storage;
 
 
-    protected TextFileColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte sep, ColumnId columnName, int columnIndex)
+    protected TextFileColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte @Nullable [] sep, ColumnId columnName, int columnIndex)
     {
         super(recordSet);
         this.textFile = textFile;

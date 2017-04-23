@@ -55,7 +55,7 @@ public class GenFormat extends Generator<TextFormat>
     @SuppressWarnings("initialization")
     public TextFormat generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        char sep = sourceOfRandomness.choose(seps);
+        String sep = "" + sourceOfRandomness.choose(seps);
         boolean hasTitle = true; //sourceOfRandomness.nextBoolean();
         int garbageBeforeTitle = 0; //sourceOfRandomness.nextInt(0, 10);
         int garbageAfterTitle = 0; //sourceOfRandomness.nextInt(0, 5);

@@ -38,18 +38,18 @@ public class TestFormat
     @Test
     public void testFormat() throws UserException, InternalException
     {
-        assertFormatCR(new TextFormat(1, c(col(NUM, "A"), col(NUM, "B")), ','),
+        assertFormatCR(new TextFormat(1, c(col(NUM, "A"), col(NUM, "B")), ","),
             "A,B", "0,0", "1,1", "2,2");
-        assertFormatCR(new TextFormat(2, c(col(NUM, "A"), col(NUM, "B")), ','),
+        assertFormatCR(new TextFormat(2, c(col(NUM, "A"), col(NUM, "B")), ","),
             "# Some comment", "A,B", "0,0", "1,1", "2,2");
-        assertFormatCR(new TextFormat(3, c(col(NUM, "A"), col(NUM, "B")), ','),
+        assertFormatCR(new TextFormat(3, c(col(NUM, "A"), col(NUM, "B")), ","),
             "# Some comment", "A,B", "===", "0,0", "1,1", "2,2");
-        assertFormatCR(new TextFormat(0, c(col(NUM, "C1"), col(NUM, "C2")), ','),
+        assertFormatCR(new TextFormat(0, c(col(NUM, "C1"), col(NUM, "C2")), ","),
             "0,0", "1,1", "2,2");
 
-        assertFormatCR(new TextFormat(0, c(col(TEXT, "C1"), col(TEXT, "C2")), ','),
+        assertFormatCR(new TextFormat(0, c(col(TEXT, "C1"), col(TEXT, "C2")), ","),
             "A,B", "0,0", "1,1", "C,D", "2,2");
-        assertFormatCR(new TextFormat(1, c(col(NUM, "A"), col(TEXT, "B")), ','),
+        assertFormatCR(new TextFormat(1, c(col(NUM, "A"), col(TEXT, "B")), ","),
             "A,B", "0,0", "1,1", "1.5,D", "2,2");
 
         //#error TODO add support for date columns
@@ -57,11 +57,11 @@ public class TestFormat
     @Test
     public void testCurrency() throws InternalException, UserException
     {
-        assertFormat(new TextFormat(0, c(col(NUM("$"), "C1"), col(TEXT, "C2")), ','),
+        assertFormat(new TextFormat(0, c(col(NUM("$"), "C1"), col(TEXT, "C2")), ","),
             "$0, A", "$1, Whatever", "$2, C");
-        assertFormat(new TextFormat(0, c(col(NUM("£"), "C1"), col(TEXT, "C2")), ','),
+        assertFormat(new TextFormat(0, c(col(NUM("£"), "C1"), col(TEXT, "C2")), ","),
             "£ 0, A", "£ 1, Whatever", "£ 2, C");
-        assertFormat(new TextFormat(0, c(col(TEXT, "C1"), col(TEXT, "C2")), ','),
+        assertFormat(new TextFormat(0, c(col(TEXT, "C1"), col(TEXT, "C2")), ","),
             "A0, A", "A1, Whatever", "A2, C");
     }
 
@@ -70,7 +70,7 @@ public class TestFormat
         assertFormat(fmt, lines);
         for (char sep : ";\t :".toCharArray())
         {
-            fmt.separator = sep;
+            fmt.separator = "" + sep;
             assertFormat(fmt, Utility.mapArray(String.class, lines, l -> l.replace(',', sep)));
         }
     }

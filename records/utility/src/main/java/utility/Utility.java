@@ -759,7 +759,7 @@ public class Utility
         }
     }
 
-    public static ReadState readColumnChunk(File filename, ReadState state, byte delimiter, int columnIndex, ArrayList<String> fill) throws IOException
+    public static ReadState readColumnChunk(File filename, ReadState state, byte @Nullable [] delimiter, int columnIndex, ArrayList<String> fill) throws IOException
     {
         try (InputStream is = new BufferedInputStream(new FileInputStream(filename)))
         {
@@ -780,7 +780,7 @@ public class Utility
                 int startCurEntry = 0; // within buf at least, not counting previous leftover
                 for (int i = 0; i < readChars; i++)
                 {
-                    if (buf[i] == '\n' || buf[i] == delimiter)
+                    if (buf[i] == '\n' || subEquals(buf, i, delimiter))
                     {
                         if (state.currentCol == columnIndex)
                         {
@@ -816,6 +816,20 @@ public class Utility
             }
             return state;
         }
+    }
+
+    // Does large array, starting at largeOffset, equal completeSmall?
+    // null completeSmall matches *NOTHING*, not anything.
+    private static boolean subEquals(byte[] large, int largeOffset, byte @Nullable [] completeSmall)
+    {
+        if (completeSmall == null)
+            return false;
+        for (int i = 0; i < completeSmall.length; i++)
+        {
+            if (large[largeOffset + i] != completeSmall[i])
+                return false;
+        }
+        return true;
     }
 
     public static int countIn(String small, String large)
