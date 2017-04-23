@@ -59,6 +59,7 @@ public class TextFormat extends Format
             "headerRows=" + headerRows +
             ", columnTypes=" + columnTypes.stream().map(c -> "\n" + c).collect(Collectors.joining()) +
             ", separator=" + separator +
+            ", charset=" + charset +
             '}';
     }
 

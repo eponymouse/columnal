@@ -44,6 +44,16 @@ public class GenFormattedData extends Generator<FormatAndData>
             this.content = content;
             this.loadedContent = loadedContent;
         }
+
+        @Override
+        public String toString()
+        {
+            return "FormatAndData{" +
+                "format=" + format +
+                /*", content=" + content +
+                ", loadedContent=" + loadedContent +*/
+                '}';
+        }
     }
 
     @Override

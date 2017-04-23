@@ -16,6 +16,8 @@ import records.importers.ColumnInfo;
 import records.importers.TextFormat;
 import records.transformations.function.ToDate;
 import test.DummyManager;
+import test.TestUtil;
+import utility.Utility;
 
 import java.nio.charset.Charset;
 import java.time.LocalDate;
@@ -30,6 +32,7 @@ import java.util.stream.Collectors;
  */
 public class GenFormat extends Generator<TextFormat>
 {
+    public static List<Charset> CHARSETS = Utility.mapList(Arrays.asList("ISO-8859-1", "UTF-8", "UTF-16"), Charset::forName);
     public static List<Character> seps = Arrays.asList(',', ';', '\t', ':');
     public static List<Unit> currencies;
     static {
@@ -80,7 +83,7 @@ public class GenFormat extends Generator<TextFormat>
             String title = hasTitle ? "GenCol" + i : "";
             columns.add(new ColumnInfo(type, new ColumnId(title)));
         }
-        TextFormat format = new TextFormat(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), columns, sep, Charset.forName("UTF-8"));
+        TextFormat format = new TextFormat(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), columns, sep, sourceOfRandomness.choose(CHARSETS));
         return format;
     }
 

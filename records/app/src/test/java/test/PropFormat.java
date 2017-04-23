@@ -12,6 +12,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.importers.ChoicePoint;
 import records.importers.GuessFormat;
+import records.importers.GuessFormat.CharsetChoice;
 import records.importers.GuessFormat.ColumnCountChoice;
 import records.importers.GuessFormat.HeaderRowChoice;
 import records.importers.GuessFormat.SeparatorChoice;
@@ -26,6 +27,11 @@ import utility.Utility;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -38,12 +44,13 @@ public class PropFormat
 {
     @Property
     @OnThread(Tag.Simulation)
-    public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException
+    public void testGuessFormat(@From(GenFormattedData.class) @When(seed=-6127925015995296227L) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException
     {
         String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
         String format = formatAndData.format.toString();
-        ChoicePoint<?, TextFormat> formatChoicePoint = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), formatAndData.content);
+        ChoicePoint<?, TextFormat> formatChoicePoint = GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), variousCharsets(formatAndData.content, formatAndData.format.charset));
         ChoicePick[] picks = new ChoicePick[] {
+            new ChoicePick<>(CharsetChoice.class, new CharsetChoice(formatAndData.format.charset)),
             new ChoicePick<HeaderRowChoice>(HeaderRowChoice.class, new HeaderRowChoice(formatAndData.format.headerRows)),
             new ChoicePick<SeparatorChoice>(SeparatorChoice.class, new SeparatorChoice("" + formatAndData.format.separator)),
             new ChoicePick<ColumnCountChoice>(ColumnCountChoice.class, new ColumnCountChoice(formatAndData.format.columnTypes.size()))
@@ -64,6 +71,18 @@ public class PropFormat
                 assertEquals("Column " + c + " expected: " + expected + " was " + loaded + " from row " + formatAndData.content.get(i + 1), 0, Utility.compareValues(expected, loaded));
             }
         }
+    }
+
+    private Map<Charset, List<String>> variousCharsets(List<String> content, Charset actual)
+    {
+        Map<Charset, List<String>> m = new HashMap<>();
+        String joined = content.stream().collect(Collectors.joining("\n"));
+        for (Charset c : Arrays.asList(Charset.forName("UTF-8"), Charset.forName("ISO-8859-1"), Charset.forName("UTF-16")))
+        {
+            m.put(c, Arrays.asList(new String(joined.getBytes(actual), c).split("\n")));
+        }
+
+        return m;
     }
 
 }

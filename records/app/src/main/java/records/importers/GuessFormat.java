@@ -110,6 +110,47 @@ public class GuessFormat
         }
     }
 
+    public static class CharsetChoice extends Choice
+    {
+        private final Charset charset;
+        private final String charsetName;
+
+        public CharsetChoice(String charsetName)
+        {
+            this.charsetName = charsetName;
+            charset = Charset.forName(charsetName);
+        }
+
+        public CharsetChoice(Charset charset)
+        {
+            this.charsetName = charset.displayName();
+            this.charset = charset;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            CharsetChoice that = (CharsetChoice) o;
+
+            return charset.equals(that.charset);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return charset.hashCode();
+        }
+
+        @Override
+        public String toString()
+        {
+            return charsetName;
+        }
+    }
+
     // public for testing
     public static class HeaderRowChoice extends Choice
     {
@@ -224,50 +265,62 @@ public class GuessFormat
         return new SeparatorChoice(separator);
     }
 
-    public static ChoicePoint<HeaderRowChoice, TextFormat> guessTextFormat(UnitManager mgr, List<String> initial)
+    public static ChoicePoint<?, TextFormat> guessTextFormat(UnitManager mgr, Map<Charset, List<String>> initialByCharset)
     {
-        List<Choice> headerRowChoices = new ArrayList<>();
-        for (int headerRows = 0; headerRows < Math.min(MAX_HEADER_ROWS, initial.size() - 1); headerRows++)
+        return ChoicePoint.choose(Quality.PROMISING, 0, (CharsetChoice chc) ->
         {
-            headerRowChoices.add(new HeaderRowChoice(headerRows));
-        }
+            List<String> initialCheck = initialByCharset.get(chc.charset);
+            if (initialCheck == null)
+                throw new InternalException("initialByCharset key lookup returned null");
 
-        return ChoicePoint.choose(Quality.PROMISING, 0, (HeaderRowChoice hrc) -> {
-            int headerRows = hrc.numHeaderRows;
-            return ChoicePoint.choose(Quality.PROMISING, 0, (SeparatorChoice sep) -> {
-                Multiset<Integer> counts = HashMultiset.create();
-                for (int i = headerRows; i < initial.size(); i++)
+            @NonNull List<String> initial = initialCheck;
+
+            List<Choice> headerRowChoices = new ArrayList<>();
+            for (int headerRows = 0; headerRows < Math.min(MAX_HEADER_ROWS, initial.size() - 1); headerRows++)
+            {
+                headerRowChoices.add(new HeaderRowChoice(headerRows));
+            }
+
+            return ChoicePoint.choose(Quality.PROMISING, 0, (HeaderRowChoice hrc) ->
+            {
+                int headerRows = hrc.numHeaderRows;
+                return ChoicePoint.choose(Quality.PROMISING, 0, (SeparatorChoice sep) ->
                 {
-                    if (!initial.get(i).isEmpty())
+                    Multiset<Integer> counts = HashMultiset.create();
+                    for (int i = headerRows; i < initial.size(); i++)
                     {
-                        // Column count is one higher than separator count:
-                        counts.add(1 + Utility.countIn(sep.separator, initial.get(i)));
+                        if (!initial.get(i).isEmpty())
+                        {
+                            // Column count is one higher than separator count:
+                            counts.add(1 + Utility.countIn(sep.separator, initial.get(i)));
+                        }
                     }
-                }
 
-                double score;
-                Quality quality;
-                if (counts.stream().allMatch(c -> c.intValue() == 0))
-                {
-                    // None found; totally rubbish:
-                    score = -Double.MAX_VALUE;
-                    quality = Quality.FALLBACK;
-                } else
-                {
-                    // Higher is better choice so negate:
-                    score = -Utility.variance(counts);
-                    quality = Quality.PROMISING;
-                }
-                List<ColumnCountChoice> viableColumnCounts = Multisets.copyHighestCountFirst(counts).entrySet().stream().limit(10).<@NonNull ColumnCountChoice>map(e -> new ColumnCountChoice(e.getElement())).collect(Collectors.<@NonNull ColumnCountChoice>toList());
+                    double score;
+                    Quality quality;
+                    if (counts.stream().allMatch(c -> c.intValue() == 0))
+                    {
+                        // None found; totally rubbish:
+                        score = -Double.MAX_VALUE;
+                        quality = Quality.FALLBACK;
+                    } else
+                    {
+                        // Higher is better choice so negate:
+                        score = -Utility.variance(counts);
+                        quality = Quality.PROMISING;
+                    }
+                    List<ColumnCountChoice> viableColumnCounts = Multisets.copyHighestCountFirst(counts).entrySet().stream().limit(10).<@NonNull ColumnCountChoice>map(e -> new ColumnCountChoice(e.getElement())).collect(Collectors.<@NonNull ColumnCountChoice>toList());
 
-                return ChoicePoint.choose(quality, score, (ColumnCountChoice cc) -> {
-                    List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> Arrays.asList(s.split(sep.separator, -1)));
-                    Format format = guessBodyFormat(mgr, cc.columnCount, headerRows, initialVals);
-                    TextFormat textFormat = new TextFormat(format, sep.separator, Charset.forName("UTF-8")/*TODO*/);
-                    return ChoicePoint.<TextFormat>success(textFormat);
-                }, viableColumnCounts.toArray(new ColumnCountChoice[0]));
-            }, sep(";"), sep(","), sep("\t"), sep(":"), sep(" "));
-        }, headerRowChoices.toArray(new HeaderRowChoice[0]));
+                    return ChoicePoint.choose(quality, score, (ColumnCountChoice cc) ->
+                    {
+                        List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> Arrays.asList(s.split(sep.separator, -1)));
+                        Format format = guessBodyFormat(mgr, cc.columnCount, headerRows, initialVals);
+                        TextFormat textFormat = new TextFormat(format, sep.separator, chc.charset);
+                        return ChoicePoint.<TextFormat>success(textFormat);
+                    }, viableColumnCounts.toArray(new ColumnCountChoice[0]));
+                }, sep(";"), sep(","), sep("\t"), sep(":"), sep(" "));
+            }, headerRowChoices.toArray(new HeaderRowChoice[0]));
+        }, initialByCharset.keySet().stream().<@NonNull CharsetChoice>map(CharsetChoice::new).collect(Collectors.<@NonNull CharsetChoice>toList()).<@NonNull CharsetChoice>toArray(new @NonNull CharsetChoice[0]));
     }
 
     private static Format guessBodyFormat(UnitManager mgr, int columnCount, int headerRows, @NonNull List<@NonNull List<@NonNull String>> initialVals) throws GuessException
@@ -408,19 +461,19 @@ public class GuessFormat
     }
 
     @OnThread(Tag.Simulation)
-    public static void guessTextFormatGUI_Then(UnitManager mgr, List<String> initial, Consumer<TextFormat> then)
+    public static void guessTextFormatGUI_Then(UnitManager mgr, Map<Charset, List<String>> initial, Consumer<TextFormat> then)
     {
         ChoicePoint<?, TextFormat> choicePoints = guessTextFormat(mgr, initial);
         Platform.runLater(() ->
         {
             Stage s = new Stage();
-            TextArea textView = new TextArea(initial.stream().collect(Collectors.joining("\n")));
+            TextArea textView = new TextArea();
             textView.setEditable(false);
             TableView<List<String>> tableView = new TableView<>();
             Node choices;
             try
             {
-                choices = makeGUI(choicePoints, initial, tableView);
+                choices = makeGUI(choicePoints, initial, textView, tableView);
             }
             catch (InternalException e)
             {
@@ -437,7 +490,7 @@ public class GuessFormat
     }
 
     @OnThread(Tag.FXPlatform)
-    private static <C extends Choice> Node makeGUI(ChoicePoint<C, TextFormat> rawChoicePoint, List<String> initial, TableView<List<String>> tableView) throws InternalException
+    private static <C extends Choice> Node makeGUI(ChoicePoint<C, TextFormat> rawChoicePoint, Map<Charset, List<String>> initial, TextArea textView, TableView<List<String>> tableView) throws InternalException
     {
         @Nullable Class<? extends C> choiceClass = rawChoicePoint.getChoiceClass();
         // TODO drill into consecutive choices afterwards
@@ -447,7 +500,10 @@ public class GuessFormat
             try
             {
                 TextFormat t = rawChoicePoint.get();
-                previewFormat(t, initial, tableView);
+                List<String> initialLines = initial.get(t.charset);
+                if (initialLines == null)
+                    throw new InternalException("Charset pick gives no initial lines");
+                previewFormat(t, initialLines, textView, tableView);
             }
             catch (UserException e)
             {
@@ -477,7 +533,7 @@ public class GuessFormat
             try
             {
                 ChoicePoint<?, TextFormat> next = rawChoicePoint.select(item);
-                Node gui = makeGUI(next, initial, tableView);
+                Node gui = makeGUI(next, initial, textView, tableView);
                 if (vbox.getChildren().size() == 1)
                 {
                     vbox.getChildren().add(gui);
@@ -500,8 +556,10 @@ public class GuessFormat
     }
 
     @OnThread(Tag.FXPlatform)
-    private static void previewFormat(TextFormat t, List<String> initial, TableView<List<String>> tableView)
+    private static void previewFormat(TextFormat t, List<String> initial, TextArea textArea, TableView<List<String>> tableView)
     {
+        textArea.setText(initial.stream().collect(Collectors.joining("\n")));
+
         tableView.getItems().clear();
         tableView.getColumns().clear();
 

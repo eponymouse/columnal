@@ -19,6 +19,7 @@ import utility.Utility;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -84,7 +85,7 @@ public class TestFormat
             new ChoicePick<SeparatorChoice>(SeparatorChoice.class, new SeparatorChoice("" + fmt.separator)),
             new ChoicePick<ColumnCountChoice>(ColumnCountChoice.class, new ColumnCountChoice(fmt.columnTypes.size()))
         };
-        assertEquals(fmt, TestUtil.pick(GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), java.util.Arrays.asList(lines)), picks));
+        assertEquals(fmt, TestUtil.pick(GuessFormat.guessTextFormat(DummyManager.INSTANCE.getUnitManager(), Collections.singletonMap(Charset.forName("UTF-8"), Arrays.asList(lines))), picks));
     }
 
     private static List<ColumnInfo> c(ColumnInfo... ts)

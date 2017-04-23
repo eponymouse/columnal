@@ -6,8 +6,10 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility.ReadState;
 
 import java.io.File;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.function.UnaryOperator;
 
@@ -21,9 +23,9 @@ public class TextFileNumericColumn extends TextFileColumn<NumericColumnStorage>
     private final @Nullable UnaryOperator<String> processString;
 
     @SuppressWarnings("initialization")
-    public TextFileNumericColumn(RecordSet recordSet, File textFile, long fileStartPosition, byte @Nullable [] sep, ColumnId columnName, int columnIndex, int totalColumns, NumberInfo numberInfo, @Nullable UnaryOperator<String> processString) throws InternalException, UserException
+    public TextFileNumericColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, NumberInfo numberInfo, @Nullable UnaryOperator<String> processString) throws InternalException, UserException
     {
-        super(recordSet, textFile, fileStartPosition, sep, columnName, columnIndex, totalColumns);
+        super(recordSet, reader, sep, columnName, columnIndex, totalColumns);
         setStorage(new NumericColumnStorage(numberInfo, (index, prog) -> fillUpTo(index)));
         this.numberInfo = numberInfo;
         this.processString = processString;

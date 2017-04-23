@@ -1,6 +1,7 @@
 package utility;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedReader;
 import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
@@ -8,10 +9,13 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.net.URL;
+import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -19,6 +23,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -31,6 +36,7 @@ import java.util.stream.Stream;
 import annotation.userindex.qual.UserIndex;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.io.*;
 import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -132,31 +138,27 @@ public class Utility
     // From http://stackoverflow.com/questions/453018/number-of-lines-in-a-file-in-java
     public static int countLines(File filename) throws IOException
     {
-        try (InputStream is = new BufferedInputStream(new FileInputStream(filename)))
+        try (LineNumberReader lnr = new LineNumberReader(new FileReader(filename)))
         {
-            byte[] c = new byte[1048576];
-            int count = 1;
-            int readChars;
-            boolean empty = true;
+            char[] buffer = new char[1048576];
             boolean lastWasNewline = false;
-            while ((readChars = is.read(c)) > 0) {
+            int numRead;
+            boolean empty = true;
+            while ((numRead = lnr.read(buffer, 0, buffer.length)) > 0)
+            {
                 empty = false;
-                for (int i = 0; i < readChars; ++i) {
-                    if (c[i] == '\n') {
-                        count += 1;
-                    }
-                }
-                lastWasNewline = c[readChars - 1] == '\n';
+                lastWasNewline = buffer[numRead - 1] == '\n';
             }
+
             // Nothing at all; zero lines
             if (empty)
                 return 0;
             // Some content, no newline, must be one line:
-            else if (count == 1 && !empty)
+            else if (lnr.getLineNumber() == 0 && !empty)
                 return 1;
             else
             // Some content with newlines; ignore blank extra line if \n is very end of file:
-                return count - (lastWasNewline ? 1 : 0);
+                return lnr.getLineNumber() + 1 - (lastWasNewline ? 1 : 0);
         }
     }
 
@@ -734,102 +736,67 @@ public class Utility
 
     public static class ReadState
     {
-        public long startFrom;
-        private int currentCol;
-        private byte @Nullable [] currentEntry;
-        private boolean eof;
+        private final File file;
+        private final Iterator<String> lineStream;
 
-        public ReadState()
+        // Pass 0 to start at beginning of file, any other number
+        // to skip that many lines at the beginning.
+        public ReadState(File file, Charset charset, int firstLine) throws IOException
         {
-            startFrom = 0;
-            currentCol = 0;
-            currentEntry = null;
-            eof = false;
+            this.file = file;
+            //TODO change to lines() not readLines().stream() to handle large files:
+            lineStream = com.google.common.io.Files.asCharSource(file, charset).readLines().stream().skip(firstLine).iterator();
+            //Files.lines(file.toPath(), charset).skip(firstLine).iterator();
         }
 
-        public ReadState(long posOfRowStart)
+        public @Nullable String nextLine() throws IOException
         {
-            this();
-            startFrom = posOfRowStart;
+            return lineStream.hasNext() ? lineStream.next() : null;
         }
 
-        public boolean isEOF()
+        public String getAbsolutePath()
         {
-            return eof;
+            return file.getAbsolutePath();
         }
     }
 
-    public static ReadState readColumnChunk(File filename, ReadState state, byte @Nullable [] delimiter, int columnIndex, ArrayList<String> fill) throws IOException
+    public static ReadState readColumnChunk(ReadState readState, @Nullable String delimiter, int columnIndex, ArrayList<String> fill) throws IOException
     {
-        try (InputStream is = new BufferedInputStream(new FileInputStream(filename)))
+        loopOverLines: for (int lineRead = 0; lineRead < 20; lineRead++)
         {
-            byte[] buf = new byte[1048576 * 4];
-            is.skip(state.startFrom);
-            int readChars = is.read(buf);
-            state.eof = readChars <= 0;
-            // If we reach EOF but there's content left to process,
-            // inject a fake trailing newline to try to finish file correctly:
-            if (!state.eof || state.currentEntry != null)
+            String line = readState.nextLine();
+            if (line == null)
+                break loopOverLines; // No more lines to read!
+            if (delimiter == null)
             {
-                if (state.eof) // currentEntry must be non-null so ignore EOF for now:
+                // All just one column, so must be us:
+                fill.add(line);
+            }
+            else
+            {
+                int currentCol = 0;
+                int currentColStart = 0;
+                for (int i = 0; i < line.length(); i++)
                 {
-                    state.eof = false;
-                    buf[0] = '\n';
-                    readChars = 1;
-                }
-                int startCurEntry = 0; // within buf at least, not counting previous leftover
-                for (int i = 0; i < readChars; i++)
-                {
-                    if (buf[i] == '\n' || subEquals(buf, i, delimiter))
+                    if (line.regionMatches(i, delimiter, 0, delimiter.length()))
                     {
-                        if (state.currentCol == columnIndex)
+                        if (currentCol == columnIndex)
                         {
-                            int len = i - startCurEntry;
-                            if (state.currentEntry == null)
-                            {
-                                // No left-overs, just copy from current:
-                                fill.add(new String(buf, startCurEntry, len));
-                            }
-                            else
-                            {
-                                // Need to join leftovers.  Must join raw byte arrays in case
-                                // UTF-8 char spans the two.
-                                byte[] combined = Arrays.copyOf(state.currentEntry, state.currentEntry.length + len);
-                                System.arraycopy(buf, startCurEntry, combined, state.currentEntry.length, len);
-                                fill.add(new String(combined));
-                            }
+                            fill.add(line.substring(currentColStart, i));
+                            // No point going further in this line as we've found our column:
+                            continue loopOverLines;
                         }
-                        if (buf[i] == '\n')
-                            state.currentCol = 0;
-                        else
-                            state.currentCol += 1;
-                        state.currentEntry = null;
-                        startCurEntry = i + 1;
+                        currentCol += 1;
+                        currentColStart = i + delimiter.length();
+                        // TODO this doesn't handle the last column (should fail test)
                     }
                 }
-                // Save any left-over:
-                if (startCurEntry < readChars)
-                {
-                    state.currentEntry = Arrays.copyOfRange(buf, startCurEntry, readChars);
-                }
-                state.startFrom += readChars;
+                // Might be the last column we want:
+                if (currentCol == columnIndex)
+                    fill.add(line.substring(currentColStart));
             }
-            return state;
         }
-    }
-
-    // Does large array, starting at largeOffset, equal completeSmall?
-    // null completeSmall matches *NOTHING*, not anything.
-    private static boolean subEquals(byte[] large, int largeOffset, byte @Nullable [] completeSmall)
-    {
-        if (completeSmall == null)
-            return false;
-        for (int i = 0; i < completeSmall.length; i++)
-        {
-            if (large[largeOffset + i] != completeSmall[i])
-                return false;
-        }
-        return true;
+        return readState;
     }
 
     public static int countIn(String small, String large)
@@ -850,33 +817,9 @@ public class Utility
         return src.stream().<Number>mapToDouble(Number::doubleValue).map(x -> (x - mean) * (x - mean)).sum();
     }
 
-    public static ReadState skipFirstNRows(File src, final int headerRows) throws IOException
+    public static ReadState skipFirstNRows(File src, Charset charset, final int headerRows) throws IOException
     {
-        if (headerRows == 0)
-            return new ReadState(0);
-        try (InputStream is = new BufferedInputStream(new FileInputStream(src)))
-        {
-            int seen = 0;
-            long pos = 0;
-            byte[] buf = new byte[1048576];
-            int readChars;
-            while ((readChars = is.read(buf)) > 0)
-            {
-                for (int i = 0; i < readChars; i++)
-                {
-                    if (buf[i] == '\n')
-                    {
-                        seen += 1;
-                        if (seen == headerRows)
-                        {
-                            return new ReadState(pos + i + 1);
-                        }
-                    }
-                }
-                pos += readChars;
-            }
-            throw new EOFException("File \"" + src.getAbsolutePath() + "\" does not contain specified number of header rows: " + headerRows);
-        }
+        return new ReadState(src, charset, headerRows);
     }
 
     public static int compareNumbers(final Object a, final Object b)

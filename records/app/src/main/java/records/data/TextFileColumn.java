@@ -16,6 +16,7 @@ import utility.Utility.ReadState;
 import java.io.EOFException;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 /**
@@ -23,23 +24,21 @@ import java.util.ArrayList;
  */
 public abstract class TextFileColumn<S extends ColumnStorage<?>> extends Column
 {
-    protected final File textFile;
-    protected final byte @Nullable [] sep;
+    protected final @Nullable String sep;
     protected final int columnIndex;
     private final ColumnId columnName;
     private final boolean lastColumn;
-    protected ReadState lastFilePosition;
+    protected ReadState reader;
     @MonotonicNonNull
     @OnThread(Tag.Any)
     private S storage;
 
 
-    protected TextFileColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte @Nullable [] sep, ColumnId columnName, int columnIndex, int totalColumns)
+    protected TextFileColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns)
     {
         super(recordSet);
-        this.textFile = textFile;
         this.sep = sep;
-        this.lastFilePosition = new ReadState(initialFilePosition);
+        this.reader = reader;
         this.columnName = columnName;
         this.columnIndex = columnIndex;
         this.lastColumn = columnIndex == totalColumns - 1;
@@ -55,25 +54,13 @@ public abstract class TextFileColumn<S extends ColumnStorage<?>> extends Column
             {
                 // Should we share loading across columns for the same file?
                 ArrayList<String> next = new ArrayList<>();
-                lastFilePosition = Utility.readColumnChunk(textFile, lastFilePosition, sep, columnIndex, next);
-                if (!lastFilePosition.isEOF())
-                {
-                    addValues(next);
-                }
-                else if (lastColumn && storage.filled() + next.size() == rowIndex)
-                {
-                    next.add("");
-                    addValues(next);
-                }
-                else
-                {
-                    throw new FetchException("Error reading line of " + textFile.getAbsolutePath() + " got " + storage.filled() + " lines searching for# " + (1 + rowIndex), new EOFException());
-                }
+                reader = Utility.readColumnChunk(reader, sep, columnIndex, next);
+                addValues(next);
             }
         }
         catch (IOException e)
         {
-            throw new FetchException("Error reading file " + textFile.getAbsolutePath(), e);
+            throw new FetchException("Error reading file " + reader.getAbsolutePath(), e);
         }
 
     }

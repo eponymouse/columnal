@@ -25,14 +25,20 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Utility;
+import utility.Utility.ReadState;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by neil on 31/10/2016.
@@ -42,7 +48,7 @@ public class TextImport
     @OnThread(Tag.Simulation)
     public static void importTextFile(TableManager mgr, File textFile, FXPlatformConsumer<DataSource> then) throws IOException, InternalException, UserException
     {
-        List<String> initial = getInitial(textFile);
+        Map<Charset, List<String>> initial = getInitial(textFile);
         GuessFormat.guessTextFormatGUI_Then(mgr.getUnitManager(), initial, format ->
         {
             try
@@ -61,7 +67,7 @@ public class TextImport
     @OnThread(Tag.Simulation)
     public static ChoicePoint<?, DataSource> _test_importTextFile(TableManager mgr, File textFile) throws IOException, InternalException, UserException
     {
-        List<String> initial = getInitial(textFile);
+        Map<Charset, List<String>> initial = getInitial(textFile);
         return GuessFormat.guessTextFormat(mgr.getUnitManager(), initial).then(format -> {
             try
             {
@@ -77,30 +83,30 @@ public class TextImport
     @OnThread(Tag.Simulation)
     private static LinkedDataSource makeDataSource(TableManager mgr, final File textFile, final TextFormat format) throws IOException, InternalException, UserException
     {
-        long startPosition = Utility.skipFirstNRows(textFile, format.headerRows).startFrom;
-
         List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
         int totalColumns = format.columnTypes.size();
         for (int i = 0; i < totalColumns; i++)
         {
+            // Must be one per column:
+            ReadState reader = Utility.skipFirstNRows(textFile, format.charset, format.headerRows);
+
             ColumnInfo columnInfo = format.columnTypes.get(i);
             int iFinal = i;
-            byte @Nullable [] separatorBytes = format.separator == null ? null : format.separator.getBytes(Charset.forName("UTF-8"));
             if (columnInfo.type instanceof NumericColumnType)
             {
                 columns.add(rs ->
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) columnInfo.type;
-                    return new TextFileNumericColumn(rs, textFile, startPosition, separatorBytes, columnInfo.title, iFinal, totalColumns, new NumberInfo(numericColumnType.unit, numericColumnType.minDP), numericColumnType::removePrefix);
+                    return new TextFileNumericColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, new NumberInfo(numericColumnType.unit, numericColumnType.minDP), numericColumnType::removePrefix);
                 });
             } else if (columnInfo.type instanceof TextColumnType)
-                columns.add(rs -> new TextFileStringColumn(rs, textFile, startPosition, separatorBytes, columnInfo.title, iFinal, totalColumns));
+                columns.add(rs -> new TextFileStringColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns));
             else if (columnInfo.type instanceof CleanDateColumnType)
             {
                 columns.add(rs ->
                 {
                     CleanDateColumnType dateColumnType = (CleanDateColumnType) columnInfo.type;
-                    return new TextFileDateColumn(rs, textFile, startPosition, separatorBytes, columnInfo.title, iFinal, totalColumns, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
+                    return new TextFileDateColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
                 });
             }
             else if (columnInfo.type instanceof BlankColumnType)
@@ -143,17 +149,22 @@ public class TextImport
     }
 
     @NotNull
-    private static List<String> getInitial(File textFile) throws IOException
+    private static Map<Charset, List<String>> getInitial(File textFile) throws IOException
     {
-        List<String> initial = new ArrayList<>();
-        // Read the first few lines:
-        try (BufferedReader br = new BufferedReader(new FileReader(textFile)))
+        Map<Charset, List<String>> initial = new HashMap<>();
+        for (Charset charset : Arrays.asList(Charset.forName("UTF-8"), Charset.forName("ISO-8859-1"), Charset.forName("UTF-16")))
         {
-            String line;
-            while ((line = br.readLine()) != null && initial.size() < GuessFormat.INITIAL_ROWS_TEXT_FILE)
+            ArrayList<String> initialLines = new ArrayList<>();
+            // Read the first few lines:
+            try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(textFile), charset)))
             {
-                initial.add(line);
+                String line;
+                while ((line = br.readLine()) != null && initial.size() < GuessFormat.INITIAL_ROWS_TEXT_FILE)
+                {
+                    initialLines.add(line);
+                }
             }
+            initial.put(charset, initialLines);
         }
         return initial;
     }
