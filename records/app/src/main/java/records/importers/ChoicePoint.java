@@ -212,6 +212,11 @@ public class ChoicePoint<C extends Choice, R>
         }
     }
 
+    public List<C> getOptions()
+    {
+        return Collections.unmodifiableList(options);
+    }
+
     @Override
     public String toString()
     {

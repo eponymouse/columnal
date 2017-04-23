@@ -3,6 +3,21 @@ package records.importers;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
+import javafx.application.Platform;
+import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.collections.FXCollections;
+import javafx.scene.Node;
+import javafx.scene.Scene;
+import javafx.scene.control.ComboBox;
+import javafx.scene.control.Label;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
+import javafx.scene.control.TextArea;
+import javafx.scene.layout.HBox;
+import javafx.scene.layout.VBox;
+import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
@@ -13,11 +28,16 @@ import records.data.columntype.NumericColumnType;
 import records.data.columntype.OrBlankColumnType;
 import records.data.columntype.TextColumnType;
 import records.data.unit.UnitManager;
+import records.error.InternalException;
 import records.error.UserException;
 import records.importers.ChoicePoint.Choice;
 import records.importers.ChoicePoint.Quality;
 import records.transformations.function.ToDate;
+import threadchecker.OnThread;
+import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -115,6 +135,12 @@ public class GuessFormat
         {
             return numHeaderRows;
         }
+
+        @Override
+        public String toString()
+        {
+            return Integer.toString(numHeaderRows);
+        }
     }
 
     // public for testing
@@ -143,6 +169,16 @@ public class GuessFormat
         public int hashCode()
         {
             return separator.hashCode();
+        }
+
+        @Override
+        public String toString()
+        {
+            if (separator.equals(" "))
+                return "<Space>";
+            if (separator.equals("\t"))
+                return "<Tab>";
+            return separator;
         }
     }
 
@@ -177,9 +213,7 @@ public class GuessFormat
         @Override
         public String toString()
         {
-            return "ColumnCountChoice{" +
-                "columnCount=" + columnCount +
-                '}';
+            return Integer.toString(columnCount);
         }
     }
 
@@ -371,11 +405,118 @@ public class GuessFormat
         return new Format(headerRows, columns);
     }
 
+    @OnThread(Tag.Simulation)
     public static void guessTextFormatGUI_Then(UnitManager mgr, List<String> initial, Consumer<TextFormat> then)
     {
         ChoicePoint<?, TextFormat> choicePoints = guessTextFormat(mgr, initial);
+        Platform.runLater(() ->
+        {
+            Stage s = new Stage();
+            TextArea textView = new TextArea(initial.stream().collect(Collectors.joining("\n")));
+            textView.setEditable(false);
+            TableView<List<String>> tableView = new TableView<>();
+            Node choices;
+            try
+            {
+                choices = makeGUI(choicePoints, initial, tableView);
+            }
+            catch (InternalException e)
+            {
+                Utility.log(e);
+                choices = new Label("Internal error: " + e.getLocalizedMessage());
+            }
+
+            s.setScene(new Scene(new HBox(textView, tableView, choices)));
+            s.show();
+        });
         System.err.println(choicePoints);
         // TODO show GUI, apply them
         // TODO include choice of link or copy.
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private static <C extends Choice> Node makeGUI(ChoicePoint<C, TextFormat> rawChoicePoint, List<String> initial, TableView<List<String>> tableView) throws InternalException
+    {
+        @Nullable Class<? extends C> choiceClass = rawChoicePoint.getChoiceClass();
+        // TODO drill into consecutive choices afterwards
+        // TODO also show a preview of what it will import!
+        if (choiceClass == null)
+        {
+            try
+            {
+                TextFormat t = rawChoicePoint.get();
+                previewFormat(t, initial, tableView);
+            }
+            catch (UserException e)
+            {
+                tableView.setPlaceholder(new Label("Problem: " + e.getLocalizedMessage()));
+            }
+            return new Label("END");
+        }
+        // Default handling:
+        Node choiceNode;
+        ObjectExpression<C> choiceExpression;
+
+        List<C> options = rawChoicePoint.getOptions();
+        if (options.size() == 1)
+        {
+            choiceNode = new Label(options.get(0).toString());
+            choiceExpression = new ReadOnlyObjectWrapper<>(options.get(0));
+        }
+        else
+        {
+            ComboBox<C> combo = new ComboBox<>(FXCollections.observableArrayList(options));
+            combo.getSelectionModel().selectFirst();
+            choiceNode = combo;
+            choiceExpression = combo.getSelectionModel().selectedItemProperty();
+        }
+        VBox vbox = new VBox(choiceNode);
+        FXPlatformConsumer<C> pick = item -> {
+            try
+            {
+                ChoicePoint<?, TextFormat> next = rawChoicePoint.select(item);
+                Node gui = makeGUI(next, initial, tableView);
+                if (vbox.getChildren().size() == 1)
+                {
+                    vbox.getChildren().add(gui);
+                }
+                else
+                {
+                    vbox.getChildren().set(1, gui);
+                }
+            }
+            catch (InternalException e)
+            {
+                Utility.log(e);
+                tableView.getColumns().clear();
+                tableView.setPlaceholder(new Label("Error: " + e.getLocalizedMessage()));
+            }
+        };
+        pick.consume(choiceExpression.get());
+        Utility.addChangeListenerPlatformNN(choiceExpression, pick);
+        return vbox;
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private static void previewFormat(TextFormat t, List<String> initial, TableView<List<String>> tableView)
+    {
+        tableView.getItems().clear();
+        tableView.getColumns().clear();
+
+        List<ColumnInfo> columnTypes = t.columnTypes;
+        for (int column = 0; column < columnTypes.size(); column++)
+        {
+            ColumnInfo columnType = columnTypes.get(column);
+            TableColumn<List<String>, String> col = new TableColumn<>(columnType.title + ":" + columnType.type);
+            int columnFinal = column;
+            col.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().get(columnFinal)));
+            tableView.getColumns().add(col);
+        }
+
+        //TODO fill tableView
+        for (int row = t.headerRows; row < initial.size(); row++)
+        {
+            tableView.getItems().add(Arrays.asList(initial.get(row).split("" + t.separator)));
+        }
     }
 }
