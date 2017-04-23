@@ -17,6 +17,7 @@ import records.importers.TextFormat;
 import records.transformations.function.ToDate;
 import test.DummyManager;
 
+import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -79,7 +80,7 @@ public class GenFormat extends Generator<TextFormat>
             String title = hasTitle ? "GenCol" + i : "";
             columns.add(new ColumnInfo(type, new ColumnId(title)));
         }
-        TextFormat format = new TextFormat(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), columns, sep);
+        TextFormat format = new TextFormat(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), columns, sep, Charset.forName("UTF-8"));
         return format;
     }
 
@@ -96,7 +97,7 @@ public class GenFormat extends Generator<TextFormat>
             // Don't let them all be blank or all text/blank:
             if (reducedCols.stream().allMatch(GenFormat::canBeBlank) || reducedCols.stream().allMatch(c -> c.type instanceof TextColumnType || c.type instanceof BlankColumnType))
                 continue;
-            TextFormat smaller = new TextFormat(larger.headerRows, reducedCols, larger.separator);
+            TextFormat smaller = new TextFormat(larger.headerRows, reducedCols, larger.separator, Charset.forName("UTF-8"));
             if (reducedCols.size() >= 2) // TODO allow one column
                 r.add(smaller);
         }

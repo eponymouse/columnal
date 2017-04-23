@@ -27,13 +27,14 @@ public abstract class TextFileColumn<S extends ColumnStorage<?>> extends Column
     protected final byte @Nullable [] sep;
     protected final int columnIndex;
     private final ColumnId columnName;
+    private final boolean lastColumn;
     protected ReadState lastFilePosition;
     @MonotonicNonNull
     @OnThread(Tag.Any)
     private S storage;
 
 
-    protected TextFileColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte @Nullable [] sep, ColumnId columnName, int columnIndex)
+    protected TextFileColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte @Nullable [] sep, ColumnId columnName, int columnIndex, int totalColumns)
     {
         super(recordSet);
         this.textFile = textFile;
@@ -41,6 +42,7 @@ public abstract class TextFileColumn<S extends ColumnStorage<?>> extends Column
         this.lastFilePosition = new ReadState(initialFilePosition);
         this.columnName = columnName;
         this.columnIndex = columnIndex;
+        this.lastColumn = columnIndex == totalColumns - 1;
     }
 
     protected final void fillUpTo(final int rowIndex) throws UserException, InternalException
@@ -58,8 +60,15 @@ public abstract class TextFileColumn<S extends ColumnStorage<?>> extends Column
                 {
                     addValues(next);
                 }
+                else if (lastColumn && storage.filled() + next.size() == rowIndex)
+                {
+                    next.add("");
+                    addValues(next);
+                }
                 else
+                {
                     throw new FetchException("Error reading line of " + textFile.getAbsolutePath() + " got " + storage.filled() + " lines searching for# " + (1 + rowIndex), new EOFException());
+                }
             }
         }
         catch (IOException e)

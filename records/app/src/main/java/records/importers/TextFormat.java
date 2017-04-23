@@ -2,6 +2,7 @@ package records.importers;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.nio.charset.Charset;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -12,19 +13,22 @@ import java.util.stream.Collectors;
  */
 public class TextFormat extends Format
 {
+    public final Charset charset;
     // null means no separator; just one big column
-    public @Nullable String separator;
+    public final @Nullable String separator;
 
-    public TextFormat(Format copyFrom, @Nullable String separator)
+    public TextFormat(Format copyFrom, @Nullable String separator, Charset charset)
     {
         super(copyFrom);
         this.separator = separator;
+        this.charset = charset;
     }
 
-    public TextFormat(int headerRows, List<ColumnInfo> columnTypes, @Nullable String separator)
+    public TextFormat(int headerRows, List<ColumnInfo> columnTypes, @Nullable String separator, Charset charset)
     {
         super(headerRows, columnTypes);
         this.separator = separator;
+        this.charset = charset;
     }
 
     @Override
@@ -56,5 +60,11 @@ public class TextFormat extends Format
             ", columnTypes=" + columnTypes.stream().map(c -> "\n" + c).collect(Collectors.joining()) +
             ", separator=" + separator +
             '}';
+    }
+
+    // Copies format but replaces separator
+    public TextFormat withSeparator(String sep)
+    {
+        return new TextFormat(this, sep, charset);
     }
 }

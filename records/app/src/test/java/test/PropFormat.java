@@ -3,6 +3,7 @@ package test;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.apache.commons.io.FileUtils;
 import org.junit.runner.RunWith;
@@ -50,7 +51,7 @@ public class PropFormat
         assertEquals("Failure with content: " + content, formatAndData.format, TestUtil.pick(formatChoicePoint, picks));
         File tempFile = File.createTempFile("test", "txt");
         tempFile.deleteOnExit();
-        FileUtils.writeStringToFile(tempFile, content, Charset.forName("UTF-8"));
+        FileUtils.writeStringToFile(tempFile, content, formatAndData.format.charset);
         DataSource ds = TestUtil.pick(TextImport._test_importTextFile(new DummyManager(), tempFile), picks);
         assertEquals("Right column length", formatAndData.loadedContent.size(), ds.getData().getLength());
         for (int i = 0; i < formatAndData.loadedContent.size(); i++)

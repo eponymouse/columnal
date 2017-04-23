@@ -25,9 +25,9 @@ public class TextFileDateColumn extends TextFileColumn<TemporalColumnStorage>
     private final TemporalQuery<? extends Temporal> query;
 
     @SuppressWarnings("initialization")
-    public TextFileDateColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte @Nullable [] sep, ColumnId columnName, int columnIndex, DateTimeInfo dateTimeInfo, DateTimeFormatter dateTimeFormatter, TemporalQuery query) throws InternalException
+    public TextFileDateColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte @Nullable [] sep, ColumnId columnName, int columnIndex, int totalColumns, DateTimeInfo dateTimeInfo, DateTimeFormatter dateTimeFormatter, TemporalQuery query) throws InternalException
     {
-        super(recordSet, textFile, initialFilePosition, sep, columnName, columnIndex);
+        super(recordSet, textFile, initialFilePosition, sep, columnName, columnIndex, totalColumns);
         setStorage(new TemporalColumnStorage(dateTimeInfo, (index, prog) -> fillUpTo(index)));
         this.dateTimeInfo = dateTimeInfo;
         this.dateTimeFormatter = dateTimeFormatter;

@@ -41,6 +41,7 @@ import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.math.BigDecimal;
+import java.nio.charset.Charset;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
@@ -94,7 +95,7 @@ public class GuessFormat
         catch (GuessException e)
         {
             // Always valid backup: a single text column, no header
-            TextFormat fmt = new TextFormat(new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), new ColumnId("Content")))), null);
+            Format fmt = new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), new ColumnId("Content"))));
             String msg = e.getLocalizedMessage();
             fmt.recordProblem(msg == null ? "Unknown" : msg);
             return fmt;
@@ -262,7 +263,7 @@ public class GuessFormat
                 return ChoicePoint.choose(quality, score, (ColumnCountChoice cc) -> {
                     List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> Arrays.asList(s.split(sep.separator, -1)));
                     Format format = guessBodyFormat(mgr, cc.columnCount, headerRows, initialVals);
-                    TextFormat textFormat = new TextFormat(format, sep.separator);
+                    TextFormat textFormat = new TextFormat(format, sep.separator, Charset.forName("UTF-8")/*TODO*/);
                     return ChoicePoint.<TextFormat>success(textFormat);
                 }, viableColumnCounts.toArray(new ColumnCountChoice[0]));
             }, sep(";"), sep(","), sep("\t"), sep(":"), sep(" "));

@@ -80,7 +80,8 @@ public class TextImport
         long startPosition = Utility.skipFirstNRows(textFile, format.headerRows).startFrom;
 
         List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
-        for (int i = 0; i < format.columnTypes.size(); i++)
+        int totalColumns = format.columnTypes.size();
+        for (int i = 0; i < totalColumns; i++)
         {
             ColumnInfo columnInfo = format.columnTypes.get(i);
             int iFinal = i;
@@ -90,16 +91,16 @@ public class TextImport
                 columns.add(rs ->
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) columnInfo.type;
-                    return new TextFileNumericColumn(rs, textFile, startPosition, separatorBytes, columnInfo.title, iFinal, new NumberInfo(numericColumnType.unit, numericColumnType.minDP), numericColumnType::removePrefix);
+                    return new TextFileNumericColumn(rs, textFile, startPosition, separatorBytes, columnInfo.title, iFinal, totalColumns, new NumberInfo(numericColumnType.unit, numericColumnType.minDP), numericColumnType::removePrefix);
                 });
             } else if (columnInfo.type instanceof TextColumnType)
-                columns.add(rs -> new TextFileStringColumn(rs, textFile, startPosition, separatorBytes, columnInfo.title, iFinal));
+                columns.add(rs -> new TextFileStringColumn(rs, textFile, startPosition, separatorBytes, columnInfo.title, iFinal, totalColumns));
             else if (columnInfo.type instanceof CleanDateColumnType)
             {
                 columns.add(rs ->
                 {
                     CleanDateColumnType dateColumnType = (CleanDateColumnType) columnInfo.type;
-                    return new TextFileDateColumn(rs, textFile, startPosition, separatorBytes, columnInfo.title, iFinal, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
+                    return new TextFileDateColumn(rs, textFile, startPosition, separatorBytes, columnInfo.title, iFinal, totalColumns, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
                 });
             }
             else if (columnInfo.type instanceof BlankColumnType)

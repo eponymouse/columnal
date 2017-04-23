@@ -12,9 +12,9 @@ import java.util.ArrayList;
 public class TextFileStringColumn extends TextFileColumn<StringColumnStorage>
 {
     @SuppressWarnings("initialization")
-    public TextFileStringColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte @Nullable [] sep, ColumnId columnName, int columnIndex)
+    public TextFileStringColumn(RecordSet recordSet, File textFile, long initialFilePosition, byte @Nullable [] sep, ColumnId columnName, int columnIndex, int totalColumns)
     {
-        super(recordSet, textFile, initialFilePosition, sep, columnName, columnIndex);
+        super(recordSet, textFile, initialFilePosition, sep, columnName, columnIndex, totalColumns);
         setStorage(new StringColumnStorage((index, prog) -> fillUpTo(index)));
     }
 
