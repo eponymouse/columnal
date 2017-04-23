@@ -12,6 +12,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
+import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
@@ -426,7 +427,7 @@ public class GuessFormat
                 choices = new Label("Internal error: " + e.getLocalizedMessage());
             }
 
-            s.setScene(new Scene(new HBox(textView, tableView, choices)));
+            s.setScene(new Scene(new VBox(choices, new SplitPane(textView, tableView))));
             s.show();
         });
         System.err.println(choicePoints);
