@@ -78,6 +78,8 @@ public class GenFormattedData extends Generator<FormatAndData>
                 if (c.type instanceof NumericColumnType)
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) c.type;
+                    if (!format.charset.newEncoder().canEncode(numericColumnType.unit.getDisplayPrefix()))
+                        throw new RuntimeException("Cannot encode prefix: " + numericColumnType.unit.getDisplayPrefix());
                     line.append(r.nextBoolean() ? "" : numericColumnType.unit.getDisplayPrefix());
                     long value = r.nextLong();
 
@@ -95,6 +97,8 @@ public class GenFormattedData extends Generator<FormatAndData>
                 else if (c.type instanceof TextColumnType)
                 {
                     String str = TestUtil.makeString(r, generationStatus).replace("\n", "").replace("\r", "");
+                    // Get rid of any characters which can't be saved in that encoding:
+                    str = str.chars().filter(ch -> format.charset.newEncoder().canEncode((char)ch)).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
                     // TODO quote separators instead of removing them:
                     str = str.replace("" + format.separator, "");
                     data.add(DataTypeUtility.value(str));

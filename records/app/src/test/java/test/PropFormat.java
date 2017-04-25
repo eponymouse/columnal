@@ -44,7 +44,7 @@ public class PropFormat
 {
     @Property
     @OnThread(Tag.Simulation)
-    public void testGuessFormat(@From(GenFormattedData.class) @When(seed=-6127925015995296227L) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException
+    public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException
     {
         String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
         String format = formatAndData.format.toString();

@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 29/10/2016.
@@ -83,7 +84,12 @@ public class GenFormat extends Generator<TextFormat>
             String title = hasTitle ? "GenCol" + i : "";
             columns.add(new ColumnInfo(type, new ColumnId(title)));
         }
-        TextFormat format = new TextFormat(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), columns, sep, sourceOfRandomness.choose(CHARSETS));
+        // Don't pick a charset which can't represent the currency signs:
+        List<Charset> possibleCharsets = CHARSETS.stream().filter(charset -> columns.stream().allMatch(ci -> ci.type instanceof NumericColumnType ?
+            charset.newEncoder().canEncode(((NumericColumnType) ci.type).unit.getDisplayPrefix()) : true)
+        ).collect(Collectors.toList());
+
+        TextFormat format = new TextFormat(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), columns, sep, sourceOfRandomness.choose(possibleCharsets));
         return format;
     }
 
