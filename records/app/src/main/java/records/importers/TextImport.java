@@ -136,7 +136,7 @@ public class TextImport
                 {
                     try
                     {
-                        rowCount = Utility.countLines(textFile) - format.headerRows;
+                        rowCount = Utility.countLines(textFile, format.charset) - format.headerRows;
                     } catch (IOException e)
                     {
                         throw new FetchException("Error counting rows", e);

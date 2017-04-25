@@ -4,23 +4,28 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 
 /**
  * Created by neil on 26/10/2016.
  */
 public class TestTextFile
 {
-    private File file;
+    private final File file;
+    private final Charset charset;
     private final int lineCount;
 
     public TestTextFile(SourceOfRandomness rnd) throws IOException
     {
+        charset = rnd.choose(Charset.availableCharsets().values());
         file = File.createTempFile("aaa", "bbb");
         file.deleteOnExit();
 
-        BufferedWriter w = new BufferedWriter(new FileWriter(file));
+        BufferedWriter w = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file), charset));
 
         //TODO write columns not just junk
         lineCount = rnd.nextInt(0, 100000);
@@ -46,5 +51,10 @@ public class TestTextFile
         return "TestTextFile{" +
             "lineCount=" + lineCount +
             '}';
+    }
+
+    public Charset getCharset()
+    {
+        return charset;
     }
 }

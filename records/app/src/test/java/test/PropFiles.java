@@ -21,7 +21,7 @@ public class PropFiles
     @Property
     public void testLineCount(@From(GenFile.class) TestTextFile input) throws IOException
     {
-        assertEqualsMsg(input.getLineCount(), Utility.countLines(input.getFile()));
+        assertEqualsMsg(input.getLineCount(), Utility.countLines(input.getFile(), input.getCharset()));
     }
 
     public static <T> void assertEqualsMsg(@NonNull T exp, @NonNull T act)

@@ -136,9 +136,9 @@ public class Utility
     }
 
     // From http://stackoverflow.com/questions/453018/number-of-lines-in-a-file-in-java
-    public static int countLines(File filename) throws IOException
+    public static int countLines(File filename, Charset charset) throws IOException
     {
-        try (LineNumberReader lnr = new LineNumberReader(new FileReader(filename)))
+        try (LineNumberReader lnr = new LineNumberReader(new InputStreamReader(new FileInputStream(filename), charset)))
         {
             char[] buffer = new char[1048576];
             boolean lastWasNewline = false;
