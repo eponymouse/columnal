@@ -21,14 +21,14 @@ public class PropFiles
     @Property
     public void testLineCount(@From(GenFile.class) TestTextFile input) throws IOException
     {
-        assertEqualsMsg(input.getLineCount(), Utility.countLines(input.getFile(), input.getCharset()));
+        assertEqualsMsg("Counting lines for " + input.getCharset(), input.getLineCount(), Utility.countLines(input.getFile(), input.getCharset()));
     }
 
-    public static <T> void assertEqualsMsg(@NonNull T exp, @NonNull T act)
+    public static <T> void assertEqualsMsg(String msg, @NonNull T exp, @NonNull T act)
     {
         try
         {
-            assertEquals(exp, act);
+            assertEquals(msg, exp, act);
         }
         catch (AssertionError err)
         {

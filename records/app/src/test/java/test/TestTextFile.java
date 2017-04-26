@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 26/10/2016.
@@ -21,7 +22,7 @@ public class TestTextFile
 
     public TestTextFile(SourceOfRandomness rnd) throws IOException
     {
-        charset = rnd.choose(Charset.availableCharsets().values());
+        charset = rnd.choose(Charset.availableCharsets().values().stream().filter(c -> !c.displayName().contains("JIS") && !c.displayName().contains("2022") && !c.displayName().contains("IBM")).collect(Collectors.<Charset>toList()));
         file = File.createTempFile("aaa", "bbb");
         file.deleteOnExit();
 
