@@ -89,7 +89,7 @@ public class GenFormat extends Generator<TextFormat>
             charset.newEncoder().canEncode(((NumericColumnType) ci.type).unit.getDisplayPrefix()) : true)
         ).collect(Collectors.toList());
 
-        TextFormat format = new TextFormat(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), columns, sep, sourceOfRandomness.choose(possibleCharsets));
+        TextFormat format = new TextFormat(garbageBeforeTitle + garbageAfterTitle + (hasTitle ? 1 : 0), columns, sep, null /*TODO */, sourceOfRandomness.choose(possibleCharsets));
         return format;
     }
 
@@ -106,7 +106,7 @@ public class GenFormat extends Generator<TextFormat>
             // Don't let them all be blank or all text/blank:
             if (reducedCols.stream().allMatch(GenFormat::canBeBlank) || reducedCols.stream().allMatch(c -> c.type instanceof TextColumnType || c.type instanceof BlankColumnType))
                 continue;
-            TextFormat smaller = new TextFormat(larger.headerRows, reducedCols, larger.separator, Charset.forName("UTF-8"));
+            TextFormat smaller = new TextFormat(larger.headerRows, reducedCols, larger.separator, larger.quote, Charset.forName("UTF-8"));
             if (reducedCols.size() >= 2) // TODO allow one column
                 r.add(smaller);
         }

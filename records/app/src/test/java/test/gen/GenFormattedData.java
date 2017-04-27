@@ -100,7 +100,10 @@ public class GenFormattedData extends Generator<FormatAndData>
                     // Get rid of any characters which can't be saved in that encoding:
                     str = str.chars().filter(ch -> format.charset.newEncoder().canEncode((char)ch)).collect(StringBuilder::new, StringBuilder::appendCodePoint, StringBuilder::append).toString();
                     // TODO quote separators instead of removing them:
-                    str = str.replace("" + format.separator, "");
+                    if (format.quote != null)
+                        str = str.replace(format.quote, format.quote + format.quote);
+                    if (format.separator != null)
+                        str = str.replace(format.separator, "");
                     data.add(DataTypeUtility.value(str));
                     line.append(str);
                 }

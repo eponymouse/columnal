@@ -1,5 +1,6 @@
 package records.importers;
 
+import com.google.common.base.Objects;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
@@ -16,7 +17,6 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -38,7 +38,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Utility;
-import utility.gui.FXUtility;
 
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
@@ -189,10 +188,10 @@ public class GuessFormat
     // public for testing
     public static class SeparatorChoice extends Choice
     {
-        private final String separator;
+        private final @Nullable String separator;
 
         // public for testing
-        public SeparatorChoice(String separator)
+        public SeparatorChoice(@Nullable String separator)
         {
             this.separator = separator;
         }
@@ -205,23 +204,61 @@ public class GuessFormat
 
             SeparatorChoice that = (SeparatorChoice) o;
 
-            return separator.equals(that.separator);
+            return Objects.equal(separator, that.separator);
         }
 
         @Override
         public int hashCode()
         {
-            return separator.hashCode();
+            return separator == null ? 0 : separator.hashCode();
         }
 
         @Override
         public String toString()
         {
+            if (separator == null)
+                return "<None>";
             if (separator.equals(" "))
                 return "<Space>";
             if (separator.equals("\t"))
                 return "<Tab>";
             return separator;
+        }
+    }
+
+    public static class QuoteChoice extends Choice
+    {
+        private final @Nullable String quote;
+        private final @Nullable String escapedQuote;
+
+        public QuoteChoice(@Nullable String quote)
+        {
+            this.quote = quote;
+            // Only option at the moment is doubled quote:
+            this.escapedQuote = quote == null ? null : (quote + quote);
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            QuoteChoice that = (QuoteChoice) o;
+
+            return quote != null ? quote.equals(that.quote) : that.quote == null;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return quote != null ? quote.hashCode() : 0;
+        }
+
+        @Override
+        public String toString()
+        {
+            return quote == null ? "<None>" : quote;
         }
     }
 
@@ -265,6 +302,11 @@ public class GuessFormat
         return new SeparatorChoice(separator);
     }
 
+    private static QuoteChoice quot(@Nullable String quoteChar)
+    {
+        return new QuoteChoice(quoteChar);
+    }
+
     public static ChoicePoint<?, TextFormat> guessTextFormat(UnitManager mgr, Map<Charset, List<String>> initialByCharset)
     {
         return ChoicePoint.choose(Quality.PROMISING, 0, (CharsetChoice chc) ->
@@ -282,17 +324,15 @@ public class GuessFormat
             }
 
             return ChoicePoint.choose(Quality.PROMISING, 0, (HeaderRowChoice hrc) ->
-            {
-                int headerRows = hrc.numHeaderRows;
-                return ChoicePoint.choose(Quality.PROMISING, 0, (SeparatorChoice sep) ->
+                ChoicePoint.choose(Quality.PROMISING, 0, (SeparatorChoice sep) ->
+                ChoicePoint.choose(Quality.PROMISING, 0, (QuoteChoice quot) ->
                 {
                     Multiset<Integer> counts = HashMultiset.create();
-                    for (int i = headerRows; i < initial.size(); i++)
+                    for (int i = hrc.numHeaderRows; i < initial.size(); i++)
                     {
                         if (!initial.get(i).isEmpty())
                         {
-                            // Column count is one higher than separator count:
-                            counts.add(1 + Utility.countIn(sep.separator, initial.get(i)));
+                            counts.add(splitIntoColumns(initial.get(i), sep, quot).size());
                         }
                     }
 
@@ -313,14 +353,53 @@ public class GuessFormat
 
                     return ChoicePoint.choose(quality, score, (ColumnCountChoice cc) ->
                     {
-                        List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> Arrays.asList(s.split(sep.separator, -1)));
-                        Format format = guessBodyFormat(mgr, cc.columnCount, headerRows, initialVals);
-                        TextFormat textFormat = new TextFormat(format, sep.separator, chc.charset);
+                        List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> splitIntoColumns(s, sep, quot));
+                        Format format = guessBodyFormat(mgr, cc.columnCount, hrc.numHeaderRows, initialVals);
+                        TextFormat textFormat = new TextFormat(format, sep.separator, quot.quote, chc.charset);
                         return ChoicePoint.<TextFormat>success(textFormat);
                     }, viableColumnCounts.toArray(new ColumnCountChoice[0]));
-                }, sep(";"), sep(","), sep("\t"), sep(":"), sep(" "));
-            }, headerRowChoices.toArray(new HeaderRowChoice[0]));
+                }, quot(null), quot("\""), quot("\'"))
+                , sep(";"), sep(","), sep("\t"), sep(":"), sep(" "))
+                , headerRowChoices.toArray(new HeaderRowChoice[0]));
         }, initialByCharset.keySet().stream().<@NonNull CharsetChoice>map(CharsetChoice::new).collect(Collectors.<@NonNull CharsetChoice>toList()).<@NonNull CharsetChoice>toArray(new @NonNull CharsetChoice[0]));
+    }
+
+    // Split a row of text into columns, given a separator and a quote character
+    private static List<String> splitIntoColumns(String row, SeparatorChoice sep, QuoteChoice quot)
+    {
+        boolean inQuoted = false;
+        StringBuilder sb = new StringBuilder();
+        List<String> r = new ArrayList<>();
+        for (int i = 0; i < row.length();)
+        {
+            // First check for escaped quote (which may otherwise look like a quote):
+            if (inQuoted && quot.escapedQuote != null && row.startsWith(quot.escapedQuote, i))
+            {
+                // Skip it:
+                sb.append(quot.quote);
+                i += quot.escapedQuote.length();
+                continue;
+            }
+            else if (quot.quote != null && row.startsWith(quot.quote, i))
+            {
+                inQuoted = !inQuoted;
+                i += quot.quote.length();
+            }
+            else if (!inQuoted && sep.separator != null && row.startsWith(sep.separator, i))
+            {
+                r.add(sb.toString());
+                sb = new StringBuilder();
+                i += sep.separator.length();
+            }
+            else
+            {
+                // Nothing special:
+                sb.append(row.charAt(i));
+                i += 1;
+            }
+        }
+        r.add(sb.toString());
+        return r;
     }
 
     private static Format guessBodyFormat(UnitManager mgr, int columnCount, int headerRows, @NonNull List<@NonNull List<@NonNull String>> initialVals) throws GuessException
@@ -569,14 +648,13 @@ public class GuessFormat
             ColumnInfo columnType = columnTypes.get(column);
             TableColumn<List<String>, String> col = new TableColumn<>(columnType.title + ":" + columnType.type);
             int columnFinal = column;
-            col.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().get(columnFinal)));
+            col.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().size() <= columnFinal ? "<Missing>" : c.getValue().get(columnFinal)));
             tableView.getColumns().add(col);
         }
 
-        //TODO fill tableView
         for (int row = t.headerRows; row < initial.size(); row++)
         {
-            tableView.getItems().add(Arrays.asList(initial.get(row).split("" + t.separator)));
+            tableView.getItems().add(t.separator == null ? Collections.singletonList(initial.get(row)) : splitIntoColumns(initial.get(row), new SeparatorChoice(t.separator), new QuoteChoice(t.quote)));
         }
     }
 }

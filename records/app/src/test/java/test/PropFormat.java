@@ -15,6 +15,7 @@ import records.importers.GuessFormat;
 import records.importers.GuessFormat.CharsetChoice;
 import records.importers.GuessFormat.ColumnCountChoice;
 import records.importers.GuessFormat.HeaderRowChoice;
+import records.importers.GuessFormat.QuoteChoice;
 import records.importers.GuessFormat.SeparatorChoice;
 import records.importers.TextFormat;
 import records.importers.TextImport;
@@ -44,7 +45,7 @@ public class PropFormat
 {
     @Property
     @OnThread(Tag.Simulation)
-    public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException
+    public void testGuessFormat(@From(GenFormattedData.class) @When(seed=-8664656379975213837L) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException
     {
         String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
         String format = formatAndData.format.toString();
@@ -52,7 +53,8 @@ public class PropFormat
         ChoicePick[] picks = new ChoicePick[] {
             new ChoicePick<>(CharsetChoice.class, new CharsetChoice(formatAndData.format.charset)),
             new ChoicePick<HeaderRowChoice>(HeaderRowChoice.class, new HeaderRowChoice(formatAndData.format.headerRows)),
-            new ChoicePick<SeparatorChoice>(SeparatorChoice.class, new SeparatorChoice("" + formatAndData.format.separator)),
+            new ChoicePick<SeparatorChoice>(SeparatorChoice.class, new SeparatorChoice(formatAndData.format.separator)),
+            new ChoicePick<QuoteChoice>(QuoteChoice.class, new QuoteChoice(formatAndData.format.quote)),
             new ChoicePick<ColumnCountChoice>(ColumnCountChoice.class, new ColumnCountChoice(formatAndData.format.columnTypes.size()))
         };
         assertEquals("Failure with content: " + content, formatAndData.format, TestUtil.pick(formatChoicePoint, picks));
