@@ -125,16 +125,16 @@ public class ChoicePoint<C extends Choice, R>
 
     }*/
 
-    public static <R> ChoicePoint<Choice, R> success(R value)
+    public static <R> ChoicePoint<Choice, R> success(Quality quality, double score, R value)
     {
-        return new ChoicePoint<Choice, R>(Collections.<Choice>emptyList(), Quality.PROMISING, Double.MAX_VALUE, null, value, null);
+        return new ChoicePoint<Choice, R>(Collections.<Choice>emptyList(), quality, score, null, value, null);
     }
 
     public static <R> ChoicePoint<Choice, R> run(ExSupplier<@NonNull R> supplier)
     {
         try
         {
-            return ChoicePoint.<R>success(supplier.get());
+            return ChoicePoint.<R>success(Quality.PROMISING, Double.MAX_VALUE, supplier.get());
         }
         catch (InternalException | UserException e)
         {
@@ -215,6 +215,11 @@ public class ChoicePoint<C extends Choice, R>
     public List<C> getOptions()
     {
         return Collections.unmodifiableList(options);
+    }
+
+    public Quality getQuality()
+    {
+        return quality;
     }
 
     @Override

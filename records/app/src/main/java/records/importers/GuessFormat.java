@@ -56,6 +56,7 @@ import java.util.Optional;
 import java.util.TreeMap;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 20/10/2016.
@@ -356,7 +357,8 @@ public class GuessFormat
                         List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> splitIntoColumns(s, sep, quot));
                         Format format = guessBodyFormat(mgr, cc.columnCount, hrc.numHeaderRows, initialVals);
                         TextFormat textFormat = new TextFormat(format, sep.separator, quot.quote, chc.charset);
-                        return ChoicePoint.<TextFormat>success(textFormat);
+                        double proportionNonText = (double)textFormat.columnTypes.stream().filter(c -> !(c.type instanceof TextColumnType)).count() / (double)textFormat.columnTypes.size();
+                        return ChoicePoint.<TextFormat>success(proportionNonText > 0 ? Quality.PROMISING : Quality.FALLBACK, proportionNonText, textFormat);
                     }, viableColumnCounts.toArray(new ColumnCountChoice[0]));
                 }, quot(null), quot("\""), quot("\'"))
                 , sep(";"), sep(","), sep("\t"), sep(":"), sep(" "))
@@ -552,7 +554,8 @@ public class GuessFormat
             Node choices;
             try
             {
-                choices = makeGUI(choicePoints, initial, textView, tableView);
+                @Nullable Stream<Choice> bestGuess = findBestGuess(choicePoints);
+                choices = makeGUI(choicePoints, bestGuess == null ? Collections.emptyList() : bestGuess.collect(Collectors.<@NonNull Choice>toList()), initial, textView, tableView);
             }
             catch (InternalException e)
             {
@@ -568,8 +571,42 @@ public class GuessFormat
         // TODO include choice of link or copy.
     }
 
+    // Null means not viable, empty stream means no more choices to make
+    private static <C extends Choice> @Nullable Stream<Choice> findBestGuess(ChoicePoint<C, TextFormat> choicePoints)
+    {
+        if (choicePoints.getOptions().isEmpty())
+            return Stream.empty();
+        else
+        {
+            // At the moment, we just try first and if that gives promising all the way, we take it:
+            for (C choice : choicePoints.getOptions())
+            {
+                try
+                {
+                    ChoicePoint<?, TextFormat> next = choicePoints.select(choice);
+                    if (next.getQuality() == Quality.PROMISING)
+                    {
+                        // Keep going!
+                        Stream<Choice> inner = findBestGuess(next);
+                        if (inner != null)
+                        {
+                            return Stream.concat(Stream.of(choice), inner);
+                        }
+                        // Otherwise try next choice
+                    }
+                }
+                catch (InternalException e)
+                {
+                    // Go to next
+                }
+            }
+            // No options found:
+            return null;
+        }
+    }
+
     @OnThread(Tag.FXPlatform)
-    private static <C extends Choice> Node makeGUI(ChoicePoint<C, TextFormat> rawChoicePoint, Map<Charset, List<String>> initial, TextArea textView, TableView<List<String>> tableView) throws InternalException
+    private static <C extends Choice> Node makeGUI(ChoicePoint<C, TextFormat> rawChoicePoint, List<Choice> mostRecentPick, Map<Charset, List<String>> initial, TextArea textView, TableView<List<String>> tableView) throws InternalException
     {
         @Nullable Class<? extends C> choiceClass = rawChoicePoint.getChoiceClass();
         // TODO drill into consecutive choices afterwards
@@ -603,7 +640,11 @@ public class GuessFormat
         else
         {
             ComboBox<C> combo = new ComboBox<>(FXCollections.observableArrayList(options));
-            combo.getSelectionModel().selectFirst();
+            @Nullable C choice = findByClass(mostRecentPick, choiceClass);
+            if (choice == null || !combo.getItems().contains(choice))
+                combo.getSelectionModel().selectFirst();
+            else
+                combo.getSelectionModel().select(choice);
             choiceNode = combo;
             choiceExpression = combo.getSelectionModel().selectedItemProperty();
         }
@@ -612,7 +653,7 @@ public class GuessFormat
             try
             {
                 ChoicePoint<?, TextFormat> next = rawChoicePoint.select(item);
-                Node gui = makeGUI(next, initial, textView, tableView);
+                Node gui = makeGUI(next, mostRecentPick, initial, textView, tableView);
                 if (vbox.getChildren().size() == 1)
                 {
                     vbox.getChildren().add(gui);
@@ -632,6 +673,19 @@ public class GuessFormat
         pick.consume(choiceExpression.get());
         Utility.addChangeListenerPlatformNN(choiceExpression, pick);
         return vbox;
+    }
+
+    // There should only be one item per class in the list
+    private static <C extends Choice> @Nullable C findByClass(List<Choice> choiceItems, Class<? extends C> targetClass)
+    {
+        for (Choice c : choiceItems)
+        {
+            if (targetClass.isInstance(c))
+            {
+                return (C) c;
+            }
+        }
+        return null;
     }
 
     @OnThread(Tag.FXPlatform)
