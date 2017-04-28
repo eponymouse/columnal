@@ -11,8 +11,8 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.1.10" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.1.10" level="project" />
+    <orderEntry type="library" name="Maven: org.checkerframework:checker-qual:2.1.10" level="project" />
+    <orderEntry type="library" name="Maven: org.checkerframework:checker:2.1.10" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.1.10" level="project" />
   </component>
 </module>

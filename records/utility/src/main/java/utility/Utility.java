@@ -698,6 +698,7 @@ public class Utility
     }
 
     // Like indexOf on lists, but uses only reference equality, and thus doesn't mind about initialization
+    @SuppressWarnings("interned")
     public static <T> int indexOfRef(List<T> list, @UnknownInitialization T item)
     {
         for (int i = 0; i < list.size(); i++)

@@ -30,6 +30,7 @@
         <maven.compiler.source>1.8</maven.compiler.source>
         <maven.compiler.target>1.8</maven.compiler.target>
         <maven.compiler.fork>true</maven.compiler.fork>
+        <maven.compiler.verbose>true</maven.compiler.verbose>
         <annotatedJdk>${org.checkerframework:jdk8:jar}</annotatedJdk>
     </properties>
 
@@ -107,18 +108,24 @@
                                     <annotationProcessor>org.checkerframework.checker.i18n.I18nChecker</annotationProcessor>
                                     <!-- Disabled for speed: -->
                                     <annotationProcessor>org.checkerframework.checker.interning.InterningChecker</annotationProcessor>
-                                    <!-- Disabled for speed: -->
+
                                     <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor>
-                                    <!-- Disabled for speed: -->
                                     <annotationProcessor>annotation.userindex.UserIndexChecker</annotationProcessor>
                                 </annotationProcessors>
+                                <annotationProcessorPaths>
+                                    <path>
+                                        <groupId>groupId</groupId>
+                                        <artifactId>anns</artifactId>
+                                        <version>1.0-SNAPSHOT</version>
+                                    </path>
+                                </annotationProcessorPaths>
                                 <compilerArgs>
                                     <!-- location of the annotated JDK, which comes from a Maven dependency -->
                                     <arg>-Xbootclasspath/p:${annotatedJdk}</arg>
                                     <arg>-AprintErrorStack</arg>
                                     <arg>-AskipDefs=records.grammar.|one.util.</arg>
                                     <arg>-Astubs=${project.basedir}/../stubs</arg>
-                                    <arg>-Apropfiles=${project.basedir}/app/src/main/resources/transformations_en.properties:${project.basedir}/app/src/main/resources/expression_en.properties:${project.basedir}/app/src/main/resources/function_en.properties:${project.basedir}/app/src/main/resources/main_en.properties</arg>
+                                    <arg>-Apropfiles=${project.basedir}/../app/src/main/resources/transformations_en.properties:${project.basedir}/../app/src/main/resources/expression_en.properties:${project.basedir}/../app/src/main/resources/function_en.properties:${project.basedir}/../app/src/main/resources/main_en.properties</arg>
                                     <arg>-Xplugin:threadchecker.TCPlugin</arg>
                                 </compilerArgs>
                             </configuration>

@@ -10,6 +10,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <artifactId>anns</artifactId>
+    <packaging>jar</packaging>
 
     <dependencies>
         <!-- annotations from the Checker Framework: nullness, interning, locking, ... -->
@@ -17,13 +18,11 @@
             <groupId>org.checkerframework</groupId>
             <artifactId>checker-qual</artifactId>
             <version>2.1.10</version>
-            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.checkerframework</groupId>
             <artifactId>checker</artifactId>
             <version>2.1.10</version>
-            <scope>provided</scope>
         </dependency>
         <!-- The annotated JDK to use (change to jdk7 if using Java 7) -->
         <dependency>

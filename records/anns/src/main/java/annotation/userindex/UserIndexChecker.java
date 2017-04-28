@@ -1,5 +1,8 @@
 package annotation.userindex;
 
+import annotation.userindex.qual.UnknownIfUserIndex;
+import annotation.userindex.qual.UserIndex;
+import annotation.userindex.qual.UserIndexBottom;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.MethodTree;
@@ -9,6 +12,10 @@ import org.checkerframework.common.basetype.BaseTypeChecker;
 import org.checkerframework.common.basetype.BaseTypeVisitor;
 import org.checkerframework.framework.type.GenericAnnotatedTypeFactory;
 
+import java.lang.annotation.Annotation;
+import java.util.Arrays;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.function.Supplier;
 
 /**
@@ -39,7 +46,23 @@ public class UserIndexChecker extends BaseTypeChecker
             @Override
             protected GenericAnnotatedTypeFactory<?, ?, ?, ?> createTypeFactory()
             {
-                return new BaseAnnotatedTypeFactory(UserIndexChecker.this, false);
+                return new BaseAnnotatedTypeFactory(UserIndexChecker.this, false) {
+                    // This body of the class is only needed to work around some kind of
+                    // bug in the import scanning when the class files are available in a directory
+                    // rather than a JAR, which is true since we moved the annotations to a Maven module:
+                    {
+                        postInit();
+                    }
+                    @Override
+                    protected Set<Class<? extends Annotation>> createSupportedTypeQualifiers()
+                    {
+                        return new HashSet<>(Arrays.asList(
+                            UnknownIfUserIndex.class,
+                            UserIndex.class,
+                            UserIndexBottom.class
+                        ));
+                    }
+                };
             }
 /*
             boolean ofInterest;
