@@ -17,6 +17,7 @@ import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataTypeUtility;
 import records.grammar.GrammarUtility;
+import records.importers.ChoicePoint.ChoiceType;
 import utility.TaggedValue;
 import records.data.Transformation;
 import records.data.datatype.DataType;
@@ -516,8 +517,8 @@ public class TestUtil
 
     public static <C extends Choice, R> @NonNull R pick(ChoicePoint<C, R> choicePoint, ChoicePick<C>... picks) throws InternalException, UserException
     {
-        Class<?> choicePointClass = choicePoint.getChoiceClass();
-        if (choicePointClass == null)
+        ChoiceType<C> choicePointType = choicePoint.getChoiceType();
+        if (choicePointType == null)
         {
             return choicePoint.get();
         }
@@ -525,14 +526,14 @@ public class TestUtil
         {
             for (ChoicePick<C> pick : picks)
             {
-                if (pick.theClass.equals(choicePointClass))
+                if (pick.theClass.equals(choicePointType.getChoiceClass()))
                 {
                     ChoicePoint<Choice, R> selected = (ChoicePoint<Choice, R>) choicePoint.select(pick.choice);
                     @NonNull R picked = pick(selected, (ChoicePick<Choice>[]) picks);
                     return picked;
                 }
             }
-            throw new RuntimeException("No suitable choice for class: " + choicePointClass);
+            throw new RuntimeException("No suitable choice for class: " + choicePointType);
         }
     }
 

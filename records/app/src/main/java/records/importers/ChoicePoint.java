@@ -3,6 +3,8 @@ package records.importers;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
@@ -11,6 +13,7 @@ import records.importers.ChoicePoint.Choice;
 import utility.ExFunction;
 import utility.ExSupplier;
 import utility.Utility;
+import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -25,6 +28,8 @@ import java.util.concurrent.ExecutionException;
  */
 public class ChoicePoint<C extends Choice, R>
 {
+
+
     public static enum Quality
     {
         // Good candidate, can stop at this one if searching for best
@@ -42,6 +47,36 @@ public class ChoicePoint<C extends Choice, R>
         public abstract boolean equals(@Nullable Object obj);
     }
 
+    /**
+     * Contains information about the type C.  A bit like a souped-up
+     * Class<C> with useful meta-information (e.g. is free entry allowed,
+     * get help on the item, etc).
+     */
+    public static class ChoiceType<C extends Choice>
+    {
+        private final Class<C> choiceClass;
+        private final @LocalizableKey String labelKey;
+
+        public ChoiceType(Class<C> choiceClass, @LocalizableKey String labelKey)
+        {
+            this.choiceClass = choiceClass;
+            this.labelKey = labelKey;
+        }
+
+        public Class<C> getChoiceClass()
+        {
+            return choiceClass;
+        }
+
+        public @Localized String getLabel()
+        {
+            return TranslationUtility.getString(labelKey);
+        }
+
+        //TODO: methods for free entry, and for help
+    }
+
+    private final @Nullable ChoiceType<C> choiceType;
     // If none, end of the road (either successful or failure, depending on exception/vakye)
     private final List<C> options;
     private final Quality quality;
@@ -51,8 +86,9 @@ public class ChoicePoint<C extends Choice, R>
     // If we take current choice, what's the next choice point?
     private final LoadingCache<C, ChoicePoint<?, R>> calculated;
 
-    private ChoicePoint(List<C> options, Quality quality, double score, @Nullable Exception exception, @Nullable R value, final @Nullable ExFunction<C, ChoicePoint<?, R>> calculate)
+    private ChoicePoint(@Nullable ChoiceType<C> choiceType, List<C> options, Quality quality, double score, @Nullable Exception exception, @Nullable R value, final @Nullable ExFunction<C, ChoicePoint<?, R>> calculate)
     {
+        this.choiceType = choiceType;
         this.options = new ArrayList<>(options);
         this.quality = quality;
         this.score = score;
@@ -82,7 +118,7 @@ public class ChoicePoint<C extends Choice, R>
             });
     }
 
-    public static <C extends Choice, R> ChoicePoint<C, R> choose(Quality quality, double score, ExFunction<C, ChoicePoint<?, R>> hereOnwards, C... choices)
+    public static <C extends Choice, R> ChoicePoint<C, R> choose(Quality quality, double score, ChoiceType<C> choiceType, ExFunction<C, ChoicePoint<?, R>> hereOnwards, C... choices)
     {
         List<C> allOptions = new ArrayList<>();
         allOptions.addAll(Arrays.<C>asList(choices));
@@ -106,7 +142,7 @@ public class ChoicePoint<C extends Choice, R>
             calc.put(choice, next);
         }
         */
-        return new ChoicePoint<C, R>(allOptions, quality, score, null, null, hereOnwards);
+        return new ChoicePoint<C, R>(choiceType, allOptions, quality, score, null, null, hereOnwards);
     }
 
     /*
@@ -127,7 +163,7 @@ public class ChoicePoint<C extends Choice, R>
 
     public static <R> ChoicePoint<Choice, R> success(Quality quality, double score, R value)
     {
-        return new ChoicePoint<Choice, R>(Collections.<Choice>emptyList(), quality, score, null, value, null);
+        return new ChoicePoint<Choice, R>(null, Collections.<Choice>emptyList(), quality, score, null, value, null);
     }
 
     public static <R> ChoicePoint<Choice, R> run(ExSupplier<@NonNull R> supplier)
@@ -145,7 +181,7 @@ public class ChoicePoint<C extends Choice, R>
 
     public static <R> ChoicePoint<Choice, R> failure(Exception e)
     {
-        return new ChoicePoint<Choice, R>(Collections.<Choice>emptyList(), Quality.FALLBACK, -Double.MAX_VALUE, e, null, null);
+        return new ChoicePoint<Choice, R>(null, Collections.<Choice>emptyList(), Quality.FALLBACK, -Double.MAX_VALUE, e, null, null);
     }
 
     public <S> ChoicePoint<?, S> then(ExFunction<R, @NonNull S> then)
@@ -158,13 +194,13 @@ public class ChoicePoint<C extends Choice, R>
                 return ChoicePoint.<S>run(() -> then.apply(valueFinal));
             }
             else
-                return new ChoicePoint<Choice, S>(Collections.<Choice>emptyList(), quality, score, exception, null, null);
+                return new ChoicePoint<Choice, S>(null, Collections.<Choice>emptyList(), quality, score, exception, null, null);
         }
         else
         {
             // Not a leaf; need to copy and go deeper:
             // Options is non-empty so exception and value not null:
-            return new ChoicePoint<C, S>(options, quality, score, null, null, (ExFunction<C, ChoicePoint<?, S>>) choice -> {
+            return new ChoicePoint<C, S>(choiceType, options, quality, score, null, null, (ExFunction<C, ChoicePoint<?, S>>) choice -> {
                 try
                 {
                     return calculated.get(choice).then(then);
@@ -175,14 +211,6 @@ public class ChoicePoint<C extends Choice, R>
                 }
             });
         }
-    }
-
-    public @Nullable Class<? extends C> getChoiceClass()
-    {
-        if (options.isEmpty())
-            return null;
-        else
-            return (Class<? extends C>) options.get(0).getClass();
     }
 
 
@@ -220,6 +248,11 @@ public class ChoicePoint<C extends Choice, R>
     public Quality getQuality()
     {
         return quality;
+    }
+
+    public @Nullable ChoiceType<C> getChoiceType()
+    {
+        return choiceType;
     }
 
     @Override

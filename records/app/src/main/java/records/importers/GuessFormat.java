@@ -17,6 +17,7 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -32,6 +33,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.importers.ChoicePoint.Choice;
+import records.importers.ChoicePoint.ChoiceType;
 import records.importers.ChoicePoint.Quality;
 import records.transformations.function.ToDate;
 import threadchecker.OnThread;
@@ -149,6 +151,11 @@ public class GuessFormat
         {
             return charsetName;
         }
+
+        public static ChoiceType<CharsetChoice> getType()
+        {
+            return new ChoiceType<>(CharsetChoice.class,"guess.charset");
+        }
     }
 
     // public for testing
@@ -183,6 +190,11 @@ public class GuessFormat
         public String toString()
         {
             return Integer.toString(numHeaderRows);
+        }
+
+        public static ChoiceType<HeaderRowChoice> getType()
+        {
+            return new ChoiceType<>(HeaderRowChoice.class, "guess.headerRow");
         }
     }
 
@@ -225,6 +237,11 @@ public class GuessFormat
                 return "<Tab>";
             return separator;
         }
+
+        public static ChoiceType<SeparatorChoice> getType()
+        {
+            return new ChoiceType<>(SeparatorChoice.class, "guess.separator");
+        }
     }
 
     public static class QuoteChoice extends Choice
@@ -261,6 +278,11 @@ public class GuessFormat
         {
             return quote == null ? "<None>" : quote;
         }
+
+        public static ChoiceType<QuoteChoice> getType()
+        {
+            return new ChoiceType<>(QuoteChoice.class, "guess.quote");
+        }
     }
 
     // public for testing
@@ -296,6 +318,11 @@ public class GuessFormat
         {
             return Integer.toString(columnCount);
         }
+
+        public static ChoiceType<ColumnCountChoice> getType()
+        {
+            return new ChoiceType<>(ColumnCountChoice.class, "guess.column");
+        }
     }
 
     private static SeparatorChoice sep(String separator)
@@ -310,7 +337,7 @@ public class GuessFormat
 
     public static ChoicePoint<?, TextFormat> guessTextFormat(UnitManager mgr, Map<Charset, List<String>> initialByCharset)
     {
-        return ChoicePoint.choose(Quality.PROMISING, 0, (CharsetChoice chc) ->
+        return ChoicePoint.choose(Quality.PROMISING, 0, CharsetChoice.getType(), (CharsetChoice chc) ->
         {
             List<String> initialCheck = initialByCharset.get(chc.charset);
             if (initialCheck == null)
@@ -324,9 +351,9 @@ public class GuessFormat
                 headerRowChoices.add(new HeaderRowChoice(headerRows));
             }
 
-            return ChoicePoint.choose(Quality.PROMISING, 0, (HeaderRowChoice hrc) ->
-                ChoicePoint.choose(Quality.PROMISING, 0, (SeparatorChoice sep) ->
-                ChoicePoint.choose(Quality.PROMISING, 0, (QuoteChoice quot) ->
+            return ChoicePoint.choose(Quality.PROMISING, 0, HeaderRowChoice.getType(), (HeaderRowChoice hrc) ->
+                ChoicePoint.choose(Quality.PROMISING, 0, SeparatorChoice.getType(), (SeparatorChoice sep) ->
+                ChoicePoint.choose(Quality.PROMISING, 0, QuoteChoice.getType(), (QuoteChoice quot) ->
                 {
                     Multiset<Integer> counts = HashMultiset.create();
                     for (int i = hrc.numHeaderRows; i < initial.size(); i++)
@@ -352,7 +379,7 @@ public class GuessFormat
                     }
                     List<ColumnCountChoice> viableColumnCounts = Multisets.copyHighestCountFirst(counts).entrySet().stream().limit(10).<@NonNull ColumnCountChoice>map(e -> new ColumnCountChoice(e.getElement())).collect(Collectors.<@NonNull ColumnCountChoice>toList());
 
-                    return ChoicePoint.choose(quality, score, (ColumnCountChoice cc) ->
+                    return ChoicePoint.choose(quality, score, ColumnCountChoice.getType(), (ColumnCountChoice cc) ->
                     {
                         List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> splitIntoColumns(s, sep, quot));
                         Format format = guessBodyFormat(mgr, cc.columnCount, hrc.numHeaderRows, initialVals);
@@ -608,10 +635,10 @@ public class GuessFormat
     @OnThread(Tag.FXPlatform)
     private static <C extends Choice> Node makeGUI(ChoicePoint<C, TextFormat> rawChoicePoint, List<Choice> mostRecentPick, Map<Charset, List<String>> initial, TextArea textView, TableView<List<String>> tableView) throws InternalException
     {
-        @Nullable Class<? extends C> choiceClass = rawChoicePoint.getChoiceClass();
+        final @Nullable ChoiceType<C> choiceType = rawChoicePoint.getChoiceType();
         // TODO drill into consecutive choices afterwards
         // TODO also show a preview of what it will import!
-        if (choiceClass == null)
+        if (choiceType == null)
         {
             try
             {
@@ -640,7 +667,7 @@ public class GuessFormat
         else
         {
             ComboBox<C> combo = new ComboBox<>(FXCollections.observableArrayList(options));
-            @Nullable C choice = findByClass(mostRecentPick, choiceClass);
+            @Nullable C choice = findByClass(mostRecentPick, choiceType.getChoiceClass());
             if (choice == null || !combo.getItems().contains(choice))
                 combo.getSelectionModel().selectFirst();
             else
@@ -648,7 +675,7 @@ public class GuessFormat
             choiceNode = combo;
             choiceExpression = combo.getSelectionModel().selectedItemProperty();
         }
-        VBox vbox = new VBox(choiceNode);
+        VBox vbox = new VBox(new HBox(new Label(choiceType.getLabel()), choiceNode));
         FXPlatformConsumer<C> pick = item -> {
             try
             {
