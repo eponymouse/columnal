@@ -113,7 +113,7 @@ public class MainWindow
         });
         menu.getItems().addAll(importItem, importHTMLItem);
 
-        MenuItem openItem = new MenuItem(TranslationUtility.getString("main.open"));
+        MenuItem openItem = new MenuItem(TranslationUtility.getString("menu.project.open"));
         openItem.setOnAction(e -> {
             FileChooser fc = new FileChooser();
             File open = fc.showOpenDialog(stage);
@@ -233,7 +233,7 @@ public class MainWindow
     private static class DummySaveMenuItem extends MenuItem
     {
         private final ObjectProperty<Object> dummyNowBinding = new SimpleObjectProperty<>(new Object());
-        private final @OnThread(Tag.FXPlatform) @Localized StringBinding text;
+        private final @OnThread(Tag.FXPlatform) StringBinding text;
 
         @OnThread(Tag.FXPlatform)
         public DummySaveMenuItem(View view)

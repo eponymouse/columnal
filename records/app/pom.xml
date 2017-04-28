@@ -235,7 +235,7 @@
                         <arg>-AprintErrorStack</arg>
                         <arg>-AskipDefs=records.grammar.|one.util.</arg>
                         <arg>-Astubs=/Users/neil/intellij/records/records/stubs</arg>
-                        <arg>-Apropfiles=/Users/neil/intellij/records/records/app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/newcolumn_en.properties</arg>
+                        <arg>-Apropfiles=/Users/neil/intellij/records/records/app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/main_en.properties</arg>
                         <arg>-Xplugin:threadchecker.TCPlugin</arg>
                     </compilerArgs>
                 </configuration>

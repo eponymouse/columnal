@@ -107,6 +107,7 @@ public class TranslationUtility
         return key; // Best we can do, if we can't find the labels file.
     }
 
+    @SuppressWarnings("i18n") // Because we return original if there's an issue
     @OnThread(Tag.FXPlatform)
     public static Pair<@Localized String, @Nullable KeyCombination> getStringAndShortcut(@LocalizableKey String key)
     {
@@ -227,6 +228,7 @@ public class TranslationUtility
      * Like getString, but lets the substitutions be dynamic.  If they change,
      * the returned binding will be updated.
      */
+    @SuppressWarnings("i18n") // Because checker doesn't recognise what we're doing
     @OnThread(Tag.FXPlatform)
     public static @Localized StringBinding bindString(@LocalizableKey String key, ObservableStringValue firstValue, ObservableStringValue... moreValues)
     {
