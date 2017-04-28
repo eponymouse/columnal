@@ -73,6 +73,11 @@ public class ChoicePoint<C extends Choice, R>
             return TranslationUtility.getString(labelKey);
         }
 
+        public String getHelpId()
+        {
+            return ""; //TODO add an annotation on this
+        }
+
         //TODO: methods for free entry, and for help
     }
 

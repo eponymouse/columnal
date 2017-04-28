@@ -3,6 +3,7 @@ package utility.gui;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -57,10 +58,19 @@ public class GUI
         return vBox;
     }
 
+    /**
+     * Like label but the text is permitted to wrap (by using a TextFlow)
+     */
     public static Node labelWrap(@LocalizableKey String contentKey, String... styleClasses)
     {
         TextFlow textFlow = new TextFlow(new Text(TranslationUtility.getString(contentKey)));
         textFlow.getStyleClass().addAll(styleClasses);
         return textFlow;
+    }
+
+    public static Node labelled(@LocalizableKey String labelKey, String helpId, Node choiceNode)
+    {
+        // TODO add in the help
+        return new HBox(label(labelKey), choiceNode);
     }
 }

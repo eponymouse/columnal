@@ -21,6 +21,7 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
+import records.importers.GuessFormat.CharsetChoice;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -37,8 +38,10 @@ import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by neil on 31/10/2016.
@@ -152,7 +155,10 @@ public class TextImport
     private static Map<Charset, List<String>> getInitial(File textFile) throws IOException
     {
         Map<Charset, List<String>> initial = new HashMap<>();
-        for (Charset charset : Arrays.asList(Charset.forName("UTF-8"), Charset.forName("ISO-8859-1"), Charset.forName("UTF-16")))
+        Set<Charset> charsets = new HashSet<>();
+        charsets.addAll(Arrays.asList(Charset.forName("UTF-8"), Charset.forName("ISO-8859-1"), Charset.forName("UTF-16")));
+        charsets.add(Charset.defaultCharset());
+        for (Charset charset : charsets)
         {
             ArrayList<String> initialLines = new ArrayList<>();
             // Read the first few lines:

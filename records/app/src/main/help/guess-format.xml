@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<dialog id="guess-format" title="Text Import Format">
+    <help id="encoding" title="Encoding">
+        <hint>The popular modern scheme is UTF-8, but this is not universal.</hint>
+        <short>The scheme used to encode characters in the file.</short>
+        <full>There are lots of different characters in the world: Latin characters (as used in the English alphabet),
+            Arabic, Chinese and many more besides.  An encoding scheme is the way in which these characters
+        are numbered and stored in a file.  Unfortunately, historically every sub-region had its own encoding,
+        and if you get the encoding mismatched, you will get weird characters.  Recently, UTF-8 has become
+        something of a common standard, but many other encoding schemes are still in use.  Try UTF-8 first,
+        but try then others if that doesn't work.</full>
+    </help>
+</dialog>

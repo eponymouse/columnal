@@ -40,6 +40,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Utility;
+import utility.gui.GUI;
 
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
@@ -675,7 +676,7 @@ public class GuessFormat
             choiceNode = combo;
             choiceExpression = combo.getSelectionModel().selectedItemProperty();
         }
-        VBox vbox = new VBox(new HBox(new Label(choiceType.getLabel()), choiceNode));
+        VBox vbox = new VBox(GUI.labelled(choiceType.getLabel(), choiceType.getHelpId(), choiceNode));
         FXPlatformConsumer<C> pick = item -> {
             try
             {
