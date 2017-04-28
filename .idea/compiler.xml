@@ -33,27 +33,27 @@
         <outputRelativeToContentRoot value="true" />
         <module name="parsers" />
       </profile>
-      <profile name="Annotation profile for records" enabled="true">
-        <sourceOutputDir name="target/generated-sources/annotations" />
-        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
-        <outputRelativeToContentRoot value="true" />
-        <option name="printErrorStack" value="" />
-        <option name="propfiles" value="$PROJECT_DIR$/records/app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/function_en.properties" />
-        <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/stubs" />
-        <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
-        <module name="utility" />
-      </profile>
       <profile name="Annotation profile for app" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
         <option name="printErrorStack" value="" />
-        <option name="propfiles" value="$PROJECT_DIR$/records/app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/newcolumn_en.properties" />
+        <option name="propfiles" value="/Users/neil/intellij/records/records/app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/main_en.properties" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="$PROJECT_DIR$/records/stubs" />
+        <option name="stubs" value="/Users/neil/intellij/records/records/stubs" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="app" />
+      </profile>
+      <profile name="Annotation profile for records" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <option name="printErrorStack" value="" />
+        <option name="propfiles" value="/Users/neil/intellij/records/records/app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/main_en.properties" />
+        <option name="skipDefs" value="records.grammar.|one.util." />
+        <option name="stubs" value="/Users/neil/intellij/records/records/stubs" />
+        <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <module name="utility" />
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
