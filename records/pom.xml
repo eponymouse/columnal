@@ -86,6 +86,13 @@
         <profile>
             <id>full</id>
 
+            <activation>
+                <property>
+                    <name>check</name>
+                    <value>full</value>
+                </property>
+            </activation>
+
             <build>
                 <pluginManagement>
                     <plugins>
