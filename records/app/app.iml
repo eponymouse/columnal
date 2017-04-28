@@ -14,6 +14,7 @@
     <orderEntry type="module" module-name="utility" />
     <orderEntry type="library" name="Maven: org.antlr:antlr4:4.5.3" level="project" />
     <orderEntry type="module" module-name="parsers" />
+    <orderEntry type="module" module-name="anns" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.1.10" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.1.10" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.1.7" level="project" />
@@ -40,15 +41,6 @@
       <library name="Maven: junit:junit:4.13">
         <CLASSES>
           <root url="jar://$MODULE_DIR$/../lib/junit-4.13-SNAPSHOT.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
-    <orderEntry type="module-library">
-      <library name="Maven: me:valueann:0.1">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/valueann.jar!/" />
         </CLASSES>
         <JAVADOC />
         <SOURCES />

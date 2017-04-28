@@ -25,6 +25,11 @@
             <artifactId>parsers</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>groupId</groupId>
+            <artifactId>anns</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
 
         <!-- annotations from the Checker Framework: nullness, interning, locking, ... -->
         <dependency>
@@ -114,14 +119,6 @@
             <version>4.13</version>
             <scope>system</scope> <!-- should be test -->
             <systemPath>${basedir}/../lib/junit-4.13-SNAPSHOT.jar</systemPath>
-        </dependency>
-
-        <dependency>
-            <groupId>me</groupId>
-            <artifactId>valueann</artifactId>
-            <version>0.1</version>
-            <scope>system</scope>
-            <systemPath>${basedir}/../lib/valueann.jar</systemPath>
         </dependency>
 
         <dependency>

@@ -13,5 +13,6 @@
         <module>parsers</module>
         <module>utility</module>
         <module>app</module>
+        <module>anns</module>
     </modules>
 </project>

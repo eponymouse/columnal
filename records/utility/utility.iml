@@ -10,9 +10,10 @@
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="parsers" />
+    <orderEntry type="module" module-name="anns" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.1.10" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.1.10" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.1.7" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.1.10" level="project" />
     <orderEntry type="library" name="Maven: org.antlr:antlr4:4.5.3" level="project" />
     <orderEntry type="library" name="Maven: org.controlsfx:controlsfx:8.40.12" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:java-smt:1.0.1" level="project" />
@@ -20,15 +21,6 @@
     <orderEntry type="library" name="Maven: com.google.guava:guava:19.0" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:smtinterpol:comp:2.1-255-gcdd5908" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:smtinterpol:sources:2.1-255-gcdd5908" level="project" />
-    <orderEntry type="module-library">
-      <library name="Maven: me:valueann:0.1">
-        <CLASSES>
-          <root url="jar://$MODULE_DIR$/../lib/valueann.jar!/" />
-        </CLASSES>
-        <JAVADOC />
-        <SOURCES />
-      </library>
-    </orderEntry>
     <orderEntry type="module-library">
       <library name="Maven: org.bluej:threadchecker-tags:0.1">
         <CLASSES>

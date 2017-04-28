@@ -31,6 +31,7 @@
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
         <outputRelativeToContentRoot value="true" />
+        <module name="anns" />
         <module name="parsers" />
       </profile>
       <profile name="Annotation profile for app" enabled="true">
@@ -57,6 +58,7 @@
       </profile>
     </annotationProcessing>
     <bytecodeTargetLevel>
+      <module name="anns" target="1.8" />
       <module name="app" target="1.8" />
       <module name="parsers" target="1.8" />
       <module name="records" target="1.5" />
