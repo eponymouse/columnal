@@ -17,7 +17,7 @@
     <orderEntry type="module" module-name="anns" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.1.10" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.1.10" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.1.7" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.1.10" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.pholser:junit-quickcheck-core:0.7" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.javaruntype:javaruntype:1.2" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: org.antlr:antlr-runtime:3.1.2" level="project" />

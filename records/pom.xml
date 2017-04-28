@@ -16,7 +16,109 @@
         <module>anns</module>
     </modules>
 
+    <dependencies>
+        <dependency>
+            <groupId>org.checkerframework</groupId>
+            <artifactId>jdk8</artifactId>
+            <version>2.1.10</version>
+            <scope>provided</scope>
+        </dependency>
+    </dependencies>
+
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>1.8</maven.compiler.source>
+        <maven.compiler.target>1.8</maven.compiler.target>
+        <maven.compiler.fork>true</maven.compiler.fork>
+        <annotatedJdk>${org.checkerframework:jdk8:jar}</annotatedJdk>
     </properties>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>2.3</version>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>properties</goal>
+                        </goals>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+
+    <profiles>
+        <profile>
+            <id>quick</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <artifactId>maven-compiler-plugin</artifactId>
+                            <version>3.3</version>
+                            <configuration>
+                                <annotationProcessors>
+                                    <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
+                                </annotationProcessors>
+                                <compilerArgs>
+                                    <!-- location of the annotated JDK, which comes from a Maven dependency -->
+                                    <arg>-Xbootclasspath/p:${annotatedJdk}</arg>
+                                    <arg>-AprintErrorStack</arg>
+                                    <arg>-AskipDefs=records.grammar.|one.util.</arg>
+                                    <arg>-Astubs=${project.basedir}/../stubs</arg>
+                                    <arg>-Xplugin:threadchecker.TCPlugin</arg>
+                                </compilerArgs>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+
+        <profile>
+            <id>full</id>
+
+            <build>
+                <pluginManagement>
+                    <plugins>
+                        <plugin>
+                            <artifactId>maven-compiler-plugin</artifactId>
+                            <version>3.3</version>
+                            <configuration>
+                                <annotationProcessors>
+                                    <!-- Add all the checkers you want to enable here -->
+                                    <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
+                                    <!-- Disabled for speed: -->
+                                    <annotationProcessor>org.checkerframework.checker.i18n.I18nChecker</annotationProcessor>
+                                    <!-- Disabled for speed: -->
+                                    <annotationProcessor>org.checkerframework.checker.interning.InterningChecker</annotationProcessor>
+                                    <!-- Disabled for speed: -->
+                                    <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor>
+                                    <!-- Disabled for speed: -->
+                                    <annotationProcessor>annotation.userindex.UserIndexChecker</annotationProcessor>
+                                </annotationProcessors>
+                                <compilerArgs>
+                                    <!-- location of the annotated JDK, which comes from a Maven dependency -->
+                                    <arg>-Xbootclasspath/p:${annotatedJdk}</arg>
+                                    <arg>-AprintErrorStack</arg>
+                                    <arg>-AskipDefs=records.grammar.|one.util.</arg>
+                                    <arg>-Astubs=${project.basedir}/../stubs</arg>
+                                    <arg>-Apropfiles=${project.basedir}/app/src/main/resources/transformations_en.properties:${project.basedir}/app/src/main/resources/expression_en.properties:${project.basedir}/app/src/main/resources/function_en.properties:${project.basedir}/app/src/main/resources/main_en.properties</arg>
+                                    <arg>-Xplugin:threadchecker.TCPlugin</arg>
+                                </compilerArgs>
+                            </configuration>
+                        </plugin>
+                    </plugins>
+                </pluginManagement>
+            </build>
+        </profile>
+    </profiles>
 </project>

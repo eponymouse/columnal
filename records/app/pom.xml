@@ -48,7 +48,7 @@
         <dependency>
             <groupId>org.checkerframework</groupId>
             <artifactId>jdk8</artifactId>
-            <version>2.1.7</version>
+            <version>2.1.10</version>
             <scope>provided</scope>
         </dependency>
 
@@ -229,34 +229,6 @@
             <plugin>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.3</version>
-                <configuration>
-                    <!-- Change source and target to 1.7 if using Java 7 -->
-                    <source>1.8</source>
-                    <target>1.8</target>
-                    <encoding>UTF-8</encoding>
-                    <fork>true</fork>
-                    <annotationProcessors>
-                        <!-- Add all the checkers you want to enable here -->
-                        <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
-                        <!-- Disabled for speed: -->
-                        <!-- <annotationProcessor>org.checkerframework.checker.i18n.I18nChecker</annotationProcessor> -->
-                        <!-- Disabled for speed: -->
-                        <!-- <annotationProcessor>org.checkerframework.checker.interning.InterningChecker</annotationProcessor> -->
-                        <!-- Disabled for speed: -->
-                        <!-- <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor> -->
-                        <!-- Disabled for speed: -->
-                        <!-- <annotationProcessor>annotation.userindex.UserIndexChecker</annotationProcessor> -->
-                    </annotationProcessors>
-                    <compilerArgs>
-                        <!-- location of the annotated JDK, which comes from a Maven dependency -->
-                        <arg>-Xbootclasspath/p:${annotatedJdk}</arg>
-                        <arg>-AprintErrorStack</arg>
-                        <arg>-AskipDefs=records.grammar.|one.util.</arg>
-                        <arg>-Astubs=${project.basedir}/../stubs</arg>
-                        <arg>-Apropfiles=/Users/neil/intellij/records/records/app/src/main/resources/transformations_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/expression_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/function_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/newcolumn_en.properties:/Users/neil/intellij/records/records/app/src/main/resources/main_en.properties</arg>
-                        <arg>-Xplugin:threadchecker.TCPlugin</arg>
-                    </compilerArgs>
-                </configuration>
             </plugin>
 
             <plugin>
