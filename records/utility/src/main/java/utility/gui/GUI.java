@@ -1,5 +1,6 @@
 package utility.gui;
 
+import annotation.help.qual.HelpKey;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCombination;
@@ -68,7 +69,7 @@ public class GUI
         return textFlow;
     }
 
-    public static Node labelled(@LocalizableKey String labelKey, String helpId, Node choiceNode)
+    public static Node labelled(@LocalizableKey String labelKey, @HelpKey String helpId, Node choiceNode)
     {
         // TODO add in the help
         return new HBox(label(labelKey), choiceNode);

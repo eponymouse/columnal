@@ -1,5 +1,6 @@
 package records.importers;
 
+import annotation.help.qual.HelpKey;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
@@ -56,11 +57,13 @@ public class ChoicePoint<C extends Choice, R>
     {
         private final Class<C> choiceClass;
         private final @LocalizableKey String labelKey;
+        private final @HelpKey String helpKey;
 
-        public ChoiceType(Class<C> choiceClass, @LocalizableKey String labelKey)
+        public ChoiceType(Class<C> choiceClass, @LocalizableKey String labelKey, @HelpKey String helpKey)
         {
             this.choiceClass = choiceClass;
             this.labelKey = labelKey;
+            this.helpKey = helpKey;
         }
 
         public Class<C> getChoiceClass()
@@ -73,9 +76,9 @@ public class ChoicePoint<C extends Choice, R>
             return labelKey;
         }
 
-        public String getHelpId()
+        public @HelpKey String getHelpId()
         {
-            return ""; //TODO add an annotation on this
+            return helpKey;
         }
 
         //TODO: methods for free entry, and for help

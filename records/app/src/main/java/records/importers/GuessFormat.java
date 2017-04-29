@@ -154,7 +154,7 @@ public class GuessFormat
 
         public static ChoiceType<CharsetChoice> getType()
         {
-            return new ChoiceType<>(CharsetChoice.class,"guess.charset");
+            return new ChoiceType<>(CharsetChoice.class,"guess.charset", "guess-format/charset");
         }
     }
 
@@ -194,7 +194,7 @@ public class GuessFormat
 
         public static ChoiceType<HeaderRowChoice> getType()
         {
-            return new ChoiceType<>(HeaderRowChoice.class, "guess.headerRow");
+            return new ChoiceType<>(HeaderRowChoice.class, "guess.headerRow", "guess-format/headerRow");
         }
     }
 
@@ -240,7 +240,7 @@ public class GuessFormat
 
         public static ChoiceType<SeparatorChoice> getType()
         {
-            return new ChoiceType<>(SeparatorChoice.class, "guess.separator");
+            return new ChoiceType<>(SeparatorChoice.class, "guess.separator", "guess-format/separator");
         }
     }
 
@@ -281,7 +281,7 @@ public class GuessFormat
 
         public static ChoiceType<QuoteChoice> getType()
         {
-            return new ChoiceType<>(QuoteChoice.class, "guess.quote");
+            return new ChoiceType<>(QuoteChoice.class, "guess.quote", "guess-format/quote");
         }
     }
 
@@ -321,7 +321,7 @@ public class GuessFormat
 
         public static ChoiceType<ColumnCountChoice> getType()
         {
-            return new ChoiceType<>(ColumnCountChoice.class, "guess.column");
+            return new ChoiceType<>(ColumnCountChoice.class, "guess.columnCount", "guess-format/columnCount");
         }
     }
 

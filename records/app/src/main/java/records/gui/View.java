@@ -231,7 +231,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     }
 
     // The type of the listener really throws off the checkers so suppress them all:
-    @SuppressWarnings({"initialization", "keyfor", "interning", "userindex", "valuetype"})
+    @SuppressWarnings({"initialization", "keyfor", "interning", "userindex", "valuetype", "helpfile"})
     public View(File location) throws InternalException, UserException
     {
         diskFile = new SimpleObjectProperty<>(location);

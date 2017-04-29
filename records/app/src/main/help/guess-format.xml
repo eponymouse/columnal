@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <dialog id="guess-format" title="Text Import Format">
-    <help id="encoding" title="Encoding">
+    <help id="charset" title="Encoding">
         <hint>The popular modern scheme is UTF-8, but this is not universal.</hint>
         <short>The scheme used to encode characters in the file.</short>
         <full>There are lots of different characters in the world: Latin characters (as used in the English alphabet),

@@ -31,6 +31,14 @@
             <version>2.1.10</version>
             <scope>provided</scope>
         </dependency>
+
+        <!-- XOM for parsing XML help files: -->
+        <dependency>
+            <groupId>com.io7m.xom</groupId>
+            <artifactId>xom</artifactId>
+            <version>1.2.10</version>
+        </dependency>
+
     </dependencies>
 
     <properties>
