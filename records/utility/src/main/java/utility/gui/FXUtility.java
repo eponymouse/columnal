@@ -6,10 +6,12 @@ import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableValue;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
 import javafx.geometry.Bounds;
@@ -22,7 +24,7 @@ import javafx.scene.input.DataFormat;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.VBox;
+import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -41,10 +43,11 @@ import threadchecker.Tag;
 import utility.*;
 
 import java.io.File;
-import java.io.FileReader;
+import java.io.IOException;
+import java.io.InputStream;
+import java.net.URL;
 import java.util.*;
 import java.util.Map.Entry;
-import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -55,6 +58,8 @@ import java.util.stream.Stream;
 @OnThread(Tag.FXPlatform)
 public class FXUtility
 {
+    private static final Set<String> loadedFonts = new HashSet<>();
+
     @OnThread(Tag.FXPlatform)
     public static <T> ListView<@NonNull T> readOnlyListView(ObservableList<@NonNull T> content, Function<T, String> toString)
     {
@@ -165,13 +170,109 @@ public class FXUtility
                    Arrays.stream(stylesheetNames).map(s -> s.endsWith(".css") ? s : (s + ".css"))
                  )
                  .distinct()
-                 .map(Utility::getStylesheet)
+                 .map(FXUtility::getStylesheet)
                  .collect(Collectors.<String>toList());
     }
 
     public static ExtensionFilter getProjectExtensionFilter()
     {
         return new ExtensionFilter(TranslationUtility.getString("extension.projects"), "*.rec");
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static <T> void onNonNull(ReadOnlyObjectProperty<T> property, FXPlatformConsumer<T> consumer)
+    {
+        property.addListener(new ChangeListener<T>()
+        {
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<? extends T> observable, T oldValue, T newValue)
+            {
+                property.removeListener(this);
+                consumer.consume(newValue);
+            }
+        });
+    }
+
+    @SuppressWarnings("nullness")
+    public static String getStylesheet(String stylesheetName)
+    {
+        try
+        {
+            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+            URL resource = classLoader.getResource(stylesheetName);
+            return resource.toString();
+        }
+        catch (NullPointerException e)
+        {
+            Utility.log("Problem loading stylesheet: " + stylesheetName, e);
+            return "";
+        }
+    }
+
+    @SuppressWarnings("nullness")
+    public static void ensureFontLoaded(String fontFileName)
+    {
+        if (!loadedFonts.contains(fontFileName))
+        {
+            try (InputStream fis = ClassLoader.getSystemClassLoader().getResourceAsStream(fontFileName))
+            {
+                Font.loadFont(fis, 10);
+                loadedFonts.add(fontFileName);
+            }
+            catch (IOException | NullPointerException e)
+            {
+                Utility.log(e);
+            }
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    @SuppressWarnings("nullness")
+    public static <T> void addChangeListenerPlatform(ObservableValue<T> property, FXPlatformConsumer<@Nullable T> listener)
+    {
+        // Defeat thread checker:
+        property.addListener(new ChangeListener<T>()
+        {
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<? extends T> a, T b, T newVal)
+            {
+                listener.consume(newVal);
+            }
+        });
+    }
+
+    @OnThread(Tag.FXPlatform)
+    @SuppressWarnings("nullness")
+    // NN = Not Null
+    public static <T> void addChangeListenerPlatformNN(ObservableValue<T> property, FXPlatformConsumer<@NonNull T> listener)
+    {
+        // Defeat thread checker:
+        property.addListener(new ChangeListener<T>()
+        {
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<? extends T> a, T b, T newVal)
+            {
+                listener.consume(newVal);
+            }
+        });
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static void runAfter(FXPlatformRunnable r)
+    {
+        // Defeat thread-checker:
+        ((Runnable)(() -> Platform.runLater(r::run))).run();
+    }
+
+    // Mainly, this method is to avoid having to cast to ListChangeListener to disambiguate
+    // from the invalidionlistener overload in ObservableList
+    @OnThread(Tag.FXPlatform)
+    public static <T> void listen(ObservableList<T> list, FXPlatformConsumer<ListChangeListener.Change<? extends T>> listener)
+    {
+        list.addListener(listener::consume);
     }
 
     public static interface DragHandler
@@ -222,7 +323,7 @@ public class FXUtility
     public static <T, R> ObjectExpression<R> mapBindingEager(ObservableObjectValue<T> original, FXPlatformFunction<T, R> extract)
     {
         ObjectProperty<R> binding = new SimpleObjectProperty<>();
-        Utility.addChangeListenerPlatformNN(original, x -> binding.setValue(extract.apply(x)));
+        addChangeListenerPlatformNN(original, x -> binding.setValue(extract.apply(x)));
         return binding;
     }
 

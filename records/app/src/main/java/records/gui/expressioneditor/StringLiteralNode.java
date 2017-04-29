@@ -16,7 +16,6 @@ import records.transformations.expression.ErrorRecorder;
 import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
 import utility.Pair;
-import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.Collections;
@@ -52,7 +51,7 @@ public class StringLiteralNode extends LeafNode implements OperandNode
             }
         }, c -> false);
 
-        Utility.addChangeListenerPlatformNN(textField.textProperty(), text -> parent.changed(this));
+        FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> parent.changed(this));
         textField.setText(initialValue);
     }
 
@@ -78,7 +77,7 @@ public class StringLiteralNode extends LeafNode implements OperandNode
     @Override
     public OperandNode focusWhenShown()
     {
-        Utility.onNonNull(textField.sceneProperty(), s -> focus(Focus.RIGHT));
+        FXUtility.onNonNull(textField.sceneProperty(), s -> focus(Focus.RIGHT));
         return this;
     }
 

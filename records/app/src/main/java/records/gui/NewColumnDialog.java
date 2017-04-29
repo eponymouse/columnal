@@ -20,7 +20,7 @@ import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.NumericLiteral;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 /**
@@ -53,9 +53,9 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
 
         setResizable(true);
         getDialogPane().getStylesheets().addAll(
-                Utility.getStylesheet("general.css"),
-                Utility.getStylesheet("dialogs.css"),
-                Utility.getStylesheet("new-column-dialog.css")
+                FXUtility.getStylesheet("general.css"),
+                FXUtility.getStylesheet("dialogs.css"),
+                FXUtility.getStylesheet("new-column-dialog.css")
         );
         getDialogPane().setContent(contents);
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);

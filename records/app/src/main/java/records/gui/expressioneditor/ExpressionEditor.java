@@ -81,20 +81,20 @@ public class ExpressionEditor extends ConsecutiveBase
         this.container = new FlowPane();
         this.tableManager = tableManager;
         container.getStyleClass().add("expression-editor");
-        Utility.ensureFontLoaded("NotoSans-Regular.ttf");
-        container.getStylesheets().add(Utility.getStylesheet("expression-editor.css"));
+        FXUtility.ensureFontLoaded("NotoSans-Regular.ttf");
+        container.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
         this.srcTable = srcTable;
         this.type = type;
         container.getChildren().setAll(nodes());
-        Utility.listen(nodes(), c -> {
+        FXUtility.listen(nodes(), c -> {
             container.getChildren().setAll(nodes());
         });
         this.onChange = onChangeHandler;
-        Utility.addChangeListenerPlatform(container.sceneProperty(), scene -> {
+        FXUtility.addChangeListenerPlatform(container.sceneProperty(), scene -> {
             // We should only ever be added to one scene, but we will also get removed from it
             if (scene != null)
             {
-                Utility.addChangeListenerPlatform(scene.focusOwnerProperty(), owner -> Utility.runAfter(() -> focusChanged()));
+                FXUtility.addChangeListenerPlatform(scene.focusOwnerProperty(), owner -> FXUtility.runAfter(() -> focusChanged()));
             }
         });
 

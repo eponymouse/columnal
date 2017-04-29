@@ -401,7 +401,7 @@ public class Sort extends Transformation
                 if (srcControl.getTableOrNull() != null)
                     allColumns.addAll(srcControl.getTableOrNull().getData().getColumns());
                 updateExample(allColumns, getPresent(sortByView.getItems()), srcHeaderAndData, destHeaderAndData);
-                Utility.listen(sortByView.getItems(), c -> {
+                FXUtility.listen(sortByView.getItems(), c -> {
                     try
                     {
                         updateExample(allColumns, getPresent(sortByView.getItems()), srcHeaderAndData, destHeaderAndData);

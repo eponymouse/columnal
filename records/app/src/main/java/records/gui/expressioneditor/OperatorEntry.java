@@ -22,7 +22,6 @@ import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.GeneralEntry.Status;
 import utility.Pair;
-import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
@@ -92,7 +91,7 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
 
         this.autoComplete = new AutoComplete(textField, this::getCompletions, new CompletionListener(), c -> !isOperatorAlphabet(c));
 
-        Utility.addChangeListenerPlatformNN(textField.textProperty(), text ->{
+        FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text ->{
             parent.changed(OperatorEntry.this);
             FXUtility.setPseudoclass(textField, "op-empty", text.isEmpty());
         });
@@ -101,7 +100,7 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
         {
             // Do this after auto-complete is set up and we are set as part of parent,
             // in case it finishes a completion:
-            Utility.runAfter(() -> textField.setText(content));
+            FXUtility.runAfter(() -> textField.setText(content));
         }
     }
 
@@ -126,7 +125,7 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
 
     public ExpressionNode focusWhenShown()
     {
-        Utility.onNonNull(textField.sceneProperty(), scene -> focus(Focus.RIGHT));
+        FXUtility.onNonNull(textField.sceneProperty(), scene -> focus(Focus.RIGHT));
         return this;
     }
 

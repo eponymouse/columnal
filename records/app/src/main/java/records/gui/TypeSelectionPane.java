@@ -1,6 +1,5 @@
 package records.gui;
 
-import annotation.qual.UnknownIfValue;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -11,7 +10,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -27,11 +25,9 @@ import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -43,7 +39,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 import utility.Pair;
-import utility.Utility;
+import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
@@ -69,7 +65,7 @@ public class TypeSelectionPane
     {
         typeGroup = new ToggleGroup();
         contents = new VBox();
-        contents.getStylesheets().add(Utility.getStylesheet("type-selection-pane.css"));
+        contents.getStylesheets().add(FXUtility.getStylesheet("type-selection-pane.css"));
         contents.getStyleClass().add("type-selection-pane");
 
         ErrorableTextField<Unit> units = new ErrorableTextField<Unit>(unitSrc ->
@@ -110,7 +106,7 @@ public class TypeSelectionPane
         ObservableList<Label> commas = FXCollections.observableArrayList();
         FlowPane tupleTypesPane = new FlowPane(new Label("("), new HBox(new Label(")"), shrinkTupleButton, extendTupleButton));
         ObjectProperty<@Nullable DataType> tupleType = new SimpleObjectProperty<>(null);
-        Utility.listen(tupleTypes, c -> {
+        FXUtility.listen(tupleTypes, c -> {
             List<@NonNull DataType> types = new ArrayList<>();
             for (ObservableObjectValue<@Nullable DataType> obsType : tupleTypes)
             {
@@ -121,7 +117,7 @@ public class TypeSelectionPane
             }
             tupleType.setValue(DataType.tuple(types));
         });
-        Utility.listen(commas, c -> {
+        FXUtility.listen(commas, c -> {
             for (int i = 0; i < commas.size(); i++)
             {
                 commas.get(i).setText(i == commas.size() - 1 ? "" : ",");
@@ -160,7 +156,7 @@ public class TypeSelectionPane
         listNotSelected = addType("type.list.of", listSubType.getSecond(), listSubType.getFirst());
         listSubType.getFirst().disableProperty().bind(listNotSelected);
 
-        Utility.addChangeListenerPlatformNN(typeGroup.selectedToggleProperty(), toggle -> {
+        FXUtility.addChangeListenerPlatformNN(typeGroup.selectedToggleProperty(), toggle -> {
             updateSelectedType();
         });
     }
@@ -208,7 +204,7 @@ public class TypeSelectionPane
         hbox.getChildren().addAll(furtherDetails);
         contents.getChildren().add(hbox);
         types.put(radioButton, calculateType);
-        Utility.addChangeListenerPlatform(calculateType, t -> updateSelectedType());
+        FXUtility.addChangeListenerPlatform(calculateType, t -> updateSelectedType());
         // Select first one by default:
         if (typeGroup.getSelectedToggle() == null)
             typeGroup.selectToggle(radioButton);

@@ -5,13 +5,9 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Bounds;
 import javafx.scene.Node;
-import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.PopupControl;
-import javafx.scene.control.Skin;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.cell.TextFieldListCell;
@@ -19,11 +15,8 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import javafx.stage.PopupWindow.AnchorLocation;
 import javafx.util.StringConverter;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.Table;
@@ -39,12 +32,10 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 /**
  * Created by neil on 22/11/2016.
@@ -78,7 +69,7 @@ public abstract class TransformationEditor
     {
         ListView<ColumnId> lv = new ListView<>();
         lv.setPlaceholder(new Label("Could not find table: " + idProperty.get()));
-        Utility.addChangeListenerPlatform(idProperty, id -> updateList(lv, id, id == null ? null : mgr.getSingleTableOrNull(id)));
+        FXUtility.addChangeListenerPlatform(idProperty, id -> updateList(lv, id, id == null ? null : mgr.getSingleTableOrNull(id)));
         {
             @Nullable TableId id = idProperty.get();
             updateList(lv, id, id == null ? null : mgr.getSingleTableOrNull(id));
@@ -141,7 +132,7 @@ public abstract class TransformationEditor
     {
         TableView<List<DisplayValue>> t = new TableView<>();
         setHeaderAndData(t, headerAndData);
-        Utility.listen(headerAndData, c -> setHeaderAndData(t, headerAndData));
+        FXUtility.listen(headerAndData, c -> setHeaderAndData(t, headerAndData));
         return t;
     }
 

@@ -1,8 +1,5 @@
 package utility;
 
-import java.io.BufferedInputStream;
-import java.io.BufferedReader;
-import java.io.EOFException;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
@@ -14,21 +11,17 @@ import java.io.LineNumberReader;
 import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.MathContext;
-import java.net.URL;
 import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Properties;
-import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -36,13 +29,8 @@ import java.util.stream.Stream;
 import annotation.userindex.qual.UserIndex;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import com.google.common.io.*;
 import javafx.application.Platform;
-import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.value.ChangeListener;
-import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.Styleable;
 import javafx.geometry.Bounds;
@@ -50,7 +38,6 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
-import javafx.scene.text.Font;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
@@ -64,7 +51,6 @@ import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.*;
 import org.checkerframework.dataflow.qual.Pure;
-import org.jetbrains.annotations.NotNull;
 import org.sosy_lab.common.rationals.Rational;
 import records.error.InternalException;
 import records.error.UserException;
@@ -77,7 +63,6 @@ import utility.gui.FXUtility;
  */
 public class Utility
 {
-    private static final Set<String> loadedFonts = new HashSet<>();
     @OnThread(Tag.FXPlatform)
     private static @MonotonicNonNull ObservableList<File> mruList;
     public static final String MRU_FILE_NAME = "recent.mru";
@@ -557,54 +542,6 @@ public class Utility
         log("", e);
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static <T> void onNonNull(ReadOnlyObjectProperty<T> property, FXPlatformConsumer<T> consumer)
-    {
-        property.addListener(new ChangeListener<T>()
-        {
-            @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            public void changed(ObservableValue<? extends T> observable, T oldValue, T newValue)
-            {
-                property.removeListener(this);
-                consumer.consume(newValue);
-            }
-        });
-    }
-
-    @SuppressWarnings("nullness")
-    public static String getStylesheet(String stylesheetName)
-    {
-        try
-        {
-            ClassLoader classLoader = ClassLoader.getSystemClassLoader();
-            URL resource = classLoader.getResource(stylesheetName);
-            return resource.toString();
-        }
-        catch (NullPointerException e)
-        {
-            log("Problem loading stylesheet: " + stylesheetName, e);
-            return "";
-        }
-    }
-
-    @SuppressWarnings("nullness")
-    public static void ensureFontLoaded(String fontFileName)
-    {
-        if (!loadedFonts.contains(fontFileName))
-        {
-            try (InputStream fis = ClassLoader.getSystemClassLoader().getResourceAsStream(fontFileName))
-            {
-                Font.loadFont(fis, 10);
-                loadedFonts.add(fontFileName);
-            }
-            catch (IOException | NullPointerException e)
-            {
-                log(e);
-            }
-        }
-    }
-
     public static void logStackTrace(String s)
     {
         try
@@ -942,39 +879,6 @@ public class Utility
         }
     }
 
-    @OnThread(Tag.FXPlatform)
-    @SuppressWarnings("nullness")
-    public static <T> void addChangeListenerPlatform(ObservableValue<T> property, FXPlatformConsumer<@Nullable T> listener)
-    {
-        // Defeat thread checker:
-        property.addListener(new ChangeListener<T>()
-        {
-            @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            public void changed(ObservableValue<? extends T> a, T b, T newVal)
-            {
-                listener.consume(newVal);
-            }
-        });
-    }
-
-    @OnThread(Tag.FXPlatform)
-    @SuppressWarnings("nullness")
-    // NN = Not Null
-    public static <T> void addChangeListenerPlatformNN(ObservableValue<T> property, FXPlatformConsumer<@NonNull T> listener)
-    {
-        // Defeat thread checker:
-        property.addListener(new ChangeListener<T>()
-        {
-            @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            public void changed(ObservableValue<? extends T> a, T b, T newVal)
-            {
-                listener.consume(newVal);
-            }
-        });
-    }
-
     public static class DescriptiveErrorListener extends BaseErrorListener
     {
         public final List<String> errors = new ArrayList<>();
@@ -991,13 +895,6 @@ public class Utility
 
             errors.add(sourceName+"line "+line+":"+charPositionInLine+" "+msg);
         }
-    }
-
-    @OnThread(Tag.FXPlatform)
-    public static void runAfter(FXPlatformRunnable r)
-    {
-        // Defeat thread-checker:
-        ((Runnable)(() -> Platform.runLater(r::run))).run();
     }
 
     @OnThread(Tag.Simulation)
@@ -1075,14 +972,6 @@ public class Utility
         }
     }
 
-    // Mainly, this method is to avoid having to cast to ListChangeListener to disambiguate
-    // from the invalidionlistener overload in ObservableList
-    @OnThread(Tag.FXPlatform)
-    public static <T> void listen(ObservableList<T> list, FXPlatformConsumer<ListChangeListener.Change<? extends T>> listener)
-    {
-        list.addListener(listener::consume);
-    }
-
     public static File getAutoSaveDirectory() throws IOException
     {
         File dir = new File(getStorageDirectory(), "autosave");
@@ -1130,7 +1019,7 @@ public class Utility
             mruList = FXCollections.observableArrayList();
             reloadMRU();
             // After loading, add the listener:
-            Utility.listen(mruList, c -> {
+            FXUtility.listen(mruList, c -> {
                 try
                 {
                     FileUtils.writeLines(new File(getStorageDirectory(), MRU_FILE_NAME), "UTF-8", Utility.mapList(c.getList(), File::getAbsoluteFile));

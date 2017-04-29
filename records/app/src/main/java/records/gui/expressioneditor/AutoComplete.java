@@ -28,6 +28,7 @@ import threadchecker.Tag;
 import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.Arrays;
 import java.util.List;
@@ -66,7 +67,7 @@ public class AutoComplete extends PopupControl
         container = new BorderPane(null, null, null, null, completions);
         this.calculateCompletions = calculateCompletions;
 
-        completions.getStylesheets().add(Utility.getStylesheet("autocomplete.css"));
+        completions.getStylesheets().add(FXUtility.getStylesheet("autocomplete.css"));
 
         completions.setCellFactory(lv -> {
             return new CompleteCell();
@@ -78,7 +79,7 @@ public class AutoComplete extends PopupControl
             }
         });
 
-        Utility.addChangeListenerPlatform(completions.getSelectionModel().selectedItemProperty(), selected -> {
+        FXUtility.addChangeListenerPlatform(completions.getSelectionModel().selectedItemProperty(), selected -> {
             if (selected != null)
             {
                 @Nullable Node furtherDetails = selected.getFurtherDetails();
@@ -92,7 +93,7 @@ public class AutoComplete extends PopupControl
 
         setSkin(new AutoCompleteSkin());
 
-        Utility.addChangeListenerPlatformNN(textField.focusedProperty(), focused -> {
+        FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), focused -> {
             if (focused)
             {
                 Pair<Double, Double> pos = calculatePosition();
@@ -108,10 +109,10 @@ public class AutoComplete extends PopupControl
         });
 
         // TODO listen to scene's position in window, and window's position
-        Utility.addChangeListenerPlatformNN(textField.localToSceneTransformProperty(), t -> updatePosition());
-        Utility.addChangeListenerPlatformNN(textField.layoutXProperty(), t -> updatePosition());
-        Utility.addChangeListenerPlatformNN(textField.layoutYProperty(), t -> updatePosition());
-        Utility.addChangeListenerPlatformNN(textField.heightProperty(), t -> updatePosition());
+        FXUtility.addChangeListenerPlatformNN(textField.localToSceneTransformProperty(), t -> updatePosition());
+        FXUtility.addChangeListenerPlatformNN(textField.layoutXProperty(), t -> updatePosition());
+        FXUtility.addChangeListenerPlatformNN(textField.layoutYProperty(), t -> updatePosition());
+        FXUtility.addChangeListenerPlatformNN(textField.heightProperty(), t -> updatePosition());
 
         textField.setTextFormatter(new TextFormatter<String>(change -> {
             // We're not interested in changes in just the selection:

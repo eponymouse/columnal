@@ -4,7 +4,6 @@ import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ReadOnlyObjectProperty;
-import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -33,12 +32,12 @@ import records.transformations.TransformationEditor;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformBiFunction;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.Workers;
+import utility.gui.FXUtility;
 
 import java.util.List;
 import java.util.Optional;
@@ -94,7 +93,7 @@ public class EditTransformationDialog
         pane.setLeft(filteredListView);
         ReadOnlyObjectProperty<TransformationInfo> selectedTransformation = filteredListView.getSelectionModel().selectedItemProperty();
         SimpleObjectProperty<Optional<TransformationEditor>> editor = new SimpleObjectProperty<>();
-        Utility.addChangeListenerPlatform(selectedTransformation, trans ->
+        FXUtility.addChangeListenerPlatform(selectedTransformation, trans ->
         {
             if (trans != null)
                 editor.set(Optional.of(trans.editNew(parentView, parentView.getManager(), srcId, srcId == null ? null : parentView.getManager().getSingleTableOrNull(srcId))));
@@ -118,7 +117,7 @@ public class EditTransformationDialog
         infoPane.getChildren().add(textFlow);
         pane.setCenter(infoPane);
 
-        Utility.addChangeListenerPlatform(editor, ed ->
+        FXUtility.addChangeListenerPlatform(editor, ed ->
         {
             if (infoPane.getChildren().size() > 2)
                 infoPane.getChildren().remove(2);
@@ -135,8 +134,8 @@ public class EditTransformationDialog
         });
         editor.set(existing == null ? Optional.empty() : Optional.of(existing));
         dialog.getDialogPane().setContent(pane);
-        dialog.getDialogPane().getStylesheets().add(Utility.getStylesheet("general.css"));
-        dialog.getDialogPane().getStylesheets().add(Utility.getStylesheet("transformation.css"));
+        dialog.getDialogPane().getStylesheets().add(FXUtility.getStylesheet("general.css"));
+        dialog.getDialogPane().getStylesheets().add(FXUtility.getStylesheet("transformation.css"));
 
         dialog.setOnShown(e -> org.scenicview.ScenicView.show(dialog.getDialogPane().getScene()));
 

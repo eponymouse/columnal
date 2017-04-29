@@ -2,8 +2,6 @@ package records.gui;
 
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
-import javafx.beans.binding.StringBinding;
-import javafx.beans.binding.StringExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.SimpleObjectProperty;
@@ -30,16 +28,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
 import records.data.Table;
-import records.data.Table.BlankSaver;
 import records.data.Table.FullSaver;
-import records.data.Table.Saver;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.TransformationEditor;
-import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
@@ -49,13 +44,8 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Created by neil on 18/10/2016.
@@ -255,7 +245,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
         // Needs to pick up mouse events on mouse pane, not display pane:
         pickPaneMouse.setMouseTransparent(false);
         pickPaneDisplay.setMouseTransparent(true);
-        Utility.addChangeListenerPlatform(currentPick, t -> {
+        FXUtility.addChangeListenerPlatform(currentPick, t -> {
             if (t != null)
             {
                 Bounds b = t.getDisplay().getBoundsInParent();

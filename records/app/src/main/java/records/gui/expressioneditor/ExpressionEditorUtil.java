@@ -2,11 +2,8 @@ package records.gui.expressioneditor;
 
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
-import javafx.beans.binding.ListBinding;
-import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.beans.property.StringProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
@@ -19,16 +16,13 @@ import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.PopupWindow.AnchorLocation;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.jetbrains.annotations.NotNull;
 import records.transformations.expression.ErrorRecorder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
 import utility.Pair;
-import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.io.Serializable;
@@ -90,8 +84,8 @@ public class ExpressionEditorUtil
         {
             this.vBox = vBox;
             this.textField = textField;
-            Utility.addChangeListenerPlatformNN(textField.focusedProperty(), this::textFieldFocusChanged);
-            Utility.addChangeListenerPlatformNN(vBox.hoverProperty(), this::mouseHoverStatusChanged);
+            FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), this::textFieldFocusChanged);
+            FXUtility.addChangeListenerPlatformNN(vBox.hoverProperty(), this::mouseHoverStatusChanged);
         }
 
         private static class ErrorMessagePopup extends PopupControl

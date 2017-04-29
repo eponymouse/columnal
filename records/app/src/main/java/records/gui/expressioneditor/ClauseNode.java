@@ -23,6 +23,7 @@ import records.transformations.expression.MatchExpression.Pattern;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -62,7 +63,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
         this.nodes = FXCollections.observableArrayList();
         // Must initialize outcome first because updateNodes will use it:
         this.outcome = makeConsecutive("\u2794", patternsAndGuardsToOutcome == null ? null : patternsAndGuardsToOutcome.getSecond()).prompt("value");
-        Utility.listen(matches, c -> {
+        FXUtility.listen(matches, c -> {
             updateNodes();
             updateListeners();
         });

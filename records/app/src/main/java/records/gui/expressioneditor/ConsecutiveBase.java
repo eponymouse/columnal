@@ -92,15 +92,15 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
 
         this.prefixNode = prefixNode;
         this.suffixNode = suffixNode;
-        Utility.listen(operands, c -> {
+        FXUtility.listen(operands, c -> {
             updateNodes();
             updateListeners();
         });
-        Utility.listen(operators, c -> {
+        FXUtility.listen(operators, c -> {
             updateNodes();
             updateListeners();
         });
-        Utility.addChangeListenerPlatformNN(atomicEdit, inProgress -> {
+        FXUtility.addChangeListenerPlatformNN(atomicEdit, inProgress -> {
             if (!inProgress)
             {
                 // At end of edit:

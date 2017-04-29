@@ -26,9 +26,7 @@ import records.transformations.expression.ErrorRecorder;
 import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
 import utility.Pair;
-import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.Comparator;
@@ -85,7 +83,7 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode, Err
         else
             contents = null;
 
-        Utility.addChangeListenerPlatformNN(head.textProperty(), text -> {
+        FXUtility.addChangeListenerPlatformNN(head.textProperty(), text -> {
             parent.changed(this);
         });
     }

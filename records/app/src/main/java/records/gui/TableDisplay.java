@@ -18,14 +18,13 @@ import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import records.data.RecordSet;
 import records.data.Table;
-import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 import utility.Utility;
 import utility.Workers;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -269,7 +268,7 @@ public class TableDisplay extends BorderPane
         setOnMouseReleased(e -> { resizing = false; });
 
         mostRecentBounds = new AtomicReference<>(getBoundsInParent());
-        Utility.addChangeListenerPlatformNN(boundsInParentProperty(), mostRecentBounds::set);
+        FXUtility.addChangeListenerPlatformNN(boundsInParentProperty(), mostRecentBounds::set);
     }
 
     private boolean dragResize(double sceneX, double sceneY)

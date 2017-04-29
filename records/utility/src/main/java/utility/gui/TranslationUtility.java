@@ -1,9 +1,7 @@
 package utility.gui;
 
-import javafx.beans.*;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
-import javafx.beans.binding.StringExpression;
 import javafx.beans.value.ObservableStringValue;
 import javafx.geometry.Bounds;
 import javafx.scene.Node;
@@ -169,7 +167,7 @@ public class TranslationUtility
             String before = remaining.substring(0, subst);
             r.add(new Text(before));
             Hyperlink link = new Hyperlink(target);
-            Utility.addChangeListenerPlatformNN(link.hoverProperty(), new FXPlatformConsumer<Boolean>()
+            FXUtility.addChangeListenerPlatformNN(link.hoverProperty(), new FXPlatformConsumer<Boolean>()
                 {
                     private @Nullable PopupControl info;
                     @Override

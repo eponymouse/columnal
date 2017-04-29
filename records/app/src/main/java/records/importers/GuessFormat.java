@@ -39,6 +39,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Utility;
+import utility.gui.FXUtility;
 import utility.gui.GUI;
 
 import java.math.BigDecimal;
@@ -697,7 +698,7 @@ public class GuessFormat
             }
         };
         pick.consume(choiceExpression.get());
-        Utility.addChangeListenerPlatformNN(choiceExpression, pick);
+        FXUtility.addChangeListenerPlatformNN(choiceExpression, pick);
         return vbox;
     }
 

@@ -58,7 +58,7 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
         this.childrenNodeListener = c -> {
             updateNodes();
         };
-        Utility.listen(clauses, c -> {
+        FXUtility.listen(clauses, c -> {
             updateNodes();
             updateListeners();
         });

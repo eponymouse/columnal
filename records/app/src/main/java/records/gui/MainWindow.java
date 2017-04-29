@@ -1,24 +1,18 @@
 package records.gui;
 
 import javafx.application.Platform;
-import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
-import javafx.beans.binding.StringExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
-import javafx.scene.control.Alert.AlertType;
-import javafx.scene.input.Clipboard;
-import javafx.scene.input.DataFormat;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
@@ -157,7 +151,7 @@ public class MainWindow
         ScrollPane scrollPane = new ScrollPane(v);
 
         // From https://reportmill.wordpress.com/2014/06/03/make-scrollpane-content-fill-viewport-bounds/
-        Utility.addChangeListenerPlatform(scrollPane.viewportBoundsProperty(), bounds -> {
+        FXUtility.addChangeListenerPlatform(scrollPane.viewportBoundsProperty(), bounds -> {
             if (bounds != null)
             {
                 Node content = scrollPane.getContent();
@@ -168,7 +162,7 @@ public class MainWindow
 
         BorderPane root = new BorderPane(scrollPane, menuBar, null, null, null);
         Scene scene = new Scene(root);
-        scene.getStylesheets().add(Utility.getStylesheet("mainview.css"));
+        scene.getStylesheets().add(FXUtility.getStylesheet("mainview.css"));
         stage.setScene(scene);
         stage.setWidth(1000);
         stage.setHeight(800);

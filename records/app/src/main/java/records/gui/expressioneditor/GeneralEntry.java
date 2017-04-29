@@ -178,7 +178,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
         this.nodes = FXCollections.observableArrayList(container);
         this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), OperatorEntry::isOperatorAlphabet);
 
-        Utility.addChangeListenerPlatformNN(status, s -> {
+        FXUtility.addChangeListenerPlatformNN(status, s -> {
             // Need to beware that some status values may map to same pseudoclass:
             // First turn all off:
             for (Status possibleStatus : Status.values())
@@ -189,7 +189,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
             container.pseudoClassStateChanged(getPseudoClass(s), true);
             typeLabel.setText(getTypeLabel(s));
         });
-        Utility.addChangeListenerPlatformNN(textField.textProperty(), t -> {
+        FXUtility.addChangeListenerPlatformNN(textField.textProperty(), t -> {
             if (!completing)
             {
                 status.set(Status.UNFINISHED);
@@ -338,7 +338,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
 
     public GeneralEntry focusWhenShown()
     {
-        Utility.onNonNull(textField.sceneProperty(), scene -> focus(Focus.RIGHT));
+        FXUtility.onNonNull(textField.sceneProperty(), scene -> focus(Focus.RIGHT));
         return this;
     }
 

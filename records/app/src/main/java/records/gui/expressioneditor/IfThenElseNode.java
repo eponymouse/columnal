@@ -20,7 +20,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
-import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
@@ -57,9 +56,9 @@ public class IfThenElseNode implements OperandNode, ExpressionParent, ErrorDispl
         thenPart = new @Interned Consecutive(this, thenLabel, null, "if-then", null);
         elsePart = new @Interned Consecutive(this, elseLabel, null, "if-else", null);
 
-        Utility.listen(condition.nodes(), c -> updateNodes());
-        Utility.listen(thenPart.nodes(), c -> updateNodes());
-        Utility.listen(elsePart.nodes(), c -> updateNodes());
+        FXUtility.listen(condition.nodes(), c -> updateNodes());
+        FXUtility.listen(thenPart.nodes(), c -> updateNodes());
+        FXUtility.listen(elsePart.nodes(), c -> updateNodes());
 
         updateNodes();
     }

@@ -1,7 +1,5 @@
 package records.gui;
 
-import javafx.beans.Observable;
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -17,7 +15,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExSupplier;
 import utility.FXPlatformFunction;
-import utility.Utility;
 import utility.gui.FXUtility;
 
 
@@ -41,14 +38,14 @@ public class ErrorableTextField<T>
         field.getStyleClass().add("errorable-text-field");
         this.converter = converter;
         this.converted = new SimpleObjectProperty<>(converter.apply(""));
-        Utility.addChangeListenerPlatformNN(field.textProperty(), s -> converted.setValue(converter.apply(s)));
+        FXUtility.addChangeListenerPlatformNN(field.textProperty(), s -> converted.setValue(converter.apply(s)));
         for (ObservableValue dependency : conversionDependencies)
         {
-            Utility.addChangeListenerPlatform(dependency, o -> converted.setValue(converter.apply(field.getText())));
+            FXUtility.addChangeListenerPlatform(dependency, o -> converted.setValue(converter.apply(field.getText())));
         }
         this.value = FXUtility.<ConversionResult<T>, @Nullable T>mapBindingEager(converted, ConversionResult::getValue);
         this.error = FXUtility.<ConversionResult<T>, String>mapBindingEager(converted, ConversionResult::getError);
-        Utility.addChangeListenerPlatform(error, err -> {
+        FXUtility.addChangeListenerPlatform(error, err -> {
             FXUtility.setPseudoclass(field, "has-error", err != null);
             // TODO show a tooltip
         });
