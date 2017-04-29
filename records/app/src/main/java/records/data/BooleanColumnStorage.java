@@ -76,7 +76,7 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
     @Override
     public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
     {
-        boolean value;
+        @Value boolean value;
         switch (writtenValue.getString())
         {
             case "true": value = true; break;

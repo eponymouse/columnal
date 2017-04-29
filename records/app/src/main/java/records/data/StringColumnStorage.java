@@ -25,7 +25,7 @@ import java.util.List;
 public class StringColumnStorage implements ColumnStorage<String>
 {
     private final ArrayList<@Value String> values;
-    private final DumbObjectPool<String> pool = new DumbObjectPool<>(String.class, 1000, null);
+    private final DumbObjectPool<@Value String> pool = new DumbObjectPool<>((Class<@Value String>)(Class)String.class, 1000, null);
     private final @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet;
     @MonotonicNonNull
     @OnThread(value = Tag.Any,requireSynchronized = true)
@@ -63,7 +63,7 @@ public class StringColumnStorage implements ColumnStorage<String>
         this.values.ensureCapacity(this.values.size() + items.size());
         for (String s : items)
         {
-            this.values.add(DataTypeUtility.value(pool.pool(s)));
+            this.values.add(pool.pool(DataTypeUtility.value(s)));
         }
     }
 

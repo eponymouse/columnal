@@ -1,5 +1,6 @@
 package records.transformations;
 
+import annotation.qual.Value;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -385,7 +386,9 @@ public class Filter extends Transformation
 
         }
 
-        private String show(@Nullable Object v)
+        // Not really a @Value return, but satisfies type system:
+        @SuppressWarnings("value")
+        private @Value String show(@Nullable Object v)
         {
             if (v == null)
                 return "null";

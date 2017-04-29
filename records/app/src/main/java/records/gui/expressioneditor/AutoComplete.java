@@ -17,6 +17,7 @@ import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Window;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.error.InternalException;
@@ -245,7 +246,7 @@ public class AutoComplete extends PopupControl
         }
     }
 
-    public abstract static class Completion
+    public abstract static @Interned class Completion
     {
         /**
          * Given a property with the latest text, what graphical node and text property
@@ -292,7 +293,7 @@ public class AutoComplete extends PopupControl
 
 
 
-    public static class KeyShortcutCompletion extends Completion
+    public static @Interned class KeyShortcutCompletion extends Completion
     {
         private final Character[] shortcuts;
         private final String title;

@@ -1,5 +1,7 @@
 package records.gui;
 
+import annotation.qual.Value;
+
 /**
  * A DisplayValue which comes from the user entering a string.
  *
@@ -23,7 +25,8 @@ public class EnteredDisplayValue extends DisplayValueBase
         return enteredString;
     }
 
-    public String getString()
+    @SuppressWarnings("value") // To add @Value annotation
+    public @Value String getString()
     {
         return enteredString;
     }

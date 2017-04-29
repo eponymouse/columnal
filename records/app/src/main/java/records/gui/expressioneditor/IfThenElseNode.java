@@ -53,9 +53,9 @@ public class IfThenElseNode implements OperandNode, ExpressionParent, ErrorDispl
         thenLabel = ExpressionEditorUtil.keyword("then", "if-keyword", this, getParentStyles());
         elseLabel = ExpressionEditorUtil.keyword("else", "if-keyword", this, getParentStyles());
 
-        condition = new Consecutive(this, ifLabel, null, "if-condition", null);
-        thenPart = new Consecutive(this, thenLabel, null, "if-then", null);
-        elsePart = new Consecutive(this, elseLabel, null, "if-else", null);
+        condition = new @Interned Consecutive(this, ifLabel, null, "if-condition", null);
+        thenPart = new @Interned Consecutive(this, thenLabel, null, "if-then", null);
+        elsePart = new @Interned Consecutive(this, elseLabel, null, "if-else", null);
 
         Utility.listen(condition.nodes(), c -> updateNodes());
         Utility.listen(thenPart.nodes(), c -> updateNodes());

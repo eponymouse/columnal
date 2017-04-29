@@ -101,22 +101,22 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
      * Shortcut for opening a bracketed section.  This is passed back to us by reference
      * from AutoCompletion, hence we mark it @Interned to allow reference comparison.
      */
-    private final @Interned KeyShortcutCompletion bracketCompletion;
+    private final KeyShortcutCompletion bracketCompletion;
     /**
      * Shortcut for opening a string literal.  This is passed back to us by reference
      * from AutoCompletion, hence we mark it @Interned to allow reference comparison.
      */
-    private final @Interned KeyShortcutCompletion stringCompletion;
+    private final KeyShortcutCompletion stringCompletion;
 
     /**
      * Completion for if-then-else
      */
-    private final @Interned Completion ifCompletion;
+    private final Completion ifCompletion;
 
     /**
      * Completion for match expressions
      */
-    private final @Interned Completion matchCompletion;
+    private final Completion matchCompletion;
 
     /**
      * Set to true while updating field with auto completion.  Allows us to avoid
@@ -156,8 +156,8 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
     public GeneralEntry(String content, Status initialStatus, ConsecutiveBase parent)
     {
         super(parent);
-        bracketCompletion = new @Interned KeyShortcutCompletion("Bracketed expressions", '(');
-        stringCompletion = new @Interned KeyShortcutCompletion("Text", '\"');
+        bracketCompletion = new KeyShortcutCompletion("Bracketed expressions", '(');
+        stringCompletion = new KeyShortcutCompletion("Text", '\"');
         ifCompletion = new KeywordCompletion("if");
         matchCompletion = new KeywordCompletion("match");
         this.textField = createLeaveableTextField();
@@ -745,7 +745,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
         }
 
         @Override
-        protected String selected(String currentText, Completion c, String rest)
+        protected String selected(String currentText, @Interned Completion c, String rest)
         {
             if (c instanceof KeyShortcutCompletion)
             {
@@ -757,11 +757,11 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
                 //else if (ksc == patternMatchCompletion)
                     //parent.replace(GeneralEntry.this, new PatternMatchNode(parent).focusWhenShown());
             }
-            else if (c == ifCompletion)
+            else if (c.equals(ifCompletion))
             {
                 parent.replace(GeneralEntry.this, new IfThenElseNode(parent));
             }
-            else if (c == matchCompletion)
+            else if (c.equals(matchCompletion))
             {
                 parent.replace(GeneralEntry.this, new PatternMatchNode(parent, null));
             }

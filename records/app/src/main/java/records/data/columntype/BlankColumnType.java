@@ -8,7 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class BlankColumnType extends ColumnType
 {
-    public static final @Interned BlankColumnType INSTANCE = new BlankColumnType();
+    public static final BlankColumnType INSTANCE = new BlankColumnType();
 
     // Singleton:
     private BlankColumnType() {};
@@ -19,6 +19,7 @@ public class BlankColumnType extends ColumnType
         return 0;
     }
 
+    @SuppressWarnings("interned")
     @Override
     public boolean equals(@Nullable Object obj)
     {

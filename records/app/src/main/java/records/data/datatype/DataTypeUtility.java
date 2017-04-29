@@ -152,7 +152,7 @@ public class DataTypeUtility
             @Override
             public DisplayValue tuple(List<DataType> inner) throws InternalException, UserException
             {
-                Object[] array = (Object[])object;
+                @Value Object @Value[] array = (@Value Object @Value[])object;
                 if (array.length != inner.size())
                     throw new InternalException("Tuple type does not match value, expected: " + inner.size() + " got " + array.length);
                 List<DisplayValue> innerDisplay = new ArrayList<>();
@@ -169,7 +169,7 @@ public class DataTypeUtility
                 if (inner == null)
                     return DisplayValue.array(rowIndex, Collections.emptyList());
                 @NonNull DataType innerFinal = inner;
-                List<Object> list = (List<Object>)object;
+                List<@Value Object> list = (List<@Value Object>)object;
                 return DisplayValue.array(rowIndex, Utility.mapListEx(list, o -> display(rowIndex, innerFinal, o)));
             }
         });

@@ -96,7 +96,7 @@ public class TupleExpression extends Expression
     {
         if (value instanceof Object[])
         {
-            Object[] tuple = (Object[]) value;
+            @Value Object @Value[] tuple = (@Value Object @Value[]) value;
             if (tuple.length != members.size())
                 throw new InternalException("Mismatch in tuple size, type is " + members.size() + " but found " + tuple.length);
             @Nullable EvaluateState curState = state;

@@ -1,5 +1,6 @@
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.interning.qual.Interned;
 
 package javafx.scene;
 class Parent
@@ -42,7 +43,7 @@ class Button
 {
     void setOnAction(@NonNull EventHandler<ActionEvent> ev) @UnknownInitialization;
 }
-class @Interned ButtonType
+@Interned class ButtonType
 {
 
 }

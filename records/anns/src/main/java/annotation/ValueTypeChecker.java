@@ -4,12 +4,20 @@ import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import annotation.qual.ValueBottom;
 import annotation.userindex.UserIndexChecker;
+import com.sun.source.tree.LiteralTree;
+import com.sun.source.tree.Tree.Kind;
 import org.checkerframework.common.basetype.BaseAnnotatedTypeFactory;
 import org.checkerframework.common.basetype.BaseTypeChecker;
 import org.checkerframework.common.basetype.BaseTypeVisitor;
 import org.checkerframework.framework.qual.PolyAll;
+import org.checkerframework.framework.type.AnnotatedTypeMirror;
 import org.checkerframework.framework.type.GenericAnnotatedTypeFactory;
+import org.checkerframework.framework.type.treeannotator.ListTreeAnnotator;
+import org.checkerframework.framework.type.treeannotator.TreeAnnotator;
+import org.checkerframework.javacutil.AnnotationUtils;
 
+import javax.lang.model.element.AnnotationMirror;
+import javax.lang.model.util.Elements;
 import java.io.File;
 import java.io.IOException;
 import java.lang.annotation.Annotation;
@@ -52,7 +60,43 @@ public class ValueTypeChecker extends BaseTypeChecker
             protected GenericAnnotatedTypeFactory<?, ?, ?, ?> createTypeFactory()
             {
                 return new BaseAnnotatedTypeFactory(ValueTypeChecker.this, false) {
-                    // This body of the class is only needed to work around some kind of
+                    // Need to let literals be @Value for booleans and empty string:
+                    protected TreeAnnotator createTreeAnnotator() {
+                        return new ListTreeAnnotator(new TreeAnnotator[]{super.createTreeAnnotator(), new ValueTypeTreeAnnotator(this, elements)});
+                    }
+
+                    class ValueTypeTreeAnnotator extends TreeAnnotator {
+                        private final AnnotationMirror VALUE;
+
+                        public ValueTypeTreeAnnotator(BaseAnnotatedTypeFactory atypeFactory, Elements elements)
+                        {
+                            super(atypeFactory);
+                            this.VALUE = AnnotationUtils.fromClass(elements, Value.class);
+                        }
+
+                        public Void visitLiteral(LiteralTree tree, AnnotatedTypeMirror type)
+                        {
+
+                            if(!type.isAnnotatedInHierarchy(this.VALUE))
+                            {
+                                // Empty string is automatically @Value
+                                if (tree.getKind() == Kind.STRING_LITERAL && tree.getValue().equals(""))
+                                {
+                                    type.addAnnotation(this.VALUE);
+                                }
+                                // So are boolean literals:
+                                if(tree.getKind() == Kind.BOOLEAN_LITERAL)
+                                {
+                                    type.addAnnotation(this.VALUE);
+                                }
+                            }
+
+                            return (Void)super.visitLiteral(tree, type);
+                        }
+                    }
+
+
+                    // This follow part of the body of the class is only needed to work around some kind of
                     // bug in the import scanning when the class files are available in a directory
                     // rather than a JAR, which is true since we moved the annotations to a Maven module:
                     {

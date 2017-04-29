@@ -1,5 +1,6 @@
 package records.gui;
 
+import annotation.qual.UnknownIfValue;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -26,6 +27,7 @@ import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -108,7 +110,7 @@ public class TypeSelectionPane
         ObservableList<Label> commas = FXCollections.observableArrayList();
         FlowPane tupleTypesPane = new FlowPane(new Label("("), new HBox(new Label(")"), shrinkTupleButton, extendTupleButton));
         ObjectProperty<@Nullable DataType> tupleType = new SimpleObjectProperty<>(null);
-        tupleTypes.addListener((ListChangeListener<? super @UnknownKeyFor ObservableObjectValue<@UnknownKeyFor @Nullable DataType>>) (ListChangeListener.Change<? extends ObservableObjectValue<@UnknownKeyFor @Nullable DataType>> c) -> {
+        Utility.listen(tupleTypes, c -> {
             List<@NonNull DataType> types = new ArrayList<>();
             for (ObservableObjectValue<@Nullable DataType> obsType : tupleTypes)
             {
@@ -119,7 +121,7 @@ public class TypeSelectionPane
             }
             tupleType.setValue(DataType.tuple(types));
         });
-        commas.addListener((ListChangeListener<? super @UnknownKeyFor Label>) c -> {
+        Utility.listen(commas, c -> {
             for (int i = 0; i < commas.size(); i++)
             {
                 commas.get(i).setText(i == commas.size() - 1 ? "" : ",");

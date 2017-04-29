@@ -36,8 +36,8 @@ public class TypeState
     // If variable is in there but > size 1, means it is known but cannot be used because it has multiple types in different guards
     private final Map<String, Set<DataType>> variables;
     private final Map<String, FunctionDefinition> functions;
-    private final @Interned TypeManager typeManager;
-    private final @Interned UnitManager unitManager;
+    private final TypeManager typeManager;
+    private final UnitManager unitManager;
 
     public TypeState(UnitManager unitManager, TypeManager typeManager)
     {
@@ -187,9 +187,9 @@ public class TypeState
         for (TypeState typeState : typeStates)
         {
             // TypeManager and UnitManager should be constant:
-            if (typeState.typeManager != original.typeManager)
+            if (!typeState.typeManager.equals(original.typeManager))
                 throw new InternalException("Type manager changed between different type states");
-            if (typeState.unitManager != original.unitManager)
+            if (!typeState.unitManager.equals(original.unitManager))
                 throw new InternalException("Unit manager changed between different type states");
             // Functions shouldn't have changed:
             if (!typeState.functions.equals(original.functions))

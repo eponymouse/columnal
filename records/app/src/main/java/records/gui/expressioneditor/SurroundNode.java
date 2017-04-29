@@ -344,6 +344,7 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode, Err
         }
 
         @Override
+        @SuppressWarnings("interned")
         @OnThread(Tag.FX)
         public void changed(ObservableValue<? extends @Nullable String> observable, @Nullable String oldValue, @Nullable String newValue)
         {
