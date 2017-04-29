@@ -21,6 +21,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.StyledText;
@@ -239,7 +240,7 @@ public class GuessFormat
             if (separator.equals(" "))
                 return "<Space>";
             if (separator.equals("\t"))
-                return "<Tab>";
+                return "<Tab (\u27FC)>";
             return separator;
         }
 
@@ -446,7 +447,7 @@ public class GuessFormat
             else if (!inQuoted && sep.separator != null && row.startsWith(sep.separator, i))
             {
                 r.columnContents.add(sb.toString());
-                r.originalContentAndStyle.add(new Pair<>(sep.separator, "separator"));
+                r.originalContentAndStyle.add(new Pair<>(replaceTab(sep.separator), "separator"));
                 sb = new StringBuilder();
                 i += sep.separator.length();
             }
@@ -454,13 +455,18 @@ public class GuessFormat
             {
                 // Nothing special:
                 sb.append(row.charAt(i));
-                r.originalContentAndStyle.add(new Pair<>(row.substring(i, i+1), "normal"));
+                r.originalContentAndStyle.add(new Pair<>(replaceTab(row.substring(i, i+1)), "normal"));
                 i += 1;
 
             }
         }
         r.columnContents.add(sb.toString());
         return r;
+    }
+
+    private static String replaceTab(String s)
+    {
+        return s.replace("\t", "\u27FE");
     }
 
     private static Format guessBodyFormat(UnitManager mgr, int columnCount, int headerRows, @NonNull List<@NonNull List<@NonNull String>> initialVals) throws GuessException
@@ -623,7 +629,7 @@ public class GuessFormat
                 choices = new Label("Internal error: " + e.getLocalizedMessage());
             }
 
-            Scene scene = new Scene(new VBox(choices, new SplitPane(sourceFileView, tableView)));
+            Scene scene = new Scene(new VBox(choices, new SplitPane(new VirtualizedScrollPane<>(sourceFileView), tableView)));
             scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
             s.setScene(scene);
             s.show();

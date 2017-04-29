@@ -57,10 +57,7 @@ public class NumericColumnType extends ColumnType
     @Override
     public String toString()
     {
-        return "NumericColumnType{" +
-            "unit=" + unit +
-            ", minDP=" + minDP +
-            '}';
+        return "Number"; // TODO add units
     }
 
     public String getPrefixToRemove()
