@@ -21,6 +21,9 @@ import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.fxmisc.richtext.StyleClassedTextArea;
+import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
+import org.fxmisc.richtext.model.StyledText;
 import records.data.ColumnId;
 import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
@@ -38,6 +41,7 @@ import records.transformations.function.ToDate;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
@@ -48,6 +52,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -360,7 +365,7 @@ public class GuessFormat
                     {
                         if (!initial.get(i).isEmpty())
                         {
-                            counts.add(splitIntoColumns(initial.get(i), sep, quot).size());
+                            counts.add(splitIntoColumns(initial.get(i), sep, quot).columnContents.size());
                         }
                     }
 
@@ -381,7 +386,7 @@ public class GuessFormat
 
                     return ChoicePoint.choose(quality, score, ColumnCountChoice.getType(), (ColumnCountChoice cc) ->
                     {
-                        List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> splitIntoColumns(s, sep, quot));
+                        List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> splitIntoColumns(s, sep, quot).columnContents);
                         Format format = guessBodyFormat(mgr, cc.columnCount, hrc.numHeaderRows, initialVals);
                         TextFormat textFormat = new TextFormat(format, sep.separator, quot.quote, chc.charset);
                         double proportionNonText = (double)textFormat.columnTypes.stream().filter(c -> !(c.type instanceof TextColumnType)).count() / (double)textFormat.columnTypes.size();
@@ -393,12 +398,21 @@ public class GuessFormat
         }, initialByCharset.keySet().stream().<@NonNull CharsetChoice>map(CharsetChoice::new).collect(Collectors.<@NonNull CharsetChoice>toList()).<@NonNull CharsetChoice>toArray(new @NonNull CharsetChoice[0]));
     }
 
+    private static class RowInfo
+    {
+        // Each item is one column's content on this row
+        private final List<String> columnContents = new ArrayList<>();
+        // Each pair is (content, style)
+        private final List<Pair<String, String>> originalContentAndStyle = new ArrayList<>();
+
+    }
+
     // Split a row of text into columns, given a separator and a quote character
-    private static List<String> splitIntoColumns(String row, SeparatorChoice sep, QuoteChoice quot)
+    private static RowInfo splitIntoColumns(String row, SeparatorChoice sep, QuoteChoice quot)
     {
         boolean inQuoted = false;
         StringBuilder sb = new StringBuilder();
-        List<String> r = new ArrayList<>();
+        RowInfo r = new RowInfo();
         for (int i = 0; i < row.length();)
         {
             // First check for escaped quote (which may otherwise look like a quote):
@@ -407,16 +421,27 @@ public class GuessFormat
                 // Skip it:
                 sb.append(quot.quote);
                 i += quot.escapedQuote.length();
-                continue;
+
+                if (quot.quote != null && quot.escapedQuote.endsWith(quot.quote))
+                {
+                    r.originalContentAndStyle.add(new Pair<>(quot.escapedQuote.substring(0, quot.escapedQuote.length() - quot.quote.length()), "escaped-quote-escape"));
+                    r.originalContentAndStyle.add(new Pair<>(quot.quote, "escaped-quote-quote"));
+                }
+                else
+                {
+                    r.originalContentAndStyle.add(new Pair<>(quot.escapedQuote, "escaped-quote"));
+                }
             }
             else if (quot.quote != null && row.startsWith(quot.quote, i))
             {
                 inQuoted = !inQuoted;
                 i += quot.quote.length();
+                r.originalContentAndStyle.add(new Pair<>(quot.quote, inQuoted ? "quote-begin" : "quote-end"));
             }
             else if (!inQuoted && sep.separator != null && row.startsWith(sep.separator, i))
             {
-                r.add(sb.toString());
+                r.columnContents.add(sb.toString());
+                r.originalContentAndStyle.add(new Pair<>(sep.separator, "separator"));
                 sb = new StringBuilder();
                 i += sep.separator.length();
             }
@@ -424,10 +449,12 @@ public class GuessFormat
             {
                 // Nothing special:
                 sb.append(row.charAt(i));
+                r.originalContentAndStyle.add(new Pair<>(row.substring(i, i+1), "normal"));
                 i += 1;
+
             }
         }
-        r.add(sb.toString());
+        r.columnContents.add(sb.toString());
         return r;
     }
 
@@ -575,14 +602,15 @@ public class GuessFormat
         Platform.runLater(() ->
         {
             Stage s = new Stage();
-            TextArea textView = new TextArea();
-            textView.setEditable(false);
+            StyleClassedTextArea sourceFileView = new StyleClassedTextArea();
+            sourceFileView.getStyleClass().add("source");
+            sourceFileView.setEditable(false);
             TableView<List<String>> tableView = new TableView<>();
             Node choices;
             try
             {
                 @Nullable Stream<Choice> bestGuess = findBestGuess(choicePoints);
-                choices = makeGUI(choicePoints, bestGuess == null ? Collections.emptyList() : bestGuess.collect(Collectors.<@NonNull Choice>toList()), initial, textView, tableView);
+                choices = makeGUI(choicePoints, bestGuess == null ? Collections.emptyList() : bestGuess.collect(Collectors.<@NonNull Choice>toList()), initial, sourceFileView, tableView);
             }
             catch (InternalException e)
             {
@@ -590,8 +618,11 @@ public class GuessFormat
                 choices = new Label("Internal error: " + e.getLocalizedMessage());
             }
 
-            s.setScene(new Scene(new VBox(choices, new SplitPane(textView, tableView))));
+            Scene scene = new Scene(new VBox(choices, new SplitPane(sourceFileView, tableView)));
+            scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
+            s.setScene(scene);
             s.show();
+            org.scenicview.ScenicView.show(scene);
         });
         System.err.println(choicePoints);
         // TODO show GUI, apply them
@@ -633,11 +664,9 @@ public class GuessFormat
     }
 
     @OnThread(Tag.FXPlatform)
-    private static <C extends Choice> Node makeGUI(ChoicePoint<C, TextFormat> rawChoicePoint, List<Choice> mostRecentPick, Map<Charset, List<String>> initial, TextArea textView, TableView<List<String>> tableView) throws InternalException
+    private static <C extends Choice> Node makeGUI(ChoicePoint<C, TextFormat> rawChoicePoint, List<Choice> mostRecentPick, Map<Charset, List<String>> initial, StyleClassedTextArea textView, TableView<List<String>> tableView) throws InternalException
     {
         final @Nullable ChoiceType<C> choiceType = rawChoicePoint.getChoiceType();
-        // TODO drill into consecutive choices afterwards
-        // TODO also show a preview of what it will import!
         if (choiceType == null)
         {
             try
@@ -716,10 +745,9 @@ public class GuessFormat
     }
 
     @OnThread(Tag.FXPlatform)
-    private static void previewFormat(TextFormat t, List<String> initial, TextArea textArea, TableView<List<String>> tableView)
+    private static void previewFormat(TextFormat t, List<String> initial, StyleClassedTextArea textArea, TableView<List<String>> tableView)
     {
-        textArea.setText(initial.stream().collect(Collectors.joining("\n")));
-
+        textArea.clear();
         tableView.getItems().clear();
         tableView.getColumns().clear();
 
@@ -727,7 +755,7 @@ public class GuessFormat
         for (int column = 0; column < columnTypes.size(); column++)
         {
             ColumnInfo columnType = columnTypes.get(column);
-            TableColumn<List<String>, String> col = new TableColumn<>(columnType.title + ":" + columnType.type);
+            TableColumn<List<String>, String> col = new TableColumn<>(columnType.title + "\n" + columnType.type);
             int columnFinal = column;
             col.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().size() <= columnFinal ? "<Missing>" : c.getValue().get(columnFinal)));
             tableView.getColumns().add(col);
@@ -735,7 +763,24 @@ public class GuessFormat
 
         for (int row = t.headerRows; row < initial.size(); row++)
         {
-            tableView.getItems().add(t.separator == null ? Collections.singletonList(initial.get(row)) : splitIntoColumns(initial.get(row), new SeparatorChoice(t.separator), new QuoteChoice(t.quote)));
+            if (t.separator == null)
+            {
+                // TODO: is quoting still valid?
+                tableView.getItems().add(Collections.singletonList(initial.get(row)));
+                textArea.appendText(initial.get(row));
+            }
+            else
+            {
+                RowInfo split = splitIntoColumns(initial.get(row), new SeparatorChoice(t.separator), new QuoteChoice(t.quote));
+                tableView.getItems().add(split.columnContents);
+                ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = ReadOnlyStyledDocument.fromString("", Collections.<@NonNull String>emptyList(), Collections.<@NonNull String>emptyList(), StyledText.<Collection<@NonNull String>>textOps());
+                for (int i = 0; i < split.originalContentAndStyle.size(); i++)
+                {
+                    doc = doc.concat(ReadOnlyStyledDocument.fromString(split.originalContentAndStyle.get(i).getFirst(), Collections.emptyList(), Collections.singletonList(split.originalContentAndStyle.get(i).getSecond()), StyledText.<Collection<@NonNull String>>textOps()));
+                }
+                textArea.append(doc);
+                textArea.appendText("\n");
+            }
         }
     }
 }
