@@ -68,9 +68,9 @@ public class ChoicePoint<C extends Choice, R>
             return choiceClass;
         }
 
-        public @Localized String getLabel()
+        public @LocalizableKey String getLabelKey()
         {
-            return TranslationUtility.getString(labelKey);
+            return labelKey;
         }
 
         public String getHelpId()

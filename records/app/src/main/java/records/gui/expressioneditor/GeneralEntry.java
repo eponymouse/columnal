@@ -111,12 +111,12 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
     /**
      * Completion for if-then-else
      */
-    private final Completion ifCompletion;
+    private final @Interned Completion ifCompletion;
 
     /**
      * Completion for match expressions
      */
-    private final Completion matchCompletion;
+    private final @Interned Completion matchCompletion;
 
     /**
      * Set to true while updating field with auto completion.  Allows us to avoid

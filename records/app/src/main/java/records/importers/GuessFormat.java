@@ -17,7 +17,6 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextArea;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -48,7 +47,6 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
@@ -676,7 +674,7 @@ public class GuessFormat
             choiceNode = combo;
             choiceExpression = combo.getSelectionModel().selectedItemProperty();
         }
-        VBox vbox = new VBox(GUI.labelled(choiceType.getLabel(), choiceType.getHelpId(), choiceNode));
+        VBox vbox = new VBox(GUI.labelled(choiceType.getLabelKey(), choiceType.getHelpId(), choiceNode));
         FXPlatformConsumer<C> pick = item -> {
             try
             {

@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
+import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -35,8 +36,8 @@ public class TypeState
     // If variable is in there but > size 1, means it is known but cannot be used because it has multiple types in different guards
     private final Map<String, Set<DataType>> variables;
     private final Map<String, FunctionDefinition> functions;
-    private final TypeManager typeManager;
-    private final UnitManager unitManager;
+    private final @Interned TypeManager typeManager;
+    private final @Interned UnitManager unitManager;
 
     public TypeState(UnitManager unitManager, TypeManager typeManager)
     {

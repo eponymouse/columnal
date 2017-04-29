@@ -8,6 +8,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -35,9 +36,9 @@ public class IfThenElseNode implements OperandNode, ExpressionParent, ErrorDispl
 {
     private final ConsecutiveBase parent;
     private final ObservableList<Node> nodes;
-    private final Consecutive condition;
-    private final Consecutive thenPart;
-    private final Consecutive elsePart;
+    private final @Interned Consecutive condition;
+    private final @Interned Consecutive thenPart;
+    private final @Interned Consecutive elsePart;
     private final VBox ifLabel;
     private final VBox thenLabel;
     private final VBox elseLabel;

@@ -42,6 +42,10 @@ class Button
 {
     void setOnAction(@NonNull EventHandler<ActionEvent> ev) @UnknownInitialization;
 }
+class @Interned ButtonType
+{
+
+}
 class ComboBox<T>
 {
     ObjectProperty<@Nullable T> valueProperty();

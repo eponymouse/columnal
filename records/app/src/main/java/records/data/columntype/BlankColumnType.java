@@ -1,5 +1,6 @@
 package records.data.columntype;
 
+import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
 /**
@@ -7,7 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
  */
 public class BlankColumnType extends ColumnType
 {
-    public static final BlankColumnType INSTANCE = new BlankColumnType();
+    public static final @Interned BlankColumnType INSTANCE = new BlankColumnType();
 
     // Singleton:
     private BlankColumnType() {};
