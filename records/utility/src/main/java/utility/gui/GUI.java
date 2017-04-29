@@ -71,7 +71,11 @@ public class GUI
 
     public static Node labelled(@LocalizableKey String labelKey, @HelpKey String helpId, Node choiceNode)
     {
-        // TODO add in the help
-        return new HBox(label(labelKey), choiceNode);
+        return new HBox(label(labelKey), helpBox(helpId), choiceNode);
+    }
+
+    private static Node helpBox(@HelpKey String helpId)
+    {
+        return new Label("?"); //TODO
     }
 }
