@@ -10,6 +10,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 
 import java.io.File;
+import java.nio.file.Path;
 
 /**
  * Created by neil on 09/11/2016.
@@ -41,7 +42,19 @@ public class LinkedDataSource extends DataSource
         //dataSourceLinkHeader : DATA tableId LINKED importType filePath NEWLINE;
         OutputBuilder b = new OutputBuilder();
         b.t(MainLexer.DATA).id(getId()).t(MainLexer.LINKED).t(this.typeToken);
-        b.path(destination == null ? this.path.toPath() : destination.toPath().relativize(this.path.toPath()));
+        Path path = this.path.toPath();
+        if (destination != null)
+        {
+            try
+            {
+                path = destination.toPath().relativize(path);
+            }
+            catch (IllegalArgumentException e)
+            {
+                // Not near enough to use relative path
+            }
+        }
+        b.path(path);
         b.nl();
         then.saveTable(b.toString());
     }

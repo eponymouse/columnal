@@ -6,12 +6,16 @@ import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.scene.Node;
 import javafx.scene.Scene;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
@@ -612,16 +616,18 @@ public class GuessFormat
         ChoicePoint<?, TextFormat> choicePoints = guessTextFormat(mgr, initial);
         Platform.runLater(() ->
         {
-            Stage s = new Stage();
+            Dialog<TextFormat> dialog = new Dialog<>();
             StyleClassedTextArea sourceFileView = new StyleClassedTextArea();
             sourceFileView.getStyleClass().add("source");
             sourceFileView.setEditable(false);
             TableView<List<String>> tableView = new TableView<>();
             Node choices;
+            SimpleObjectProperty<@Nullable TextFormat> formatProperty = new SimpleObjectProperty<>(null);
             try
             {
                 @Nullable Stream<Choice> bestGuess = findBestGuess(choicePoints);
-                choices = makeGUI(choicePoints, bestGuess == null ? Collections.emptyList() : bestGuess.collect(Collectors.<@NonNull Choice>toList()), initial, sourceFileView, tableView);
+
+                choices = makeGUI(choicePoints, bestGuess == null ? Collections.emptyList() : bestGuess.collect(Collectors.<@NonNull Choice>toList()), initial, sourceFileView, tableView, formatProperty);
             }
             catch (InternalException e)
             {
@@ -629,15 +635,23 @@ public class GuessFormat
                 choices = new Label("Internal error: " + e.getLocalizedMessage());
             }
 
-            Scene scene = new Scene(new VBox(choices, new SplitPane(new VirtualizedScrollPane<>(sourceFileView), tableView)));
-            scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
-            s.setScene(scene);
-            s.show();
-            org.scenicview.ScenicView.show(scene);
+            VBox content = new VBox(choices, new SplitPane(new VirtualizedScrollPane<>(sourceFileView), tableView));
+            dialog.getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
+            dialog.getDialogPane().setContent(content);
+            dialog.getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
+            dialog.setResultConverter(bt -> {
+                if (bt == ButtonType.OK)
+                {
+                    return formatProperty.get();
+                }
+                return null;
+            });
+            dialog.showAndWait().ifPresent(then);
+            // TODO include choice of link or copy.
+            //org.scenicview.ScenicView.show(scene);
         });
         System.err.println(choicePoints);
-        // TODO show GUI, apply them
-        // TODO include choice of link or copy.
+
     }
 
     // Null means not viable, empty stream means no more choices to make
@@ -675,7 +689,7 @@ public class GuessFormat
     }
 
     @OnThread(Tag.FXPlatform)
-    private static <C extends Choice> Node makeGUI(ChoicePoint<C, TextFormat> rawChoicePoint, List<Choice> mostRecentPick, Map<Charset, List<String>> initial, StyleClassedTextArea textView, TableView<List<String>> tableView) throws InternalException
+    private static <C extends Choice> Node makeGUI(ChoicePoint<C, TextFormat> rawChoicePoint, List<Choice> mostRecentPick, Map<Charset, List<String>> initial, StyleClassedTextArea textView, TableView<List<String>> tableView, ObjectProperty<@Nullable TextFormat> destProperty) throws InternalException
     {
         final @Nullable ChoiceType<C> choiceType = rawChoicePoint.getChoiceType();
         if (choiceType == null)
@@ -686,6 +700,7 @@ public class GuessFormat
                 List<String> initialLines = initial.get(t.charset);
                 if (initialLines == null)
                     throw new InternalException("Charset pick gives no initial lines");
+                destProperty.set(t);
                 previewFormat(t, initialLines, textView, tableView);
             }
             catch (UserException e)
@@ -720,7 +735,7 @@ public class GuessFormat
             try
             {
                 ChoicePoint<?, TextFormat> next = rawChoicePoint.select(item);
-                Node gui = makeGUI(next, mostRecentPick, initial, textView, tableView);
+                Node gui = makeGUI(next, mostRecentPick, initial, textView, tableView, destProperty);
                 if (vbox.getChildren().size() == 1)
                 {
                     vbox.getChildren().add(gui);
