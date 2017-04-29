@@ -16,6 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.TableManager;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.NumericLiteral;
 import threadchecker.OnThread;
@@ -82,7 +83,7 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
             @Nullable DataType selectedType = getSelectedType();
             if (selectedType == null) // Shouldn't happen given our event filter, but only reasonable option is to back out and act like cancel:
                 return null;
-            return new NewColumnDetails(name.getText(), selectedType, "");
+            return new NewColumnDetails(name.getText(), selectedType, DataTypeUtility.value(""));
         }
         else
             return null;

@@ -14,6 +14,7 @@ import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -79,8 +80,8 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
         @Value boolean value;
         switch (writtenValue.getString())
         {
-            case "true": value = true; break;
-            case "false": value = false; break;
+            case "true": value = DataTypeUtility.value(true); break;
+            case "false": value = DataTypeUtility.value(false); break;
             default: throw new UserException("Invalid boolean value: \"" + writtenValue.getString() + "\"");
         }
         data.set(writtenValue.getRowIndex(), value);
