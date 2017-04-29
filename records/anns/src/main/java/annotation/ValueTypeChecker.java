@@ -60,40 +60,6 @@ public class ValueTypeChecker extends BaseTypeChecker
             protected GenericAnnotatedTypeFactory<?, ?, ?, ?> createTypeFactory()
             {
                 return new BaseAnnotatedTypeFactory(ValueTypeChecker.this, false) {
-                    // Need to let literals be @Value for booleans and empty string:
-                    protected TreeAnnotator createTreeAnnotator() {
-                        return new ListTreeAnnotator(new TreeAnnotator[]{super.createTreeAnnotator(), new ValueTypeTreeAnnotator(this, elements)});
-                    }
-
-                    class ValueTypeTreeAnnotator extends TreeAnnotator {
-                        private final AnnotationMirror VALUE;
-
-                        public ValueTypeTreeAnnotator(BaseAnnotatedTypeFactory atypeFactory, Elements elements)
-                        {
-                            super(atypeFactory);
-                            this.VALUE = AnnotationUtils.fromClass(elements, Value.class);
-                        }
-
-                        public Void visitLiteral(LiteralTree tree, AnnotatedTypeMirror type)
-                        {
-
-                            if(!type.isAnnotatedInHierarchy(this.VALUE))
-                            {
-                                // Empty string is automatically @Value
-                                if (tree.getKind() == Kind.STRING_LITERAL && tree.getValue().equals(""))
-                                {
-                                    type.addAnnotation(this.VALUE);
-                                }
-                                // So are boolean literals:
-                                if(tree.getKind() == Kind.BOOLEAN_LITERAL)
-                                {
-                                    type.addAnnotation(this.VALUE);
-                                }
-                            }
-
-                            return (Void)super.visitLiteral(tree, type);
-                        }
-                    }
 
 
                     // This follow part of the body of the class is only needed to work around some kind of
