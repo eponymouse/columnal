@@ -39,6 +39,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -154,8 +156,8 @@ public class TextImport
     @NotNull
     private static Map<Charset, List<String>> getInitial(File textFile) throws IOException
     {
-        Map<Charset, List<String>> initial = new HashMap<>();
-        Set<Charset> charsets = new HashSet<>();
+        Map<Charset, List<String>> initial = new LinkedHashMap<>();
+        Set<Charset> charsets = new LinkedHashSet<>();
         charsets.addAll(Arrays.asList(Charset.forName("UTF-8"), Charset.forName("ISO-8859-1"), Charset.forName("UTF-16")));
         charsets.add(Charset.defaultCharset());
         for (Charset charset : charsets)
@@ -165,7 +167,7 @@ public class TextImport
             try (BufferedReader br = new BufferedReader(new InputStreamReader(new FileInputStream(textFile), charset)))
             {
                 String line;
-                while ((line = br.readLine()) != null && initial.size() < GuessFormat.INITIAL_ROWS_TEXT_FILE)
+                while ((line = br.readLine()) != null && initialLines.size() < GuessFormat.INITIAL_ROWS_TEXT_FILE)
                 {
                     initialLines.add(line);
                 }
