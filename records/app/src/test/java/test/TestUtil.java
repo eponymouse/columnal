@@ -515,7 +515,7 @@ public class TestUtil
         }
     }
 
-    @SuppressWarnings("localized") // No idea why this triggers here
+    @SuppressWarnings("i18n") // No idea why this triggers here
     public static <C extends Choice, R> @NonNull R pick(ChoicePoint<C, R> choicePoint, ChoicePick<C>... picks) throws InternalException, UserException
     {
         ChoiceType<C> choicePointType = choicePoint.getChoiceType();
