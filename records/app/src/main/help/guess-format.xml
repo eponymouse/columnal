@@ -1,13 +1,31 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <dialog id="guess-format" title="Text Import Format">
     <help id="charset" title="Encoding">
-        <hint>The popular modern scheme is UTF-8, but this is not universal.</hint>
-        <short>The scheme used to encode characters in the file.</short>
+        <short>The scheme used to encode characters in the file.  UTF-8 is the most likely choice.</short>
         <full>There are lots of different characters in the world: Latin characters (as used in the English alphabet),
             Arabic, Chinese and many more besides.  An encoding scheme is the way in which these characters
         are numbered and stored in a file.  Unfortunately, historically every sub-region had its own encoding,
         and if you get the encoding mismatched, you will get weird characters.  Recently, UTF-8 has become
         something of a common standard, but many other encoding schemes are still in use.  Try UTF-8 first,
         but try then others if that doesn't work.</full>
+    </help>
+    <help id="headerRow" title="Header Rows">
+        <short>How many rows to skip at the beginning of the file.</short>
+        <full>There are often header rows at the beginning of the file which
+        do not contain useful data.  This number is how many rows to skip.  The
+        last row is taken to be the names of the columns.</full>
+    </help>
+    <help id="quote" title="Quote Character">
+        <short>The character used to surround columns.</short>
+        <full>Text files use a particular character, such as a comma,
+        to separate the columns.  But some pieces of text may actually
+        contain a comma.  So quotes are sometimes used to surround
+        text values in columns.</full>
+    </help>
+    <help id="columnCount" title="Column Count">
+        <short>The number of columns to use in the file.</short>
+        <full>If every row has the same number of columns then
+        this is fixed.  If there is a varying number of columns
+        then you must specify the current number.</full>
     </help>
 </dialog>
