@@ -432,8 +432,13 @@ public class GuessFormat
                     r.originalContentAndStyle.add(new Pair<>(quot.escapedQuote, "escaped-quote"));
                 }
             }
-            else if (quot.quote != null && row.startsWith(quot.quote, i))
+            else if (quot.quote != null && row.startsWith(quot.quote, i) && (inQuoted || sb.toString().trim().isEmpty()))
             {
+                if (!inQuoted)
+                {
+                    // Ignore the spaces beforehand:
+                    sb = new StringBuilder();
+                }
                 inQuoted = !inQuoted;
                 i += quot.quote.length();
                 r.originalContentAndStyle.add(new Pair<>(quot.quote, inQuoted ? "quote-begin" : "quote-end"));
