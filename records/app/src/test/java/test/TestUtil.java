@@ -515,7 +515,7 @@ public class TestUtil
         }
     }
 
-    @SuppressWarnings("i18n") // No idea why this triggers here
+    @SuppressWarnings("all") // I18n triggers here, and i18n alone won't shut it off. No idea what the issue is.
     public static <C extends Choice, R> @NonNull R pick(ChoicePoint<C, R> choicePoint, ChoicePick<C>... picks) throws InternalException, UserException
     {
         ChoiceType<C> choicePointType = choicePoint.getChoiceType();
