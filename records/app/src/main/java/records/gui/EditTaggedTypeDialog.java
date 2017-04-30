@@ -70,7 +70,7 @@ public class EditTaggedTypeDialog extends Dialog<Void>
         {
             tagName = new ErrorableTextField<String>(name -> {
                 // TODO check if tag name is valid
-                return ErrorableTextField.ConversionResult.<@NonNull String>error("TODO: check tag name validity");
+                return ErrorableTextField.ConversionResult.<@NonNull String>error("");
             });
             addSubType = new Button(TranslationUtility.getString("taggedtype.addsubtype"));
             addSubType.setOnAction(e -> {
