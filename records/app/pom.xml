@@ -228,6 +228,21 @@
                             <dir>src/main/help</dir>
                             <outputDir>${project.build.directory}/classes</outputDir>
                             <stylesheet>src/main/make-help.xsl</stylesheet>
+                            <fileMappers>
+                                <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                                    <targetExtension>.help</targetExtension>
+                                </fileMapper>
+                            </fileMappers>
+                        </transformationSet>
+                        <transformationSet>
+                            <dir>src/main/help</dir>
+                            <outputDir>${project.build.directory}/classes</outputDir>
+                            <stylesheet>src/main/make-help-html.xsl</stylesheet>
+                            <fileMappers>
+                                <fileMapper implementation="org.codehaus.plexus.components.io.filemappers.FileExtensionMapper">
+                                    <targetExtension>.html</targetExtension>
+                                </fileMapper>
+                            </fileMappers>
                         </transformationSet>
                         <transformationSet>
                             <dir>src/main/help</dir>

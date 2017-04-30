@@ -39,6 +39,14 @@
     -fx-border-width: 2px;
 }
 
+.popover {
+    -fx-cursor: move;
+
+    .title > .icon > .graphics {
+        -fx-cursor: hand;
+    }
+}
+
 .errorable-text-field-popup {
     .errorable-text-field:has-error & .border {
         -fx-stroke: red;
@@ -48,11 +56,6 @@
         -fx-stroke: orange;
         -fx-stroke-width: 2;
     }
-    -fx-cursor: move;
-    .title > .icon > .graphics {
-        -fx-cursor: hand;
-    }
-
     .popup-error-pane {
         -fx-padding: 0em 1em 0.75em 1em;
     }
@@ -75,9 +78,12 @@
         & > .border {
             -fx-stroke-width: 1;
         }
-        .help-web-wrapper {
-            -fx-padding: 0.25em;
-            -fx-snap-to-pixel: true;
+        .help-content {
+            -fx-padding: 0.5em;
+            -fx-max-width: 400px;
+            .short {
+                 -fx-font-weight: bold;
+            }
         }
     }
 }

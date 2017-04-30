@@ -3,6 +3,7 @@ package records.gui;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.TableId;
 import records.data.TableManager;
+import utility.Utility;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
@@ -19,7 +20,7 @@ public class TableNameTextField extends ErrorableTextField<TableId>
         // We automatically remove leading/trailing whitespace, rather than complaining about it.
         // We also convert any whitespace (including multiple chars) into a single space
         super(s -> {
-            s = s.trim().replaceAll("(?U)\\s+", " ");
+            s = Utility.collapseSpaces(s);
             if (s.isEmpty())
                 return ConversionResult.<@NonNull TableId>error(TranslationUtility.getString("table.name.cannotBeBlank"));
             TableId tableId = new TableId(s);
@@ -37,4 +38,5 @@ public class TableNameTextField extends ErrorableTextField<TableId>
             }
         });
     }
+
 }

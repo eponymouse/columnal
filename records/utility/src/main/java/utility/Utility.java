@@ -678,6 +678,15 @@ public class Utility
         return item == null ? Stream.empty() : Stream.of(item);
     }
 
+    /**
+     * Gets rid of beginning and trailing spaces, and collapses all other
+     * consecutive whitespace into a single space.
+     */
+    public static String collapseSpaces(String s)
+    {
+        return s.trim().replaceAll("(?U)\\s+", " ");
+    }
+
     public static class ReadState
     {
         private final File file;
