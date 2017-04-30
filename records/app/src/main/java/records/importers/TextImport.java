@@ -1,12 +1,13 @@
 package records.importers;
 
 import javafx.application.Platform;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 import records.data.Column;
 import records.data.DataSource;
+import records.data.ImmediateDataSource;
 import records.data.LinkedDataSource;
 import records.data.RecordSet;
+import records.data.TableId;
 import records.data.TableManager;
 import records.data.TextFileDateColumn;
 import records.data.TextFileNumericColumn;
@@ -21,7 +22,7 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
-import records.importers.GuessFormat.CharsetChoice;
+import records.importers.GuessFormat.ImportInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -31,14 +32,11 @@ import utility.Utility.ReadState;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -54,11 +52,11 @@ public class TextImport
     public static void importTextFile(TableManager mgr, File textFile, FXPlatformConsumer<DataSource> then) throws IOException, InternalException, UserException
     {
         Map<Charset, List<String>> initial = getInitial(textFile);
-        GuessFormat.guessTextFormatGUI_Then(mgr.getUnitManager(), initial, format ->
+        GuessFormat.guessTextFormatGUI_Then(mgr, initial, format ->
         {
             try
             {
-                LinkedDataSource ds = makeDataSource(mgr, textFile, format);
+                DataSource ds = makeDataSource(mgr, textFile, format.getFirst(), format.getSecond());
                 Platform.runLater(() -> then.consume(ds));
             }
             catch (InternalException | UserException | IOException e)
@@ -70,13 +68,13 @@ public class TextImport
     }
 
     @OnThread(Tag.Simulation)
-    public static ChoicePoint<?, DataSource> _test_importTextFile(TableManager mgr, File textFile) throws IOException, InternalException, UserException
+    public static ChoicePoint<?, DataSource> _test_importTextFile(TableManager mgr, File textFile, boolean link) throws IOException, InternalException, UserException
     {
         Map<Charset, List<String>> initial = getInitial(textFile);
         return GuessFormat.guessTextFormat(mgr.getUnitManager(), initial).then(format -> {
             try
             {
-                return makeDataSource(mgr, textFile, format);
+                return makeDataSource(mgr, textFile, new ImportInfo(new TableId(textFile.getName()), link), format);
             }
             catch (IOException e)
             {
@@ -86,7 +84,7 @@ public class TextImport
     }
 
     @OnThread(Tag.Simulation)
-    private static LinkedDataSource makeDataSource(TableManager mgr, final File textFile, final TextFormat format) throws IOException, InternalException, UserException
+    private static DataSource makeDataSource(TableManager mgr, final File textFile, final ImportInfo importInfo, final TextFormat format) throws IOException, InternalException, UserException
     {
         List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
         int totalColumns = format.columnTypes.size();
@@ -150,7 +148,10 @@ public class TextImport
                 return rowCount;
             }
         };
-        return new LinkedDataSource(mgr, rs, MainLexer.TEXTFILE, textFile);
+        if (importInfo.linkFile)
+            return new LinkedDataSource(mgr, importInfo.tableName, rs, MainLexer.TEXTFILE, textFile);
+        else
+            return new ImmediateDataSource(mgr, importInfo.tableName, rs);
     }
 
     @NotNull

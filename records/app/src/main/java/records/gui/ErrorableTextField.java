@@ -7,6 +7,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
 import javafx.scene.control.TextField;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.error.InternalException;
@@ -70,7 +71,7 @@ public class ErrorableTextField<T>
     {
         private final boolean success;
         private final @Nullable T value;
-        private final @Nullable String error;
+        private final @Nullable @Localized String error;
 
         private ConversionResult(T value)
         {
@@ -102,7 +103,7 @@ public class ErrorableTextField<T>
             return new ConversionResult<T>(value);
         }
 
-        public static <T> ConversionResult<T> error(String error)
+        public static <T> ConversionResult<T> error(@Localized String error)
         {
             return new ConversionResult<T>(error);
         }

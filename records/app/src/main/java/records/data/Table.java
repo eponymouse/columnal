@@ -41,14 +41,14 @@ public abstract class Table
     protected Table(TableManager mgr)
     {
         this.mgr = mgr;
-        this.id = mgr.getNextFreeId(this);
+        this.id = mgr.registerNextFreeId(this);
     }
 
     protected Table(TableManager mgr, @Nullable TableId id)
     {
         this.mgr = mgr;
         if (id == null)
-            this.id = mgr.getNextFreeId(this);
+            this.id = mgr.registerNextFreeId(this);
         else
         {
             this.id = id;

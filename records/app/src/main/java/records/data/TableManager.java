@@ -74,7 +74,7 @@ public class TableManager
 
     // Generates a new unused ID and registers it.
     @OnThread(Tag.Simulation)
-    public synchronized TableId getNextFreeId(@UnknownInitialization(Object.class) Table table)
+    public synchronized TableId registerNextFreeId(@UnknownInitialization(Object.class) Table table)
     {
         TableId id;
         // So GUID is very unlikely to be in use already, but no harm in checking:
@@ -352,6 +352,11 @@ public class TableManager
             });
 
         }
+    }
+
+    public synchronized boolean isFreeId(TableId tableId)
+    {
+        return usedIds.containsKey(tableId);
     }
 
     public static interface TableManagerListener

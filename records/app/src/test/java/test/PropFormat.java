@@ -45,7 +45,7 @@ public class PropFormat
 {
     @Property
     @OnThread(Tag.Simulation)
-    public void testGuessFormat(@From(GenFormattedData.class) @When(seed=-8664656379975213837L) GenFormattedData.FormatAndData formatAndData) throws IOException, UserException, InternalException
+    public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData, boolean link) throws IOException, UserException, InternalException
     {
         String content = formatAndData.content.stream().collect(Collectors.joining("\n"));
         String format = formatAndData.format.toString();
@@ -61,7 +61,7 @@ public class PropFormat
         File tempFile = File.createTempFile("test", "txt");
         tempFile.deleteOnExit();
         FileUtils.writeStringToFile(tempFile, content, formatAndData.format.charset);
-        DataSource ds = TestUtil.pick(TextImport._test_importTextFile(new DummyManager(), tempFile), picks);
+        DataSource ds = TestUtil.pick(TextImport._test_importTextFile(new DummyManager(), tempFile, link), picks);
         assertEquals("Right column length", formatAndData.loadedContent.size(), ds.getData().getLength());
         for (int i = 0; i < formatAndData.loadedContent.size(); i++)
         {

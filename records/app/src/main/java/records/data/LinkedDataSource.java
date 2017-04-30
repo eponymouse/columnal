@@ -21,9 +21,9 @@ public class LinkedDataSource extends DataSource
     private final int typeToken;
     private final File path;
 
-    public LinkedDataSource(TableManager mgr, RecordSet rs, int typeToken, File path)
+    public LinkedDataSource(TableManager mgr, TableId tableId, RecordSet rs, int typeToken, File path)
     {
-        super(mgr, null);
+        super(mgr, tableId);
         this.data = rs;
         this.typeToken = typeToken;
         this.path = path;

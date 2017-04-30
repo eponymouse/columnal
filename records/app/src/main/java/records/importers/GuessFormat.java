@@ -12,7 +12,6 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
@@ -20,16 +19,18 @@ import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
-import javafx.scene.control.TextArea;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.VBox;
-import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.controlsfx.control.SegmentedButton;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.StyledText;
 import records.data.ColumnId;
+import records.data.TableId;
+import records.data.TableManager;
 import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.ColumnType;
@@ -39,6 +40,7 @@ import records.data.columntype.TextColumnType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.TableNameTextField;
 import records.importers.ChoicePoint.Choice;
 import records.importers.ChoicePoint.ChoiceType;
 import records.importers.ChoicePoint.Quality;
@@ -50,6 +52,7 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
+import utility.gui.SegmentedButtonValue;
 
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
@@ -61,6 +64,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -610,13 +614,25 @@ public class GuessFormat
         return new Format(headerRows, columns);
     }
 
-    @OnThread(Tag.Simulation)
-    public static void guessTextFormatGUI_Then(UnitManager mgr, Map<Charset, List<String>> initial, Consumer<TextFormat> then)
+    public static class ImportInfo
     {
-        ChoicePoint<?, TextFormat> choicePoints = guessTextFormat(mgr, initial);
+        public final TableId tableName;
+        public final boolean linkFile;
+
+        public ImportInfo(TableId tableName, boolean linkFile)
+        {
+            this.tableName = tableName;
+            this.linkFile = linkFile;
+        }
+    }
+
+    @OnThread(Tag.Simulation)
+    public static void guessTextFormatGUI_Then(TableManager mgr, Map<Charset, List<String>> initial, Consumer<Pair<ImportInfo, TextFormat>> then)
+    {
+        ChoicePoint<?, TextFormat> choicePoints = guessTextFormat(mgr.getUnitManager(), initial);
         Platform.runLater(() ->
         {
-            Dialog<TextFormat> dialog = new Dialog<>();
+            Dialog<Pair<ImportInfo, TextFormat>> dialog = new Dialog<>();
             StyleClassedTextArea sourceFileView = new StyleClassedTextArea();
             sourceFileView.getStyleClass().add("source");
             sourceFileView.setEditable(false);
@@ -635,19 +651,28 @@ public class GuessFormat
                 choices = new Label("Internal error: " + e.getLocalizedMessage());
             }
 
-            VBox content = new VBox(choices, new SplitPane(new VirtualizedScrollPane<>(sourceFileView), tableView));
+            TableNameTextField nameField = new TableNameTextField(mgr);
+            SegmentedButtonValue<Boolean> linkCopyButtons = new SegmentedButtonValue<>(new Pair<>("table.copy", false), new Pair<>("table.link", true));
+
+            VBox content = new VBox(
+                GUI.labelled("table.name", "guess-format/tableName", nameField.getNode()),
+                GUI.labelled("table.linkCopy", "guess-format/linkCopy", linkCopyButtons),
+                choices,
+                new SplitPane(new VirtualizedScrollPane<>(sourceFileView), tableView));
             dialog.getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
             dialog.getDialogPane().setContent(content);
             dialog.getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
+            //TODO disable ok button if name isn't valid
             dialog.setResultConverter(bt -> {
-                if (bt == ButtonType.OK)
+                @Nullable TableId tableId = nameField.valueProperty().get();
+                @Nullable TextFormat textFormat = formatProperty.get();
+                if (bt == ButtonType.OK && tableId != null && textFormat != null)
                 {
-                    return formatProperty.get();
+                    return new Pair<>(new ImportInfo(tableId, linkCopyButtons.valueProperty().get()), textFormat);
                 }
                 return null;
             });
             dialog.showAndWait().ifPresent(then);
-            // TODO include choice of link or copy.
             //org.scenicview.ScenicView.show(scene);
         });
         System.err.println(choicePoints);

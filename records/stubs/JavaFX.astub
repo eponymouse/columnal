@@ -43,6 +43,11 @@ class Button
 {
     void setOnAction(@NonNull EventHandler<ActionEvent> ev) @UnknownInitialization;
 }
+class ToggleButton
+{
+    ToggleButton(@Localized String text);
+    ToggleButton(@Localized String text, Node graphic);
+}
 @Interned class ButtonType
 {
 
@@ -127,4 +132,10 @@ class ScenicView
 {
     // Not actually true (will throw NPE) but we only this for debugging and don't want to do a null check:
     void show(@Nullable Scene target);
+}
+package org.controlsfx.control;
+class SegmentedButton
+{
+    List getButtons() @UnknownInitialization;
+    ToggleGroup getToggleGroup() @UnknownInitialization;
 }
