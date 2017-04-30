@@ -1,16 +1,15 @@
 package utility.gui;
 
 import annotation.help.qual.HelpKey;
-import javafx.scene.Node;
-import javafx.scene.control.Tooltip;
+import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
-import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import javafx.scene.web.WebView;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.PopOver;
@@ -20,19 +19,18 @@ import threadchecker.Tag;
 import utility.Utility;
 import utility.gui.Help.HelpInfo;
 
-import java.net.URL;
-import java.util.Collections;
 import java.util.List;
-import java.util.MissingResourceException;
-import java.util.ResourceBundle;
 
 /**
  * Created by neil on 30/04/2017.
  */
+@OnThread(Tag.FXPlatform)
 class HelpBox extends StackPane
 {
     private @MonotonicNonNull PopOver popOver;
     private Help.@MonotonicNonNull HelpInfo helpInfo;
+    // Showing full is also equivalent to whether it is pinned.
+    private final BooleanProperty showingFull = new SimpleBooleanProperty(false);
 
     @SuppressWarnings("initialization") // For the call of showHidePopOver
     public HelpBox(@HelpKey String helpId)
@@ -44,10 +42,38 @@ class HelpBox extends StackPane
         text.getStyleClass().add("question");
         getChildren().setAll(circle, text);
 
-        setOnMouseClicked(e -> showHidePopOver(helpId, true));
+        setOnMouseEntered(e -> {
+            if (!popupShowing())
+                showPopOver(helpId);
+        });
+        setOnMouseExited(e -> {
+            if (popupShowing() && !showingFull.get())
+            {
+                popOver.hide();
+            }
+        });
+        setOnMouseClicked(e -> {
+            boolean wasPinned = showingFull.get();
+            showingFull.set(true);
+            if (!popupShowing())
+            {
+                showPopOver(helpId);
+            }
+            else
+            {
+                if (wasPinned)
+                    popOver.hide();
+            }
+        });
     }
 
-    @OnThread(Tag.FXPlatform)
+
+    @EnsuresNonNullIf(expression = "popOver", result = true)
+    private boolean popupShowing()
+    {
+        return popOver != null && popOver.isShowing();
+    }
+
     private Help.@Nullable HelpInfo getHelpInfo(@HelpKey String helpId)
     {
         if (helpInfo == null)
@@ -60,47 +86,46 @@ class HelpBox extends StackPane
     }
 
     @OnThread(Tag.FXPlatform)
-    private void showHidePopOver(@HelpKey String helpId, boolean full)
+    private void showPopOver(@HelpKey String helpId)
     {
-        if (popOver != null && popOver.isShowing())
+        if (popOver == null)
         {
-            popOver.hide();
-        }
-        else
-        {
-            if (popOver == null)
+            @Nullable HelpInfo helpInfo = getHelpInfo(helpId);
+            if (helpInfo != null)
             {
-                @Nullable HelpInfo helpInfo = getHelpInfo(helpId);
-                if (helpInfo != null)
+                Text shortText = new Text(helpInfo.shortText);
+                shortText.getStyleClass().add("short");
+                TextFlow textFlow = new TextFlow(shortText);
+                Text more = new Text("\nClick ? icon to show more");
+                more.visibleProperty().bind(showingFull.not());
+                more.managedProperty().bind(more.visibleProperty());
+                textFlow.getChildren().add(more);
+
+                textFlow.getChildren().addAll(Utility.mapList(helpInfo.fullParas, p ->
                 {
-                    Text shortText = new Text(helpInfo.shortText + "\n");
-                    shortText.getStyleClass().add("short");
-                    TextFlow textFlow = new TextFlow(shortText);
-                    if (full)
-                    {
-                        textFlow.getChildren().addAll(Utility.mapList(helpInfo.fullParas, p ->
-                        {
-                            Text t = new Text("\n" + p);
-                            t.getStyleClass().add("full");
-                            return t;
-                        }));
-                    }
+                    // Blank line between paragraphs:
+                    Text t = new Text("\n\n" + p);
+                    t.getStyleClass().add("full");
+                    t.visibleProperty().bind(showingFull);
+                    t.managedProperty().bind(t.visibleProperty());
+                    return t;
+                }));
 
-                    BorderPane pane = new BorderPane(textFlow);
-                    pane.getStyleClass().add("help-content");
+                BorderPane pane = new BorderPane(textFlow);
+                pane.getStyleClass().add("help-content");
 
-                    popOver = new PopOver(pane);
-                    popOver.setTitle(helpInfo.title);
-                    popOver.setArrowLocation(ArrowLocation.TOP_LEFT);
-                    popOver.getStyleClass().add("help-popup");
-                }
-                //org.scenicview.ScenicView.show(popOver.getRoot().getScene());
+                popOver = new PopOver(pane);
+                popOver.setTitle(helpInfo.title);
+                popOver.setArrowLocation(ArrowLocation.TOP_LEFT);
+                popOver.getStyleClass().add("help-popup");
+                popOver.setOnHidden(e -> {showingFull.set(false);});
             }
-            // Not guaranteed to have been created, if we can't find the hint:
-            if (popOver != null)
-            {
-                popOver.show(this);
-            }
+            //org.scenicview.ScenicView.show(popOver.getRoot().getScene());
+        }
+        // Not guaranteed to have been created, if we can't find the hint:
+        if (popOver != null)
+        {
+            popOver.show(this);
         }
     }
 }
