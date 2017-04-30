@@ -21,7 +21,8 @@ public class UserException extends Exception
         super(message, cause);
     }
 
-    @SuppressWarnings("nullness") // Given our constructors require non-null, this can't return null:
+    @SuppressWarnings({"nullness", "i18n"}) // Given our constructors require non-null, this can't return null.
+    // Also, putting @Localized on Exception.getLocalizedMessage doesn't seem to prevent error here, so suppress i18n warning.
     @Override
     public @NonNull @Localized String getLocalizedMessage()
     {

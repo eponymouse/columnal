@@ -30,10 +30,30 @@
     }
 }
 
+.errorable-text-field:has-warnings {
+    -fx-border-color: orange;
+    -fx-border-width: 2px;
+}
 .errorable-text-field:has-error {
     -fx-border-color: red;
     -fx-border-width: 2px;
 }
-.popup-error-pane {
-    -fx-padding: 1em;
+
+.errorable-text-field-popup {
+    .errorable-text-field:has-error & .border {
+        -fx-stroke: red;
+        -fx-stroke-width: 2;
+    }
+    .errorable-text-field:has-warnings & .border {
+        -fx-stroke: orange;
+        -fx-stroke-width: 2;
+    }
+    -fx-cursor: move;
+    .title > .icon > .graphics {
+        -fx-cursor: hand;
+    }
+
+    .popup-error-pane {
+        -fx-padding: 0em 1em 0.75em 1em;
+    }
 }

@@ -24,6 +24,7 @@ import utility.FXPlatformFunction;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
+import utility.gui.TranslationUtility;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -49,6 +50,7 @@ public class ErrorableTextField<T>
     public ErrorableTextField(FXPlatformFunction<String, ConversionResult<T>> converter, ObservableValue... conversionDependencies)
     {
         field.getStyleClass().add("errorable-text-field");
+        popOver.getStyleClass().add("errorable-text-field-popup");
         this.converted = new SimpleObjectProperty<>(converter.apply(""));
         FXUtility.addChangeListenerPlatformNN(field.textProperty(), s -> converted.setValue(converter.apply(s)));
         for (ObservableValue dependency : conversionDependencies)
@@ -75,6 +77,8 @@ public class ErrorableTextField<T>
         boolean shouldShow = (hasError || hasWarnings) && field.isFocused();
         if (shouldShow)
         {
+            popOver.setTitle(TranslationUtility.getString(hasError ? "error.popup.title.error" : "error.popup.title.warnings"));
+            popOver.setHeaderAlwaysVisible(true);
             popOver.setContentNode(GUI.wrap(new TextFlow(Stream.concat(
                 Utility.streamNullable(result.getError()),
                 result.getWarnings().stream()
