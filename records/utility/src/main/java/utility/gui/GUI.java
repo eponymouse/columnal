@@ -24,8 +24,11 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 import utility.Pair;
+import utility.Utility;
 
 import java.net.URL;
+import java.util.MissingResourceException;
+import java.util.ResourceBundle;
 
 /**
  * Created by neil on 17/04/2017.
@@ -113,6 +116,23 @@ public class GUI
             getChildren().setAll(circle, text);
 
             setOnMouseClicked(e -> showHidePopOver(helpId));
+
+            Tooltip.install(this, new Tooltip(getTooltip(helpId)));
+        }
+
+        @OnThread(Tag.FXPlatform)
+        private static @Localized String getTooltip(@HelpKey String helpId)
+        {
+            try
+            {
+                String[] rootAndEntry = helpId.split("/");
+                return ResourceBundle.getBundle(rootAndEntry[0]).getString(rootAndEntry[1]);
+            }
+            catch (MissingResourceException e)
+            {
+                Utility.log(e);
+                return "";
+            }
         }
 
         @OnThread(Tag.FXPlatform)
