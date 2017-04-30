@@ -1,5 +1,6 @@
 package records.error;
 
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -22,7 +23,7 @@ public class UserException extends Exception
 
     @SuppressWarnings("nullness") // Given our constructors require non-null, this can't return null:
     @Override
-    public @NonNull String getLocalizedMessage()
+    public @NonNull @Localized String getLocalizedMessage()
     {
         return super.getLocalizedMessage();
     }

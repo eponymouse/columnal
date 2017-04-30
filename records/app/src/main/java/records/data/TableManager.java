@@ -354,9 +354,24 @@ public class TableManager
         }
     }
 
-    public synchronized boolean isFreeId(TableId tableId)
+    /**
+     * Is the given id available?
+     * @param tableId
+     * @param similarIds If you pass a non-null list, it will be filled with any ids
+     *                   deemed similar (e.g. differ only in case)
+     * @return
+     */
+    public synchronized boolean isFreeId(TableId tableId, @Nullable List<TableId> similarIds)
     {
-        return usedIds.containsKey(tableId);
+        if (similarIds != null)
+        {
+            for (TableId t : usedIds.keySet())
+            {
+                if (t.tableId.toLowerCase().equals(tableId.tableId.toLowerCase()))
+                    similarIds.add(t);
+            }
+        }
+        return !usedIds.containsKey(tableId);
     }
 
     public static interface TableManagerListener

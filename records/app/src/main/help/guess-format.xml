@@ -1,5 +1,20 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <dialog id="guess-format" title="Text Import Format">
+    <help id="tableName" title="Table Name">
+        <short>The name of the new table.</short>
+        <full>The name cannot be blank and must be different from all other tables in the project.</full>
+    </help>
+    <help id="linkCopy" title="Link/Copy">
+        <short>Whether to copy the data in to the project, or leave it in the file.</short>
+        <full><p>There are two options available to import data.  One is to take a copy
+            of the data from the file into the project.  Afterwards, the source file
+            is forgotten: it can be deleted, moved or edited with no effect on the project.
+            This is the best option if you want to access the project from multiple machines.</p>
+            <p>The alternative is to link the file.  The source file must be kept afterwards,
+                and any changes will be automatically detected by the project.  This is the best
+                option for very large datasets, or if you know the file will have its data changed
+                in future.</p></full>
+    </help>
     <help id="charset" title="Encoding">
         <short>The scheme used to encode characters in the file.  UTF-8 is the most likely choice.</short>
         <full>There are lots of different characters in the world: Latin characters (as used in the English alphabet),

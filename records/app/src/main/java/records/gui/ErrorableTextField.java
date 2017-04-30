@@ -18,6 +18,10 @@ import utility.ExSupplier;
 import utility.FXPlatformFunction;
 import utility.gui.FXUtility;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 
 /**
  * A wrapper for a TextField which supports two extras:
@@ -72,12 +76,14 @@ public class ErrorableTextField<T>
         private final boolean success;
         private final @Nullable T value;
         private final @Nullable @Localized String error;
+        private final List<@Localized String> warnings;
 
-        private ConversionResult(T value)
+        private ConversionResult(T value, @Localized String... warnings)
         {
             this.success = true;
             this.value = value;
             this.error = null;
+            this.warnings = Arrays.asList(warnings);
         }
 
         private ConversionResult(@Localized String error)
@@ -85,6 +91,7 @@ public class ErrorableTextField<T>
             this.success = false;
             this.value = null;
             this.error = error;
+            this.warnings = Collections.emptyList();
         }
 
         public @Nullable T getValue()
@@ -98,9 +105,9 @@ public class ErrorableTextField<T>
             return error;
         }
 
-        public static <T> ConversionResult<T> success(T value)
+        public static <T> ConversionResult<T> success(T value, @Localized String... warnings)
         {
-            return new ConversionResult<T>(value);
+            return new ConversionResult<T>(value, warnings);
         }
 
         public static <T> ConversionResult<T> error(@Localized String error)
@@ -109,6 +116,7 @@ public class ErrorableTextField<T>
         }
     }
 
+    @SuppressWarnings("i18n")
     public static <T> ConversionResult<T> validate(ExSupplier<T> getValue)
     {
         try
