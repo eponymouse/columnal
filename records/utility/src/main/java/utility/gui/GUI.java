@@ -4,7 +4,9 @@ import annotation.help.qual.HelpKey;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -77,5 +79,13 @@ public class GUI
     private static Node helpBox(@HelpKey String helpId)
     {
         return new Label("?"); //TODO
+    }
+
+    // Wraps the item in a Pane with the given style classes (on the pane, not content)
+    public static Pane wrap(Node content, String... styleClasses)
+    {
+        Pane p = new BorderPane(content);
+        p.getStyleClass().addAll(styleClasses);
+        return p;
     }
 }

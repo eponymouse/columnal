@@ -672,6 +672,12 @@ public class Utility
             mruList.remove(mruList.size() - 1);
     }
 
+    // If item is null, returns empty stream, otherwise stream containing that item
+    public static <T> Stream<@NonNull T> streamNullable(@Nullable T item)
+    {
+        return item == null ? Stream.empty() : Stream.of(item);
+    }
+
     public static class ReadState
     {
         private final File file;

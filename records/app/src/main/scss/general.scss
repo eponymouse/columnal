@@ -31,6 +31,9 @@
 }
 
 .errorable-text-field:has-error {
-   -fx-border-color: red;
-   -fx-border-width: 2px;
+    -fx-border-color: red;
+    -fx-border-width: 2px;
+}
+.popup-error-pane {
+    -fx-padding: 1em;
 }

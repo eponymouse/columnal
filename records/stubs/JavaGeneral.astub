@@ -7,6 +7,10 @@ class Object
 {
     public boolean equals(@Nullable Object o);
 }
+class Exception
+{
+    @Localized String getLocalizedMessage();
+}
 package java.util;
 class List
 {
