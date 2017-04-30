@@ -16,6 +16,7 @@
     <method>
       <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/records/app/pom.xml" goal="sass:update-stylesheets" />
       <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/records/app/pom.xml" goal="xml:transform" />
+      <option name="Maven.BeforeRunTask" enabled="true" file="$PROJECT_DIR$/records/app/pom.xml" goal="resources:resources" />
     </method>
   </configuration>
 </component>

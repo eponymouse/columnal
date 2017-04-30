@@ -229,8 +229,29 @@
                             <outputDir>${project.build.directory}/classes</outputDir>
                             <stylesheet>src/main/make-help.xsl</stylesheet>
                         </transformationSet>
+                        <transformationSet>
+                            <dir>src/main/help</dir>
+                            <stylesheet>src/main/make-help-indiv.xsl</stylesheet>
+                            <!-- When generating multiple files, outputDir is not respected.
+                                 So we must pass as a parameter instead -->
+                            <!-- <outputDir>${project.build.directory}/classes</outputDir> -->
+                            <parameters>
+                                <parameter>
+                                    <name>myOutputDir</name>
+                                    <value>${project.build.directory}/classes</value>
+                                </parameter>
+                            </parameters>
+                        </transformationSet>
                     </transformationSets>
                 </configuration>
+                <!-- For XSLT 2.0: -->
+                <dependencies>
+                    <dependency>
+                        <groupId>net.sf.saxon</groupId>
+                        <artifactId>saxon</artifactId>
+                        <version>8.7</version>
+                    </dependency>
+                </dependencies>
             </plugin>
 
             <plugin>

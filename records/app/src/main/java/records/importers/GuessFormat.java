@@ -21,6 +21,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.VBox;
+import javafx.stage.Modality;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -673,8 +674,12 @@ public class GuessFormat
                 }
                 return null;
             });
+            /*dialog.initModality(Modality.NONE);
+            dialog.setOnShown(e -> {
+                org.scenicview.ScenicView.show(dialog.getDialogPane().getScene());
+            });*/
             dialog.showAndWait().ifPresent(then);
-            //org.scenicview.ScenicView.show(scene);
+
         });
         System.err.println(choicePoints);
 

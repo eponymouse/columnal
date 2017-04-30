@@ -57,3 +57,27 @@
         -fx-padding: 0em 1em 0.75em 1em;
     }
 }
+
+.help-box {
+    -fx-cursor: hand;
+
+    .circle {
+        /* Match popover styling used for close button: */
+        -fx-fill: hsb(0, 0%, 75%);
+    	-fx-effect: innershadow(gaussian, rgba(0,0,0,.2), 3, 0.5, 1.0, 1.0);
+    }
+
+    .question {
+        -fx-fill: white;
+    }
+
+    .help-popup {
+        & > .border {
+            -fx-stroke-width: 1;
+        }
+        .help-web-wrapper {
+            -fx-padding: 0.25em;
+            -fx-snap-to-pixel: true;
+        }
+    }
+}
