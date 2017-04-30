@@ -2,4 +2,16 @@
     .quote-begin, .quote-end, .separator {
          -fx-fill: hsb(0, 0%, 70%);
     }
+    .line-number {
+         -fx-font-size: 8pt;
+         -fx-alignment: center-right;
+         -fx-text-alignment: right;
+         -fx-min-width: 25;
+         -fx-pref-width: 25;
+         -fx-max-width: 25;
+         -fx-label-padding: 0 2 0 0;
+         -fx-border-width: 0 1 0 0;
+         -fx-border-style: solid;
+         -fx-border-color: hsb(0, 0%, 60%);
+    }
 }

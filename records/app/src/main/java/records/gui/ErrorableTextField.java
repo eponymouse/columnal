@@ -80,7 +80,7 @@ public class ErrorableTextField<T>
             this.error = null;
         }
 
-        private ConversionResult(String error)
+        private ConversionResult(@Localized String error)
         {
             this.success = false;
             this.value = null;
@@ -93,7 +93,7 @@ public class ErrorableTextField<T>
         }
 
         @Pure
-        public @Nullable String getError()
+        public @Nullable @Localized String getError()
         {
             return error;
         }

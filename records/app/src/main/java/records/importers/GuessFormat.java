@@ -21,6 +21,7 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.SegmentedButton;
@@ -652,7 +653,7 @@ public class GuessFormat
             }
 
             TableNameTextField nameField = new TableNameTextField(mgr);
-            SegmentedButtonValue<Boolean> linkCopyButtons = new SegmentedButtonValue<>(new Pair<>("table.copy", false), new Pair<>("table.link", true));
+            SegmentedButtonValue<Boolean> linkCopyButtons = new SegmentedButtonValue<>(new Pair<@LocalizableKey String, Boolean>("table.copy", false), new Pair<@LocalizableKey String, Boolean>("table.link", true));
 
             VBox content = new VBox(
                 GUI.labelled("table.name", "guess-format/tableName", nameField.getNode()),
@@ -802,6 +803,11 @@ public class GuessFormat
         tableView.getItems().clear();
         tableView.getColumns().clear();
 
+        textArea.setParagraphGraphicFactory(sourceLine -> {
+            Label label = new Label(Integer.toString(sourceLine + 1 - t.headerRows));
+            label.getStyleClass().add("line-number");
+            return label;
+        });
         List<ColumnInfo> columnTypes = t.columnTypes;
         for (int column = 0; column < columnTypes.size(); column++)
         {
