@@ -33,7 +33,7 @@ public class TableNameTextField extends ErrorableTextField<TableId>
             }
             else
             {
-                return ConversionResult.<@NonNull TableId>error(TranslationUtility.getString("table.exists", s));
+                return ConversionResult.<@NonNull TableId>error(TranslationUtility.getString("table.name.exists", s));
             }
         });
     }
