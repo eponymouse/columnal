@@ -1,8 +1,11 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<dialog id="guess-format" title="Text Import Format">
+<dialog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:noNamespaceSchemaLocation="help.xsd"
+
+        id="guess-format" title="Text Import Format" >
     <help id="tableName" title="Table Name">
         <short>The name of the new table.</short>
-        <full>The name cannot be blank and must be different from all other tables in the project.</full>
+        <full><p>The name cannot be blank and must be different from all other tables in the project.</p></full>
     </help>
     <help id="linkCopy" title="Link/Copy">
         <short>Whether to copy the data in to the project, or leave it in the file.</short>
@@ -17,36 +20,36 @@
     </help>
     <help id="charset" title="Encoding">
         <short>The scheme used to encode characters in the file.  UTF-8 is the most likely choice.</short>
-        <full>There are lots of different characters in the world: Latin characters (as used in the English alphabet),
+        <full><p>There are lots of different characters in the world: Latin characters (as used in the English alphabet),
             Arabic, Chinese and many more besides.  An encoding scheme is the way in which these characters
         are numbered and stored in a file.  Unfortunately, historically every sub-region had its own encoding,
         and if you get the encoding mismatched, you will get weird characters.  Recently, UTF-8 has become
         something of a common standard, but many other encoding schemes are still in use.  Try UTF-8 first,
-        but try then others if that doesn't work.</full>
+            but try then others if that doesn't work.</p></full>
     </help>
     <help id="headerRow" title="Header Rows">
         <short>How many rows to skip at the beginning of the file.</short>
-        <full>There are often header rows at the beginning of the file which
+        <full><p>There are often header rows at the beginning of the file which
         do not contain useful data.  This number is how many rows to skip.  The
-        last row is taken to be the names of the columns.</full>
+        last row is taken to be the names of the columns.</p></full>
     </help>
     <help id="quote" title="Quote Character">
         <short>The character used to surround columns.</short>
-        <full>Text files use a particular character, such as a comma,
+        <full><p>Text files use a particular character, such as a comma,
         to separate the columns.  But some pieces of text may actually
         contain a comma.  So quotes are sometimes used to surround
-        text values in columns.</full>
+        text values in columns.</p></full>
     </help>
     <help id="columnCount" title="Column Count">
         <short>The number of columns to use in the file.</short>
-        <full>If every row has the same number of columns then
+        <full><p>If every row has the same number of columns then
         this is fixed.  If there is a varying number of columns
-        then you must specify the current number.</full>
+            then you must specify the current number.</p></full>
     </help>
     <help id="separator" title="Column Separator">
         <short>The character used to separate columns in the file.</short>
-        <full>The columns in each row need to be separated by a particular
-        character, such as a comma or semi-colon.</full>
+        <full><p>The columns in each row need to be separated by a particular
+            character, such as a comma or semi-colon.</p></full>
     </help>
 
 </dialog>
