@@ -757,7 +757,7 @@ public class GuessFormat
         }
         else
         {
-            ComboBox<C> combo = new ComboBox<>(FXCollections.observableArrayList(options));
+            ComboBox<C> combo = GUI.comboBoxStyled(FXCollections.observableArrayList(options));
             @Nullable C choice = findByClass(mostRecentPick, choiceType.getChoiceClass());
             if (choice == null || !combo.getItems().contains(choice))
                 combo.getSelectionModel().selectFirst();

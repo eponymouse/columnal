@@ -3,6 +3,7 @@ package utility.gui;
 import annotation.help.qual.HelpKey;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
+import javafx.collections.ObservableList;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -13,6 +14,8 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.util.Callback;
+import javafx.util.StringConverter;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -23,6 +26,7 @@ import org.fxmisc.wellbehaved.event.Nodes;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
+import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.Utility;
 
@@ -127,4 +131,46 @@ public class GUI
         return p;
     }
 
+    /**
+     * If toString() on any item has angle brackets it around, that item gets
+     * formatted as italics without the angle brackets.
+     */
+    public static <C> ComboBox<C> comboBoxStyled(ObservableList<C> cs)
+    {
+        ComboBox<C> comboBox = new ComboBox<>(cs);
+        FXPlatformSupplier<ListCell<C>> cellFactory = () -> {
+            return new ListCell<C>() {
+                @Override
+                @OnThread(Tag.FX)
+                public void updateItem(C item, boolean empty)
+                {
+                    super.updateItem(item, empty);
+                    if (empty)
+                    {
+                        setText("");
+                    }
+                    else
+                    {
+                        // run item through StringConverter if it isn't null
+                        StringConverter<C> c = comboBox.getConverter();
+                        String s = item == null ? comboBox.getPromptText() : (c == null ? item.toString() : c.toString(item));
+                        if (s.startsWith("<") && s.endsWith(">"))
+                        {
+                            setText(s.substring(1, s.length() - 1));
+                            setStyle("-fx-font-style: italic;");
+                        }
+                        else
+                        {
+                            setText(s);
+                            setStyle("");
+                        }
+                    }
+                }
+            };
+        };
+        // From the ComboBox docs:
+        comboBox.setButtonCell(cellFactory.get());
+        comboBox.setCellFactory(lv -> cellFactory.get());
+        return comboBox;
+    }
 }
