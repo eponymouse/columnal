@@ -254,7 +254,7 @@ public class GuessFormat
             if (separator.equals(" "))
                 return "<Space>";
             if (separator.equals("\t"))
-                return "<Tab (\u27FC)>";
+                return "<Tab (\u27FE)>";
             return separator;
         }
 
