@@ -4,8 +4,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import utility.Utility.ReadState;
 
-import java.io.File;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 
 /**

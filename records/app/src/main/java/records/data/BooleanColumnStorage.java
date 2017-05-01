@@ -14,7 +14,6 @@ import records.gui.EnteredDisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
-import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.BitSet;

@@ -8,8 +8,6 @@ import threadchecker.Tag;
 import utility.Utility;
 import utility.Utility.ReadState;
 
-import java.io.File;
-import java.nio.charset.Charset;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;

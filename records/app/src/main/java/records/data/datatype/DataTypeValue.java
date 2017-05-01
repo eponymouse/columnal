@@ -5,12 +5,12 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.Column.ProgressListener;
-import utility.TaggedValue;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.TaggedValue;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;

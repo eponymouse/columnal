@@ -2,8 +2,6 @@ package records.data.unit;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
-import records.data.datatype.DataType;
-import records.data.datatype.DataType.TagType;
 import utility.Pair;
 
 import java.util.ArrayList;

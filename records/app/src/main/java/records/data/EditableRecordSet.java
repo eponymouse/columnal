@@ -1,11 +1,9 @@
 package records.data;
 
 import javafx.application.Platform;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
-import threadchecker.OnThread;
 
 import java.util.List;
 

@@ -8,8 +8,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility.ReadState;
 
-import java.io.File;
-import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.function.UnaryOperator;
 

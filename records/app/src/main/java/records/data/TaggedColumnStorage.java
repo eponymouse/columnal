@@ -1,8 +1,5 @@
 package records.data;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
@@ -19,6 +16,9 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.TaggedValue;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by neil on 05/11/2016.
