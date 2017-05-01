@@ -1,5 +1,6 @@
 package records.importers;
 
+import com.google.common.io.Files;
 import javafx.application.Platform;
 import org.jetbrains.annotations.NotNull;
 import records.data.Column;
@@ -52,7 +53,7 @@ public class TextImport
     public static void importTextFile(TableManager mgr, File textFile, FXPlatformConsumer<DataSource> then) throws IOException, InternalException, UserException
     {
         Map<Charset, List<String>> initial = getInitial(textFile);
-        GuessFormat.guessTextFormatGUI_Then(mgr, initial, format ->
+        GuessFormat.guessTextFormatGUI_Then(mgr, Files.getNameWithoutExtension(textFile.getName()), initial, format ->
         {
             try
             {

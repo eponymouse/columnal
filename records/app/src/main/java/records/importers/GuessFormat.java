@@ -12,6 +12,7 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
@@ -85,7 +86,7 @@ import java.util.stream.Stream;
  */
 public class GuessFormat
 {
-    public static final int MAX_HEADER_ROWS = 20;
+    public static final int MAX_HEADER_ROWS = 5;
     public static final int INITIAL_ROWS_TEXT_FILE = 100;
 
     public static Format guessGeneralFormat(UnitManager mgr, List<List<String>> vals)
@@ -633,7 +634,7 @@ public class GuessFormat
     }
 
     @OnThread(Tag.Simulation)
-    public static void guessTextFormatGUI_Then(TableManager mgr, Map<Charset, List<String>> initial, Consumer<Pair<ImportInfo, TextFormat>> then)
+    public static void guessTextFormatGUI_Then(TableManager mgr, String suggestedName, Map<Charset, List<String>> initial, Consumer<Pair<ImportInfo, TextFormat>> then)
     {
         ChoicePoint<?, TextFormat> choicePoints = guessTextFormat(mgr.getUnitManager(), initial);
         Platform.runLater(() ->
@@ -644,7 +645,9 @@ public class GuessFormat
             sourceFileView.setEditable(false);
             TableView<List<String>> tableView = new TableView<>();
             LabelledGrid choices = new LabelledGrid();
+            choices.getStyleClass().add("choice-grid");
             TableNameTextField nameField = new TableNameTextField(mgr);
+            nameField.setText(suggestedName);
             SegmentedButtonValue<Boolean> linkCopyButtons = new SegmentedButtonValue<>(new Pair<@LocalizableKey String, Boolean>("table.copy", false), new Pair<@LocalizableKey String, Boolean>("table.link", true));
             choices.addRow(GUI.labelledGridRow("table.name", "guess-format/tableName", nameField.getNode()));
             choices.addRow(GUI.labelledGridRow("table.linkCopy", "guess-format/linkCopy", linkCopyButtons));
@@ -666,9 +669,13 @@ public class GuessFormat
             VBox content = new VBox(
                 choices,
                 new SplitPane(new VirtualizedScrollPane<>(sourceFileView), tableView));
+            content.getStyleClass().add("guess-format-content");
             dialog.getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
             dialog.getDialogPane().setContent(content);
             dialog.getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
+            // Prevent enter/escape activating buttons:
+            ((Button)dialog.getDialogPane().lookupButton(ButtonType.CANCEL)).setCancelButton(false);
+            ((Button)dialog.getDialogPane().lookupButton(ButtonType.OK)).setDefaultButton(false);
             //TODO disable ok button if name isn't valid
             dialog.setResultConverter(bt -> {
                 @Nullable TableId tableId = nameField.valueProperty().get();
@@ -679,10 +686,16 @@ public class GuessFormat
                 }
                 return null;
             });
-            /*dialog.initModality(Modality.NONE);
+            dialog.setResizable(true);
+
+            //dialog.initModality(Modality.NONE); // For scenic view
             dialog.setOnShown(e -> {
-                org.scenicview.ScenicView.show(dialog.getDialogPane().getScene());
-            });*/
+                //org.scenicview.ScenicView.show(dialog.getDialogPane().getScene());
+
+                // Have to use runAfter because the OK button gets focused
+                // so we have to wait, then steal the focus back:
+                FXUtility.runAfter(() -> nameField.requestFocusWhenInScene());
+            });
             dialog.showAndWait().ifPresent(then);
 
         });

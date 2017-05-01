@@ -1,3 +1,11 @@
+.guess-format-content {
+    -fx-pref-width: 800px;
+}
+
+.choice-grid {
+    -fx-padding: 0 0 2em 4em;
+}
+
 .source {
     .quote-begin, .quote-end, .separator {
          -fx-fill: hsb(0, 0%, 70%);

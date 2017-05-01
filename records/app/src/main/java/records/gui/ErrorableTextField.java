@@ -112,6 +112,18 @@ public class ErrorableTextField<T>
         return field;
     }
 
+    public void requestFocusWhenInScene()
+    {
+        FXUtility.onceNotNull(field.sceneProperty(), sc -> {
+            field.requestFocus();
+        });
+    }
+
+    public void setText(String text)
+    {
+        field.setText(text);
+    }
+
     public static class ConversionResult<T>
     {
         private final boolean success;
