@@ -77,7 +77,7 @@ public class StringLiteralNode extends LeafNode implements OperandNode
     @Override
     public OperandNode focusWhenShown()
     {
-        FXUtility.onNonNull(textField.sceneProperty(), s -> focus(Focus.RIGHT));
+        FXUtility.onceNotNull(textField.sceneProperty(), s -> focus(Focus.RIGHT));
         return this;
     }
 

@@ -179,21 +179,6 @@ public class FXUtility
         return new ExtensionFilter(TranslationUtility.getString("extension.projects"), "*.rec");
     }
 
-    @OnThread(Tag.FXPlatform)
-    public static <T> void onNonNull(ReadOnlyObjectProperty<T> property, FXPlatformConsumer<T> consumer)
-    {
-        property.addListener(new ChangeListener<T>()
-        {
-            @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            public void changed(ObservableValue<? extends T> observable, T oldValue, T newValue)
-            {
-                property.removeListener(this);
-                consumer.consume(newValue);
-            }
-        });
-    }
-
     @SuppressWarnings("nullness")
     public static String getStylesheet(String stylesheetName)
     {

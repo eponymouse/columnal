@@ -338,7 +338,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
 
     public GeneralEntry focusWhenShown()
     {
-        FXUtility.onNonNull(textField.sceneProperty(), scene -> focus(Focus.RIGHT));
+        FXUtility.onceNotNull(textField.sceneProperty(), scene -> focus(Focus.RIGHT));
         return this;
     }
 

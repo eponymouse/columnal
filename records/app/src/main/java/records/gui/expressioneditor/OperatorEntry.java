@@ -125,7 +125,7 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
 
     public ExpressionNode focusWhenShown()
     {
-        FXUtility.onNonNull(textField.sceneProperty(), scene -> focus(Focus.RIGHT));
+        FXUtility.onceNotNull(textField.sceneProperty(), scene -> focus(Focus.RIGHT));
         return this;
     }
 
