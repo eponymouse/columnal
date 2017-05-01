@@ -98,8 +98,16 @@ class Pane
 }
 class Region
 {
+    DoubleProperty minWidthProperty() @UnknownInitialization;
     DoubleProperty prefWidthProperty() @UnknownInitialization;
+    DoubleProperty maxWidthProperty() @UnknownInitialization;
+    DoubleProperty widthProperty() @UnknownInitialization;
+
+    DoubleProperty minHeightProperty() @UnknownInitialization;
+    DoubleProperty prefHeightProperty() @UnknownInitialization;
+    DoubleProperty maxHeightProperty() @UnknownInitialization;
     DoubleProperty heightProperty() @UnknownInitialization;
+
 }
 
 package javafx.stage;
@@ -138,4 +146,8 @@ class SegmentedButton
 {
     List getButtons() @UnknownInitialization;
     ToggleGroup getToggleGroup() @UnknownInitialization;
+}
+class PopOver
+{
+    void show(@UnknownInitialization @NonNull Node owner);
 }

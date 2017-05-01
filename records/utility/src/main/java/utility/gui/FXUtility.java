@@ -1,5 +1,7 @@
 package utility.gui;
 
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
@@ -29,6 +31,7 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
+import javafx.util.Duration;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -250,6 +253,17 @@ public class FXUtility
     {
         // Defeat thread-checker:
         ((Runnable)(() -> Platform.runLater(r::run))).run();
+    }
+
+    /**
+     * Runs the given action after the given delay, unless you call the returned cancellation
+     * action in the mean-time.  Calling it later on has no effect.
+     */
+    public static FXPlatformRunnable runAfterDelay(Duration duration, FXPlatformRunnable action)
+    {
+        Timeline t = new Timeline(new KeyFrame(duration, e -> action.run()));
+        t.play();
+        return t::stop;
     }
 
     // Mainly, this method is to avoid having to cast to ListChangeListener to disambiguate

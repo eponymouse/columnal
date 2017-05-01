@@ -2,21 +2,28 @@ package utility.gui;
 
 import annotation.help.qual.HelpKey;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Circle;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.util.Duration;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.UnderInitialization;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.PopOver.ArrowLocation;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.Utility;
 import utility.gui.Help.HelpInfo;
 
@@ -29,16 +36,18 @@ import java.util.List;
 @OnThread(Tag.FXPlatform)
 class HelpBox extends StackPane
 {
+    private final @HelpKey String helpId;
     private @MonotonicNonNull PopOver popOver;
-    private Help.@MonotonicNonNull HelpInfo helpInfo;
     // Showing full is also equivalent to whether it is pinned.
     private final BooleanProperty showingFull = new SimpleBooleanProperty(false);
+    private final BooleanProperty keyboardFocused = new SimpleBooleanProperty(false);
+    private @Nullable FXPlatformRunnable cancelHover;
 
-    @SuppressWarnings("initialization") // For the call of showHidePopOver
     public HelpBox(@HelpKey String helpId)
     {
+        this.helpId = helpId;
         getStyleClass().add("help-box");
-        Circle circle = new Circle(10.0);
+        Circle circle = new Circle(12.0);
         circle.getStyleClass().add("circle");
         Text text = new Text("?");
         text.getStyleClass().add("question");
@@ -46,16 +55,23 @@ class HelpBox extends StackPane
         // We extend the node beneath the circle to put some space between the circle
         // and where the arrow of the popover shows, otherwise the popover interrupts the
         // mouseover detection and things get weird:
-        setMinHeight(20);
+        minHeightProperty().set(20);
         text.setMouseTransparent(true);
 
         text.rotateProperty().bind(Bindings.when(showingFull).then(-45.0).otherwise(0.0));
 
         circle.setOnMouseEntered(e -> {
-            if (!popupShowing())
-                showPopOver(helpId);
+            cancelHover = FXUtility.runAfterDelay(Duration.millis(400), () -> {
+                if (!popupShowing())
+                    showPopOver();
+            });
         });
         circle.setOnMouseExited(e -> {
+            if (cancelHover != null)
+            {
+                cancelHover.run();
+                cancelHover = null;
+            }
             if (popupShowing() && !showingFull.get())
             {
                 popOver.hide();
@@ -66,7 +82,7 @@ class HelpBox extends StackPane
             showingFull.set(true);
             if (!popupShowing())
             {
-                showPopOver(helpId);
+                showPopOver();
             }
             else
             {
@@ -78,34 +94,28 @@ class HelpBox extends StackPane
 
 
     @EnsuresNonNullIf(expression = "popOver", result = true)
-    private boolean popupShowing()
+    private boolean popupShowing(@UnknownInitialization(StackPane.class) HelpBox this)
     {
         return popOver != null && popOver.isShowing();
     }
 
-    private Help.@Nullable HelpInfo getHelpInfo(@HelpKey String helpId)
-    {
-        if (helpInfo == null)
-        {
-            @Nullable HelpInfo loaded = Help.getHelpInfo(helpId);
-            if (loaded != null)
-                this.helpInfo = loaded;
-        }
-        return helpInfo;
-    }
-
     @OnThread(Tag.FXPlatform)
-    private void showPopOver(@HelpKey String helpId)
+    @RequiresNonNull("helpId")
+    private void showPopOver(@UnknownInitialization(StackPane.class) HelpBox this)
     {
         if (popOver == null)
         {
-            @Nullable HelpInfo helpInfo = getHelpInfo(helpId);
+            @Nullable HelpInfo helpInfo = Help.getHelpInfo(helpId);
             if (helpInfo != null)
             {
                 Text shortText = new Text(helpInfo.shortText);
                 shortText.getStyleClass().add("short");
                 TextFlow textFlow = new TextFlow(shortText);
-                Text more = new Text("\n\n" + TranslationUtility.getString("help.more"));
+                Text more = new Text();
+                more.textProperty().bind(new ReadOnlyStringWrapper("\n\n").concat(
+                    Bindings.when(keyboardFocused)
+                        .then(TranslationUtility.getString("help.more.keyboard"))
+                        .otherwise(TranslationUtility.getString("help.more"))));
                 more.getStyleClass().add("more");
                 more.visibleProperty().bind(showingFull.not());
                 more.managedProperty().bind(more.visibleProperty());
@@ -120,6 +130,7 @@ class HelpBox extends StackPane
                     t.managedProperty().bind(t.visibleProperty());
                     return t;
                 }));
+
 
                 BorderPane pane = new BorderPane(textFlow);
                 pane.getStyleClass().add("help-content");
@@ -151,5 +162,33 @@ class HelpBox extends StackPane
             popOver.show(this);
             //org.scenicview.ScenicView.show(popOver.getRoot().getScene());
         }
+    }
+
+    /**
+     * Cycles through: not showing, showing, showing full.
+     */
+    public void cycleStates()
+    {
+        if (!popupShowing())
+        {
+            showPopOver();
+        }
+        else
+        {
+            if (!showingFull.get())
+            {
+                showingFull.set(true);
+            }
+            else
+            {
+                popOver.hide();
+            }
+        }
+    }
+
+    public void bindKeyboardFocused(@Nullable BooleanExpression keyboardFocused)
+    {
+        if (keyboardFocused != null)
+            this.keyboardFocused.bind(keyboardFocused);
     }
 }

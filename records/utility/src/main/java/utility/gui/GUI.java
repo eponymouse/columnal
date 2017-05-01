@@ -1,8 +1,11 @@
 package utility.gui;
 
 import annotation.help.qual.HelpKey;
+import javafx.beans.Observable;
+import javafx.beans.binding.Bindings;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -13,10 +16,18 @@ import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.controlsfx.control.SegmentedButton;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 import utility.Pair;
+import utility.Utility;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by neil on 17/04/2017.
@@ -73,12 +84,32 @@ public class GUI
 
     public static Node labelled(@LocalizableKey String labelKey, @HelpKey String helpId, Node choiceNode)
     {
-        return new HBox(label(labelKey), helpBox(helpId), choiceNode);
+        return new HBox(label(labelKey), helpBox(helpId, choiceNode), choiceNode);
     }
 
-    private static Node helpBox(@HelpKey String helpId)
+    private static HelpBox helpBox(@HelpKey String helpId, @Nullable Node relevantNode)
     {
-        return new HelpBox(helpId);
+        List<Node> nodes = new ArrayList<>();
+        if (relevantNode != null)
+        {
+            if (relevantNode.isFocusTraversable())
+            {
+                nodes.add(relevantNode);
+            }
+            else if (relevantNode instanceof SegmentedButton)
+            {
+                nodes.addAll(((SegmentedButton)relevantNode).getButtons());
+            }
+        }
+        HelpBox helpBox = new HelpBox(helpId);
+        helpBox.bindKeyboardFocused(Bindings.createBooleanBinding(() -> {
+            return nodes.stream().map(Node::isFocused).reduce(false, (a, b) -> a || b);
+        }, Utility.mapList(nodes, Node::focusedProperty).toArray(new Observable[0])));
+        for (Node n : nodes)
+        {
+            Nodes.addInputMap(n, InputMap.consume(EventPattern.keyPressed(KeyCode.F1), e -> helpBox.cycleStates()));
+        }
+        return helpBox;
     }
 
     // Wraps the item in a Pane with the given style classes (on the pane, not content)

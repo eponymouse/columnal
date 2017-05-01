@@ -65,6 +65,12 @@
             <version>1.0.1</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.fxmisc.wellbehaved</groupId>
+            <artifactId>wellbehavedfx</artifactId>
+            <version>0.3</version>
+        </dependency>
+
         <!-- XOM for parsing XML help files: -->
         <dependency>
             <groupId>com.io7m.xom</groupId>
