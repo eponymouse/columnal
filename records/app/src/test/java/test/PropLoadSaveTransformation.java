@@ -19,7 +19,6 @@ import test.gen.GenNonsenseTransformation;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationSupplier;
-import utility.Utility;
 
 import javax.swing.SwingUtilities;
 import java.io.File;

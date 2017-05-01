@@ -3,7 +3,6 @@ package test;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import javafx.embed.swing.JFXPanel;
 import org.junit.runner.RunWith;
 import records.data.Table;
 import records.data.Table.FullSaver;
@@ -14,9 +13,7 @@ import test.gen.GenImmediateData;
 import test.gen.GenTableManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
 
-import javax.swing.SwingUtilities;
 import java.lang.reflect.InvocationTargetException;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;

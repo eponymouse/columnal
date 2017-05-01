@@ -15,6 +15,7 @@
         <module>app</module>
         <module>anns</module>
         <module>gui-utility</module>
+        <module>data</module>
     </modules>
 
     <dependencies>

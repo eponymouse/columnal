@@ -2,7 +2,6 @@ package records.transformations.expression;
 
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
-import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;

@@ -1,17 +1,14 @@
 package records.gui.expressioneditor;
 
-import javafx.beans.binding.StringExpression;
 import javafx.beans.value.ObservableObjectValue;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
 import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 
 import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.List;
 
 /**

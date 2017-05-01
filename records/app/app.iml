@@ -22,6 +22,7 @@
     <orderEntry type="library" name="Maven: xalan:xalan:2.7.0" level="project" />
     <orderEntry type="module" module-name="parsers" />
     <orderEntry type="module" module-name="anns" />
+    <orderEntry type="module" module-name="data" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.1.10" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.1.10" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.1.10" level="project" />
