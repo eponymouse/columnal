@@ -1669,6 +1669,7 @@ public class DataType
         R differentKind(T a, T b) throws InternalException, UserException;
     }
 
+    @OnThread(Tag.FX)
     public static abstract class StringConvBase extends StringConverter<DisplayValueBase>
     {
         protected int rowIndex;
@@ -1679,17 +1680,20 @@ public class DataType
         }
 
         @Override
+        @OnThread(value = Tag.FX, ignoreParent = true) // Parent should be tagged FX anyway!
         public String toString(DisplayValueBase object)
         {
             return object.getEditString();
         }
     }
 
+    @OnThread(Tag.FX)
     public StringConvBase makeConverter()
     {
         return new StringConvBase()
         {
             @Override
+            @OnThread(value = Tag.FX, ignoreParent = true) // Parent should be tagged FX anyway!
             public DisplayValueBase fromString(String string)
             {
                 return new EnteredDisplayValue(rowIndex, string);

@@ -37,6 +37,7 @@ import records.loadsave.OutputBuilder;
 import records.transformations.expression.ErrorRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
+import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -60,7 +61,7 @@ import java.util.Map.Entry;
  * Created by neil on 21/10/2016.
  */
 @OnThread(Tag.Simulation)
-public class SummaryStatistics extends Transformation
+public class SummaryStatistics extends TransformationEditable
 {
     public static final String NAME = "summary";
     private final @Nullable Table src;
@@ -208,7 +209,7 @@ public class SummaryStatistics extends Transformation
             {
                 Expression expression = e.getValue().summaryExpression;
                 ErrorRecorderStorer errors = new ErrorRecorderStorer();
-                @Nullable DataType type = expression.check(src, mgr.getTypeState(), errors);
+                @Nullable DataType type = expression.check(src, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
                 if (type == null)
                     throw new UserException((@NonNull String)errors.getAllErrors().findFirst().orElse("Unknown type error"));
                 @NonNull DataType typeFinal = type;

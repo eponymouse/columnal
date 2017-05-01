@@ -1,5 +1,8 @@
 package records.data;
 
+import threadchecker.OnThread;
+import threadchecker.Tag;
+
 /**
  * Because of the way TableView works, we have to send the string
  * through a DisplayValueBase type before it can be stored, even
@@ -9,6 +12,7 @@ package records.data;
  * only really exists to allow EnteredDisplayValue to pass through in the
  * other direction.
  */
+@OnThread(Tag.FX)
 public abstract class DisplayValueBase
 {
     /**
@@ -16,11 +20,13 @@ public abstract class DisplayValueBase
      */
     private final int rowIndex;
 
+    @OnThread(Tag.Any)
     public DisplayValueBase(int rowIndex)
     {
         this.rowIndex = rowIndex;
     }
 
+    @OnThread(Tag.Any)
     public int getRowIndex()
     {
         return rowIndex;

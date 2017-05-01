@@ -1,6 +1,8 @@
 package records.data;
 
 import annotation.qual.Value;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 /**
  * A DisplayValue which comes from the user entering a string.
@@ -9,6 +11,7 @@ import annotation.qual.Value;
  * through a DisplayValueBase type before it can be stored, even
  * though really DisplayValue was intended only for display, not for entry.
  */
+@OnThread(Tag.FX)
 public class EnteredDisplayValue extends DisplayValueBase
 {
     private final String enteredString;
@@ -26,6 +29,7 @@ public class EnteredDisplayValue extends DisplayValueBase
     }
 
     @SuppressWarnings("value") // To add @Value annotation
+    @OnThread(Tag.Any)
     public @Value String getString()
     {
         return enteredString;

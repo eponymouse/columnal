@@ -68,7 +68,7 @@ import java.util.Optional;
  *   - Errors in every place if the sort-by columns can't be found.
  */
 @OnThread(Tag.Simulation)
-public class Sort extends Transformation
+public class Sort extends TransformationEditable
 {
 
     public static final String NAME = "sort";

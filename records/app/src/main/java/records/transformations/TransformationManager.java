@@ -4,6 +4,7 @@ import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.TableManager.TransformationLoader;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
@@ -22,7 +23,7 @@ import java.util.stream.Collectors;
 /**
  * Created by neil on 02/11/2016.
  */
-public class TransformationManager
+public class TransformationManager implements TransformationLoader
 {
     @MonotonicNonNull
     @OnThread(value = Tag.Any,requireSynchronized = true)

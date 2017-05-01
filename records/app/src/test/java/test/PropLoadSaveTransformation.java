@@ -13,6 +13,7 @@ import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.View;
+import records.transformations.TransformationEditable;
 import test.gen.GenTableManager;
 import test.gen.GenNonsenseTransformation;
 import threadchecker.OnThread;
@@ -105,7 +106,7 @@ public class PropLoadSaveTransformation
             {
                 throw new RuntimeException(e);
             }
-            f.complete(original.transformation.edit(view).getTransformation(original.mgr));
+            f.complete(((TransformationEditable)original.transformation).edit(view).getTransformation(original.mgr));
         });
         assertEquals(original.transformation, f.get(10, TimeUnit.SECONDS).get());
     }

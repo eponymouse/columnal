@@ -62,7 +62,7 @@ import java.util.List;
  * data set.
  */
 @OnThread(Tag.Simulation)
-public class HideColumns extends Transformation
+public class HideColumns extends TransformationEditable
 {
     @OnThread(Tag.Any)
     private final TableId srcTableId;

@@ -34,7 +34,9 @@ import records.data.TableManager;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.TransformationEditable;
 import records.transformations.TransformationEditor;
+import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
@@ -235,7 +237,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     public View(File location) throws InternalException, UserException
     {
         diskFile = new SimpleObjectProperty<>(location);
-        tableManager = new TableManager(this);
+        tableManager = new TableManager(TransformationManager.getInstance(), this);
         mainPane = new Pane();
         pickPaneMouse = new Pane();
         pickPaneDisplay = new Pane();
@@ -248,7 +250,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
         FXUtility.addChangeListenerPlatform(currentPick, t -> {
             if (t != null)
             {
-                Bounds b = t.getDisplay().getBoundsInParent();
+                Bounds b = ((TableDisplay)t.getDisplay()).getBoundsInParent();
                 pickPaneDisplay.setClip(Shape.subtract(new Rectangle(mainPane.getWidth(), mainPane.getHeight()), new Rectangle(b.getMinX(), b.getMinY(), b.getWidth(), b.getHeight())));
                 pickPaneMouse.setCursor(Cursor.HAND);
             }
@@ -334,7 +336,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
             }
             overlays.put(transformation, new Overlays(sourceDisplays, transformation.getTransformationLabel(), tableDisplay, () ->
             {
-                View.this.edit(transformation.getId(), transformation.edit(View.this));
+                View.this.edit(transformation.getId(), ((TransformationEditable)transformation).edit(View.this));
             }));
 
             save();
@@ -357,7 +359,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
         if (table == null)
             return null;
         else
-            return table.getDisplay();
+            return (TableDisplay)table.getDisplay();
     }
 
     public void edit(TableId existingTableId, TransformationEditor selectedEditor)

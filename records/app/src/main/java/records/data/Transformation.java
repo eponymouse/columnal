@@ -5,9 +5,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.grammar.MainLexer;
-import records.gui.View;
 import records.loadsave.OutputBuilder;
-import records.transformations.TransformationEditor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -30,10 +28,6 @@ public abstract class Transformation extends Table
 
     @OnThread(Tag.Any)
     public abstract List<TableId> getSources();
-
-    @OnThread(Tag.FXPlatform)
-    public abstract TransformationEditor edit(View view);
-
 
     @Override
     @OnThread(Tag.Simulation)

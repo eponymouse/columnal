@@ -12,8 +12,6 @@ import records.grammar.MainLexer;
 import records.grammar.MainParser;
 import records.grammar.MainParser.FileContext;
 import records.grammar.MainParser.TableContext;
-import records.transformations.TransformationManager;
-import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.GraphUtility;
@@ -48,9 +46,11 @@ public class TableManager
     private final UnitManager unitManager;
     private final TypeManager typeManager;
     private final TableManagerListener listener;
+    private final TransformationLoader transformationLoader;
 
-    public TableManager(TableManagerListener listener) throws UserException, InternalException
+    public TableManager(TransformationLoader transformationLoader, TableManagerListener listener) throws UserException, InternalException
     {
+        this.transformationLoader = transformationLoader;
         this.listener = listener;
         this.unitManager = new UnitManager();;
         this.typeManager = new TypeManager(unitManager);
@@ -120,11 +120,6 @@ public class TableManager
         return unitManager;
     }
 
-    public TypeState getTypeState()
-    {
-        return new TypeState(unitManager, typeManager);
-    }
-
     @OnThread(Tag.Simulation)
     public List<Table> loadAll(String completeSrc) throws UserException, InternalException
     {
@@ -156,7 +151,7 @@ public class TableManager
             {
                 try
                 {
-                    loaded.add(TransformationManager.getInstance().loadOne(this, tableContext));
+                    loaded.add(transformationLoader.loadOne(this, tableContext));
                 }
                 catch (InternalException | UserException e)
                 {
@@ -350,7 +345,7 @@ public class TableManager
         for (String script : scripts)
         {
             Utility.alertOnError_(() -> {
-                Transformation transformation = TransformationManager.getInstance().loadOne(this, script);
+                Transformation transformation = transformationLoader.loadOne(this, script);
                 listener.addTransformation(transformation);
             });
 
@@ -384,5 +379,14 @@ public class TableManager
         public void addSource(DataSource dataSource);
 
         public void addTransformation(Transformation transformation);
+    }
+
+    public static interface TransformationLoader
+    {
+        @OnThread(Tag.Simulation)
+        public Transformation loadOne(TableManager mgr, String source) throws InternalException, UserException;
+
+        @OnThread(Tag.Simulation)
+        public Transformation loadOne(TableManager mgr, TableContext table) throws UserException, InternalException;
     }
 }

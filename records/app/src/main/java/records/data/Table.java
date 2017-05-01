@@ -12,9 +12,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
 import records.grammar.MainParser.PositionContext;
-import records.gui.TableDisplay;
 import records.loadsave.OutputBuilder;
-import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -33,7 +31,7 @@ public abstract class Table
     private final TableManager mgr;
     private final TableId id;
     @OnThread(value = Tag.Any, requireSynchronized = true)
-    private @MonotonicNonNull TableDisplay display;
+    private @MonotonicNonNull TableDisplayBase display;
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private Bounds prevPosition = new BoundingBox(0, 0, 100, 400);
 
@@ -143,7 +141,7 @@ public abstract class Table
     public abstract void save(@Nullable File destination, Saver then);
 
     @OnThread(Tag.FXPlatform)
-    public synchronized void setDisplay(TableDisplay display)
+    public synchronized void setDisplay(TableDisplayBase display)
     {
         this.display = display;
     }
@@ -207,7 +205,7 @@ public abstract class Table
     }
 
     @OnThread(Tag.FXPlatform)
-    public synchronized @Nullable TableDisplay getDisplay()
+    public synchronized @Nullable TableDisplayBase getDisplay()
     {
         return display;
     }
@@ -226,15 +224,19 @@ public abstract class Table
      */
     public abstract Table addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException, UserException;
 
-    protected TypeState getTypeState()
-    {
-        return mgr.getTypeState();
-    }
-
     @OnThread(Tag.Any)
     protected TableManager getManager()
     {
         return mgr;
     }
 
+    /**
+     * Slightly ham-fisted way to break the data->gui module dependency
+     * while still letting Table store a link to its display.
+     */
+    public static interface TableDisplayBase
+    {
+        @OnThread(Tag.Any)
+        public Bounds getPosition();
+    }
 }

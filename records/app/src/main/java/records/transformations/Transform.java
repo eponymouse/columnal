@@ -25,6 +25,7 @@ import records.gui.View;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
+import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -47,7 +48,7 @@ import java.util.stream.Collectors;
  * by evaluating an expression for each.
  */
 @OnThread(Tag.Simulation)
-public class Transform extends Transformation
+public class Transform extends TransformationEditable
 {
     @OnThread(Tag.Any)
     private final Map<ColumnId, Expression> newColumns;
@@ -100,7 +101,7 @@ public class Transform extends Transformation
 
             for (Entry<ColumnId, Expression> newCol : toCalculate.entrySet())
             {
-                @Nullable DataType type = newCol.getValue().check(srcRecordSet, mgr.getTypeState(), (e, s, q) ->
+                @Nullable DataType type = newCol.getValue().check(srcRecordSet, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), (e, s, q) ->
                 {
                     error = s;
                 });

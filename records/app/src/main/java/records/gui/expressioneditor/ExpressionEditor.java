@@ -18,6 +18,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.transformations.expression.Expression;
+import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -234,7 +235,7 @@ public class ExpressionEditor extends ConsecutiveBase
             {
                 if (srcTable != null && tableManager != null)
                 {
-                    expression.check(srcTable.getData(), tableManager.getTypeState(), (e, s, q) ->
+                    expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), (e, s, q) ->
                     {
                         if (!errorDisplayers.showError(e, s, q))
                         {

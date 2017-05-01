@@ -1,4 +1,4 @@
-package records.gui;
+package records.data;
 
 import annotation.qual.Value;
 import javafx.application.Platform;
@@ -40,6 +40,7 @@ import static records.data.DisplayValue.ProgressState.QUEUED;
 /**
  * Created by neil on 27/10/2016.
  */
+@OnThread(Tag.FXPlatform)
 public class DisplayCache
 {
     private static final int INITIAL_DISPLAY_CACHE_SIZE = 100;
@@ -242,6 +243,7 @@ public class DisplayCache
         }
 
         @Override
+        @OnThread(Tag.Simulation)
         public synchronized void queueMoved(long finished, long lastQueued)
         {
             double progress = (double)(finished - originalFinished) / (double)(us - originalFinished);
@@ -249,6 +251,7 @@ public class DisplayCache
         }
 
         @Override
+        @OnThread(Tag.FX)
         public synchronized void addedToQueue(long finished, long us)
         {
             this.originalFinished = finished;

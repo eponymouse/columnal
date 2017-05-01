@@ -6,6 +6,7 @@ import records.data.TableManager;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.TransformationManager;
 
 /**
  * Created by neil on 16/11/2016.
@@ -29,7 +30,7 @@ public class DummyManager extends TableManager
 
     public DummyManager() throws InternalException, UserException
     {
-        super(new TableManagerListener()
+        super(TransformationManager.getInstance(), new TableManagerListener()
         {
             @Override
             public void removeTable(Table t)

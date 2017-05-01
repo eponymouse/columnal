@@ -9,7 +9,6 @@ import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.DisplayCache;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;

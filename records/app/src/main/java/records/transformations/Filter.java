@@ -53,6 +53,7 @@ import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ErrorRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
+import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -75,7 +76,7 @@ import java.util.Map.Entry;
  * Created by neil on 23/11/2016.
  */
 @OnThread(Tag.Simulation)
-public class Filter extends Transformation
+public class Filter extends TransformationEditable
 {
     private static final String PREFIX = "KEEPIF";
     private final TableId srcTableId;
@@ -164,7 +165,7 @@ public class Filter extends Transformation
                 // Must set it before, in case it throws:
                 typeChecked = true;
                 ErrorRecorderStorer errors = new ErrorRecorderStorer();
-                @Nullable DataType checked = filterExpression.check(data, getTypeState(), errors);
+                @Nullable DataType checked = filterExpression.check(data, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
                 if (checked != null)
                     type = checked;
                 else
@@ -253,7 +254,7 @@ public class Filter extends Transformation
             {
                 expression = Expression.parse(null, "abs(true + false - 632 + @column \"Date\" + (@match 63 @case 5 @then true)) - 62 + \"hi\"", mgr.getTypeManager());
                 if (src != null)
-                    expression.check(src.getData(), mgr.getTypeState(), (e, s, q) -> {});
+                    expression.check(src.getData(), new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), (e, s, q) -> {});
             }
             catch (InternalException | UserException e)
             {
@@ -278,7 +279,7 @@ public class Filter extends Transformation
             @Nullable Table src = srcControl.getTableOrNull();
             if (src == null)
                 return;
-            if (expression.check(src.getData(), mgr.getTypeState(), (e, s, q) -> {}) == null)
+            if (expression.check(src.getData(), new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), (e, s, q) -> {}) == null)
                 return;
 
             if (allColumns.isEmpty())

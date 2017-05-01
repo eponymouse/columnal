@@ -3,6 +3,8 @@ package records.data;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.unit.Unit;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
@@ -16,6 +18,7 @@ import java.util.stream.Collectors;
  *  - Successfully loaded (with a String which is what to show in the cell)
  *  - Unsuccessful (with a String giving an error description)
  */
+@OnThread(Tag.FX)
 public class DisplayValue extends DisplayValueBase
 {
     public static enum ProgressState
@@ -37,16 +40,19 @@ public class DisplayValue extends DisplayValueBase
     /**
      * Create successfully loaded item with text
      */
+    @OnThread(Tag.Any)
     public DisplayValue(int rowIndex, String val)
     {
         this(rowIndex, val, false);
     }
 
+    @OnThread(Tag.Any)
     public DisplayValue(int rowIndex, TemporalAccessor temporal)
     {
         this(rowIndex, temporal.toString());
     }
 
+    @OnThread(Tag.Any)
     public DisplayValue(int rowIndex, boolean b)
     {
         this(rowIndex, Boolean.toString(b));
@@ -55,6 +61,7 @@ public class DisplayValue extends DisplayValueBase
     /**
      * Create successfully loaded item with number
      */
+    @OnThread(Tag.Any)
     public DisplayValue(int rowIndex, Number val, Unit unit, int minimumDecimalPlaces)
     {
         super(rowIndex);
@@ -71,6 +78,7 @@ public class DisplayValue extends DisplayValueBase
     /**
      * Creating loading-in-progress item (param is progress, 0 to 1)
      */
+    @OnThread(Tag.Any)
     public DisplayValue(int rowIndex, ProgressState state, double d)
     {
         super(rowIndex);
@@ -87,6 +95,7 @@ public class DisplayValue extends DisplayValueBase
     /**
      * Create error item (if err is true; err being false is same as single-arg constructor).
      */
+    @OnThread(Tag.Any)
     public DisplayValue(int rowIndex, String s, boolean err)
     {
         super(rowIndex);
@@ -142,6 +151,7 @@ public class DisplayValue extends DisplayValueBase
     }
 
     @SuppressWarnings("nullness")
+    @OnThread(Tag.Any)
     public static DisplayValue tuple(int rowIndex, List<DisplayValue> displays)
     {
         boolean allLoaded = true;
@@ -169,6 +179,7 @@ public class DisplayValue extends DisplayValueBase
     }
 
     @SuppressWarnings("nullness")
+    @OnThread(Tag.Any)
     public static DisplayValue array(int rowIndex, List<DisplayValue> displays)
     {
         boolean allLoaded = true;

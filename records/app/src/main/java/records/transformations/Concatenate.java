@@ -62,7 +62,7 @@ import java.util.stream.Collectors;
  * Created by neil on 18/01/2017.
  */
 @OnThread(Tag.Simulation)
-public class Concatenate extends Transformation
+public class Concatenate extends TransformationEditable
 {
     @OnThread(Tag.Any)
     private final List<TableId> sources;

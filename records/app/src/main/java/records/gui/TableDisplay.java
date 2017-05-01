@@ -18,6 +18,7 @@ import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import records.data.RecordSet;
 import records.data.Table;
+import records.data.Table.TableDisplayBase;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -39,7 +40,7 @@ import java.util.concurrent.atomic.AtomicReference;
  * the display.  The data is handled by the inner class TableDataDisplay.
  */
 @OnThread(Tag.FXPlatform)
-public class TableDisplay extends BorderPane
+public class TableDisplay extends BorderPane implements TableDisplayBase
 {
     private static final int INITIAL_LOAD = 100;
     private static final int LOAD_CHUNK = 100;
@@ -300,6 +301,7 @@ public class TableDisplay extends BorderPane
     }
 
     @OnThread(Tag.Any)
+    @Override
     public Bounds getPosition()
     {
         return mostRecentBounds.get();
