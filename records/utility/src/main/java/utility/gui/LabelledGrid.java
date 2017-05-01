@@ -8,6 +8,9 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Created by neil on 01/05/2017.
  */
@@ -35,7 +38,7 @@ public class LabelledGrid extends GridPane
         getStyleClass().add("labelled-grid");
     }
 
-    public void addRow(Row row)
+    public int addRow(Row row)
     {
         int col = 0;
         add(row.label, col++, rows);
@@ -43,6 +46,19 @@ public class LabelledGrid extends GridPane
         if (row.helpBox != null)
             add(row.helpBox, col++, rows);
         add(row.item, col++, rows);
-        rows++;
+        return rows++;
     }
+
+
+    public void clearRowsAfter(int rowNumber)
+    {
+        List<Node> childrenCopy = new ArrayList<>(getChildren());
+        for (Node node : childrenCopy)
+        {
+            if (getRowIndex(node) > rowNumber)
+                getChildren().remove(node);
+        }
+        rows = rowNumber + 1;
+    }
+
 }

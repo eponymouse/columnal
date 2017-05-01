@@ -766,11 +766,12 @@ public class GuessFormat
             choiceNode = combo;
             choiceExpression = combo.getSelectionModel().selectedItemProperty();
         }
-        controlGrid.addRow(GUI.labelledGridRow(choiceType.getLabelKey(), choiceType.getHelpId(), choiceNode));
+        int rowNumber = controlGrid.addRow(GUI.labelledGridRow(choiceType.getLabelKey(), choiceType.getHelpId(), choiceNode));
         FXPlatformConsumer<C> pick = item -> {
             try
             {
                 ChoicePoint<?, TextFormat> next = rawChoicePoint.select(item);
+                controlGrid.clearRowsAfter(rowNumber);
                 makeGUI(next, mostRecentPick, initial, controlGrid, textView, tableView, destProperty);
             }
             catch (InternalException e)
