@@ -1,4 +1,4 @@
-package records.gui;
+package records.data;
 
 import annotation.qual.Value;
 

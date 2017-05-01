@@ -9,6 +9,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.Column.ProgressListener;
+import records.data.DisplayValue;
+import records.data.DisplayValueBase;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
@@ -32,8 +34,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 
-import static records.gui.DisplayValue.ProgressState.GETTING;
-import static records.gui.DisplayValue.ProgressState.QUEUED;
+import static records.data.DisplayValue.ProgressState.GETTING;
+import static records.data.DisplayValue.ProgressState.QUEUED;
 
 /**
  * Created by neil on 27/10/2016.

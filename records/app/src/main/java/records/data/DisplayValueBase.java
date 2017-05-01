@@ -1,4 +1,4 @@
-package records.gui;
+package records.data;
 
 /**
  * Because of the way TableView works, we have to send the string

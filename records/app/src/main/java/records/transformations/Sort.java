@@ -40,7 +40,7 @@ import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.OrderByContext;
 import records.grammar.TransformationParser.SortContext;
-import records.gui.DisplayValue;
+import records.data.DisplayValue;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.loadsave.OutputBuilder;

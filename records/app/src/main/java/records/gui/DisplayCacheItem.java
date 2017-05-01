@@ -1,6 +1,7 @@
 package records.gui;
 
 import javafx.beans.property.SimpleObjectProperty;
+import records.data.DisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 

@@ -22,7 +22,7 @@ import records.data.datatype.DataType.TagType;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.DisplayValue;
+import records.data.DisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;

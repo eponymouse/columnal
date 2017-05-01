@@ -45,7 +45,7 @@ import records.data.datatype.DataTypeValue;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.DisplayValue;
+import records.data.DisplayValue;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.gui.expressioneditor.ExpressionEditor;
