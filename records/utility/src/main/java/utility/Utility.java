@@ -31,6 +31,7 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.css.Styleable;
 import javafx.geometry.Bounds;
@@ -56,7 +57,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.gui.FXUtility;
 
 /**
  * Created by neil on 20/10/2016.
@@ -1034,7 +1034,7 @@ public class Utility
             mruList = FXCollections.observableArrayList();
             reloadMRU();
             // After loading, add the listener:
-            FXUtility.listen(mruList, c -> {
+            mruList.addListener((ListChangeListener<File>)(c -> {
                 try
                 {
                     FileUtils.writeLines(new File(getStorageDirectory(), MRU_FILE_NAME), "UTF-8", Utility.mapList(c.getList(), File::getAbsoluteFile));
@@ -1043,7 +1043,7 @@ public class Utility
                 {
                     Utility.log(e);
                 }
-            });
+            }));
 
             // From http://stackoverflow.com/questions/16251273/can-i-watch-for-single-file-change-with-watchservice-not-the-whole-directory
             final Path path = getStorageDirectory().toPath();

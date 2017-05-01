@@ -44,6 +44,16 @@
         <module name="anns" />
         <module name="parsers" />
       </profile>
+      <profile name="Annotation profile for gui-utility" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <option name="printErrorStack" value="" />
+        <option name="skipDefs" value="records.grammar.|one.util." />
+        <option name="stubs" value="C:\Users\neil\intellij\records\records\gui-utility/../stubs" />
+        <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <module name="gui-utility" />
+      </profile>
       <profile name="Annotation profile for records" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
@@ -58,6 +68,7 @@
     <bytecodeTargetLevel>
       <module name="anns" target="1.8" />
       <module name="app" target="1.8" />
+      <module name="gui-utility" target="1.8" />
       <module name="parsers" target="1.8" />
       <module name="records" target="1.8" />
       <module name="utility" target="1.8" />

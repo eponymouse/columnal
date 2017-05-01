@@ -13,6 +13,7 @@
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="module" module-name="utility" />
     <orderEntry type="library" name="Maven: org.antlr:antlr4:4.5.3" level="project" />
+    <orderEntry type="module" module-name="gui-utility" />
     <orderEntry type="library" name="Maven: org.fxmisc.wellbehaved:wellbehavedfx:0.3" level="project" />
     <orderEntry type="library" name="Maven: org.fxmisc.flowless:flowless:0.5.2" level="project" />
     <orderEntry type="library" name="Maven: com.io7m.xom:xom:1.2.10" level="project" />

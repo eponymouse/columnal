@@ -14,6 +14,7 @@
         <module>utility</module>
         <module>app</module>
         <module>anns</module>
+        <module>gui-utility</module>
     </modules>
 
     <dependencies>

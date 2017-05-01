@@ -2,27 +2,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0"
          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
-    <modelVersion>4.0.0</modelVersion>
-
     <parent>
-        <groupId>groupId</groupId>
         <artifactId>records</artifactId>
+        <groupId>groupId</groupId>
         <version>1.0-SNAPSHOT</version>
     </parent>
+    <modelVersion>4.0.0</modelVersion>
 
-    <groupId>groupId</groupId>
-    <artifactId>utility</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>gui-utility</artifactId>
+
 
     <dependencies>
         <dependency>
             <groupId>groupId</groupId>
-            <artifactId>parsers</artifactId>
-            <version>1.0-SNAPSHOT</version>
-        </dependency>
-        <dependency>
-            <groupId>groupId</groupId>
-            <artifactId>anns</artifactId>
+            <artifactId>utility</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
@@ -48,15 +41,28 @@
         </dependency>
 
         <dependency>
-            <groupId>org.antlr</groupId>
-            <artifactId>antlr4</artifactId>
-            <version>4.5.3</version>
+            <groupId>org.controlsfx</groupId>
+            <artifactId>controlsfx</artifactId>
+            <version>8.40.12</version>
         </dependency>
 
         <dependency>
-            <groupId>org.sosy-lab</groupId>
-            <artifactId>java-smt</artifactId>
-            <version>1.0.1</version>
+            <groupId>org.fxmisc.wellbehaved</groupId>
+            <artifactId>wellbehavedfx</artifactId>
+            <version>0.3</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.fxmisc.flowless</groupId>
+            <artifactId>flowless</artifactId>
+            <version>0.5.2</version>
+        </dependency>
+
+        <!-- XOM for parsing XML help files: -->
+        <dependency>
+            <groupId>com.io7m.xom</groupId>
+            <artifactId>xom</artifactId>
+            <version>1.2.10</version>
         </dependency>
 
         <dependency>
@@ -67,8 +73,14 @@
             <systemPath>${basedir}/../lib/threadchecker.jar</systemPath>
         </dependency>
 
+        <dependency>
+            <groupId>com.fxexperience</groupId>
+            <artifactId>scenic-view</artifactId>
+            <version>8.7.0</version>
+            <scope>system</scope>
+            <systemPath>${basedir}/../lib/scenicView.jar</systemPath>
+        </dependency>
     </dependencies>
-
 
     <build>
         <plugins>
