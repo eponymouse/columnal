@@ -30,6 +30,17 @@
     }
 }
 
+.labelled-wrapper {
+    -fx-alignment: center-left;
+    .label {
+        -fx-padding: 0 2em 0 0;
+    }
+}
+.labelled-grid {
+    -fx-vgap: 0.6em;
+    -fx-hgap: 0.5em;
+}
+
 .errorable-text-field:has-warnings {
     -fx-border-color: orange;
     -fx-border-width: 2px;

@@ -84,7 +84,14 @@ public class GUI
 
     public static Node labelled(@LocalizableKey String labelKey, @HelpKey String helpId, Node choiceNode)
     {
-        return new HBox(label(labelKey), helpBox(helpId, choiceNode), choiceNode);
+        HBox hBox = new HBox(label(labelKey), helpBox(helpId, choiceNode), choiceNode);
+        hBox.getStyleClass().add("labelled-wrapper");
+        return hBox;
+    }
+
+    public static LabelledGrid.Row labelledGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, Node choiceNode)
+    {
+        return new LabelledGrid.Row(label(labelKey), helpBox(helpId, choiceNode), choiceNode);
     }
 
     private static HelpBox helpBox(@HelpKey String helpId, @Nullable Node relevantNode)

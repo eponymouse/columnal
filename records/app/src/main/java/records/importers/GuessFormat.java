@@ -21,6 +21,8 @@ import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.VBox;
+import javafx.scene.text.Text;
+import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -54,6 +56,8 @@ import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
+import utility.gui.LabelledGrid;
+import utility.gui.LabelledGrid.Row;
 import utility.gui.SegmentedButtonValue;
 
 import java.math.BigDecimal;
@@ -639,26 +643,27 @@ public class GuessFormat
             sourceFileView.getStyleClass().add("source");
             sourceFileView.setEditable(false);
             TableView<List<String>> tableView = new TableView<>();
-            Node choices;
+            LabelledGrid choices = new LabelledGrid();
+            TableNameTextField nameField = new TableNameTextField(mgr);
+            SegmentedButtonValue<Boolean> linkCopyButtons = new SegmentedButtonValue<>(new Pair<@LocalizableKey String, Boolean>("table.copy", false), new Pair<@LocalizableKey String, Boolean>("table.link", true));
+            choices.addRow(GUI.labelledGridRow("table.name", "guess-format/tableName", nameField.getNode()));
+            choices.addRow(GUI.labelledGridRow("table.linkCopy", "guess-format/linkCopy", linkCopyButtons));
+
             SimpleObjectProperty<@Nullable TextFormat> formatProperty = new SimpleObjectProperty<>(null);
             try
             {
                 @Nullable Stream<Choice> bestGuess = findBestGuess(choicePoints);
 
-                choices = makeGUI(choicePoints, bestGuess == null ? Collections.emptyList() : bestGuess.collect(Collectors.<@NonNull Choice>toList()), initial, sourceFileView, tableView, formatProperty);
+                makeGUI(choicePoints, bestGuess == null ? Collections.emptyList() : bestGuess.collect(Collectors.<@NonNull Choice>toList()), initial, choices, sourceFileView, tableView, formatProperty);
             }
             catch (InternalException e)
             {
                 Utility.log(e);
-                choices = new Label("Internal error: " + e.getLocalizedMessage());
+                choices.addRow(new Row(new Label("Internal error: "), null, new TextFlow(new Text(e.getLocalizedMessage()))));
             }
 
-            TableNameTextField nameField = new TableNameTextField(mgr);
-            SegmentedButtonValue<Boolean> linkCopyButtons = new SegmentedButtonValue<>(new Pair<@LocalizableKey String, Boolean>("table.copy", false), new Pair<@LocalizableKey String, Boolean>("table.link", true));
 
             VBox content = new VBox(
-                GUI.labelled("table.name", "guess-format/tableName", nameField.getNode()),
-                GUI.labelled("table.linkCopy", "guess-format/linkCopy", linkCopyButtons),
                 choices,
                 new SplitPane(new VirtualizedScrollPane<>(sourceFileView), tableView));
             dialog.getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
@@ -720,7 +725,7 @@ public class GuessFormat
     }
 
     @OnThread(Tag.FXPlatform)
-    private static <C extends Choice> Node makeGUI(ChoicePoint<C, TextFormat> rawChoicePoint, List<Choice> mostRecentPick, Map<Charset, List<String>> initial, StyleClassedTextArea textView, TableView<List<String>> tableView, ObjectProperty<@Nullable TextFormat> destProperty) throws InternalException
+    private static <C extends Choice> void makeGUI(ChoicePoint<C, TextFormat> rawChoicePoint, List<Choice> mostRecentPick, Map<Charset, List<String>> initial, LabelledGrid controlGrid, StyleClassedTextArea textView, TableView<List<String>> tableView, ObjectProperty<@Nullable TextFormat> destProperty) throws InternalException
     {
         final @Nullable ChoiceType<C> choiceType = rawChoicePoint.getChoiceType();
         if (choiceType == null)
@@ -738,7 +743,7 @@ public class GuessFormat
             {
                 tableView.setPlaceholder(new Label("Problem: " + e.getLocalizedMessage()));
             }
-            return new Label("END");
+            return;
         }
         // Default handling:
         Node choiceNode;
@@ -761,20 +766,12 @@ public class GuessFormat
             choiceNode = combo;
             choiceExpression = combo.getSelectionModel().selectedItemProperty();
         }
-        VBox vbox = new VBox(GUI.labelled(choiceType.getLabelKey(), choiceType.getHelpId(), choiceNode));
+        controlGrid.addRow(GUI.labelledGridRow(choiceType.getLabelKey(), choiceType.getHelpId(), choiceNode));
         FXPlatformConsumer<C> pick = item -> {
             try
             {
                 ChoicePoint<?, TextFormat> next = rawChoicePoint.select(item);
-                Node gui = makeGUI(next, mostRecentPick, initial, textView, tableView, destProperty);
-                if (vbox.getChildren().size() == 1)
-                {
-                    vbox.getChildren().add(gui);
-                }
-                else
-                {
-                    vbox.getChildren().set(1, gui);
-                }
+                makeGUI(next, mostRecentPick, initial, controlGrid, textView, tableView, destProperty);
             }
             catch (InternalException e)
             {
@@ -785,7 +782,6 @@ public class GuessFormat
         };
         pick.consume(choiceExpression.get());
         FXUtility.addChangeListenerPlatformNN(choiceExpression, pick);
-        return vbox;
     }
 
     // There should only be one item per class in the list
