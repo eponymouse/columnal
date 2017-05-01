@@ -47,6 +47,8 @@ class ToggleButton
 {
     ToggleButton(@Localized String text);
     ToggleButton(@Localized String text, Node graphic);
+    void setGraphic(Node graphic) @UnknownInitialization;
+    BooleanProperty selectedProperty() @UnknownInitialization;
 }
 @Interned class ButtonType
 {
