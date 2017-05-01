@@ -45,6 +45,12 @@
     .title > .icon > .graphics {
         -fx-cursor: hand;
     }
+
+    /* Important to not have shadow above the arrow as it messes with the mouse over detection
+       on the original node: */
+    & > .border {
+       -fx-effect: dropshadow(gaussian, rgba(0,0,0,.2), 5.0, 0.3, 5.0, 5.0) !important;
+    }
 }
 
 .errorable-text-field-popup {
@@ -62,12 +68,13 @@
 }
 
 .help-box {
-    -fx-cursor: hand;
-
     .circle {
-        /* Match popover styling used for close button: */
+        -fx-cursor: hand;
         -fx-fill: hsb(0, 0%, 90%);
     	-fx-effect: innershadow(gaussian, rgba(0,0,0,.1), 3, 0.5, 1.0, 1.0);
+    	&:hover {
+    	    -fx-fill: hsb(0, 0%, 95%);
+    	}
     }
 
     .question {
@@ -75,14 +82,20 @@
     }
 
     .help-popup {
+        -fx-min-height: 0;
+
         & > .border {
             -fx-stroke-width: 1;
         }
         .help-content {
-            -fx-padding: 0.5em;
+            -fx-padding: 0.75em;
             -fx-max-width: 400px;
             .short {
-                 -fx-font-weight: bold;
+                -fx-font-weight: bold;
+            }
+            .more {
+                -fx-font-size: 70%;
+                -fx-fill: hsb(0, 0%, 60%);
             }
         }
     }

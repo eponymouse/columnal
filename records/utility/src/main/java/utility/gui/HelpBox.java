@@ -1,6 +1,7 @@
 package utility.gui;
 
 import annotation.help.qual.HelpKey;
+import javafx.beans.binding.Bindings;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.scene.layout.BorderPane;
@@ -22,7 +23,8 @@ import utility.gui.Help.HelpInfo;
 import java.util.List;
 
 /**
- * Created by neil on 30/04/2017.
+ * A little question mark in a circle which offers a short toolip when hovered over,
+ * or a longer tooltip if clicked.
  */
 @OnThread(Tag.FXPlatform)
 class HelpBox extends StackPane
@@ -41,18 +43,25 @@ class HelpBox extends StackPane
         Text text = new Text("?");
         text.getStyleClass().add("question");
         getChildren().setAll(circle, text);
+        // We extend the node beneath the circle to put some space between the circle
+        // and where the arrow of the popover shows, otherwise the popover interrupts the
+        // mouseover detection and things get weird:
+        setMinHeight(20);
+        text.setMouseTransparent(true);
 
-        setOnMouseEntered(e -> {
+        text.rotateProperty().bind(Bindings.when(showingFull).then(-45.0).otherwise(0.0));
+
+        circle.setOnMouseEntered(e -> {
             if (!popupShowing())
                 showPopOver(helpId);
         });
-        setOnMouseExited(e -> {
+        circle.setOnMouseExited(e -> {
             if (popupShowing() && !showingFull.get())
             {
                 popOver.hide();
             }
         });
-        setOnMouseClicked(e -> {
+        circle.setOnMouseClicked(e -> {
             boolean wasPinned = showingFull.get();
             showingFull.set(true);
             if (!popupShowing())
@@ -96,7 +105,8 @@ class HelpBox extends StackPane
                 Text shortText = new Text(helpInfo.shortText);
                 shortText.getStyleClass().add("short");
                 TextFlow textFlow = new TextFlow(shortText);
-                Text more = new Text("\nClick ? icon to show more");
+                Text more = new Text("\n\n" + TranslationUtility.getString("help.more"));
+                more.getStyleClass().add("more");
                 more.visibleProperty().bind(showingFull.not());
                 more.managedProperty().bind(more.visibleProperty());
                 textFlow.getChildren().add(more);
@@ -113,19 +123,33 @@ class HelpBox extends StackPane
 
                 BorderPane pane = new BorderPane(textFlow);
                 pane.getStyleClass().add("help-content");
+                FXUtility.addChangeListenerPlatformNN(showingFull, b -> pane.requestLayout());
 
                 popOver = new PopOver(pane);
                 popOver.setTitle(helpInfo.title);
                 popOver.setArrowLocation(ArrowLocation.TOP_LEFT);
                 popOver.getStyleClass().add("help-popup");
+                popOver.setAnimated(false);
+                popOver.setArrowIndent(30);
                 popOver.setOnHidden(e -> {showingFull.set(false);});
+                // Remove minimum height constraint:
+                // We can only do this once skin has been set (which is what binds
+                // it in the first place):
+                FXUtility.onceNotNull(popOver.skinProperty(), sk -> {
+                    if (popOver != null)
+                    {
+                        popOver.getRoot().minHeightProperty().unbind();
+                        popOver.getRoot().minHeightProperty().set(0);
+                    }
+                });
             }
-            //org.scenicview.ScenicView.show(popOver.getRoot().getScene());
+
         }
         // Not guaranteed to have been created, if we can't find the hint:
         if (popOver != null)
         {
             popOver.show(this);
+            //org.scenicview.ScenicView.show(popOver.getRoot().getScene());
         }
     }
 }
