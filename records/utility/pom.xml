@@ -71,6 +71,12 @@
             <version>0.3</version>
         </dependency>
 
+        <dependency>
+            <groupId>org.fxmisc.flowless</groupId>
+            <artifactId>flowless</artifactId>
+            <version>0.5.2</version>
+        </dependency>
+
         <!-- XOM for parsing XML help files: -->
         <dependency>
             <groupId>com.io7m.xom</groupId>
