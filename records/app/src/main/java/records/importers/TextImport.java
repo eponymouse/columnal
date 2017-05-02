@@ -53,7 +53,7 @@ public class TextImport
     public static void importTextFile(TableManager mgr, File textFile, FXPlatformConsumer<DataSource> then) throws IOException, InternalException, UserException
     {
         Map<Charset, List<String>> initial = getInitial(textFile);
-        GuessFormat.guessTextFormatGUI_Then(mgr, Files.getNameWithoutExtension(textFile.getName()), initial, format ->
+        GuessFormat.guessTextFormatGUI_Then(mgr, textFile, Files.getNameWithoutExtension(textFile.getName()), initial, format ->
         {
             try
             {
@@ -86,6 +86,16 @@ public class TextImport
 
     @OnThread(Tag.Simulation)
     private static DataSource makeDataSource(TableManager mgr, final File textFile, final ImportInfo importInfo, final TextFormat format) throws IOException, InternalException, UserException
+    {
+        RecordSet rs = makeRecordSet(textFile, format);
+        if (importInfo.linkFile)
+            return new LinkedDataSource(mgr, importInfo.tableName, rs, MainLexer.TEXTFILE, textFile);
+        else
+            return new ImmediateDataSource(mgr, importInfo.tableName, rs);
+    }
+
+    @OnThread(Tag.Simulation)
+    public static RecordSet makeRecordSet(File textFile, TextFormat format) throws IOException, InternalException, UserException
     {
         List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
         int totalColumns = format.columnTypes.size();
@@ -123,7 +133,7 @@ public class TextImport
         }
 
 
-        RecordSet rs = new RecordSet(columns)
+        return new RecordSet(columns)
         {
             protected int rowCount = -1;
 
@@ -149,10 +159,6 @@ public class TextImport
                 return rowCount;
             }
         };
-        if (importInfo.linkFile)
-            return new LinkedDataSource(mgr, importInfo.tableName, rs, MainLexer.TEXTFILE, textFile);
-        else
-            return new ImmediateDataSource(mgr, importInfo.tableName, rs);
     }
 
     @NotNull

@@ -1,5 +1,6 @@
 package records.importers;
 
+import annotation.userindex.qual.UserIndex;
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultiset;
 import com.google.common.collect.Multiset;
@@ -19,7 +20,6 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -31,6 +31,8 @@ import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.StyledText;
 import records.data.ColumnId;
+import records.data.DisplayValue;
+import records.data.RecordSet;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.columntype.BlankColumnType;
@@ -42,6 +44,7 @@ import records.data.columntype.TextColumnType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.TableDisplayUtility;
 import records.gui.TableNameTextField;
 import records.importers.ChoicePoint.Choice;
 import records.importers.ChoicePoint.ChoiceType;
@@ -50,14 +53,19 @@ import records.transformations.function.ToDate;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
+import utility.Workers;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LabelledGrid;
 import utility.gui.LabelledGrid.Row;
 import utility.gui.SegmentedButtonValue;
+import utility.gui.stable.StableView;
 
+import java.io.File;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.nio.charset.Charset;
 import java.time.LocalDate;
@@ -630,7 +638,7 @@ public class GuessFormat
     }
 
     @OnThread(Tag.Simulation)
-    public static void guessTextFormatGUI_Then(TableManager mgr, String suggestedName, Map<Charset, List<String>> initial, Consumer<Pair<ImportInfo, TextFormat>> then)
+    public static void guessTextFormatGUI_Then(TableManager mgr, File file, String suggestedName, Map<Charset, List<String>> initial, Consumer<Pair<ImportInfo, TextFormat>> then)
     {
         ChoicePoint<?, TextFormat> choicePoints = guessTextFormat(mgr.getUnitManager(), initial);
         Platform.runLater(() ->
@@ -639,7 +647,7 @@ public class GuessFormat
             StyleClassedTextArea sourceFileView = new StyleClassedTextArea();
             sourceFileView.getStyleClass().add("source");
             sourceFileView.setEditable(false);
-            TableView<List<String>> tableView = new TableView<>();
+            StableView tableView = new StableView();
             LabelledGrid choices = new LabelledGrid();
             choices.getStyleClass().add("choice-grid");
             TableNameTextField nameField = new TableNameTextField(mgr);
@@ -653,7 +661,7 @@ public class GuessFormat
             {
                 @Nullable Stream<Choice> bestGuess = findBestGuess(choicePoints);
 
-                makeGUI(choicePoints, bestGuess == null ? Collections.emptyList() : bestGuess.collect(Collectors.<@NonNull Choice>toList()), initial, choices, sourceFileView, tableView, formatProperty);
+                makeGUI(choicePoints, bestGuess == null ? Collections.emptyList() : bestGuess.collect(Collectors.<@NonNull Choice>toList()), file, initial, choices, sourceFileView, tableView, formatProperty);
             }
             catch (InternalException e)
             {
@@ -664,7 +672,7 @@ public class GuessFormat
 
             VBox content = new VBox(
                 choices,
-                new SplitPane(new VirtualizedScrollPane<>(sourceFileView), tableView));
+                new SplitPane(new VirtualizedScrollPane<>(sourceFileView), tableView.getNode()));
             content.getStyleClass().add("guess-format-content");
             dialog.getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
             dialog.getDialogPane().setContent(content);
@@ -734,7 +742,7 @@ public class GuessFormat
     }
 
     @OnThread(Tag.FXPlatform)
-    private static <C extends Choice> void makeGUI(ChoicePoint<C, TextFormat> rawChoicePoint, List<Choice> mostRecentPick, Map<Charset, List<String>> initial, LabelledGrid controlGrid, StyleClassedTextArea textView, TableView<List<String>> tableView, ObjectProperty<@Nullable TextFormat> destProperty) throws InternalException
+    private static <C extends Choice> void makeGUI(ChoicePoint<C, TextFormat> rawChoicePoint, List<Choice> mostRecentPick, File file, Map<Charset, List<String>> initial, LabelledGrid controlGrid, StyleClassedTextArea textView, StableView tableView, ObjectProperty<@Nullable TextFormat> destProperty) throws InternalException
     {
         final @Nullable ChoiceType<C> choiceType = rawChoicePoint.getChoiceType();
         if (choiceType == null)
@@ -746,11 +754,11 @@ public class GuessFormat
                 if (initialLines == null)
                     throw new InternalException("Charset pick gives no initial lines");
                 destProperty.set(t);
-                previewFormat(t, initialLines, textView, tableView);
+                previewFormat(file, t, initialLines, textView, tableView);
             }
             catch (UserException e)
             {
-                tableView.setPlaceholder(new Label("Problem: " + e.getLocalizedMessage()));
+                tableView.setPlaceholderText("Problem: " + e.getLocalizedMessage());
             }
             return;
         }
@@ -781,13 +789,13 @@ public class GuessFormat
             {
                 ChoicePoint<?, TextFormat> next = rawChoicePoint.select(item);
                 controlGrid.clearRowsAfter(rowNumber);
-                makeGUI(next, mostRecentPick, initial, controlGrid, textView, tableView, destProperty);
+                makeGUI(next, mostRecentPick, file, initial, controlGrid, textView, tableView, destProperty);
             }
             catch (InternalException e)
             {
                 Utility.log(e);
-                tableView.getColumns().clear();
-                tableView.setPlaceholder(new Label("Error: " + e.getLocalizedMessage()));
+                tableView.clear();
+                tableView.setPlaceholderText("Error: " + e.getLocalizedMessage());
             }
         };
         pick.consume(choiceExpression.get());
@@ -808,32 +816,42 @@ public class GuessFormat
     }
 
     @OnThread(Tag.FXPlatform)
-    private static void previewFormat(TextFormat t, List<String> initial, StyleClassedTextArea textArea, TableView<List<String>> tableView)
+    private static void previewFormat(File file, TextFormat t, List<String> initial, StyleClassedTextArea textArea, StableView tableView)
     {
         textArea.clear();
-        tableView.getItems().clear();
-        tableView.getColumns().clear();
+        tableView.clear();
 
         textArea.setParagraphGraphicFactory(sourceLine -> {
             Label label = new Label(Integer.toString(sourceLine + 1 - t.headerRows));
             label.getStyleClass().add("line-number");
             return label;
         });
-        List<ColumnInfo> columnTypes = t.columnTypes;
-        for (int column = 0; column < columnTypes.size(); column++)
-        {
-            ColumnInfo columnType = columnTypes.get(column);
-            TableColumn<List<String>, String> col = new TableColumn<>(columnType.title + "\n" + columnType.type);
-            int columnFinal = column;
-            col.setCellValueFactory(c -> new ReadOnlyStringWrapper(c.getValue().size() <= columnFinal ? "<Missing>" : c.getValue().get(columnFinal)));
-            tableView.getColumns().add(col);
-        }
 
+        Workers.onWorkerThread("Loading" + file.getName(), () -> {
+            try
+            {
+                @OnThread(Tag.Simulation) RecordSet recordSet = TextImport.makeRecordSet(file, t);
+                Platform.runLater(() -> {
+                    tableView.setColumns(TableDisplayUtility.makeStableViewColumn(recordSet));
+                    //TODO this isn't thread valid
+                    tableView.setRows(recordSet::indexValid);
+                });
+            }
+            catch (IOException | InternalException | UserException e)
+            {
+                Utility.log(e);
+                Platform.runLater(() -> tableView.setPlaceholderText(e.getLocalizedMessage()));
+
+            }
+        });
+
+        // TODO put preview back by adding listeners to import process
+        /*
         for (int row = t.headerRows; row < initial.size(); row++)
         {
             if (t.separator == null)
             {
-                // TODO: is quoting still valid?
+                // TODO: is quoting still valid if there's only one column?
                 tableView.getItems().add(Collections.singletonList(initial.get(row)));
                 textArea.appendText(initial.get(row));
             }
@@ -849,6 +867,6 @@ public class GuessFormat
                 textArea.append(doc);
                 textArea.appendText("\n");
             }
-        }
+        }*/
     }
 }
