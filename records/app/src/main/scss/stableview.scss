@@ -1,0 +1,10 @@
+.stable-view-header {
+    -fx-effect: dropshadow(two-pass-box, black, 10, 0.5, 0, 3);
+}
+
+.stable-view-header-item {
+    -fx-background-color: hsb(0, 0%, 80%);
+    -fx-border-color: transparent hsb(0, 0%, 60%) black transparent;
+    -fx-border-width: 0 1 1 0;
+    -fx-border-style: solid inside;
+}

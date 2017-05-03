@@ -2,13 +2,17 @@ package utility.gui.stable;
 
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -24,7 +28,9 @@ import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
+import utility.Utility.ListEx;
 import utility.Workers;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -47,19 +53,22 @@ public class StableView
 
     private final BooleanProperty showingRowNumbers = new SimpleBooleanProperty(true);
     private final List<ValueFetcher> columns;
+    private final List<DoubleProperty> columnSizes;
 
 
     public StableView()
     {
         items = FXCollections.observableArrayList();
         header = new HBox();
+        header.getStyleClass().add("stable-view-header");
         virtualFlow = VirtualFlow.<@Nullable Object, StableRow>createVertical(items, this::makeCell);
         scrollPane = new VirtualizedScrollPane<VirtualFlow<@Nullable Object, StableRow>>(virtualFlow);
         placeholder = new Label("<Empty>");
         stackPane = new StackPane(placeholder, new BorderPane(scrollPane, header, null, null, null));
         // TODO make placeholder's visibility depend on table being empty
+        stackPane.getStyleClass().add("stable-view");
         columns = new ArrayList<>();
-
+        columnSizes = new ArrayList<>();
 
     }
 
@@ -89,10 +98,30 @@ public class StableView
         items.clear();
         this.columns.clear();
         this.columns.addAll(Utility.mapList(columns, Pair::getSecond));
-        header.getChildren().clear();
-        for (Pair<String, ValueFetcher> column : columns)
+        while (columnSizes.size() > columns.size())
         {
-            header.getChildren().add(new Label(column.getFirst()));
+            columnSizes.remove(columnSizes.size() - 1);
+        }
+        while (columnSizes.size() < columns.size())
+        {
+            columnSizes.add(new SimpleDoubleProperty(100.0));
+        }
+
+        header.getChildren().clear();
+        for (int i = 0; i < columns.size(); i++)
+        {
+            Pair<String, ValueFetcher> column = columns.get(i);
+            Label headerItem = new Label(column.getFirst());
+            headerItem.getStyleClass().add("stable-view-header-item");
+            header.getChildren().add(headerItem);
+            headerItem.setMinWidth(Region.USE_PREF_SIZE);
+            headerItem.setMaxWidth(Region.USE_PREF_SIZE);
+            headerItem.prefWidthProperty().bind(columnSizes.get(i));
+            headerItem.setOnMouseMoved(e -> {
+                final double TOLERANCE = 8;
+                boolean nearEdge = e.getX() < TOLERANCE || e.getX() >= headerItem.getWidth() - TOLERANCE;
+                headerItem.setCursor(nearEdge ? Cursor.H_RESIZE : null);
+            });
         }
     }
 
@@ -154,6 +183,14 @@ public class StableView
             lineLabel.managedProperty().bind(lineLabel.visibleProperty());
         }
 
+        private void bindChildSize(int itemIndex)
+        {
+            Region n = (Region)hBox.getChildren().get(itemIndex);
+            n.setMinWidth(Region.USE_PREF_SIZE);
+            n.setMaxWidth(Region.USE_PREF_SIZE);
+            n.prefWidthProperty().bind(columnSizes.get(itemIndex));
+        }
+
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public boolean isReusable()
@@ -170,12 +207,17 @@ public class StableView
                 curIndex = index;
                 lineLabel.setText(Integer.toString(index));
                 hBox.getChildren().setAll(lineLabel);
-                Utility.logStackTrace("Columns: " + columns.size() + " index: " + index);
+                bindChildSize(0);
                 for (ValueFetcher column : columns)
                 {
-                    int colIndex = hBox.getChildren().size();
+                    // This will be column + 1, if we are displaying line numbers:
+                    int itemIndex = hBox.getChildren().size();
                     hBox.getChildren().add(new Label(""));
-                    column.fetchValue(index, (x, n) -> hBox.getChildren().set(colIndex, n));
+                    bindChildSize(itemIndex - 1);
+                    column.fetchValue(index, (x, n) -> {
+                        hBox.getChildren().set(itemIndex, n);
+                        bindChildSize(itemIndex - 1);
+                    });
                 }
             }
         }
@@ -198,7 +240,7 @@ public class StableView
     @OnThread(Tag.FXPlatform)
     public static interface ValueReceiver
     {
-        public void setValue(int rowIndex, Node value);
+        public void setValue(int rowIndex, Region value);
     }
 
     @OnThread(Tag.FXPlatform)

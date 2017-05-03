@@ -169,7 +169,7 @@ public class FXUtility
     public static List<String> getSceneStylesheets(String... stylesheetNames)
     {
         return Stream.concat(
-                   Stream.of("general.css"),
+                   Stream.of("general.css", "stableview.css"),
                    Arrays.stream(stylesheetNames).map(s -> s.endsWith(".css") ? s : (s + ".css"))
                  )
                  .distinct()

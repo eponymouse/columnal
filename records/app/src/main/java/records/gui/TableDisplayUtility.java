@@ -3,9 +3,11 @@ package records.gui;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.OverrunStyle;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.ColumnId;
@@ -41,7 +43,7 @@ public class TableDisplayUtility
     }
 
     @OnThread(Tag.FXPlatform)
-    private static Node getNode(DisplayValue item)
+    private static Region getNode(DisplayValue item)
     {
         if (item.getNumber() != null)
         {
@@ -67,7 +69,9 @@ public class TableDisplayUtility
         }
         else
         {
-            return new Label(item.toString());
+            Label label = new Label(item.toString());
+            label.setTextOverrun(OverrunStyle.CLIP);
+            return label;
         }
     }
 }

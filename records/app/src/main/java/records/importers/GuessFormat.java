@@ -833,7 +833,6 @@ public class GuessFormat
                 @OnThread(Tag.Simulation) RecordSet recordSet = TextImport.makeRecordSet(file, t);
                 Platform.runLater(() -> {
                     tableView.setColumns(TableDisplayUtility.makeStableViewColumn(recordSet));
-                    //TODO this isn't thread valid
                     tableView.setRows(recordSet::indexValid);
                 });
             }
