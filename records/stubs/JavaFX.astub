@@ -12,7 +12,7 @@ class Parent
 
 class Node
 {
-    void setCursor(Cursor c) @UnknownInitialization;
+    void setCursor(@Nullable Cursor c) @UnknownInitialization;
     void setClip(@Nullable Node a);
     ObservableList<String> getStyleClass() @UnknownInitialization;
     @Nullable Scene getScene() @UnknownInitialization;
@@ -132,9 +132,9 @@ class PopupWindow
 }
 class FileChooser
 {
-    @Nullable File showOpenDialog(Window w);
-    @Nullable List<@NonNull File> showOpenMultipleDialog(Window w);
-    @Nullable File showSaveDialog(Window w);
+    @Nullable File showOpenDialog(@Nullable Window w);
+    @Nullable List<@NonNull File> showOpenMultipleDialog(@Nullable Window w);
+    @Nullable File showSaveDialog(@Nullable Window w);
 }
 
 package org.scenicview;

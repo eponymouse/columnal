@@ -85,9 +85,9 @@ public class InitialWindow
     }
 
     @OnThread(Tag.FXPlatform)
-    public static void newProject(Stage parent)
+    public static MainWindow.@Nullable MainWindowActions newProject(@Nullable Stage parent)
     {
-        Utility.alertOnErrorFX_(() ->
+        return Utility.<MainWindow.@Nullable MainWindowActions>alertOnErrorFX(() ->
         {
             @Nullable File dest;
             try
@@ -100,7 +100,9 @@ public class InitialWindow
                 dest = new FileChooser().showSaveDialog(parent);
             }
             if (dest != null)
-                MainWindow.show(dest, null);
+                return MainWindow.show(dest, null);
+            else
+                return null;
         });
     }
 }

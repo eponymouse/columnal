@@ -831,6 +831,11 @@ public class Utility
         @OnThread(Tag.Simulation)
         void run() throws InternalException, UserException;
     }
+    public static interface GenOrErrorFX<T>
+    {
+        @OnThread(Tag.FXPlatform)
+        T run() throws InternalException, UserException;
+    }
     public static interface RunOrErrorFX
     {
         @OnThread(Tag.FXPlatform)
@@ -868,6 +873,22 @@ public class Utility
             e.printStackTrace(); // TODO have proper log
             String localizedMessage = e.getLocalizedMessage();
             new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK).showAndWait();
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static <T> @Nullable T alertOnErrorFX(GenOrErrorFX<T> r)
+    {
+        try
+        {
+            return r.run();
+        }
+        catch (InternalException | UserException e)
+        {
+            log(e);
+            String localizedMessage = e.getLocalizedMessage();
+            new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK).showAndWait();
+            return null;
         }
     }
 

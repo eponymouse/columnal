@@ -44,8 +44,14 @@ public class MainWindow
 {
     private final static IdentityHashMap<View, Stage> views = new IdentityHashMap<>();
 
+    public static interface MainWindowActions
+    {
+        @OnThread(Tag.FXPlatform)
+        public void importFile(File file);
+    }
+
     // If src is null, make new
-    public static void show(File destinationFile, @Nullable String src) throws UserException, InternalException
+    public static MainWindowActions show(File destinationFile, @Nullable String src) throws UserException, InternalException
     {
         View v = new View(destinationFile);
         final Stage stage = new Stage();
@@ -175,6 +181,14 @@ public class MainWindow
 
         stage.show();
         //org.scenicview.ScenicView.show(stage.getScene());
+        return new MainWindowActions()
+        {
+            @Override
+            public void importFile(File file)
+            {
+                importText(v, file);
+            }
+        };
     }
 
     private static void importText(View v, Stage stage)
@@ -185,20 +199,24 @@ public class MainWindow
         );
         if (chosen != null)
         {
-            @NonNull File chosenFinal = chosen;
-            Workers.onWorkerThread("GuessFormat data", () ->
-            {
-                try
-                {
-                    TextImport.importTextFile(v.getManager(), chosenFinal, rs ->
-                            Utility.alertOnErrorFX_(() -> v.addSource(rs)));
-                }
-                catch (InternalException | UserException | IOException ex)
-                {
-                    FXUtility.logAndShowError("import.text.error", ex);
-                }
-            });
+            importText(v, chosen);
         }
+    }
+
+    private static void importText(View v, @NonNull File chosenFinal)
+    {
+        Workers.onWorkerThread("GuessFormat data", () ->
+        {
+            try
+            {
+                TextImport.importTextFile(v.getManager(), chosenFinal, rs ->
+                        Utility.alertOnErrorFX_(() -> v.addSource(rs)));
+            }
+            catch (InternalException | UserException | IOException ex)
+            {
+                FXUtility.logAndShowError("import.text.error", ex);
+            }
+        });
     }
 
     public static void closeAll()
