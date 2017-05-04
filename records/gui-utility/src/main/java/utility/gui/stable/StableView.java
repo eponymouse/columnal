@@ -74,6 +74,8 @@ public class StableView
         scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
         scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
         lineNumbers = VirtualFlow.createVertical(items, x -> new LineNumber());
+        StackPane lineNumberWrapper = new StackPane(lineNumbers);
+        lineNumberWrapper.getStyleClass().add("stable-view-row-numbers");
         FXUtility.listen(virtualFlow.visibleCells(), c -> {
             if (!c.getList().isEmpty())
             {
@@ -83,8 +85,9 @@ public class StableView
                 lineNumbers.showAtOffset(rowIndex, y);
             }
         });
+        FXUtility.addChangeListenerPlatformNN(virtualFlow.breadthOffsetProperty(), d -> FXUtility.setPseudoclass(lineNumberWrapper, "pinned", d >= 5));
         placeholder = new Label("<Empty>");
-        stackPane = new StackPane(placeholder, new BorderPane(scrollPane, new Pane(header), null, null, lineNumbers));
+        stackPane = new StackPane(placeholder, new BorderPane(scrollPane, new Pane(header), null, null, lineNumberWrapper));
         header.layoutXProperty().bind(Val.combine(virtualFlow.breadthOffsetProperty().map(d -> -d), lineNumbers.widthProperty(), (x, y) -> x + y.doubleValue()));
         placeholder.managedProperty().bind(placeholder.visibleProperty());
         stackPane.getStyleClass().add("stable-view");
@@ -341,6 +344,11 @@ public class StableView
     private class LineNumber implements Cell<@Nullable Object, Node>
     {
         private final Label label = new Label();
+
+        public LineNumber()
+        {
+            label.getStyleClass().add("stable-view-row-number");
+        }
 
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)

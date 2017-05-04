@@ -1,10 +1,18 @@
 .stable-view-header:pinned {
-    -fx-effect: dropshadow(two-pass-box, black, 10, 0.5, 0, 3);
+    -fx-effect: dropshadow(gaussian, hsba(0, 0%, 50%, 0.5), 8, 0.6, 0, 4);
+}
+.stable-view-row-numbers:pinned {
+    -fx-effect: dropshadow(gaussian, hsba(0, 0%, 50%, 0.5), 8, 0.6, 4, 0);
 }
 
-.stable-view-header-item {
+.stable-view-header-item, .stable-view-row-number {
     -fx-background-color: hsb(0, 0%, 80%);
-    -fx-border-color: transparent hsb(0, 0%, 60%) black transparent;
-    -fx-border-width: 0 1 1 0;
     -fx-border-style: solid inside;
+    -fx-border-width: 0 1 1 0;
+}
+.stable-view-header-item {
+    -fx-border-color: transparent hsb(0, 0%, 60%) black transparent;
+}
+.stable-view-row-number {
+    -fx-border-color: transparent black hsb(0, 0%, 60%) transparent;
 }
