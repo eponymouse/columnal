@@ -10,8 +10,10 @@ import javafx.collections.ObservableList;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -20,23 +22,20 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.reactfx.value.Val;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
-import utility.Utility.ListEx;
 import utility.Workers;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Predicate;
 
 /**
  * A customised equivalent of TableView
@@ -46,6 +45,7 @@ public class StableView
 {
     private final ObservableList<@Nullable Object> items;
     private final VirtualFlow<@Nullable Object, StableRow> virtualFlow;
+    private final VirtualFlow<@Nullable Object, LineNumber> lineNumbers;
     private final HBox header;
     private final VirtualizedScrollPane scrollPane;
     private final Label placeholder;
@@ -66,9 +66,20 @@ public class StableView
         header.getStyleClass().add("stable-view-header");
         virtualFlow = VirtualFlow.<@Nullable Object, StableRow>createVertical(items, this::makeCell);
         scrollPane = new VirtualizedScrollPane<VirtualFlow<@Nullable Object, StableRow>>(virtualFlow);
+        scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
+        scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
+        lineNumbers = VirtualFlow.createVertical(items, x -> new LineNumber());
+        FXUtility.listen(virtualFlow.visibleCells(), c -> {
+            if (!c.getList().isEmpty())
+            {
+                int rowIndex = c.getList().get(0).getCurRowIndex();
+                lineNumbers.showAtOffset(rowIndex, virtualFlow.cellToViewport(c.getList().get(0), 0, 0).getY());
+            }
+        });
         placeholder = new Label("<Empty>");
-        stackPane = new StackPane(placeholder, new BorderPane(scrollPane, header, null, null, null));
-        // TODO make placeholder's visibility depend on table being empty
+        stackPane = new StackPane(placeholder, new BorderPane(scrollPane, new Pane(header), null, null, lineNumbers));
+        header.layoutXProperty().bind(Val.combine(virtualFlow.breadthOffsetProperty().map(d -> -d), lineNumbers.widthProperty(), (x, y) -> x + y.doubleValue()));
+        placeholder.managedProperty().bind(placeholder.visibleProperty());
         stackPane.getStyleClass().add("stable-view");
         columns = new ArrayList<>();
         columnSizes = new ArrayList<>();
@@ -118,6 +129,8 @@ public class StableView
             header.getChildren().add(headerItem);
             headerItems.add(headerItem);
         }
+
+        placeholder.setVisible(columns.isEmpty());
     }
 
     public void setRows(SimulationFunction<Integer, Boolean> isRowValid)
@@ -237,14 +250,11 @@ public class StableView
     @OnThread(Tag.FXPlatform)
     private class StableRow implements Cell<@Nullable Object, Node>
     {
-        private final Label lineLabel = new Label();
-        private final HBox hBox = new HBox(lineLabel);
-        private int curIndex = -1;
+        private final HBox hBox = new HBox();
+        private int curRowIndex = -1;
 
         public StableRow()
         {
-            lineLabel.visibleProperty().bind(showingRowNumbers);
-            lineLabel.managedProperty().bind(lineLabel.visibleProperty());
         }
 
         private void bindChildSize(int itemIndex)
@@ -264,28 +274,27 @@ public class StableView
 
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public void updateIndex(int index)
+        public void updateIndex(int rowIndex)
         {
-            if (index != curIndex)
+            if (rowIndex != curRowIndex)
             {
-                curIndex = index;
-                lineLabel.setText(Integer.toString(index));
-                hBox.getChildren().setAll(lineLabel);
-                bindChildSize(0);
+                curRowIndex = rowIndex;
+                hBox.getChildren().clear();
                 for (ValueFetcher column : columns)
                 {
                     // This will be column + 1, if we are displaying line numbers:
-                    int itemIndex = hBox.getChildren().size();
+                    int columnIndex = hBox.getChildren().size();
                     hBox.getChildren().add(new Label(""));
-                    bindChildSize(itemIndex - 1);
-                    column.fetchValue(index, (x, n) -> {
-                        hBox.getChildren().set(itemIndex, n);
-                        bindChildSize(itemIndex - 1);
+                    bindChildSize(columnIndex);
+                    column.fetchValue(rowIndex, (x, n) -> {
+                        hBox.getChildren().set(columnIndex, n);
+                        bindChildSize(columnIndex);
                     });
                 }
             }
         }
 
+        // You have to override this to avoid the UnsupportedOperationException
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void updateItem(@Nullable Object item)
@@ -298,6 +307,11 @@ public class StableView
         public Node getNode()
         {
             return hBox;
+        }
+
+        public int getCurRowIndex()
+        {
+            return curRowIndex;
         }
     }
 
@@ -314,5 +328,40 @@ public class StableView
         // Until then it will be blank.  You can call receiver multiple times though,
         // so you can just call it with a placeholder before returning.
         public void fetchValue(int rowIndex, ValueReceiver receiver);
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private class LineNumber implements Cell<@Nullable Object, Node>
+    {
+        private final Label label = new Label();
+
+        @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        public boolean isReusable()
+        {
+            return true;
+        }
+
+        @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        public void updateIndex(int index)
+        {
+            label.setText(Integer.toString(index));
+        }
+
+        @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        public Node getNode()
+        {
+            return label;
+        }
+
+        // You have to override this to avoid the UnsupportedOperationException
+        @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        public void updateItem(@Nullable Object item)
+        {
+            // Everything is actually done in updateIndex
+        }
     }
 }
