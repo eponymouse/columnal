@@ -13,6 +13,7 @@ class Parent
 class Node
 {
     void setCursor(@Nullable Cursor c) @UnknownInitialization;
+    Cursor getCursor() @UnknownInitialization;
     void setClip(@Nullable Node a);
     ObservableList<String> getStyleClass() @UnknownInitialization;
     @Nullable Scene getScene() @UnknownInitialization;
@@ -20,8 +21,13 @@ class Node
     void setOnMousePressed(EventHandler<? super MouseEvent> value) @UnknownInitialization;
     void setOnMouseReleased(EventHandler<? super MouseEvent> value) @UnknownInitialization;
     void setOnMouseClicked(EventHandler<? super MouseEvent> value) @UnknownInitialization;
+    void setOnMouseMoved(EventHandler<? super MouseEvent> value) @UnknownInitialization;
+    void setOnMouseDragged(EventHandler<? super MouseEvent> value) @UnknownInitialization;
 
     void setScaleX(double x) @UnknownInitialization;
+
+    double getWidth() @UnknownInitialization;
+    double getHeight() @UnknownInitialization;
 }
 class Scene
 {
@@ -109,7 +115,17 @@ class Region
     DoubleProperty prefHeightProperty() @UnknownInitialization;
     DoubleProperty maxHeightProperty() @UnknownInitialization;
     DoubleProperty heightProperty() @UnknownInitialization;
+    
+    void setMinWidth(double v) @UnknownInitialization;
+    void setPrefWidth(double v) @UnknownInitialization;
+    void setMaxWidth(double v) @UnknownInitialization;
+    
+    void setMinHeight(double v) @UnknownInitialization;
+    void setPrefHeight(double v) @UnknownInitialization;
+    void setMaxHeight(double v) @UnknownInitialization;
 
+    double getWidth() @UnknownInitialization;
+    double getHeight() @UnknownInitialization;
 }
 
 package javafx.stage;

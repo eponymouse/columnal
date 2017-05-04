@@ -54,6 +54,9 @@ public class StableView
     private final BooleanProperty showingRowNumbers = new SimpleBooleanProperty(true);
     private final List<ValueFetcher> columns;
     private final List<DoubleProperty> columnSizes;
+    private static final double EDGE_DRAG_TOLERANCE = 8;
+    private static final double MIN_COLUMN_WIDTH = 30;
+    private final List<HeaderItem> headerItems = new ArrayList<>();
 
 
     public StableView()
@@ -111,17 +114,9 @@ public class StableView
         for (int i = 0; i < columns.size(); i++)
         {
             Pair<String, ValueFetcher> column = columns.get(i);
-            Label headerItem = new Label(column.getFirst());
-            headerItem.getStyleClass().add("stable-view-header-item");
+            HeaderItem headerItem = new HeaderItem(column.getFirst(), i);
             header.getChildren().add(headerItem);
-            headerItem.setMinWidth(Region.USE_PREF_SIZE);
-            headerItem.setMaxWidth(Region.USE_PREF_SIZE);
-            headerItem.prefWidthProperty().bind(columnSizes.get(i));
-            headerItem.setOnMouseMoved(e -> {
-                final double TOLERANCE = 8;
-                boolean nearEdge = e.getX() < TOLERANCE || e.getX() >= headerItem.getWidth() - TOLERANCE;
-                headerItem.setCursor(nearEdge ? Cursor.H_RESIZE : null);
-            });
+            headerItems.add(headerItem);
         }
     }
 
@@ -168,6 +163,75 @@ public class StableView
         });
 
         //TODO store it for fetching more
+    }
+
+    private class HeaderItem extends Label
+    {
+        private final int itemIndex;
+        private double offsetFromEdge;
+        private boolean draggingLeftEdge;
+        private boolean dragging = false;
+
+        public HeaderItem(String name, int itemIndex)
+        {
+            super(name);
+            this.itemIndex = itemIndex;
+            this.getStyleClass().add("stable-view-header-item");
+            this.setMinWidth(Region.USE_PREF_SIZE);
+            this.setMaxWidth(Region.USE_PREF_SIZE);
+            this.prefWidthProperty().bind(columnSizes.get(itemIndex));
+            this.setOnMouseMoved(e -> {
+                boolean nearEdge = e.getX() < EDGE_DRAG_TOLERANCE || e.getX() >= this.getWidth() - EDGE_DRAG_TOLERANCE;
+                this.setCursor(dragging || nearEdge ? Cursor.H_RESIZE : null);
+            });
+            this.setOnMousePressed(e -> {
+                if (this.getCursor() != null)
+                {
+                    // We always prefer to drag the right edge, as if
+                    // you squish all the columns, it gives you a way out of dragging
+                    // all right edges (whereas leftmost edge cannot be dragged):
+                    if (e.getX() >= this.getWidth() - EDGE_DRAG_TOLERANCE)
+                    {
+                        dragging = true;
+                        draggingLeftEdge = false;
+                        // Positive offset:
+                        offsetFromEdge = getWidth() - e.getX();
+                    }
+                    else if (itemIndex > 0 && e.getX() < EDGE_DRAG_TOLERANCE)
+                    {
+                        dragging = true;
+                        draggingLeftEdge = true;
+                        offsetFromEdge = e.getX();
+                    }
+                }
+                e.consume();
+            });
+            this.setOnMouseDragged(e -> {
+                // Should be true:
+                if (dragging)
+                {
+                    if (draggingLeftEdge)
+                    {
+                        // Have to adjust size of column to our left
+                        headerItems.get(itemIndex - 1).setRightEdgeToSceneX(e.getSceneX() - offsetFromEdge);
+                    }
+                    else
+                    {
+                        columnSizes.get(itemIndex).set(Math.max(MIN_COLUMN_WIDTH, e.getX() + offsetFromEdge));
+                    }
+                }
+                e.consume();
+            });
+            this.setOnMouseReleased(e -> {
+                dragging = false;
+                e.consume();
+            });
+        }
+
+        private void setRightEdgeToSceneX(double sceneX)
+        {
+            columnSizes.get(itemIndex).set(Math.max(MIN_COLUMN_WIDTH, sceneX - localToScene(getBoundsInLocal()).getMinX()));
+        }
     }
 
     @OnThread(Tag.FXPlatform)
