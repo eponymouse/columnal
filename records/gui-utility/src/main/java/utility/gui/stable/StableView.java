@@ -16,6 +16,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -64,6 +65,10 @@ public class StableView
         items = FXCollections.observableArrayList();
         header = new HBox();
         header.getStyleClass().add("stable-view-header");
+        Rectangle headerClip = new Rectangle();
+        headerClip.widthProperty().bind(header.widthProperty());
+        headerClip.heightProperty().bind(header.heightProperty().add(10.0));
+        header.setClip(headerClip);
         virtualFlow = VirtualFlow.<@Nullable Object, StableRow>createVertical(items, this::makeCell);
         scrollPane = new VirtualizedScrollPane<VirtualFlow<@Nullable Object, StableRow>>(virtualFlow);
         scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
@@ -73,7 +78,9 @@ public class StableView
             if (!c.getList().isEmpty())
             {
                 int rowIndex = c.getList().get(0).getCurRowIndex();
-                lineNumbers.showAtOffset(rowIndex, virtualFlow.cellToViewport(c.getList().get(0), 0, 0).getY());
+                double y = virtualFlow.cellToViewport(c.getList().get(0), 0, 0).getY();
+                FXUtility.setPseudoclass(header, "pinned", y >= 5 || rowIndex > 0);
+                lineNumbers.showAtOffset(rowIndex, y);
             }
         });
         placeholder = new Label("<Empty>");
