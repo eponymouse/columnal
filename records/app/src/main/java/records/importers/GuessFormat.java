@@ -20,6 +20,8 @@ import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TableColumn;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -670,9 +672,8 @@ public class GuessFormat
             }
 
 
-            VBox content = new VBox(
-                choices,
-                new SplitPane(new VirtualizedScrollPane<>(sourceFileView), tableView.getNode()));
+            SplitPane splitPane = new SplitPane(new VirtualizedScrollPane<>(sourceFileView), tableView.getNode());
+            Pane content = new BorderPane(splitPane, choices, null, null, null);
             content.getStyleClass().add("guess-format-content");
             dialog.getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
             dialog.getDialogPane().setContent(content);
