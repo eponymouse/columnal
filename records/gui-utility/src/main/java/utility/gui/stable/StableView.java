@@ -95,9 +95,8 @@ public class StableView
     private final ScrollBar hbar;
     private final ScrollBar vbar;
     private final DropShadow leftDropShadow;
-    private final InnerShadow leftInnerShadow;
     private final DropShadow topDropShadow;
-    private final InnerShadow topInnerShadow;
+    private final DropShadow topLeftDropShadow;
     private boolean atTop;
     private boolean atLeft;
 
@@ -170,30 +169,25 @@ public class StableView
         topDropShadow.setColor(Color.hsb(0, 0, 0.5, 0.7));
         topDropShadow.setOffsetY(2);
         topDropShadow.setHeight(8);
-        topDropShadow.setWidth(12);
+        topDropShadow.setWidth(0);
         topDropShadow.setSpread(0.4);
-        leftInnerShadow = new InnerShadow();
-        leftInnerShadow.setBlurType(BlurType.GAUSSIAN);
-        leftInnerShadow.setColor(Color.hsb(0, 0, 0.5, 0.7));
-        leftInnerShadow.setChoke(0.4);
-        leftInnerShadow.setOffsetY(2);
-        leftInnerShadow.setHeight(8);
-        leftInnerShadow.setWidth(0);
         leftDropShadow = new DropShadow();
         leftDropShadow.setBlurType(BlurType.GAUSSIAN);
         leftDropShadow.setColor(Color.hsb(0, 0, 0.5, 0.7));
-        leftDropShadow.setHeight(12);
+        leftDropShadow.setHeight(0);
         leftDropShadow.setWidth(8);
         leftDropShadow.setOffsetX(2);
         leftDropShadow.setSpread(0.4);
-        topInnerShadow = new InnerShadow();
-        topInnerShadow.setBlurType(BlurType.GAUSSIAN);
-        topInnerShadow.setColor(Color.hsb(0, 0, 0.5, 0.7));
-        topInnerShadow.setChoke(0.4);
-        topInnerShadow.setOffsetX(2);
-        topInnerShadow.setHeight(0);
-        topInnerShadow.setWidth(8);
-
+        // Copy of topDropShadow, but with input of leftDropShadow:
+        topLeftDropShadow = new DropShadow();
+        topLeftDropShadow.setBlurType(BlurType.GAUSSIAN);
+        topLeftDropShadow.setColor(Color.hsb(0, 0, 0.5, 0.7));
+        topLeftDropShadow.setOffsetX(2);
+        topLeftDropShadow.setOffsetY(2);
+        topLeftDropShadow.setHeight(8);
+        topLeftDropShadow.setWidth(8);
+        topLeftDropShadow.setSpread(0.4);
+        
         
         FXUtility.listen(virtualFlow.visibleCells(), c -> {
             if (!c.getList().isEmpty())
@@ -202,7 +196,7 @@ public class StableView
                 double y = virtualFlow.cellToViewport(c.getList().get(0), 0, 0).getY();
                 //FXUtility.setPseudoclass(header, "pinned", y >= 5 || rowIndex > 0);
                 atTop = y < 5 && rowIndex == 0;
-                updateShadows(header, lineNumberWrapper);
+                updateShadows(header, lineNumberWrapper, topLeft);
                 FXUtility.setPseudoclass(stackPane, "at-top", y == 0 && rowIndex == 0);
                 lineNumbers.showAtOffset(rowIndex, y);
             }
@@ -213,32 +207,25 @@ public class StableView
             //FXUtility.setPseudoclass(lineNumbers, "pinned", d >= 5);
             System.err.println("Breadth: " + d);
             atLeft = d < 5;
-            updateShadows(header, lineNumberWrapper);
+            updateShadows(header, lineNumberWrapper, topLeft);
         });
     }
 
-    @RequiresNonNull({"topDropShadow", "topInnerShadow", "leftDropShadow", "leftInnerShadow"})
-    private void updateShadows(@UnknownInitialization(Object.class) StableView this, Node top, Node left)
+    @RequiresNonNull({"topDropShadow", "leftDropShadow", "topLeftDropShadow"})
+    private void updateShadows(@UnknownInitialization(Object.class) StableView this, Node top, Node left, Node topLeft)
     {
         if (!atTop)
         {
             top.setEffect(topDropShadow);
-            topDropShadow.setInput(atLeft ? null : topInnerShadow);
+            topLeft.setEffect(atLeft ? topDropShadow : topLeftDropShadow);
         }
         else
         {
-            top.setEffect(atLeft ? null : topInnerShadow);
+            top.setEffect(null);
+            topLeft.setEffect(atLeft ? null : leftDropShadow);
         }
 
-        if (!atLeft)
-        {
-            left.setEffect(leftDropShadow);
-            leftDropShadow.setInput(atTop ? null : leftInnerShadow);
-        }
-        else
-        {
-            left.setEffect(atTop ? null : leftInnerShadow);
-        }
+        left.setEffect(atLeft ? null : leftDropShadow);
     }
 
     private static Node makeButtonArrow()
