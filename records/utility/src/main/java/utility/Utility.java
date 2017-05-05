@@ -36,9 +36,11 @@ import javafx.collections.ObservableList;
 import javafx.css.Styleable;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.scene.control.ScrollBar;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
@@ -685,6 +687,14 @@ public class Utility
     public static String collapseSpaces(String s)
     {
         return s.trim().replaceAll("(?U)\\s+", " ");
+    }
+
+    /**
+     * Filters a stream down to only the items of the given class
+     */
+    public static <S, T extends S /*precludes interfaces*/> Stream<@NonNull T> filterClass(Stream<@NonNull S> stream, Class<T> targetClass)
+    {
+        return stream.<@NonNull T>flatMap(x -> targetClass.isInstance(x) ? Stream.<@NonNull T>of(targetClass.cast(x)) : Stream.<@NonNull T>empty());
     }
 
     public static class ReadState

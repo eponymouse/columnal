@@ -7,19 +7,28 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Orientation;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
+import javafx.scene.effect.BlurType;
+import javafx.scene.effect.DropShadow;
+import javafx.scene.effect.InnerShadow;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualizedScrollPane;
@@ -33,6 +42,7 @@ import utility.SimulationFunction;
 import utility.Utility;
 import utility.Workers;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -40,14 +50,38 @@ import java.util.List;
 
 /**
  * A customised equivalent of TableView
+ *
+ * The internal node architecture is a bit complicated.
+ *
+ * .stable-view: StackPane
+ *     .stable-view-placeholder: Label
+ *     *: BorderPane
+ *         .stable-view-scroll-pane: VirtualizedScrollPane
+ *             .: VirtualFlow [table contents]
+ *         .stable-view-top: BorderPane [container to hold column headers and jump to top button]
+ *             .stable-view-top-left: Region [item to take up top-left space]
+ *             .stable-view-header: BorderPane [needed to clip and position the actual header items]
+ *                 .: HBox [actual container of column headers]
+ *                     .stable-view-header-item*: HeaderItem [each column header]
+ *             .stable-button-top-wrapper: BorderPane [container to occupy spare height above the jump to top button]
+ *                 .stable-button-top: Button [button to jump to top]
+ *                     .stable-view-button-arrow: Region [the arrow graphic]
+ *         .stable-view-left: BorderPane [container to hold row headers and jump to top button]
+ *             .stable-view-side: BorderPane [needed to have clip and shadow for row numbers]
+ *                 .: VirtualFlow [row numbers]
+ *             .stable-button-left-wrapper: BorderPane [container to occupy spare height above the jump to left button]
+ *                 .stable-button-left: Button [button to jump to left]
+ *                     .stable-view-button-arrow: Region [the arrow graphic]
+ *         .stable-view-row-numbers: StackPane [ ... ]
  */
+
 @OnThread(Tag.FXPlatform)
 public class StableView
 {
     private final ObservableList<@Nullable Object> items;
     private final VirtualFlow<@Nullable Object, StableRow> virtualFlow;
     private final VirtualFlow<@Nullable Object, LineNumber> lineNumbers;
-    private final HBox header;
+    private final HBox headerItemsContainer;
     private final VirtualizedScrollPane scrollPane;
     private final Label placeholder;
     private final StackPane stackPane; // has scrollPane and placeholder as its children
@@ -58,42 +92,160 @@ public class StableView
     private static final double EDGE_DRAG_TOLERANCE = 8;
     private static final double MIN_COLUMN_WIDTH = 30;
     private final List<HeaderItem> headerItems = new ArrayList<>();
+    private final ScrollBar hbar;
+    private final ScrollBar vbar;
+    private final DropShadow leftDropShadow;
+    private final InnerShadow leftInnerShadow;
+    private final DropShadow topDropShadow;
+    private final InnerShadow topInnerShadow;
+    private boolean atTop;
+    private boolean atLeft;
 
 
     public StableView()
     {
         items = FXCollections.observableArrayList();
-        header = new HBox();
+        headerItemsContainer = new HBox();
+        final Pane header = new Pane(headerItemsContainer);
         header.getStyleClass().add("stable-view-header");
-        Rectangle headerClip = new Rectangle();
-        headerClip.widthProperty().bind(header.widthProperty());
-        headerClip.heightProperty().bind(header.heightProperty().add(10.0));
-        header.setClip(headerClip);
         virtualFlow = VirtualFlow.<@Nullable Object, StableRow>createVertical(items, this::makeCell);
         scrollPane = new VirtualizedScrollPane<VirtualFlow<@Nullable Object, StableRow>>(virtualFlow);
+        scrollPane.getStyleClass().add("stable-view-scroll-pane");
         scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
         scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
+        hbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.HORIZONTAL).findFirst().get();
+        vbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.VERTICAL).findFirst().get();
         lineNumbers = VirtualFlow.createVertical(items, x -> new LineNumber());
-        StackPane lineNumberWrapper = new StackPane(lineNumbers);
-        lineNumberWrapper.getStyleClass().add("stable-view-row-numbers");
-        FXUtility.listen(virtualFlow.visibleCells(), c -> {
-            if (!c.getList().isEmpty())
-            {
-                int rowIndex = c.getList().get(0).getCurRowIndex();
-                double y = virtualFlow.cellToViewport(c.getList().get(0), 0, 0).getY();
-                FXUtility.setPseudoclass(header, "pinned", y >= 5 || rowIndex > 0);
-                lineNumbers.showAtOffset(rowIndex, y);
-            }
-        });
-        FXUtility.addChangeListenerPlatformNN(virtualFlow.breadthOffsetProperty(), d -> FXUtility.setPseudoclass(lineNumberWrapper, "pinned", d >= 5));
+        final BorderPane lineNumberWrapper = new BorderPane(lineNumbers);
+        lineNumberWrapper.getStyleClass().add("stable-view-side");
         placeholder = new Label("<Empty>");
-        stackPane = new StackPane(placeholder, new BorderPane(scrollPane, new Pane(header), null, null, lineNumberWrapper));
-        header.layoutXProperty().bind(Val.combine(virtualFlow.breadthOffsetProperty().map(d -> -d), lineNumbers.widthProperty(), (x, y) -> x + y.doubleValue()));
+        placeholder.getStyleClass().add(".stable-view-placeholder");
+        
+        Button topButton = new Button("", makeButtonArrow());
+        topButton.getStyleClass().add("stable-view-button-top");
+        topButton.setOnAction(e -> virtualFlow.scrollYToPixel(0));
+        FXUtility.forcePrefSize(topButton);
+        topButton.prefWidthProperty().bind(vbar.widthProperty());
+        topButton.prefHeightProperty().bind(topButton.prefWidthProperty());
+        BorderPane.setAlignment(topButton, Pos.BOTTOM_RIGHT);
+        Region topLeft = new Region();
+        topLeft.getStyleClass().add("stable-view-top-left");
+        FXUtility.forcePrefSize(topLeft);
+        topLeft.setMaxHeight(Double.MAX_VALUE);
+        topLeft.prefWidthProperty().bind(lineNumberWrapper.widthProperty());
+        Pane top = new BorderPane(header, null, GUI.wrap(topButton, "stable-button-top-wrapper"), null, topLeft);
+        top.getStyleClass().add("stable-view-top");
+
+        Button leftButton = new Button("", makeButtonArrow());
+        leftButton.getStyleClass().add("stable-view-button-left");
+        leftButton.setOnAction(e -> virtualFlow.scrollXToPixel(0));
+        leftButton.prefHeightProperty().bind(hbar.heightProperty());
+        leftButton.prefWidthProperty().bind(leftButton.prefHeightProperty());
+        FXUtility.forcePrefSize(leftButton);
+        BorderPane.setAlignment(leftButton, Pos.BOTTOM_RIGHT);
+        Pane left = new BorderPane(lineNumberWrapper, null, null, GUI.wrap(leftButton, "stable-button-left-wrapper"), null);
+        left.getStyleClass().add("stable-view-left");
+        
+        stackPane = new StackPane(placeholder, new BorderPane(scrollPane, top, null, null, left));
+        headerItemsContainer.layoutXProperty().bind(virtualFlow.breadthOffsetProperty().map(d -> -d));
         placeholder.managedProperty().bind(placeholder.visibleProperty());
         stackPane.getStyleClass().add("stable-view");
         columns = new ArrayList<>();
         columnSizes = new ArrayList<>();
 
+        Rectangle headerClip = new Rectangle();
+        headerClip.widthProperty().bind(header.widthProperty());
+        headerClip.heightProperty().bind(header.heightProperty().add(10.0));
+        header.setClip(headerClip);
+
+        Rectangle sideClip = new Rectangle();
+        sideClip.widthProperty().bind(lineNumbers.widthProperty().add(10.0));
+        sideClip.heightProperty().bind(lineNumbers.heightProperty());
+        lineNumberWrapper.setClip(sideClip);
+
+        // CSS doesn't let us have different width to height, which we need to prevent
+        // visible curling in at the edges:
+        topDropShadow = new DropShadow();
+        topDropShadow.setBlurType(BlurType.GAUSSIAN);
+        topDropShadow.setColor(Color.hsb(0, 0, 0.5, 0.7));
+        topDropShadow.setOffsetY(2);
+        topDropShadow.setHeight(8);
+        topDropShadow.setWidth(12);
+        topDropShadow.setSpread(0.4);
+        leftInnerShadow = new InnerShadow();
+        leftInnerShadow.setBlurType(BlurType.GAUSSIAN);
+        leftInnerShadow.setColor(Color.hsb(0, 0, 0.5, 0.7));
+        leftInnerShadow.setChoke(0.4);
+        leftInnerShadow.setOffsetY(2);
+        leftInnerShadow.setHeight(8);
+        leftInnerShadow.setWidth(0);
+        leftDropShadow = new DropShadow();
+        leftDropShadow.setBlurType(BlurType.GAUSSIAN);
+        leftDropShadow.setColor(Color.hsb(0, 0, 0.5, 0.7));
+        leftDropShadow.setHeight(12);
+        leftDropShadow.setWidth(8);
+        leftDropShadow.setOffsetX(2);
+        leftDropShadow.setSpread(0.4);
+        topInnerShadow = new InnerShadow();
+        topInnerShadow.setBlurType(BlurType.GAUSSIAN);
+        topInnerShadow.setColor(Color.hsb(0, 0, 0.5, 0.7));
+        topInnerShadow.setChoke(0.4);
+        topInnerShadow.setOffsetX(2);
+        topInnerShadow.setHeight(0);
+        topInnerShadow.setWidth(8);
+
+        
+        FXUtility.listen(virtualFlow.visibleCells(), c -> {
+            if (!c.getList().isEmpty())
+            {
+                int rowIndex = c.getList().get(0).getCurRowIndex();
+                double y = virtualFlow.cellToViewport(c.getList().get(0), 0, 0).getY();
+                //FXUtility.setPseudoclass(header, "pinned", y >= 5 || rowIndex > 0);
+                atTop = y < 5 && rowIndex == 0;
+                updateShadows(header, lineNumberWrapper);
+                FXUtility.setPseudoclass(stackPane, "at-top", y == 0 && rowIndex == 0);
+                lineNumbers.showAtOffset(rowIndex, y);
+            }
+        });
+
+        
+        FXUtility.addChangeListenerPlatformNN(virtualFlow.breadthOffsetProperty(), d -> {
+            //FXUtility.setPseudoclass(lineNumbers, "pinned", d >= 5);
+            System.err.println("Breadth: " + d);
+            atLeft = d < 5;
+            updateShadows(header, lineNumberWrapper);
+        });
+    }
+
+    @RequiresNonNull({"topDropShadow", "topInnerShadow", "leftDropShadow", "leftInnerShadow"})
+    private void updateShadows(@UnknownInitialization(Object.class) StableView this, Node top, Node left)
+    {
+        if (!atTop)
+        {
+            top.setEffect(topDropShadow);
+            topDropShadow.setInput(atLeft ? null : topInnerShadow);
+        }
+        else
+        {
+            top.setEffect(atLeft ? null : topInnerShadow);
+        }
+
+        if (!atLeft)
+        {
+            left.setEffect(leftDropShadow);
+            leftDropShadow.setInput(atTop ? null : leftInnerShadow);
+        }
+        else
+        {
+            left.setEffect(atTop ? null : leftInnerShadow);
+        }
+    }
+
+    private static Node makeButtonArrow()
+    {
+        Region s = new Region();
+        s.getStyleClass().add("stable-view-button-arrow");
+        return s;
     }
 
     private StableRow makeCell(@UnknownInitialization(Object.class) StableView this, @Nullable Object data)
@@ -131,12 +283,12 @@ public class StableView
             columnSizes.add(new SimpleDoubleProperty(100.0));
         }
 
-        header.getChildren().clear();
+        headerItemsContainer.getChildren().clear();
         for (int i = 0; i < columns.size(); i++)
         {
             Pair<String, ValueFetcher> column = columns.get(i);
             HeaderItem headerItem = new HeaderItem(column.getFirst(), i);
-            header.getChildren().add(headerItem);
+            headerItemsContainer.getChildren().add(headerItem);
             headerItems.add(headerItem);
         }
 

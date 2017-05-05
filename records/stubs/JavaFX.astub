@@ -15,6 +15,7 @@ class Node
     void setCursor(@Nullable Cursor c) @UnknownInitialization;
     Cursor getCursor() @UnknownInitialization;
     void setClip(@Nullable Node a);
+    void setEffect(@Nullable Effect e) @UnknownInitialization;
     ObservableList<String> getStyleClass() @UnknownInitialization;
     @Nullable Scene getScene() @UnknownInitialization;
 
@@ -91,6 +92,16 @@ class MenuItem
     void addEventHandler(EventType t, EventHandler e) @UnknownInitialization;
     StringProperty textProperty() @UnknownInitialization;
     ReadOnlyObjectProperty parentMenuProperty() @UnknownInitialization;
+}
+
+package javafx.scene.effect;
+class DropShadow
+{
+    void setInput(@Nullable Effect e);
+}
+class InnerShadow
+{
+    void setInput(@Nullable Effect e);
 }
 
 package javafx.scene.layout;

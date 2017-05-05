@@ -274,6 +274,14 @@ public class FXUtility
         list.addListener(listener::consume);
     }
 
+    public static void forcePrefSize(Region region)
+    {
+        region.setMinWidth(Region.USE_PREF_SIZE);
+        region.setMaxWidth(Region.USE_PREF_SIZE);
+        region.setMinHeight(Region.USE_PREF_SIZE);
+        region.setMaxHeight(Region.USE_PREF_SIZE);
+    }
+
     public static interface DragHandler
     {
         @OnThread(Tag.FXPlatform)
