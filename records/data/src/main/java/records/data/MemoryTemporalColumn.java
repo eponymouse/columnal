@@ -15,22 +15,13 @@ import java.util.List;
  */
 public class MemoryTemporalColumn extends Column
 {
-    private final ColumnId title;
     private final TemporalColumnStorage storage;
 
     public MemoryTemporalColumn(RecordSet rs, ColumnId title, DateTimeInfo dateTimeInfo, List<TemporalAccessor> list) throws InternalException
     {
-        super(rs);
-        this.title = title;
+        super(rs, title);
         this.storage = new TemporalColumnStorage(dateTimeInfo);
         this.storage.addAll(list);
-    }
-
-    @Override
-    @OnThread(Tag.Any)
-    public ColumnId getName()
-    {
-        return title;
     }
 
     @Override
@@ -43,7 +34,7 @@ public class MemoryTemporalColumn extends Column
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        return new MemoryTemporalColumn(rs, title, getType().getDateTimeInfo(), storage._test_getShrunk(shrunkLength));
+        return new MemoryTemporalColumn(rs, getName(), getType().getDateTimeInfo(), storage._test_getShrunk(shrunkLength));
     }
 
     @Override

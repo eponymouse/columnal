@@ -21,7 +21,6 @@ public abstract class TextFileColumn<S extends ColumnStorage<?>> extends Column
 {
     protected final @Nullable String sep;
     protected final int columnIndex;
-    private final ColumnId columnName;
     private final boolean lastColumn;
     protected ReadState reader;
     @MonotonicNonNull
@@ -31,10 +30,9 @@ public abstract class TextFileColumn<S extends ColumnStorage<?>> extends Column
 
     protected TextFileColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns)
     {
-        super(recordSet);
+        super(recordSet, columnName);
         this.sep = sep;
         this.reader = reader;
-        this.columnName = columnName;
         this.columnIndex = columnIndex;
         this.lastColumn = columnIndex == totalColumns - 1;
     }
@@ -83,13 +81,6 @@ public abstract class TextFileColumn<S extends ColumnStorage<?>> extends Column
     }
 
     protected abstract void addValues(ArrayList<String> values) throws InternalException, UserException;
-
-    @Override
-    @OnThread(Tag.Any)
-    public final ColumnId getName()
-    {
-        return columnName;
-    }
 
     @Override
     public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException

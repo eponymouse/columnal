@@ -11,12 +11,9 @@ import threadchecker.Tag;
  */
 public abstract class CalculatedColumn extends Column
 {
-    private final ColumnId name;
-
     public CalculatedColumn(RecordSet recordSet, ColumnId name)
     {
-        super(recordSet);
-        this.name = name;
+        super(recordSet, name);
     }
 
     // Preserves type
@@ -117,13 +114,6 @@ public abstract class CalculatedColumn extends Column
     protected abstract void fillNextCacheChunk() throws UserException, InternalException;
 
     protected abstract int getCacheFilled();
-
-    @Override
-    @OnThread(Tag.Any)
-    public final ColumnId getName()
-    {
-        return name;
-    }
 
     /*
     private static abstract class PrimitiveCalculatedColumn<T> extends CalculatedColumn

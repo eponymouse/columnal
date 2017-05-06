@@ -13,22 +13,13 @@ import java.util.List;
  */
 public class MemoryBooleanColumn extends Column
 {
-    private final ColumnId title;
     private final BooleanColumnStorage storage;
 
     public MemoryBooleanColumn(RecordSet rs, ColumnId title, List<Boolean> list) throws InternalException
     {
-        super(rs);
-        this.title = title;
+        super(rs, title);
         this.storage = new BooleanColumnStorage();
         this.storage.addAll(list);
-    }
-
-    @Override
-    @OnThread(Tag.Any)
-    public ColumnId getName()
-    {
-        return title;
     }
 
     @Override
@@ -41,7 +32,7 @@ public class MemoryBooleanColumn extends Column
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException
     {
-        return new MemoryBooleanColumn(rs, title, storage.getShrunk(shrunkLength));
+        return new MemoryBooleanColumn(rs, getName(), storage.getShrunk(shrunkLength));
     }
 
     @Override

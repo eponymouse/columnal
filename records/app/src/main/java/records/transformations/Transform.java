@@ -82,14 +82,8 @@ public class Transform extends TransformationEditable
             {
                 if (!newColumns.containsKey(c.getName()))
                 {
-                    columns.add(rs -> new Column(rs)
+                    columns.add(rs -> new Column(rs, c.getName())
                     {
-                        @Override
-                        public @OnThread(Tag.Any) ColumnId getName()
-                        {
-                            return c.getName();
-                        }
-
                         @Override
                         public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
                         {

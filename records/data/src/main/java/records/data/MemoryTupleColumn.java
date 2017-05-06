@@ -14,13 +14,11 @@ import java.util.List;
  */
 public class MemoryTupleColumn extends Column
 {
-    private final ColumnId title;
     private final TupleColumnStorage storage;
 
     public MemoryTupleColumn(RecordSet recordSet, ColumnId title, List<DataType> dataTypes) throws InternalException
     {
-        super(recordSet);
-        this.title = title;
+        super(recordSet, title);
         this.storage = new TupleColumnStorage(dataTypes);
     }
 
@@ -28,13 +26,6 @@ public class MemoryTupleColumn extends Column
     {
         this(recordSet, title, dataTypes);
         storage.addAll(values);
-    }
-
-    @Override
-    @OnThread(Tag.Any)
-    public ColumnId getName()
-    {
-        return title;
     }
 
     @Override
@@ -47,7 +38,7 @@ public class MemoryTupleColumn extends Column
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        MemoryTupleColumn shrunk = new MemoryTupleColumn(rs, title, storage.getType().getMemberType());
+        MemoryTupleColumn shrunk = new MemoryTupleColumn(rs, getName(), storage.getType().getMemberType());
         shrunk.storage.addAll(storage._test_getShrunk(shrunkLength));
         return shrunk;
     }

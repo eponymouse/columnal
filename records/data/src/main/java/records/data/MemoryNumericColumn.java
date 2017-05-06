@@ -16,14 +16,12 @@ import java.util.stream.Stream;
  */
 public class MemoryNumericColumn extends Column
 {
-    private final ColumnId title;
     private final NumericColumnStorage storage;
 
     private MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo) throws InternalException, UserException
     {
-        super(rs);
+        super(rs, title);
         storage = new NumericColumnStorage(numberInfo);
-        this.title = title;
     }
 
     public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, List<Number> values) throws InternalException, UserException
@@ -47,12 +45,6 @@ public class MemoryNumericColumn extends Column
     }
 
     @Override
-    public @OnThread(Tag.Any) ColumnId getName()
-    {
-        return title;
-    }
-
-    @Override
     @OnThread(Tag.Any)
     public DataTypeValue getType()
     {
@@ -62,7 +54,7 @@ public class MemoryNumericColumn extends Column
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        return new MemoryNumericColumn(rs, title, storage.getDisplayInfo(), storage._test_getShrunk(shrunkLength));
+        return new MemoryNumericColumn(rs, getName(), storage.getDisplayInfo(), storage._test_getShrunk(shrunkLength));
     }
 
     @Override

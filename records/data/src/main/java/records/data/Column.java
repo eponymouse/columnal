@@ -53,10 +53,12 @@ public abstract class Column
     @OnThread(Tag.Any)
     private boolean editable;
     protected final RecordSet recordSet;
+    private final ColumnId name;
 
-    protected Column(RecordSet recordSet)
+    protected Column(RecordSet recordSet, ColumnId name)
     {
         this.recordSet = recordSet;
+        this.name = name;
     }
 
     @MonotonicNonNull
@@ -82,10 +84,13 @@ public abstract class Column
 
     @Pure
     @OnThread(Tag.Any)
-    public abstract ColumnId getName();
+    public final ColumnId getName()
+    {
+        return name;
+    }
 
     @OnThread(Tag.FXPlatform)
-    public void withDisplay(FXPlatformConsumer<String> withType)
+    public final void withDisplay(FXPlatformConsumer<String> withType)
     {
         Workers.onWorkerThread("Fetching display from column " + getName(), () -> {
             Utility.alertOnError_(() -> {

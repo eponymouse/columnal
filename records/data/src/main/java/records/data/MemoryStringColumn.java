@@ -13,13 +13,11 @@ import java.util.List;
  */
 public class MemoryStringColumn extends Column
 {
-    private final ColumnId title;
     private final StringColumnStorage storage;
 
     public MemoryStringColumn(RecordSet recordSet, ColumnId title, List<String> values) throws InternalException
     {
-        super(recordSet);
-        this.title = title;
+        super(recordSet, title);
         this.storage = new StringColumnStorage();
         this.storage.addAll(values);
     }
@@ -27,13 +25,6 @@ public class MemoryStringColumn extends Column
     public void add(String value) throws InternalException
     {
         storage.add(value);
-    }
-
-    @Override
-    @OnThread(Tag.Any)
-    public ColumnId getName()
-    {
-        return title;
     }
 
     @Override
@@ -46,7 +37,7 @@ public class MemoryStringColumn extends Column
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        return new MemoryStringColumn(rs, title, storage._test_getShrunk(shrunkLength));
+        return new MemoryStringColumn(rs, getName(), storage._test_getShrunk(shrunkLength));
     }
 
     @Override

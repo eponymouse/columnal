@@ -18,24 +18,15 @@ import java.util.List;
  */
 public class MemoryTaggedColumn extends Column
 {
-    private final ColumnId title;
     private final TaggedColumnStorage storage;
     private final TypeId typeName;
 
     public MemoryTaggedColumn(RecordSet rs, ColumnId title, TypeId typeName, List<TagType<DataType>> tags, List<TaggedValue> list) throws InternalException
     {
-        super(rs);
-        this.title = title;
+        super(rs, title);
         this.typeName = typeName;
         this.storage = new TaggedColumnStorage(typeName, tags);
         this.storage.addAll(list);
-    }
-
-    @Override
-    @OnThread(Tag.Any)
-    public ColumnId getName()
-    {
-        return title;
     }
 
     @Override
@@ -56,7 +47,7 @@ public class MemoryTaggedColumn extends Column
                 return tags;
             }
         });
-        return new MemoryTaggedColumn(rs, title, typeName, tags, storage.getShrunk(shrunkLength));
+        return new MemoryTaggedColumn(rs, getName(), typeName, tags, storage.getShrunk(shrunkLength));
     }
 
     @Override

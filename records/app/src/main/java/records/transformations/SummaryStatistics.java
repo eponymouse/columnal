@@ -166,18 +166,11 @@ public class SummaryStatistics extends TransformationEditable
                     ColumnId colName = splitBy.get(i);
                     Column orig = src.getColumn(colName);
                     int iFinal = i;
-                    columns.add(rs -> new Column(rs)
+                    columns.add(rs -> new Column(rs, colName)
                     {
                         private Object getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
                         {
                             return splits.get(index).colValue.get(iFinal);
-                        }
-
-                        @Override
-                        @OnThread(Tag.Any)
-                        public ColumnId getName()
-                        {
-                            return colName;
                         }
 
                         @Override

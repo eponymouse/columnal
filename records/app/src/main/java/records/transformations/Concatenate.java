@@ -187,16 +187,10 @@ public class Concatenate extends TransformationEditable
                 @OnThread(Tag.Simulation)
                 public Column apply(RecordSet rs) throws InternalException, UserException
                 {
-                    return new Column(rs)
+                    return new Column(rs, oldC.getKey())
                     {
 
                         public @MonotonicNonNull DataTypeValue type;
-
-                        @Override
-                        public @OnThread(Tag.Any) ColumnId getName()
-                        {
-                            return oldC.getKey();
-                        }
 
                         @Override
                         public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException

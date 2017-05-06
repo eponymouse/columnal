@@ -500,6 +500,8 @@ public class GuessFormat
         {
             // Have a guess at column columntype:
             boolean allNumeric = true;
+            // The "blank", which may be empty string, or might be another value (e.g. "NA")
+            String numericBlank = null;
             // Only false if we find content which is not parseable as a number:
             boolean allNumericOrBlank = true;
             boolean allBlank = true;
@@ -563,7 +565,15 @@ public class GuessFormat
                         catch (NumberFormatException e)
                         {
                             allNumeric = false;
-                            allNumericOrBlank = false;
+                            if (numericBlank == null || numericBlank.equals(val))
+                            {
+                                // First non-number we've seen; this might be our blank:
+                                numericBlank = val;
+                            }
+                            else
+                            {
+                                allNumericOrBlank = false;
+                            }
                             commonPrefix = "";
                         }
                         // Minimum length for date is 6 by my count

@@ -112,14 +112,8 @@ public class Filter extends TransformationEditable
                 RecordSet data = src.getData();
                 for (Column c : data.getColumns())
                 {
-                    columns.add(rs -> new Column(rs)
+                    columns.add(rs -> new Column(rs, c.getName())
                     {
-                        @Override
-                        public @OnThread(Tag.Any) ColumnId getName()
-                        {
-                            return c.getName();
-                        }
-
                         @Override
                         @SuppressWarnings({"nullness", "initialization"})
                         public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException

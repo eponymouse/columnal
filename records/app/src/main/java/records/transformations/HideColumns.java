@@ -108,14 +108,8 @@ public class HideColumns extends TransformationEditable
             if (shownColumns.isEmpty())
                 throw new UserException("Cannot hide all columns");
 
-            theResult = new RecordSet(Utility.mapList(shownColumns, c -> rs -> new Column(rs)
+            theResult = new RecordSet(Utility.mapList(shownColumns, c -> rs -> new Column(rs, c.getName())
             {
-                @Override
-                public @OnThread(Tag.Any) ColumnId getName()
-                {
-                    return c.getName();
-                }
-
                 @Override
                 public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
                 {

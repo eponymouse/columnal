@@ -15,22 +15,13 @@ import java.util.List;
  */
 public class MemoryArrayColumn extends Column
 {
-    private final ColumnId title;
     private final ArrayColumnStorage storage;
 
     public MemoryArrayColumn(RecordSet recordSet, ColumnId title, DataType inner, List<ListEx> values) throws InternalException
     {
-        super(recordSet);
-        this.title = title;
+        super(recordSet, title);
         this.storage = new ArrayColumnStorage(inner, null);
         this.storage.addAll(values);
-    }
-
-    @Override
-    @OnThread(Tag.Any)
-    public ColumnId getName()
-    {
-        return title;
     }
 
     @Override
@@ -43,7 +34,7 @@ public class MemoryArrayColumn extends Column
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        MemoryArrayColumn shrunk = new MemoryArrayColumn(rs, title, storage.getType().getMemberType().get(0), storage._test_getShrunk(shrunkLength));
+        MemoryArrayColumn shrunk = new MemoryArrayColumn(rs, getName(), storage.getType().getMemberType().get(0), storage._test_getShrunk(shrunkLength));
         return shrunk;
     }
 

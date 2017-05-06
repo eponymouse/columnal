@@ -149,14 +149,8 @@ public class Sort extends TransformationEditable
             stillToOrder[stillToOrder.length - 1] = -1;
             for (Column c : srcRecordSet.getColumns())
             {
-                columns.add(rs -> new Column(rs)
+                columns.add(rs -> new Column(rs, c.getName())
                 {
-                    @Override
-                    public @OnThread(Tag.Any) ColumnId getName()
-                    {
-                        return c.getName();
-                    }
-
                     @Override
                     @SuppressWarnings({"nullness", "initialization"})
                     public @OnThread(Tag.Any) DataTypeValue getType() throws InternalException, UserException
