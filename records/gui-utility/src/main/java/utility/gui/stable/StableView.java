@@ -121,7 +121,7 @@ public class StableView
         placeholder.getStyleClass().add(".stable-view-placeholder");
         
         Button topButton = new Button("", makeButtonArrow());
-        topButton.getStyleClass().add("stable-view-button-top");
+        topButton.getStyleClass().addAll("stable-view-button", "stable-view-button-top");
         topButton.setOnAction(e -> virtualFlow.scrollYToPixel(0));
         FXUtility.forcePrefSize(topButton);
         topButton.prefWidthProperty().bind(vbar.widthProperty());
@@ -136,7 +136,7 @@ public class StableView
         top.getStyleClass().add("stable-view-top");
 
         Button leftButton = new Button("", makeButtonArrow());
-        leftButton.getStyleClass().add("stable-view-button-left");
+        leftButton.getStyleClass().addAll("stable-view-button", "stable-view-button-left");
         leftButton.setOnAction(e -> virtualFlow.scrollXToPixel(0));
         leftButton.prefHeightProperty().bind(hbar.heightProperty());
         leftButton.prefWidthProperty().bind(leftButton.prefHeightProperty());
@@ -144,8 +144,16 @@ public class StableView
         BorderPane.setAlignment(leftButton, Pos.BOTTOM_RIGHT);
         Pane left = new BorderPane(lineNumberWrapper, null, null, GUI.wrap(leftButton, "stable-button-left-wrapper"), null);
         left.getStyleClass().add("stable-view-left");
+
+        Button bottomButton = new Button("", makeButtonArrow());
+        bottomButton.getStyleClass().addAll("stable-view-button", "stable-view-button-bottom");
+        bottomButton.setOnAction(e -> virtualFlow.scrollYToPixel(Double.MAX_VALUE));
+        FXUtility.forcePrefSize(bottomButton);
+        bottomButton.prefWidthProperty().bind(vbar.widthProperty());
+        bottomButton.prefHeightProperty().bind(bottomButton.prefWidthProperty());
+        StackPane.setAlignment(bottomButton, Pos.BOTTOM_RIGHT);
         
-        stackPane = new StackPane(placeholder, new BorderPane(scrollPane, top, null, null, left));
+        stackPane = new StackPane(placeholder, new BorderPane(scrollPane, top, null, null, left), bottomButton);
         headerItemsContainer.layoutXProperty().bind(virtualFlow.breadthOffsetProperty().map(d -> -d));
         placeholder.managedProperty().bind(placeholder.visibleProperty());
         stackPane.getStyleClass().add("stable-view");
@@ -192,13 +200,18 @@ public class StableView
         FXUtility.listen(virtualFlow.visibleCells(), c -> {
             if (!c.getList().isEmpty())
             {
-                int rowIndex = c.getList().get(0).getCurRowIndex();
-                double y = virtualFlow.cellToViewport(c.getList().get(0), 0, 0).getY();
-                //FXUtility.setPseudoclass(header, "pinned", y >= 5 || rowIndex > 0);
-                atTop = y < 5 && rowIndex == 0;
+                StableRow firstVisible = c.getList().get(0);
+                int firstVisibleRowIndex = firstVisible.getCurRowIndex();
+                StableRow lastVisible = c.getList().get(c.getList().size() - 1);
+                int lastVisibleRowIndex = lastVisible.getCurRowIndex();
+                double topY = virtualFlow.cellToViewport(firstVisible, 0, 0).getY();
+                double bottomY = virtualFlow.cellToViewport(lastVisible, 0, lastVisible.getNode().getHeight() - 4).getY();
+                //FXUtility.setPseudoclass(header, "pinned", topY >= 5 || firstVisibleRowIndex > 0);
+                atTop = topY < 5 && firstVisibleRowIndex == 0;
                 updateShadows(header, lineNumberWrapper, topLeft);
-                FXUtility.setPseudoclass(stackPane, "at-top", y == 0 && rowIndex == 0);
-                lineNumbers.showAtOffset(rowIndex, y);
+                FXUtility.setPseudoclass(stackPane, "at-top", topY < 1 && firstVisibleRowIndex == 0);
+                FXUtility.setPseudoclass(stackPane, "at-bottom", lastVisibleRowIndex == items.size() - 1 && bottomY < virtualFlow.getHeight());
+                lineNumbers.showAtOffset(firstVisibleRowIndex, topY);
             }
         });
 
@@ -208,6 +221,8 @@ public class StableView
             System.err.println("Breadth: " + d);
             atLeft = d < 5;
             updateShadows(header, lineNumberWrapper, topLeft);
+            FXUtility.setPseudoclass(stackPane, "at-left", d < 1);
+            FXUtility.setPseudoclass(stackPane, "at-right", d >= headerItemsContainer.getWidth() - virtualFlow.getWidth() - 3);
         });
     }
 
@@ -397,7 +412,7 @@ public class StableView
     }
 
     @OnThread(Tag.FXPlatform)
-    private class StableRow implements Cell<@Nullable Object, Node>
+    private class StableRow implements Cell<@Nullable Object, Region>
     {
         private final HBox hBox = new HBox();
         private int curRowIndex = -1;
@@ -453,7 +468,7 @@ public class StableView
 
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public Node getNode()
+        public Region getNode()
         {
             return hBox;
         }
