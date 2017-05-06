@@ -111,3 +111,19 @@
         }
     }
 }
+
+
+
+.number-display {
+    /* -fx-spacing: 2; */
+    -fx-alignment: baseline-right;
+}
+.number-display-frac {
+    -fx-font-size: 80%;
+}
+.string-display-quote {
+    -fx-text-fill: gray(70%);
+    -fx-font-family: "Source Code Pro";
+    -fx-font-weight: 600;
+    -fx-font-size: 80%;
+}

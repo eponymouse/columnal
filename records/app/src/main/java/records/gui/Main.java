@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.MainWindow.MainWindowActions;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.gui.FXUtility;
 
 import java.io.File;
 import java.nio.charset.Charset;
@@ -20,6 +21,10 @@ public class Main extends Application
     @OnThread(value = Tag.FXPlatform,ignoreParent = true)
     public void start(final Stage primaryStage) throws Exception
     {
+        FXUtility.ensureFontLoaded("NotoSans-Regular.ttf");
+        FXUtility.ensureFontLoaded("SourceCodePro-Regular.ttf");
+        FXUtility.ensureFontLoaded("SourceCodePro-Semibold.ttf");
+
         Parameters parameters = getParameters();
         if (parameters.getUnnamed().isEmpty())
         {

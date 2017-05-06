@@ -82,7 +82,6 @@ public class ExpressionEditor extends ConsecutiveBase
         this.container = new FlowPane();
         this.tableManager = tableManager;
         container.getStyleClass().add("expression-editor");
-        FXUtility.ensureFontLoaded("NotoSans-Regular.ttf");
         container.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
         this.srcTable = srcTable;
         this.type = type;

@@ -1,6 +1,8 @@
 package records.gui;
 
 import javafx.beans.value.ObservableValue;
+import javafx.geometry.Insets;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
@@ -8,6 +10,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.ColumnId;
@@ -69,9 +72,19 @@ public class TableDisplayUtility
         }
         else
         {
+            StackPane stringWrapper = new StackPane();
+            Label beginQuote = new Label("\u201C");
+            Label endQuote = new Label("\u201D");
+            beginQuote.getStyleClass().add("string-display-quote");
+            endQuote.getStyleClass().add("string-display-quote");
+            StackPane.setAlignment(beginQuote, Pos.TOP_LEFT);
+            StackPane.setAlignment(endQuote, Pos.TOP_RIGHT);
+            //StackPane.setMargin(beginQuote, new Insets(0, 0, 0, 3));
+            //StackPane.setMargin(endQuote, new Insets(0, 3, 0, 0));
             Label label = new Label(item.toString());
             label.setTextOverrun(OverrunStyle.CLIP);
-            return label;
+            stringWrapper.getChildren().addAll(beginQuote /*, endQuote*/, label);
+            return stringWrapper;
         }
     }
 }
