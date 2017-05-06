@@ -1,11 +1,13 @@
 package records.data;
 
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnStorage.BeforeGet;
+import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.TypeId;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
@@ -13,6 +15,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.ExFunction;
+import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ReadState;
 
@@ -21,8 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQuery;
 import java.util.ArrayList;
-import java.util.function.BiConsumer;
-import java.util.function.Function;
+import java.util.List;
 import java.util.function.UnaryOperator;
 
 /**
@@ -111,6 +113,16 @@ public final class TextFileColumn extends Column
         return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns,
             (BeforeGet<StringColumnStorage> fill) -> new StringColumnStorage(fill),
             (storage, values) -> storage.addAll(values)
+        );
+    }
+
+    public static <DT extends DataType> TextFileColumn taggedColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, TypeId typeName, List<TagType<DT>> tagTypes, ExFunction<String, TaggedValue> parseValue) throws InternalException, UserException
+    {
+        return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns,
+            (BeforeGet<TaggedColumnStorage> fill) -> new TaggedColumnStorage(typeName, tagTypes, fill),
+            (storage, values) -> {
+                storage.addAll(Utility.mapListEx(values, parseValue));
+            }
         );
     }
 }

@@ -9,13 +9,15 @@ public class OrBlankColumnType extends ColumnType
 {
     // The actual column type (when non-blank)
     private final ColumnType columnType;
+    private final String blankString;
 
-    public OrBlankColumnType(ColumnType columnType)
+    public OrBlankColumnType(ColumnType columnType, String blankString)
     {
         this.columnType = columnType;
+        this.blankString = blankString;
     }
 
-    public Object getInner()
+    public ColumnType getInner()
     {
         return columnType;
     }
@@ -41,5 +43,10 @@ public class OrBlankColumnType extends ColumnType
     public String toString()
     {
         return columnType.toString() + "?";
+    }
+
+    public String getBlankString()
+    {
+        return blankString;
     }
 }

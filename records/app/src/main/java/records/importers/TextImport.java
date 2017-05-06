@@ -14,8 +14,12 @@ import records.data.TextFileColumn;
 import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
+import records.data.columntype.OrBlankColumnType;
 import records.data.columntype.TextColumnType;
+import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.DataType.TagType;
+import records.data.datatype.TypeManager;
 import records.error.FetchException;
 import records.error.FunctionInt;
 import records.error.InternalException;
@@ -25,6 +29,7 @@ import records.importers.GuessFormat.ImportInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ReadState;
 
@@ -85,7 +90,7 @@ public class TextImport
     @OnThread(Tag.Simulation)
     private static DataSource makeDataSource(TableManager mgr, final File textFile, final ImportInfo importInfo, final TextFormat format) throws IOException, InternalException, UserException
     {
-        RecordSet rs = makeRecordSet(textFile, format);
+        RecordSet rs = makeRecordSet(mgr.getTypeManager(), textFile, format);
         if (importInfo.linkFile)
             return new LinkedDataSource(mgr, importInfo.tableName, rs, MainLexer.TEXTFILE, textFile);
         else
@@ -93,7 +98,7 @@ public class TextImport
     }
 
     @OnThread(Tag.Simulation)
-    public static RecordSet makeRecordSet(File textFile, TextFormat format) throws IOException, InternalException, UserException
+    public static RecordSet makeRecordSet(TypeManager typeManager, File textFile, TextFormat format) throws IOException, InternalException, UserException
     {
         List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
         int totalColumns = format.columnTypes.size();
@@ -111,8 +116,37 @@ public class TextImport
                     NumericColumnType numericColumnType = (NumericColumnType) columnInfo.type;
                     return TextFileColumn.numericColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, new NumberInfo(numericColumnType.unit, numericColumnType.minDP), numericColumnType::removePrefix);
                 });
-            } else if (columnInfo.type instanceof TextColumnType)
+            }
+            else if (columnInfo.type instanceof OrBlankColumnType)
+            {
+                OrBlankColumnType orBlankColumnType = (OrBlankColumnType)columnInfo.type;
+                if (orBlankColumnType.getInner() instanceof NumericColumnType)
+                {
+                    //TODO make/fetch tagged type from manager
+                    DataType numberOrBlank = typeManager.registerTaggedType("Number?", Arrays.asList(
+                        new TagType<>("Number", DataType.NUMBER),
+                        new TagType<>("Blank", null)
+                    ));
+                    columns.add(rs -> {
+                        return TextFileColumn.taggedColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, numberOrBlank.getTaggedTypeName(), numberOrBlank.getTagTypes(), str -> {
+                            if (str.equals(orBlankColumnType.getBlankString()))
+                            {
+                                return new TaggedValue(1, null);
+                            }
+                            else
+                            {
+                                return new TaggedValue(0, Utility.parseNumber(str));
+                            }
+                        });
+                    });
+                }
+                else
+                    throw new InternalException("Unhandled or-blank column type: " + orBlankColumnType.getInner().getClass());
+            }
+            else if (columnInfo.type instanceof TextColumnType)
+            {
                 columns.add(rs -> TextFileColumn.stringColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns));
+            }
             else if (columnInfo.type instanceof CleanDateColumnType)
             {
                 columns.add(rs ->

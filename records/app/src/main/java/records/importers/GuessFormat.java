@@ -43,6 +43,7 @@ import records.data.columntype.ColumnType;
 import records.data.columntype.NumericColumnType;
 import records.data.columntype.OrBlankColumnType;
 import records.data.columntype.TextColumnType;
+import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -612,8 +613,10 @@ public class GuessFormat
             {
                 columnTypes.add(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, commonPrefix));
             }
-            else if (allNumericOrBlank)
-                columnTypes.add(new OrBlankColumnType(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, commonPrefix)));
+            else if (allNumericOrBlank && numericBlank != null)
+            {
+                columnTypes.add(new OrBlankColumnType(new NumericColumnType(mgr.guessUnit(commonPrefix), minDP, commonPrefix), numericBlank));
+            }
             else
                 columnTypes.add(new TextColumnType());
             // Go backwards to find column titles:
@@ -673,7 +676,7 @@ public class GuessFormat
             {
                 @Nullable Stream<Choice> bestGuess = findBestGuess(choicePoints);
 
-                makeGUI(choicePoints, bestGuess == null ? Collections.emptyList() : bestGuess.collect(Collectors.<@NonNull Choice>toList()), file, initial, choices, sourceFileView, tableView, formatProperty);
+                makeGUI(mgr.getTypeManager(), choicePoints, bestGuess == null ? Collections.emptyList() : bestGuess.collect(Collectors.<@NonNull Choice>toList()), file, initial, choices, sourceFileView, tableView, formatProperty);
             }
             catch (InternalException e)
             {
@@ -753,7 +756,7 @@ public class GuessFormat
     }
 
     @OnThread(Tag.FXPlatform)
-    private static <C extends Choice> void makeGUI(ChoicePoint<C, TextFormat> rawChoicePoint, List<Choice> mostRecentPick, File file, Map<Charset, List<String>> initial, LabelledGrid controlGrid, StyleClassedTextArea textView, StableView tableView, ObjectProperty<@Nullable TextFormat> destProperty) throws InternalException
+    private static <C extends Choice> void makeGUI(TypeManager typeManager, ChoicePoint<C, TextFormat> rawChoicePoint, List<Choice> mostRecentPick, File file, Map<Charset, List<String>> initial, LabelledGrid controlGrid, StyleClassedTextArea textView, StableView tableView, ObjectProperty<@Nullable TextFormat> destProperty) throws InternalException
     {
         final @Nullable ChoiceType<C> choiceType = rawChoicePoint.getChoiceType();
         if (choiceType == null)
@@ -765,7 +768,7 @@ public class GuessFormat
                 if (initialLines == null)
                     throw new InternalException("Charset pick gives no initial lines");
                 destProperty.set(t);
-                previewFormat(file, t, initialLines, textView, tableView);
+                previewFormat(typeManager, file, t, initialLines, textView, tableView);
             }
             catch (UserException e)
             {
@@ -800,7 +803,7 @@ public class GuessFormat
             {
                 ChoicePoint<?, TextFormat> next = rawChoicePoint.select(item);
                 controlGrid.clearRowsAfter(rowNumber);
-                makeGUI(next, mostRecentPick, file, initial, controlGrid, textView, tableView, destProperty);
+                makeGUI(typeManager, next, mostRecentPick, file, initial, controlGrid, textView, tableView, destProperty);
             }
             catch (InternalException e)
             {
@@ -827,7 +830,7 @@ public class GuessFormat
     }
 
     @OnThread(Tag.FXPlatform)
-    private static void previewFormat(File file, TextFormat t, List<String> initial, StyleClassedTextArea textArea, StableView tableView)
+    private static void previewFormat(TypeManager typeManager, File file, TextFormat t, List<String> initial, StyleClassedTextArea textArea, StableView tableView)
     {
         textArea.clear();
         tableView.clear();
@@ -841,7 +844,7 @@ public class GuessFormat
         Workers.onWorkerThread("Loading" + file.getName(), () -> {
             try
             {
-                @OnThread(Tag.Simulation) RecordSet recordSet = TextImport.makeRecordSet(file, t);
+                @OnThread(Tag.Simulation) RecordSet recordSet = TextImport.makeRecordSet(typeManager, file, t);
                 Platform.runLater(() -> {
                     tableView.setColumns(TableDisplayUtility.makeStableViewColumn(recordSet));
                     tableView.setRows(recordSet::indexValid);
