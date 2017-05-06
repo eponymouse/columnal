@@ -7,6 +7,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -218,12 +219,17 @@ public class StableView
         
         FXUtility.addChangeListenerPlatformNN(virtualFlow.breadthOffsetProperty(), d -> {
             //FXUtility.setPseudoclass(lineNumbers, "pinned", d >= 5);
-            System.err.println("Breadth: " + d);
             atLeft = d < 5;
             updateShadows(header, lineNumberWrapper, topLeft);
             FXUtility.setPseudoclass(stackPane, "at-left", d < 1);
             FXUtility.setPseudoclass(stackPane, "at-right", d >= headerItemsContainer.getWidth() - virtualFlow.getWidth() - 3);
         });
+    }
+
+    public void scrollToTopLeft()
+    {
+        virtualFlow.scrollYToPixel(0);
+        virtualFlow.scrollXToPixel(0);
     }
 
     @RequiresNonNull({"topDropShadow", "leftDropShadow", "topLeftDropShadow"})
@@ -295,6 +301,8 @@ public class StableView
         }
 
         placeholder.setVisible(columns.isEmpty());
+
+        scrollToTopLeft();
     }
 
     public void setRows(SimulationFunction<Integer, Boolean> isRowValid)

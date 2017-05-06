@@ -1,3 +1,8 @@
+/* Functions */
+@function grey($amount) {
+    @return hsb(0, 0%, $amount)
+}
+
 /* General: */
 $focus-color: rgb(75, 54, 150);
 $focus-color-text: white;

@@ -1,3 +1,5 @@
+@import 'colors';
+
 .stable-view-header-item, .stable-view-row-number, .stable-view-top-left {
     -fx-background-color: hsb(0, 0%, 80%);
     -fx-border-style: solid inside;
@@ -17,16 +19,26 @@ $stable-view-header-border: hsb(0, 0%, 40%);
     -fx-border-color: transparent $stable-view-header-border $stable-view-header-border transparent;
 }
 
-.stable-view-scroll-pane > .scroll-bar, .stable-button-top-wrapper {
+
+.stable-view-scroll-pane > .scroll-bar > .decrement-button:hover,
+   .stable-view-scroll-pane > .scroll-bar > .increment-button:hover,
+    .stable-view-button:hover {
+   -fx-background-color: -fx-base, grey(60%), white;
+}
+
+.stable-view-scroll-pane > .scroll-bar,
+   .stable-button-top-wrapper {
     -fx-background-color: -fx-base;
 }
 .stable-view-scroll-pane > .scroll-bar > .decrement-button > .decrement-arrow {
     -fx-shape: "M38,16 L32,10 L26,16 Z";
     -fx-scale-shape: false;
+    -fx-effect: null;
 }
 .stable-view-scroll-pane > .scroll-bar > .increment-button > .increment-arrow {
     -fx-shape: "M38,-16 L32,-10 L26,-16 Z";
     -fx-scale-shape: false;
+    -fx-effect: null;
 }
 .stable-view-scroll-pane > .scroll-bar:horizontal > .decrement-button > .decrement-arrow,
 .stable-view-scroll-pane > .scroll-bar:horizontal > .increment-button > .increment-arrow {
@@ -34,8 +46,10 @@ $stable-view-header-border: hsb(0, 0%, 40%);
 }
 .stable-view-button {
     -fx-focus-traversable: false;
-    -fx-background-color: -fx-base;
+    -fx-background-insets: 0, 2, 3;
+    -fx-background-color: -fx-base, -fx-base, -fx-base;
     -fx-background-radius: 0;
+    -fx-padding: 0;
     & > .stable-view-button-arrow {
         -fx-shape: "M38,16 L32,10 L38,10 L38,8 L26,8 L26,10 L32,10 L26,16 Z";
         -fx-scale-shape: false;
@@ -48,10 +62,15 @@ $stable-view-header-border: hsb(0, 0%, 40%);
     -fx-rotate: 180;
 }
 .stable-view {
+    & .stable-view-scroll-pane > .scroll-bar .thumb {
+        -fx-background-radius: 0;
+    }
+
     & .stable-view-scroll-pane > .scroll-bar > .decrement-button > .decrement-arrow,
     & .stable-view-scroll-pane > .scroll-bar > .increment-button > .increment-arrow,
+    & .stable-view-scroll-pane > .scroll-bar .thumb,
     & .stable-view-button > .stable-view-button-arrow  {
-        -fx-background-color: derive(-fx-base, -30%);
+        -fx-background-color: derive(-fx-base, -25%);
     }
     &:at-top .stable-view-scroll-pane > .scroll-bar:vertical > .decrement-button > .decrement-arrow,
     &:at-bottom .stable-view-scroll-pane > .scroll-bar:vertical > .increment-button > .increment-arrow,
