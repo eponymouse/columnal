@@ -279,6 +279,8 @@ public class StableView
 
     public void setColumns(List<Pair<String, ValueFetcher>> columns)
     {
+        // Important to clear the items, as we need to make new cells
+        // which will have the updated number of columns
         items.clear();
         this.columns.clear();
         this.columns.addAll(Utility.mapList(columns, Pair::getSecond));
@@ -423,18 +425,21 @@ public class StableView
     private class StableRow implements Cell<@Nullable Object, Region>
     {
         private final HBox hBox = new HBox();
+        private final ArrayList<Pane> cells = new ArrayList<>();
         private int curRowIndex = -1;
 
         public StableRow()
         {
-        }
-
-        private void bindChildSize(int itemIndex)
-        {
-            Region n = (Region)hBox.getChildren().get(itemIndex);
-            n.setMinWidth(Region.USE_PREF_SIZE);
-            n.setMaxWidth(Region.USE_PREF_SIZE);
-            n.prefWidthProperty().bind(columnSizes.get(itemIndex));
+            hBox.getStyleClass().add("stable-view-row");
+            for (int columnIndex = 0; columnIndex < columns.size(); columnIndex++)
+            {
+                Pane pane = new StackPane();
+                pane.getStyleClass().add("stable-view-row-cell");
+                FXUtility.forcePrefSize(pane);
+                pane.prefWidthProperty().bind(columnSizes.get(columnIndex));
+                cells.add(pane);
+            }
+            hBox.getChildren().setAll(cells);
         }
 
         @Override
@@ -451,16 +456,13 @@ public class StableView
             if (rowIndex != curRowIndex)
             {
                 curRowIndex = rowIndex;
-                hBox.getChildren().clear();
-                for (ValueFetcher column : columns)
+                for (int columnIndex = 0; columnIndex < columns.size(); columnIndex++)
                 {
-                    // This will be column + 1, if we are displaying line numbers:
-                    int columnIndex = hBox.getChildren().size();
-                    hBox.getChildren().add(new Label(""));
-                    bindChildSize(columnIndex);
-                    column.fetchValue(rowIndex, (x, n) -> {
-                        hBox.getChildren().set(columnIndex, n);
-                        bindChildSize(columnIndex);
+                    ValueFetcher column = columns.get(columnIndex);
+                    int columnIndexFinal = columnIndex;
+                    column.fetchValue(rowIndex, (x, n) ->
+                    {
+                        cells.get(columnIndexFinal).getChildren().setAll(n);
                     });
                 }
             }
@@ -506,10 +508,12 @@ public class StableView
     private class LineNumber implements Cell<@Nullable Object, Node>
     {
         private final Label label = new Label();
+        private final Pane labelWrapper = new StackPane(label);
 
         public LineNumber()
         {
-            label.getStyleClass().add("stable-view-row-number");
+            FXUtility.forcePrefSize(labelWrapper);
+            labelWrapper.getStyleClass().add("stable-view-row-number");
         }
 
         @Override
@@ -530,7 +534,7 @@ public class StableView
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public Node getNode()
         {
-            return label;
+            return labelWrapper;
         }
 
         // You have to override this to avoid the UnsupportedOperationException

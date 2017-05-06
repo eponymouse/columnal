@@ -2,6 +2,9 @@
 @function grey($amount) {
     @return hsb(0, 0%, $amount)
 }
+@function gray($amount) {
+    @return hsb(0, 0%, $amount)
+}
 
 /* General: */
 $focus-color: rgb(75, 54, 150);

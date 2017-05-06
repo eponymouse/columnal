@@ -82,3 +82,14 @@ $stable-view-header-border: hsb(0, 0%, 40%);
         -fx-background-color: derive(-fx-base, -10%);
     }
 }
+
+.stable-view-row-cell {
+    -fx-background-color: gray(95%);
+    -fx-border-style: solid inside;
+    -fx-border-width: 0 1 1 0;
+    -fx-border-color: gray(60%);
+}
+.stable-view-row-cell, .stable-view-row-number {
+    -fx-pref-height: 28px; /*20pt;*/
+    /*-fx-snap-to-pixel: true;*/
+}
