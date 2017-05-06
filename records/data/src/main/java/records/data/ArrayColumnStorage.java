@@ -38,7 +38,8 @@ public class ArrayColumnStorage implements ColumnStorage<ListEx>
     private final DataTypeValue type;
 
     // Constructor for array version
-    public ArrayColumnStorage(@Nullable DataType innerToCopy, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet) throws InternalException
+    @SuppressWarnings("initialization") // Calling beforeGet
+    public ArrayColumnStorage(@Nullable DataType innerToCopy, @Nullable BeforeGet<ArrayColumnStorage> beforeGet) throws InternalException
     {
         if (innerToCopy == null)
             this.type = DataTypeValue.arrayV();
@@ -48,7 +49,7 @@ public class ArrayColumnStorage implements ColumnStorage<ListEx>
             this.type = DataTypeValue.arrayV(innerToCopy, (i, prog) ->
             {
                 if (beforeGet != null)
-                    beforeGet.accept(i, prog);
+                    beforeGet.beforeGet(this, i, prog);
                 try
                 {
                     ListEx list = storage.get(i);

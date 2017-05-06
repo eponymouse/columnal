@@ -9,7 +9,7 @@ import threadchecker.Tag;
 /**
  * Created by neil on 06/11/2016.
  */
-public abstract class CalculatedStringColumn extends CalculatedColumn
+public abstract class CalculatedStringColumn extends CalculatedColumn<StringColumnStorage>
 {
     protected final StringColumnStorage cache;
 
@@ -17,7 +17,7 @@ public abstract class CalculatedStringColumn extends CalculatedColumn
     public CalculatedStringColumn(RecordSet recordSet, ColumnId name)
     {
         super(recordSet, name);
-        cache = new StringColumnStorage((index, prog) -> fillCacheWithProgress(index, prog));
+        cache = new StringColumnStorage(this);
     }
 
     @Override

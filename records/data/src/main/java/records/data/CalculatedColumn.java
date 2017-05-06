@@ -1,6 +1,7 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnStorage.BeforeGet;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -9,7 +10,7 @@ import threadchecker.Tag;
 /**
  * Created by neil on 21/10/2016.
  */
-public abstract class CalculatedColumn extends Column
+public abstract class CalculatedColumn<S extends ColumnStorage<?>> extends Column implements BeforeGet<S>
 {
     public CalculatedColumn(RecordSet recordSet, ColumnId name)
     {
@@ -92,7 +93,8 @@ public abstract class CalculatedColumn extends Column
         });
     }
 */
-    protected final void fillCacheWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+    @Override
+    public final void beforeGet(S storage, int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
     {
         if (index < 0 || index >= getLength())
             return; // Will later throw out of bounds problem

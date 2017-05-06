@@ -2,6 +2,8 @@ package records.data;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Column.ProgressListener;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -51,4 +53,9 @@ public interface ColumnStorage<T>
     public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException;
 
     public void addRow() throws InternalException, UserException;
+
+    public static interface BeforeGet<S extends ColumnStorage<?>>
+    {
+        public void beforeGet(S storage, int index, @Nullable ProgressListener progressListener) throws InternalException, UserException;
+    }
 }

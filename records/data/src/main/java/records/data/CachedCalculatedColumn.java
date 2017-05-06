@@ -1,6 +1,7 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnStorage.BeforeGet;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -13,15 +14,16 @@ import utility.ExFunction;
 /**
  * Created by neil on 14/01/2017.
  */
-public class CachedCalculatedColumn<S extends ColumnStorage> extends CalculatedColumn
+public class CachedCalculatedColumn<S extends ColumnStorage<?>> extends CalculatedColumn<S>
 {
     private final S cache;
     private final ExConsumer<S> addToCache;
 
-    public CachedCalculatedColumn(RecordSet recordSet, ColumnId name, ExFunction<ExBiConsumer<Integer, @Nullable ProgressListener>, S> cache, ExConsumer<S> addToCache) throws InternalException, UserException
+    @SuppressWarnings("initialization") // Passing ourselves to constructor
+    public CachedCalculatedColumn(RecordSet recordSet, ColumnId name, ExFunction<BeforeGet<S>, S> cache, ExConsumer<S> addToCache) throws InternalException, UserException
     {
         super(recordSet, name);
-        this.cache = cache.apply(this::fillCacheWithProgress);
+        this.cache = cache.apply(this);
         this.addToCache = addToCache;
     }
 

@@ -13,7 +13,6 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DumbObjectPool;
-import utility.ExBiConsumer;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -32,14 +31,14 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
     @MonotonicNonNull
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private DataTypeValue dataType;
-    private final @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet;
+    private final @Nullable BeforeGet<TemporalColumnStorage> beforeGet;
 
     public TemporalColumnStorage(DateTimeInfo dateTimeInfo) throws InternalException
     {
         this(dateTimeInfo, null);
     }
 
-    public TemporalColumnStorage(DateTimeInfo dateTimeInfo, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet) throws InternalException
+    public TemporalColumnStorage(DateTimeInfo dateTimeInfo, @Nullable BeforeGet<TemporalColumnStorage> beforeGet) throws InternalException
     {
         this.values = new ArrayList<>();
         this.pool = new DumbObjectPool<>((Class<@Value TemporalAccessor>)TemporalAccessor.class, 1000, (Comparator<@Value TemporalAccessor>)dateTimeInfo.getComparator());
@@ -56,7 +55,7 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
     public @Value TemporalAccessor get(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
         if (beforeGet != null)
-            beforeGet.accept(index, progressListener);
+            beforeGet.beforeGet(this, index, progressListener);
         if (index < 0 || index >= filled())
             throw new InternalException("Attempting to access invalid element: " + index + " of " + filled());
         return values.get(index);

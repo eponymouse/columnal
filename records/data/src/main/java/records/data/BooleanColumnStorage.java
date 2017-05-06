@@ -26,9 +26,10 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
     private final BitSet data = new BitSet();
     @OnThread(Tag.Any)
     private final DataTypeValue type;
-    private final @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet;
+    private final @Nullable BeforeGet<BooleanColumnStorage> beforeGet;
 
-    public BooleanColumnStorage(@Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet)
+    @SuppressWarnings("initialization") // getWithProgress method reference
+    public BooleanColumnStorage(@Nullable BeforeGet<BooleanColumnStorage> beforeGet)
     {
         this.beforeGet = beforeGet;
         this.type = DataTypeValue.bool(this::getWithProgress);
@@ -39,11 +40,11 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
         this(null);
     }
 
-    @RequiresNonNull({"data"})
-    private @Value Boolean getWithProgress(@UnknownInitialization(Object.class) BooleanColumnStorage this, int i, @Nullable ProgressListener progressListener) throws UserException, InternalException
+
+    private @Value Boolean getWithProgress(int i, @Nullable ProgressListener progressListener) throws UserException, InternalException
     {
         if (beforeGet != null)
-            beforeGet.accept(i, progressListener);
+            beforeGet.beforeGet(this, i, progressListener);
         if (i < 0 || i >= filled())
             throw new InternalException("Attempting to access invalid element: " + i + " of " + filled());
         return DataTypeUtility.value(data.get(i));

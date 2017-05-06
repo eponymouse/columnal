@@ -18,7 +18,7 @@ public abstract class CalculatedNumericColumn extends CalculatedColumn
     public CalculatedNumericColumn(RecordSet recordSet, ColumnId name, NumberInfo displayInfo) throws InternalException, UserException
     {
         super(recordSet, name);
-        cache = new NumericColumnStorage(displayInfo, this::fillCacheWithProgress);
+        cache = new NumericColumnStorage(displayInfo, this);
     }
 
     @Override

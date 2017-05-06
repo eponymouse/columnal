@@ -11,7 +11,6 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DumbObjectPool;
-import utility.ExBiConsumer;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -24,12 +23,12 @@ public class StringColumnStorage implements ColumnStorage<String>
 {
     private final ArrayList<@Value String> values;
     private final DumbObjectPool<@Value String> pool = new DumbObjectPool<>((Class<@Value String>)(Class)String.class, 1000, null);
-    private final @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet;
+    private final @Nullable BeforeGet<StringColumnStorage> beforeGet;
     @MonotonicNonNull
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private DataTypeValue dataType;
 
-    public StringColumnStorage(@Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet)
+    public StringColumnStorage(@Nullable BeforeGet<StringColumnStorage> beforeGet)
     {
         values = new ArrayList<>();
         this.beforeGet = beforeGet;
@@ -49,7 +48,7 @@ public class StringColumnStorage implements ColumnStorage<String>
     public @Value String get(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
         if (beforeGet != null)
-            beforeGet.accept(index, progressListener);
+            beforeGet.beforeGet(this, index, progressListener);
         if (index < 0 || index >= values.size())
             throw new InternalException("Attempting to access invalid element: " + index + " of " + values.size());
         return values.get(index);

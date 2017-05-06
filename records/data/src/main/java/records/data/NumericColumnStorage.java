@@ -79,7 +79,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     private DataTypeValue dataType;
     @OnThread(value = Tag.Any)
     private final NumberInfo displayInfo;
-    private final @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet;
+    private final @Nullable BeforeGet<NumericColumnStorage> beforeGet;
 
     public NumericColumnStorage(NumberInfo displayInfo)
     {
@@ -91,7 +91,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         this(NumberInfo.DEFAULT, null);
     }
 
-    public NumericColumnStorage(NumberInfo displayInfo, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet)
+    public NumericColumnStorage(NumberInfo displayInfo, @Nullable BeforeGet<NumericColumnStorage> beforeGet)
     {
         this.displayInfo = displayInfo;
         this.beforeGet = beforeGet;
@@ -329,7 +329,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     {
         // Must do this before checking range in case it adds more data:
         if (beforeGet != null)
-            beforeGet.accept(index, progressListener);
+            beforeGet.beforeGet(this, index, progressListener);
         checkRange(index);
 
 

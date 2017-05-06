@@ -32,7 +32,7 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
         this(innerToCopy, null);
     }
 
-    public TupleColumnStorage(List<DataType> innerToCopy, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet) throws InternalException
+    public TupleColumnStorage(List<DataType> innerToCopy, @Nullable BeforeGet<?> beforeGet) throws InternalException
     {
         ArrayList<ColumnStorage<?>> buildList = new ArrayList<>();
         for (DataType anInnerToCopy : innerToCopy)

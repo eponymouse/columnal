@@ -9,6 +9,7 @@ import records.data.ArrayColumnStorage;
 import records.data.BooleanColumnStorage;
 import records.data.Column.ProgressListener;
 import records.data.ColumnStorage;
+import records.data.ColumnStorage.BeforeGet;
 import records.data.NumericColumnStorage;
 import records.data.StringColumnStorage;
 import records.data.TaggedColumnStorage;
@@ -176,7 +177,7 @@ public class DataTypeUtility
     }
 
     @OnThread(Tag.Simulation)
-    public static ColumnStorage<?> makeColumnStorage(final DataType inner, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet) throws InternalException
+    public static ColumnStorage<?> makeColumnStorage(final DataType inner, ColumnStorage.@Nullable BeforeGet<?> beforeGet) throws InternalException
     {
         return inner.apply(new DataTypeVisitorEx<ColumnStorage<?>, InternalException>()
         {
@@ -184,35 +185,35 @@ public class DataTypeUtility
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> number(NumberInfo displayInfo) throws InternalException
             {
-                return new NumericColumnStorage(displayInfo, beforeGet);
+                return new NumericColumnStorage(displayInfo, (BeforeGet<NumericColumnStorage>)beforeGet);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> bool() throws InternalException
             {
-                return new BooleanColumnStorage(beforeGet);
+                return new BooleanColumnStorage((BeforeGet<BooleanColumnStorage>)beforeGet);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> text() throws InternalException
             {
-                return new StringColumnStorage(beforeGet);
+                return new StringColumnStorage((BeforeGet<StringColumnStorage>)beforeGet);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> date(DateTimeInfo dateTimeInfo) throws InternalException
             {
-                return new TemporalColumnStorage(dateTimeInfo, beforeGet);
+                return new TemporalColumnStorage(dateTimeInfo, (BeforeGet<TemporalColumnStorage>)beforeGet);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException
             {
-                return new TaggedColumnStorage(typeName, tags, beforeGet);
+                return new TaggedColumnStorage(typeName, tags, (BeforeGet<TaggedColumnStorage>)beforeGet);
             }
 
             @Override
@@ -226,7 +227,7 @@ public class DataTypeUtility
             @OnThread(Tag.Simulation)
             public ColumnStorage<?> array(@Nullable DataType inner) throws InternalException
             {
-                return new ArrayColumnStorage(inner, beforeGet);
+                return new ArrayColumnStorage(inner, (BeforeGet<ArrayColumnStorage>)beforeGet);
             }
         });
     }

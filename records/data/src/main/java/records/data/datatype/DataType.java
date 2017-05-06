@@ -111,7 +111,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public Column number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return new CachedCalculatedColumn<NumericColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new NumericColumnStorage(displayInfo, g), cache -> {
+                return new CachedCalculatedColumn<NumericColumnStorage>(rs, name, g -> new NumericColumnStorage(displayInfo, g), cache -> {
                     cache.add(castTo(Number.class, getItem.apply(cache.filled())));
                 });
             }
@@ -120,7 +120,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public Column text() throws InternalException, UserException
             {
-                return new CachedCalculatedColumn<StringColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new StringColumnStorage(g), cache -> {
+                return new CachedCalculatedColumn<StringColumnStorage>(rs, name, g -> new StringColumnStorage(g), cache -> {
                     cache.add(castTo(String.class, getItem.apply(cache.filled())));
                 });
             }
@@ -129,7 +129,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public Column date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return new CachedCalculatedColumn<TemporalColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new TemporalColumnStorage(dateTimeInfo, g), cache -> {
+                return new CachedCalculatedColumn<TemporalColumnStorage>(rs, name, g -> new TemporalColumnStorage(dateTimeInfo, g), cache -> {
                     cache.add(castTo(TemporalAccessor.class, getItem.apply(cache.filled())));
                 });
             }
@@ -138,7 +138,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public Column bool() throws InternalException, UserException
             {
-                return new CachedCalculatedColumn<BooleanColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new BooleanColumnStorage(g), cache -> {
+                return new CachedCalculatedColumn<BooleanColumnStorage>(rs, name, g -> new BooleanColumnStorage(g), cache -> {
                     cache.add(castTo(Boolean.class, getItem.apply(cache.filled())));
                 });
             }
@@ -147,7 +147,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public Column tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return new CachedCalculatedColumn<TaggedColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new TaggedColumnStorage(typeName, tags, g), cache -> {
+                return new CachedCalculatedColumn<TaggedColumnStorage>(rs, name, g -> new TaggedColumnStorage(typeName, tags, g), cache -> {
                     cache.add(castTo(TaggedValue.class, getItem.apply(cache.filled())));
                 });
             }
@@ -156,7 +156,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public Column tuple(List<DataType> inner) throws InternalException, UserException
             {
-                return new CachedCalculatedColumn<TupleColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new TupleColumnStorage(inner, g), cache -> {
+                return new CachedCalculatedColumn<TupleColumnStorage>(rs, name, g -> new TupleColumnStorage(inner, g), cache -> {
                     cache.add(castTo(Object[].class, getItem.apply(cache.filled())));
                 });
             }
@@ -165,7 +165,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public Column array(@Nullable DataType inner) throws InternalException, UserException
             {
-                return new CachedCalculatedColumn<ArrayColumnStorage>(rs, name, (ExBiConsumer<Integer, @Nullable ProgressListener> g) -> new ArrayColumnStorage(inner, g), cache -> {
+                return new CachedCalculatedColumn<ArrayColumnStorage>(rs, name, g -> new ArrayColumnStorage(inner, g), cache -> {
                     if (inner != null)
                     {
                         ListEx listItem = castTo(ListEx.class, getItem.apply(cache.filled()));

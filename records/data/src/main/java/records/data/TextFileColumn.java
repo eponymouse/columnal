@@ -2,89 +2,115 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnStorage.BeforeGet;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataTypeValue;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExBiConsumer;
+import utility.ExFunction;
 import utility.Utility;
 import utility.Utility.ReadState;
 
 import java.io.IOException;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAccessor;
+import java.time.temporal.TemporalQuery;
 import java.util.ArrayList;
+import java.util.function.BiConsumer;
+import java.util.function.Function;
+import java.util.function.UnaryOperator;
 
 /**
  * Created by neil on 22/10/2016.
  */
-public abstract class TextFileColumn<S extends ColumnStorage<?>> extends Column
+public final class TextFileColumn extends Column
 {
-    protected final @Nullable String sep;
-    protected final int columnIndex;
+    private final @Nullable String sep;
+    private final int columnIndex;
     private final boolean lastColumn;
-    protected ReadState reader;
-    @MonotonicNonNull
+    private ReadState reader;
     @OnThread(Tag.Any)
-    private S storage;
+    private final DataTypeValue type;
 
-
-    protected TextFileColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns)
+    protected <S extends ColumnStorage<?>> TextFileColumn(RecordSet recordSet, ReadState reader, @Nullable String sep,
+                             ColumnId columnName, int columnIndex, int totalColumns,
+                             ExFunction<@Nullable BeforeGet<S>, S> createStorage,
+                             ExBiConsumer<S, ArrayList<String>> addValues) throws InternalException, UserException
     {
         super(recordSet, columnName);
         this.sep = sep;
         this.reader = reader;
         this.columnIndex = columnIndex;
         this.lastColumn = columnIndex == totalColumns - 1;
-    }
-
-    protected final void fillUpTo(final int rowIndex) throws UserException, InternalException
-    {
-        if (storage == null)
-            throw new InternalException("Missing storage for " + getClass());
-        try
-        {
-            while (rowIndex >= storage.filled())
+        S theStorage = createStorage.apply((storage, rowIndex, prog) -> {
+            try
             {
-                // Should we share loading across columns for the same file?
-                ArrayList<String> next = new ArrayList<>();
-                reader = Utility.readColumnChunk(reader, sep, columnIndex, next);
-                addValues(next);
+                while (rowIndex >= storage.filled())
+                {
+                    // Should we share loading across columns for the same file?
+                    ArrayList<String> next = new ArrayList<>();
+                    this.reader = Utility.readColumnChunk(this.reader, sep, columnIndex, next);
+                    addValues.accept(storage, next);
+                }
             }
-        }
-        catch (IOException e)
-        {
-            throw new FetchException("Error reading file " + reader.getAbsolutePath(), e);
-        }
+            catch (IOException e)
+            {
+                throw new FetchException("Error reading file " + reader.getAbsolutePath(), e);
+            }
+        });
+        type = theStorage.getType();
 
-    }
-
-
-    void setStorage(S storage)
-    {
-        this.storage = storage;
-    }
-
-    S getStorage() throws InternalException
-    {
-        if (storage == null)
-            throw new InternalException("Missing storage for " + getClass());
-        return storage;
     }
 
     @Override
     @OnThread(Tag.Any)
     public final synchronized DataTypeValue getType() throws UserException, InternalException
     {
-        if (storage == null)
-            throw new InternalException("Missing storage for " + getClass());
-        return storage.getType();
+        return type;
     }
-
-    protected abstract void addValues(ArrayList<String> values) throws InternalException, UserException;
 
     @Override
     public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
     {
         throw new InternalException("Cannot edit data which is linked to a text file");
+    }
+
+    public static TextFileColumn dateColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, DateTimeInfo dateTimeInfo, DateTimeFormatter dateTimeFormatter, TemporalQuery<? extends TemporalAccessor> query) throws InternalException, UserException
+    {
+        return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns,
+            (BeforeGet<TemporalColumnStorage> fill) -> new TemporalColumnStorage(dateTimeInfo, fill),
+            (storage, values) -> storage.addAll(Utility.<String, TemporalAccessor>mapList(values, s -> dateTimeFormatter.parse(s, query)))
+        );
+
+    }
+
+    public static TextFileColumn numericColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, NumberInfo numberInfo, @Nullable UnaryOperator<String> processString) throws InternalException, UserException
+    {
+        return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns,
+            (BeforeGet<NumericColumnStorage> fill) -> new NumericColumnStorage(numberInfo, fill),
+            (storage, values) ->
+            {
+                for (String value : values)
+                {
+                    String processed = value;
+                    if (processString != null)
+                        processed = processString.apply(processed);
+                    storage.addRead(processed);
+                }
+            }
+        );
+    }
+
+    public static TextFileColumn stringColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns) throws InternalException, UserException
+    {
+        return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns,
+            (BeforeGet<StringColumnStorage> fill) -> new StringColumnStorage(fill),
+            (storage, values) -> storage.addAll(values)
+        );
     }
 }

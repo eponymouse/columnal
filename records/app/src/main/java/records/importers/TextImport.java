@@ -10,9 +10,7 @@ import records.data.LinkedDataSource;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.TableManager;
-import records.data.TextFileDateColumn;
-import records.data.TextFileNumericColumn;
-import records.data.TextFileStringColumn;
+import records.data.TextFileColumn;
 import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
@@ -111,16 +109,16 @@ public class TextImport
                 columns.add(rs ->
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) columnInfo.type;
-                    return new TextFileNumericColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, new NumberInfo(numericColumnType.unit, numericColumnType.minDP), numericColumnType::removePrefix);
+                    return TextFileColumn.numericColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, new NumberInfo(numericColumnType.unit, numericColumnType.minDP), numericColumnType::removePrefix);
                 });
             } else if (columnInfo.type instanceof TextColumnType)
-                columns.add(rs -> new TextFileStringColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns));
+                columns.add(rs -> TextFileColumn.stringColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns));
             else if (columnInfo.type instanceof CleanDateColumnType)
             {
                 columns.add(rs ->
                 {
                     CleanDateColumnType dateColumnType = (CleanDateColumnType) columnInfo.type;
-                    return new TextFileDateColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
+                    return TextFileColumn.dateColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
                 });
             }
             else if (columnInfo.type instanceof BlankColumnType)

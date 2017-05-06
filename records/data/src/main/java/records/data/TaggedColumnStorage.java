@@ -56,7 +56,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     }
 
     @SuppressWarnings("initialization")
-    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, List<TagType<DT>> copyTagTypes, @Nullable ExBiConsumer<Integer, @Nullable ProgressListener> beforeGet) throws InternalException
+    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, List<TagType<DT>> copyTagTypes, @Nullable BeforeGet<TaggedColumnStorage> beforeGet) throws InternalException
     {
         tagStore = new NumericColumnStorage();
         innerValueIndex = new NumericColumnStorage();
@@ -82,7 +82,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
         }
         dataType = DataTypeValue.tagged(typeName, tagTypes, (i, prog) -> {
             if (beforeGet != null)
-                beforeGet.accept(i, prog);
+                beforeGet.beforeGet(this, i, prog);
             return tagStore.getTag(i);
         });
     }
