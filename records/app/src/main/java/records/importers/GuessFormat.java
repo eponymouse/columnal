@@ -700,7 +700,7 @@ public class GuessFormat
             {
                 @Nullable Stream<Choice> bestGuess = findBestGuess(choicePoints);
 
-                makeGUI(mgr.getTypeManager(), choicePoints, bestGuess == null ? Collections.emptyList() : bestGuess.collect(Collectors.<@NonNull Choice>toList()), file, initial, choices, new GUI_Items(sourceFileView, tableView), formatProperty);
+                makeGUI(mgr.getTypeManager(), choicePoints, bestGuess == null ? Collections.emptyList() : bestGuess.collect(Collectors.<@NonNull Choice>toList()), file, initial, choices, sourceFileView, tableView, formatProperty);
             }
             catch (InternalException e)
             {
@@ -780,7 +780,7 @@ public class GuessFormat
     }
 
     @OnThread(Tag.FXPlatform)
-    private static <C extends Choice> void makeGUI(TypeManager typeManager, ChoicePoint<C, TextFormat> rawChoicePoint, List<Choice> mostRecentPick, File file, Map<Charset, List<String>> initial, LabelledGrid controlGrid, GUI_Items gui, ObjectProperty<@Nullable TextFormat> destProperty) throws InternalException
+    private static <C extends Choice> void makeGUI(TypeManager typeManager, ChoicePoint<C, TextFormat> rawChoicePoint, List<Choice> mostRecentPick, File file, Map<Charset, List<String>> initial, LabelledGrid controlGrid, StyleClassedTextArea textArea, StableView tableView, ObjectProperty<@Nullable TextFormat> destProperty) throws InternalException
     {
         final @Nullable ChoiceType<C> choiceType = rawChoicePoint.getChoiceType();
         if (choiceType == null)
@@ -792,11 +792,11 @@ public class GuessFormat
                 if (initialLines == null)
                     throw new InternalException("Charset pick gives no initial lines");
                 destProperty.set(t);
-                previewFormat(typeManager, file, t, gui);
+                previewFormat(typeManager, file, initialLines, t, new GUI_Items(textArea, tableView, t.headerRows));
             }
             catch (UserException e)
             {
-                gui.tableView.setPlaceholderText("Problem: " + e.getLocalizedMessage());
+                tableView.setPlaceholderText("Problem: " + e.getLocalizedMessage());
             }
             return;
         }
@@ -827,13 +827,13 @@ public class GuessFormat
             {
                 ChoicePoint<?, TextFormat> next = rawChoicePoint.select(item);
                 controlGrid.clearRowsAfter(rowNumber);
-                makeGUI(typeManager, next, mostRecentPick, file, initial, controlGrid, gui, destProperty);
+                makeGUI(typeManager, next, mostRecentPick, file, initial, controlGrid, textArea, tableView, destProperty);
             }
             catch (InternalException e)
             {
                 Utility.log(e);
-                gui.tableView.clear();
-                gui.tableView.setPlaceholderText("Error: " + e.getLocalizedMessage());
+                tableView.clear();
+                tableView.setPlaceholderText("Error: " + e.getLocalizedMessage());
             }
         };
         pick.consume(choiceExpression.get());
@@ -857,6 +857,7 @@ public class GuessFormat
     {
         public final StyleClassedTextArea textArea;
         public final StableView tableView;
+        public final int numHeaderRows;
         // This structure needs to store data proportional to the size of the text file, so we
         // use a large flat array.  It's size is columns*rows*2, where
         // rowIndex*columns+columnIndex*2 pinpoints two integers: beginning and end of used range
@@ -865,10 +866,11 @@ public class GuessFormat
 
         @OnThread(Tag.FXPlatform)
         @SuppressWarnings("initialization") // For passing this as change listener
-        private GUI_Items(StyleClassedTextArea textArea, StableView tableView)
+        private GUI_Items(StyleClassedTextArea textArea, StableView tableView, int numHeaderRows)
         {
             this.textArea = textArea;
             this.tableView = tableView;
+            this.numHeaderRows = numHeaderRows;
             this.usedRanges = new int[100000];
             Arrays.fill(usedRanges, -1);
             tableView.focusedCellProperty().addListener(this);
@@ -898,26 +900,26 @@ public class GuessFormat
             {
                 int usedIndex = (oldFocus.getSecond()*tableView.getColumnCount() + oldFocus.getFirst()) * 2;
                 if (usedRanges[usedIndex] != -1)
-                    overlayStyle(textArea, oldFocus.getSecond(), new IndexRange(usedRanges[usedIndex], usedRanges[usedIndex+1]), "selected-cell", Sets::difference);
+                    overlayStyle(textArea, numHeaderRows, oldFocus.getSecond(), new IndexRange(usedRanges[usedIndex], usedRanges[usedIndex+1]), "selected-cell", Sets::difference);
             }
             if (newFocus != null)
             {
                 int usedIndex = (newFocus.getSecond()*tableView.getColumnCount() + newFocus.getFirst()) * 2;
                 if (usedRanges[usedIndex] != -1)
-                    overlayStyle(textArea, newFocus.getSecond(), new IndexRange(usedRanges[usedIndex], usedRanges[usedIndex+1]), "selected-cell", Sets::union);
+                    overlayStyle(textArea, numHeaderRows, newFocus.getSecond(), new IndexRange(usedRanges[usedIndex], usedRanges[usedIndex+1]), "selected-cell", Sets::union);
             }
         }
     }
 
     @OnThread(Tag.FXPlatform)
-    private static void previewFormat(TypeManager typeManager, File file, TextFormat t, GUI_Items gui)
+    private static void previewFormat(TypeManager typeManager, File file, List<String> initialLines, TextFormat t, GUI_Items gui)
     {
-        gui.textArea.clear();
+        gui.textArea.replaceText(initialLines.stream().collect(Collectors.joining("\n")));
         gui.tableView.clear();
         TextAreaFiller textAreaFiller = new TextAreaFiller(gui);
 
         gui.textArea.setParagraphGraphicFactory(sourceLine -> {
-            Label label = new Label(Integer.toString(sourceLine + 1 - t.headerRows));
+            Label label = new Label(Integer.toString(sourceLine - t.headerRows));
             label.getStyleClass().add("line-number");
             return label;
         });
@@ -968,7 +970,6 @@ public class GuessFormat
     {
         private final GUI_Items gui;
 
-
         public TextAreaFiller(GUI_Items guiItems)
         {
             this.gui = guiItems;
@@ -980,15 +981,15 @@ public class GuessFormat
         {
             Platform.runLater(() ->
             {
-                while (gui.textArea.getParagraphs().size() <= rowIndex)
+                while (gui.textArea.getParagraphs().size() <= rowIndex + gui.numHeaderRows)
                     gui.textArea.appendText("\n");
-                Paragraph<Collection<String>, StyledText<Collection<String>>, Collection<String>> para = gui.textArea.getParagraphs().get(rowIndex);
+                Paragraph<Collection<String>, StyledText<Collection<String>>, Collection<String>> para = gui.textArea.getParagraphs().get(rowIndex + gui.numHeaderRows);
                 if (para.getText().isEmpty())
                 {
-                    int pos = gui.textArea.getDocument().getAbsolutePosition(rowIndex, 0);
+                    int pos = gui.textArea.getDocument().getAbsolutePosition(rowIndex + gui.numHeaderRows, 0);
                     gui.textArea.replaceText(pos, pos, replaceTab(line));
                 }
-                overlayStyle(gui.textArea, rowIndex, usedPortion, "used", Sets::union);
+                overlayStyle(gui.textArea, gui.numHeaderRows, rowIndex, usedPortion, "used", Sets::union);
                 gui.setUsedRange(columnIndex, rowIndex, usedPortion.start, usedPortion.end);
             });
         }
@@ -996,9 +997,9 @@ public class GuessFormat
 
 
     @OnThread(Tag.FXPlatform)
-    private static void overlayStyle(StyleClassedTextArea textArea, int rowIndex, IndexRange usedPortion, String style, BiFunction<Set<String>, Set<String>, SetView<String>> setOp)
+    private static void overlayStyle(StyleClassedTextArea textArea, int numHeaderRows, int rowIndex, IndexRange usedPortion, String style, BiFunction<Set<String>, Set<String>, SetView<String>> setOp)
     {
-        textArea.setStyleSpans(rowIndex, 0, textArea.getStyleSpans(rowIndex).overlay(
+        textArea.setStyleSpans(numHeaderRows + rowIndex, 0, textArea.getStyleSpans(numHeaderRows + rowIndex).overlay(
             StyleSpans.<Collection<String>>singleton(Collections.emptyList(), usedPortion.start).concat(StyleSpans.<Collection<String>>singleton(Collections.singletonList(style), usedPortion.getLength())),
             (a, b) -> setOp.apply(new HashSet<String>(a), new HashSet<String>(b)).immutableCopy())
         );

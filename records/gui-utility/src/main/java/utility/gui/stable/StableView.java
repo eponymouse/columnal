@@ -24,6 +24,7 @@ import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.effect.InnerShadow;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -125,6 +126,10 @@ public class StableView
         hbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.HORIZONTAL).findFirst().get();
         vbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.VERTICAL).findFirst().get();
         lineNumbers = VirtualFlow.createVertical(items, x -> new LineNumber());
+        // Need to prevent independent scrolling on the line numbers:
+        lineNumbers.addEventFilter(ScrollEvent.SCROLL, e -> {
+            e.consume();
+        });
         final BorderPane lineNumberWrapper = new BorderPane(lineNumbers);
         lineNumberWrapper.getStyleClass().add("stable-view-side");
         placeholder = new Label("<Empty>");
