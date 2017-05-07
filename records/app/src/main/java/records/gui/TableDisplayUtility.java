@@ -13,6 +13,15 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.fxmisc.richtext.StyleClassedTextArea;
+import org.fxmisc.richtext.model.EditableStyledDocument;
+import org.fxmisc.richtext.model.GenericEditableStyledDocument;
+import org.fxmisc.richtext.model.Paragraph;
+import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
+import org.fxmisc.richtext.model.StyledDocument;
+import org.fxmisc.richtext.model.StyledText;
+import org.fxmisc.undo.UndoManagerFactory;
 import records.data.ColumnId;
 import records.data.DisplayValue;
 import records.data.DisplayValueBase;
@@ -26,6 +35,9 @@ import utility.gui.FXUtility;
 import utility.gui.stable.StableView;
 import utility.gui.stable.StableView.ValueFetcher;
 
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -51,6 +63,7 @@ public class TableDisplayUtility
         if (item.getNumber() != null)
         {
             @NonNull Number n = item.getNumber();
+            /*
             HBox container = new HBox();
             Utility.addStyleClass(container, "number-display");
             Text prefix = new Text(item.getUnit().getDisplayPrefix());
@@ -69,6 +82,30 @@ public class TableDisplayUtility
             HBox.setHgrow(spacer, Priority.ALWAYS);
             container.getChildren().addAll(prefix, spacer, whole, frac);
             return container;
+            */
+            StyleClassedTextArea textArea = new StyleClassedTextArea(false /* plain undo manager */)
+            {
+                @Override
+                public void replaceText(int start, int end, String text)
+                {
+                    // Prevent newlines being entered:
+                    super.replaceText(start, end, text.replace("\n", ""));
+                    //TODO sort out any restyling needed
+                }
+            };
+            textArea.setUseInitialStyleForInsertion(false);
+            textArea.setUndoManager(UndoManagerFactory.fixedSizeHistoryFactory(3));
+
+            String fracPart = Utility.getFracPartAsString(n);
+            while (fracPart.length() < item.getMinimumDecimalPlaces())
+                fracPart += "0";
+            fracPart = fracPart.isEmpty() ? "" : "." + fracPart;
+            textArea.replace(docFromSegments(
+                new StyledText<>(Utility.getIntegerPart(n).toString(), Arrays.asList("number-display-int")),
+                new StyledText<>(fracPart, Arrays.asList("number-display-frac"))
+            ));
+            textArea.getStyleClass().add("number-display");
+            return textArea;
         }
         else
         {
@@ -86,5 +123,15 @@ public class TableDisplayUtility
             stringWrapper.getChildren().addAll(beginQuote /*, endQuote*/, label);
             return stringWrapper;
         }
+    }
+
+    private static StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> docFromSegments(StyledText<Collection<String>>... segments)
+    {
+        ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromSegment((StyledText<Collection<String>>)segments[0], Collections.emptyList(), Collections.emptyList(), StyledText.<Collection<String>>textOps());
+        for (int i = 1; i < segments.length; i++)
+        {
+            doc = doc.concat(ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromSegment(segments[i], Collections.emptyList(), Collections.emptyList(), StyledText.<Collection<String>>textOps()));
+        }
+        return doc;
     }
 }
