@@ -10,6 +10,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.importers.GuessFormat;
 import records.importers.ColumnInfo;
+import records.importers.GuessFormat.CharsetChoice;
 import records.importers.GuessFormat.ColumnCountChoice;
 import records.importers.GuessFormat.HeaderRowChoice;
 import records.importers.GuessFormat.SeparatorChoice;
@@ -81,6 +82,7 @@ public class TestFormat
     private static void assertFormat(TextFormat fmt, String... lines) throws UserException, InternalException
     {
         ChoicePick[] picks = new ChoicePick[] {
+            new ChoicePick<CharsetChoice>(CharsetChoice.class, new CharsetChoice("UTF-8")),
             new ChoicePick<HeaderRowChoice>(HeaderRowChoice.class, new HeaderRowChoice(fmt.headerRows)),
             new ChoicePick<SeparatorChoice>(SeparatorChoice.class, new SeparatorChoice("" + fmt.separator)),
             new ChoicePick<ColumnCountChoice>(ColumnCountChoice.class, new ColumnCountChoice(fmt.columnTypes.size()))

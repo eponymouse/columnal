@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.junit.Rule;
 import org.junit.runner.RunWith;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
@@ -30,6 +31,9 @@ import static org.junit.Assert.fail;
 @RunWith(JUnitQuickcheck.class)
 public class PropLoadSaveExpression
 {
+    @Rule
+    public JavaFXThreadingRule javafxRule = new JavaFXThreadingRule();
+
     @Property(trials = 2000)
     public void testLoadSaveNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {

@@ -91,6 +91,7 @@ public class PropLoadSaveTransformation
     @OnThread(value = Tag.Simulation,ignoreParent = true)
     public void testNoOpEdit(@From(GenNonsenseTransformation.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException, TimeoutException
     {
+        // Initialise JavaFX:
         SwingUtilities.invokeAndWait(() -> new JFXPanel());
         CompletableFuture<SimulationSupplier<Transformation>> f = new CompletableFuture<>();
         Platform.runLater(() -> {
