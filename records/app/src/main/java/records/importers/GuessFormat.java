@@ -957,13 +957,13 @@ public class GuessFormat
         {
             Platform.runLater(() ->
             {
-                while (textArea.getParagraphs().size() < rowIndex)
+                while (textArea.getParagraphs().size() <= rowIndex)
                     textArea.appendText("\n");
                 Paragraph<Collection<String>, StyledText<Collection<String>>, Collection<String>> para = textArea.getParagraphs().get(rowIndex);
                 if (para.getText().isEmpty())
                 {
                     int pos = textArea.getDocument().getAbsolutePosition(rowIndex, 0);
-                    textArea.replaceText(pos, pos, line);
+                    textArea.replaceText(pos, pos, replaceTab(line));
                 }
                 overlayStyle(rowIndex, usedPortion, "used", Sets::union);
                 selectionListeners.put(new Pair<>(columnIndex, rowIndex), selected -> {
