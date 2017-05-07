@@ -21,6 +21,7 @@ import records.data.columntype.TextColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.error.FetchException;
 import records.error.FunctionInt;
@@ -137,7 +138,7 @@ public class TextImport
                             }
                             else
                             {
-                                return new TaggedValue(0, Utility.valueNumber(Utility.parseNumber(str)));
+                                return new TaggedValue(0, DataTypeUtility.value(Utility.parseNumber(str)));
                             }
                         });
                     });
