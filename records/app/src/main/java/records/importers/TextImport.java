@@ -124,9 +124,9 @@ public class TextImport
                 OrBlankColumnType orBlankColumnType = (OrBlankColumnType)columnInfo.type;
                 if (orBlankColumnType.getInner() instanceof NumericColumnType)
                 {
-                    //TODO make/fetch tagged type from manager
+                    NumericColumnType numericColumnType = (NumericColumnType) orBlankColumnType.getInner();
                     DataType numberOrBlank = typeManager.registerTaggedType("Number?", Arrays.asList(
-                        new TagType<>("Number", DataType.NUMBER),
+                        new TagType<>("Number", DataType.number(new NumberInfo(numericColumnType.unit, numericColumnType.minDP))),
                         new TagType<>("Blank", null)
                     ));
                     columns.add(rs -> {

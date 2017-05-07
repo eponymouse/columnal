@@ -418,7 +418,7 @@ public class GuessFormat
                         List<@NonNull List<@NonNull String>> initialVals = Utility.<@NonNull String, @NonNull List<@NonNull String>>mapList(initial, s -> splitIntoColumns(s, sep, quot).columnContents);
                         Format format = guessBodyFormat(mgr, cc.columnCount, hrc.numHeaderRows, initialVals);
                         TextFormat textFormat = new TextFormat(format, sep.separator, quot.quote, chc.charset);
-                        double proportionNonText = (double)textFormat.columnTypes.stream().filter(c -> !(c.type instanceof TextColumnType)).count() / (double)textFormat.columnTypes.size();
+                        double proportionNonText = (double)textFormat.columnTypes.stream().filter(c -> !(c.type instanceof TextColumnType) && !(c.type instanceof BlankColumnType)).count() / (double)textFormat.columnTypes.size();
                         return ChoicePoint.<TextFormat>success(proportionNonText > 0 ? Quality.PROMISING : Quality.FALLBACK, proportionNonText, textFormat);
                     }, viableColumnCounts.toArray(new ColumnCountChoice[0]));
                 }, quot(null), quot("\""), quot("\'"))
