@@ -334,6 +334,7 @@ public class FXUtility
         return binding;
     }
 
+    @OnThread(Tag.FX)
     public static void setPseudoclass(Node node, String className, boolean on)
     {
         node.pseudoClassStateChanged(PseudoClass.getPseudoClass(className), on);

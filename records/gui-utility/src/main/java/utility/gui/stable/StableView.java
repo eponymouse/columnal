@@ -1,10 +1,15 @@
 package utility.gui.stable;
 
 import javafx.application.Platform;
+import javafx.beans.binding.DoubleExpression;
+import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
+import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Insets;
@@ -47,6 +52,7 @@ import utility.gui.GUI;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 
 /**
@@ -100,6 +106,9 @@ public class StableView
     private final DropShadow topLeftDropShadow;
     private boolean atTop;
     private boolean atLeft;
+    private final ObjectProperty<Pair<Integer, Double>> topShowingCellProperty = new SimpleObjectProperty<>(new Pair<>(0, 0.0));
+
+    private final ObjectProperty<@Nullable Pair<Integer, Integer>> focusedCell = new SimpleObjectProperty<>(null);
 
 
     public StableView()
@@ -213,6 +222,7 @@ public class StableView
                 FXUtility.setPseudoclass(stackPane, "at-top", topY < 1 && firstVisibleRowIndex == 0);
                 FXUtility.setPseudoclass(stackPane, "at-bottom", lastVisibleRowIndex == items.size() - 1 && bottomY < virtualFlow.getHeight());
                 lineNumbers.showAtOffset(firstVisibleRowIndex, topY);
+                topShowingCellProperty.set(new Pair<>(firstVisibleRowIndex, topY));
             }
         });
 
@@ -269,6 +279,16 @@ public class StableView
     public void setPlaceholderText(@Localized String text)
     {
         placeholder.setText(text);
+    }
+
+    /**
+     * A pair with the row index and Y-offset of the top showing cell,
+     * listen to this if you want to act on scroll.
+     * @return
+     */
+    public ObjectExpression<Pair<Integer, Double>> topShowingCell()
+    {
+        return topShowingCellProperty;
     }
 
     public void clear()
@@ -350,6 +370,16 @@ public class StableView
         });
 
         //TODO store it for fetching more
+    }
+
+    public DoubleExpression topHeightProperty()
+    {
+        return headerItemsContainer.heightProperty();
+    }
+
+    public ObjectExpression<@Nullable Pair<Integer, Integer>> focusedCellProperty()
+    {
+        return focusedCell;
     }
 
     private class HeaderItem extends Label
@@ -437,6 +467,11 @@ public class StableView
                 pane.getStyleClass().add("stable-view-row-cell");
                 FXUtility.forcePrefSize(pane);
                 pane.prefWidthProperty().bind(columnSizes.get(columnIndex));
+                pane.setOnMouseClicked(e -> {
+                    if (!pane.getChildren().isEmpty())
+                        pane.getChildren().get(0).requestFocus();
+                    e.consume();
+                });
                 cells.add(pane);
             }
             hBox.getChildren().setAll(cells);
@@ -462,7 +497,13 @@ public class StableView
                     int columnIndexFinal = columnIndex;
                     column.fetchValue(rowIndex, (x, n) ->
                     {
-                        cells.get(columnIndexFinal).getChildren().setAll(n);
+                        Pane cell = cells.get(columnIndexFinal);
+                        n.setFocusTraversable(true);
+                        FXUtility.addChangeListenerPlatformNN(n.focusedProperty(), gotFocus -> {
+                            FXUtility.setPseudoclass(cell, "focused-cell", gotFocus);
+                            focusedCell.set(gotFocus ? new Pair<>(columnIndexFinal, rowIndex) : null);
+                        });
+                        cell.getChildren().setAll(n);
                     });
                 }
             }

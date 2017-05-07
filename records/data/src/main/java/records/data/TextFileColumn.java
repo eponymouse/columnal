@@ -43,7 +43,7 @@ public final class TextFileColumn extends Column
 
     protected <S extends ColumnStorage<?>> TextFileColumn(RecordSet recordSet, ReadState reader, @Nullable String sep,
                              ColumnId columnName, int columnIndex, int totalColumns,
-                             @Nullable TextFileListener listener,
+                             @Nullable TextFileColumnListener listener,
                              ExFunction<@Nullable BeforeGet<S>, S> createStorage,
                              ExBiConsumer<S, ArrayList<String>> addValues) throws InternalException, UserException
     {
@@ -67,7 +67,7 @@ public final class TextFileColumn extends Column
                         for (int i = 0; i < nextDetails.size(); i++)
                         {
                             Pair<String, Utility.IndexRange> item = nextDetails.get(i);
-                            listener.usedLine(storage.filled() + i, item.getFirst(), item.getSecond());
+                            listener.usedLine(storage.filled() + i, columnIndex, item.getFirst(), item.getSecond());
                         }
                     }
                     addValues.accept(storage, next);
@@ -95,12 +95,12 @@ public final class TextFileColumn extends Column
         throw new InternalException("Cannot edit data which is linked to a text file");
     }
 
-    public static interface TextFileListener
+    public static interface TextFileColumnListener
     {
-        public void usedLine(int rowIndex, String line, IndexRange usedPortion);
+        public void usedLine(int rowIndex, int columnIndex, String line, IndexRange usedPortion);
     }
 
-    public static TextFileColumn dateColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, @Nullable TextFileListener listener, DateTimeInfo dateTimeInfo, DateTimeFormatter dateTimeFormatter, TemporalQuery<? extends TemporalAccessor> query) throws InternalException, UserException
+    public static TextFileColumn dateColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, @Nullable TextFileColumnListener listener, DateTimeInfo dateTimeInfo, DateTimeFormatter dateTimeFormatter, TemporalQuery<? extends TemporalAccessor> query) throws InternalException, UserException
     {
         return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns, listener,
             (BeforeGet<TemporalColumnStorage> fill) -> new TemporalColumnStorage(dateTimeInfo, fill),
@@ -109,7 +109,7 @@ public final class TextFileColumn extends Column
 
     }
 
-    public static TextFileColumn numericColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, @Nullable TextFileListener listener,NumberInfo numberInfo, @Nullable UnaryOperator<String> processString) throws InternalException, UserException
+    public static TextFileColumn numericColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, @Nullable TextFileColumnListener listener, NumberInfo numberInfo, @Nullable UnaryOperator<String> processString) throws InternalException, UserException
     {
         return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns, listener,
             (BeforeGet<NumericColumnStorage> fill) -> new NumericColumnStorage(numberInfo, fill),
@@ -126,7 +126,7 @@ public final class TextFileColumn extends Column
         );
     }
 
-    public static TextFileColumn stringColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, @Nullable TextFileListener listener) throws InternalException, UserException
+    public static TextFileColumn stringColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, @Nullable TextFileColumnListener listener) throws InternalException, UserException
     {
         return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns, listener,
             (BeforeGet<StringColumnStorage> fill) -> new StringColumnStorage(fill),
@@ -134,7 +134,7 @@ public final class TextFileColumn extends Column
         );
     }
 
-    public static <DT extends DataType> TextFileColumn taggedColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, @Nullable TextFileListener listener, TypeId typeName, List<TagType<DT>> tagTypes, ExFunction<String, TaggedValue> parseValue) throws InternalException, UserException
+    public static <DT extends DataType> TextFileColumn taggedColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, @Nullable TextFileColumnListener listener, TypeId typeName, List<TagType<DT>> tagTypes, ExFunction<String, TaggedValue> parseValue) throws InternalException, UserException
     {
         return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns, listener,
             (BeforeGet<TaggedColumnStorage> fill) -> new TaggedColumnStorage(typeName, tagTypes, fill),

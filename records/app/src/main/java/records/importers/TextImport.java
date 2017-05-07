@@ -12,6 +12,7 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TextFileColumn;
+import records.data.TextFileColumn.TextFileColumnListener;
 import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.NumericColumnType;
@@ -99,7 +100,7 @@ public class TextImport
     }
 
     @OnThread(Tag.Simulation)
-    public static RecordSet makeRecordSet(TypeManager typeManager, File textFile, TextFormat format, TextFileColumn.@Nullable TextFileListener listener) throws IOException, InternalException, UserException
+    public static RecordSet makeRecordSet(TypeManager typeManager, File textFile, TextFormat format, @Nullable TextFileColumnListener listener) throws IOException, InternalException, UserException
     {
         List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
         int totalColumns = format.columnTypes.size();

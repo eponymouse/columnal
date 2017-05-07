@@ -1,3 +1,5 @@
+@import 'colors';
+
 .guess-format-content {
     -fx-pref-width: 800px;
 }
@@ -21,5 +23,11 @@
          -fx-border-width: 0 1 0 0;
          -fx-border-style: solid;
          -fx-border-color: hsb(0, 0%, 60%);
+    }
+    .text {
+        -fx-fill: gray(70%);
+    }
+    .text.used {
+         -fx-fill: black;
     }
 }
