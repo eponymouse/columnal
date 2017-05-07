@@ -692,10 +692,15 @@ public class Utility
     /**
      * Filters a stream down to only the items of the given class
      */
-    @SuppressWarnings("localized") // Goodness knows why this is triggered...
     public static <S, T extends S /*precludes interfaces*/> Stream<@NonNull T> filterClass(Stream<@NonNull S> stream, Class<T> targetClass)
     {
-        return stream.<@NonNull T>flatMap(x -> targetClass.isInstance(x) ? Stream.<@NonNull T>of(targetClass.cast(x)) : Stream.<@NonNull T>empty());
+        return stream.<@NonNull T>flatMap(x ->
+        {
+            if (targetClass.isInstance(x))
+                return Stream.<@NonNull T>of(targetClass.cast(x));
+            else
+                return Stream.<@NonNull T>empty();
+        });
     }
 
     public static class ReadState
