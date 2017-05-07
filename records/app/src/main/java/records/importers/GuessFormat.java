@@ -796,7 +796,7 @@ public class GuessFormat
             }
             catch (UserException e)
             {
-                tableView.setPlaceholderText("Problem: " + e.getLocalizedMessage());
+                tableView.setPlaceholderText(e.getLocalizedMessage());
             }
             return;
         }
@@ -833,7 +833,7 @@ public class GuessFormat
             {
                 Utility.log(e);
                 tableView.clear();
-                tableView.setPlaceholderText("Error: " + e.getLocalizedMessage());
+                tableView.setPlaceholderText(e.getLocalizedMessage());
             }
         };
         pick.consume(choiceExpression.get());

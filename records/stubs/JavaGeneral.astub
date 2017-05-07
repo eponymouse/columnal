@@ -7,7 +7,7 @@ class Object
 {
     public boolean equals(@Nullable Object o);
 }
-class Exception
+class Throwable
 {
     @Localized String getLocalizedMessage();
 }

@@ -137,7 +137,7 @@ public class TextImport
                             }
                             else
                             {
-                                return new TaggedValue(0, Utility.parseNumber(str));
+                                return new TaggedValue(0, Utility.valueNumber(Utility.parseNumber(str)));
                             }
                         });
                     });
