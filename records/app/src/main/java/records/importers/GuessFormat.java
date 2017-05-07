@@ -638,7 +638,9 @@ public class GuessFormat
         }
         int nonBlankColumnCount = (int)columnTypes.stream().filter(c -> !(c instanceof BlankColumnType)).count();
         // All must think it's viable, and then pick last one:
-        Optional<List<String>> headerRow = viableColumnNameRows.entrySet().stream().filter(e -> e.getValue() == nonBlankColumnCount || e.getValue() == columnTypes.size()).max(Entry.comparingByKey()).map(e -> initialVals.get(e.getKey()));
+        Optional<List<String>> headerRow = viableColumnNameRows.entrySet().stream()
+            //.filter(e -> e.getValue() == nonBlankColumnCount || e.getValue() == columnTypes.size())
+            .max(Entry.comparingByKey()).map(e -> initialVals.get(e.getKey()));
 
         List<ColumnInfo> columns = new ArrayList<>(columnCount);
         for (int columnIndex = 0; columnIndex < columnTypes.size(); columnIndex++)
