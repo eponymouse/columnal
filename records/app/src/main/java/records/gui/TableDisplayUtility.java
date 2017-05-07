@@ -33,7 +33,7 @@ import java.util.List;
  */
 public class TableDisplayUtility
 {
-    public static List<Pair<String, ValueFetcher>> makeStableViewColumn(RecordSet recordSet)
+    public static List<Pair<String, ValueFetcher>> makeStableViewColumns(RecordSet recordSet)
     {
         return Utility.mapList(recordSet.getColumns(), col -> {
             return new Pair<>(col.getName().getRaw(), (rowIndex, callback) ->

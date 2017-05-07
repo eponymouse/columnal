@@ -168,7 +168,7 @@ public class MainWindow
 
         BorderPane root = new BorderPane(scrollPane, menuBar, null, null, null);
         Scene scene = new Scene(root);
-        scene.getStylesheets().add(FXUtility.getStylesheet("mainview.css"));
+        scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("mainview.css"));
         stage.setScene(scene);
         stage.setWidth(1000);
         stage.setHeight(800);

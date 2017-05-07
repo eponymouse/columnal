@@ -81,6 +81,16 @@ public class ChoicePoint<C extends Choice, R>
             return helpKey;
         }
 
+        @Override
+        public String toString()
+        {
+            return "ChoiceType{" +
+                "choiceClass=" + choiceClass +
+                ", labelKey='" + labelKey + '\'' +
+                ", helpKey='" + helpKey + '\'' +
+                '}';
+        }
+
         //TODO: methods for free entry, and for help
     }
 

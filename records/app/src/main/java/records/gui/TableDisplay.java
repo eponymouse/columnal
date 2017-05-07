@@ -26,6 +26,7 @@ import threadchecker.Tag;
 import utility.Utility;
 import utility.Workers;
 import utility.gui.FXUtility;
+import utility.gui.stable.StableView;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -93,7 +94,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     }
 
     @OnThread(Tag.FXPlatform)
-    private static class TableDataDisplay extends TableView<Integer> implements RecordSet.RecordSetListener
+    private static class TableDataDisplay extends StableView implements RecordSet.RecordSetListener
     {
         @SuppressWarnings("initialization")
         @UIEffect
@@ -101,16 +102,11 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         {
             super();
             recordSet.setListener(this);
-            try
-            {
-                getColumns().setAll(recordSet.getDisplayColumns());
-            }
-            catch (InternalException | UserException e)
-            {
-                setPlaceholder(new Label(e.getLocalizedMessage()));
-            }
-            setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
-            boolean expandable = getColumns().stream().allMatch(TableColumn::isEditable);
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet));
+            setRows(recordSet::indexValid);
+            //TODO restore editability
+            //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
+            //boolean expandable = getColumns().stream().allMatch(TableColumn::isEditable);
             Workers.onWorkerThread("Determining row count", () -> {
                 ArrayList<Integer> indexesToAdd = new ArrayList<Integer>();
                 Utility.alertOnError_(() -> {
@@ -124,29 +120,32 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                         {
                             // This is the first row after.  If all columns are editable,
                             // add a false row which indicates that the data can be expanded:
-                            if (expandable)
-                                indexesToAdd.add(Integer.valueOf(i == 0 ? Integer.MIN_VALUE : -i));
+                            // TODO restore add-row
+                            //if (expandable)
+                                //indexesToAdd.add(Integer.valueOf(i == 0 ? Integer.MIN_VALUE : -i));
                         }
                     }
                 });
                 // TODO when user causes a row to be shown, load LOAD_CHUNK entries
                 // afterwards.
-                Platform.runLater(() -> getItems().addAll(indexesToAdd));
+                //Platform.runLater(() -> getItems().addAll(indexesToAdd));
             });
 
         }
+
 
         @Override
         @OnThread(Tag.FXPlatform)
         public void rowAddedAtEnd()
         {
+            /*
             // If our table has 3 real rows and is editable, it will have integers:
             // 0, 1, 2, -3
             // What we want to do is insert item 3 at position 3, to get:
             // 0, 1, 2, 3, -4
             getItems().set(getItems().size() - 1, Integer.valueOf(getItems().size() - 1));
             getItems().add(Integer.valueOf(- getItems().size()));
-
+            */
         }
     }
 
@@ -170,7 +169,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         }
         this.error = error;
         this.recordSet = recordSet;
-        StackPane body = new StackPane(new TableDataDisplay(recordSet));
+        StackPane body = new StackPane(new TableDataDisplay(recordSet).getNode());
         Utility.addStyleClass(body, "table-body");
         setCenter(body);
         Utility.addStyleClass(this, "table-wrapper");

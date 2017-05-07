@@ -26,7 +26,6 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import javafx.stage.Modality;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -929,7 +928,7 @@ public class GuessFormat
             {
                 @OnThread(Tag.Simulation) RecordSet recordSet = TextImport.makeRecordSet(typeManager, file, t, textAreaFiller);
                 Platform.runLater(() -> {
-                    gui.tableView.setColumns(TableDisplayUtility.makeStableViewColumn(recordSet));
+                    gui.tableView.setColumns(TableDisplayUtility.makeStableViewColumns(recordSet));
                     gui.tableView.setRows(recordSet::indexValid);
                 });
             }
