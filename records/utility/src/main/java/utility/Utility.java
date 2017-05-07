@@ -723,7 +723,19 @@ public class Utility
         }
     }
 
-    public static ReadState readColumnChunk(ReadState readState, @Nullable String delimiter, int columnIndex, ArrayList<String> fill) throws IOException
+    public static class IndexRange
+    {
+        public final int start;
+        public final int end;
+
+        public IndexRange(int start, int end)
+        {
+            this.start = start;
+            this.end = end;
+        }
+    }
+
+    public static ReadState readColumnChunk(ReadState readState, @Nullable String delimiter, int columnIndex, ArrayList<String> fill, @Nullable ArrayList<Pair<String, IndexRange>> fillFullAndIndexes) throws IOException
     {
         loopOverLines: for (int lineRead = 0; lineRead < 20; lineRead++)
         {
@@ -734,6 +746,8 @@ public class Utility
             {
                 // All just one column, so must be us:
                 fill.add(line);
+                if (fillFullAndIndexes != null)
+                    fillFullAndIndexes.add(new Pair<>(line, new IndexRange(0, line.length())));
             }
             else
             {
@@ -746,6 +760,8 @@ public class Utility
                         if (currentCol == columnIndex)
                         {
                             fill.add(line.substring(currentColStart, i));
+                            if (fillFullAndIndexes != null)
+                                fillFullAndIndexes.add(new Pair<>(line, new IndexRange(currentColStart, i)));
                             // No point going further in this line as we've found our column:
                             continue loopOverLines;
                         }
@@ -756,7 +772,11 @@ public class Utility
                 }
                 // Might be the last column we want:
                 if (currentCol == columnIndex)
+                {
                     fill.add(line.substring(currentColStart));
+                    if (fillFullAndIndexes != null)
+                        fillFullAndIndexes.add(new Pair<>(line, new IndexRange(currentColStart, line.length())));
+                }
             }
         }
         return readState;

@@ -2,6 +2,7 @@ package records.importers;
 
 import com.google.common.io.Files;
 import javafx.application.Platform;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 import records.data.Column;
 import records.data.DataSource;
@@ -90,7 +91,7 @@ public class TextImport
     @OnThread(Tag.Simulation)
     private static DataSource makeDataSource(TableManager mgr, final File textFile, final ImportInfo importInfo, final TextFormat format) throws IOException, InternalException, UserException
     {
-        RecordSet rs = makeRecordSet(mgr.getTypeManager(), textFile, format);
+        RecordSet rs = makeRecordSet(mgr.getTypeManager(), textFile, format, null);
         if (importInfo.linkFile)
             return new LinkedDataSource(mgr, importInfo.tableName, rs, MainLexer.TEXTFILE, textFile);
         else
@@ -98,7 +99,7 @@ public class TextImport
     }
 
     @OnThread(Tag.Simulation)
-    public static RecordSet makeRecordSet(TypeManager typeManager, File textFile, TextFormat format) throws IOException, InternalException, UserException
+    public static RecordSet makeRecordSet(TypeManager typeManager, File textFile, TextFormat format, TextFileColumn.@Nullable TextFileListener listener) throws IOException, InternalException, UserException
     {
         List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
         int totalColumns = format.columnTypes.size();
@@ -114,7 +115,7 @@ public class TextImport
                 columns.add(rs ->
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) columnInfo.type;
-                    return TextFileColumn.numericColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, new NumberInfo(numericColumnType.unit, numericColumnType.minDP), numericColumnType::removePrefix);
+                    return TextFileColumn.numericColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener, new NumberInfo(numericColumnType.unit, numericColumnType.minDP), numericColumnType::removePrefix);
                 });
             }
             else if (columnInfo.type instanceof OrBlankColumnType)
@@ -128,7 +129,7 @@ public class TextImport
                         new TagType<>("Blank", null)
                     ));
                     columns.add(rs -> {
-                        return TextFileColumn.taggedColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, numberOrBlank.getTaggedTypeName(), numberOrBlank.getTagTypes(), str -> {
+                        return TextFileColumn.taggedColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener, numberOrBlank.getTaggedTypeName(), numberOrBlank.getTagTypes(), str -> {
                             if (str.equals(orBlankColumnType.getBlankString()))
                             {
                                 return new TaggedValue(1, null);
@@ -145,14 +146,14 @@ public class TextImport
             }
             else if (columnInfo.type instanceof TextColumnType)
             {
-                columns.add(rs -> TextFileColumn.stringColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns));
+                columns.add(rs -> TextFileColumn.stringColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener));
             }
             else if (columnInfo.type instanceof CleanDateColumnType)
             {
                 columns.add(rs ->
                 {
                     CleanDateColumnType dateColumnType = (CleanDateColumnType) columnInfo.type;
-                    return TextFileColumn.dateColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
+                    return TextFileColumn.dateColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener, dateColumnType.getDateTimeInfo(), dateColumnType.getDateTimeFormatter(), dateColumnType.getQuery());
                 });
             }
             else if (columnInfo.type instanceof BlankColumnType)

@@ -30,6 +30,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.richtext.StyleClassedTextArea;
+import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.StyledText;
 import records.data.ColumnId;
@@ -37,6 +38,7 @@ import records.data.DisplayValue;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.TextFileColumn.TextFileListener;
 import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
 import records.data.columntype.ColumnType;
@@ -59,6 +61,7 @@ import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.IndexRange;
 import utility.Workers;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
@@ -834,6 +837,7 @@ public class GuessFormat
     {
         textArea.clear();
         tableView.clear();
+        TextAreaFiller textAreaFiller = new TextAreaFiller(textArea);
 
         textArea.setParagraphGraphicFactory(sourceLine -> {
             Label label = new Label(Integer.toString(sourceLine + 1 - t.headerRows));
@@ -844,7 +848,7 @@ public class GuessFormat
         Workers.onWorkerThread("Loading" + file.getName(), () -> {
             try
             {
-                @OnThread(Tag.Simulation) RecordSet recordSet = TextImport.makeRecordSet(typeManager, file, t);
+                @OnThread(Tag.Simulation) RecordSet recordSet = TextImport.makeRecordSet(typeManager, file, t, textAreaFiller);
                 Platform.runLater(() -> {
                     tableView.setColumns(TableDisplayUtility.makeStableViewColumn(recordSet));
                     tableView.setRows(recordSet::indexValid);
@@ -881,5 +885,33 @@ public class GuessFormat
                 textArea.appendText("\n");
             }
         }*/
+    }
+
+    private static class TextAreaFiller implements TextFileListener
+    {
+        private final StyleClassedTextArea textArea;
+
+        public TextAreaFiller(StyleClassedTextArea textArea)
+        {
+            this.textArea = textArea;
+        }
+
+        @Override
+        @OnThread(Tag.Simulation)
+        public void usedLine(int rowIndex, String line, IndexRange usedPortion)
+        {
+            Platform.runLater(() ->
+            {
+                while (textArea.getParagraphs().size() < rowIndex)
+                    textArea.appendText("\n");
+                Paragraph<Collection<String>, StyledText<Collection<String>>, Collection<String>> para = textArea.getParagraphs().get(rowIndex);
+                if (para.getText().isEmpty())
+                {
+                    int pos = textArea.getDocument().getAbsolutePosition(rowIndex, 0);
+                    textArea.replaceText(pos, pos, line);
+                }
+                //TODO apply styles based on what was used
+            });
+        }
     }
 }

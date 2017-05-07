@@ -15,8 +15,10 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.ExFunction;
+import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
+import utility.Utility.IndexRange;
 import utility.Utility.ReadState;
 
 import java.io.IOException;
@@ -41,6 +43,7 @@ public final class TextFileColumn extends Column
 
     protected <S extends ColumnStorage<?>> TextFileColumn(RecordSet recordSet, ReadState reader, @Nullable String sep,
                              ColumnId columnName, int columnIndex, int totalColumns,
+                             @Nullable TextFileListener listener,
                              ExFunction<@Nullable BeforeGet<S>, S> createStorage,
                              ExBiConsumer<S, ArrayList<String>> addValues) throws InternalException, UserException
     {
@@ -56,7 +59,17 @@ public final class TextFileColumn extends Column
                 {
                     // Should we share loading across columns for the same file?
                     ArrayList<String> next = new ArrayList<>();
-                    this.reader = Utility.readColumnChunk(this.reader, sep, columnIndex, next);
+                    @Nullable ArrayList<Pair<String, Utility.IndexRange>> nextDetails = listener == null ? null : new ArrayList<>();
+                    this.reader = Utility.readColumnChunk(this.reader, sep, columnIndex, next, nextDetails);
+                    // Redundant check to check both, but satisfies null checker:
+                    if (nextDetails != null && listener != null)
+                    {
+                        for (int i = 0; i < nextDetails.size(); i++)
+                        {
+                            Pair<String, Utility.IndexRange> item = nextDetails.get(i);
+                            listener.usedLine(storage.filled() + i, item.getFirst(), item.getSecond());
+                        }
+                    }
                     addValues.accept(storage, next);
                 }
             }
@@ -82,18 +95,23 @@ public final class TextFileColumn extends Column
         throw new InternalException("Cannot edit data which is linked to a text file");
     }
 
-    public static TextFileColumn dateColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, DateTimeInfo dateTimeInfo, DateTimeFormatter dateTimeFormatter, TemporalQuery<? extends TemporalAccessor> query) throws InternalException, UserException
+    public static interface TextFileListener
     {
-        return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns,
+        public void usedLine(int rowIndex, String line, IndexRange usedPortion);
+    }
+
+    public static TextFileColumn dateColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, @Nullable TextFileListener listener, DateTimeInfo dateTimeInfo, DateTimeFormatter dateTimeFormatter, TemporalQuery<? extends TemporalAccessor> query) throws InternalException, UserException
+    {
+        return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns, listener,
             (BeforeGet<TemporalColumnStorage> fill) -> new TemporalColumnStorage(dateTimeInfo, fill),
             (storage, values) -> storage.addAll(Utility.<String, TemporalAccessor>mapList(values, s -> dateTimeFormatter.parse(s, query)))
         );
 
     }
 
-    public static TextFileColumn numericColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, NumberInfo numberInfo, @Nullable UnaryOperator<String> processString) throws InternalException, UserException
+    public static TextFileColumn numericColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, @Nullable TextFileListener listener,NumberInfo numberInfo, @Nullable UnaryOperator<String> processString) throws InternalException, UserException
     {
-        return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns,
+        return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns, listener,
             (BeforeGet<NumericColumnStorage> fill) -> new NumericColumnStorage(numberInfo, fill),
             (storage, values) ->
             {
@@ -108,17 +126,17 @@ public final class TextFileColumn extends Column
         );
     }
 
-    public static TextFileColumn stringColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns) throws InternalException, UserException
+    public static TextFileColumn stringColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, @Nullable TextFileListener listener) throws InternalException, UserException
     {
-        return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns,
+        return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns, listener,
             (BeforeGet<StringColumnStorage> fill) -> new StringColumnStorage(fill),
             (storage, values) -> storage.addAll(values)
         );
     }
 
-    public static <DT extends DataType> TextFileColumn taggedColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, TypeId typeName, List<TagType<DT>> tagTypes, ExFunction<String, TaggedValue> parseValue) throws InternalException, UserException
+    public static <DT extends DataType> TextFileColumn taggedColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, @Nullable TextFileListener listener, TypeId typeName, List<TagType<DT>> tagTypes, ExFunction<String, TaggedValue> parseValue) throws InternalException, UserException
     {
-        return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns,
+        return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns, listener,
             (BeforeGet<TaggedColumnStorage> fill) -> new TaggedColumnStorage(typeName, tagTypes, fill),
             (storage, values) -> {
                 storage.addAll(Utility.mapListEx(values, parseValue));
