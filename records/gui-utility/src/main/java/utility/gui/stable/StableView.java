@@ -377,9 +377,15 @@ public class StableView
         return headerItemsContainer.heightProperty();
     }
 
+    // Column Index, Row Index
     public ObjectExpression<@Nullable Pair<Integer, Integer>> focusedCellProperty()
     {
         return focusedCell;
+    }
+
+    public int getColumnCount()
+    {
+        return columns.size();
     }
 
     private class HeaderItem extends Label

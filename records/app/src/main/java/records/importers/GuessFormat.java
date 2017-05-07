@@ -77,6 +77,7 @@ import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -856,7 +857,11 @@ public class GuessFormat
     {
         public final StyleClassedTextArea textArea;
         public final StableView tableView;
-        public final Map<Pair<Integer, Integer>, FXPlatformConsumer<Boolean>> selectionListeners;
+        // This structure needs to store data proportional to the size of the text file, so we
+        // use a large flat array.  It's size is columns*rows*2, where
+        // rowIndex*columns+columnIndex*2 pinpoints two integers: beginning and end of used range
+        // we store rows together to plan for case where number of rows may not be known upfront.
+        private int[] usedRanges;
 
         @OnThread(Tag.FXPlatform)
         @SuppressWarnings("initialization") // For passing this as change listener
@@ -864,8 +869,25 @@ public class GuessFormat
         {
             this.textArea = textArea;
             this.tableView = tableView;
-            this.selectionListeners = new HashMap<>();
+            this.usedRanges = new int[100000];
+            Arrays.fill(usedRanges, -1);
             tableView.focusedCellProperty().addListener(this);
+        }
+
+
+        @OnThread(Tag.FXPlatform)
+        public void setUsedRange(int columnIndex, int rowIndex, int start, int end)
+        {
+            int usedIndex = (rowIndex*tableView.getColumnCount() + columnIndex) * 2;
+            // Poor man's array list:
+            if (usedRanges.length <= usedIndex)
+            {
+                int oldLength = usedRanges.length;
+                usedRanges = Arrays.copyOf(usedRanges, usedIndex + 2 + (usedRanges.length / 4));
+                Arrays.fill(usedRanges, oldLength, usedRanges.length, -1);
+            }
+            usedRanges[usedIndex + 0] = start;
+            usedRanges[usedIndex + 1] = end;
         }
 
         @Override
@@ -874,15 +896,15 @@ public class GuessFormat
         {
             if (oldFocus != null)
             {
-                @Nullable FXPlatformConsumer<Boolean> listener = selectionListeners.get(oldFocus);
-                if (listener != null)
-                    listener.consume(false);
+                int usedIndex = (oldFocus.getSecond()*tableView.getColumnCount() + oldFocus.getFirst()) * 2;
+                if (usedRanges[usedIndex] != -1)
+                    overlayStyle(textArea, oldFocus.getSecond(), new IndexRange(usedRanges[usedIndex], usedRanges[usedIndex+1]), "selected-cell", Sets::difference);
             }
             if (newFocus != null)
             {
-                @Nullable FXPlatformConsumer<Boolean> listener = selectionListeners.get(newFocus);
-                if (listener != null)
-                    listener.consume(true);
+                int usedIndex = (newFocus.getSecond()*tableView.getColumnCount() + newFocus.getFirst()) * 2;
+                if (usedRanges[usedIndex] != -1)
+                    overlayStyle(textArea, newFocus.getSecond(), new IndexRange(usedRanges[usedIndex], usedRanges[usedIndex+1]), "selected-cell", Sets::union);
             }
         }
     }
@@ -892,7 +914,7 @@ public class GuessFormat
     {
         gui.textArea.clear();
         gui.tableView.clear();
-        TextAreaFiller textAreaFiller = new TextAreaFiller(gui.textArea, gui.selectionListeners);
+        TextAreaFiller textAreaFiller = new TextAreaFiller(gui);
 
         gui.textArea.setParagraphGraphicFactory(sourceLine -> {
             Label label = new Label(Integer.toString(sourceLine + 1 - t.headerRows));
@@ -944,13 +966,12 @@ public class GuessFormat
 
     private static class TextAreaFiller implements TextFileColumnListener
     {
-        private final StyleClassedTextArea textArea;
-        private final Map<Pair<Integer, Integer>, FXPlatformConsumer<Boolean>> selectionListeners;
+        private final GUI_Items gui;
 
-        public TextAreaFiller(StyleClassedTextArea textArea, Map<Pair<Integer, Integer>, FXPlatformConsumer<Boolean>> selectionListeners)
+
+        public TextAreaFiller(GUI_Items guiItems)
         {
-            this.textArea = textArea;
-            this.selectionListeners = selectionListeners;
+            this.gui = guiItems;
         }
 
         @Override
@@ -959,31 +980,27 @@ public class GuessFormat
         {
             Platform.runLater(() ->
             {
-                while (textArea.getParagraphs().size() <= rowIndex)
-                    textArea.appendText("\n");
-                Paragraph<Collection<String>, StyledText<Collection<String>>, Collection<String>> para = textArea.getParagraphs().get(rowIndex);
+                while (gui.textArea.getParagraphs().size() <= rowIndex)
+                    gui.textArea.appendText("\n");
+                Paragraph<Collection<String>, StyledText<Collection<String>>, Collection<String>> para = gui.textArea.getParagraphs().get(rowIndex);
                 if (para.getText().isEmpty())
                 {
-                    int pos = textArea.getDocument().getAbsolutePosition(rowIndex, 0);
-                    textArea.replaceText(pos, pos, replaceTab(line));
+                    int pos = gui.textArea.getDocument().getAbsolutePosition(rowIndex, 0);
+                    gui.textArea.replaceText(pos, pos, replaceTab(line));
                 }
-                overlayStyle(rowIndex, usedPortion, "used", Sets::union);
-                selectionListeners.put(new Pair<>(columnIndex, rowIndex), selected -> {
-                    if (selected)
-                        overlayStyle(rowIndex, usedPortion, "selected-cell", Sets::union);
-                    else
-                        overlayStyle(rowIndex, usedPortion, "selected-cell", Sets::difference);
-                });
+                overlayStyle(gui.textArea, rowIndex, usedPortion, "used", Sets::union);
+                gui.setUsedRange(columnIndex, rowIndex, usedPortion.start, usedPortion.end);
             });
         }
+    }
 
-        @OnThread(Tag.FXPlatform)
-        private void overlayStyle(int rowIndex, IndexRange usedPortion, String style, BiFunction<Set<String>, Set<String>, SetView<String>> setOp)
-        {
-            textArea.setStyleSpans(rowIndex, 0, textArea.getStyleSpans(rowIndex).overlay(
-                StyleSpans.<Collection<String>>singleton(Collections.emptyList(), usedPortion.start).concat(StyleSpans.<Collection<String>>singleton(Collections.singletonList(style), usedPortion.getLength())),
-                (a, b) -> setOp.apply(new HashSet<String>(a), new HashSet<String>(b)).immutableCopy())
-            );
-        }
+
+    @OnThread(Tag.FXPlatform)
+    private static void overlayStyle(StyleClassedTextArea textArea, int rowIndex, IndexRange usedPortion, String style, BiFunction<Set<String>, Set<String>, SetView<String>> setOp)
+    {
+        textArea.setStyleSpans(rowIndex, 0, textArea.getStyleSpans(rowIndex).overlay(
+            StyleSpans.<Collection<String>>singleton(Collections.emptyList(), usedPortion.start).concat(StyleSpans.<Collection<String>>singleton(Collections.singletonList(style), usedPortion.getLength())),
+            (a, b) -> setOp.apply(new HashSet<String>(a), new HashSet<String>(b)).immutableCopy())
+        );
     }
 }
