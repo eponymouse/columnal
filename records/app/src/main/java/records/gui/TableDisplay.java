@@ -107,7 +107,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             //TODO restore editability
             //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
             //boolean expandable = getColumns().stream().allMatch(TableColumn::isEditable);
-            Workers.onWorkerThread("Determining row count", () -> {
+            Workers.onWorkerThread("Determining row count", Workers.Priority.FETCH, () -> {
                 ArrayList<Integer> indexesToAdd = new ArrayList<Integer>();
                 Utility.alertOnError_(() -> {
                     for (int i = 0; i < INITIAL_LOAD; i++)
@@ -194,7 +194,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 Optional<NewColumnDialog.NewColumnDetails> choice = dialog.showAndWait();
                 if (choice.isPresent())
                 {
-                    Workers.onWorkerThread("Adding column", () ->
+                    Workers.onWorkerThread("Adding column", Workers.Priority.SAVE_ENTRY, () ->
                     {
                         Utility.alertOnError_(() ->
                         {

@@ -48,6 +48,7 @@ import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Workers;
+import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 
@@ -334,7 +335,7 @@ public class StableView
 
     public void setRows(SimulationFunction<Integer, Boolean> isRowValid)
     {
-        Workers.onWorkerThread("Calculating table rows", () -> {
+        Workers.onWorkerThread("Calculating table rows", Priority.FETCH, () -> {
             int toAdd = 0;
             try
             {

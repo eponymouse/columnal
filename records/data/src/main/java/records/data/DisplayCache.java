@@ -23,6 +23,7 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 import utility.Workers;
+import utility.Workers.Priority;
 import utility.Workers.Worker;
 
 import java.time.temporal.TemporalAccessor;
@@ -73,7 +74,7 @@ public class DisplayCache
 
         SimpleObjectProperty<DisplayValueBase> v = new SimpleObjectProperty<>(new DisplayValue(index, QUEUED, 0));
         ValueLoader loader = new ValueLoader(index, v);
-        Workers.onWorkerThread("Value load for display: " + index, loader);
+        Workers.onWorkerThread("Value load for display: " + index, Priority.FETCH, loader);
 
         // Add to cache, removing one if we've reached the limit:
         if (displayCacheItems.size() >= DISPLAY_CACHE_SIZE)

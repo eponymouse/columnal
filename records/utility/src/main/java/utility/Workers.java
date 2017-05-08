@@ -1,5 +1,6 @@
 package utility;
 
+import javafx.scene.layout.Priority;
 import org.checkerframework.checker.interning.qual.UsesObjectEquals;
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -7,6 +8,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.PriorityQueue;
 import java.util.Stack;
@@ -17,6 +19,12 @@ import java.util.Stack;
 @OnThread(Tag.Simulation)
 public class Workers
 {
+    public static enum Priority
+    {
+        // Highest to lowest:
+        SAVE_TO_DISK, SAVE_ENTRY, LOAD_FROM_DISK, FETCH;
+    }
+
     @FunctionalInterface
     @UsesObjectEquals
     public static interface Worker
@@ -42,17 +50,21 @@ public class Workers
         private final Worker work;
         private final String title;
         private final long timeReady;
+        private final Priority priority;
 
-        public WorkChunk(String title, Worker work, long timeReady)
+        public WorkChunk(String title, Priority priority, Worker work, long timeReady)
         {
             this.title = title;
+            this.priority = priority;
             this.work = work;
             this.timeReady = timeReady;
         }
     }
 
     @OnThread(value = Tag.Any, requireSynchronized = true)
-    private static final PriorityQueue<@NonNull WorkChunk> workQueue = new PriorityQueue<>((a, b) -> Long.compare(a.timeReady, b.timeReady));
+    private static final PriorityQueue<@NonNull WorkChunk> workQueue = new PriorityQueue<>(
+        Comparator.<WorkChunk, Priority>comparing(a -> a.priority).thenComparing(Comparator.comparingLong(a -> a.timeReady))
+    );
 
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private static long finished = 0;
@@ -115,13 +127,13 @@ public class Workers
     }
 
     @OnThread(Tag.FX)
-    public static void onWorkerThread(String title, Worker runnable)
+    public static void onWorkerThread(String title, Priority priority, Worker runnable)
     {
-        onWorkerThread(title, runnable, 0);
+        onWorkerThread(title, priority, runnable, 0);
     }
 
     @OnThread(Tag.FX)
-    public static void onWorkerThread(String title, Worker runnable, long delay)
+    public static void onWorkerThread(String title, Priority priority, Worker runnable, long delay)
     {
         int numAhead;
         synchronized (Workers.class)
@@ -129,7 +141,7 @@ public class Workers
             // We ask for current time.  If we just used 0, then all immediates
             // would queue-jump all timed ones.  Giving new immediates a larger
             // ready time than old delayed ones makes sure the delayed ones aren't starved.
-            workQueue.add(new WorkChunk(title, runnable, System.currentTimeMillis() + delay));
+            workQueue.add(new WorkChunk(title, priority, runnable, System.currentTimeMillis() + delay));
 
             // TODO this isn't right if we actually use the delay feature:
             runnable.addedToQueue(finished, finished + workQueue.size());

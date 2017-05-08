@@ -15,6 +15,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.Workers;
+import utility.Workers.Priority;
 
 import java.util.List;
 import java.util.Optional;
@@ -92,7 +93,7 @@ public abstract class Column
     @OnThread(Tag.FXPlatform)
     public final void withDisplay(FXPlatformConsumer<String> withType)
     {
-        Workers.onWorkerThread("Fetching display from column " + getName(), () -> {
+        Workers.onWorkerThread("Fetching display from column " + getName(), Priority.FETCH, () -> {
             Utility.alertOnError_(() -> {
                 String s = getType().getHeaderDisplay();
                 Platform.runLater(() -> withType.consume(s));

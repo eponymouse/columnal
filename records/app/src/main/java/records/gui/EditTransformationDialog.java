@@ -181,7 +181,7 @@ public class EditTransformationDialog
         Optional<SimulationSupplier<Transformation>> supplier = dialog.showAndWait();
         if (supplier.isPresent())
         {
-            Workers.onWorkerThread("Creating transformation", () -> {
+            Workers.onWorkerThread("Creating transformation", Workers.Priority.SAVE_ENTRY, () -> {
                 Optional<Transformation> trans = Utility.alertOnError(() -> supplier.get().get());
                 Platform.runLater(() -> withResult.consume(trans));
             });

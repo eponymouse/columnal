@@ -29,6 +29,8 @@ class Node
 
     double getWidth() @UnknownInitialization;
     double getHeight() @UnknownInitialization;
+
+    BooleanProperty focusedProperty() @UnknownInitialization;
 }
 class Scene
 {
@@ -179,4 +181,10 @@ class SegmentedButton
 class PopOver
 {
     void show(@UnknownInitialization @NonNull Node owner);
+}
+package org.fxmisc.richtext;
+class StyleClassedTextArea
+{
+    String getText() @UnknownInitialization;
+    void setText(String s) @UnknownInitialization;
 }

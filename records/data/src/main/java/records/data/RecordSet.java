@@ -151,7 +151,7 @@ public abstract class RecordSet
                         // We will have been passed an EnteredDisplayValue
                         // We must store the value then pass a DisplayValue
                         // to the parent for actual display
-                        Workers.onWorkerThread("Storing value " + writtenValue, () ->
+                        Workers.onWorkerThread("Storing value " + writtenValue, Workers.Priority.SAVE_ENTRY, () ->
                         {
                             Utility.alertOnError_(() ->
                             {

@@ -40,6 +40,7 @@ import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.*;
+import utility.Workers.Priority;
 import utility.gui.FXUtility;
 
 import java.io.File;
@@ -115,7 +116,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
                 }
             }
         };
-        Workers.onWorkerThread("Saving", () ->
+        Workers.onWorkerThread("Saving", Priority.SAVE_TO_DISK, () ->
         {
             new Fetcher(getAllTables()).getNext();
         });
@@ -383,7 +384,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     private void showEditDialog(EditTransformationDialog dialog, @Nullable TableId replaceOnOK)
     {
         // add will re-run any dependencies:
-        dialog.show(optNewTable -> optNewTable.ifPresent(t -> Workers.onWorkerThread("Updating tables", () -> Utility.alertOnError_(() -> tableManager.edit(replaceOnOK, t)))));
+        dialog.show(optNewTable -> optNewTable.ifPresent(t -> Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> tableManager.edit(replaceOnOK, t)))));
     }
 
     @Override

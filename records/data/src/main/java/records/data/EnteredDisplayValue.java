@@ -16,6 +16,7 @@ public class EnteredDisplayValue extends DisplayValueBase
 {
     private final String enteredString;
 
+    @OnThread(Tag.Any)
     public EnteredDisplayValue(int rowIndex, String enteredString)
     {
         super(rowIndex);

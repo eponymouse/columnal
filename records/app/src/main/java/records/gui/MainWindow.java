@@ -26,6 +26,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 import utility.Workers;
+import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.TranslationUtility;
@@ -95,7 +96,7 @@ public class MainWindow
             if (chosen != null)
             {
                 @NonNull File chosenFinal = chosen;
-                Workers.onWorkerThread("GuessFormat data", () ->
+                Workers.onWorkerThread("GuessFormat data", Priority.LOAD_FROM_DISK, () ->
                 {
                     try
                     {
@@ -176,7 +177,7 @@ public class MainWindow
         if (src != null)
         {
             @NonNull String srcFinal = src;
-            Workers.onWorkerThread("Load", () -> Utility.alertOnError_(() -> v.getManager().loadAll(srcFinal)));
+            Workers.onWorkerThread("Load", Priority.LOAD_FROM_DISK, () -> Utility.alertOnError_(() -> v.getManager().loadAll(srcFinal)));
         }
 
         stage.show();
@@ -205,7 +206,7 @@ public class MainWindow
 
     private static void importText(View v, @NonNull File chosenFinal)
     {
-        Workers.onWorkerThread("GuessFormat data", () ->
+        Workers.onWorkerThread("GuessFormat data", Priority.LOAD_FROM_DISK, () ->
         {
             try
             {
@@ -229,7 +230,7 @@ public class MainWindow
 
     private static void newTable(View v)
     {
-        Workers.onWorkerThread("Create new table", () -> {
+        Workers.onWorkerThread("Create new table", Priority.SAVE_ENTRY, () -> {
             try
             {
                 EditableRecordSet rs = new EditableRecordSet(Collections.emptyList(), 0);

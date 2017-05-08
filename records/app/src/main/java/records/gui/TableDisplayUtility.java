@@ -12,6 +12,7 @@ import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -25,12 +26,15 @@ import org.fxmisc.undo.UndoManagerFactory;
 import records.data.ColumnId;
 import records.data.DisplayValue;
 import records.data.DisplayValueBase;
+import records.data.EnteredDisplayValue;
 import records.data.RecordSet;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
 import utility.Pair;
+import utility.SimulationConsumer;
 import utility.Utility;
+import utility.Workers;
 import utility.gui.FXUtility;
 import utility.gui.stable.StableView;
 import utility.gui.stable.StableView.ValueFetcher;
@@ -51,14 +55,15 @@ public class TableDisplayUtility
             return new Pair<>(col.getName().getRaw(), (rowIndex, callback) ->
             {
                 ObservableValue<DisplayValueBase> obs = col.getDisplay(rowIndex);
-                callback.setValue(rowIndex, getNode((DisplayValue)obs.getValue()));
-                FXUtility.addChangeListenerPlatformNN(obs, v -> callback.setValue(rowIndex, getNode((DisplayValue)v)));
+                SimulationConsumer<String> storeValue = s -> col.storeValue(new EnteredDisplayValue(rowIndex, s));
+                callback.setValue(rowIndex, getNode((DisplayValue)obs.getValue(), storeValue));
+                FXUtility.addChangeListenerPlatformNN(obs, v -> callback.setValue(rowIndex, getNode((DisplayValue)v, storeValue)));
             });
         });
     }
 
     @OnThread(Tag.FXPlatform)
-    private static Region getNode(DisplayValue item)
+    private static Region getNode(DisplayValue item, SimulationConsumer<String> storeValue)
     {
         if (item.getNumber() != null)
         {
@@ -85,6 +90,24 @@ public class TableDisplayUtility
             */
             StyleClassedTextArea textArea = new StyleClassedTextArea(false /* plain undo manager */)
             {
+                private String valueBeforeFocus = "";
+
+                {
+                    FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
+                        if (focused)
+                        {
+                            valueBeforeFocus = getText();
+                        }
+                        else
+                        {
+                            @Initialized @NonNull String val = getText();
+                            Workers.onWorkerThread("Storing value " + getText(), Workers.Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> {
+                                storeValue.consume(val);
+                            }));
+                        }
+                    });
+                }
+
                 @Override
                 public void replaceText(int start, int end, String text)
                 {

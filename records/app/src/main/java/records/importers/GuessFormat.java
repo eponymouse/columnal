@@ -61,6 +61,7 @@ import utility.Pair;
 import utility.Utility;
 import utility.Utility.IndexRange;
 import utility.Workers;
+import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LabelledGrid;
@@ -923,7 +924,7 @@ public class GuessFormat
             return label;
         });
 
-        Workers.onWorkerThread("Loading" + file.getName(), () -> {
+        Workers.onWorkerThread("Loading" + file.getName(), Priority.LOAD_FROM_DISK, () -> {
             try
             {
                 @OnThread(Tag.Simulation) RecordSet recordSet = TextImport.makeRecordSet(typeManager, file, t, textAreaFiller);
