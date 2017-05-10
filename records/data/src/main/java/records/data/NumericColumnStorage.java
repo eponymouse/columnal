@@ -9,6 +9,7 @@ import records.data.Column.ProgressListener;
 import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.GetValue;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UnimplementedException;
@@ -397,7 +398,20 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.number(displayInfo, (i, prog) -> DataTypeUtility.value(getNonBlank(i, prog)));
+            dataType = DataTypeValue.number(displayInfo, new GetValue<Number>()
+            {
+                @Override
+                public Number getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
+                {
+                    return DataTypeUtility.value(NumericColumnStorage.this.getNonBlank(i, prog));
+                }
+
+                @Override
+                public @OnThread(Tag.Simulation) void set(int index, Number value) throws InternalException
+                {
+
+                }
+            });
         }
         return dataType;
     }
@@ -464,12 +478,6 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     public NumberInfo getDisplayInfo()
     {
         return displayInfo;
-    }
-
-    @Override
-    public DisplayValue storeValue(EnteredDisplayValue writtenValue)
-    {
-        throw new UnimplementedException();
     }
 
     @Override

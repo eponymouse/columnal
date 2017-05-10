@@ -6,6 +6,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -77,16 +78,22 @@ public class StringColumnStorage implements ColumnStorage<String>
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.text((i, prog) -> get(i, prog));
+            dataType = DataTypeValue.text(new GetValue<String>()
+            {
+                @Override
+                public String getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+                {
+                    return StringColumnStorage.this.get(i, prog);
+                }
+
+                @Override
+                public @OnThread(Tag.Simulation) void set(int index, String value) throws InternalException
+                {
+                    values.set(index, pool.pool(value));
+                }
+            });
         }
         return dataType;
-    }
-
-    @Override
-    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
-    {
-        values.set(writtenValue.getRowIndex(), pool.pool(writtenValue.getString()));
-        return new DisplayValue(writtenValue.getRowIndex(), writtenValue.getString());
     }
 
     @Override

@@ -390,7 +390,7 @@ public class Utility
         // Last try: big decimal (and re-throw if not)
         try
         {
-            return new BigDecimal(number);
+            return new BigDecimal(number, MathContext.DECIMAL128);
         }
         catch (NumberFormatException e)
         {

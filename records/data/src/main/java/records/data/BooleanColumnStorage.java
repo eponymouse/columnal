@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -32,7 +33,20 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
     public BooleanColumnStorage(@Nullable BeforeGet<BooleanColumnStorage> beforeGet)
     {
         this.beforeGet = beforeGet;
-        this.type = DataTypeValue.bool(this::getWithProgress);
+        this.type = DataTypeValue.bool(new GetValue<Boolean>()
+        {
+            @Override
+            public Boolean getWithProgress(int i, ProgressListener progressListener) throws UserException, InternalException
+            {
+                return BooleanColumnStorage.this.getWithProgress(i, progressListener);
+            }
+
+            @Override
+            public @OnThread(Tag.Simulation) void set(int index, Boolean value) throws InternalException
+            {
+                data.set(index, value);
+            }
+        });
     }
 
     public BooleanColumnStorage()
@@ -70,20 +84,6 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
     public DataTypeValue getType()
     {
         return type;
-    }
-
-    @Override
-    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
-    {
-        @Value boolean value;
-        switch (writtenValue.getString())
-        {
-            case "true": value = DataTypeUtility.value(true); break;
-            case "false": value = DataTypeUtility.value(false); break;
-            default: throw new UserException("Invalid boolean value: \"" + writtenValue.getString() + "\"");
-        }
-        data.set(writtenValue.getRowIndex(), value);
-        return DataTypeUtility.display(writtenValue.getRowIndex(), getType(), value);
     }
 
     @Override

@@ -67,11 +67,11 @@ public abstract class Column
     private DisplayCache displayCache;
 
     @OnThread(Tag.FXPlatform)
-    public final ObservableValue<DisplayValueBase> getDisplay(int index)
+    public final void fetchDisplay(int index, FXPlatformConsumer<DisplayValue> updateValue)
     {
         if (displayCache == null)
             displayCache = new DisplayCache(this);
-        return displayCache.getDisplay(index);
+        displayCache.fetchDisplay(index, updateValue);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -150,14 +150,6 @@ public abstract class Column
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
         throw new RuntimeException("Unshrinkable!");
-    }
-
-    /**
-     * For editable columns.  If editing is not possible, throw an exception.
-     */
-    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
-    {
-        throw new InternalException("Cannot edit results of transformation");
     }
 
     public void addRow() throws InternalException, UserException

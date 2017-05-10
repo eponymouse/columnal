@@ -1,44 +1,45 @@
 package records.gui;
 
 import javafx.beans.value.ObservableValue;
-import javafx.geometry.Insets;
 import javafx.geometry.Pos;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.scene.text.Text;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.StyleClassedTextArea;
-import org.fxmisc.richtext.model.EditableStyledDocument;
-import org.fxmisc.richtext.model.GenericEditableStyledDocument;
-import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.StyledDocument;
 import org.fxmisc.richtext.model.StyledText;
 import org.fxmisc.undo.UndoManagerFactory;
-import records.data.ColumnId;
+import records.data.Column;
 import records.data.DisplayValue;
-import records.data.DisplayValueBase;
-import records.data.EnteredDisplayValue;
 import records.data.RecordSet;
+import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
+import records.data.datatype.DataTypeValue.GetValue;
+import records.data.datatype.TypeId;
+import records.error.InternalException;
+import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.SimulationConsumer;
 import utility.Utility;
+import utility.Utility.RunOrError;
 import utility.Workers;
 import utility.gui.FXUtility;
-import utility.gui.stable.StableView;
 import utility.gui.stable.StableView.ValueFetcher;
 
+import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
@@ -49,21 +50,147 @@ import java.util.List;
  */
 public class TableDisplayUtility
 {
+    private static class ValidationResult
+    {
+        private final String newReplacement;
+        private final @Nullable @Localized String error;
+        private final RunOrError storer;
+
+        private ValidationResult(String newReplacement, @Nullable @Localized String error, RunOrError storer)
+        {
+            this.newReplacement = newReplacement;
+            this.error = error;
+            this.storer = storer;
+        }
+    }
+
+    private static interface StringInputValidator
+    {
+        /**
+         *
+         * @param rowIndex The row index of the item (mainly needed for storing it)
+         * @param before The untouched part of the String before the altered part
+         * @param oldPart The old value of the altered part of the String
+         * @param newPart The new value of the altered part of the String
+         * @param end The untouched part of the String after the altered part
+         * @return The value of oldPart/newPart to use.  Return oldPart if you want no change.
+         */
+        @OnThread(Tag.FXPlatform)
+        public ValidationResult validate(int rowIndex, String before, String oldPart, String newPart, String end); // Or should this work on change?
+    }
+
+    private static ValidationResult result(String newReplacement, @Nullable @Localized  String error, RunOrError storer)
+    {
+        return new ValidationResult(newReplacement, error, storer);
+    }
+
     public static List<Pair<String, ValueFetcher>> makeStableViewColumns(RecordSet recordSet)
     {
         return Utility.mapList(recordSet.getColumns(), col -> {
+            @Nullable StringInputValidator validator = getValidator(col);
             return new Pair<>(col.getName().getRaw(), (rowIndex, callback) ->
             {
-                ObservableValue<DisplayValueBase> obs = col.getDisplay(rowIndex);
-                SimulationConsumer<String> storeValue = s -> col.storeValue(new EnteredDisplayValue(rowIndex, s));
-                callback.setValue(rowIndex, getNode((DisplayValue)obs.getValue(), storeValue));
-                FXUtility.addChangeListenerPlatformNN(obs, v -> callback.setValue(rowIndex, getNode((DisplayValue)v, storeValue)));
+                col.fetchDisplay(rowIndex, displayValue -> callback.setValue(rowIndex, getNode(displayValue, validator)));
             });
         });
     }
 
+    @OnThread(Tag.Any)
+    private static @Nullable StringInputValidator getValidator(Column column)
+    {
+        try
+        {
+            return column.getType().applyGet(new DataTypeVisitorGet<@Nullable StringInputValidator>()
+            {
+                @Override
+                public StringInputValidator number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
+                {
+                    return (rowIndex, before, oldPart, newPart, end) -> {
+                        String altered = newPart.replaceAll("[^0-9.+-]", "");
+                        // We also disallow + and - except at start, and only allow one dot:
+                        if (before.contains(".") || end.contains("."))
+                            altered = altered.replace(".", "");
+                        if (before.isEmpty())
+                        {
+                            // + or - would be allowed at the start
+                        }
+                        else
+                        {
+                            altered = altered.replace("[+-]","");
+                        }
+                        // Check it is actually valid as a number:
+                        @Nullable Number n;
+                        @Nullable @Localized String error = null;
+                        try
+                        {
+                            n = Utility.parseNumber(before + altered + end);
+                        }
+                        catch (UserException e)
+                        {
+                            error = e.getLocalizedMessage();
+                            n = null;
+                        }
+                        @Nullable Number nFinal = n;
+                        return result(altered, error, () -> {
+                            if (nFinal != null)
+                                g.set(rowIndex, nFinal);
+                        });
+                    };
+                }
+
+                @Override
+                public @Nullable StringInputValidator text(GetValue<String> g) throws InternalException, UserException
+                {
+                    // We ban newlines:
+                    return (rowIndex, before, oldPart, newPart, end) -> {
+
+                        String mungedNewPart = newPart.replace("\n", "");
+                        return result(mungedNewPart, null,
+                            () -> g.set(rowIndex, before + mungedNewPart + end)
+                        );
+                    };
+                }
+
+                @Override
+                public @Nullable StringInputValidator bool(GetValue<Boolean> g) throws InternalException, UserException
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable StringInputValidator date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable StringInputValidator tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable StringInputValidator tuple(List<DataTypeValue> types) throws InternalException, UserException
+                {
+                    return null;
+                }
+
+                @Override
+                public @Nullable StringInputValidator array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+                {
+                    return null;
+                }
+            });
+        }
+        catch (InternalException | UserException e)
+        {
+            Utility.log(e);
+            return null;
+        }
+    }
+
     @OnThread(Tag.FXPlatform)
-    private static Region getNode(DisplayValue item, SimulationConsumer<String> storeValue)
+    private static Region getNode(DisplayValue item, @Nullable StringInputValidator validator)
     {
         if (item.getNumber() != null)
         {
@@ -91,6 +218,7 @@ public class TableDisplayUtility
             StyleClassedTextArea textArea = new StyleClassedTextArea(false /* plain undo manager */)
             {
                 private String valueBeforeFocus = "";
+                private @Nullable RunOrError storeAction = null;
 
                 {
                     FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
@@ -100,22 +228,32 @@ public class TableDisplayUtility
                         }
                         else
                         {
-                            @Initialized @NonNull String val = getText();
-                            Workers.onWorkerThread("Storing value " + getText(), Workers.Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> {
-                                storeValue.consume(val);
-                            }));
+                            if (storeAction != null)
+                            {
+                                @Initialized @NonNull RunOrError storeActionFinal = storeAction;
+                                Workers.onWorkerThread("Storing value " + getText(), Workers.Priority.SAVE_ENTRY, () -> Utility.alertOnError_(storeActionFinal));
+                            }
                         }
                     });
                 }
 
                 @Override
+                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
                 public void replaceText(int start, int end, String text)
                 {
-                    // Prevent newlines being entered:
-                    super.replaceText(start, end, text.replace("\n", ""));
-                    //TODO sort out any restyling needed
+                    String old = getText();
+                    if (validator != null)
+                    {
+                        @OnThread(Tag.FXPlatform) ValidationResult result = validator.validate(item.getRowIndex(), old.substring(0, start), old.substring(start, end), text, old.substring(end));
+                        this.storeAction = result.storer;
+                        super.replaceText(start, end, result.newReplacement);
+                        //TODO sort out any restyling needed
+                        // TODO show error
+                    }
+
                 }
             };
+            textArea.setEditable(validator != null);
             textArea.setUseInitialStyleForInsertion(false);
             textArea.setUndoManager(UndoManagerFactory.fixedSizeHistoryFactory(3));
 

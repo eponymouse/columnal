@@ -89,12 +89,6 @@ public final class TextFileColumn extends Column
         return type;
     }
 
-    @Override
-    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
-    {
-        throw new InternalException("Cannot edit data which is linked to a text file");
-    }
-
     public static interface TextFileColumnListener
     {
         public void usedLine(int rowIndex, int columnIndex, String line, IndexRange usedPortion);

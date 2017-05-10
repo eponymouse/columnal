@@ -166,7 +166,7 @@ public class DataTypeValue extends DataType
         }
     }
 
-    @OnThread(Tag.Simulation)
+    @OnThread(Tag.Any)
     public static interface DataTypeVisitorGetEx<R, E extends Throwable>
     {
         R number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, E;
@@ -190,7 +190,7 @@ public class DataTypeValue extends DataType
     
 
     @SuppressWarnings({"nullness", "unchecked"})
-    @OnThread(Tag.Simulation)
+    @OnThread(Tag.Any)
     public final <R> R applyGet(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
     {
         switch (kind)
@@ -226,8 +226,15 @@ public class DataTypeValue extends DataType
     {
         @OnThread(Tag.Simulation)
         @NonNull T getWithProgress(int index, Column.@Nullable ProgressListener progressListener) throws UserException, InternalException;
+
         @OnThread(Tag.Simulation)
         default @NonNull T get(int index) throws UserException, InternalException { return getWithProgress(index, null); }
+
+        @OnThread(Tag.Simulation)
+        default void set(int index, T value) throws InternalException
+        {
+            throw new InternalException("Attempted to set value for uneditable column");
+        };
     }
 
 
@@ -248,21 +255,21 @@ public class DataTypeValue extends DataType
         return applyGet(new DataTypeVisitorGet<@Value Object>()
         {
             @Override
-            @OnThread(Tag.Simulation)
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
             public @Value Object number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
                 return g.get(index);
             }
 
             @Override
-            @OnThread(Tag.Simulation)
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
             public @Value Object text(GetValue<@Value String> g) throws InternalException, UserException
             {
                 return g.get(index);
             }
 
             @Override
-            @OnThread(Tag.Simulation)
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
             public @Value Object tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 Integer tagIndex = g.get(index);
@@ -271,6 +278,7 @@ public class DataTypeValue extends DataType
             }
 
             @Override
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
             public @Value Object tuple(List<DataTypeValue> types) throws InternalException, UserException
             {
                 @Value Object [] array = new Object[types.size()];
@@ -282,6 +290,7 @@ public class DataTypeValue extends DataType
             }
 
             @Override
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
             public @Value Object array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
             {
                 List<@Value Object> l = new ArrayList<>();
@@ -295,14 +304,14 @@ public class DataTypeValue extends DataType
             }
 
             @Override
-            @OnThread(Tag.Simulation)
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
             public @Value Object bool(GetValue<@Value Boolean> g) throws InternalException, UserException
             {
                 return g.get(index);
             }
 
             @Override
-            @OnThread(Tag.Simulation)
+            @OnThread(value = Tag.Simulation, ignoreParent = true)
             public @Value Object date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
             {
                 return g.get(index);

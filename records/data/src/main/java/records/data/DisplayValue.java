@@ -19,13 +19,14 @@ import java.util.stream.Collectors;
  *  - Unsuccessful (with a String giving an error description)
  */
 @OnThread(Tag.FX)
-public class DisplayValue extends DisplayValueBase
+public class DisplayValue
 {
     public static enum ProgressState
     {
         GETTING, QUEUED;
     }
 
+    private final int rowIndex;
     private final @Nullable Number number;
     // These next two are fixed per-column, but it's just
     // easier to store them with the data item itself:
@@ -64,7 +65,7 @@ public class DisplayValue extends DisplayValueBase
     @OnThread(Tag.Any)
     public DisplayValue(int rowIndex, Number val, Unit unit, int minimumDecimalPlaces)
     {
-        super(rowIndex);
+        this.rowIndex = rowIndex;
         number = val;
         this.unit = unit;
         this.minimumDecimalPlaces = minimumDecimalPlaces;
@@ -81,7 +82,7 @@ public class DisplayValue extends DisplayValueBase
     @OnThread(Tag.Any)
     public DisplayValue(int rowIndex, ProgressState state, double d)
     {
-        super(rowIndex);
+        this.rowIndex = rowIndex;
         number = null;
         minimumDecimalPlaces = 0;
         this.state = state;
@@ -98,7 +99,7 @@ public class DisplayValue extends DisplayValueBase
     @OnThread(Tag.Any)
     public DisplayValue(int rowIndex, String s, boolean err)
     {
-        super(rowIndex);
+        this.rowIndex = rowIndex;
         unit = Unit.SCALAR;
         number = null;
         minimumDecimalPlaces = 0;
@@ -114,7 +115,7 @@ public class DisplayValue extends DisplayValueBase
      */
     private DisplayValue(int rowIndex)
     {
-        super(rowIndex);
+        this.rowIndex = rowIndex;
         number = null;
         minimumDecimalPlaces = 0;
         this.state = null;
@@ -123,13 +124,6 @@ public class DisplayValue extends DisplayValueBase
         show = null;
         isError = false;
         isAddExtraRowItem = true;
-    }
-
-    @Override
-    public String getEditString()
-    {
-        //TODO: implement this properly
-        return toString();
     }
 
     @Pure
@@ -215,6 +209,13 @@ public class DisplayValue extends DisplayValueBase
     public boolean isAddExtraRowItem()
     {
         return isAddExtraRowItem;
+    }
+
+
+    @OnThread(Tag.Any)
+    public int getRowIndex()
+    {
+        return rowIndex;
     }
 
     @Override

@@ -94,12 +94,6 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     }
 
     @Override
-    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
-    {
-        throw new UnimplementedException();
-    }
-
-    @Override
     public void addRow() throws InternalException, UserException
     {
         throw new UnimplementedException();

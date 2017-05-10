@@ -44,12 +44,6 @@ public class MemoryTupleColumn extends Column
     }
 
     @Override
-    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException
-    {
-        return storage.storeValue(writtenValue);
-    }
-
-    @Override
     public void addRow() throws InternalException, UserException
     {
         storage.addRow();

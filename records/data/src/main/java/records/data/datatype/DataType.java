@@ -40,8 +40,6 @@ import records.grammar.DataParser.StringContext;
 import records.grammar.DataParser.TaggedContext;
 import records.grammar.DataParser.TupleContext;
 import records.grammar.FormatLexer;
-import records.data.DisplayValueBase;
-import records.data.EnteredDisplayValue;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -1668,37 +1666,5 @@ public class DataType
         R array(T a, T b, @Nullable DataType innerA, @Nullable DataType innerB) throws InternalException, UserException;
 
         R differentKind(T a, T b) throws InternalException, UserException;
-    }
-
-    @OnThread(Tag.FX)
-    public static abstract class StringConvBase extends StringConverter<DisplayValueBase>
-    {
-        protected int rowIndex;
-
-        public void setRowIndex(int rowIndex)
-        {
-            this.rowIndex = rowIndex;
-        }
-
-        @Override
-        @OnThread(value = Tag.FX, ignoreParent = true) // Parent should be tagged FX anyway!
-        public String toString(DisplayValueBase object)
-        {
-            return object.getEditString();
-        }
-    }
-
-    @OnThread(Tag.FX)
-    public StringConvBase makeConverter()
-    {
-        return new StringConvBase()
-        {
-            @Override
-            @OnThread(value = Tag.FX, ignoreParent = true) // Parent should be tagged FX anyway!
-            public DisplayValueBase fromString(String string)
-            {
-                return new EnteredDisplayValue(rowIndex, string);
-            }
-        };
     }
 }

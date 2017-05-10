@@ -1,13 +1,18 @@
 package records.data;
 
 import annotation.qual.Value;
+import com.google.common.cache.CacheBuilder;
+import com.google.common.cache.CacheLoader;
+import com.google.common.cache.LoadingCache;
 import javafx.application.Platform;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableValue;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
+import records.data.DisplayValue.ProgressState;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.NumberInfo;
@@ -20,6 +25,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.Workers;
@@ -31,6 +37,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutionException;
 
 import static records.data.DisplayValue.ProgressState.GETTING;
 import static records.data.DisplayValue.ProgressState.QUEUED;
@@ -41,15 +48,10 @@ import static records.data.DisplayValue.ProgressState.QUEUED;
 @OnThread(Tag.FXPlatform)
 public class DisplayCache
 {
-    private static final int INITIAL_DISPLAY_CACHE_SIZE = 100;
-    private static final int DISPLAY_CACHE_SIZE = 1000;
-    // We access this more often by index than by age so we use
-    // index as key and store age within:
-    @MonotonicNonNull
+    private static final int INITIAL_DISPLAY_CACHE_SIZE = 60;
+    private static final int MAX_DISPLAY_CACHE_SIZE = 500;
     @OnThread(Tag.FXPlatform)
-    private HashMap<@NonNull Integer, @NonNull DisplayCacheItem> displayCacheItems;
-    // Count of latest age:
-    private long latestAge = 0;
+    private final LoadingCache<@NonNull Integer, @NonNull DisplayCacheItem> displayCacheItems;
 
     @OnThread(Tag.Any)
     private final Column column;
@@ -58,57 +60,42 @@ public class DisplayCache
     public DisplayCache(Column column)
     {
         this.column = column;
+        displayCacheItems = CacheBuilder.newBuilder()
+            .initialCapacity(INITIAL_DISPLAY_CACHE_SIZE)
+            .maximumSize(MAX_DISPLAY_CACHE_SIZE)
+            .build(new CacheLoader<Integer, DisplayCacheItem>()
+            {
+                @Override
+                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+                public DisplayCacheItem load(Integer index) throws Exception
+                {
+                    return new DisplayCacheItem(index);
+                }
+            });
     }
 
     @OnThread(Tag.FXPlatform)
-    public final ObservableValue<DisplayValueBase> getDisplay(int index)
+    public final void fetchDisplay(int index, FXPlatformConsumer<DisplayValue> callback)
     {
-        if (displayCacheItems == null)
-            displayCacheItems = new HashMap<>(INITIAL_DISPLAY_CACHE_SIZE);
-        else
+        try
         {
-            DisplayCacheItem item = displayCacheItems.get(index);
-            if (item != null)
-                return item.display;
+            @NonNull DisplayCacheItem item = displayCacheItems.get(index);
+            item.setLoaderAndCall(callback);
         }
-
-        SimpleObjectProperty<DisplayValueBase> v = new SimpleObjectProperty<>(new DisplayValue(index, QUEUED, 0));
-        ValueLoader loader = new ValueLoader(index, v);
-        Workers.onWorkerThread("Value load for display: " + index, Priority.FETCH, loader);
-
-        // Add to cache, removing one if we've reached the limit:
-        if (displayCacheItems.size() >= DISPLAY_CACHE_SIZE)
+        catch (ExecutionException e)
         {
-            // We can't rely on ages being consecutive because cancellations
-            // may have removed arbitrarily from cache:
-            int minIndex = -1;
-            long minAge = Long.MAX_VALUE;
-            for (Entry<@NonNull Integer, @NonNull DisplayCacheItem> item : displayCacheItems.entrySet())
-            {
-                if (item.getValue().age < minAge)
-                {
-                    minAge = item.getValue().age;
-                    minIndex = item.getKey();
-                }
-            }
-            displayCacheItems.remove(minIndex);
+            callback.consume(new DisplayValue(index, e.getLocalizedMessage(), true));
         }
-        displayCacheItems.put(index, new DisplayCacheItem(latestAge, v, loader));
-        latestAge += 1;
-
-        return v;
     }
 
     @OnThread(Tag.FXPlatform)
     public void cancelGetDisplay(int index)
     {
-        if (displayCacheItems == null)
-            return;
-
-        DisplayCacheItem item = displayCacheItems.remove(index);
+        @Nullable DisplayCacheItem item = displayCacheItems.getIfPresent(index);
         if (item != null)
         {
-            Workers.cancel(item.loader);
+            item.cancelLoad();
+            displayCacheItems.invalidate(index);
         }
     }
 
@@ -118,17 +105,41 @@ public class DisplayCache
      * DisplayCache class.
      */
     @OnThread(Tag.FXPlatform)
-    private static class DisplayCacheItem
+    private class DisplayCacheItem
     {
-        public final long age;
-        public final ValueLoader loader;
-        public final SimpleObjectProperty<DisplayValueBase> display;
+        private final ValueLoader loader;
+        @OnThread(value = Tag.FXPlatform, requireSynchronized = true)
+        private @NonNull DisplayValue latestItem;
+        @OnThread(value = Tag.FXPlatform, requireSynchronized = true)
+        private @Nullable FXPlatformConsumer<DisplayValue> setDisplay;
 
-        public DisplayCacheItem(long age, SimpleObjectProperty<DisplayValueBase> display, ValueLoader loader)
+        @SuppressWarnings("initialization") // ValueLoader, though I don't quite understand why
+        public DisplayCacheItem(int index)
         {
-            this.age = age;
-            this.display = display;
-            this.loader = loader;
+            latestItem = new DisplayValue(index, ProgressState.QUEUED, 0.0);
+            loader = new ValueLoader(index, this);
+            Workers.onWorkerThread("Value load for display: " + index, Priority.FETCH, loader);
+        }
+
+        public synchronized void update(DisplayValue latestItem)
+        {
+            this.latestItem = latestItem;
+            if (setDisplay != null)
+            {
+                setDisplay.consume(latestItem);
+            }
+        }
+
+        public synchronized void setLoaderAndCall(FXPlatformConsumer<DisplayValue> callback)
+        {
+            this.setDisplay = callback;
+            setDisplay.consume(latestItem);
+        }
+
+        public synchronized void cancelLoad()
+        {
+            this.setDisplay = null;
+            Workers.cancel(loader);
         }
     }
 
@@ -136,17 +147,18 @@ public class DisplayCache
     private class ValueLoader implements Worker
     {
         private final int originalIndex;
-        private final SimpleObjectProperty<DisplayValueBase> v;
+        private final DisplayCacheItem displayCacheItem;
         @OnThread(value = Tag.Any, requireSynchronized = true)
         private long originalFinished;
         @OnThread(value = Tag.Any, requireSynchronized = true)
         private long us;
 
         @OnThread(Tag.FXPlatform)
-        public ValueLoader(int index, SimpleObjectProperty<DisplayValueBase> v)
+        @SuppressWarnings("initialization") // For displayCacheItem
+        public ValueLoader(int index, @UnknownInitialization DisplayCacheItem displayCacheItem)
         {
             this.originalIndex = index;
-            this.v = v;
+            this.displayCacheItem = displayCacheItem;
         }
 
         public void run()
@@ -154,17 +166,17 @@ public class DisplayCache
             try
             {
                 ProgressListener prog = d -> {
-                    Platform.runLater(() -> v.setValue(new DisplayValue(originalIndex, GETTING, d)));
+                    Platform.runLater(() -> displayCacheItem.update(new DisplayValue(originalIndex, GETTING, d)));
                 };
                 DisplayValue val = getDisplayValue(column.getType(), originalIndex, prog);
-                Platform.runLater(() -> v.setValue(val));
+                Platform.runLater(() -> displayCacheItem.update(val));
             }
             catch (UserException | InternalException e)
             {
                 e.printStackTrace();
                 Platform.runLater(() -> {
                     String msg = e.getLocalizedMessage();
-                    v.setValue(new DisplayValue(originalIndex, msg == null ? "ERROR" : ("ERR:" + msg), true));
+                    displayCacheItem.update(new DisplayValue(originalIndex, msg == null ? "ERROR" : ("ERR:" + msg), true));
                 });
             }
         }
@@ -245,7 +257,7 @@ public class DisplayCache
         public synchronized void queueMoved(long finished, long lastQueued)
         {
             double progress = (double)(finished - originalFinished) / (double)(us - originalFinished);
-            Platform.runLater(() -> v.setValue(new DisplayValue(originalIndex, QUEUED, progress)));
+            Platform.runLater(() -> displayCacheItem.update(new DisplayValue(originalIndex, QUEUED, progress)));
         }
 
         @Override

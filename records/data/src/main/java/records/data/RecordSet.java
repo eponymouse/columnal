@@ -66,7 +66,7 @@ public abstract class RecordSet
         if (colNames.size() != columns.size())
             throw new UserException("Duplicate column names found: " + this.columns.stream().map(c -> c.getName().getOutput()).collect(Collectors.joining(", ")));
     }
-
+/*
     @OnThread(Tag.FXPlatform)
     public final List<TableColumn<Integer, DisplayValueBase>> getDisplayColumns() throws InternalException, UserException
     {
@@ -176,7 +176,7 @@ public abstract class RecordSet
         };
         return Utility.mapListEx(columns, makeDisplayColumn);
     }
-
+*/
     protected void addRow() throws UserException, InternalException
     {
         throw new InternalException("Cannot extend length of data table; not editable");

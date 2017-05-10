@@ -50,8 +50,6 @@ public interface ColumnStorage<T>
         return getAllCollapsed(length);
     }
 
-    public DisplayValue storeValue(EnteredDisplayValue writtenValue) throws InternalException, UserException;
-
     public void addRow() throws InternalException, UserException;
 
     public static interface BeforeGet<S extends ColumnStorage<?>>
