@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
 
 import static org.junit.Assert.assertEquals;
 
@@ -71,5 +72,39 @@ public class PropNumericStorage
         // to higher storage, then test with that:
         input.add(n);
         testNumbers(input);
+    }
+
+    @OnThread(Tag.Simulation)
+    private void testSet(List<Number> input, int index, Number n) throws InternalException, UserException
+    {
+        NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT);
+        for (Number orig : input)
+            storage.add(orig);
+
+        storage.set(OptionalInt.of(index), n);
+
+        List<Number> expected = new ArrayList<>(input);
+        expected.set(index, n);
+
+        assertEquals(expected.size(), storage.filled());
+
+        List<Number> out = new ArrayList<>();
+        for (int i = 0; i < input.size(); i++)
+            out.add(Utility.toBigDecimal((Number) storage.getType().getCollapsed(i)));
+        TestUtil.assertEqualList(Utility.mapList(expected, Utility::toBigDecimal), out);
+    }
+
+    @Property(trials = 1000)
+    @OnThread(Tag.Simulation)
+    public void testNumbersSet(@From(GenNumbers.class) List<Number> input, int index, @From(GenNumber.class) Number n) throws IOException, InternalException, UserException
+    {
+        // These numbers come from a fixed bit size, so may lack
+        // a high number
+        testNumbers(input);
+        if (!input.isEmpty())
+        {
+            index = Math.abs(index) % input.size();
+            testSet(input, index, n);
+        }
     }
 }

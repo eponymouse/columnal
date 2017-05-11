@@ -22,6 +22,8 @@ import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalInt;
 
 /**
  * A class to store numbers or a series of values of the type
@@ -107,22 +109,22 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             long n = Long.valueOf(number);
             if (BYTE_MIN <= n && n <= BYTE_MAX)
             {
-                addByte((byte) n);
+                addByte(OptionalInt.empty(), (byte) n);
                 return;
             }
             else if (SHORT_MIN <= n && n <= SHORT_MAX)
             {
-                addShort((short) n);
+                addShort(OptionalInt.empty(), (short) n);
                 return;
             }
             else if (INT_MIN <= n && n <= INT_MAX)
             {
-                addInteger((int) n);
+                addInteger(OptionalInt.empty(), (int) n);
                 return;
             }
             else if (LONG_MIN <= n && n <= LONG_MAX)
             {
-                addLong(n, false);
+                addLong(OptionalInt.empty(), n, false);
                 return;
             }
             // We may fall out of here if it parsed as a long
@@ -132,7 +134,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         // Ok, last try: big decimal (and rethrow if not)
         try
         {
-            addBigDecimal(new BigDecimal(number, MathContext.DECIMAL128));
+            addBigDecimal(OptionalInt.empty(), new BigDecimal(number, MathContext.DECIMAL128));
         }
         catch (NumberFormatException e)
         {
@@ -140,21 +142,28 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         }
     }
 
-    private void addByte(byte n) throws InternalException
+    private void addByte(OptionalInt index, byte n) throws InternalException
     {
         if (bytes == null)
-            addShort(byteToShort(n)); // Cascade upwards
+            addShort(index, byteToShort(n)); // Cascade upwards
         else
         {
-            if (filled >= bytes.length)
+            if (isPresent(index))
             {
-                bytes = Arrays.copyOf(bytes, increaseLength(bytes.length));
+                bytes[index.getAsInt()] = n;
             }
-            bytes[filled++] = n;
+            else
+            {
+                if (filled >= bytes.length)
+                {
+                    bytes = Arrays.copyOf(bytes, increaseLength(bytes.length));
+                }
+                bytes[filled++] = n;
+            }
         }
     }
 
-    private void addShort(short n) throws InternalException
+    private void addShort(OptionalInt index, short n) throws InternalException
     {
         if (bytes != null)
         {
@@ -165,14 +174,30 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         }
         else if (shorts == null)
         {
-            addInteger(shortToInt(n));
+            addInteger(index, shortToInt(n));
             return;
         }
-        if (filled >= shorts.length)
+
+        if (isPresent(index))
         {
-            shorts = Arrays.copyOf(shorts, increaseLength(shorts.length));
+            shorts[index.getAsInt()] = n;
         }
-        shorts[filled++] = n;
+        else
+        {
+            if (filled >= shorts.length)
+            {
+                shorts = Arrays.copyOf(shorts, increaseLength(shorts.length));
+            }
+            shorts[filled++] = n;
+        }
+    }
+
+    // For some reason index.isPresent() won't count as pure,
+    // even with the @Pure annotation in the stubs file.  So we use this method:
+    @Pure
+    private boolean isPresent(OptionalInt index)
+    {
+        return index.isPresent();
     }
 
     @Pure
@@ -191,7 +216,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         return x < INT_MIN ? (LONG_MIN - (long)(INT_MIN - x)) : x;
     }
 
-    private void addInteger(int n) throws InternalException
+    private void addInteger(OptionalInt index, int n) throws InternalException
     {
         if (ints == null)
         {
@@ -211,24 +236,32 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             }
             else
             {
-                addLong(intToLong(n), false);
+                addLong(index, intToLong(n), false);
                 return;
             }
         }
-        if (filled >= ints.length)
+
+        if (isPresent(index))
         {
-            ints = Arrays.copyOf(ints, increaseLength(ints.length));
+            ints[index.getAsInt()] = n;
         }
-        ints[filled++] = n;
+        else
+        {
+            if (filled >= ints.length)
+            {
+                ints = Arrays.copyOf(ints, increaseLength(ints.length));
+            }
+            ints[filled++] = n;
+        }
     }
 
     @EnsuresNonNull("longs")
-    private final void addLong(long n, boolean special) throws InternalException
+    private final void addLong(OptionalInt index, long n, boolean special) throws InternalException
     {
         // If it overlaps our special values but isn't special, store as biginteger:
         if (!special && (n < LONG_MIN))
         {
-            addBigDecimal(BigDecimal.valueOf(n));
+            addBigDecimal(index, BigDecimal.valueOf(n));
             return;
         }
 
@@ -258,32 +291,51 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             else
                 throw new InternalException("All arrays null");
         }
-        // If it is special, add as if normal
-        if (filled >= longs.length)
+        if (isPresent(index))
         {
-            longs = Arrays.copyOf(longs, increaseLength(longs.length));
+            longs[index.getAsInt()] = n;
         }
-        longs[filled++] = n;
+        else
+        {
+            // If it is special, add as if normal
+            if (filled >= longs.length)
+            {
+                longs = Arrays.copyOf(longs, increaseLength(longs.length));
+            }
+            longs[filled++] = n;
+        }
+
+        assert longs != null : "@AssumeAssertion(nullness)";
     }
 
     @EnsuresNonNull({"longs", "bigDecimals"})
-    private final void addBigDecimal(BigDecimal bigDecimal) throws InternalException
+    private final void addBigDecimal(OptionalInt index, BigDecimal bigDecimal) throws InternalException
     {
         // This will convert to LONG_OR_BIG if needed:
-        addLong(SEE_BIGDEC, true);
+        addLong(index, SEE_BIGDEC, true);
 
         if (bigDecimals == null)
         {
             bigDecimals = new BigDecimal[longs.length];
         }
 
-        // Subtract one because addLong already increased it:
-        if (filled - 1 >= bigDecimals.length)
+        if (isPresent(index))
         {
-            bigDecimals = Arrays.copyOf(bigDecimals, increaseLength(bigDecimals.length));
+            bigDecimals[index.getAsInt()] = bigDecimal;
+            assert longs != null : "@AssumeAssertion(nullness)";
         }
-        bigDecimals[filled - 1] = bigDecimal;
-        assert longs != null : "@AssumeAssertion(nullness)";
+        else
+        {
+            // Subtract one because addLong already increased it:
+            if (filled - 1 >= bigDecimals.length)
+            {
+                bigDecimals = Arrays.copyOf(bigDecimals, increaseLength(bigDecimals.length));
+            }
+            bigDecimals[filled - 1] = bigDecimal;
+            assert longs != null : "@AssumeAssertion(nullness)";
+        }
+
+        assert bigDecimals != null : "@AssumeAssertion(nullness)";
     }
 
     private int increaseLength(int length)
@@ -409,7 +461,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
                 @Override
                 public @OnThread(Tag.Simulation) void set(int index, Number value) throws InternalException
                 {
-
+                    NumericColumnStorage.this.set(OptionalInt.of(index), value);
                 }
             });
         }
@@ -424,22 +476,36 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             add(n);
         }
     }
+
+    // If index is empty, add at end.
+    // public for testing
+    public void set(OptionalInt index, Number n) throws InternalException
+    {
+        try
+        {
+            if (n instanceof BigDecimal)
+                addBigDecimal(index, (BigDecimal) n);
+            else
+            {
+                if ((long) n.byteValue() == n.longValue())
+                    addByte(index, n.byteValue()); // Fits in a byte
+                else if ((long) n.shortValue() == n.longValue())
+                    addShort(index, n.shortValue()); // Fits in a short
+                else if ((long) n.intValue() == n.longValue())
+                    addInteger(index, n.intValue()); // Fits in a int
+                else
+                    addLong(index, n.longValue(), false);
+            }
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            throw new InternalException("Out of bounds: " + index + " filled: " + filled, e);
+        }
+    }
     
     public void add(Number n) throws InternalException
     {
-        if (n instanceof BigDecimal)
-            addBigDecimal((BigDecimal) n);
-        else
-        {
-            if ((long)n.byteValue() == n.longValue())
-                addByte(n.byteValue()); // Fits in a byte
-            else if ((long)n.shortValue() == n.longValue())
-                addShort(n.shortValue()); // Fits in a short
-            else if ((long)n.intValue() == n.longValue())
-                addInteger(n.intValue()); // Fits in a int
-            else
-                addLong(n.longValue(), false);
-        }
+        set(OptionalInt.empty(), n);
     }
 /*
     public int getNumericTag()
@@ -474,6 +540,6 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     @Override
     public void addRow() throws InternalException, UserException
     {
-        addByte((byte)0);
+        addByte(OptionalInt.empty(), (byte)0);
     }
 }
