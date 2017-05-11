@@ -8,6 +8,7 @@ import records.data.NumericColumnStorage;
 import records.data.datatype.DataType.NumberInfo;
 import records.error.InternalException;
 import records.error.UserException;
+import test.gen.GenNumber;
 import test.gen.GenNumbers;
 import test.gen.GenNumbersAsString;
 import threadchecker.OnThread;
@@ -59,4 +60,16 @@ public class PropNumericStorage
         TestUtil.assertEqualList(Utility.mapList(input, Utility::toBigDecimal), out);
     }
 
+    @Property(trials = 1000)
+    @OnThread(Tag.Simulation)
+    public void testNumbersAdd(@From(GenNumbers.class) List<Number> input, @From(GenNumber.class) Number n) throws IOException, InternalException, UserException
+    {
+        // These numbers come from a fixed bit size, so may lack
+        // a high number
+        testNumbers(input);
+        // We add a new number which may cause the whole thing to be shifted
+        // to higher storage, then test with that:
+        input.add(n);
+        testNumbers(input);
+    }
 }
