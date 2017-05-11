@@ -401,7 +401,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             dataType = DataTypeValue.number(displayInfo, new GetValue<Number>()
             {
                 @Override
-                public Number getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
+                public Number getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
                 {
                     return DataTypeUtility.value(NumericColumnStorage.this.getNonBlank(i, prog));
                 }
@@ -425,17 +425,8 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         }
     }
     
-    public void add(@Nullable Number n) throws InternalException
+    public void add(Number n) throws InternalException
     {
-        if (n == null)
-        {
-            // They want to add a blank.  We have no special case for this; we have
-            // to store some sort of number.  So we store Byte.MAX_VALUE which at least
-            // won't increase our storage requirement:
-            addByte(Byte.MAX_VALUE);
-            return;
-        }
-
         if (n instanceof BigDecimal)
             addBigDecimal((BigDecimal) n);
         else
