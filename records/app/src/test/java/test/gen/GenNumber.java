@@ -15,9 +15,17 @@ import java.util.List;
  */
 public class GenNumber extends Generator<Number>
 {
-    public GenNumber()
+    private final boolean fixBits;
+
+    public GenNumber(boolean fixBits)
     {
         super(Number.class);
+        this.fixBits = fixBits;
+    }
+
+    public GenNumber()
+    {
+        this(false);
     }
 
     @Override
@@ -26,7 +34,7 @@ public class GenNumber extends Generator<Number>
         Number n;
         try
         {
-            n = Utility.parseNumber(new GenNumberAsString().generate(sourceOfRandomness, generationStatus));
+            n = Utility.parseNumber(new GenNumberAsString(fixBits).generate(sourceOfRandomness, generationStatus));
         }
         catch (UserException e)
         {

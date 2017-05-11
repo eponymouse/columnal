@@ -8,11 +8,14 @@ import records.data.NumericColumnStorage;
 import records.data.datatype.DataType.NumberInfo;
 import records.error.InternalException;
 import records.error.UserException;
+import test.gen.GenNumbers;
 import test.gen.GenNumbersAsString;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
 
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,7 +29,7 @@ public class PropNumericStorage
 {
     @Property
     @OnThread(Tag.Simulation)
-    public void testPureNumbers(@From(GenNumbersAsString.class) List<String> input) throws IOException, InternalException, UserException
+    public void testNumbersFromString(@From(GenNumbersAsString.class) List<String> input) throws IOException, InternalException, UserException
     {
         NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT);
         for (String s : input)
@@ -38,6 +41,22 @@ public class PropNumericStorage
         for (int i = 0; i < input.size(); i++)
             out.add(storage.getType().getCollapsed(i).toString());
         TestUtil.assertEqualList(input, out);
+    }
+
+    @Property
+    @OnThread(Tag.Simulation)
+    public void testNumbers(@From(GenNumbers.class) List<Number> input) throws IOException, InternalException, UserException
+    {
+        NumericColumnStorage storage = new NumericColumnStorage(NumberInfo.DEFAULT);
+        for (Number n : input)
+            storage.add(n);
+
+        assertEquals(input.size(), storage.filled());
+
+        List<Number> out = new ArrayList<>();
+        for (int i = 0; i < input.size(); i++)
+            out.add(Utility.toBigDecimal((Number) storage.getType().getCollapsed(i)));
+        TestUtil.assertEqualList(Utility.mapList(input, Utility::toBigDecimal), out);
     }
 
 }

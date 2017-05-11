@@ -12,9 +12,22 @@ import java.util.Arrays;
  */
 public class GenNumberAsString extends Generator<String>
 {
-    public GenNumberAsString()
+    private final boolean fixBits;
+    private int maxBits = -1;
+
+    /**
+     *
+     * @param fixBits If true then
+     */
+    public GenNumberAsString(boolean fixBits)
     {
         super(String.class);
+        this.fixBits = fixBits;
+    }
+
+    public GenNumberAsString()
+    {
+        this(false);
     }
 
     @Override
@@ -34,8 +47,11 @@ public class GenNumberAsString extends Generator<String>
                 BigInteger.valueOf(Long.MAX_VALUE).add(BigInteger.ONE)
             )).toString();
         }
-        boolean includeFractional = sourceOfRandomness.nextBoolean();
-        int maxBits = sourceOfRandomness.nextInt(6, 80);
+        if (!fixBits || maxBits == -1)
+        {
+            maxBits = sourceOfRandomness.nextInt(3, 80);
+        }
+        boolean includeFractional = maxBits >= 48;
         if (includeFractional && sourceOfRandomness.nextBoolean())
         {
             // I don't think it matters here whether we come up with

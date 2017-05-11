@@ -22,6 +22,6 @@ public class GenNumbersAsString extends Generator<List<String>>
     public List<String> generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         int length = sourceOfRandomness.nextInt(0, 100);
-        return TestUtil.makeList(length, new GenNumberAsString(), sourceOfRandomness, generationStatus);
+        return TestUtil.makeList(length, new GenNumberAsString(true), sourceOfRandomness, generationStatus);
     }
 }
