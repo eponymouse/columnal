@@ -193,6 +193,7 @@ public class OutputBuilder
         cur().add(type.applyGet(new DataTypeVisitorGet<String>()
         {
             @Override
+            @OnThread(Tag.Simulation)
             public String number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
                 @Value @NonNull Number number = g.get(index);
@@ -203,12 +204,14 @@ public class OutputBuilder
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public String text(GetValue<@Value String> g) throws InternalException, UserException
             {
                 return quoted(g.get(index));
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public String tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 TagType<DataTypeValue> t = tagTypes.get(g.get(index));
@@ -220,18 +223,21 @@ public class OutputBuilder
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public String bool(GetValue<@Value Boolean> g) throws InternalException, UserException
             {
                 return g.get(index).toString();
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public String date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
             {
                 return quoted(dateTimeInfo.getFormatter().format(g.get(index)));
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public String tuple(List<DataTypeValue> types) throws InternalException, UserException
             {
                 OutputBuilder b = new OutputBuilder();
@@ -249,6 +255,7 @@ public class OutputBuilder
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public String array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
             {
                 OutputBuilder b = new OutputBuilder();

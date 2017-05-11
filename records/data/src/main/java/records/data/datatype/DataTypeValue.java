@@ -166,7 +166,6 @@ public class DataTypeValue extends DataType
         }
     }
 
-    @OnThread(Tag.Any)
     public static interface DataTypeVisitorGetEx<R, E extends Throwable>
     {
         R number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, E;
@@ -182,7 +181,6 @@ public class DataTypeValue extends DataType
         R array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, E;
     }
 
-    @OnThread(Tag.Simulation)
     public static interface DataTypeVisitorGet<R> extends DataTypeVisitorGetEx<R, UserException>
     {
         
