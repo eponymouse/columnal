@@ -164,6 +164,13 @@ public class View extends StackPane implements TableManager.TableManagerListener
         //TODO
     }
 
+    public void modified()
+    {
+        lastSaveTime.set(null);
+        // TODO use a timer rather than saving instantly every time?
+        save();
+    }
+
     @OnThread(Tag.FXPlatform)
     private static class Overlays
     {

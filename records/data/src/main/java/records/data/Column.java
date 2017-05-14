@@ -146,6 +146,12 @@ public abstract class Column
         return editable;
     }
 
+    @OnThread(Tag.Simulation)
+    public final void modified()
+    {
+        recordSet.modified();
+    }
+
     // For testing: return copy of column with length trimmed to shrunkLength
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {

@@ -23,6 +23,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.Utility;
 import utility.Workers;
 import utility.gui.FXUtility;
@@ -96,11 +97,14 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     @OnThread(Tag.FXPlatform)
     private static class TableDataDisplay extends StableView implements RecordSet.RecordSetListener
     {
+        private final FXPlatformRunnable onModify;
+
         @SuppressWarnings("initialization")
         @UIEffect
-        public TableDataDisplay(RecordSet recordSet)
+        public TableDataDisplay(RecordSet recordSet, FXPlatformRunnable onModify)
         {
             super();
+            this.onModify = onModify;
             recordSet.setListener(this);
             setColumns(TableDisplayUtility.makeStableViewColumns(recordSet));
             setRows(recordSet::indexValid);
@@ -147,6 +151,13 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             getItems().add(Integer.valueOf(- getItems().size()));
             */
         }
+
+        @Override
+        @OnThread(Tag.FXPlatform)
+        public void modified()
+        {
+            onModify.run();
+        }
     }
 
     @SuppressWarnings("initialization")
@@ -169,7 +180,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         }
         this.error = error;
         this.recordSet = recordSet;
-        StackPane body = new StackPane(new TableDataDisplay(recordSet).getNode());
+        StackPane body = new StackPane(new TableDataDisplay(recordSet, parent::modified).getNode());
         Utility.addStyleClass(body, "table-body");
         setCenter(body);
         Utility.addStyleClass(this, "table-wrapper");

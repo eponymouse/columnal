@@ -133,7 +133,10 @@ public class TableDisplayUtility
                         @Nullable Number nFinal = n;
                         return result(altered, error, () -> {
                             if (nFinal != null)
+                            {
                                 g.set(rowIndex, nFinal);
+                                column.modified();
+                            }
                         });
                     };
                 }
@@ -146,7 +149,10 @@ public class TableDisplayUtility
 
                         String mungedNewPart = newPart.replace("\n", "");
                         return result(mungedNewPart, null,
-                            () -> g.set(rowIndex, before + mungedNewPart + end)
+                            () -> {
+                                g.set(rowIndex, before + mungedNewPart + end);
+                                column.modified();
+                            }
                         );
                     };
                 }

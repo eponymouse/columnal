@@ -9,6 +9,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.text.Text;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -50,7 +51,7 @@ public abstract class RecordSet
     private final List<Column> columns;
 
     @OnThread(Tag.FXPlatform)
-    protected @Nullable RecordSetListener listener;
+    protected @MonotonicNonNull RecordSetListener listener;
 
     @SuppressWarnings("initialization")
     public RecordSet(List<? extends FunctionInt<RecordSet, ? extends Column>> columns) throws InternalException, UserException
@@ -312,9 +313,22 @@ public abstract class RecordSet
         this.listener = listener;
     }
 
+    @OnThread(Tag.Simulation)
+    public void modified()
+    {
+        Platform.runLater(() -> {
+            if (listener != null)
+                listener.modified();
+        });
+    }
+
+    @OnThread(Tag.FXPlatform)
     public static interface RecordSetListener
     {
         @OnThread(Tag.FXPlatform)
         public void rowAddedAtEnd();
+
+        @OnThread(Tag.FXPlatform)
+        public void modified();
     }
 }
