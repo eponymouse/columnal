@@ -76,6 +76,8 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     private static final long LONG_MIN = Long.MIN_VALUE + 1;
     private static final long LONG_MAX = Long.MAX_VALUE;
     // If any are non-integer, we use bigDecimals
+    // Note that bigDecimals.length <= longs.length, not ==
+    // That is, bigDecimals may not be as long as the longs array if it doesn't have to be.
     private @Nullable BigDecimal @Nullable [] bigDecimals;
     @MonotonicNonNull
     @OnThread(value = Tag.Any, requireSynchronized = true)
@@ -195,9 +197,17 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     // For some reason index.isPresent() won't count as pure,
     // even with the @Pure annotation in the stubs file.  So we use this method:
     @Pure
-    private boolean isPresent(OptionalInt index)
+    private static boolean isPresent(OptionalInt index)
     {
         return index.isPresent();
+    }
+
+    // For some reason index.getAsInt() won't count as pure,
+    // even with the @Pure annotation in the stubs file.  So we use this method:
+    @Pure
+    private static int getAsInt(OptionalInt index)
+    {
+        return index.getAsInt();
     }
 
     @Pure
@@ -321,6 +331,11 @@ public class NumericColumnStorage implements ColumnStorage<Number>
 
         if (isPresent(index))
         {
+            if (getAsInt(index) >= bigDecimals.length)
+            {
+                bigDecimals = Arrays.copyOf(bigDecimals, increaseLength(bigDecimals.length));
+            }
+
             bigDecimals[index.getAsInt()] = bigDecimal;
             assert longs != null : "@AssumeAssertion(nullness)";
         }
