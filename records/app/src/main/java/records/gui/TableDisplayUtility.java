@@ -263,9 +263,7 @@ public class TableDisplayUtility
             textArea.setUseInitialStyleForInsertion(false);
             textArea.setUndoManager(UndoManagerFactory.fixedSizeHistoryFactory(3));
 
-            String fracPart = Utility.getFracPartAsString(n);
-            while (fracPart.length() < item.getMinimumDecimalPlaces())
-                fracPart += "0";
+            String fracPart = Utility.getFracPartAsString(n, item.getMinimumDecimalPlaces(), 9999);
             fracPart = fracPart.isEmpty() ? "" : "." + fracPart;
             textArea.replace(docFromSegments(
                 new StyledText<>(Utility.getIntegerPart(n).toString(), Arrays.asList("number-display-int")),

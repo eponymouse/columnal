@@ -291,8 +291,19 @@ public class Utility
         return cmp;
     }
 
-    // Gets the fractional part as a String
-    public static String getFracPartAsString(Number number)
+    /**
+     * Gets the fractional part as a String, excluding the dot
+     *
+     * @param minDisplayDP The minimum number of decimal places to show.  If zero,
+     *                     empty string will be returned if the number is an integer.
+     * @param maxDisplayDP The maximum number of decimal places to show.  There is
+     *                     an in-built maximum in effect of around 35, as that is the
+     *                     maximum precision possible in a BigDecimal.  So if this
+     *                     number is much higher than 35, it effectively means no maximum.
+     */
+
+
+    public static String getFracPartAsString(Number number, int minDisplayDP, int maxDisplayDP)
     {
         if (number instanceof BigDecimal)
         {
