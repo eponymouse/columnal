@@ -21,6 +21,7 @@ public class Main extends Application
     @OnThread(value = Tag.FXPlatform,ignoreParent = true)
     public void start(final Stage primaryStage) throws Exception
     {
+        FXUtility.ensureFontLoaded("DroidSansMono-Regular.ttf");
         FXUtility.ensureFontLoaded("NotoSans-Regular.ttf");
         FXUtility.ensureFontLoaded("SourceCodePro-Regular.ttf");
         FXUtility.ensureFontLoaded("SourceCodePro-Semibold.ttf");
