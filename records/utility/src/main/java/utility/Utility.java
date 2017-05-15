@@ -300,6 +300,8 @@ public class Utility
      *                     an in-built maximum in effect of around 35, as that is the
      *                     maximum precision possible in a BigDecimal.  So if this
      *                     number is much higher than 35, it effectively means no maximum.
+     *                     Must be at least 1 (otherwise, why call this function?).
+     *                     Passing a negative number is equivalent to unlimited.
      */
 
 
@@ -316,6 +318,10 @@ public class Utility
                 s = s.substring(dot + 1);
                 while (s.length() < minDisplayDP)
                     s = s + "0";
+                if (maxDisplayDP > 0 && s.length() > maxDisplayDP)
+                {
+                    s = s.substring(0, maxDisplayDP - 1) + "\u2026";
+                }
                 return s;
             }
 

@@ -21,7 +21,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class PropUtility
 {
-    @Property(trials = 10000)
+    @Property(trials = 2000)
     public void testNumberFracUtilities(@From(GenNumber.class) Number n) throws UserException
     {
         /* Too hard to test
@@ -31,15 +31,25 @@ public class PropUtility
                 Utility.multiplyNumbers(Utility.getFracPart(n, 35), Utility.rationalToPower(Rational.of(10), -35))
                 , true)));
         */
-        for (int minDP = 0; minDP < 30; minDP++)
+        for (int minDP = 0; minDP < 15; minDP++)
         {
-            String fracPartAsString = Utility.getFracPartAsString(n, minDP, 9999);
-            assertThat(fracPartAsString.length(), Matchers.greaterThanOrEqualTo(minDP));
-            if (!fracPartAsString.isEmpty())
-                fracPartAsString = "." + fracPartAsString;
-            // TODO test maxDisplayDP
-            // TODO also add a param to function which adds ellipsis or not, then tests that
-            assertThat(Utility.toBigDecimal(n), Matchers.comparesEqualTo(Utility.toBigDecimal(Utility.parseNumber(Utility.getIntegerPart(n).toString() + fracPartAsString)).stripTrailingZeros()));
+            for (int maxDP = Math.max(1, minDP); maxDP <= 20; maxDP++)
+            {
+                String fracPartAsString = Utility.getFracPartAsString(n, minDP, maxDP);
+                assertThat(fracPartAsString.length(), Matchers.greaterThanOrEqualTo(minDP));
+                assertThat(fracPartAsString.length(), Matchers.lessThanOrEqualTo(maxDP));
+                if (!fracPartAsString.isEmpty())
+                    fracPartAsString = "." + fracPartAsString;
+                if (fracPartAsString.endsWith("\u2026"))
+                {
+                    // Check that it's a prefix of full string:
+                    assertThat(Utility.toBigDecimal(n).toPlainString(), Matchers.startsWith(Utility.getIntegerPart(n).toString() + fracPartAsString.substring(0, fracPartAsString.length() - 1)));
+                }
+                else
+                {
+                    assertThat(Utility.toBigDecimal(n), Matchers.comparesEqualTo(Utility.toBigDecimal(Utility.parseNumber(Utility.getIntegerPart(n).toString() + fracPartAsString)).stripTrailingZeros()));
+                }
+            }
         }
     }
 }
