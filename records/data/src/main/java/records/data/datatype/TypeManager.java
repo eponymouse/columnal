@@ -6,7 +6,6 @@ import records.data.Table.Saver;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
-import records.data.datatype.DataType.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;

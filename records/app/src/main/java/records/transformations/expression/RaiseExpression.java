@@ -11,7 +11,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UnimplementedException;

@@ -9,7 +9,7 @@ import org.hamcrest.Matchers;
 import org.junit.Before;
 import org.junit.runner.RunWith;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;

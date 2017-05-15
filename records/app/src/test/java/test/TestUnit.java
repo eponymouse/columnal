@@ -9,7 +9,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.sosy_lab.common.rationals.Rational;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.SingleUnit;
 import records.data.unit.Unit;

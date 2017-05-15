@@ -30,7 +30,7 @@ import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.FunctionInt;

@@ -2,7 +2,6 @@ package records.data.datatype;
 
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
-import javafx.util.StringConverter;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -11,7 +10,6 @@ import records.data.ArrayColumnStorage;
 import records.data.BooleanColumnStorage;
 import records.data.CachedCalculatedColumn;
 import records.data.Column;
-import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.ColumnStorage.BeforeGet;
 import records.data.MemoryArrayColumn;
@@ -28,7 +26,6 @@ import records.data.TaggedColumnStorage;
 import records.data.TemporalColumnStorage;
 import records.data.TupleColumnStorage;
 import records.data.datatype.DataTypeValue.GetValue;
-import records.data.unit.Unit;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
@@ -320,63 +317,6 @@ public class DataType
     public static DataType date(DateTimeInfo dateTimeInfo)
     {
         return new DataType(Kind.DATETIME, null, dateTimeInfo, null, null);
-    }
-
-    public static class NumberInfo
-    {
-        private final Unit unit;
-        private final int minimumDP;
-
-        public NumberInfo(Unit unit, int minimumDP)
-        {
-            this.unit = unit;
-            this.minimumDP = minimumDP;
-        }
-
-        public static final NumberInfo DEFAULT = new NumberInfo(Unit.SCALAR, 0);
-
-        public int getMinimumDP()
-        {
-            return minimumDP;
-        }
-
-        @Override
-        public boolean equals(@Nullable Object o)
-        {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            NumberInfo that = (NumberInfo) o;
-
-            if (minimumDP != that.minimumDP) return false;
-            return unit.equals(that.unit);
-        }
-
-        @Override
-        public int hashCode()
-        {
-            int result = unit.hashCode();
-            result = 31 * result + minimumDP;
-            return result;
-        }
-
-        public Unit getUnit()
-        {
-            return unit;
-        }
-
-        public boolean sameType(@Nullable NumberInfo numberInfo)
-        {
-            if (numberInfo == null)
-                return false;
-            return unit.equals(numberInfo.unit);
-        }
-
-
-        public int hashCodeForType()
-        {
-            return unit.hashCode();
-        }
     }
 
     public static interface DataTypeVisitorEx<R, E extends Throwable>

@@ -17,7 +17,7 @@ import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.NumberInfo;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;

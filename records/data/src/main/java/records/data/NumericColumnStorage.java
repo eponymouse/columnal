@@ -6,23 +6,20 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column.ProgressListener;
-import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.error.FetchException;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExBiConsumer;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Optional;
 import java.util.OptionalInt;
 
 /**

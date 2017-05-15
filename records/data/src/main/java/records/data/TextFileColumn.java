@@ -4,7 +4,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnStorage.BeforeGet;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeId;

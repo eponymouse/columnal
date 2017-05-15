@@ -2,11 +2,10 @@ package test;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.data.NumericColumnStorage;
-import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.NumberInfo;
 import records.error.InternalException;
 import records.error.UserException;
 import test.gen.GenNumber;
@@ -17,7 +16,6 @@ import threadchecker.Tag;
 import utility.Utility;
 
 import java.io.IOException;
-import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;

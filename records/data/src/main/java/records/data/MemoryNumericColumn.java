@@ -1,6 +1,6 @@
 package records.data;
 
-import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;

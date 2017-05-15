@@ -5,17 +5,14 @@ import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import javafx.application.Platform;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ObservableValue;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
 import records.data.DisplayValue.ProgressState;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
@@ -34,9 +31,7 @@ import utility.Workers.Worker;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.concurrent.ExecutionException;
 
 import static records.data.DisplayValue.ProgressState.GETTING;

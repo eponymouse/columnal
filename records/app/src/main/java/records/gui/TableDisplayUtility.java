@@ -1,6 +1,5 @@
 package records.gui;
 
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
@@ -19,9 +18,8 @@ import records.data.Column;
 import records.data.DisplayValue;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
@@ -32,7 +30,6 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.SimulationConsumer;
 import utility.Utility;
 import utility.Utility.RunOrError;
 import utility.Workers;

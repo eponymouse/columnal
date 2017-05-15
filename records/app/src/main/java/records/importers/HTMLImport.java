@@ -25,7 +25,7 @@ import records.data.columntype.NumericColumnType;
 import records.data.columntype.OrBlankColumnType;
 import records.data.columntype.TextColumnType;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.NumberInfo;
+import records.data.datatype.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.unit.Unit;
 import records.error.FunctionInt;
