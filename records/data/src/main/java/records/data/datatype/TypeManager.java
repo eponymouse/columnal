@@ -142,7 +142,7 @@ public class TypeManager
         {
             NumberContext n = type.number();
             Unit unit = unitManager.loadUse(n.UNIT().getText());
-            return DataType.number(new NumberInfo(unit, Integer.valueOf(n.DIGITS().getText())));
+            return DataType.number(new NumberInfo(unit, null /*TODO */));
         }
         else if (type.tagRef() != null)
         {

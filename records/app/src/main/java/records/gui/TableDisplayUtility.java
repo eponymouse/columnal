@@ -19,6 +19,7 @@ import records.data.DisplayValue;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.NumberDisplayInfo;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
@@ -260,7 +261,10 @@ public class TableDisplayUtility
             textArea.setUseInitialStyleForInsertion(false);
             textArea.setUndoManager(UndoManagerFactory.fixedSizeHistoryFactory(3));
 
-            String fracPart = Utility.getFracPartAsString(n, item.getMinimumDecimalPlaces(), 9999);
+            @Nullable NumberDisplayInfo ndi = item.getNumberDisplayInfo();
+            if (ndi == null)
+                ndi = NumberDisplayInfo.SYSTEMWIDE_DEFAULT; // TODO use file-wide default
+            String fracPart = Utility.getFracPartAsString(n, ndi.getMinimumDP(), ndi.getMaximumDP());
             fracPart = fracPart.isEmpty() ? "" : "." + fracPart;
             textArea.replace(docFromSegments(
                 new StyledText<>(Utility.getIntegerPart(n).toString(), Arrays.asList("number-display-int")),

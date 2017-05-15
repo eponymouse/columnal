@@ -105,9 +105,9 @@ public class DataTypeUtility
         return dataType.apply(new DataTypeVisitor<DisplayValue>()
         {
             @Override
-            public DisplayValue number(NumberInfo displayInfo) throws InternalException, UserException
+            public DisplayValue number(NumberInfo numberInfo) throws InternalException, UserException
             {
-                return new DisplayValue(rowIndex, (Number)object, displayInfo.getUnit(), displayInfo.getMinimumDP());
+                return new DisplayValue(rowIndex, (Number)object, numberInfo.getUnit(), numberInfo.getDisplayInfo());
             }
 
             @Override
@@ -342,12 +342,13 @@ public class DataTypeUtility
         };
     }
 
+    // Only for use with examples
     public static DisplayValue toDisplayValue(int rowIndex, @Value Object o)
     {
         if (o instanceof Boolean)
             return new DisplayValue(rowIndex, (Boolean)o);
         else if (o instanceof Number)
-            return new DisplayValue(rowIndex, (Number)o, Unit.SCALAR, 0);
+            return new DisplayValue(rowIndex, (Number)o, Unit.SCALAR, null);
         else if (o instanceof String)
             return new DisplayValue(rowIndex, (String)o);
         throw new RuntimeException("Unexpected toDisplayValue type: " + o.getClass());

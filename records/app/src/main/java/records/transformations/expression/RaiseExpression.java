@@ -87,11 +87,11 @@ public class RaiseExpression extends BinaryOpExpression
             {
                 if (numeratorOne)
                 {
-                    return DataType.number(new NumberInfo(lhsTypeFinal.getNumberInfo().getUnit().rootedBy(r.getDen().intValueExact()), 0));
+                    return DataType.number(new NumberInfo(lhsTypeFinal.getNumberInfo().getUnit().rootedBy(r.getDen().intValueExact()), lhsTypeFinal.getNumberInfo().getDisplayInfo()));
                 }
                 else
                 {
-                    return DataType.number(new NumberInfo(lhsTypeFinal.getNumberInfo().getUnit().raisedTo(r.getNum().intValueExact()), 0));
+                    return DataType.number(new NumberInfo(lhsTypeFinal.getNumberInfo().getUnit().raisedTo(r.getNum().intValueExact()), lhsTypeFinal.getNumberInfo().getDisplayInfo()));
                 }
             }
             catch (ArithmeticException e)

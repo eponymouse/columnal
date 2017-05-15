@@ -51,7 +51,7 @@ public class AsUnit extends FunctionDefinition
             return null;
         }
 
-        return new Pair<>(new Instance(multiplier.get()), DataType.number(new NumberInfo(units.get(0), 0)));
+        return new Pair<>(new Instance(multiplier.get()), DataType.number(new NumberInfo(units.get(0), param.getNumberInfo().getDisplayInfo())));
     }
 
     @Override

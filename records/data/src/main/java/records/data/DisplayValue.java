@@ -2,6 +2,7 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import records.data.datatype.NumberDisplayInfo;
 import records.data.unit.Unit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -31,7 +32,7 @@ public class DisplayValue
     // These next two are fixed per-column, but it's just
     // easier to store them with the data item itself:
     private final Unit unit;
-    private final int minimumDecimalPlaces;
+    private final @Nullable NumberDisplayInfo numberDisplayInfo;
     private final @Nullable ProgressState state;
     private final double loading; // If -1, use String
     private final @Nullable String show;
@@ -63,12 +64,12 @@ public class DisplayValue
      * Create successfully loaded item with number
      */
     @OnThread(Tag.Any)
-    public DisplayValue(int rowIndex, Number val, Unit unit, int minimumDecimalPlaces)
+    public DisplayValue(int rowIndex, Number val, Unit unit, @Nullable NumberDisplayInfo displayInfo)
     {
         this.rowIndex = rowIndex;
         number = val;
         this.unit = unit;
-        this.minimumDecimalPlaces = minimumDecimalPlaces;
+        this.numberDisplayInfo = displayInfo;
         show = null;
         state = null;
         loading = -1;
@@ -84,7 +85,7 @@ public class DisplayValue
     {
         this.rowIndex = rowIndex;
         number = null;
-        minimumDecimalPlaces = 0;
+        numberDisplayInfo = null;
         this.state = state;
         this.unit = Unit.SCALAR;
         loading = d;
@@ -102,7 +103,7 @@ public class DisplayValue
         this.rowIndex = rowIndex;
         unit = Unit.SCALAR;
         number = null;
-        minimumDecimalPlaces = 0;
+        numberDisplayInfo = null;
         show = s;
         isError = err;
         loading = -1;
@@ -117,7 +118,7 @@ public class DisplayValue
     {
         this.rowIndex = rowIndex;
         number = null;
-        minimumDecimalPlaces = 0;
+        numberDisplayInfo = null;
         this.state = null;
         this.unit = Unit.SCALAR;
         loading = -1;
@@ -139,9 +140,9 @@ public class DisplayValue
     }
 
     @Pure
-    public int getMinimumDecimalPlaces()
+    public @Nullable NumberDisplayInfo getNumberDisplayInfo()
     {
-        return minimumDecimalPlaces;
+        return numberDisplayInfo;
     }
 
     @SuppressWarnings("nullness")

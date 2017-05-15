@@ -37,8 +37,8 @@ public class ToYearMonth extends ToTemporalFunction
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), "dateym.datetime"));
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "dateym.datetimez"));
         r.add(new FunctionType(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
-            DataType.number(new NumberInfo(mgr.loadBuiltIn("year"), 0)),
-            DataType.number(new NumberInfo(mgr.loadBuiltIn("month"), 0))
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("year"), null)),
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("month"), null))
         ), "dateym.year_month"));
         return r;
     }

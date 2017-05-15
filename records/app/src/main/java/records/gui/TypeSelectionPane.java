@@ -239,7 +239,7 @@ public class TypeSelectionPane
             Unit u = units.get();
             if (u == null)
                 return null;
-            return DataType.number(new NumberInfo(u, 0));
+            return DataType.number(new NumberInfo(u, null));
         }
     }
 }

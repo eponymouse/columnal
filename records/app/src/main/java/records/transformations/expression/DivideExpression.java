@@ -10,6 +10,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
+import records.data.datatype.NumberDisplayInfo;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
@@ -64,7 +65,7 @@ public class DivideExpression extends BinaryOpExpression
         }
         NumberInfo numberInfoLHS = lhsType.getNumberInfo();
         NumberInfo numberInfoRHS = rhsType.getNumberInfo();
-        return DataType.number(new NumberInfo(numberInfoLHS.getUnit().divide(numberInfoRHS.getUnit()), Math.max(numberInfoLHS.getMinimumDP(), numberInfoRHS.getMinimumDP())));
+        return DataType.number(new NumberInfo(numberInfoLHS.getUnit().divide(numberInfoRHS.getUnit()), NumberDisplayInfo.merge(numberInfoLHS.getDisplayInfo(), numberInfoRHS.getDisplayInfo())));
     }
 
     @Override

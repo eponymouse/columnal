@@ -49,7 +49,7 @@ public class GenDataType extends Generator<DataType>
         List<ExSupplier<DataType>> options = new ArrayList<>(Arrays.asList(
             () -> DataType.BOOLEAN,
             () -> DataType.TEXT,
-            () -> DataType.number(new NumberInfo(new GenUnit().generate(r, gs), r.nextInt(0, 6))),
+            () -> DataType.number(new NumberInfo(new GenUnit().generate(r, gs), null /* TODO generate NDI? */)),
             () -> DataType.date(new DateTimeInfo(r.choose(DateTimeType.values())))
         ));
         if (maxDepth > 1)

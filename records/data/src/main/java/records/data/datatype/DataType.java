@@ -321,7 +321,7 @@ public class DataType
 
     public static interface DataTypeVisitorEx<R, E extends Throwable>
     {
-        R number(NumberInfo displayInfo) throws InternalException, E;
+        R number(NumberInfo numberInfo) throws InternalException, E;
         R text() throws InternalException, E;
         R date(DateTimeInfo dateTimeInfo) throws InternalException, E;
         R bool() throws InternalException, E;
@@ -1307,11 +1307,15 @@ public class DataType
         apply(new DataTypeVisitorEx<UnitType, InternalException>()
         {
             @Override
-            public UnitType number(NumberInfo displayInfo) throws InternalException, InternalException
+            public UnitType number(NumberInfo numberInfo) throws InternalException, InternalException
             {
                 b.t(FormatLexer.NUMBER, FormatLexer.VOCABULARY);
-                b.n(displayInfo.getMinimumDP());
-                b.unit(displayInfo.getUnit().toString());
+                @Nullable NumberDisplayInfo ndi = numberInfo.getDisplayInfo();
+                if (ndi != null)
+                {
+                    b.n(ndi.getMinimumDP());
+                }
+                b.unit(numberInfo.getUnit().toString());
                 return UnitType.UNIT;
             }
 

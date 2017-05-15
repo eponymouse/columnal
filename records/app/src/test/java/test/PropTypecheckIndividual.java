@@ -173,8 +173,8 @@ public class PropTypecheckIndividual
             // Will actually type-check
             Unit aOverB = a.getNumberInfo().getUnit().divide(b.getNumberInfo().getUnit());
             Unit bOverA = b.getNumberInfo().getUnit().divide(a.getNumberInfo().getUnit());
-            assertEquals(DataType.number(new NumberInfo(aOverB, 0)), new DivideExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
-            assertEquals(DataType.number(new NumberInfo(bOverA, 0)), new DivideExpression(new DummyExpression(b), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
+            assertEquals(DataType.number(new NumberInfo(aOverB, null)), new DivideExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
+            assertEquals(DataType.number(new NumberInfo(bOverA, null)), new DivideExpression(new DummyExpression(b), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
         }
         else
         {
@@ -232,7 +232,7 @@ public class PropTypecheckIndividual
         Assume.assumeFalse(unit.equals(Unit.SCALAR));
 
         // No units on RHS:
-        DataType unitNum = DataType.number(new NumberInfo(unit, 0));
+        DataType unitNum = DataType.number(new NumberInfo(unit, null));
         assertEquals(null, check(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(unitNum))));
         // Plain on both is fine, even when RHS doesn't constant fold:
         assertEquals(DataType.NUMBER, check(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(DataType.NUMBER))));
@@ -241,13 +241,13 @@ public class PropTypecheckIndividual
         // LHS units and RHS integer is fine:
         assertEquals(unitNum, check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.ONE))));
         assertEquals(DataType.NUMBER, check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.ZERO))));
-        assertEquals(DataType.number(new NumberInfo(unit.raisedTo(5), 0)), check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(5)))));
-        assertEquals(DataType.number(new NumberInfo(unit.reciprocal(), 0)), check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(-1)))));
-        assertEquals(DataType.number(new NumberInfo(unit.raisedTo(3).reciprocal(), 0)), check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(-3)))));
+        assertEquals(DataType.number(new NumberInfo(unit.raisedTo(5), null)), check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(5)))));
+        assertEquals(DataType.number(new NumberInfo(unit.reciprocal(), null)), check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(-1)))));
+        assertEquals(DataType.number(new NumberInfo(unit.raisedTo(3).reciprocal(), null)), check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(-3)))));
         // 1/integer is ok if all units divisible:
-        assertEquals(unitNum, check(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(3), 0))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(1L, 3L)))));
+        assertEquals(unitNum, check(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(3), null))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(1L, 3L)))));
         // Any other rational not allowed:
-        assertEquals(null, check(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(6), 0))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(2L, 3L)))));
+        assertEquals(null, check(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(6), null))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(2L, 3L)))));
     }
 
     @Property

@@ -9,20 +9,16 @@ import records.data.unit.Unit;
 public class NumberInfo
 {
     private final Unit unit;
-    private final int minimumDP;
+    // Can override file-wide default.  If null, use file-wide default
+    private final @Nullable NumberDisplayInfo numberDisplayInfo;
 
-    public NumberInfo(Unit unit, int minimumDP)
+    public NumberInfo(Unit unit, @Nullable NumberDisplayInfo numberDisplayInfo)
     {
         this.unit = unit;
-        this.minimumDP = minimumDP;
+        this.numberDisplayInfo = numberDisplayInfo;
     }
 
-    public static final NumberInfo DEFAULT = new NumberInfo(Unit.SCALAR, 0);
-
-    public int getMinimumDP()
-    {
-        return minimumDP;
-    }
+    public static final NumberInfo DEFAULT = new NumberInfo(Unit.SCALAR, null);
 
     @Override
     public boolean equals(@Nullable Object o)
@@ -32,15 +28,15 @@ public class NumberInfo
 
         NumberInfo that = (NumberInfo) o;
 
-        if (minimumDP != that.minimumDP) return false;
-        return unit.equals(that.unit);
+        if (!unit.equals(that.unit)) return false;
+        return numberDisplayInfo != null ? numberDisplayInfo.equals(that.numberDisplayInfo) : that.numberDisplayInfo == null;
     }
 
     @Override
     public int hashCode()
     {
         int result = unit.hashCode();
-        result = 31 * result + minimumDP;
+        result = 31 * result + (numberDisplayInfo != null ? numberDisplayInfo.hashCode() : 0);
         return result;
     }
 
@@ -60,5 +56,10 @@ public class NumberInfo
     public int hashCodeForType()
     {
         return unit.hashCode();
+    }
+
+    public @Nullable NumberDisplayInfo getDisplayInfo()
+    {
+        return numberDisplayInfo;
     }
 }

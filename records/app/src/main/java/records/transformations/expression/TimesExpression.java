@@ -9,6 +9,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
+import records.data.datatype.NumberDisplayInfo;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.Unit;
@@ -67,7 +68,7 @@ public class TimesExpression extends NaryOpExpression
     public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         Unit runningUnit = Unit.SCALAR;
-        int minDP = 0;
+        @Nullable NumberDisplayInfo displayInfo = null;
         for (Expression expression : expressions)
         {
             @Nullable DataType expType = expression.check(data, state, onError);
@@ -80,9 +81,9 @@ public class TimesExpression extends NaryOpExpression
             }
             NumberInfo numberInfo = expType.getNumberInfo();
             runningUnit = runningUnit.times(numberInfo.getUnit());
-            minDP = Math.max(minDP, numberInfo.getMinimumDP());
+            displayInfo = NumberDisplayInfo.merge(displayInfo, numberInfo.getDisplayInfo());
         }
-        return DataType.number(new NumberInfo(runningUnit, minDP));
+        return DataType.number(new NumberInfo(runningUnit, displayInfo));
     }
 
     @Override

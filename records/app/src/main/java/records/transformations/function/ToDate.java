@@ -64,11 +64,11 @@ public class ToDate extends ToTemporalFunction
         ArrayList<FunctionType> r = new ArrayList<>(fromString("date.string"));
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), "date.datetime"));
         r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "date.datetimez"));
-        r.add(new FunctionType(FromYearMonth_Day::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), DataType.number(new NumberInfo(mgr.loadBuiltIn("day"), 0))), "date.ym_d"));
+        r.add(new FunctionType(FromYearMonth_Day::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), DataType.number(new NumberInfo(mgr.loadBuiltIn("day"), null))), "date.ym_d"));
         r.add(new FunctionType(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
-            DataType.number(new NumberInfo(mgr.loadBuiltIn("year"), 0)),
-            DataType.number(new NumberInfo(mgr.loadBuiltIn("month"), 0)),
-            DataType.number(new NumberInfo(mgr.loadBuiltIn("day"), 0))
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("year"), null)),
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("month"), null)),
+            DataType.number(new NumberInfo(mgr.loadBuiltIn("day"), null))
         ), "date.y_m_d"));
         return r;
     }

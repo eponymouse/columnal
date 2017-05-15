@@ -117,7 +117,7 @@ public class TextImport
                 columns.add(rs ->
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) columnInfo.type;
-                    return TextFileColumn.numericColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener, new NumberInfo(numericColumnType.unit, numericColumnType.minDP), numericColumnType::removePrefix);
+                    return TextFileColumn.numericColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener, new NumberInfo(numericColumnType.unit, numericColumnType.displayInfo), numericColumnType::removePrefix);
                 });
             }
             else if (columnInfo.type instanceof OrBlankColumnType)
@@ -127,7 +127,7 @@ public class TextImport
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) orBlankColumnType.getInner();
                     DataType numberOrBlank = typeManager.registerTaggedType("Number?", Arrays.asList(
-                        new TagType<>("Number", DataType.number(new NumberInfo(numericColumnType.unit, numericColumnType.minDP))),
+                        new TagType<>("Number", DataType.number(new NumberInfo(numericColumnType.unit, numericColumnType.displayInfo))),
                         new TagType<>("Blank", null)
                     ));
                     columns.add(rs -> {

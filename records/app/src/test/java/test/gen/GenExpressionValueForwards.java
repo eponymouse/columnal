@@ -170,8 +170,8 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                     // Either just use target unit, or make up crazy one
                     Unit numUnit = r.nextBoolean() ? displayInfo.getUnit() : makeUnit();
                     Unit denomUnit = calculateRequiredMultiplyUnit(numUnit, displayInfo.getUnit()).reciprocal();
-                    Pair<List<@Value Object>, Expression> numerator = make(DataType.number(new NumberInfo(numUnit, 0)), maxLevels - 1);
-                    Pair<List<@Value Object>, Expression> denominator = make(DataType.number(new NumberInfo(denomUnit, 0)), maxLevels - 1);
+                    Pair<List<@Value Object>, Expression> numerator = make(DataType.number(new NumberInfo(numUnit, null)), maxLevels - 1);
+                    Pair<List<@Value Object>, Expression> denominator = make(DataType.number(new NumberInfo(denomUnit, null)), maxLevels - 1);
                     // We avoid divide by zeros and return -7 in that case (arbitrary pick unlikely to come up by accident/bug):
                     return map2(numerator, denominator, (top, bottom) -> Utility.compareValues(bottom, DataTypeUtility.value(0)) == 0 ? DataTypeUtility.value(-7) : DataTypeUtility.value(Utility.divideNumbers((Number) top, (Number) bottom)), (topE, bottomE) -> new IfThenElseExpression(new EqualExpression(bottomE, new NumericLiteral(0, denomUnit)), new NumericLiteral(-7, displayInfo.getUnit()), new DivideExpression(topE, bottomE)));
                 }, /* TODO put RaiseExpression back again
@@ -270,7 +270,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                     {
                         Unit unit = i == numArgs - 1 ? calculateRequiredMultiplyUnit(runningUnit, displayInfo.getUnit()) : makeUnit();
                         runningUnit = runningUnit.times(unit);
-                        Pair<List<@Value Object>, Expression> pair = make(DataType.number(new NumberInfo(unit, 0)), maxLevels - 1);
+                        Pair<List<@Value Object>, Expression> pair = make(DataType.number(new NumberInfo(unit, null)), maxLevels - 1);
                         eachI(runningTotals, (row, runningTotal) -> Utility.multiplyNumbers(runningTotal, (Number)pair.getFirst().get(row)));
                         expressions.add(pair.getSecond());
                     }

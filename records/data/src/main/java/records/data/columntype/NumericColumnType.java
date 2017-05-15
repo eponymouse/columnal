@@ -2,6 +2,8 @@ package records.data.columntype;
 
 import org.apache.commons.lang3.StringUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.NumberDisplayInfo;
+import records.data.datatype.NumberDisplayInfo.Padding;
 import records.data.unit.Unit;
 
 /**
@@ -10,13 +12,13 @@ import records.data.unit.Unit;
 public class NumericColumnType extends ColumnType
 {
     public final Unit unit;
-    public final int minDP;
+    public final NumberDisplayInfo displayInfo;
     private final @Nullable String commonPrefix;
 
     public NumericColumnType(Unit unit, int minDP, @Nullable String commonPrefix)
     {
         this.unit = unit;
-        this.minDP = minDP;
+        this.displayInfo = new NumberDisplayInfo(minDP, -1, Padding.ZERO);
         this.commonPrefix = commonPrefix;
     }
 
@@ -42,7 +44,7 @@ public class NumericColumnType extends ColumnType
 
         NumericColumnType that = (NumericColumnType) o;
 
-        if (minDP != that.minDP) return false;
+        if (!displayInfo.equals(that.displayInfo)) return false;
         return unit.equals(that.unit);
     }
 
@@ -50,7 +52,7 @@ public class NumericColumnType extends ColumnType
     public int hashCode()
     {
         int result = unit.hashCode();
-        result = 31 * result + minDP;
+        result = 31 * result + displayInfo.hashCode();
         return result;
     }
 

@@ -93,7 +93,7 @@ public class HTMLImport
                     columns.add(rs ->
                     {
                         NumericColumnType numericColumnType = (NumericColumnType) columnType;
-                        return new MemoryNumericColumn(rs, columnInfo.title, new NumberInfo(numericColumnType.unit, numericColumnType.minDP), slice.stream().map(numericColumnType::removePrefix));
+                        return new MemoryNumericColumn(rs, columnInfo.title, new NumberInfo(numericColumnType.unit, numericColumnType.displayInfo), slice.stream().map(numericColumnType::removePrefix));
                     });
                 }
                 else if (columnType instanceof TextColumnType)
@@ -115,7 +115,7 @@ public class HTMLImport
                     {
                         type = mgr.getTypeManager().registerTaggedType(idealTypeName, Arrays.asList(
                             new TagType<DataType>("Blank", null),
-                            new TagType<DataType>(idealTypeName.substring(1), DataType.number(new NumberInfo(inner.unit, inner.minDP)))
+                            new TagType<DataType>(idealTypeName.substring(1), DataType.number(new NumberInfo(inner.unit, inner.displayInfo)))
                         ));
                     }
                     @NonNull DataType typeFinal = type;

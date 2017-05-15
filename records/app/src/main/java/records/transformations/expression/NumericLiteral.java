@@ -34,7 +34,7 @@ public class NumericLiteral extends Literal
     {
         this.value = DataTypeUtility.value(value);
         this.unit = unit;
-        this.type = unit == null ? DataType.NUMBER : DataType.number(new NumberInfo(unit, 0));
+        this.type = unit == null ? DataType.NUMBER : DataType.number(new NumberInfo(unit, null));
     }
 
     @Override

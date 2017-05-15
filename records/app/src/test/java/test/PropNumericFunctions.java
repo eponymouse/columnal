@@ -125,7 +125,7 @@ public class PropNumericFunctions
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<FunctionInstance, DataType> instance = function.typeCheck(Collections.emptyList(), DataType.number(new NumberInfo(mgr.loadUse(srcUnit), 0)), s ->
+            @Nullable Pair<FunctionInstance, DataType> instance = function.typeCheck(Collections.emptyList(), DataType.number(new NumberInfo(mgr.loadUse(srcUnit), null)), s ->
             {
                 throw new RuntimeException(new UserException(s));
             }, mgr);
@@ -154,7 +154,7 @@ public class PropNumericFunctions
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<FunctionInstance, DataType> instance = function.typeCheck(Collections.emptyList(), DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit), 0))), s ->
+            @Nullable Pair<FunctionInstance, DataType> instance = function.typeCheck(Collections.emptyList(), DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit), null))), s ->
             {
                 throw new RuntimeException(new UserException(s));
             }, mgr);

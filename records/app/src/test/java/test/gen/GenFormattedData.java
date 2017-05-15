@@ -84,9 +84,9 @@ public class GenFormattedData extends Generator<FormatAndData>
                     long value = r.nextLong();
 
                     line.append(String.format(",".equals(format.separator) ? "%d" : "%,d", value));
-                    if (numericColumnType.minDP > 0)
+                    if (numericColumnType.displayInfo.getMinimumDP() > 0)
                     {
-                        String decimalDigs = String.format("%0" + numericColumnType.minDP + "d", Math.abs(r.nextInt())).substring(0, numericColumnType.minDP);
+                        String decimalDigs = String.format("%0" + numericColumnType.displayInfo.getMinimumDP() + "d", Math.abs(r.nextInt())).substring(0, numericColumnType.displayInfo.getMinimumDP());
                         line.append("." + decimalDigs);
                         data.add(DataTypeUtility.value(new BigDecimal(Long.toString(value) + "." + decimalDigs)));
                     }

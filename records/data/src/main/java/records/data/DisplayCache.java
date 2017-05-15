@@ -183,9 +183,9 @@ public class DisplayCache
                         {
                             @Override
                             @OnThread(Tag.Simulation)
-                            public DisplayValue number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
+                            public DisplayValue number(GetValue<@Value Number> g, NumberInfo numberInfo) throws InternalException, UserException
                             {
-                                return new DisplayValue(originalIndex, g.getWithProgress(index, prog), displayInfo.getUnit(), displayInfo.getMinimumDP());
+                                return new DisplayValue(originalIndex, g.getWithProgress(index, prog), numberInfo.getUnit(), numberInfo.getDisplayInfo());
                             }
 
                             @Override
