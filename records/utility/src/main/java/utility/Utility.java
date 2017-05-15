@@ -307,13 +307,25 @@ public class Utility
     {
         if (number instanceof BigDecimal)
         {
-            // From http://stackoverflow.com/a/30761234/412908
-            BigDecimal bd = ((BigDecimal)number).stripTrailingZeros();
-            return bd.remainder(BigDecimal.ONE).movePointRight(bd.scale()).abs().toBigInteger().toString();
+            // Munged from http://stackoverflow.com/a/30761234/412908
+            BigDecimal bd = ((BigDecimal)number);
+            String s = bd.abs().remainder(BigDecimal.ONE, MathContext.DECIMAL128).stripTrailingZeros().toString();
+            if (s.length() >= 2)
+            {
+                s = s.substring(2);
+                while (s.length() < minDisplayDP)
+                    s = s + "0";
+                return s;
+            }
 
+            // Otherwise it's zero; fall through:
         }
-        else
-            return "";
+        char cs[] = new char[minDisplayDP];
+        for (int i = 0; i < cs.length; i++)
+        {
+            cs[i] = '0';
+        }
+        return new String(cs);
     }
 
     // getFracPar(5.06, 3), will give 60.

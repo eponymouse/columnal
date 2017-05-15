@@ -21,8 +21,8 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class PropUtility
 {
-    @Property
-    public void testNumberFracUtilities(@From(GenNumber.class) @When(seed=-4652085681972298319L) Number n) throws UserException
+    @Property(trials = 10000)
+    public void testNumberFracUtilities(@From(GenNumber.class) Number n) throws UserException
     {
         /* Too hard to test
         assertEquals(Utility.toBigDecimal(n),
@@ -37,9 +37,9 @@ public class PropUtility
             assertThat(fracPartAsString.length(), Matchers.greaterThanOrEqualTo(minDP));
             if (!fracPartAsString.isEmpty())
                 fracPartAsString = "." + fracPartAsString;
-            //TODO I know that getFracEPart is wrong for leading zeroes, so make sure that fails, then fix it
-            assertEquals(Utility.toBigDecimal(n).toString(), Utility.getIntegerPart(n).toString() + fracPartAsString);
-            assertEquals(Utility.toBigDecimal(n), Utility.toBigDecimal(Utility.parseNumber(Utility.getIntegerPart(n).toString() + fracPartAsString)));
+            // TODO test maxDisplayDP
+            // TODO also add a param to function which adds ellipsis or not, then tests that
+            assertThat(Utility.toBigDecimal(n), Matchers.comparesEqualTo(Utility.toBigDecimal(Utility.parseNumber(Utility.getIntegerPart(n).toString() + fracPartAsString)).stripTrailingZeros()));
         }
     }
 }
