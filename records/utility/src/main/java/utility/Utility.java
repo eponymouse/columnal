@@ -308,17 +308,18 @@ public class Utility
         if (number instanceof BigDecimal)
         {
             // Munged from http://stackoverflow.com/a/30761234/412908
-            BigDecimal bd = ((BigDecimal)number);
-            String s = bd.abs().remainder(BigDecimal.ONE, MathContext.DECIMAL128).stripTrailingZeros().toString();
-            if (s.length() >= 2)
+            BigDecimal bd = (BigDecimal)number;
+            String s = bd.abs().toPlainString();
+            int dot = s.indexOf('.');
+            if (dot != -1)
             {
-                s = s.substring(2);
+                s = s.substring(dot + 1);
                 while (s.length() < minDisplayDP)
                     s = s + "0";
                 return s;
             }
 
-            // Otherwise it's zero; fall through:
+            // Otherwise it's an integer; fall through:
         }
         char cs[] = new char[minDisplayDP];
         for (int i = 0; i < cs.length; i++)
