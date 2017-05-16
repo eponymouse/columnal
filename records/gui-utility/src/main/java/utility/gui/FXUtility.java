@@ -182,13 +182,16 @@ public class FXUtility
         return new ExtensionFilter(TranslationUtility.getString("extension.projects"), "*.rec");
     }
 
-    @SuppressWarnings("nullness")
     public static String getStylesheet(String stylesheetName)
     {
         try
         {
             ClassLoader classLoader = ClassLoader.getSystemClassLoader();
+            if (classLoader == null)
+                return "";
             URL resource = classLoader.getResource(stylesheetName);
+            if (resource == null)
+                return "";
             return resource.toString();
         }
         catch (NullPointerException e)
