@@ -17,6 +17,8 @@ DATETIME : 'DATETIME';
 DATETIMEZONED : 'DATETIMEZONED';
 TAGGED : 'TAGGED';
 TYPE : 'TYPE';
+SPACE_KWD : 'SPACE';
+ZERO_KWD : 'ZERO';
 
 WS : ( ' ' | '\t' )+ -> skip;
 
@@ -28,6 +30,7 @@ CLOSE_BRACKET : ')';
 COMMA: ',';
 OPEN_SQUARE : '[';
 CLOSE_SQUARE : ']';
+DASH: '-';
 
 COLUMN : 'COLUMN';
 

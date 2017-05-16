@@ -2,7 +2,8 @@ parser grammar FormatParser;
 
 options { tokenVocab = FormatLexer; }
 
-number : NUMBER DIGITS UNIT;
+decimalPlaces : DIGITS (DASH DIGITS)? (SPACE_KWD | ZERO_KWD);
+number : NUMBER decimalPlaces? UNIT;
 date : YEARMONTHDAY | YEARMONTH | TIMEOFDAY | TIMEOFDAYZONED | DATETIME | DATETIMEZONED;
 tuple : OPEN_BRACKET type (COMMA type)+ CLOSE_BRACKET;
 array : OPEN_SQUARE type CLOSE_SQUARE;
