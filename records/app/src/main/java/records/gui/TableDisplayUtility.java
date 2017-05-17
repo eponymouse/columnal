@@ -7,8 +7,10 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.StyledDocument;
@@ -28,8 +30,10 @@ import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.DisplayCache.VisibleDetails;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.Utility.RunOrError;
@@ -108,7 +112,9 @@ public class TableDisplayUtility
             {
                 class NumberDisplay
                 {
-                    private final StyleClassedTextArea textArea;
+                    private final @NonNull StyleClassedTextArea textArea;
+                    private String fracPart;
+                    private String integerPart;
 
                     @OnThread(Tag.FXPlatform)
                     public NumberDisplay(int rowIndex, Number n)
@@ -155,17 +161,35 @@ public class TableDisplayUtility
                         @Nullable NumberDisplayInfo ndi = displayInfo.getDisplayInfo();
                         if (ndi == null)
                             ndi = NumberDisplayInfo.SYSTEMWIDE_DEFAULT; // TODO use file-wide default
-                        String fracPart = Utility.getFracPartAsString(n, ndi.getMinimumDP(), ndi.getMaximumDP());
-                        fracPart = fracPart.isEmpty() ? "" : "." + fracPart;
-                        textArea.replace(docFromSegments(
-                            new StyledText<>(Utility.getIntegerPart(n).toString(), Arrays.asList("number-display-int")),
-                            new StyledText<>(fracPart, Arrays.asList("number-display-frac"))
-                        ));
+                        integerPart = Utility.getIntegerPart(n).toString();
+                        fracPart = Utility.getFracPartAsString(n, ndi.getMinimumDP(), ndi.getMaximumDP());
+                        updateDisplay();
                         textArea.getStyleClass().add("number-display");
+                    }
+
+                    @SuppressWarnings("initialization") // Due to use of various fields
+                    private void updateDisplay(@UnknownInitialization(Object.class) NumberDisplay this)
+                    {
+                        textArea.replace(docFromSegments(
+                            new StyledText<>(integerPart, Arrays.asList("number-display-int")),
+                            new StyledText<>(fracPart.isEmpty() ? "" : ("." + fracPart), Arrays.asList("number-display-frac"))
+                        ));
                     }
                 }
 
-                return new DisplayCache<Number, NumberDisplay>(g, null, p -> new NumberDisplay(p.getFirst(), p.getSecond()), n -> n.textArea);
+                FXPlatformConsumer<DisplayCache<Number, NumberDisplay>.VisibleDetails> formatVisible = vis -> {
+                    int maxFracLength = vis.visibleCells.stream().mapToInt(d -> d == null ? 0 : d.fracPart.length()).max().orElse(0);
+                    for (NumberDisplay display : vis.visibleCells)
+                    {
+                        if (display != null)
+                        {
+                            while (display.fracPart.length() < maxFracLength)
+                                display.fracPart += "-";
+                            display.updateDisplay();
+                        }
+                    }
+                };
+                return new DisplayCache<Number, NumberDisplay>(g, formatVisible, p -> new NumberDisplay(p.getFirst(), p.getSecond()), n -> n.textArea);
             }
 
             @Override

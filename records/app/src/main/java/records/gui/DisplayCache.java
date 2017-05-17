@@ -44,8 +44,6 @@ import java.util.List;
 @OnThread(Tag.FXPlatform)
 public class DisplayCache<V, G> implements StableView.ValueFetcher
 {
-
-
     public static enum ProgressState
     {
         GETTING, QUEUED;
@@ -60,6 +58,8 @@ public class DisplayCache<V, G> implements StableView.ValueFetcher
     private final @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells;
     private final FXPlatformFunction<Pair<Integer, V>, G> makeGraphical;
     private final FXPlatformFunction<G, Region> getNode;
+    private int firstVisibleRowIndexIncl = -1;
+    private int lastVisibleRowIndexIncl = -1;
 
     @OnThread(Tag.Any)
     public DisplayCache(GetValue<V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, FXPlatformFunction<Pair<Integer, V>,  G> makeGraphical, FXPlatformFunction<G, Region> getNode)
@@ -94,7 +94,7 @@ public class DisplayCache<V, G> implements StableView.ValueFetcher
             this.newVisibleIndex = rowIndex - firstVisibleRowIndexIncl;
 
             visibleCells = new ArrayList<>(lastVisibleRowIndexIncl - firstVisibleRowIndexIncl + 1);
-            for (int i = firstVisibleRowIndexIncl; i < lastVisibleRowIndexIncl; i++)
+            for (int i = firstVisibleRowIndexIncl; i <= lastVisibleRowIndexIncl; i++)
             {
                 @Nullable Either<Pair<V, G>, @Localized String> loadedItemOrError = displayCacheItems.getUnchecked(i).loadedItemOrError;
                 if (loadedItemOrError != null)
@@ -119,6 +119,8 @@ public class DisplayCache<V, G> implements StableView.ValueFetcher
     @Override
     public void fetchValue(int rowIndex, ValueReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
     {
+        this.firstVisibleRowIndexIncl = firstVisibleRowIndexIncl;
+        this.lastVisibleRowIndexIncl = lastVisibleRowIndexIncl;
         @NonNull DisplayCacheItem item = displayCacheItems.getUnchecked(rowIndex);
         if (formatVisibleCells != null)
             formatVisibleCells.consume(new VisibleDetails(rowIndex, firstVisibleRowIndexIncl, lastVisibleRowIndexIncl));
@@ -126,6 +128,11 @@ public class DisplayCache<V, G> implements StableView.ValueFetcher
         item.setCallback(receiver);
     }
 
+    private void formatVisible(int rowIndexUpdated)
+    {
+        if (formatVisibleCells != null && firstVisibleRowIndexIncl != -1 && lastVisibleRowIndexIncl != -1)
+            formatVisibleCells.consume(new VisibleDetails(rowIndexUpdated, firstVisibleRowIndexIncl, lastVisibleRowIndexIncl));
+    }
 
     /**
      * A display cache.  This sets off the loader for its value, and in the mean time
@@ -158,6 +165,7 @@ public class DisplayCache<V, G> implements StableView.ValueFetcher
         {
             this.loadedItemOrError = Either.left(new Pair<>(loadedItem, makeGraphical.apply(new Pair<>(rowIndex, loadedItem))));
             triggerCallback();
+            formatVisible(rowIndex);
         }
 
         @OnThread(Tag.FXPlatform)
@@ -168,7 +176,8 @@ public class DisplayCache<V, G> implements StableView.ValueFetcher
                 if (loadedItemOrError != null)
                 {
                     callback.setValue(rowIndex, loadedItemOrError.either(p -> getNode.apply(p.getSecond()), Label::new));
-                } else
+                }
+                else
                 {
                     callback.setValue(rowIndex, new Label("Loading: " + progress));
                 }
