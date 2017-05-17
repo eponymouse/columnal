@@ -40,7 +40,6 @@ import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.OrderByContext;
 import records.grammar.TransformationParser.SortContext;
-import records.data.DisplayValue;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.loadsave.OutputBuilder;
@@ -386,7 +385,7 @@ public class Sort extends TransformationEditable
 
             //FXUtility.enableDragFrom();
             //FXUtility.enableDragTo(sortByView, Optional::of, "ColumnId");
-
+            /*
             ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData = FXCollections.observableArrayList();
             ObservableList<Pair<String, List<DisplayValue>>> destHeaderAndData = FXCollections.observableArrayList();
             List<Column> allColumns = new ArrayList<>();
@@ -420,8 +419,8 @@ public class Sort extends TransformationEditable
                 e.printStackTrace();
             }
             Node example = createExplanation(srcHeaderAndData, destHeaderAndData, "The table's rows will be sorted by the values in the chosen columns.");
-
-            return new VBox(colsAndSort, example);
+            */
+            return new VBox(colsAndSort); //, example);
         }
 
         @OnThread(Tag.FXPlatform)
@@ -436,6 +435,7 @@ public class Sort extends TransformationEditable
             return r;
         }
 
+        /*
         @OnThread(Tag.FXPlatform)
         private void updateExample(List<Column> allColumns, List<Column> sortBy, ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData, ObservableList<Pair<String, List<DisplayValue>>> destHeaderAndData) throws UserException, InternalException
         {
@@ -541,6 +541,7 @@ public class Sort extends TransformationEditable
             destHeaderAndData.setAll(destCols);
             srcHeaderAndData.setAll(srcCols);
         }
+        */
 
         @Override
         public @OnThread(Tag.FXPlatform) BooleanExpression canPressOk()

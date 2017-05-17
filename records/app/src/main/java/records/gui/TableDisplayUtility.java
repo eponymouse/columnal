@@ -15,7 +15,6 @@ import org.fxmisc.richtext.model.StyledDocument;
 import org.fxmisc.richtext.model.StyledText;
 import org.fxmisc.undo.UndoManagerFactory;
 import records.data.Column;
-import records.data.DisplayValue;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -27,6 +26,7 @@ import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.TypeId;
 import records.error.InternalException;
+import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -42,6 +42,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Created by neil on 01/05/2017.
@@ -85,141 +86,194 @@ public class TableDisplayUtility
     public static List<Pair<String, ValueFetcher>> makeStableViewColumns(RecordSet recordSet)
     {
         return Utility.mapList(recordSet.getColumns(), col -> {
-            @Nullable StringInputValidator validator = getValidator(col);
-            return new Pair<>(col.getName().getRaw(), (rowIndex, callback) ->
+            try
             {
-                col.fetchDisplay(rowIndex, displayValue -> callback.setValue(rowIndex, getNode(displayValue, validator)));
-            });
+                return getDisplay(col);
+            }
+            catch (InternalException | UserException e)
+            {
+                return new Pair<>(col.getName().getRaw(), (rowIndex, receiver, first, last) -> {
+                    receiver.setValue(rowIndex, new Label("Error: " + e.getLocalizedMessage()));
+                });
+            }
         });
     }
 
-    @OnThread(Tag.Any)
-    private static @Nullable StringInputValidator getValidator(Column column)
+    private static Pair<String, ValueFetcher> getDisplay(@NonNull Column column) throws UserException, InternalException
     {
-        try
+        return new Pair<>(column.getName().getRaw(), column.getType().applyGet(new DataTypeVisitorGet<ValueFetcher>()
         {
-            return column.getType().applyGet(new DataTypeVisitorGet<@Nullable StringInputValidator>()
+            @Override
+            public ValueFetcher number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
-                @Override
-                public StringInputValidator number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
+                class NumberDisplay
                 {
-                    return (rowIndex, before, oldPart, newPart, end) -> {
-                        String altered = newPart.replaceAll("[^0-9.+-]", "");
-                        // We also disallow + and - except at start, and only allow one dot:
-                        if (before.contains(".") || end.contains("."))
-                            altered = altered.replace(".", "");
-                        if (before.isEmpty())
+                    private final StyleClassedTextArea textArea;
+
+                    @OnThread(Tag.FXPlatform)
+                    public NumberDisplay(int rowIndex, Number n)
+                    {
+                        StringInputValidator validator = getNumericValidator(column, g);
+                        textArea = new StyleClassedTextArea(false) // plain undo manager
                         {
-                            // + or - would be allowed at the start
-                        }
-                        else
-                        {
-                            altered = altered.replace("[+-]","");
-                        }
-                        // Check it is actually valid as a number:
-                        @Nullable Number n;
-                        @Nullable @Localized String error = null;
-                        try
-                        {
-                            n = Utility.parseNumber(before + altered + end);
-                        }
-                        catch (UserException e)
-                        {
-                            error = e.getLocalizedMessage();
-                            n = null;
-                        }
-                        @Nullable Number nFinal = n;
-                        return result(altered, error, () -> {
-                            if (nFinal != null)
+                            private String valueBeforeFocus = "";
+                            private Utility.@Nullable RunOrError storeAction = null;
+
                             {
-                                g.set(rowIndex, nFinal);
-                                column.modified();
+                                FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused ->
+                                {
+                                    if (focused)
+                                    {
+                                        valueBeforeFocus = getText();
+                                    } else
+                                    {
+                                        if (storeAction != null)
+                                        {
+                                            Utility.@Initialized @NonNull RunOrError storeActionFinal = storeAction;
+                                            Workers.onWorkerThread("Storing value " + getText(), Workers.Priority.SAVE_ENTRY, () -> Utility.alertOnError_(storeActionFinal));
+                                        }
+                                    }
+                                });
                             }
-                        });
-                    };
-                }
 
-                @Override
-                public @Nullable StringInputValidator text(GetValue<String> g) throws InternalException, UserException
-                {
-                    // We ban newlines:
-                    return (rowIndex, before, oldPart, newPart, end) -> {
-
-                        String mungedNewPart = newPart.replace("\n", "");
-                        return result(mungedNewPart, null,
-                            () -> {
-                                g.set(rowIndex, before + mungedNewPart + end);
-                                column.modified();
+                            @Override
+                            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+                            public void replaceText(int start, int end, String text)
+                            {
+                                String old = getText();
+                                TableDisplayUtility.ValidationResult result = validator.validate(rowIndex, old.substring(0, start), old.substring(start, end), text, old.substring(end));
+                                this.storeAction = result.storer;
+                                super.replaceText(start, end, result.newReplacement);
+                                //TODO sort out any restyling needed
+                                // TODO show error
                             }
-                        );
-                    };
+                        };
+                        textArea.setEditable(column.isEditable());
+                        textArea.setUseInitialStyleForInsertion(false);
+                        textArea.setUndoManager(UndoManagerFactory.fixedSizeHistoryFactory(3));
+
+                        @Nullable NumberDisplayInfo ndi = displayInfo.getDisplayInfo();
+                        if (ndi == null)
+                            ndi = NumberDisplayInfo.SYSTEMWIDE_DEFAULT; // TODO use file-wide default
+                        String fracPart = Utility.getFracPartAsString(n, ndi.getMinimumDP(), ndi.getMaximumDP());
+                        fracPart = fracPart.isEmpty() ? "" : "." + fracPart;
+                        textArea.replace(docFromSegments(
+                            new StyledText<>(Utility.getIntegerPart(n).toString(), Arrays.asList("number-display-int")),
+                            new StyledText<>(fracPart, Arrays.asList("number-display-frac"))
+                        ));
+                        textArea.getStyleClass().add("number-display");
+                    }
                 }
 
-                @Override
-                public @Nullable StringInputValidator bool(GetValue<Boolean> g) throws InternalException, UserException
+                return new DisplayCache<Number, NumberDisplay>(g, null, p -> new NumberDisplay(p.getFirst(), p.getSecond()), n -> n.textArea);
+            }
+
+            @Override
+            public ValueFetcher text(GetValue<String> g) throws InternalException, UserException
+            {
+                class StringDisplay extends StackPane
                 {
-                    return null;
+                    private final Label label;
+
+                    public StringDisplay(String value)
+                    {
+                        Label beginQuote = new Label("\u201C");
+                        Label endQuote = new Label("\u201D");
+                        beginQuote.getStyleClass().add("string-display-quote");
+                        endQuote.getStyleClass().add("string-display-quote");
+                        StackPane.setAlignment(beginQuote, Pos.TOP_LEFT);
+                        StackPane.setAlignment(endQuote, Pos.TOP_RIGHT);
+                        //StackPane.setMargin(beginQuote, new Insets(0, 0, 0, 3));
+                        //StackPane.setMargin(endQuote, new Insets(0, 3, 0, 0));
+                        label = new Label(value);
+                        label.setTextOverrun(OverrunStyle.CLIP);
+                        getChildren().addAll(beginQuote, label); //endQuote, label);
+                        // TODO allow editing, and call column.modified when it happens
+                    }
                 }
 
-                @Override
-                public @Nullable StringInputValidator date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
-                {
-                    return null;
-                }
+                return new DisplayCache<String, StringDisplay>(g, null, p -> new StringDisplay(p.getSecond()), s -> s);
+            }
 
-                @Override
-                public @Nullable StringInputValidator tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
-                {
-                    return null;
-                }
+            @Override
+            public ValueFetcher bool(GetValue<Boolean> g) throws InternalException, UserException
+            {
+                throw new UnimplementedException();
+            }
 
-                @Override
-                public @Nullable StringInputValidator tuple(List<DataTypeValue> types) throws InternalException, UserException
-                {
-                    return null;
-                }
+            @Override
+            public ValueFetcher date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+            {
+                throw new UnimplementedException();
+            }
 
-                @Override
-                public @Nullable StringInputValidator array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
-                {
-                    return null;
-                }
-            });
-        }
-        catch (InternalException | UserException e)
-        {
-            Utility.log(e);
-            return null;
-        }
+            @Override
+            public ValueFetcher tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            {
+                throw new UnimplementedException();
+            }
+
+            @Override
+            public ValueFetcher tuple(List<DataTypeValue> types) throws InternalException, UserException
+            {
+                throw new UnimplementedException();
+            }
+
+            @Override
+            public ValueFetcher array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+            {
+                throw new UnimplementedException();
+            }
+        }));
     }
 
+    @OnThread(Tag.Any)
+    private static StringInputValidator getNumericValidator(Column column, GetValue<Number> g)
+    {
+
+        return (rowIndex, before, oldPart, newPart, end) -> {
+            String altered = newPart.replaceAll("[^0-9.+-]", "");
+            // We also disallow + and - except at start, and only allow one dot:
+            if (before.contains(".") || end.contains("."))
+                altered = altered.replace(".", "");
+            if (before.isEmpty())
+            {
+                // + or - would be allowed at the start
+            }
+            else
+            {
+                altered = altered.replace("[+-]","");
+            }
+            // Check it is actually valid as a number:
+            @Nullable Number n;
+            @Nullable @Localized String error = null;
+            try
+            {
+                n = Utility.parseNumber(before + altered + end);
+            }
+            catch (UserException e)
+            {
+                error = e.getLocalizedMessage();
+                n = null;
+            }
+            @Nullable Number nFinal = n;
+            return result(altered, error, () -> {
+                if (nFinal != null)
+                {
+                    g.set(rowIndex, nFinal);
+                    column.modified();
+                }
+            });
+        };
+    }
+/*
     @OnThread(Tag.FXPlatform)
     private static Region getNode(DisplayValue item, @Nullable StringInputValidator validator)
     {
         if (item.getNumber() != null)
         {
             @NonNull Number n = item.getNumber();
-            /*
-            HBox container = new HBox();
-            Utility.addStyleClass(container, "number-display");
-            Text prefix = new Text(item.getUnit().getDisplayPrefix());
-            Utility.addStyleClass(prefix, "number-display-prefix");
-            String integerPart = Utility.getIntegerPart(n).toString();
-            integerPart = integerPart.replace("-", "\u2012");
-            Text whole = new Text(integerPart);
-            Utility.addStyleClass(whole, "number-display-int");
-            String fracPart = Utility.getFracPartAsString(n);
-            while (fracPart.length() < item.getMinimumDecimalPlaces())
-                fracPart += "0";
-            Text frac = new Text(fracPart.isEmpty() ? "" : ("." + fracPart));
-            Utility.addStyleClass(frac, "number-display-frac");
-            Pane spacer = new Pane();
-            spacer.setVisible(false);
-            HBox.setHgrow(spacer, Priority.ALWAYS);
-            container.getChildren().addAll(prefix, spacer, whole, frac);
-            return container;
-            */
-            StyleClassedTextArea textArea = new StyleClassedTextArea(false /* plain undo manager */)
+            StyleClassedTextArea textArea = new StyleClassedTextArea(false) // plain undo manager
             {
                 private String valueBeforeFocus = "";
                 private @Nullable RunOrError storeAction = null;
@@ -286,10 +340,11 @@ public class TableDisplayUtility
             //StackPane.setMargin(endQuote, new Insets(0, 3, 0, 0));
             Label label = new Label(item.toString());
             label.setTextOverrun(OverrunStyle.CLIP);
-            stringWrapper.getChildren().addAll(beginQuote /*, endQuote*/, label);
+            stringWrapper.getChildren().addAll(beginQuote, label); //endQuote, label);
             return stringWrapper;
         }
     }
+    */
 
     private static StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> docFromSegments(StyledText<Collection<String>>... segments)
     {

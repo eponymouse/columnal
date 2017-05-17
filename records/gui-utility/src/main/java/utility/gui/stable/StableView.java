@@ -229,6 +229,7 @@ public class StableView
                 FXUtility.setPseudoclass(stackPane, "at-bottom", lastVisibleRowIndex == items.size() - 1 && bottomY < virtualFlow.getHeight());
                 lineNumbers.showAtOffset(firstVisibleRowIndex, topY);
                 topShowingCellProperty.set(new Pair<>(firstVisibleRowIndex, topY));
+                // TODO call listener to update visible cells (DisplayCache needs this)
             }
         });
 
@@ -507,6 +508,8 @@ public class StableView
                 {
                     ValueFetcher column = columns.get(columnIndex);
                     int columnIndexFinal = columnIndex;
+                    StableRow firstVisibleRow = virtualFlow.visibleCells().get(0);
+                    StableRow lastVisibleRow = virtualFlow.visibleCells().get(virtualFlow.visibleCells().size() - 1);
                     column.fetchValue(rowIndex, (x, n) ->
                     {
                         Pane cell = cells.get(columnIndexFinal);
@@ -516,7 +519,7 @@ public class StableView
                             focusedCell.set(gotFocus ? new Pair<>(columnIndexFinal, rowIndex) : null);
                         });
                         cell.getChildren().setAll(n);
-                    });
+                    }, firstVisibleRow.curRowIndex, lastVisibleRow.curRowIndex);
                 }
             }
         }
@@ -551,10 +554,10 @@ public class StableView
     @OnThread(Tag.FXPlatform)
     public static interface ValueFetcher
     {
-        // Called to fetch a value.  Once available, received should be called.
+        // Called to fetch a value.  Once available, receiver should be called.
         // Until then it will be blank.  You can call receiver multiple times though,
         // so you can just call it with a placeholder before returning.
-        public void fetchValue(int rowIndex, ValueReceiver receiver);
+        public void fetchValue(int rowIndex, ValueReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl);
     }
 
     @OnThread(Tag.FXPlatform)

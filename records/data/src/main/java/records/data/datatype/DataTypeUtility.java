@@ -21,7 +21,6 @@ import records.data.datatype.DataType.TagType;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import records.data.DisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.TaggedValue;
@@ -96,79 +95,6 @@ public class DataTypeUtility
             public @Value Object array(@Nullable DataType inner) throws InternalException, UserException
             {
                 return value(Collections.emptyList());
-            }
-        });
-    }
-
-    public static DisplayValue display(int rowIndex, DataType dataType, @Value Object object) throws UserException, InternalException
-    {
-        return dataType.apply(new DataTypeVisitor<DisplayValue>()
-        {
-            @Override
-            public DisplayValue number(NumberInfo numberInfo) throws InternalException, UserException
-            {
-                return new DisplayValue(rowIndex, (Number)object, numberInfo.getUnit(), numberInfo.getDisplayInfo());
-            }
-
-            @Override
-            public DisplayValue text() throws InternalException, UserException
-            {
-                return new DisplayValue(rowIndex, (String)object);
-            }
-
-            @Override
-            public DisplayValue bool() throws InternalException, UserException
-            {
-                return new DisplayValue(rowIndex, (Boolean)object);
-            }
-
-            @Override
-            public DisplayValue date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
-            {
-                return new DisplayValue(rowIndex, (Temporal) object);
-            }
-
-            @Override
-            public DisplayValue tagged(TypeId typeName, List<TagType<DataType>> tagTypes) throws InternalException, UserException
-            {
-                int tag = ((TaggedValue)object).getTagIndex();
-                TagType tagType = tagTypes.get(tag);
-                @Nullable DataType inner = tagType.getInner();
-                if (DataType.canFitInOneNumeric(tagTypes))
-                {
-                    if (inner == null)
-                        return new DisplayValue(rowIndex, tagType.getName());
-                    else
-                        return inner.apply(this);
-                }
-                else
-                {
-                    return new DisplayValue(rowIndex, tagType.getName() + (inner == null ? "" : (" " + inner.apply(this))));
-                }
-            }
-
-            @Override
-            public DisplayValue tuple(List<DataType> inner) throws InternalException, UserException
-            {
-                @Value Object @Value[] array = (@Value Object @Value[])object;
-                if (array.length != inner.size())
-                    throw new InternalException("Tuple type does not match value, expected: " + inner.size() + " got " + array.length);
-                List<DisplayValue> innerDisplay = new ArrayList<>();
-                for (int i = 0; i < array.length; i++)
-                {
-                    innerDisplay.add(display(rowIndex, inner.get(i), array[i]));
-                }
-                return DisplayValue.tuple(rowIndex, innerDisplay);
-            }
-
-            @Override
-            public DisplayValue array(@Nullable DataType inner) throws InternalException, UserException
-            {
-                if (inner == null)
-                    return DisplayValue.array(rowIndex, Collections.emptyList());
-                @NonNull DataType innerFinal = inner;
-                List<@Value Object> list = (List<@Value Object>)object;
-                return DisplayValue.array(rowIndex, Utility.mapListEx(list, o -> display(rowIndex, innerFinal, o)));
             }
         });
     }
@@ -340,17 +266,5 @@ public class DataTypeUtility
                 return list.get(index);
             }
         };
-    }
-
-    // Only for use with examples
-    public static DisplayValue toDisplayValue(int rowIndex, @Value Object o)
-    {
-        if (o instanceof Boolean)
-            return new DisplayValue(rowIndex, (Boolean)o);
-        else if (o instanceof Number)
-            return new DisplayValue(rowIndex, (Number)o, Unit.SCALAR, null);
-        else if (o instanceof String)
-            return new DisplayValue(rowIndex, (String)o);
-        throw new RuntimeException("Unexpected toDisplayValue type: " + o.getClass());
     }
 }

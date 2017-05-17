@@ -62,27 +62,6 @@ public abstract class Column
         this.name = name;
     }
 
-    @MonotonicNonNull
-    @OnThread(Tag.FXPlatform)
-    private DisplayCache displayCache;
-
-    @OnThread(Tag.FXPlatform)
-    public final void fetchDisplay(int index, FXPlatformConsumer<DisplayValue> updateValue)
-    {
-        if (displayCache == null)
-            displayCache = new DisplayCache(this);
-        displayCache.fetchDisplay(index, updateValue);
-    }
-
-    @OnThread(Tag.FXPlatform)
-    public final void cancelGetDisplay(int index)
-    {
-        if (displayCache != null)
-        {
-            displayCache.cancelGetDisplay(index);
-        }
-    }
-
     @Pure
     @OnThread(Tag.Any)
     public final ColumnId getName()

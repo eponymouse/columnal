@@ -7,6 +7,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -45,7 +46,6 @@ import records.data.datatype.DataTypeValue;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
-import records.data.DisplayValue;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.gui.expressioneditor.ExpressionEditor;
@@ -227,8 +227,8 @@ public class Filter extends TransformationEditable
         private final @Nullable TableId thisTableId;
         private final SingleSourceControl srcControl;
         private final List<ColumnId> allColumns = new ArrayList<>();
-        private final ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData;
-        private final ObservableList<Pair<String, List<DisplayValue>>> destHeaderAndData;
+        //private final ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData;
+        //private final ObservableList<Pair<String, List<DisplayValue>>> destHeaderAndData;
         private final TableManager mgr;
         private final Expression expression;
         private final ExpressionEditor expressionEditor;
@@ -240,8 +240,8 @@ public class Filter extends TransformationEditable
             this.mgr = mgr;
             this.thisTableId = thisTableId;
             this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
-            this.srcHeaderAndData = FXCollections.observableArrayList();
-            this.destHeaderAndData = FXCollections.observableArrayList();
+            //this.srcHeaderAndData = FXCollections.observableArrayList();
+            //this.destHeaderAndData = FXCollections.observableArrayList();
             this.expression = expression;
             // For testing:
             try
@@ -324,7 +324,7 @@ public class Filter extends TransformationEditable
                     boolean isUnsat = prover.isUnsat();
                     //System.out.println("Satisfiable: " + !isUnsat);
                     if (!isUnsat) {
-                        srcHeaderAndData.clear();
+                        //srcHeaderAndData.clear();
                         Model model = prover.getModel();
                         for (Entry<Pair<@Nullable TableId, ColumnId>, @NonNull Formula> var : vars.entrySet())
                         {
@@ -332,8 +332,8 @@ public class Filter extends TransformationEditable
                             if (evaluated != null)
                             {
                                 //System.out.println("Variable " + var.getKey() + " = " + show(evaluated));
-                                srcHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(DataTypeUtility.toDisplayValue(-1, show(evaluated)))));
-                                destHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(DataTypeUtility.toDisplayValue(-1, show(evaluated)))));
+                                //srcHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(DataTypeUtility.toDisplayValue(-1, show(evaluated)))));
+                                //destHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(DataTypeUtility.toDisplayValue(-1, show(evaluated)))));
                             }
                         }
                     }
@@ -358,7 +358,7 @@ public class Filter extends TransformationEditable
                             if (evaluated != null)
                             {
                                 //System.out.println("Variable " + var.getKey() + " = " + show(model.evaluate(var.getValue())));
-                                srcHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(DataTypeUtility.toDisplayValue(-1, show(evaluated)))));
+                                //srcHeaderAndData.add(new Pair<String, List<DisplayValue>>(var.getKey().getSecond().getOutput(), Arrays.asList(DataTypeUtility.toDisplayValue(-1, show(evaluated)))));
                             }
                         }
                     }
@@ -438,7 +438,7 @@ public class Filter extends TransformationEditable
                 reportError.consume(e);
             }
 
-            Node example = createExplanation(srcHeaderAndData, destHeaderAndData, "");
+            Node example = new Label("TODO"); //createExplanation(srcHeaderAndData, destHeaderAndData, "");
             FXPlatformConsumer<@Nullable Expression> updater = expression -> {
                 if (expression != null)
                 {

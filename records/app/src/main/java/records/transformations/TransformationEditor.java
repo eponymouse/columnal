@@ -25,7 +25,6 @@ import records.data.TableManager;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
-import records.data.DisplayValue;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -127,7 +126,7 @@ public abstract class TransformationEditor
             }
         }
     }
-
+/*
     protected static TableView<List<DisplayValue>> createExampleTable(ObservableList<Pair<String, List<DisplayValue>>> headerAndData)
     {
         TableView<List<DisplayValue>> t = new TableView<>();
@@ -169,4 +168,5 @@ public abstract class TransformationEditor
         textFlow.setPrefWidth(500);
         return new BorderPane(new Label("->"), null, createExampleTable(destHeaderAndData), textFlow, createExampleTable(srcHeaderAndData));
     }
+*/
 }
