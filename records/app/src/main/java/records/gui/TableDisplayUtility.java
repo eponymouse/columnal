@@ -183,6 +183,7 @@ public class TableDisplayUtility
                     {
                         if (display != null)
                         {
+                            //TODO work out if number is too long and truncate it on left as well
                             while (display.fracPart.length() < maxFracLength)
                                 display.fracPart += "-";
                             display.updateDisplay();
