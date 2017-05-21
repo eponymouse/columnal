@@ -24,11 +24,12 @@ import utility.Pair;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.Workers.Worker;
-import utility.gui.stable.StableView;
+import utility.gui.stable.StableView.ColumnHandler;
 import utility.gui.stable.StableView.ValueReceiver;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
 
 /**
  * DisplayCache is responsible for managing the thread-hopping loading
@@ -42,7 +43,7 @@ import java.util.List;
  *    and its value will only change by being edited on the FX thread.
  */
 @OnThread(Tag.FXPlatform)
-public class DisplayCache<V, G> implements StableView.ValueFetcher
+public class DisplayCache<V, G> implements ColumnHandler
 {
     public static enum ProgressState
     {
@@ -60,6 +61,7 @@ public class DisplayCache<V, G> implements StableView.ValueFetcher
     private final FXPlatformFunction<G, Region> getNode;
     private int firstVisibleRowIndexIncl = -1;
     private int lastVisibleRowIndexIncl = -1;
+    private double latestWidth = -1;
 
     @OnThread(Tag.Any)
     public DisplayCache(GetValue<V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, FXPlatformFunction<Pair<Integer, V>,  G> makeGraphical, FXPlatformFunction<G, Region> getNode)
@@ -86,12 +88,15 @@ public class DisplayCache<V, G> implements StableView.ValueFetcher
     {
         public final int firstVisibleRowIndex;
         public final List<@Nullable G> visibleCells; // First one is firstVisibleRowIndex; If any are null it is because they are still loading
-        public final int newVisibleIndex; // Index into visibleCells, not a row number, which is the cause for this update
+        public final OptionalInt newVisibleIndex; // Index into visibleCells, not a row number, which is the cause for this update
+        public final double width;
 
-        private VisibleDetails(int rowIndex, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+        private VisibleDetails(OptionalInt rowIndex, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl, double width)
         {
             this.firstVisibleRowIndex = firstVisibleRowIndexIncl;
-            this.newVisibleIndex = rowIndex - firstVisibleRowIndexIncl;
+            // Why doesn't OptionalInt have a map method?
+            this.newVisibleIndex = rowIndex.isPresent() ? OptionalInt.of(rowIndex.getAsInt() - firstVisibleRowIndexIncl) : OptionalInt.empty();
+            this.width = width;
 
             visibleCells = new ArrayList<>(lastVisibleRowIndexIncl - firstVisibleRowIndexIncl + 1);
             for (int i = firstVisibleRowIndexIncl; i <= lastVisibleRowIndexIncl; i++)
@@ -122,16 +127,22 @@ public class DisplayCache<V, G> implements StableView.ValueFetcher
         this.firstVisibleRowIndexIncl = firstVisibleRowIndexIncl;
         this.lastVisibleRowIndexIncl = lastVisibleRowIndexIncl;
         @NonNull DisplayCacheItem item = displayCacheItems.getUnchecked(rowIndex);
-        if (formatVisibleCells != null)
-            formatVisibleCells.consume(new VisibleDetails(rowIndex, firstVisibleRowIndexIncl, lastVisibleRowIndexIncl));
+        formatVisible(OptionalInt.of(rowIndex));
 
         item.setCallback(receiver);
     }
 
-    private void formatVisible(int rowIndexUpdated)
+    @Override
+    public void columnResized(double width)
     {
-        if (formatVisibleCells != null && firstVisibleRowIndexIncl != -1 && lastVisibleRowIndexIncl != -1)
-            formatVisibleCells.consume(new VisibleDetails(rowIndexUpdated, firstVisibleRowIndexIncl, lastVisibleRowIndexIncl));
+        latestWidth = width;
+        formatVisible(OptionalInt.empty());
+    }
+
+    private void formatVisible(OptionalInt rowIndexUpdated)
+    {
+        if (formatVisibleCells != null && firstVisibleRowIndexIncl != -1 && lastVisibleRowIndexIncl != -1 && latestWidth > 0)
+            formatVisibleCells.consume(new VisibleDetails(rowIndexUpdated, firstVisibleRowIndexIncl, lastVisibleRowIndexIncl, latestWidth));
     }
 
     /**
@@ -165,7 +176,7 @@ public class DisplayCache<V, G> implements StableView.ValueFetcher
         {
             this.loadedItemOrError = Either.left(new Pair<>(loadedItem, makeGraphical.apply(new Pair<>(rowIndex, loadedItem))));
             triggerCallback();
-            formatVisible(rowIndex);
+            formatVisible(OptionalInt.of(rowIndex));
         }
 
         @OnThread(Tag.FXPlatform)

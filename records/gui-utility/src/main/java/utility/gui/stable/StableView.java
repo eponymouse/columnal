@@ -9,10 +9,8 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.value.ChangeListener;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Insets;
 import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -23,7 +21,6 @@ import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
-import javafx.scene.effect.InnerShadow;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -39,7 +36,6 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualizedScrollPane;
-import org.reactfx.value.Val;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -54,7 +50,6 @@ import utility.gui.GUI;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.List;
 
 /**
@@ -96,7 +91,7 @@ public class StableView
     private final StackPane stackPane; // has scrollPane and placeholder as its children
 
     private final BooleanProperty showingRowNumbers = new SimpleBooleanProperty(true);
-    private final List<ValueFetcher> columns;
+    private final List<ColumnHandler> columns;
     private final List<DoubleProperty> columnSizes;
     private static final double EDGE_DRAG_TOLERANCE = 8;
     private static final double MIN_COLUMN_WIDTH = 30;
@@ -304,26 +299,25 @@ public class StableView
         setColumns(Collections.emptyList());
     }
 
-    public void setColumns(List<Pair<String, ValueFetcher>> columns)
+    public void setColumns(List<Pair<String, ColumnHandler>> columns)
     {
         // Important to clear the items, as we need to make new cells
         // which will have the updated number of columns
         items.clear();
         this.columns.clear();
         this.columns.addAll(Utility.mapList(columns, Pair::getSecond));
-        while (columnSizes.size() > columns.size())
-        {
-            columnSizes.remove(columnSizes.size() - 1);
-        }
-        while (columnSizes.size() < columns.size())
+        this.columnSizes.clear();
+        for (int i = 0; i < columns.size(); i++)
         {
             columnSizes.add(new SimpleDoubleProperty(100.0));
+            ColumnHandler colHandler = columns.get(i).getSecond();
+            FXUtility.addChangeListenerPlatformNN(columnSizes.get(i), d -> colHandler.columnResized(d.doubleValue()));
         }
 
         headerItemsContainer.getChildren().clear();
         for (int i = 0; i < columns.size(); i++)
         {
-            Pair<String, ValueFetcher> column = columns.get(i);
+            Pair<String, ColumnHandler> column = columns.get(i);
             HeaderItem headerItem = new HeaderItem(column.getFirst(), i);
             headerItemsContainer.getChildren().add(headerItem);
             headerItems.add(headerItem);
@@ -506,7 +500,7 @@ public class StableView
                 curRowIndex = rowIndex;
                 for (int columnIndex = 0; columnIndex < columns.size(); columnIndex++)
                 {
-                    ValueFetcher column = columns.get(columnIndex);
+                    ColumnHandler column = columns.get(columnIndex);
                     int columnIndexFinal = columnIndex;
                     StableRow firstVisibleRow = virtualFlow.visibleCells().get(0);
                     StableRow lastVisibleRow = virtualFlow.visibleCells().get(virtualFlow.visibleCells().size() - 1);
@@ -552,12 +546,14 @@ public class StableView
     }
 
     @OnThread(Tag.FXPlatform)
-    public static interface ValueFetcher
+    public static interface ColumnHandler
     {
         // Called to fetch a value.  Once available, receiver should be called.
         // Until then it will be blank.  You can call receiver multiple times though,
         // so you can just call it with a placeholder before returning.
         public void fetchValue(int rowIndex, ValueReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl);
+
+        public void columnResized(double width);
     }
 
     @OnThread(Tag.FXPlatform)

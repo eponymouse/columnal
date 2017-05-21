@@ -8,6 +8,7 @@ import org.checkerframework.dataflow.qual.Pure;
  */
 public class NumberDisplayInfo
 {
+
     public static enum Padding
     {
         ZERO, SPACE;
@@ -36,6 +37,11 @@ public class NumberDisplayInfo
     public int getMaximumDP()
     {
         return maximumDP;
+    }
+
+    public String getPaddingChar()
+    {
+        return rightPadding == Padding.ZERO ? "0" : " ";
     }
 
     public static @Nullable NumberDisplayInfo merge(@Nullable NumberDisplayInfo a, @Nullable NumberDisplayInfo b)

@@ -3,14 +3,13 @@ package records.gui;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
-import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
+import javafx.scene.text.Text;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.StyledDocument;
@@ -30,7 +29,6 @@ import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.DisplayCache.VisibleDetails;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -39,20 +37,56 @@ import utility.Utility;
 import utility.Utility.RunOrError;
 import utility.Workers;
 import utility.gui.FXUtility;
-import utility.gui.stable.StableView.ValueFetcher;
+import utility.gui.stable.StableView.ColumnHandler;
+import utility.gui.stable.StableView.ValueReceiver;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
+import java.util.Objects;
 
 /**
  * Created by neil on 01/05/2017.
  */
 public class TableDisplayUtility
 {
+    private static final String ELLIPSIS = "\u22EF";
+    private static double LEFT_DIGIT_WIDTH = -1;
+    private static double RIGHT_DIGIT_WIDTH = -1;
+    private static double DOT_WIDTH = -1;
+
+
+    // Maps a number of digits on the right side of the decimal place to the amount
+    // of digits which there is then room for on the left side of the decimal place:
+    @OnThread(Tag.FXPlatform)
+    private static int rightToLeft(int right, double totalWidth)
+    {
+        if (LEFT_DIGIT_WIDTH < 0)
+        {
+            Text t = new Text("0000000000");
+            // TODO Set font and apply CSS
+            LEFT_DIGIT_WIDTH = t.getLayoutBounds().getWidth() / 10.0;
+        }
+        if (RIGHT_DIGIT_WIDTH < 0)
+        {
+            Text t = new Text("0000000000");
+            // TODO Set font and apply CSS
+            RIGHT_DIGIT_WIDTH = t.getLayoutBounds().getWidth() / 10.0;
+        }
+        if (DOT_WIDTH < 0)
+        {
+            Text t = new Text("...........");
+            // TODO Set font and apply CSS
+            DOT_WIDTH = t.getLayoutBounds().getWidth() / 10.0;
+        }
+
+        double width = totalWidth - DOT_WIDTH;
+        width -= right * RIGHT_DIGIT_WIDTH;
+        return (int)Math.floor(width / LEFT_DIGIT_WIDTH);
+    }
+
     private static class ValidationResult
     {
         private final String newReplacement;
@@ -87,7 +121,7 @@ public class TableDisplayUtility
         return new ValidationResult(newReplacement, error, storer);
     }
 
-    public static List<Pair<String, ValueFetcher>> makeStableViewColumns(RecordSet recordSet)
+    public static List<Pair<String, ColumnHandler>> makeStableViewColumns(RecordSet recordSet)
     {
         return Utility.mapList(recordSet.getColumns(), col -> {
             try
@@ -96,19 +130,30 @@ public class TableDisplayUtility
             }
             catch (InternalException | UserException e)
             {
-                return new Pair<>(col.getName().getRaw(), (rowIndex, receiver, first, last) -> {
-                    receiver.setValue(rowIndex, new Label("Error: " + e.getLocalizedMessage()));
+                return new Pair<>(col.getName().getRaw(), new ColumnHandler()
+                {
+                    @Override
+                    public void fetchValue(int rowIndex, ValueReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+                    {
+                        receiver.setValue(rowIndex, new Label("Error: " + e.getLocalizedMessage()));
+                    }
+
+                    @Override
+                    public void columnResized(double width)
+                    {
+
+                    }
                 });
             }
         });
     }
 
-    private static Pair<String, ValueFetcher> getDisplay(@NonNull Column column) throws UserException, InternalException
+    private static Pair<String, ColumnHandler> getDisplay(@NonNull Column column) throws UserException, InternalException
     {
-        return new Pair<>(column.getName().getRaw(), column.getType().applyGet(new DataTypeVisitorGet<ValueFetcher>()
+        return new Pair<>(column.getName().getRaw(), column.getType().applyGet(new DataTypeVisitorGet<ColumnHandler>()
         {
             @Override
-            public ValueFetcher number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
+            public ColumnHandler number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
                 class NumberDisplay
                 {
@@ -178,15 +223,49 @@ public class TableDisplayUtility
                 }
 
                 FXPlatformConsumer<DisplayCache<Number, NumberDisplay>.VisibleDetails> formatVisible = vis -> {
-                    int maxFracLength = vis.visibleCells.stream().mapToInt(d -> d == null ? 0 : d.fracPart.length()).max().orElse(0);
+                    // Left length is number of digits to left of decimal place, right length is number of digits to right of decimal place
+                    int maxLeftLength = vis.visibleCells.stream().mapToInt(d -> d == null ? 1 : d.integerPart.length()).max().orElse(1);
+                    int maxRightLength = vis.visibleCells.stream().mapToInt(d -> d == null ? 0 : d.fracPart.length()).max().orElse(0);
+                    double pixelWidth = vis.visibleCells.stream().filter(Objects::nonNull).map(d -> d == null ? 0 : d.textArea.getWidth()).findFirst().orElse(0.0);
+
+                    // We truncate the right side if needed, to a minimum of minimumDP, at which point we truncate the left side
+                    // to what remains
+                    int minimumDP = displayInfo.getDisplayInfo() == null ? 0 : displayInfo.getDisplayInfo().getMinimumDP();
+                    while (rightToLeft(maxRightLength, pixelWidth) < maxLeftLength && maxRightLength > minimumDP)
+                    {
+                        maxRightLength -= 1;
+                    }
+                    while (rightToLeft(maxRightLength, pixelWidth) < maxLeftLength && maxLeftLength > 1)
+                    {
+                        maxLeftLength -= 1;
+                    }
+                    // Still not enough room for everything?  Just set it all to ellipsis if so:
+                    boolean onlyEllipsis = rightToLeft(maxRightLength, pixelWidth) < maxLeftLength;
+
                     for (NumberDisplay display : vis.visibleCells)
                     {
                         if (display != null)
                         {
-                            //TODO work out if number is too long and truncate it on left as well
-                            while (display.fracPart.length() < maxFracLength)
-                                display.fracPart += "-";
-                            display.updateDisplay();
+                            if (onlyEllipsis)
+                            {
+                                display.integerPart = ELLIPSIS;
+                                display.fracPart = ELLIPSIS;
+                            }
+                            else
+                            {
+                                while (display.fracPart.length() < maxRightLength)
+                                    display.fracPart += displayInfo.getDisplayInfo() == null ? " " : displayInfo.getDisplayInfo().getPaddingChar();
+                                if (display.fracPart.length() > maxRightLength)
+                                {
+                                    display.fracPart = display.fracPart.substring(0, maxRightLength - 1) + ELLIPSIS;
+                                }
+                                if (display.integerPart.length() > maxLeftLength)
+                                {
+                                    display.integerPart = ELLIPSIS + display.integerPart.substring(display.integerPart.length() - maxLeftLength + 1);
+                                }
+
+                                display.updateDisplay();
+                            }
                         }
                     }
                 };
@@ -194,7 +273,7 @@ public class TableDisplayUtility
             }
 
             @Override
-            public ValueFetcher text(GetValue<String> g) throws InternalException, UserException
+            public ColumnHandler text(GetValue<String> g) throws InternalException, UserException
             {
                 class StringDisplay extends StackPane
                 {
@@ -221,31 +300,31 @@ public class TableDisplayUtility
             }
 
             @Override
-            public ValueFetcher bool(GetValue<Boolean> g) throws InternalException, UserException
+            public ColumnHandler bool(GetValue<Boolean> g) throws InternalException, UserException
             {
                 throw new UnimplementedException();
             }
 
             @Override
-            public ValueFetcher date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+            public ColumnHandler date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
             {
                 throw new UnimplementedException();
             }
 
             @Override
-            public ValueFetcher tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public ColumnHandler tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 throw new UnimplementedException();
             }
 
             @Override
-            public ValueFetcher tuple(List<DataTypeValue> types) throws InternalException, UserException
+            public ColumnHandler tuple(List<DataTypeValue> types) throws InternalException, UserException
             {
                 throw new UnimplementedException();
             }
 
             @Override
-            public ValueFetcher array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+            public ColumnHandler array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
             {
                 throw new UnimplementedException();
             }

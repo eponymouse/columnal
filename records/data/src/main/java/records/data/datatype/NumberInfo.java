@@ -1,6 +1,7 @@
 package records.data.datatype;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.unit.Unit;
 
 /**
@@ -58,6 +59,7 @@ public class NumberInfo
         return unit.hashCode();
     }
 
+    @Pure
     public @Nullable NumberDisplayInfo getDisplayInfo()
     {
         return numberDisplayInfo;
