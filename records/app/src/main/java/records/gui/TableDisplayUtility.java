@@ -158,8 +158,10 @@ public class TableDisplayUtility
                 class NumberDisplay
                 {
                     private final @NonNull StyleClassedTextArea textArea;
-                    private String fracPart;
-                    private String integerPart;
+                    private final String fullFracPart;
+                    private final String fullIntegerPart;
+                    private String displayFracPart;
+                    private String displayIntegerPart;
 
                     @OnThread(Tag.FXPlatform)
                     public NumberDisplay(int rowIndex, Number n)
@@ -206,8 +208,10 @@ public class TableDisplayUtility
                         @Nullable NumberDisplayInfo ndi = displayInfo.getDisplayInfo();
                         if (ndi == null)
                             ndi = NumberDisplayInfo.SYSTEMWIDE_DEFAULT; // TODO use file-wide default
-                        integerPart = Utility.getIntegerPart(n).toString();
-                        fracPart = Utility.getFracPartAsString(n, ndi.getMinimumDP(), ndi.getMaximumDP());
+                        fullIntegerPart = Utility.getIntegerPart(n).toString();
+                        fullFracPart = Utility.getFracPartAsString(n, 0, -1);
+                        displayIntegerPart = fullIntegerPart;
+                        displayFracPart = fullFracPart;
                         updateDisplay();
                         textArea.getStyleClass().add("number-display");
                     }
@@ -216,16 +220,16 @@ public class TableDisplayUtility
                     private void updateDisplay(@UnknownInitialization(Object.class) NumberDisplay this)
                     {
                         textArea.replace(docFromSegments(
-                            new StyledText<>(integerPart, Arrays.asList("number-display-int")),
-                            new StyledText<>(fracPart.isEmpty() ? "" : ("." + fracPart), Arrays.asList("number-display-frac"))
+                            new StyledText<>(displayIntegerPart, Arrays.asList("number-display-int")),
+                            new StyledText<>(displayFracPart.isEmpty() ? "" : ("." + displayFracPart), Arrays.asList("number-display-frac"))
                         ));
                     }
                 }
 
                 FXPlatformConsumer<DisplayCache<Number, NumberDisplay>.VisibleDetails> formatVisible = vis -> {
                     // Left length is number of digits to left of decimal place, right length is number of digits to right of decimal place
-                    int maxLeftLength = vis.visibleCells.stream().mapToInt(d -> d == null ? 1 : d.integerPart.length()).max().orElse(1);
-                    int maxRightLength = vis.visibleCells.stream().mapToInt(d -> d == null ? 0 : d.fracPart.length()).max().orElse(0);
+                    int maxLeftLength = vis.visibleCells.stream().mapToInt(d -> d == null ? 1 : d.fullIntegerPart.length()).max().orElse(1);
+                    int maxRightLength = vis.visibleCells.stream().mapToInt(d -> d == null ? 0 : d.fullFracPart.length()).max().orElse(0);
                     double pixelWidth = vis.visibleCells.stream().filter(Objects::nonNull).map(d -> d == null ? 0 : d.textArea.getWidth()).findFirst().orElse(0.0);
 
                     // We truncate the right side if needed, to a minimum of minimumDP, at which point we truncate the left side
@@ -248,20 +252,23 @@ public class TableDisplayUtility
                         {
                             if (onlyEllipsis)
                             {
-                                display.integerPart = ELLIPSIS;
-                                display.fracPart = ELLIPSIS;
+                                display.displayIntegerPart = ELLIPSIS;
+                                display.displayFracPart = ELLIPSIS;
                             }
                             else
                             {
-                                while (display.fracPart.length() < maxRightLength)
-                                    display.fracPart += displayInfo.getDisplayInfo() == null ? " " : displayInfo.getDisplayInfo().getPaddingChar();
-                                if (display.fracPart.length() > maxRightLength)
+                                display.displayIntegerPart = display.fullIntegerPart;
+                                display.displayFracPart = display.fullFracPart;
+
+                                while (display.displayFracPart.length() < maxRightLength)
+                                    display.displayFracPart += displayInfo.getDisplayInfo() == null ? " " : displayInfo.getDisplayInfo().getPaddingChar();
+                                if (display.displayFracPart.length() > maxRightLength)
                                 {
-                                    display.fracPart = display.fracPart.substring(0, maxRightLength - 1) + ELLIPSIS;
+                                    display.displayFracPart = display.displayFracPart.substring(0, Math.max(0, maxRightLength - 1)) + ELLIPSIS;
                                 }
-                                if (display.integerPart.length() > maxLeftLength)
+                                if (display.displayIntegerPart.length() > maxLeftLength)
                                 {
-                                    display.integerPart = ELLIPSIS + display.integerPart.substring(display.integerPart.length() - maxLeftLength + 1);
+                                    display.displayIntegerPart = ELLIPSIS + display.displayIntegerPart.substring(display.displayIntegerPart.length() - maxLeftLength + 1);
                                 }
 
                                 display.updateDisplay();
