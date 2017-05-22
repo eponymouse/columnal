@@ -1,5 +1,6 @@
 package records.gui;
 
+import annotation.qual.Value;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -165,7 +166,7 @@ public class TableDisplayUtility
         return new Pair<>(column.getName().getRaw(), column.getType().applyGet(new DataTypeVisitorGet<ColumnHandler>()
         {
             @Override
-            public ColumnHandler number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
+            public ColumnHandler number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
                 class NumberDisplay
                 {
@@ -299,7 +300,7 @@ public class TableDisplayUtility
             }
 
             @Override
-            public ColumnHandler text(GetValue<String> g) throws InternalException, UserException
+            public ColumnHandler text(GetValue<@Value String> g) throws InternalException, UserException
             {
                 class StringDisplay extends StackPane
                 {
@@ -326,13 +327,13 @@ public class TableDisplayUtility
             }
 
             @Override
-            public ColumnHandler bool(GetValue<Boolean> g) throws InternalException, UserException
+            public ColumnHandler bool(GetValue<@Value Boolean> g) throws InternalException, UserException
             {
                 throw new UnimplementedException();
             }
 
             @Override
-            public ColumnHandler date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+            public ColumnHandler date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
             {
                 throw new UnimplementedException();
             }
