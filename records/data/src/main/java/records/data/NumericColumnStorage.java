@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNull;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -462,16 +463,16 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.number(displayInfo, new GetValue<Number>()
+            dataType = DataTypeValue.number(displayInfo, new GetValue<@Value Number>()
             {
                 @Override
-                public Number getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+                public @Value Number getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
                 {
                     return DataTypeUtility.value(NumericColumnStorage.this.getNonBlank(i, prog));
                 }
 
                 @Override
-                public @OnThread(Tag.Simulation) void set(int index, Number value) throws InternalException
+                public @OnThread(Tag.Simulation) void set(int index, @Value Number value) throws InternalException
                 {
                     NumericColumnStorage.this.set(OptionalInt.of(index), value);
                 }

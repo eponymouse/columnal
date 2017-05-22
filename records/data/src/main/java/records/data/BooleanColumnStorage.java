@@ -33,16 +33,16 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
     public BooleanColumnStorage(@Nullable BeforeGet<BooleanColumnStorage> beforeGet)
     {
         this.beforeGet = beforeGet;
-        this.type = DataTypeValue.bool(new GetValue<Boolean>()
+        this.type = DataTypeValue.bool(new GetValue<@Value Boolean>()
         {
             @Override
-            public Boolean getWithProgress(int i, ProgressListener progressListener) throws UserException, InternalException
+            public @Value Boolean getWithProgress(int i, ProgressListener progressListener) throws UserException, InternalException
             {
                 return BooleanColumnStorage.this.getWithProgress(i, progressListener);
             }
 
             @Override
-            public @OnThread(Tag.Simulation) void set(int index, Boolean value) throws InternalException
+            public @OnThread(Tag.Simulation) void set(int index, @Value Boolean value) throws InternalException
             {
                 data.set(index, value);
             }
