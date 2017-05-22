@@ -78,16 +78,16 @@ public class StringColumnStorage implements ColumnStorage<String>
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.text(new GetValue<String>()
+            dataType = DataTypeValue.text(new GetValue<@Value String>()
             {
                 @Override
-                public String getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+                public @Value String getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
                 {
                     return StringColumnStorage.this.get(i, prog);
                 }
 
                 @Override
-                public @OnThread(Tag.Simulation) void set(int index, String value) throws InternalException
+                public @OnThread(Tag.Simulation) void set(int index, @Value String value) throws InternalException
                 {
                     values.set(index, pool.pool(value));
                 }
