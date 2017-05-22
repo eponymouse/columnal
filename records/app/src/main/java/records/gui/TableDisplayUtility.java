@@ -23,6 +23,7 @@ import records.data.Column;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberDisplayInfo;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.DataType.TagType;
@@ -296,7 +297,7 @@ public class TableDisplayUtility
                         }
                     }
                 };
-                return new DisplayCache<@Value Number, NumberDisplay>(g, formatVisible, p -> new NumberDisplay(p.getFirst(), p.getSecond()), n -> n.textArea);
+                return new DisplayCache<@Value Number, NumberDisplay>(g, formatVisible, (Pair <Integer, @Value Number> p) -> new NumberDisplay(p.getFirst(), p.getSecond()), n -> n.textArea);
             }
 
             @Override
@@ -323,7 +324,7 @@ public class TableDisplayUtility
                     }
                 }
 
-                return new DisplayCache<@Value String, StringDisplay>(g, null, p -> new StringDisplay(p.getSecond()), s -> s);
+                return new DisplayCache<@Value String, StringDisplay>(g, null, (Pair<Integer, @Value String> p) -> new StringDisplay(p.getSecond()), s -> s);
             }
 
             @Override
@@ -391,7 +392,7 @@ public class TableDisplayUtility
             return result(altered, error, () -> {
                 if (nFinal != null)
                 {
-                    g.set(rowIndex, nFinal);
+                    g.set(rowIndex, DataTypeUtility.value(nFinal));
                     column.modified();
                 }
             });
