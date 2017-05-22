@@ -1,6 +1,8 @@
 package records.gui;
 
 import javafx.geometry.Pos;
+import javafx.scene.Group;
+import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
 import javafx.scene.layout.StackPane;
@@ -8,6 +10,7 @@ import javafx.scene.text.Text;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -52,39 +55,48 @@ import java.util.Objects;
  */
 public class TableDisplayUtility
 {
-    private static final String ELLIPSIS = "\u22EF";
-    private static double LEFT_DIGIT_WIDTH = -1;
-    private static double RIGHT_DIGIT_WIDTH = -1;
-    private static double DOT_WIDTH = -1;
+    private static final String NUMBER_DOT = "\u00B7"; //"\u2022";
+    private static final String ELLIPSIS = "\u2026";//"\u22EF";
+    private static class DigitSizes
+    {
+        private static double LEFT_DIGIT_WIDTH;
+        private static double RIGHT_DIGIT_WIDTH;
+        private static double DOT_WIDTH;
 
+        @OnThread(Tag.FXPlatform)
+        public DigitSizes()
+        {
+            Text t = new Text();
+            Group root = new Group(t);
+            root.getStyleClass().add("number-display");
+            Scene scene = new Scene(root);
+            scene.getStylesheets().addAll(FXUtility.getSceneStylesheets());
+            t.setText("0000000000");
+            t.getStyleClass().setAll("number-display-int");
+            t.applyCss();
+            LEFT_DIGIT_WIDTH = t.getLayoutBounds().getWidth() / 10.0;
+            t.setText("0000000000");
+            t.getStyleClass().setAll("number-display-frac");
+            t.applyCss();
+            RIGHT_DIGIT_WIDTH = t.getLayoutBounds().getWidth() / 10.0;
+            t.setText("...........");
+            t.getStyleClass().setAll("number-display-dot");
+            DOT_WIDTH = t.getLayoutBounds().getWidth() / 10.0;
+        }
+    }
+    private static @MonotonicNonNull DigitSizes SIZES;
 
     // Maps a number of digits on the right side of the decimal place to the amount
     // of digits which there is then room for on the left side of the decimal place:
     @OnThread(Tag.FXPlatform)
     private static int rightToLeft(int right, double totalWidth)
     {
-        if (LEFT_DIGIT_WIDTH < 0)
-        {
-            Text t = new Text("0000000000");
-            // TODO Set font and apply CSS
-            LEFT_DIGIT_WIDTH = t.getLayoutBounds().getWidth() / 10.0;
-        }
-        if (RIGHT_DIGIT_WIDTH < 0)
-        {
-            Text t = new Text("0000000000");
-            // TODO Set font and apply CSS
-            RIGHT_DIGIT_WIDTH = t.getLayoutBounds().getWidth() / 10.0;
-        }
-        if (DOT_WIDTH < 0)
-        {
-            Text t = new Text("...........");
-            // TODO Set font and apply CSS
-            DOT_WIDTH = t.getLayoutBounds().getWidth() / 10.0;
-        }
+        if (SIZES == null)
+            SIZES = new DigitSizes();
 
-        double width = totalWidth - DOT_WIDTH;
-        width -= right * RIGHT_DIGIT_WIDTH;
-        return (int)Math.floor(width / LEFT_DIGIT_WIDTH);
+        double width = totalWidth - SIZES.DOT_WIDTH;
+        width -= right * SIZES.RIGHT_DIGIT_WIDTH;
+        return (int)Math.floor(width / SIZES.LEFT_DIGIT_WIDTH);
     }
 
     private static class ValidationResult
@@ -162,6 +174,7 @@ public class TableDisplayUtility
                     private final String fullIntegerPart;
                     private String displayFracPart;
                     private String displayIntegerPart;
+                    private String displayDot;
 
                     @OnThread(Tag.FXPlatform)
                     public NumberDisplay(int rowIndex, Number n)
@@ -211,6 +224,7 @@ public class TableDisplayUtility
                         fullIntegerPart = Utility.getIntegerPart(n).toString();
                         fullFracPart = Utility.getFracPartAsString(n, 0, -1);
                         displayIntegerPart = fullIntegerPart;
+                        displayDot = NUMBER_DOT;
                         displayFracPart = fullFracPart;
                         updateDisplay();
                         textArea.getStyleClass().add("number-display");
@@ -221,7 +235,8 @@ public class TableDisplayUtility
                     {
                         textArea.replace(docFromSegments(
                             new StyledText<>(displayIntegerPart, Arrays.asList("number-display-int")),
-                            new StyledText<>(displayFracPart.isEmpty() ? "" : ("." + displayFracPart), Arrays.asList("number-display-frac"))
+                            new StyledText<>(displayDot, Arrays.asList("number-display-dot")),
+                            new StyledText<>(displayFracPart, Arrays.asList("number-display-frac"))
                         ));
                     }
                 }
@@ -253,7 +268,8 @@ public class TableDisplayUtility
                             if (onlyEllipsis)
                             {
                                 display.displayIntegerPart = ELLIPSIS;
-                                display.displayFracPart = ELLIPSIS;
+                                display.displayDot = "";
+                                display.displayFracPart = "";
                             }
                             else
                             {
@@ -262,6 +278,7 @@ public class TableDisplayUtility
 
                                 while (display.displayFracPart.length() < maxRightLength)
                                     display.displayFracPart += displayInfo.getDisplayInfo() == null ? " " : displayInfo.getDisplayInfo().getPaddingChar();
+
                                 if (display.displayFracPart.length() > maxRightLength)
                                 {
                                     display.displayFracPart = display.displayFracPart.substring(0, Math.max(0, maxRightLength - 1)) + ELLIPSIS;
@@ -270,6 +287,8 @@ public class TableDisplayUtility
                                 {
                                     display.displayIntegerPart = ELLIPSIS + display.displayIntegerPart.substring(display.displayIntegerPart.length() - maxLeftLength + 1);
                                 }
+
+                                display.displayDot = display.displayFracPart.isEmpty() ? "" : NUMBER_DOT;
 
                                 display.updateDisplay();
                             }

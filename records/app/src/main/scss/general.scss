@@ -124,8 +124,13 @@
     }
 }
 .number-display-frac {
-    -fx-font-size: 80%;
+    -fx-font-size: 90%;
 }
+.number-display-dot {
+    -fx-font-family: "Noto Sans";
+    -fx-font-size: 90%;
+}
+
 .string-display-quote {
     -fx-text-fill: gray(70%);
     -fx-font-family: "Source Code Pro";
