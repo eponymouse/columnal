@@ -252,9 +252,15 @@ public class DisplayCache<V, G> implements ColumnHandler
             catch (UserException | InternalException e)
             {
                 e.printStackTrace();
-                Platform.runLater(() -> {
-                    String msg = e.getLocalizedMessage();
-                    displayCacheItem.error(msg == null ? "ERROR" : ("ERR:" + msg));
+                Platform.runLater(new Runnable()
+                {
+                    @Override
+                    @SuppressWarnings("localization") // TODO localise this
+                    public void run()
+                    {
+                        String msg = e.getLocalizedMessage();
+                        displayCacheItem.error(msg == null ? "ERROR" : ("ERR:" + msg));
+                    }
                 });
             }
         }

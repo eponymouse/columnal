@@ -296,7 +296,7 @@ public class TableDisplayUtility
                         }
                     }
                 };
-                return new DisplayCache<Number, NumberDisplay>(g, formatVisible, p -> new NumberDisplay(p.getFirst(), p.getSecond()), n -> n.textArea);
+                return new DisplayCache<@Value Number, NumberDisplay>(g, formatVisible, p -> new NumberDisplay(p.getFirst(), p.getSecond()), n -> n.textArea);
             }
 
             @Override
@@ -323,7 +323,7 @@ public class TableDisplayUtility
                     }
                 }
 
-                return new DisplayCache<String, StringDisplay>(g, null, p -> new StringDisplay(p.getSecond()), s -> s);
+                return new DisplayCache<@Value String, StringDisplay>(g, null, p -> new StringDisplay(p.getSecond()), s -> s);
             }
 
             @Override
@@ -359,7 +359,7 @@ public class TableDisplayUtility
     }
 
     @OnThread(Tag.Any)
-    private static StringInputValidator getNumericValidator(Column column, GetValue<Number> g)
+    private static StringInputValidator getNumericValidator(Column column, GetValue<@Value Number> g)
     {
 
         return (rowIndex, before, oldPart, newPart, end) -> {
