@@ -256,6 +256,7 @@ public class DisplayCache<V, G> implements ColumnHandler
                 {
                     @Override
                     @SuppressWarnings("localization") // TODO localise this
+                    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
                     public void run()
                     {
                         String msg = e.getLocalizedMessage();
