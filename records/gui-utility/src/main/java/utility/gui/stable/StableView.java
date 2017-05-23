@@ -12,6 +12,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Orientation;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -21,6 +22,7 @@ import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
@@ -41,6 +43,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -475,9 +478,12 @@ public class StableView
                 pane.getStyleClass().add("stable-view-row-cell");
                 FXUtility.forcePrefSize(pane);
                 pane.prefWidthProperty().bind(columnSizes.get(columnIndex));
+                int columnIndexFinal = columnIndex;
                 pane.setOnMouseClicked(e -> {
-                    if (!pane.getChildren().isEmpty())
-                        pane.getChildren().get(0).requestFocus();
+                    if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && columns.get(columnIndexFinal).isEditable() && curRowIndex >= 0)
+                    {
+                        columns.get(columnIndexFinal).edit(curRowIndex, new Point2D(e.getSceneX(), e.getSceneY()), () -> {});
+                    }
                     e.consume();
                 });
                 cells.add(pane);
@@ -554,7 +560,18 @@ public class StableView
         // so you can just call it with a placeholder before returning.
         public void fetchValue(int rowIndex, ValueReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl);
 
+        // Called when the column gets resized
         public void columnResized(double width);
+
+        // Called when the user initiates an error, either by double-clicking
+        // (in which case the point is passed) or by pressing enter (in which case
+        // point is null).  When the edit finishes (either cancelled or successful),
+        // you should call the given action.
+        // Will only be called if isEditable returns true
+        public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable onFinish);
+
+        // Can this column be edited?
+        public boolean isEditable();
     }
 
     @OnThread(Tag.FXPlatform)

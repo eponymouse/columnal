@@ -1,6 +1,7 @@
 package records.gui;
 
 import annotation.qual.Value;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
@@ -15,6 +16,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.fxmisc.richtext.CharacterHit;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.StyledDocument;
@@ -38,6 +40,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.Utility.RunOrError;
@@ -146,6 +149,7 @@ public class TableDisplayUtility
             }
             catch (InternalException | UserException e)
             {
+                // Show a dummy column with an error message:
                 return new Pair<>(col.getName().getRaw(), new ColumnHandler()
                 {
                     @Override
@@ -158,6 +162,18 @@ public class TableDisplayUtility
                     public void columnResized(double width)
                     {
 
+                    }
+
+                    @Override
+                    public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable onFinish)
+                    {
+                        Utility.logStackTrace("Called edit when not editable");
+                    }
+
+                    @Override
+                    public boolean isEditable()
+                    {
+                        return false;
                     }
                 });
             }
@@ -234,7 +250,8 @@ public class TableDisplayUtility
                         updateDisplay();
                         textArea.getStyleClass().add("number-display");
                         StackPane.setAlignment(textArea, Pos.CENTER_RIGHT);
-                        AnchorPane.setRightAnchor(textArea, 0.0);
+                        // Doesn't get mouse events unless focused:
+                        textArea.mouseTransparentProperty().bind(textArea.focusedProperty().not());
                     }
 
                     @SuppressWarnings("initialization") // Due to use of various fields
@@ -308,7 +325,32 @@ public class TableDisplayUtility
                         }
                     }
                 };
-                return new DisplayCache<@Value Number, NumberDisplay>(g, formatVisible, (Pair <Integer, @Value Number> p) -> new NumberDisplay(p.getFirst(), p.getSecond()), n -> n.textArea);
+                return new DisplayCache<@Value Number, NumberDisplay>(g, formatVisible, (Pair <Integer, @Value Number> p) -> new NumberDisplay(p.getFirst(), p.getSecond()), n -> n.textArea) {
+                    @Override
+                    public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable onFinish)
+                    {
+                        @Nullable NumberDisplay rowIfShowing = getRowIfShowing(rowIndex);
+                        if (rowIfShowing != null)
+                        {
+                            @NonNull StyleClassedTextArea textArea = rowIfShowing.textArea;
+                            if (scenePoint != null)
+                            {
+                                Point2D localPoint = textArea.sceneToLocal(scenePoint);
+                                CharacterHit hit = textArea.hit(localPoint.getX(), localPoint.getY());
+                                textArea.moveTo(hit.getInsertionIndex());
+                            }
+                            textArea.requestFocus();
+                            FXUtility.onFocusLostOnce(textArea, onFinish);
+                            //TODO run onFinish when focus lost again
+                        }
+                    }
+
+                    @Override
+                    public boolean isEditable()
+                    {
+                        return true;
+                    }
+                };
             }
 
             @Override
@@ -335,7 +377,19 @@ public class TableDisplayUtility
                     }
                 }
 
-                return new DisplayCache<@Value String, StringDisplay>(g, null, (Pair<Integer, @Value String> p) -> new StringDisplay(p.getSecond()), s -> s);
+                return new DisplayCache<@Value String, StringDisplay>(g, null, (Pair<Integer, @Value String> p) -> new StringDisplay(p.getSecond()), s -> s) {
+                    @Override
+                    public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable onFinish)
+                    {
+
+                    }
+
+                    @Override
+                    public boolean isEditable()
+                    {
+                        return false;
+                    }
+                };
             }
 
             @Override

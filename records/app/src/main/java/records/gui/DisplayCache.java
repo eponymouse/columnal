@@ -43,7 +43,7 @@ import java.util.OptionalInt;
  *    and its value will only change by being edited on the FX thread.
  */
 @OnThread(Tag.FXPlatform)
-public class DisplayCache<V, G> implements ColumnHandler
+public abstract class DisplayCache<V, G> implements ColumnHandler
 {
     public static enum ProgressState
     {
@@ -137,6 +137,16 @@ public class DisplayCache<V, G> implements ColumnHandler
     {
         latestWidth = width;
         formatVisible(OptionalInt.empty());
+    }
+
+    protected @Nullable G getRowIfShowing(int index)
+    {
+        @Nullable DisplayCacheItem item = displayCacheItems.getIfPresent(index);
+        if (item != null && item.loadedItemOrError != null)
+        {
+            return item.loadedItemOrError.<@Nullable G>either(Pair::getSecond, s -> null);
+        }
+        return null;
     }
 
     private void formatVisible(OptionalInt rowIndexUpdated)

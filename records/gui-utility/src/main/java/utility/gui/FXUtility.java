@@ -285,6 +285,23 @@ public class FXUtility
         region.setMaxHeight(Region.USE_PREF_SIZE);
     }
 
+    public static void onFocusLostOnce(@NonNull Node node, FXPlatformRunnable onLost)
+    {
+        node.focusedProperty().addListener(new ChangeListener<Boolean>()
+        {
+            @Override
+            @OnThread(value = Tag.FXPlatform,ignoreParent = true)
+            public void changed(ObservableValue<? extends Boolean> observable, Boolean oldValue, Boolean newValue)
+            {
+                if (!newValue)
+                {
+                    node.focusedProperty().removeListener(this);
+                    onLost.run();
+                }
+            }
+        });
+    }
+
     public static interface DragHandler
     {
         @OnThread(Tag.FXPlatform)
