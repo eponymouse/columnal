@@ -179,8 +179,11 @@ public class UnitManager
             return base;
     }
 
-    public Unit guessUnit(String commonPrefix)
+    public Unit guessUnit(@Nullable String commonPrefix)
     {
+        if (commonPrefix == null)
+            return Unit.SCALAR;
+
         UnitDeclaration possUnit = knownUnits.get(commonPrefix.trim());
         if (possUnit == null)
             return Unit.SCALAR;

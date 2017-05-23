@@ -43,7 +43,9 @@ public class TextFormat extends Format
 
         TextFormat that = (TextFormat) o;
 
-        return Objects.equals(separator, that.separator) && Objects.equals(quote, that.quote);
+        return Objects.equals(separator, that.separator)
+            && Objects.equals(quote, that.quote)
+            && Objects.equals(charset, that.charset);
 
     }
 
@@ -53,6 +55,7 @@ public class TextFormat extends Format
         int result = super.hashCode();
         result = 31 * result + (separator == null ? 0 : separator.hashCode());
         result = 31 * result + (quote == null ? 0 : quote.hashCode());
+        result = 31 * result + charset.hashCode();
         return result;
     }
 

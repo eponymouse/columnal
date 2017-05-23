@@ -6,6 +6,8 @@ import records.data.datatype.NumberDisplayInfo;
 import records.data.datatype.NumberDisplayInfo.Padding;
 import records.data.unit.Unit;
 
+import java.util.Objects;
+
 /**
  * Created by neil on 30/10/2016.
  */
@@ -45,6 +47,7 @@ public class NumericColumnType extends ColumnType
         NumericColumnType that = (NumericColumnType) o;
 
         if (!displayInfo.equals(that.displayInfo)) return false;
+        if (!Objects.equals(commonPrefix, that.commonPrefix)) return false;
         return unit.equals(that.unit);
     }
 
@@ -53,13 +56,19 @@ public class NumericColumnType extends ColumnType
     {
         int result = unit.hashCode();
         result = 31 * result + displayInfo.hashCode();
+        if (commonPrefix != null)
+            result = 31 * result + commonPrefix.hashCode();
         return result;
     }
 
     @Override
     public String toString()
     {
-        return "Number"; // TODO add units
+        return "Number{" +
+            "unit=" + unit +
+            ", displayInfo=" + displayInfo +
+            ", commonPrefix='" + commonPrefix + '\'' +
+            '}';
     }
 
     public String getPrefixToRemove()

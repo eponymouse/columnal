@@ -514,7 +514,7 @@ public class GuessFormat
             boolean allNumericOrBlank = true;
             boolean allBlank = true;
             List<DateFormat> possibleDateFormats = new ArrayList<>(ToDate.FORMATS.stream().<DateTimeFormatter>flatMap(List::stream).map(formatter -> new DateFormat(formatter, LocalDate::from)).collect(Collectors.<DateFormat>toList()));
-            String commonPrefix = "";
+            @Nullable String commonPrefix = null;
             List<Integer> decimalPlaces = new ArrayList<>();
             for (int rowIndex = headerRows; rowIndex < initialVals.size(); rowIndex++)
             {
@@ -533,28 +533,30 @@ public class GuessFormat
                     {
                         allBlank = false;
 
-                        if (commonPrefix.isEmpty())
+                        if (commonPrefix == null)
                         {
                             // Look for a prefix of currency symbol:
                             for (int i = 0; i < val.length(); i = val.offsetByCodePoints(i, 1))
                             {
                                 if (Character.getType(val.codePointAt(i)) == Character.CURRENCY_SYMBOL)
-                                    commonPrefix += val.substring(i, val.offsetByCodePoints(i, 1));
+                                {
+                                    commonPrefix = (commonPrefix == null ? "" : commonPrefix) + val.substring(i, val.offsetByCodePoints(i, 1));
+                                }
                                 else
                                     break;
                             }
                         }
                         int first;
                         // Not an else; if we just picked commonPrefix, we should find it here:
-                        if (!commonPrefix.isEmpty() && val.startsWith(commonPrefix))
+                        if (commonPrefix != null && val.startsWith(commonPrefix))
                         {
                             // Take off prefix and continue as is:
                             val = val.substring(commonPrefix.length()).trim();
                         }
-                        else if (!commonPrefix.isEmpty() && !Character.isDigit(first = val.codePointAt(0)) && first != '+' && first != '-')
+                        else if (commonPrefix != null && !Character.isDigit(first = val.codePointAt(0)) && first != '+' && first != '-')
                         {
                             // We thought we had a prefix, but we haven't found it here, so give up:
-                            commonPrefix = "";
+                            commonPrefix = null;
                             allNumeric = false;
                             allNumericOrBlank = false;
                             //break;
@@ -582,7 +584,7 @@ public class GuessFormat
                             {
                                 allNumericOrBlank = false;
                             }
-                            commonPrefix = "";
+                            commonPrefix = null;
                         }
                         // Minimum length for date is 6 by my count
                         if (val.length() < 6)

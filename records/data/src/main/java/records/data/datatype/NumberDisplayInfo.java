@@ -8,7 +8,6 @@ import org.checkerframework.dataflow.qual.Pure;
  */
 public class NumberDisplayInfo
 {
-
     public static enum Padding
     {
         ZERO, SPACE;
@@ -56,5 +55,37 @@ public class NumberDisplayInfo
         {
             return new NumberDisplayInfo(Math.max(a.minimumDP, b.minimumDP), Math.max(a.maximumDP, b.maximumDP), a.rightPadding);
         }
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        NumberDisplayInfo that = (NumberDisplayInfo) o;
+
+        if (minimumDP != that.minimumDP) return false;
+        if (maximumDP != that.maximumDP) return false;
+        return rightPadding == that.rightPadding;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = minimumDP;
+        result = 31 * result + maximumDP;
+        result = 31 * result + rightPadding.hashCode();
+        return result;
+    }
+
+    @Override
+    public String toString()
+    {
+        return "NumberDisplayInfo{" +
+            "minimumDP=" + minimumDP +
+            ", maximumDP=" + maximumDP +
+            ", rightPadding=" + rightPadding +
+            '}';
     }
 }
