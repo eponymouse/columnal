@@ -116,7 +116,7 @@ public class CallExpression extends NonOperatorExpression
             return c -> new FunctionNode(definitionFinal, param, c);
         }
         else
-            throw new RuntimeException("TODO bad function");
+            throw new RuntimeException("TODO bad function (" + functionName + ")");
     }
 
     @Override

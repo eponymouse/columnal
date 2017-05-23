@@ -124,11 +124,14 @@
     }
 }
 .number-display-frac {
-    -fx-font-size: 90%;
+    -fx-font-size: 85%;
 }
 .number-display-dot {
     -fx-font-family: "Noto Sans";
-    -fx-font-size: 90%;
+    -fx-font-size: 85%;
+}
+.number-display-dot-invisible {
+    visibility: hidden;
 }
 
 .string-display-quote {
