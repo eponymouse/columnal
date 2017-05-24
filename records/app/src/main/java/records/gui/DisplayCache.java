@@ -57,18 +57,16 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
 
     private final GetValue<V> getValue;
     private final @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells;
-    private final FXPlatformFunction<Pair<Integer, V>, G> makeGraphical;
     private final FXPlatformFunction<G, Region> getNode;
     private int firstVisibleRowIndexIncl = -1;
     private int lastVisibleRowIndexIncl = -1;
     private double latestWidth = -1;
 
     @OnThread(Tag.Any)
-    public DisplayCache(GetValue<V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, FXPlatformFunction<Pair<Integer, V>,  G> makeGraphical, FXPlatformFunction<G, Region> getNode)
+    public DisplayCache(GetValue<V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, FXPlatformFunction<G, Region> getNode)
     {
         this.getValue = getValue;
         this.formatVisibleCells = formatVisibleCells;
-        this.makeGraphical = makeGraphical;
         this.getNode = getNode;
         displayCacheItems = CacheBuilder.newBuilder()
             .initialCapacity(INITIAL_DISPLAY_CACHE_SIZE)
@@ -83,6 +81,8 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
                 }
             });
     }
+
+    protected abstract G makeGraphical(int rowIndex, V value);
 
     public class VisibleDetails
     {
@@ -184,7 +184,7 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
 
         public synchronized void update(V loadedItem)
         {
-            this.loadedItemOrError = Either.left(new Pair<>(loadedItem, makeGraphical.apply(new Pair<>(rowIndex, loadedItem))));
+            this.loadedItemOrError = Either.left(new Pair<>(loadedItem, makeGraphical(rowIndex, loadedItem)));
             triggerCallback();
             formatVisible(OptionalInt.of(rowIndex));
         }

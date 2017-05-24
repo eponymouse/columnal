@@ -482,7 +482,7 @@ public class StableView
                 pane.setOnMouseClicked(e -> {
                     if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && columns.get(columnIndexFinal).isEditable() && curRowIndex >= 0)
                     {
-                        columns.get(columnIndexFinal).edit(curRowIndex, new Point2D(e.getSceneX(), e.getSceneY()), () -> {});
+                        columns.get(columnIndexFinal).edit(curRowIndex, new Point2D(e.getSceneX(), e.getSceneY()));
                     }
                     e.consume();
                 });
@@ -565,10 +565,9 @@ public class StableView
 
         // Called when the user initiates an error, either by double-clicking
         // (in which case the point is passed) or by pressing enter (in which case
-        // point is null).  When the edit finishes (either cancelled or successful),
-        // you should call the given action.
+        // point is null).
         // Will only be called if isEditable returns true
-        public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable onFinish);
+        public void edit(int rowIndex, @Nullable Point2D scenePoint);
 
         // Can this column be edited?
         public boolean isEditable();
