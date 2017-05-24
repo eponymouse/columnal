@@ -56,6 +56,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.OptionalInt;
 
 /**
  * Created by neil on 01/05/2017.
@@ -104,6 +105,16 @@ public class TableDisplayUtility
         double width = totalWidth - SIZES.DOT_WIDTH;
         width -= right * SIZES.RIGHT_DIGIT_WIDTH;
         return (int)Math.floor(width / SIZES.LEFT_DIGIT_WIDTH);
+    }
+
+    // Given number of digits to left of point, number to right, calculates required width
+    @OnThread(Tag.FXPlatform)
+    private static double fullSize(int left, int right)
+    {
+        if (SIZES == null)
+            SIZES = new DigitSizes();
+
+        return left * SIZES.LEFT_DIGIT_WIDTH + (right == 0 ? 0 : (SIZES.DOT_WIDTH + SIZES.RIGHT_DIGIT_WIDTH * right));
     }
 
     private static class ValidationResult
@@ -187,6 +198,7 @@ public class TableDisplayUtility
             @Override
             public ColumnHandler number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
+                @OnThread(Tag.FXPlatform)
                 class NumberDisplay
                 {
                     private final @NonNull StyleClassedTextArea textArea;
@@ -267,6 +279,50 @@ public class TableDisplayUtility
                             new StyledText<>(displayFracPart, Arrays.asList("number-display-frac"))
                         ));
                     }
+
+                    public void expandToFullDisplayForEditing()
+                    {
+                        int pos = getCursorPosition();
+                        displayDotVisible = true;
+                        displayDot = fullFracPart.isEmpty() ? "" : NUMBER_DOT;
+                        displayIntegerPart = fullIntegerPart;
+                        displayFracPart = fullFracPart;
+                        updateDisplay();
+                        StackPane.setAlignment(textArea, Pos.CENTER_LEFT);
+                        setFullSize();
+                        setCursorPosition(pos);
+                    }
+
+                    public void shrinkToNormalAfterEditing()
+                    {
+                        textArea.setMinWidth(0);
+                    }
+
+                    private void setFullSize()
+                    {
+                        textArea.setMinWidth(8 + fullSize(displayIntegerPart.length(), displayFracPart.length()));
+                    }
+
+                    // A positive number means past decimal point (RHS of point = 1)
+                    // A negative number means before decimal point (LHS of point = -1)
+                    // What's mainly important is that setCursorPosition afterwards does the
+                    // sensible thing, even if get is before full expansion and set is after.
+                    private int getCursorPosition()
+                    {
+                        int caretPos = textArea.getCaretPosition();
+                        if (caretPos <= displayIntegerPart.length())
+                            return caretPos - displayIntegerPart.length() - 1;
+                        else
+                            return caretPos - displayIntegerPart.length(); // this will automatically be + 1 due to the dot
+                    }
+
+                    public void setCursorPosition(int pos)
+                    {
+                        if (pos < 0)
+                            textArea.moveTo(displayIntegerPart.length() + 1 + pos);
+                        else
+                            textArea.moveTo(displayIntegerPart.length() + pos);
+                    }
                 }
 
                 FXPlatformConsumer<DisplayCache<Number, NumberDisplay>.VisibleDetails> formatVisible = vis -> {
@@ -332,16 +388,24 @@ public class TableDisplayUtility
                         @Nullable NumberDisplay rowIfShowing = getRowIfShowing(rowIndex);
                         if (rowIfShowing != null)
                         {
-                            @NonNull StyleClassedTextArea textArea = rowIfShowing.textArea;
+                            @NonNull NumberDisplay numberDisplay = rowIfShowing;
+                            @NonNull StyleClassedTextArea textArea = numberDisplay.textArea;
                             if (scenePoint != null)
                             {
                                 Point2D localPoint = textArea.sceneToLocal(scenePoint);
                                 CharacterHit hit = textArea.hit(localPoint.getX(), localPoint.getY());
                                 textArea.moveTo(hit.getInsertionIndex());
                             }
+                            numberDisplay.expandToFullDisplayForEditing();
+                            // TODO use viewOrder from Java 9 to bring to front
+                            // TODO when focused, make white and add drop shadow around it
                             textArea.requestFocus();
-                            FXUtility.onFocusLostOnce(textArea, onFinish);
-                            //TODO run onFinish when focus lost again
+                            FXUtility.onFocusLostOnce(textArea, () -> {
+                                textArea.deselect();
+                                numberDisplay.shrinkToNormalAfterEditing();
+                                formatVisible(OptionalInt.of(rowIndex));
+                                onFinish.run();
+                            });
                         }
                     }
 
@@ -429,9 +493,9 @@ public class TableDisplayUtility
     {
 
         return (rowIndex, before, oldPart, newPart, end) -> {
-            String altered = newPart.replaceAll("[^0-9.+-]", "");
+            String altered = newPart.replace(NUMBER_DOT, ".").replaceAll("[^0-9.+-]", "");
             // We also disallow + and - except at start, and only allow one dot:
-            if (before.contains(".") || end.contains("."))
+            if (before.contains(NUMBER_DOT) || end.contains(NUMBER_DOT))
                 altered = altered.replace(".", "");
             if (before.isEmpty())
             {
@@ -446,7 +510,7 @@ public class TableDisplayUtility
             @Nullable @Localized String error = null;
             try
             {
-                n = Utility.parseNumber(before + altered + end);
+                n = Utility.parseNumber(before.replace(NUMBER_DOT, ".") + altered + end.replace(NUMBER_DOT, "."));
             }
             catch (UserException e)
             {
@@ -454,7 +518,7 @@ public class TableDisplayUtility
                 n = null;
             }
             @Nullable Number nFinal = n;
-            return result(altered, error, () -> {
+            return result(altered.replace(".", NUMBER_DOT), error, () -> {
                 if (nFinal != null)
                 {
                     g.set(rowIndex, DataTypeUtility.value(nFinal));

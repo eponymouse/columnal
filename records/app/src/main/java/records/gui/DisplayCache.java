@@ -122,7 +122,7 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
     }
 
     @Override
-    public void fetchValue(int rowIndex, ValueReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+    public final void fetchValue(int rowIndex, ValueReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
     {
         this.firstVisibleRowIndexIncl = firstVisibleRowIndexIncl;
         this.lastVisibleRowIndexIncl = lastVisibleRowIndexIncl;
@@ -133,13 +133,13 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
     }
 
     @Override
-    public void columnResized(double width)
+    public final void columnResized(double width)
     {
         latestWidth = width;
         formatVisible(OptionalInt.empty());
     }
 
-    protected @Nullable G getRowIfShowing(int index)
+    protected final @Nullable G getRowIfShowing(int index)
     {
         @Nullable DisplayCacheItem item = displayCacheItems.getIfPresent(index);
         if (item != null && item.loadedItemOrError != null)
@@ -149,7 +149,7 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
         return null;
     }
 
-    private void formatVisible(OptionalInt rowIndexUpdated)
+    protected final void formatVisible(OptionalInt rowIndexUpdated)
     {
         if (formatVisibleCells != null && firstVisibleRowIndexIncl != -1 && lastVisibleRowIndexIncl != -1 && latestWidth > 0)
             formatVisibleCells.consume(new VisibleDetails(rowIndexUpdated, firstVisibleRowIndexIncl, lastVisibleRowIndexIncl, latestWidth));
