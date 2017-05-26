@@ -86,9 +86,9 @@ import java.util.List;
 @OnThread(Tag.FXPlatform)
 public class StableView
 {
-    private final ObservableList<@Nullable Object> items;
-    private final VirtualFlow<@Nullable Object, StableRow> virtualFlow;
-    private final VirtualFlow<@Nullable Object, LineNumber> lineNumbers;
+    private final ObservableList<@Nullable Void> items;
+    private final VirtualFlow<@Nullable Void, StableRow> virtualFlow;
+    private final VirtualFlow<@Nullable Void, LineNumber> lineNumbers;
     private final HBox headerItemsContainer;
     private final VirtualizedScrollPane scrollPane;
     private final Label placeholder;
@@ -118,8 +118,8 @@ public class StableView
         headerItemsContainer = new HBox();
         final Pane header = new Pane(headerItemsContainer);
         header.getStyleClass().add("stable-view-header");
-        virtualFlow = VirtualFlow.<@Nullable Object, StableRow>createVertical(items, this::makeCell);
-        scrollPane = new VirtualizedScrollPane<VirtualFlow<@Nullable Object, StableRow>>(virtualFlow);
+        virtualFlow = VirtualFlow.<@Nullable Void, StableRow>createVertical(items, this::makeCell);
+        scrollPane = new VirtualizedScrollPane<VirtualFlow<@Nullable Void, StableRow>>(virtualFlow);
         scrollPane.getStyleClass().add("stable-view-scroll-pane");
         scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
         scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
@@ -463,7 +463,7 @@ public class StableView
     }
 
     @OnThread(Tag.FXPlatform)
-    private class StableRow implements Cell<@Nullable Object, Region>
+    private class StableRow implements Cell<@Nullable Void, Region>
     {
         private final HBox hBox = new HBox();
         private final ArrayList<Pane> cells = new ArrayList<>();
@@ -528,7 +528,7 @@ public class StableView
         // You have to override this to avoid the UnsupportedOperationException
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public void updateItem(@Nullable Object item)
+        public void updateItem(@Nullable Void item)
         {
             // Everything is actually done in updateIndex
         }
@@ -574,7 +574,7 @@ public class StableView
     }
 
     @OnThread(Tag.FXPlatform)
-    private class LineNumber implements Cell<@Nullable Object, Node>
+    private class LineNumber implements Cell<@Nullable Void, Node>
     {
         private final Label label = new Label();
         private final Pane labelWrapper = new StackPane(label);
@@ -609,7 +609,7 @@ public class StableView
         // You have to override this to avoid the UnsupportedOperationException
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public void updateItem(@Nullable Object item)
+        public void updateItem(@Nullable Void item)
         {
             // Everything is actually done in updateIndex
         }
