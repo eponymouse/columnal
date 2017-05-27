@@ -82,10 +82,4 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
     {
         return type;
     }
-
-    @Override
-    public void addRow() throws InternalException, UserException
-    {
-        throw new UnimplementedException();
-    }
 }

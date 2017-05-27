@@ -147,33 +147,17 @@ public abstract class DataSource extends Table
 
     protected abstract boolean dataEquals(DataSource obj);
 
-    private static class LoadedRecordSet extends RecordSet
+    private static class LoadedRecordSet extends EditableRecordSet
     {
-        private int length;
-
         public LoadedRecordSet(List<ColumnMaker<?>> columns, DataSourceImmediateContext immed, List<Pair<ColumnId, DataType>> format) throws InternalException, UserException
         {
-            super(columns);
-            length = loadData(immed.detail(), row ->
+            super(columns, () -> loadData(immed.detail(), row ->
             {
                 for (int i = 0; i < format.size(); i++)
                 {
                     columns.get(i).loadRow(row.get(i));
                 }
-            });
+            }));
         }
-
-        @Override
-        public boolean indexValid(int index) throws UserException, InternalException
-        {
-            return index < length;
-        }
-
-        @Override
-        public int getLength() throws UserException, InternalException
-        {
-            return length;
-        }
-
     }
 }

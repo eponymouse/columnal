@@ -233,7 +233,7 @@ public class MainWindow
         Workers.onWorkerThread("Create new table", Priority.SAVE_ENTRY, () -> {
             try
             {
-                EditableRecordSet rs = new EditableRecordSet(Collections.emptyList(), 0);
+                EditableRecordSet rs = new EditableRecordSet(Collections.emptyList(), () -> 0);
                 ImmediateDataSource ds = new ImmediateDataSource(v.getManager(), rs);
             }
             catch (InternalException | UserException ex)

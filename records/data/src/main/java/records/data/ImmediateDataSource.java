@@ -83,6 +83,12 @@ public class ImmediateDataSource extends DataSource
     }
 
     @Override
+    public @OnThread(Tag.FXPlatform) boolean showAddRowButton()
+    {
+        return true;
+    }
+
+    @Override
     public Table addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException, UserException
     {
         List<FunctionInt<RecordSet, Column>> allColumns = new ArrayList<>();
@@ -96,7 +102,7 @@ public class ImmediateDataSource extends DataSource
             });
         }
         allColumns.add(rs -> newColumnType.makeImmediateColumn(new ColumnId(newColumnName), Utility.replicate(data.getLength(), newColumnValue)).apply(rs).markEditable());
-        return new ImmediateDataSource(getManager(), getId(), new EditableRecordSet(allColumns, data.getLength()));
+        return new ImmediateDataSource(getManager(), getId(), new EditableRecordSet(allColumns, () -> data.getLength()));
     }
 
     @Override

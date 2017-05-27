@@ -4,6 +4,7 @@ import javafx.application.Platform;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
+import utility.SimulationSupplier;
 
 import java.util.List;
 
@@ -14,10 +15,10 @@ public class EditableRecordSet extends RecordSet
 {
     private int curLength;
 
-    public EditableRecordSet(List<? extends FunctionInt<RecordSet, ? extends Column>> columns, int length) throws InternalException, UserException
+    public EditableRecordSet(List<? extends FunctionInt<RecordSet, ? extends Column>> columns, SimulationSupplier<Integer> loadLength) throws InternalException, UserException
     {
         super(columns);
-        this.curLength = length;
+        this.curLength = loadLength.get();
     }
 
     @Override
@@ -33,17 +34,13 @@ public class EditableRecordSet extends RecordSet
     }
 
     @Override
-    protected void addRow() throws UserException, InternalException
+    public void addRow() throws InternalException
     {
-        for (Column c : getColumns())
-        {
-            c.addRow();
-        }
         curLength += 1;
         if (listener != null)
         {
             RecordSetListener listenerFinal = listener;
-            Platform.runLater(() -> listenerFinal.rowAddedAtEnd());
+            Platform.runLater(() -> listenerFinal.modified());
         }
         // TODO re-run dependents
     }

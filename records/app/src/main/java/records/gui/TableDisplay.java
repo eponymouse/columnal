@@ -101,12 +101,15 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
         @SuppressWarnings("initialization")
         @UIEffect
-        public TableDataDisplay(RecordSet recordSet, FXPlatformRunnable onModify)
+        public TableDataDisplay(RecordSet recordSet, boolean canAppend, FXPlatformRunnable onModify)
         {
             super();
             this.onModify = onModify;
             recordSet.setListener(this);
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet));
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet), !canAppend ? Optional.empty() : Optional.of(() -> {
+                // This will indirectly call onModify via the table listener:
+                Utility.alertOnError_(() -> recordSet.addRow());
+            }));
             setRows(recordSet::indexValid);
             //TODO restore editability
             //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
@@ -137,21 +140,6 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
         }
 
-
-        @Override
-        @OnThread(Tag.FXPlatform)
-        public void rowAddedAtEnd()
-        {
-            /*
-            // If our table has 3 real rows and is editable, it will have integers:
-            // 0, 1, 2, -3
-            // What we want to do is insert item 3 at position 3, to get:
-            // 0, 1, 2, 3, -4
-            getItems().set(getItems().size() - 1, Integer.valueOf(getItems().size() - 1));
-            getItems().add(Integer.valueOf(- getItems().size()));
-            */
-        }
-
         @Override
         @OnThread(Tag.FXPlatform)
         public void modified()
@@ -180,7 +168,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         }
         this.error = error;
         this.recordSet = recordSet;
-        StackPane body = new StackPane(new TableDataDisplay(recordSet, parent::modified).getNode());
+        StackPane body = new StackPane(new TableDataDisplay(recordSet, table.showAddRowButton(), parent::modified).getNode());
         Utility.addStyleClass(body, "table-body");
         setCenter(body);
         Utility.addStyleClass(this, "table-wrapper");

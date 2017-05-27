@@ -43,12 +43,6 @@ public class MemoryTupleColumn extends Column
         return shrunk;
     }
 
-    @Override
-    public void addRow() throws InternalException, UserException
-    {
-        storage.addRow();
-    }
-
     public void add(Object[] tuple) throws InternalException
     {
         storage.add(tuple);

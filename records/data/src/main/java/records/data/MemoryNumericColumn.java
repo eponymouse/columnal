@@ -56,10 +56,4 @@ public class MemoryNumericColumn extends Column
     {
         return new MemoryNumericColumn(rs, getName(), storage.getDisplayInfo(), storage._test_getShrunk(shrunkLength));
     }
-
-    @Override
-    public void addRow() throws InternalException, UserException
-    {
-        storage.addRow();
-    }
 }

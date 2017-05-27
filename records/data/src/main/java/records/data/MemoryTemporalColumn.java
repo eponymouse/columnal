@@ -37,12 +37,6 @@ public class MemoryTemporalColumn extends Column
         return new MemoryTemporalColumn(rs, getName(), getType().getDateTimeInfo(), storage._test_getShrunk(shrunkLength));
     }
 
-    @Override
-    public void addRow() throws InternalException, UserException
-    {
-        storage.addRow();
-    }
-
     public void add(TemporalAccessor value) throws InternalException
     {
         storage.add(value);

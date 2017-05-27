@@ -50,12 +50,6 @@ public class MemoryTaggedColumn extends Column
         return new MemoryTaggedColumn(rs, getName(), typeName, tags, storage.getShrunk(shrunkLength));
     }
 
-    @Override
-    public void addRow() throws InternalException, UserException
-    {
-        storage.addRow();
-    }
-
     public void add(TaggedValue taggedValue) throws InternalException
     {
         storage.add(taggedValue);

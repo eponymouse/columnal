@@ -13,6 +13,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
+import utility.SimulationRunnable;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -42,9 +43,11 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
             }
 
             @Override
-            public @OnThread(Tag.Simulation) void set(int index, @Value Boolean value) throws InternalException
+            public @OnThread(Tag.Simulation) SimulationRunnable set(int index, @Value Boolean value) throws InternalException
             {
+                boolean old = data.get(index);
                 data.set(index, value);
+                return () -> data.set(index, old);
             }
         });
     }
@@ -84,12 +87,6 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
     public DataTypeValue getType()
     {
         return type;
-    }
-
-    @Override
-    public void addRow() throws InternalException, UserException
-    {
-        add(false);
     }
 
     public List<Boolean> getShrunk(int shrunkLength)

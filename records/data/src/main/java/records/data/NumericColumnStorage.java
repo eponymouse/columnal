@@ -13,9 +13,11 @@ import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.error.FetchException;
 import records.error.InternalException;
+import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.SimulationRunnable;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -472,9 +474,20 @@ public class NumericColumnStorage implements ColumnStorage<Number>
                 }
 
                 @Override
-                public @OnThread(Tag.Simulation) void set(int index, @Value Number value) throws InternalException
+                public @OnThread(Tag.Simulation) SimulationRunnable set(int index, @Value Number value) throws InternalException, UserException
                 {
-                    NumericColumnStorage.this.set(OptionalInt.of(index), value);
+                    if (index == filled)
+                    {
+                        NumericColumnStorage.this.set(OptionalInt.empty(), value);
+                        // TODO implement remove properly
+                        return () -> {throw new UnimplementedException();};
+                    }
+                    else
+                    {
+                        Number old = get(index);
+                        NumericColumnStorage.this.set(OptionalInt.of(index), value);
+                        return () -> NumericColumnStorage.this.set(OptionalInt.of(index), old);
+                    }
                 }
             });
         }
@@ -548,11 +561,5 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     public NumberInfo getDisplayInfo()
     {
         return displayInfo;
-    }
-
-    @Override
-    public void addRow() throws InternalException, UserException
-    {
-        addByte(OptionalInt.empty(), (byte)0);
     }
 }

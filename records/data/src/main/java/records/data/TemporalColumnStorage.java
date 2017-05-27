@@ -88,10 +88,4 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
         }
         return dataType;
     }
-
-    @Override
-    public void addRow() throws InternalException, UserException
-    {
-        throw new UnimplementedException();
-    }
 }

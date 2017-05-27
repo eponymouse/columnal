@@ -224,6 +224,9 @@ public abstract class Table
      */
     public abstract Table addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException, UserException;
 
+    @OnThread(Tag.FXPlatform)
+    public abstract boolean showAddRowButton();
+
     @OnThread(Tag.Any)
     protected TableManager getManager()
     {

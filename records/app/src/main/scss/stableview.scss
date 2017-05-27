@@ -101,3 +101,14 @@ $stable-view-header-border: hsb(0, 0%, 40%);
     -fx-pref-height: 28px; /*20pt;*/
     /*-fx-snap-to-pixel: true;*/
 }
+
+/* The colors should be overridden by the hover pseudo-class, which is intended */
+.stable-view-row-append-button {
+   -fx-max-width: 9999.0;
+   -fx-background-color: gray(95%);
+   -fx-background-inserts: 0;
+   &:hover {
+       -fx-background-color: white;
+       -fx-cursor: hand;
+   }
+}

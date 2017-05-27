@@ -38,12 +38,6 @@ public class MemoryArrayColumn extends Column
         return shrunk;
     }
 
-    @Override
-    public void addRow() throws InternalException, UserException
-    {
-        storage.addRow();
-    }
-
     public void add(ListEx listEx) throws InternalException
     {
         storage.add(listEx);

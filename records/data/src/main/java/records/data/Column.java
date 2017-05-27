@@ -137,11 +137,6 @@ public abstract class Column
         throw new RuntimeException("Unshrinkable!");
     }
 
-    public void addRow() throws InternalException, UserException
-    {
-        throw new InternalException("Cannot edit results of transformation");
-    }
-
     public static interface ProgressListener
     {
         @OnThread(Tag.Simulation)

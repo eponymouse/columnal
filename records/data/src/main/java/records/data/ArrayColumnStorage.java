@@ -90,23 +90,4 @@ public class ArrayColumnStorage implements ColumnStorage<ListEx>
     {
         return type;
     }
-
-    @Override
-    public void addRow() throws InternalException, UserException
-    {
-        add(new ListEx()
-        {
-            @Override
-            public int size() throws InternalException, UserException
-            {
-                return 0;
-            }
-
-            @Override
-            public @Value Object get(int index) throws InternalException, UserException
-            {
-                throw new InternalException("Asking for item in empty array");
-            }
-        });
-    }
 }

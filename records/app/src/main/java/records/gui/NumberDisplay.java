@@ -24,12 +24,14 @@ import records.data.Column;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.NumberDisplayInfo;
+import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
+import utility.SimulationRunnable;
 import utility.Utility;
 import utility.Workers;
 import utility.gui.FXUtility;
@@ -296,6 +298,12 @@ class NumberDisplay
             public boolean isEditable()
             {
                 return true;
+            }
+
+            @Override
+            public SimulationRunnable appendRow(int newRowIndex) throws InternalException, UserException
+            {
+                return g.set(newRowIndex, 0);
             }
         };
     }

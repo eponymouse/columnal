@@ -178,7 +178,7 @@ public abstract class RecordSet
         return Utility.mapListEx(columns, makeDisplayColumn);
     }
 */
-    protected void addRow() throws UserException, InternalException
+    public void addRow() throws InternalException
     {
         throw new InternalException("Cannot extend length of data table; not editable");
     }
@@ -325,9 +325,6 @@ public abstract class RecordSet
     @OnThread(Tag.FXPlatform)
     public static interface RecordSetListener
     {
-        @OnThread(Tag.FXPlatform)
-        public void rowAddedAtEnd();
-
         @OnThread(Tag.FXPlatform)
         public void modified();
     }

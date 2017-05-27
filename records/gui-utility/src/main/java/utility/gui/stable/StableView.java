@@ -1,5 +1,6 @@
 package utility.gui.stable;
 
+import com.sun.jna.platform.win32.OaIdl.FUNCDESC;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
@@ -46,15 +47,19 @@ import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.SimulationFunction;
+import utility.SimulationRunnable;
+import utility.SimulationRunnableNoError;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 
+import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * A customised equivalent of TableView
@@ -110,10 +115,14 @@ public class StableView
     private final ObjectProperty<Pair<Integer, Double>> topShowingCellProperty = new SimpleObjectProperty<>(new Pair<>(0, 0.0));
 
     private final ObjectProperty<@Nullable Pair<Integer, Integer>> focusedCell = new SimpleObjectProperty<>(null);
+    private boolean canAppend;
+    private SimulationRunnableNoError afterAppend = () -> {};
 
 
     public StableView()
     {
+        // We could make a dummy list which keeps track of size, but doesn't
+        // actually bother storing the nulls:
         items = FXCollections.observableArrayList();
         headerItemsContainer = new HBox();
         final Pane header = new Pane(headerItemsContainer);
@@ -297,14 +306,62 @@ public class StableView
         return topShowingCellProperty;
     }
 
-    public void clear()
+    private boolean isAppendRow(int index)
     {
-        // Clears rows, too:
-        setColumns(Collections.emptyList());
+        return canAppend && index == items.size() - 1;
     }
 
-    public void setColumns(List<Pair<String, ColumnHandler>> columns)
+    private void appendRow(int newRowIndex)
     {
+        List<ColumnHandler> columnsFinal = new ArrayList<>(this.columns);
+        SimulationRunnableNoError afterAppendFinal = this.afterAppend;
+        Workers.onWorkerThread("Appending row", Priority.SAVE_ENTRY, () -> {
+            List<SimulationRunnable> revert = new ArrayList<>();
+            try
+            {
+                for (ColumnHandler column : columnsFinal)
+                {
+                    revert.add(column.appendRow(newRowIndex));
+                }
+
+                afterAppendFinal.run();
+                Platform.runLater(() -> {
+                    // Add the new row:
+                    // TODO make this part of the on modified callback:
+                    items.add(null);
+                });
+            }
+            catch (InternalException | UserException e)
+            {
+                Platform.runLater(() -> Utility.showError(e));
+                for (SimulationRunnable revertOne : revert)
+                {
+                    try
+                    {
+                        revertOne.run();
+                    }
+                    catch (InternalException | UserException e2)
+                    {
+                        Platform.runLater(() -> Utility.showError(e2));
+                    }
+                }
+            }
+        });
+    }
+
+    // See setColumns for description of append
+    public void clear(Optional<SimulationRunnableNoError> append)
+    {
+        // Clears rows, too:
+        setColumns(Collections.emptyList(), append);
+    }
+
+    // If append is empty, can't append.  If it's present, can append, and run
+    // this action after appending.
+    public void setColumns(List<Pair<String, ColumnHandler>> columns, Optional<SimulationRunnableNoError> append)
+    {
+        this.canAppend = append.isPresent();
+        this.afterAppend = append.orElse(() -> {});
         // Important to clear the items, as we need to make new cells
         // which will have the updated number of columns
         items.clear();
@@ -334,6 +391,7 @@ public class StableView
 
     public void setRows(SimulationFunction<Integer, Boolean> isRowValid)
     {
+        boolean addAppendRow = canAppend;
         Workers.onWorkerThread("Calculating table rows", Priority.FETCH, () -> {
             int toAdd = 0;
             try
@@ -365,6 +423,9 @@ public class StableView
                 Utility.log(e);
                 // TODO display somewhere?
             }
+            // Add final row for the "+" buttons
+            if (addAppendRow)
+                toAdd += 1;
             int toAddFinal = toAdd;
             Platform.runLater(() -> {
                 for (int k = 0; k < toAddFinal; k++)
@@ -468,6 +529,7 @@ public class StableView
         private final HBox hBox = new HBox();
         private final ArrayList<Pane> cells = new ArrayList<>();
         private int curRowIndex = -1;
+        private final List<Button> appendButtons = new ArrayList<>();
 
         public StableRow()
         {
@@ -502,25 +564,46 @@ public class StableView
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void updateIndex(int rowIndex)
         {
-            if (rowIndex != curRowIndex)
+            if (rowIndex != curRowIndex || appendButtons.isEmpty() != !isAppendRow(rowIndex))
             {
+                appendButtons.clear();
                 curRowIndex = rowIndex;
+
                 for (int columnIndex = 0; columnIndex < columns.size(); columnIndex++)
                 {
-                    ColumnHandler column = columns.get(columnIndex);
-                    int columnIndexFinal = columnIndex;
-                    StableRow firstVisibleRow = virtualFlow.visibleCells().get(0);
-                    StableRow lastVisibleRow = virtualFlow.visibleCells().get(virtualFlow.visibleCells().size() - 1);
-                    column.fetchValue(rowIndex, (x, n) ->
+                    if (isAppendRow(curRowIndex))
                     {
-                        Pane cell = cells.get(columnIndexFinal);
-                        n.setFocusTraversable(true);
-                        FXUtility.addChangeListenerPlatformNN(n.focusedProperty(), gotFocus -> {
-                            FXUtility.setPseudoclass(cell, "focused-cell", gotFocus);
-                            focusedCell.set(gotFocus ? new Pair<>(columnIndexFinal, rowIndex) : null);
+                        Button button = GUI.button("stableView.append", () -> appendRow(rowIndex), "stable-view-row-append-button");
+                        cells.get(columnIndex).getChildren().setAll(button);
+                        appendButtons.add(button);
+                        FXUtility.addChangeListenerPlatformNN(button.hoverProperty(), hover -> {
+                            for (Button other : appendButtons)
+                            {
+                                if (other != button)
+                                {
+                                    FXUtility.setPseudoclass(other, "hover", hover);
+                                }
+                            }
                         });
-                        cell.getChildren().setAll(n);
-                    }, firstVisibleRow.curRowIndex, lastVisibleRow.curRowIndex);
+                    }
+                    else
+                    {
+                        ColumnHandler column = columns.get(columnIndex);
+                        int columnIndexFinal = columnIndex;
+                        StableRow firstVisibleRow = virtualFlow.visibleCells().get(0);
+                        StableRow lastVisibleRow = virtualFlow.visibleCells().get(virtualFlow.visibleCells().size() - 1);
+                        column.fetchValue(rowIndex, (x, n) ->
+                        {
+                            Pane cell = cells.get(columnIndexFinal);
+                            n.setFocusTraversable(true);
+                            FXUtility.addChangeListenerPlatformNN(n.focusedProperty(), gotFocus ->
+                            {
+                                FXUtility.setPseudoclass(cell, "focused-cell", gotFocus);
+                                focusedCell.set(gotFocus ? new Pair<>(columnIndexFinal, rowIndex) : null);
+                            });
+                            cell.getChildren().setAll(n);
+                        }, firstVisibleRow.curRowIndex, lastVisibleRow.curRowIndex);
+                    }
                 }
             }
         }
@@ -560,7 +643,7 @@ public class StableView
         // so you can just call it with a placeholder before returning.
         public void fetchValue(int rowIndex, ValueReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl);
 
-        // Called when the column gets resized
+        // Called when the column gets resized.  Width is in pixels
         public void columnResized(double width);
 
         // Called when the user initiates an error, either by double-clicking
@@ -571,6 +654,11 @@ public class StableView
 
         // Can this column be edited?
         public boolean isEditable();
+
+        // Returns an action which will revert the add (in case there is a problem
+        // appending to one of the columns)
+        @OnThread(Tag.Simulation)
+        public SimulationRunnable appendRow(int newRowIndex) throws InternalException, UserException;
     }
 
     @OnThread(Tag.FXPlatform)
@@ -596,7 +684,7 @@ public class StableView
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void updateIndex(int index)
         {
-            label.setText(Integer.toString(index));
+            label.setText(isAppendRow(index) ? "" : Integer.toString(index));
         }
 
         @Override

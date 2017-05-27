@@ -111,6 +111,12 @@ public abstract class Transformation extends Table
     }
 
     @Override
+    public @OnThread(Tag.FXPlatform) boolean showAddRowButton()
+    {
+        return false;
+    }
+
+    @Override
     public Table addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException
     {
         throw new InternalException("Called addColumn despite showAddColumnButton returning false for type " + getClass());

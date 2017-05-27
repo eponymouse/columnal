@@ -35,12 +35,6 @@ public class MemoryBooleanColumn extends Column
         return new MemoryBooleanColumn(rs, getName(), storage.getShrunk(shrunkLength));
     }
 
-    @Override
-    public void addRow() throws InternalException, UserException
-    {
-        storage.addRow();
-    }
-
     public void add(boolean b) throws InternalException
     {
         storage.add(b);

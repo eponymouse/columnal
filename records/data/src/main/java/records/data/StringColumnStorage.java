@@ -12,6 +12,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DumbObjectPool;
+import utility.SimulationRunnable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -87,18 +88,24 @@ public class StringColumnStorage implements ColumnStorage<String>
                 }
 
                 @Override
-                public @OnThread(Tag.Simulation) void set(int index, @Value String value) throws InternalException
+                public @OnThread(Tag.Simulation) SimulationRunnable set(int index, @Value String value) throws InternalException
                 {
-                    values.set(index, pool.pool(value));
+                    if (index == values.size())
+                    {
+                        values.add(pool.pool(value));
+                        // Not values.size() because that will change:
+                        return () -> values.remove(index);
+
+                    }
+                    else
+                    {
+                        String old = values.get(index);
+                        values.set(index, pool.pool(value));
+                        return () -> values.set(index, old);
+                    }
                 }
             });
         }
         return dataType;
-    }
-
-    @Override
-    public void addRow() throws InternalException, UserException
-    {
-        addAll(Collections.singletonList(""));
     }
 }

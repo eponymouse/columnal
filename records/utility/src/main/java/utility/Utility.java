@@ -923,11 +923,9 @@ public class Utility
         }
         catch (InternalException | UserException e)
         {
-            e.printStackTrace(); // TODO have proper log
             Platform.runLater(() ->
             {
-                String localizedMessage = e.getLocalizedMessage();
-                new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK).showAndWait();
+                showError(e);
             });
         }
     }
@@ -941,9 +939,7 @@ public class Utility
         }
         catch (InternalException | UserException e)
         {
-            e.printStackTrace(); // TODO have proper log
-            String localizedMessage = e.getLocalizedMessage();
-            new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK).showAndWait();
+            showError(e);
         }
     }
 
@@ -956,11 +952,17 @@ public class Utility
         }
         catch (InternalException | UserException e)
         {
-            log(e);
-            String localizedMessage = e.getLocalizedMessage();
-            new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK).showAndWait();
+            showError(e);
             return null;
         }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static void showError(Exception e)
+    {
+        log(e);
+        String localizedMessage = e.getLocalizedMessage();
+        new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK).showAndWait();
     }
 
     @OnThread(Tag.Simulation)
@@ -978,9 +980,7 @@ public class Utility
         {
             Platform.runLater(() ->
             {
-                e.printStackTrace(); // TODO have proper log
-                String localizedMessage = e.getLocalizedMessage();
-                new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK).showAndWait();
+                showError(e);
             });
             return Optional.empty();
         }

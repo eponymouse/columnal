@@ -34,6 +34,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 import utility.Pair;
+import utility.SimulationRunnable;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.stable.StableView.ColumnHandler;
@@ -86,6 +87,12 @@ public class TableDisplayUtility
                     {
                         return false;
                     }
+
+                    @Override
+                    public @OnThread(Tag.Simulation) SimulationRunnable appendRow(int newRowIndex) throws InternalException
+                    {
+                        throw new InternalException("Called appendRow when not editable");
+                    }
                 });
             }
         });
@@ -136,13 +143,21 @@ public class TableDisplayUtility
                     @Override
                     public void edit(int rowIndex, @Nullable Point2D scenePoint)
                     {
-
+                        //TODO
                     }
 
+                    //TODO
                     @Override
                     public boolean isEditable()
                     {
                         return false;
+                    }
+
+                    @Override
+                    public @OnThread(Tag.Simulation) SimulationRunnable appendRow(int newRowIndex) throws InternalException, UserException
+                    {
+                        //TODO
+                        return g.set(newRowIndex, "");
                     }
                 };
             }

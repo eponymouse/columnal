@@ -39,10 +39,4 @@ public class MemoryStringColumn extends Column
     {
         return new MemoryStringColumn(rs, getName(), storage._test_getShrunk(shrunkLength));
     }
-
-    @Override
-    public void addRow() throws InternalException, UserException
-    {
-        storage.addRow();
-    }
 }

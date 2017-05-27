@@ -67,6 +67,13 @@ public class LinkedDataSource extends DataSource
     }
 
     @Override
+    public @OnThread(Tag.FXPlatform) boolean showAddRowButton()
+    {
+        // TODO show it, and prompt to transform to non-linked table
+        return false;
+    }
+
+    @Override
     public Table addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException
     {
         throw new InternalException("Should not try to add column to linked data source");

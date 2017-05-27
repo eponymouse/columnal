@@ -50,8 +50,6 @@ public interface ColumnStorage<T>
         return getAllCollapsed(length);
     }
 
-    public void addRow() throws InternalException, UserException;
-
     public static interface BeforeGet<S extends ColumnStorage<?>>
     {
         public void beforeGet(S storage, int index, @Nullable ProgressListener progressListener) throws InternalException, UserException;
