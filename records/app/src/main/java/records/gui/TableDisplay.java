@@ -15,7 +15,9 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
+import org.apache.commons.lang.math.IntRange;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.Table.TableDisplayBase;
@@ -142,8 +144,27 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
         @Override
         @OnThread(Tag.FXPlatform)
-        public void modified()
+        public void modifiedDataItems(int startRowIncl, int endRowIncl)
         {
+            onModify.run();
+        }
+
+        @Override
+        public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
+        {
+            if (removedRowsCount > 0)
+            {
+                items.remove(startRowIncl, startRowIncl + removedRowsCount + 1);
+            }
+            if (addedRowsCount > 0)
+            {
+                // TODO this isn't very efficient:
+                for (int i = 0; i < addedRowsCount; i++)
+                {
+                    items.add(startRowIncl + i, null);
+                }
+            }
+
             onModify.run();
         }
     }

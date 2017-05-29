@@ -126,9 +126,9 @@ public abstract class Column
     }
 
     @OnThread(Tag.Simulation)
-    public final void modified()
+    public final void modified(int rowIndex)
     {
-        recordSet.modified();
+        recordSet.modified(name, rowIndex);
     }
 
     // For testing: return copy of column with length trimmed to shrunkLength

@@ -91,7 +91,7 @@ import java.util.Optional;
 @OnThread(Tag.FXPlatform)
 public class StableView
 {
-    private final ObservableList<@Nullable Void> items;
+    protected final ObservableList<@Nullable Void> items;
     private final VirtualFlow<@Nullable Void, StableRow> virtualFlow;
     private final VirtualFlow<@Nullable Void, LineNumber> lineNumbers;
     private final HBox headerItemsContainer;
@@ -325,11 +325,6 @@ public class StableView
                 }
 
                 afterAppendFinal.run();
-                Platform.runLater(() -> {
-                    // Add the new row:
-                    // TODO make this part of the on modified callback:
-                    items.add(null);
-                });
             }
             catch (InternalException | UserException e)
             {

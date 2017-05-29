@@ -314,18 +314,24 @@ public abstract class RecordSet
     }
 
     @OnThread(Tag.Simulation)
-    public void modified()
+    public void modified(ColumnId columnId, int rowIndex)
     {
         Platform.runLater(() -> {
             if (listener != null)
-                listener.modified();
+                listener.modifiedDataItems(rowIndex, rowIndex);
         });
     }
 
     @OnThread(Tag.FXPlatform)
     public static interface RecordSetListener
     {
+        // Range of rows modified
         @OnThread(Tag.FXPlatform)
-        public void modified();
+        public void modifiedDataItems(int startRowIncl, int endRowIncl);
+
+        // Starting at startRowIncl, removedRowsCount (>= 0) was removed,
+        // and in its place was added addedRowsCount (>= 0).
+        @OnThread(Tag.FXPlatform)
+        public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount);
     }
 }
