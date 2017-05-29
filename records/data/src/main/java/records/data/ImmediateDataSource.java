@@ -83,9 +83,13 @@ public class ImmediateDataSource extends DataSource
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) boolean showAddRowButton()
+    public @OnThread(Tag.Any) TableOperations getOperations()
     {
-        return true;
+        return new TableOperations(appendRowCount -> {
+            Utility.alertOnError_(() -> data.addRows(appendRowCount));
+        }, null /*TODO*/, (deleteRowFrom, deleteRowCount) -> {
+            //TODO
+        });
     }
 
     @Override

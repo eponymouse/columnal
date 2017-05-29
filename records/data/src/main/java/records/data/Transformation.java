@@ -111,9 +111,9 @@ public abstract class Transformation extends Table
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) boolean showAddRowButton()
+    public @OnThread(Tag.Any) TableOperations getOperations()
     {
-        return false;
+        return new TableOperations(null, null, null);
     }
 
     @Override

@@ -24,8 +24,8 @@ import utility.Pair;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.Workers.Worker;
-import utility.gui.stable.StableView.ColumnHandler;
-import utility.gui.stable.StableView.ValueReceiver;
+import records.gui.stable.StableView.ColumnHandler;
+import records.gui.stable.StableView.ValueReceiver;
 
 import java.util.ArrayList;
 import java.util.List;

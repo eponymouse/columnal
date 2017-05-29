@@ -1,26 +1,22 @@
 package records.gui;
 
-import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
-import javafx.scene.control.TableColumn;
-import javafx.scene.control.TableView;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
-import org.apache.commons.lang.math.IntRange;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.Table.TableDisplayBase;
+import records.data.TableOperations;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -29,7 +25,7 @@ import utility.FXPlatformRunnable;
 import utility.Utility;
 import utility.Workers;
 import utility.gui.FXUtility;
-import utility.gui.stable.StableView;
+import records.gui.stable.StableView;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -103,15 +99,12 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
         @SuppressWarnings("initialization")
         @UIEffect
-        public TableDataDisplay(RecordSet recordSet, boolean canAppend, FXPlatformRunnable onModify)
+        public TableDataDisplay(RecordSet recordSet, TableOperations operations, FXPlatformRunnable onModify)
         {
             super();
             this.onModify = onModify;
             recordSet.setListener(this);
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet), !canAppend ? Optional.empty() : Optional.of(() -> {
-                // This will indirectly call onModify via the table listener:
-                Utility.alertOnError_(() -> recordSet.addRow());
-            }));
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet), operations);
             setRows(recordSet::indexValid);
             //TODO restore editability
             //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
@@ -189,7 +182,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         }
         this.error = error;
         this.recordSet = recordSet;
-        StackPane body = new StackPane(new TableDataDisplay(recordSet, table.showAddRowButton(), parent::modified).getNode());
+        StackPane body = new StackPane(new TableDataDisplay(recordSet, table.getOperations(), parent::modified).getNode());
         Utility.addStyleClass(body, "table-body");
         setCenter(body);
         Utility.addStyleClass(this, "table-wrapper");

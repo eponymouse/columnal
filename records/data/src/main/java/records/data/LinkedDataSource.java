@@ -67,10 +67,10 @@ public class LinkedDataSource extends DataSource
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) boolean showAddRowButton()
+    public @OnThread(Tag.Any) TableOperations getOperations()
     {
-        // TODO show it, and prompt to transform to non-linked table
-        return false;
+        // TODO prompt to transform to non-linked table
+        return new TableOperations(null, null, null);
     }
 
     @Override

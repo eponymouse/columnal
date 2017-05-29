@@ -34,14 +34,14 @@ public class EditableRecordSet extends RecordSet
     }
 
     @Override
-    public void addRow() throws InternalException
+    public void addRows(int count) throws InternalException
     {
         int newRowIndex = curLength;
-        curLength += 1;
+        curLength += count;
         if (listener != null)
         {
             RecordSetListener listenerFinal = listener;
-            Platform.runLater(() -> listenerFinal.removedAddedRows(newRowIndex, 0, 1));
+            Platform.runLater(() -> listenerFinal.removedAddedRows(newRowIndex, 0, count));
         }
         // TODO re-run dependents
     }

@@ -67,7 +67,7 @@ import utility.gui.GUI;
 import utility.gui.LabelledGrid;
 import utility.gui.LabelledGrid.Row;
 import utility.gui.SegmentedButtonValue;
-import utility.gui.stable.StableView;
+import records.gui.stable.StableView;
 
 import java.io.File;
 import java.io.IOException;
@@ -834,7 +834,7 @@ public class GuessFormat
             catch (InternalException e)
             {
                 Utility.log(e);
-                tableView.clear(Optional.empty());
+                tableView.clear(null);
                 tableView.setPlaceholderText(e.getLocalizedMessage());
             }
         };
@@ -917,7 +917,7 @@ public class GuessFormat
     private static void previewFormat(TypeManager typeManager, File file, List<String> initialLines, TextFormat t, GUI_Items gui)
     {
         gui.textArea.replaceText(initialLines.stream().collect(Collectors.joining("\n")));
-        gui.tableView.clear(Optional.empty());
+        gui.tableView.clear(null);
         TextAreaFiller textAreaFiller = new TextAreaFiller(gui);
 
         gui.textArea.setParagraphGraphicFactory(sourceLine -> {
@@ -931,7 +931,7 @@ public class GuessFormat
             {
                 @OnThread(Tag.Simulation) RecordSet recordSet = TextImport.makeRecordSet(typeManager, file, t, textAreaFiller);
                 Platform.runLater(() -> {
-                    gui.tableView.setColumns(TableDisplayUtility.makeStableViewColumns(recordSet), Optional.empty());
+                    gui.tableView.setColumns(TableDisplayUtility.makeStableViewColumns(recordSet), null);
                     gui.tableView.setRows(recordSet::indexValid);
                 });
             }

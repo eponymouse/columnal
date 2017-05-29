@@ -178,7 +178,7 @@ public abstract class RecordSet
         return Utility.mapListEx(columns, makeDisplayColumn);
     }
 */
-    public void addRow() throws InternalException
+    public void addRows(int count) throws InternalException
     {
         throw new InternalException("Cannot extend length of data table; not editable");
     }

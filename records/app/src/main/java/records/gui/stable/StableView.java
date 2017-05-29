@@ -1,6 +1,5 @@
-package utility.gui.stable;
+package records.gui.stable;
 
-import com.sun.jna.platform.win32.OaIdl.FUNCDESC;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
@@ -18,6 +17,7 @@ import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
@@ -25,7 +25,6 @@ import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
-import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
@@ -33,33 +32,33 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualizedScrollPane;
+import records.data.TableOperations;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.SimulationRunnable;
-import utility.SimulationRunnableNoError;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 
 /**
  * A customised equivalent of TableView
@@ -115,8 +114,7 @@ public class StableView
     private final ObjectProperty<Pair<Integer, Double>> topShowingCellProperty = new SimpleObjectProperty<>(new Pair<>(0, 0.0));
 
     private final ObjectProperty<@Nullable Pair<Integer, Integer>> focusedCell = new SimpleObjectProperty<>(null);
-    private boolean canAppend;
-    private SimulationRunnableNoError afterAppend = () -> {};
+    private @Nullable TableOperations operations;
 
 
     public StableView()
@@ -306,15 +304,19 @@ public class StableView
         return topShowingCellProperty;
     }
 
+    @EnsuresNonNullIf(expression = {"operations", "operations.appendRows"}, result=true)
     private boolean isAppendRow(int index)
     {
-        return canAppend && index == items.size() - 1;
+        return operations != null && operations.appendRows != null && index == items.size() - 1;
     }
 
     private void appendRow(int newRowIndex)
     {
+        if (operations == null || operations.appendRows == null)
+            return; // Shouldn't happen, but if it does, append no longer valid
+
         List<ColumnHandler> columnsFinal = new ArrayList<>(this.columns);
-        SimulationRunnableNoError afterAppendFinal = this.afterAppend;
+        TableOperations.@NonNull AppendRows appendFinal = this.operations.appendRows;
         Workers.onWorkerThread("Appending row", Priority.SAVE_ENTRY, () -> {
             List<SimulationRunnable> revert = new ArrayList<>();
             try
@@ -324,7 +326,7 @@ public class StableView
                     revert.add(column.appendRow(newRowIndex));
                 }
 
-                afterAppendFinal.run();
+                appendFinal.appendRows(1);
             }
             catch (InternalException | UserException e)
             {
@@ -345,18 +347,17 @@ public class StableView
     }
 
     // See setColumns for description of append
-    public void clear(Optional<SimulationRunnableNoError> append)
+    public void clear(@Nullable TableOperations operations)
     {
         // Clears rows, too:
-        setColumns(Collections.emptyList(), append);
+        setColumns(Collections.emptyList(), operations);
     }
 
     // If append is empty, can't append.  If it's present, can append, and run
     // this action after appending.
-    public void setColumns(List<Pair<String, ColumnHandler>> columns, Optional<SimulationRunnableNoError> append)
+    public void setColumns(List<Pair<String, ColumnHandler>> columns, @Nullable TableOperations operations)
     {
-        this.canAppend = append.isPresent();
-        this.afterAppend = append.orElse(() -> {});
+        this.operations = operations;
         // Important to clear the items, as we need to make new cells
         // which will have the updated number of columns
         items.clear();
@@ -386,7 +387,7 @@ public class StableView
 
     public void setRows(SimulationFunction<Integer, Boolean> isRowValid)
     {
-        boolean addAppendRow = canAppend;
+        boolean addAppendRow = operations != null && operations.appendRows != null;
         Workers.onWorkerThread("Calculating table rows", Priority.FETCH, () -> {
             int toAdd = 0;
             try
@@ -661,11 +662,17 @@ public class StableView
     {
         private final Label label = new Label();
         private final Pane labelWrapper = new StackPane(label);
+        private int curRowIndex;
 
         public LineNumber()
         {
             FXUtility.forcePrefSize(labelWrapper);
             labelWrapper.getStyleClass().add("stable-view-row-number");
+            labelWrapper.setOnContextMenuRequested(e -> {
+                ContextMenu menu = new ContextMenu();
+                menu.getItems().addAll(Utility.mapList(getRowOperationsForSingleRow(curRowIndex), RowOperation::makeMenuItem));
+                menu.show(labelWrapper, e.getScreenX(), e.getScreenY());
+            });
         }
 
         @Override
@@ -679,6 +686,7 @@ public class StableView
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public void updateIndex(int index)
         {
+            curRowIndex = index;
             label.setText(isAppendRow(index) ? "" : Integer.toString(index));
         }
 
@@ -696,5 +704,32 @@ public class StableView
         {
             // Everything is actually done in updateIndex
         }
+    }
+
+    private List<RowOperation> getRowOperationsForSingleRow(int rowIndex)
+    {
+        List<RowOperation> r = new ArrayList<>();
+        if (operations != null)
+        {
+            if (operations.deleteRows != null)
+            {
+                TableOperations.@NonNull DeleteRows deleteRows = operations.deleteRows;
+                r.add(new RowOperation()
+                {
+                    @Override
+                    public @OnThread(Tag.FXPlatform) @LocalizableKey String getNameKey()
+                    {
+                        return "stableView.row.delete";
+                    }
+
+                    @Override
+                    public @OnThread(Tag.Simulation) void execute()
+                    {
+                        deleteRows.deleteRows(rowIndex, 1);
+                    }
+                });
+            }
+        }
+        return r;
     }
 }
