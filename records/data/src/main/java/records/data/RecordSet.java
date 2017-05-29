@@ -178,10 +178,6 @@ public abstract class RecordSet
         return Utility.mapListEx(columns, makeDisplayColumn);
     }
 */
-    public void addRows(int count) throws InternalException
-    {
-        throw new InternalException("Cannot extend length of data table; not editable");
-    }
 
     @OnThread(Tag.Any)
     public final Column getColumn(ColumnId name) throws UserException

@@ -6,6 +6,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 import records.data.Column;
 import records.data.DataSource;
+import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.data.LinkedDataSource;
 import records.data.RecordSet;
@@ -97,7 +98,7 @@ public class TextImport
         if (importInfo.linkFile)
             return new LinkedDataSource(mgr, importInfo.tableName, rs, MainLexer.TEXTFILE, textFile);
         else
-            return new ImmediateDataSource(mgr, importInfo.tableName, rs);
+            return new ImmediateDataSource(mgr, importInfo.tableName, new EditableRecordSet(rs));
     }
 
     @OnThread(Tag.Simulation)

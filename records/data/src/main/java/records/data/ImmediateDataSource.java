@@ -22,15 +22,15 @@ import java.util.List;
  */
 public class ImmediateDataSource extends DataSource
 {
-    private final RecordSet data;
+    private final EditableRecordSet data;
 
-    public ImmediateDataSource(TableManager mgr, RecordSet data)
+    public ImmediateDataSource(TableManager mgr, EditableRecordSet data)
     {
         super(mgr, null);
         this.data = data;
     }
 
-    public ImmediateDataSource(TableManager mgr, TableId tableId, RecordSet data)
+    public ImmediateDataSource(TableManager mgr, TableId tableId, EditableRecordSet data)
     {
         super(mgr, tableId);
         this.data = data;

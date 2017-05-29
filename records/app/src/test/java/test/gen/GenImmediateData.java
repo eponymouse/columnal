@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.Precision;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.Column;
+import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
@@ -75,7 +76,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                     ExBiFunction<Integer, RecordSet, Column> col = genColumn.generate(r, generationStatus);
                     columns.add(rs -> col.apply(length, rs));
                 }
-                tables.add(new ImmediateDataSource(mgr, new KnownLengthRecordSet(columns, length)));
+                tables.add(new ImmediateDataSource(mgr, new EditableRecordSet(columns, () -> length)));
             }
             return new ImmediateData_Mgr(mgr, tables);
         }

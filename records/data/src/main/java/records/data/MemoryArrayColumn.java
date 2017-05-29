@@ -1,5 +1,6 @@
 package records.data;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
@@ -17,7 +18,7 @@ public class MemoryArrayColumn extends Column
 {
     private final ArrayColumnStorage storage;
 
-    public MemoryArrayColumn(RecordSet recordSet, ColumnId title, DataType inner, List<ListEx> values) throws InternalException
+    public MemoryArrayColumn(RecordSet recordSet, ColumnId title, @Nullable DataType inner, List<ListEx> values) throws InternalException
     {
         super(recordSet, title);
         this.storage = new ArrayColumnStorage(inner, null);

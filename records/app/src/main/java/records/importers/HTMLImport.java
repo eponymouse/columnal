@@ -6,16 +6,7 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
-import records.data.Column;
-import records.data.DataSource;
-import records.data.ImmediateDataSource;
-import records.data.KnownLengthRecordSet;
-import records.data.MemoryNumericColumn;
-import records.data.MemoryStringColumn;
-import records.data.MemoryTaggedColumn;
-import records.data.RecordSet;
-import records.data.TableManager;
-import records.data.MemoryTemporalColumn;
+import records.data.*;
 import records.data.datatype.DataTypeUtility;
 import utility.TaggedValue;
 import records.data.columntype.BlankColumnType;
@@ -138,7 +129,7 @@ public class HTMLImport
 
             vals = null; // Make sure we don't keep a reference
             // Not because we null it, but because we make it non-final.
-            results.add(new ImmediateDataSource(mgr, new KnownLengthRecordSet(columns, len)));
+            results.add(new ImmediateDataSource(mgr, new EditableRecordSet(columns, () -> len)));
 
         }
         return results;

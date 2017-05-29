@@ -67,7 +67,7 @@ public abstract class DataSource extends Table
                 ColumnId columnId = format.get(i).getFirst();
                 columns.add(t.makeImmediateColumn(columnId).markEditable());
             }
-            RecordSet recordSet = new LoadedRecordSet(columns, immed, format);
+            LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed, format);
             return new ImmediateDataSource(manager, new TableId(immed.tableId().getText()), recordSet);
         }
         else
