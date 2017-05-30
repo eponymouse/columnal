@@ -7,6 +7,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.SimulationRunnable;
 import utility.Utility.ListEx;
 
 import java.util.List;
@@ -14,7 +15,7 @@ import java.util.List;
 /**
  * Created by neil on 31/10/2016.
  */
-public class MemoryArrayColumn extends Column
+public class MemoryArrayColumn extends EditableColumn
 {
     private final ArrayColumnStorage storage;
 
@@ -42,5 +43,18 @@ public class MemoryArrayColumn extends Column
     public void add(ListEx listEx) throws InternalException
     {
         storage.add(listEx);
+    }
+
+
+    @Override
+    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    {
+        return storage.insertRows(index, count);
+    }
+
+    @Override
+    public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    {
+        return storage.removeRows(index, count);
     }
 }

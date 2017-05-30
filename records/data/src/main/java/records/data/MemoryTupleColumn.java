@@ -6,13 +6,14 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.SimulationRunnable;
 
 import java.util.List;
 
 /**
  * Created by neil on 31/10/2016.
  */
-public class MemoryTupleColumn extends Column
+public class MemoryTupleColumn extends EditableColumn
 {
     private final TupleColumnStorage storage;
 
@@ -46,5 +47,18 @@ public class MemoryTupleColumn extends Column
     public void add(Object[] tuple) throws InternalException
     {
         storage.add(tuple);
+    }
+
+
+    @Override
+    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    {
+        return storage.insertRows(index, count);
+    }
+
+    @Override
+    public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    {
+        return storage.removeRows(index, count);
     }
 }

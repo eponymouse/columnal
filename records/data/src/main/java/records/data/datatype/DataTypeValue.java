@@ -229,7 +229,6 @@ public class DataTypeValue extends DataType
         @OnThread(Tag.Simulation)
         default @NonNull T get(int index) throws UserException, InternalException { return getWithProgress(index, null); }
 
-        // If index is one beyond last index, it means append
         @OnThread(Tag.Simulation)
         default SimulationRunnable set(int index, T value) throws InternalException, UserException
         {

@@ -1,7 +1,6 @@
 package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
@@ -12,7 +11,7 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExBiConsumer;
+import utility.SimulationRunnable;
 import utility.TaggedValue;
 
 import java.util.ArrayList;
@@ -23,7 +22,7 @@ import java.util.List;
  */
 public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
 {
-    // This stores the tag index as a tag, not a number.
+    // This stores the tag index
     private final NumericColumnStorage tagStore;
     // This stores the index at which each inner value resides.
     // For example, let's stay you have the type:
@@ -35,9 +34,11 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     // \C:...
     // \D:6
     // \A:5
-    // tagIndexStore will have 0, 1, 0, 2, 3, 0 (the tag indexes)
-    // innerValueIndex will have 0, -1, 1, 0, 0, 2 (effectively, the per-tag index
-    // within the corresponding value store)
+    // tagStore will have 0, 1, 0, 2, 3, 0 (the tag indexes)
+    // innerValueIndex will have 0, -1 [none], 1, 0, 0, 2 (effectively, the per-tag index
+    // within the corresponding value store).  i.e. we compress each
+    // storage so that we don't leave gaps.  The indexes must be
+    // in ascending order
     private final NumericColumnStorage innerValueIndex;
     // This is the list of storage columns for inner types.
     // We could share them among same-types, but it doesn't save memory so
@@ -83,7 +84,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
         dataType = DataTypeValue.tagged(typeName, tagTypes, (i, prog) -> {
             if (beforeGet != null)
                 beforeGet.beforeGet(this, i, prog);
-            return tagStore.getTag(i);
+            return tagStore.getInt(i);
         });
     }
 
@@ -91,6 +92,18 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     public DataTypeValue getType()
     {
         return dataType;
+    }
+
+    @Override
+    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    {
+        throw new UnimplementedException();
+    }
+
+    @Override
+    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    {
+        throw new UnimplementedException();
     }
 
     @Override
@@ -119,7 +132,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     {
         //Walk the tag structure, adding to store depending on tag:
         int tagIndex = value.getTagIndex();
-        tagStore.addTag(tagIndex);
+        tagStore.add(tagIndex);
 
         @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();
         if (inner == null)

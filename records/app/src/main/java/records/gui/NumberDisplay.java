@@ -38,6 +38,7 @@ import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.OptionalInt;
 
@@ -298,12 +299,6 @@ class NumberDisplay
             public boolean isEditable()
             {
                 return true;
-            }
-
-            @Override
-            public SimulationRunnable appendRow(int newRowIndex) throws InternalException, UserException
-            {
-                return g.set(newRowIndex, 0);
             }
         };
     }

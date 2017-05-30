@@ -9,6 +9,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.SimulationRunnable;
 import utility.TaggedValue;
 
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.List;
 /**
  * Created by neil on 30/11/2016.
  */
-public class MemoryTaggedColumn extends Column
+public class MemoryTaggedColumn extends EditableColumn
 {
     private final TaggedColumnStorage storage;
     private final TypeId typeName;
@@ -53,5 +54,18 @@ public class MemoryTaggedColumn extends Column
     public void add(TaggedValue taggedValue) throws InternalException
     {
         storage.add(taggedValue);
+    }
+
+
+    @Override
+    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    {
+        return storage.insertRows(index, count);
+    }
+
+    @Override
+    public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    {
+        return storage.removeRows(index, count);
     }
 }

@@ -14,6 +14,7 @@ import java.math.MathContext;
 import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.time.temporal.TemporalAccessor;
+import java.util.AbstractList;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -685,10 +686,20 @@ public class Utility
 
     public static <T> List<T> replicate(int length, T value)
     {
-        List<T> r = new ArrayList<T>();
-        for (int i = 0; i < length; i++)
-            r.add(value);
-        return r;
+        return new AbstractList<T>()
+        {
+            @Override
+            public T get(int index)
+            {
+                return value;
+            }
+
+            @Override
+            public int size()
+            {
+                return length;
+            }
+        };
     }
 
     @OnThread(Tag.FXPlatform)
@@ -1076,6 +1087,24 @@ public class Utility
             {
                 return "ERR: " + e.getLocalizedMessage();
             }
+        }
+
+        public static ListEx empty()
+        {
+            return new ListEx()
+            {
+                @Override
+                public int size() throws InternalException, UserException
+                {
+                    return 0;
+                }
+
+                @Override
+                public @Value Object get(int index) throws InternalException, UserException
+                {
+                    throw new InternalException("Cannot access element of empty list");
+                }
+            };
         }
     }
 

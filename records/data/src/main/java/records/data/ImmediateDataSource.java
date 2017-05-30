@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import javafx.application.Platform;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.FunctionInt;
@@ -11,6 +12,7 @@ import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.SimulationRunnable;
 import utility.Utility;
 
 import java.io.File;
@@ -86,26 +88,29 @@ public class ImmediateDataSource extends DataSource
     public @OnThread(Tag.Any) TableOperations getOperations()
     {
         return new TableOperations(appendRowCount -> {
-            Utility.alertOnError_(() -> data.addRows(appendRowCount));
+            Utility.alertOnError_(() ->
+            {
+                data.addRows(appendRowCount);
+            });
         }, null /*TODO*/, (deleteRowFrom, deleteRowCount) -> {
-            //TODO
+            Utility.alertOnError_(() -> data.deleteRows(deleteRowFrom, deleteRowCount));
         });
     }
 
     @Override
     public Table addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException, UserException
     {
-        List<FunctionInt<RecordSet, Column>> allColumns = new ArrayList<>();
+        List<FunctionInt<RecordSet, EditableColumn>> allColumns = new ArrayList<>();
         for (Column column : data.getColumns())
         {
             allColumns.add(rs -> {
-                Column copiedColumn = column.getType().makeImmediateColumn(column.getName()).apply(rs);
+                EditableColumn copiedColumn = column.getType().makeImmediateColumn(column.getName()).apply(rs);
                 if (column.isEditable())
                     copiedColumn.markEditable();
                 return copiedColumn;
             });
         }
-        allColumns.add(rs -> newColumnType.makeImmediateColumn(new ColumnId(newColumnName), Utility.replicate(data.getLength(), newColumnValue)).apply(rs).markEditable());
+        allColumns.add(rs -> newColumnType.makeImmediateColumn(new ColumnId(newColumnName), Utility.replicate(data.getLength(), newColumnValue)).apply(rs));
         return new ImmediateDataSource(getManager(), getId(), new EditableRecordSet(allColumns, () -> data.getLength()));
     }
 

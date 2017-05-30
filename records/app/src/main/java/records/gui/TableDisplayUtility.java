@@ -79,12 +79,6 @@ public class TableDisplayUtility
                     {
                         return false;
                     }
-
-                    @Override
-                    public @OnThread(Tag.Simulation) SimulationRunnable appendRow(int newRowIndex) throws InternalException
-                    {
-                        throw new InternalException("Called appendRow when not editable");
-                    }
                 });
             }
         });
@@ -143,13 +137,6 @@ public class TableDisplayUtility
                     public boolean isEditable()
                     {
                         return false;
-                    }
-
-                    @Override
-                    public @OnThread(Tag.Simulation) SimulationRunnable appendRow(int newRowIndex) throws InternalException, UserException
-                    {
-                        //TODO
-                        return g.set(newRowIndex, "");
                     }
                 };
             }

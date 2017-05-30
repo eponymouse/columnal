@@ -13,6 +13,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DumbObjectPool;
 import utility.SimulationRunnable;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -107,5 +108,24 @@ public class StringColumnStorage implements ColumnStorage<String>
             });
         }
         return dataType;
+    }
+
+    @Override
+    public SimulationRunnable insertRows(int index, int count) throws InternalException
+    {
+        if (index < 0 || index > values.size())
+            throw new InternalException("Trying to insert rows at invalid index: " + index + " length is: " + values.size());
+        values.addAll(index, Utility.replicate(count, pool.pool("")));
+        return () -> removeRows(index, count);
+    }
+
+    @Override
+    public SimulationRunnable removeRows(int index, int count) throws InternalException
+    {
+        if (index < 0 || index > values.size())
+            throw new InternalException("Trying to remove rows at invalid index: " + index + " length is: " + values.size());
+        List<@Value String> old = new ArrayList<>(values.subList(index, index + count + 1));
+        values.subList(index, index + count + 1).clear();
+        return () -> values.addAll(index, old);
     }
 }

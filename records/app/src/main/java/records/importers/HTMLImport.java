@@ -70,7 +70,7 @@ public class HTMLImport
 
             Format format = GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals);
 
-            List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
+            List<FunctionInt<RecordSet, EditableColumn>> columns = new ArrayList<>();
             for (int i = 0; i < format.columnTypes.size(); i++)
             {
                 ColumnInfo columnInfo = format.columnTypes.get(i);

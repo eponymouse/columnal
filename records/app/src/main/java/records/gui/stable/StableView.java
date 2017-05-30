@@ -43,6 +43,7 @@ import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualizedScrollPane;
 import records.data.TableOperations;
+import records.data.TableOperations.AppendRows;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -315,35 +316,8 @@ public class StableView
         if (operations == null || operations.appendRows == null)
             return; // Shouldn't happen, but if it does, append no longer valid
 
-        List<ColumnHandler> columnsFinal = new ArrayList<>(this.columns);
-        TableOperations.@NonNull AppendRows appendFinal = this.operations.appendRows;
-        Workers.onWorkerThread("Appending row", Priority.SAVE_ENTRY, () -> {
-            List<SimulationRunnable> revert = new ArrayList<>();
-            try
-            {
-                for (ColumnHandler column : columnsFinal)
-                {
-                    revert.add(column.appendRow(newRowIndex));
-                }
-
-                appendFinal.appendRows(1);
-            }
-            catch (InternalException | UserException e)
-            {
-                Platform.runLater(() -> Utility.showError(e));
-                for (SimulationRunnable revertOne : revert)
-                {
-                    try
-                    {
-                        revertOne.run();
-                    }
-                    catch (InternalException | UserException e2)
-                    {
-                        Platform.runLater(() -> Utility.showError(e2));
-                    }
-                }
-            }
-        });
+        @NonNull AppendRows append = operations.appendRows;
+        Workers.onWorkerThread("Appending row", Priority.SAVE_ENTRY, () -> append.appendRows(1));
     }
 
     // See setColumns for description of append
@@ -639,7 +613,7 @@ public class StableView
         // so you can just call it with a placeholder before returning.
         public void fetchValue(int rowIndex, ValueReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl);
 
-        // Called when the column gets resized.  Width is in pixels
+        // Called when the column gets resized (graphically).  Width is in pixels
         public void columnResized(double width);
 
         // Called when the user initiates an error, either by double-clicking
@@ -650,11 +624,6 @@ public class StableView
 
         // Can this column be edited?
         public boolean isEditable();
-
-        // Returns an action which will revert the add (in case there is a problem
-        // appending to one of the columns)
-        @OnThread(Tag.Simulation)
-        public SimulationRunnable appendRow(int newRowIndex) throws InternalException, UserException;
     }
 
     @OnThread(Tag.FXPlatform)

@@ -12,6 +12,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
+import utility.SimulationRunnable;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -81,5 +82,62 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
     public DataTypeValue getType()
     {
         return type;
+    }
+
+    @Override
+    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    {
+        List<SimulationRunnable> reverts = new ArrayList<>();
+        try
+        {
+            for (ColumnStorage<?> columnStorage : storage)
+            {
+                reverts.add(columnStorage.insertRows(index, count));
+            }
+            return () ->
+            {
+                for (SimulationRunnable revert : reverts)
+                {
+                    revert.run();
+                }
+            };
+        }
+        catch (InternalException | UserException e)
+        {
+            for (SimulationRunnable revert : reverts)
+            {
+                revert.run();
+            }
+            throw e;
+        }
+    }
+
+    @Override
+    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    {
+        List<SimulationRunnable> reverts = new ArrayList<>();
+        try
+        {
+            for (ColumnStorage<?> columnStorage : storage)
+            {
+                reverts.add(columnStorage.removeRows(index, count));
+            }
+            return () ->
+            {
+                for (SimulationRunnable revert : reverts)
+                {
+                    revert.run();
+                }
+            };
+        }
+        catch (InternalException | UserException e)
+        {
+            for (SimulationRunnable revert : reverts)
+            {
+                revert.run();
+            }
+            throw e;
+        }
+
     }
 }

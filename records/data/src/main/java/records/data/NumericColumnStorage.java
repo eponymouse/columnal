@@ -381,17 +381,6 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     }
     */
 
-    // For when NumericColumnStorage is used as an internal integer store
-    public int getInt(int index) throws InternalException, UserException
-    {
-        Number n = getNonBlank(index, null);
-        if (n instanceof BigDecimal)
-            throw new InternalException("BigDecimal in internal integer store");
-        if (n.longValue() != (long)n.intValue())
-            throw new InternalException("Too large a number in internal integer store");
-        return n.intValue();
-    }
-
     @NonNull
     private Number getNonBlank(int index, @Nullable ProgressListener progressListener) throws InternalException, UserException
     {
@@ -428,7 +417,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     }
     // Returns numericTag if that item is not a tag
     @Pure
-    public int getTag(int index) throws InternalException
+    public int getInt(int index) throws InternalException
     {
         checkRange(index);
         // Guessing here to order most likely cases:
@@ -438,18 +427,15 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             return shorts[index];
         else if (ints != null)
             return ints[index];
-        throw new InternalException("Tag not found in NumericColumnStorage; only longs/decimals");
+        else if (longs != null && (int)longs[index] == longs[index])
+            return (int)longs[index];
+        throw new InternalException("Int not found in NumericColumnStorage; only longs/decimals");
     }
 
     private void checkRange(int index) throws InternalException
     {
         if (index < 0 || index >= filled)
             throw new InternalException("Trying to access element " + index + " but only have "+ filled);
-    }
-
-    public void addTag(int tagIndex) throws InternalException
-    {
-        add(tagIndex);
     }
 
     @OnThread(Tag.Any)
@@ -492,6 +478,18 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             });
         }
         return dataType;
+    }
+
+    @Override
+    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    {
+        throw new UnimplementedException();
+    }
+
+    @Override
+    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    {
+        throw new UnimplementedException();
     }
 
     @Override

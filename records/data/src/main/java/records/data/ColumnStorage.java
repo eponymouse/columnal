@@ -9,6 +9,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.SimulationRunnable;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -49,6 +50,11 @@ public interface ColumnStorage<T>
     {
         return getAllCollapsed(length);
     }
+
+    // Returns revert operation
+    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException;
+    // Returns revert operation
+    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException;
 
     public static interface BeforeGet<S extends ColumnStorage<?>>
     {

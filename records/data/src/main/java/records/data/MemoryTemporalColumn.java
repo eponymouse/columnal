@@ -6,6 +6,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.SimulationRunnable;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.List;
 /**
  * Created by neil on 30/11/2016.
  */
-public class MemoryTemporalColumn extends Column
+public class MemoryTemporalColumn extends EditableColumn
 {
     private final TemporalColumnStorage storage;
 
@@ -40,5 +41,18 @@ public class MemoryTemporalColumn extends Column
     public void add(TemporalAccessor value) throws InternalException
     {
         storage.add(value);
+    }
+
+
+    @Override
+    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    {
+        return storage.insertRows(index, count);
+    }
+
+    @Override
+    public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    {
+        return storage.removeRows(index, count);
     }
 }

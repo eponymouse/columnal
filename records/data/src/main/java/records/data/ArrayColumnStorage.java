@@ -12,6 +12,8 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.Pair;
+import utility.SimulationRunnable;
+import utility.Utility;
 import utility.Utility.ListEx;
 
 import java.util.ArrayList;
@@ -89,5 +91,20 @@ public class ArrayColumnStorage implements ColumnStorage<ListEx>
     public DataTypeValue getType()
     {
         return type;
+    }
+
+    @Override
+    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    {
+        storage.addAll(index, Utility.replicate(count, ListEx.empty()));
+        return () -> removeRows(index, count);
+    }
+
+    @Override
+    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    {
+        List<ListEx> old = new ArrayList<>(storage.subList(index, index + count + 1));
+        storage.subList(index, index + count + 1).clear();
+        return () -> storage.addAll(index, old);
     }
 }

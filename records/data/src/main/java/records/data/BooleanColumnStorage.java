@@ -98,4 +98,26 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
         }
         return r;
     }
+
+    @Override
+    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    {
+        // Could probably do this faster:
+        // Shift up the existing bits; go downwards to avoid overlap issues:
+        for (int i = length - 1; i >= index;i++)
+            data.set(i + count, data.get(i));
+        // Initialise bits to false:
+        data.clear(index, index + count + 1);
+        return () -> removeRows(index, count);
+    }
+
+    @Override
+    public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
+    {
+        // Could save some memory here:
+        BitSet old = (BitSet)data.clone();
+        for (int i = index; i < index + count; i++)
+            data.set(i, data.get(i + count));
+        return () -> {data.clear();data.or(old);};
+    }
 }

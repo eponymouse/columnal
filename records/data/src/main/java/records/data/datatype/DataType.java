@@ -6,25 +6,8 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.data.ArrayColumnStorage;
-import records.data.BooleanColumnStorage;
-import records.data.CachedCalculatedColumn;
-import records.data.Column;
-import records.data.ColumnId;
+import records.data.*;
 import records.data.ColumnStorage.BeforeGet;
-import records.data.MemoryArrayColumn;
-import records.data.MemoryBooleanColumn;
-import records.data.MemoryNumericColumn;
-import records.data.MemoryStringColumn;
-import records.data.MemoryTaggedColumn;
-import records.data.MemoryTemporalColumn;
-import records.data.MemoryTupleColumn;
-import records.data.NumericColumnStorage;
-import records.data.RecordSet;
-import records.data.StringColumnStorage;
-import records.data.TaggedColumnStorage;
-import records.data.TemporalColumnStorage;
-import records.data.TupleColumnStorage;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.error.FunctionInt;
 import records.error.InternalException;
@@ -970,7 +953,7 @@ public class DataType
         return cur;
     }
 
-    public static class ColumnMaker<C extends Column> implements FunctionInt<RecordSet, Column>
+    public static class ColumnMaker<C extends EditableColumn> implements FunctionInt<RecordSet, EditableColumn>
     {
         private boolean editable = false;
         private @Nullable C column;
@@ -984,7 +967,7 @@ public class DataType
         }
 
         @Override
-        public final Column apply(RecordSet rs) throws InternalException, UserException
+        public final EditableColumn apply(RecordSet rs) throws InternalException, UserException
         {
             column = makeColumn.apply(rs);
             if (editable)
@@ -1008,48 +991,48 @@ public class DataType
     }
 
     @OnThread(Tag.Simulation)
-    public FunctionInt<RecordSet, Column> makeImmediateColumn(ColumnId columnId, List<@Value Object> value) throws InternalException, UserException
+    public FunctionInt<RecordSet, EditableColumn> makeImmediateColumn(ColumnId columnId, List<@Value Object> value) throws InternalException, UserException
     {
-        return apply(new DataTypeVisitor<FunctionInt<RecordSet, Column>>()
+        return apply(new DataTypeVisitor<FunctionInt<RecordSet, EditableColumn>>()
         {
             @Override
-            public FunctionInt<RecordSet, Column> number(NumberInfo displayInfo) throws InternalException, UserException
+            public FunctionInt<RecordSet, EditableColumn> number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 return rs -> new MemoryNumericColumn(rs, columnId, displayInfo, Utility.mapListEx(value, Utility::valueNumber));
             }
 
             @Override
-            public FunctionInt<RecordSet, Column> text() throws InternalException, UserException
+            public FunctionInt<RecordSet, EditableColumn> text() throws InternalException, UserException
             {
                 return rs -> new MemoryStringColumn(rs, columnId, Utility.mapListEx(value, Utility::valueString));
             }
 
             @Override
-            public FunctionInt<RecordSet, Column> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public FunctionInt<RecordSet, EditableColumn> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 return rs -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Utility.mapListEx(value, Utility::valueTemporal));
             }
 
             @Override
-            public FunctionInt<RecordSet, Column> bool() throws InternalException, UserException
+            public FunctionInt<RecordSet, EditableColumn> bool() throws InternalException, UserException
             {
                 return rs -> new MemoryBooleanColumn(rs, columnId, Utility.mapListEx(value, Utility::valueBoolean));
             }
 
             @Override
-            public FunctionInt<RecordSet, Column> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public FunctionInt<RecordSet, EditableColumn> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return rs -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Utility.mapListEx(value, Utility::valueTagged));
             }
 
             @Override
-            public FunctionInt<RecordSet, Column> tuple(List<DataType> inner) throws InternalException, UserException
+            public FunctionInt<RecordSet, EditableColumn> tuple(List<DataType> inner) throws InternalException, UserException
             {
                 return rs -> new MemoryTupleColumn(rs, columnId, inner, Utility.mapListEx(value, t -> Utility.valueTuple(t, inner.size())));
             }
 
             @Override
-            public FunctionInt<RecordSet, Column> array(@Nullable DataType inner) throws InternalException, UserException
+            public FunctionInt<RecordSet, EditableColumn> array(@Nullable DataType inner) throws InternalException, UserException
             {
                 if (inner == null)
                     throw new UserException("Cannot create column with empty array type");

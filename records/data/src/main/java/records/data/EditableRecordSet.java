@@ -18,6 +18,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import utility.Pair;
+import utility.SimulationRunnable;
 import utility.SimulationSupplier;
 import utility.TaggedValue;
 import utility.Utility;
@@ -32,6 +33,7 @@ import java.util.List;
  */
 public class EditableRecordSet extends RecordSet
 {
+    private List<EditableColumn> editableColumns;
     // Not final, because we are editable.  But it is the exact length of the dataset
     // (not the length loaded so far, or similar)
     private int curLength;
@@ -43,21 +45,23 @@ public class EditableRecordSet extends RecordSet
      * @throws InternalException
      * @throws UserException
      */
-    public EditableRecordSet(List<? extends FunctionInt<RecordSet, ? extends Column>> columns, SimulationSupplier<Integer> loadLength) throws InternalException, UserException
+    @SuppressWarnings("initialization") // For getColumns()
+    public EditableRecordSet(List<? extends FunctionInt<RecordSet, ? extends EditableColumn>> columns, SimulationSupplier<Integer> loadLength) throws InternalException, UserException
     {
         super(columns);
+        // Can't fail given the type we require above:
+        this.editableColumns = Utility.mapList(this.getColumns(), c -> (EditableColumn)c);
         this.curLength = loadLength.get();
     }
 
     public EditableRecordSet(RecordSet copyFrom) throws InternalException, UserException
     {
-        super(Utility.mapList(copyFrom.getColumns(), EditableRecordSet::copyColumn));
-        curLength = copyFrom.getLength();
+        this(Utility.mapList(copyFrom.getColumns(), EditableRecordSet::copyColumn), copyFrom::getLength);
     }
 
-    private static FunctionInt<RecordSet, Column> copyColumn(@NonNull Column original)
+    private static FunctionInt<RecordSet, EditableColumn> copyColumn(@NonNull Column original)
     {
-        return rs -> original.getType().applyGet(new DataTypeVisitorGet<Column>()
+        return rs -> original.getType().applyGet(new DataTypeVisitorGet<EditableColumn>()
         {
             private <T> List<T> getAll(GetValue<T> g) throws InternalException, UserException
             {
@@ -70,31 +74,31 @@ public class EditableRecordSet extends RecordSet
             }
 
             @Override
-            public Column number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
+            public EditableColumn number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
                 return new MemoryNumericColumn(rs, original.getName(), displayInfo, getAll(g));
             }
 
             @Override
-            public Column text(GetValue<String> g) throws InternalException, UserException
+            public EditableColumn text(GetValue<String> g) throws InternalException, UserException
             {
                 return new MemoryStringColumn(rs, original.getName(), getAll(g));
             }
 
             @Override
-            public Column bool(GetValue<Boolean> g) throws InternalException, UserException
+            public EditableColumn bool(GetValue<Boolean> g) throws InternalException, UserException
             {
                 return new MemoryBooleanColumn(rs, original.getName(), getAll(g));
             }
 
             @Override
-            public Column date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+            public EditableColumn date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
             {
                 return new MemoryTemporalColumn(rs, original.getName(), dateTimeInfo, getAll(g));
             }
 
             @Override
-            public Column tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public EditableColumn tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 List<TaggedValue> r = new ArrayList<>();
                 for (int i = 0; original.indexValid(i); i++)
@@ -107,7 +111,7 @@ public class EditableRecordSet extends RecordSet
             }
 
             @Override
-            public Column tuple(List<DataTypeValue> types) throws InternalException, UserException
+            public EditableColumn tuple(List<DataTypeValue> types) throws InternalException, UserException
             {
                 List<Object[]> r = new ArrayList<>();
                 for (int index = 0; original.indexValid(index); index++)
@@ -123,7 +127,7 @@ public class EditableRecordSet extends RecordSet
             }
 
             @Override
-            public Column array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+            public EditableColumn array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
             {
                 List<ListEx> r = new ArrayList<>();
                 for (int index = 0; original.indexValid(index); index++)
@@ -154,8 +158,33 @@ public class EditableRecordSet extends RecordSet
         return curLength;
     }
 
-    public void addRows(int count) throws InternalException
+    public void addRows(int count) throws InternalException, UserException
     {
+        List<SimulationRunnable> revert = new ArrayList<>();
+        try
+        {
+            for (EditableColumn column : editableColumns)
+            {
+                revert.add(column.insertRows(curLength, count));
+            }
+        }
+        catch (InternalException e)
+        {
+            Platform.runLater(() -> Utility.showError(e));
+            for (SimulationRunnable revertOne : revert)
+            {
+                try
+                {
+                    revertOne.run();
+                }
+                catch (InternalException | UserException e2)
+                {
+                    Platform.runLater(() -> Utility.showError(e2));
+                }
+            }
+            return;
+        }
+
         int newRowIndex = curLength;
         curLength += count;
         if (listener != null)
@@ -165,4 +194,11 @@ public class EditableRecordSet extends RecordSet
         }
         // TODO re-run dependents
     }
+
+    public void deleteRows(int deleteRowFrom, int deleteRowCount)
+    {
+
+    }
+
+
 }
