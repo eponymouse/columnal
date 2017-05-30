@@ -90,7 +90,7 @@ public class ImmediateDataSource extends DataSource
         return new TableOperations(appendRowCount -> {
             Utility.alertOnError_(() ->
             {
-                data.addRows(appendRowCount);
+                data.insertRows(data.getLength(), appendRowCount);
             });
         }, null /*TODO*/, (deleteRowFrom, deleteRowCount) -> {
             Utility.alertOnError_(() -> data.deleteRows(deleteRowFrom, deleteRowCount));

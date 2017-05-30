@@ -51,8 +51,10 @@ import java.util.Optional;
 @OnThread(Tag.Simulation)
 public abstract class Column
 {
+    // TODO remove this now that we have EditableColumn
     @OnThread(Tag.Any)
     private boolean editable;
+
     protected final RecordSet recordSet;
     private final ColumnId name;
 
@@ -149,5 +151,10 @@ public abstract class Column
             @NonNull ProgressListener progFinal = prog;
             return new Pair<>(a -> progFinal.progressUpdate(a * 0.5), b -> progFinal.progressUpdate(b * 0.5 + 0.5));
         }
+    }
+
+    public final RecordSet getRecordSet()
+    {
+        return recordSet;
     }
 }

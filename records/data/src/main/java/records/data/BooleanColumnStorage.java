@@ -104,10 +104,11 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
     {
         // Could probably do this faster:
         // Shift up the existing bits; go downwards to avoid overlap issues:
-        for (int i = length - 1; i >= index;i++)
+        for (int i = length - 1; i >= index;i--)
             data.set(i + count, data.get(i));
         // Initialise bits to false:
-        data.clear(index, index + count + 1);
+        data.clear(index, index + count);
+        length += count;
         return () -> removeRows(index, count);
     }
 
@@ -118,6 +119,7 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
         BitSet old = (BitSet)data.clone();
         for (int i = index; i < index + count; i++)
             data.set(i, data.get(i + count));
+        length -= count;
         return () -> {data.clear();data.or(old);};
     }
 }

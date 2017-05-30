@@ -158,14 +158,14 @@ public class EditableRecordSet extends RecordSet
         return curLength;
     }
 
-    public void addRows(int count) throws InternalException, UserException
+    public void insertRows(int index, int count) throws InternalException, UserException
     {
         List<SimulationRunnable> revert = new ArrayList<>();
         try
         {
             for (EditableColumn column : editableColumns)
             {
-                revert.add(column.insertRows(curLength, count));
+                revert.add(column.insertRows(index, count));
             }
         }
         catch (InternalException e)
@@ -197,7 +197,7 @@ public class EditableRecordSet extends RecordSet
 
     public void deleteRows(int deleteRowFrom, int deleteRowCount)
     {
-
+        // TODO
     }
 
 
