@@ -61,4 +61,6 @@ public class PropInsertRemoveRows
             assertEquals("Comparing index " + i + " with insertAtIndex " + insertAtIndex + " and count " + insertCount, 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i + insertCount)));
         }
     }
+
+    // TODO add removeRows test
 }

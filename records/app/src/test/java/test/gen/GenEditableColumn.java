@@ -1,13 +1,13 @@
 package test.gen;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
-import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.ColumnId;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
-import records.data.MemoryBooleanColumn;
 import records.data.RecordSet;
+import records.data.datatype.DataType;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
@@ -17,12 +17,11 @@ import threadchecker.Tag;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * Created by neil on 30/05/2017.
  */
-public class GenEditableColumn extends Generator<EditableColumn>
+public class GenEditableColumn extends GenValueBase<EditableColumn>
 {
     public GenEditableColumn()
     {
@@ -33,18 +32,18 @@ public class GenEditableColumn extends Generator<EditableColumn>
     @OnThread(value = Tag.Simulation,ignoreParent = true)
     public EditableColumn generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
+        DataType type = new GenDataType().generate(sourceOfRandomness, generationStatus);
+        this.r = sourceOfRandomness;
+        this.gs = generationStatus;
         try
         {
-            final int length =sourceOfRandomness.nextInt(5000);
-            final FunctionInt<RecordSet, EditableColumn> create;
-            switch (sourceOfRandomness.nextInt(1))
+            final int length = sourceOfRandomness.nextInt(5000);
+            List<@Value Object> values = new ArrayList<>();
+            for (int i = 0; i < length; i++)
             {
-                case 0:
-                    create = rs -> new MemoryBooleanColumn(rs, new ColumnId("C"), make(length, sourceOfRandomness::nextBoolean));
-                    break;
-                default:
-                    throw new InternalException("Messed up the test count!");
+                values.add(makeValue(type));
             }
+            final FunctionInt<RecordSet, EditableColumn> create = type.makeImmediateColumn(new ColumnId("C"), values);
             RecordSet recordSet = new EditableRecordSet(Collections.singletonList(create), () -> length);
             return (EditableColumn)recordSet.getColumns().get(0);
         }
@@ -52,13 +51,5 @@ public class GenEditableColumn extends Generator<EditableColumn>
         {
             throw new RuntimeException(e);
         }
-    }
-
-    private static <T> List<T> make(int length, Supplier<T> makeOne)
-    {
-        List<T> r = new ArrayList<>(length);
-        for (int i = 0; i < length; i++)
-            r.add(makeOne.get());
-        return r;
     }
 }
