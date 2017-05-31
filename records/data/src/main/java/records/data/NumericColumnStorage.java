@@ -18,6 +18,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationRunnable;
+import utility.Utility;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -483,7 +484,9 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     @Override
     public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
-        throw new UnimplementedException();
+        addAll(index, Utility.replicate(count, 0));
+        // TODO
+        return () -> {};
     }
 
     @Override
@@ -495,6 +498,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     @Override
     public void addAll(List<Number> items) throws InternalException
     {
+        // TODO this could be improved rather than calling add lots of times
         for (Number n : items)
         {
             add(n);
@@ -559,5 +563,60 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     public NumberInfo getDisplayInfo()
     {
         return displayInfo;
+    }
+
+    public void addAll(int insertAtIndex, List<Number> newNumbers) throws InternalException
+    {
+        int originalLength = this.filled;
+        // First, add them on the end:
+        addAll(newNumbers);
+        // Now, swap existing numbers and new numbers:
+        if (bytes != null)
+        {
+            // New to temp:
+            byte[] newVals = Arrays.copyOfRange(bytes, originalLength, filled);
+            // Old to new:
+            System.arraycopy(bytes, insertAtIndex, bytes, insertAtIndex + newNumbers.size(), newNumbers.size());
+            // New [temp] to old:
+            System.arraycopy(newVals, 0, bytes, insertAtIndex, newNumbers.size());
+        }
+        else if (shorts != null)
+        {
+            // New to temp:
+            short[] newVals = Arrays.copyOfRange(shorts, originalLength, filled);
+            // Old to new:
+            System.arraycopy(shorts, insertAtIndex, shorts, insertAtIndex + newNumbers.size(), newNumbers.size());
+            // New [temp] to old:
+            System.arraycopy(newVals, 0, shorts, insertAtIndex, newNumbers.size());
+        }
+        else if (ints != null)
+        {
+            // New to temp:
+            int[] newVals = Arrays.copyOfRange(ints, originalLength, filled);
+            // Old to new:
+            System.arraycopy(ints, insertAtIndex, ints, insertAtIndex + newNumbers.size(), newNumbers.size());
+            // New [temp] to old:
+            System.arraycopy(newVals, 0, ints, insertAtIndex, newNumbers.size());
+        }
+        else if (longs != null)
+        {
+            // New to temp:
+            long[] newVals = Arrays.copyOfRange(longs, originalLength, filled);
+            // Old to new:
+            System.arraycopy(longs, insertAtIndex, longs, insertAtIndex + newNumbers.size(), newNumbers.size());
+            // New [temp] to old:
+            System.arraycopy(newVals, 0, longs, insertAtIndex, newNumbers.size());
+            // TODO account for the fact that bigDecimals may be shorter
+            /*
+            if (bigDecimals != null)
+            {
+                // New to temp:
+                @Nullable BigDecimal @Nullable[] newValsBD = Arrays.copyOfRange(bigDecimals, originalLength, filled);
+                // Old to new:
+                System.arraycopy(bigDecimals, insertAtIndex, bigDecimals, insertAtIndex + newNumbers.size(), newNumbers.size());
+                // New [temp] to old:
+                System.arraycopy(newValsBD, 0, bigDecimals, insertAtIndex, newNumbers.size());
+            }*/
+        }
     }
 }

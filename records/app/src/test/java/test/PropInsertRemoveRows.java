@@ -3,6 +3,7 @@ package test;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.data.EditableColumn;
@@ -30,7 +31,7 @@ public class PropInsertRemoveRows
 {
     @Property
     @OnThread(Tag.Simulation)
-    public void insertRows(@From(GenEditableColumn.class) EditableColumn column, @From(GenRandom.class) Random r) throws InternalException, UserException
+    public void insertRows(@From(GenEditableColumn.class) @When(seed=-6228292897425714012L) EditableColumn column, @From(GenRandom.class) @When(seed=-9167013349697496440L) Random r) throws InternalException, UserException
     {
         List<@Value Object> prevValues = new ArrayList<>();
         for (int i = 0; column.indexValid(i); i++)
@@ -53,14 +54,16 @@ public class PropInsertRemoveRows
         {
             assertTrue("Valid index: " + i + " insertAt: " + insertAtIndex + " count " + insertCount, column.indexValid(i));
             // Don't check here what they are, just that they are all same:
-            assertEquals(0, Utility.compareValues(column.getType().getCollapsed(insertAtIndex), column.getType().getCollapsed(i)));
+            assertEquals("Comparing " + column.getType() + ": " + i + " insertAt: " + insertAtIndex + " count " + insertCount, 0, Utility.compareValues(column.getType().getCollapsed(insertAtIndex), column.getType().getCollapsed(i)));
         }
         for (int i = insertAtIndex; i < prevValues.size(); i++)
         {
             assertTrue("Valid index " + i + " with insertAtIndex " + insertAtIndex + " and count " + insertCount + " and prev " + prevValues.size(), column.indexValid(i + insertCount));
-            assertEquals("Comparing index " + i + " with insertAtIndex " + insertAtIndex + " and count " + insertCount, 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i + insertCount)));
+            assertEquals("Comparing " + column.getType() + " index " + i + " with insertAtIndex " + insertAtIndex + " and count " + insertCount, 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i + insertCount)));
         }
+        // TODO add revert test
     }
+
 
     // TODO add removeRows test
 }

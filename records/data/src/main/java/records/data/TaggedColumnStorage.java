@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
@@ -13,9 +14,11 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationRunnable;
 import utility.TaggedValue;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.OptionalInt;
 
 /**
  * Created by neil on 05/11/2016.
@@ -97,7 +100,57 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     @Override
     public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
-        throw new UnimplementedException();
+        int firstEmptyTag = -1; // Tag with no inner type (preferred)
+        int firstNonEmptyTag = -1; // Tag with an inner type
+        for (int i = 0; i < tagTypes.size(); i++)
+        {
+            if (firstEmptyTag == -1 && tagTypes.get(i).getInner() == null)
+                firstEmptyTag = i;
+            else if (firstNonEmptyTag == -1)
+                firstNonEmptyTag = i;
+        }
+
+        if (firstEmptyTag != -1)
+        {
+            // Empty tags are easy:
+            tagStore.addAll(index, Utility.<Number>replicate(count, firstEmptyTag));
+            innerValueIndex.addAll(index, Utility.<Number>replicate(count, -1));
+        }
+        else if (firstNonEmptyTag != -1)
+        {
+            tagStore.addAll(index, Utility.<Number>replicate(count, firstNonEmptyTag));
+            int lastInnerValueIndex = -1;
+            int originalLength = innerValueIndex.filled();
+            // Find last used index before us:
+            for (int i = 0; i < originalLength; i++)
+            {
+                if (tagStore.getInt(i) == firstNonEmptyTag)
+                    lastInnerValueIndex = innerValueIndex.getInt(i);
+            }
+            // Add a new bunch:
+            List<Number> r = new ArrayList<>(count);
+            for (int i = 0; i < count; i++)
+            {
+                r.add( lastInnerValueIndex + i);
+            }
+            innerValueIndex.addAll(index, r);
+            @Nullable ColumnStorage<?> valueStore = valueStores.get(firstNonEmptyTag);
+            if (valueStore == null)
+                throw new InternalException("No value store for inner type tag: " + firstNonEmptyTag);
+            valueStore.insertRows(lastInnerValueIndex, count);
+            // Increment all after us accordingly:
+            for (int i = originalLength; i < innerValueIndex.filled(); i++)
+            {
+                if (tagStore.getInt(i) == firstNonEmptyTag)
+                    innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) + count);
+            }
+        }
+        else
+        {
+            throw new InternalException("No tags found in type");
+        }
+
+        return () -> {};
     }
 
     @Override
