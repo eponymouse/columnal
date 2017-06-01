@@ -31,7 +31,12 @@ import utility.UnitType;
 import utility.Utility;
 import utility.Utility.ListEx;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.OffsetTime;
+import java.time.YearMonth;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -1465,6 +1470,28 @@ public class DataType
         public DateTimeInfo(DateTimeType type)
         {
             this.type = type;
+        }
+
+        private static final TemporalAccessor DEFAULT_VALUE = ZonedDateTime.of(1900, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
+
+        public TemporalAccessor getDefaultValue() throws InternalException
+        {
+            switch (type)
+            {
+                case YEARMONTHDAY:
+                    return LocalDate.from(DEFAULT_VALUE);
+                case YEARMONTH:
+                    return YearMonth.from(DEFAULT_VALUE);
+                case TIMEOFDAY:
+                    return LocalTime.from(DEFAULT_VALUE);
+                case TIMEOFDAYZONED:
+                    return OffsetTime.from(DEFAULT_VALUE);
+                case DATETIME:
+                    return LocalDateTime.from(DEFAULT_VALUE);
+                case DATETIMEZONED:
+                    return ZonedDateTime.from(DEFAULT_VALUE);
+            }
+            throw new InternalException("Unknown type: " + type);
         }
 
         public boolean hasYearMonthDay()

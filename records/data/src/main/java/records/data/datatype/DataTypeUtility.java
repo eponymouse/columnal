@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 22/11/2016.
@@ -266,5 +267,16 @@ public class DataTypeUtility
                 return list.get(index);
             }
         };
+    }
+
+    public static String valueToString(@Value Object item)
+    {
+        if (item instanceof Object[])
+        {
+            @Value Object[] tuple = (@Value Object[])item;
+            return "(" + Arrays.stream(tuple).map(DataTypeUtility::valueToString).collect(Collectors.joining(", ")) + ")";
+        }
+
+        return item.toString();
     }
 }

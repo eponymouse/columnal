@@ -576,7 +576,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             // New to temp:
             byte[] newVals = Arrays.copyOfRange(bytes, originalLength, filled);
             // Old to new:
-            System.arraycopy(bytes, insertAtIndex, bytes, insertAtIndex + newNumbers.size(), newNumbers.size());
+            System.arraycopy(bytes, insertAtIndex, bytes, insertAtIndex + newNumbers.size(), originalLength - insertAtIndex);
             // New [temp] to old:
             System.arraycopy(newVals, 0, bytes, insertAtIndex, newNumbers.size());
         }
@@ -585,7 +585,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             // New to temp:
             short[] newVals = Arrays.copyOfRange(shorts, originalLength, filled);
             // Old to new:
-            System.arraycopy(shorts, insertAtIndex, shorts, insertAtIndex + newNumbers.size(), newNumbers.size());
+            System.arraycopy(shorts, insertAtIndex, shorts, insertAtIndex + newNumbers.size(), originalLength - insertAtIndex);
             // New [temp] to old:
             System.arraycopy(newVals, 0, shorts, insertAtIndex, newNumbers.size());
         }
@@ -594,7 +594,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             // New to temp:
             int[] newVals = Arrays.copyOfRange(ints, originalLength, filled);
             // Old to new:
-            System.arraycopy(ints, insertAtIndex, ints, insertAtIndex + newNumbers.size(), newNumbers.size());
+            System.arraycopy(ints, insertAtIndex, ints, insertAtIndex + newNumbers.size(), originalLength - insertAtIndex);
             // New [temp] to old:
             System.arraycopy(newVals, 0, ints, insertAtIndex, newNumbers.size());
         }
@@ -603,20 +603,24 @@ public class NumericColumnStorage implements ColumnStorage<Number>
             // New to temp:
             long[] newVals = Arrays.copyOfRange(longs, originalLength, filled);
             // Old to new:
-            System.arraycopy(longs, insertAtIndex, longs, insertAtIndex + newNumbers.size(), newNumbers.size());
+            System.arraycopy(longs, insertAtIndex, longs, insertAtIndex + newNumbers.size(), originalLength - insertAtIndex);
             // New [temp] to old:
             System.arraycopy(newVals, 0, longs, insertAtIndex, newNumbers.size());
-            // TODO account for the fact that bigDecimals may be shorter
-            /*
+
             if (bigDecimals != null)
             {
+                // Big decimals can be less than filled in length.  Although a bit inefficient, we size up first
+                // before doing the copy (more straightforward than handling various fiddly cases):
+                if (bigDecimals.length < filled)
+                    bigDecimals = Arrays.copyOf(bigDecimals, filled);
+
                 // New to temp:
                 @Nullable BigDecimal @Nullable[] newValsBD = Arrays.copyOfRange(bigDecimals, originalLength, filled);
                 // Old to new:
-                System.arraycopy(bigDecimals, insertAtIndex, bigDecimals, insertAtIndex + newNumbers.size(), newNumbers.size());
+                System.arraycopy(bigDecimals, insertAtIndex, bigDecimals, insertAtIndex + newNumbers.size(), originalLength - insertAtIndex);
                 // New [temp] to old:
                 System.arraycopy(newValsBD, 0, bigDecimals, insertAtIndex, newNumbers.size());
-            }*/
+            }
         }
     }
 }
