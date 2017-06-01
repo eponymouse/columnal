@@ -158,7 +158,8 @@ public class EditableRecordSet extends RecordSet
         return curLength;
     }
 
-    public void insertRows(int index, int count) throws InternalException, UserException
+    // The return is for testing
+    public @Nullable SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
         List<SimulationRunnable> revert = new ArrayList<>();
         try
@@ -182,7 +183,7 @@ public class EditableRecordSet extends RecordSet
                     Platform.runLater(() -> Utility.showError(e2));
                 }
             }
-            return;
+            return null;
         }
 
         int newRowIndex = curLength;
@@ -193,6 +194,14 @@ public class EditableRecordSet extends RecordSet
             Platform.runLater(() -> listenerFinal.removedAddedRows(newRowIndex, 0, count));
         }
         // TODO re-run dependents
+
+        return () -> {
+            for (SimulationRunnable revertOne : revert)
+            {
+                revertOne.run();
+            }
+            curLength -= count;
+        };
     }
 
     public void deleteRows(int deleteRowFrom, int deleteRowCount)

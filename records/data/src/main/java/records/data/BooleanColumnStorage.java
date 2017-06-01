@@ -117,7 +117,7 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
     {
         // Could save some memory here:
         BitSet old = (BitSet)data.clone();
-        for (int i = index; i < index + count; i++)
+        for (int i = index; i < length - count; i++)
             data.set(i, data.get(i + count));
         length -= count;
         return () -> {data.clear();data.or(old);};

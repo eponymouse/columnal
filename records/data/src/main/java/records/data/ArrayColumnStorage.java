@@ -103,8 +103,8 @@ public class ArrayColumnStorage implements ColumnStorage<ListEx>
     @Override
     public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
-        List<ListEx> old = new ArrayList<>(storage.subList(index, index + count + 1));
-        storage.subList(index, index + count + 1).clear();
+        List<ListEx> old = new ArrayList<>(storage.subList(index, index + count));
+        storage.subList(index, index + count).clear();
         return () -> storage.addAll(index, old);
     }
 }

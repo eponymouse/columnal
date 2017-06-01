@@ -107,8 +107,8 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
     {
         if (index < 0 || index > values.size())
             throw new InternalException("Trying to remove rows at invalid index: " + index + " length is: " + values.size());
-        List<@Value TemporalAccessor> old = new ArrayList<>(values.subList(index, index + count + 1));
-        values.subList(index, index + count + 1).clear();
+        List<@Value TemporalAccessor> old = new ArrayList<>(values.subList(index, index + count));
+        values.subList(index, index + count).clear();
         return () -> values.addAll(index, old);
     }
 }

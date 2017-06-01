@@ -17,6 +17,7 @@ import utility.TaggedValue;
 import utility.Utility;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.OptionalInt;
 
@@ -149,13 +150,55 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             throw new InternalException("No tags found in type");
         }
 
-        return () -> {};
+        return () -> removeRows(insertAtIndex, insertCount);
     }
 
     @Override
     public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
-        throw new UnimplementedException();
+        int[] firstRemovedInnerValueIndex = new int[valueStores.size()];
+        int[] lastRemovedInnerValueIndex = new int[valueStores.size()];
+        Arrays.fill(firstRemovedInnerValueIndex, -1);
+        Arrays.fill(lastRemovedInnerValueIndex, -1);
+        // Go through items and remove from innerValue storage:
+        for (int i = index; i < index + count; i++)
+        {
+            int tag = tagStore.getInt(i);
+            int valIndex = innerValueIndex.getInt(i);
+            if (valIndex != -1)
+            {
+                if (firstRemovedInnerValueIndex[tag] == -1)
+                    firstRemovedInnerValueIndex[tag] = valIndex;
+                lastRemovedInnerValueIndex[tag] = valIndex;
+            }
+        }
+        for (int i = index + count; i < filled(); i++)
+        {
+            int tag = tagStore.getInt(i);
+            if (firstRemovedInnerValueIndex[tag] != -1)
+            {
+                int diff = lastRemovedInnerValueIndex[tag] - firstRemovedInnerValueIndex[tag] + 1;
+                // Push all the indexes down:
+                innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) - diff);
+            }
+        }
+        // Now actually remove everything:
+        tagStore.removeRows(index, count);
+        innerValueIndex.removeRows(index, count);
+        for (int i = 0; i < firstRemovedInnerValueIndex.length; i++)
+        {
+            if (firstRemovedInnerValueIndex[i] != -1)
+            {
+                ColumnStorage<?> columnStorage = valueStores.get(i);
+                if (columnStorage == null)
+                {
+                    throw new InternalException("Column storage null yet some indexes point into it: " + i);
+                }
+                columnStorage.removeRows(firstRemovedInnerValueIndex[i], lastRemovedInnerValueIndex[i] - firstRemovedInnerValueIndex[i] + 1);
+            }
+        }
+        //TODO:
+        return () -> {};
     }
 
     @Override

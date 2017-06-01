@@ -485,14 +485,28 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
         addAll(index, Utility.replicate(count, 0));
-        // TODO
-        return () -> {};
+        return () -> removeRows(index, count);
     }
 
     @Override
     public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
-        throw new UnimplementedException();
+        if (bytes != null)
+            System.arraycopy(bytes, index + count, bytes, index, filled - (index + count));
+        else if (shorts != null)
+            System.arraycopy(shorts, index + count, shorts, index, filled - (index + count));
+        else if (ints != null)
+            System.arraycopy(ints, index + count, ints, index, filled - (index + count));
+        else if (longs != null)
+        {
+            System.arraycopy(longs, index + count, longs, index, filled - (index + count));
+            // TODO this won't be right if bigDecimals isn't as long as longs
+            if (bigDecimals != null)
+                System.arraycopy(bigDecimals, index + count, bigDecimals, index, filled - (index + count));
+        }
+        filled -= count;
+        //TODO
+        return () -> {};
     }
 
     @Override

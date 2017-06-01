@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
@@ -15,6 +16,7 @@ import test.gen.GenEditableColumn;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.SimulationRunnable;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -23,6 +25,7 @@ import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 /**
@@ -31,7 +34,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(JUnitQuickcheck.class)
 public class PropInsertRemoveRows
 {
-    @Property
+    @Property(trials = 1000)
     @OnThread(Tag.Simulation)
     public void insertRows(@From(GenEditableColumn.class) EditableColumn column, @From(GenRandom.class) Random r) throws InternalException, UserException
     {
@@ -45,7 +48,7 @@ public class PropInsertRemoveRows
         int insertCount = r.nextInt(1000);
 
         // Do it via RecordSet to get the validIndex function updated:
-        ((EditableRecordSet)column.getRecordSet()).insertRows(insertAtIndex, insertCount);
+        @Nullable SimulationRunnable revert = ((EditableRecordSet) column.getRecordSet()).insertRows(insertAtIndex, insertCount);
 
         for (int i = 0; i < insertAtIndex; i++)
         {
@@ -64,7 +67,20 @@ public class PropInsertRemoveRows
             assertEquals("Comparing " + column.getType() + " index " + i + " with insertAtIndex " + insertAtIndex + " and count " + insertCount + "\n  " + DataTypeUtility.valueToString(prevValues.get(i)) + " vs\n  " + DataTypeUtility.valueToString(column.getType().getCollapsed(i + insertCount)), 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i + insertCount)));
         }
         assertFalse(column.indexValid(prevValues.size() + insertCount + 1));
-        // TODO add revert test
+
+        // Test revert:
+        assertNotNull(revert);
+        if (revert != null) // Not really needed because above will throw if it's null.  Satisfies checker.
+            revert.run();
+        assertEquals("Type: " + column.getType(), prevValues.size(), column.getLength());
+        assertTrue(column.indexValid(prevValues.size() - 1));
+        assertFalse(column.indexValid(prevValues.size()));
+
+        for (int i = 0; i < prevValues.size(); i++)
+        {
+            assertTrue(column.indexValid(i));
+            assertEquals("Comparing values at index " + i + " inserted at " + insertAtIndex + "\n  " + DataTypeUtility.valueToString(prevValues.get(i)) + " vs\n  " + DataTypeUtility.valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i)));
+        }
     }
 
 
