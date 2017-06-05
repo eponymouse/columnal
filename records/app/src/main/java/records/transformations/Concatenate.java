@@ -36,6 +36,7 @@ import records.gui.View;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
@@ -181,7 +182,7 @@ public class Concatenate extends TransformationEditable
                 ends.add(totalLength);
             }
             List<Table> tablesFinal = tables;
-            rs = new KnownLengthRecordSet(Utility.<Entry<ColumnId, DataType>, FunctionInt<RecordSet, Column>>mapList(new ArrayList<>(prevColumns.entrySet()), (Entry<ColumnId, DataType> oldC) -> new FunctionInt<RecordSet, Column>()
+            rs = new KnownLengthRecordSet(Utility.<Entry<ColumnId, DataType>, ExFunction<RecordSet, Column>>mapList(new ArrayList<>(prevColumns.entrySet()), (Entry<ColumnId, DataType> oldC) -> new ExFunction<RecordSet, Column>()
             {
                 @Override
                 @OnThread(Tag.Simulation)

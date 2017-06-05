@@ -92,7 +92,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
     }
 
     // Easier than passing parameters around:
-    private List<FunctionInt<RecordSet, Column>> columns;
+    private List<ExFunction<RecordSet, Column>> columns;
     private int targetSize;
 
     @Override

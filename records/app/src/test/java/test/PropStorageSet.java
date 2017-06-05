@@ -51,7 +51,7 @@ public class PropStorageSet
     @OnThread(Tag.Simulation)
     public void testSet(@From(GenTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen typeAndValueGen, @From(GenRandom.class) Random r) throws UserException, InternalException
     {
-        EditableRecordSet recordSet = new EditableRecordSet(Collections.singletonList(typeAndValueGen.getType().makeImmediateColumn(new ColumnId("C"))), () -> 0);
+        EditableRecordSet recordSet = new EditableRecordSet(Collections.singletonList(typeAndValueGen.getType().makeImmediateColumn(new ColumnId("C"))::apply), () -> 0);
         Column c = recordSet.getColumns().get(0);
         assertEquals(0, c.getLength());
         recordSet.insertRows(0, 10);

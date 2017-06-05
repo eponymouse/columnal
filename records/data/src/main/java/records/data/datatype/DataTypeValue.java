@@ -190,7 +190,7 @@ public class DataTypeValue extends DataType
 
     @SuppressWarnings({"nullness", "unchecked"})
     @OnThread(Tag.Any)
-    public final <R> R applyGet(DataTypeVisitorGet<R> visitor) throws InternalException, UserException
+    public final <R, E extends Throwable> R applyGet(DataTypeVisitorGetEx<R, E> visitor) throws InternalException, E
     {
         switch (kind)
         {
@@ -232,7 +232,7 @@ public class DataTypeValue extends DataType
         @OnThread(Tag.Simulation)
         default SimulationRunnable set(int index, T value) throws InternalException, UserException
         {
-            throw new InternalException("Attempted to set value for uneditable column");
+            throw new InternalException("Attempted to set value for uneditable column: " + getClass());
         };
     }
 

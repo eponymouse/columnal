@@ -45,6 +45,7 @@ import records.gui.View;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
@@ -139,7 +140,7 @@ public class Sort extends TransformationEditable
             }
             theSortBy = sortByColumns;
 
-            List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
+            List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
 
             RecordSet srcRecordSet = src.getData();
             this.stillToOrder = new int[srcRecordSet.getLength() + 1];

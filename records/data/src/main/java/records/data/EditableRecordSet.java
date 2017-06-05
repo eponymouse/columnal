@@ -17,6 +17,7 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
+import utility.ExFunction;
 import utility.Pair;
 import utility.SimulationRunnable;
 import utility.SimulationSupplier;
@@ -46,7 +47,7 @@ public class EditableRecordSet extends RecordSet
      * @throws UserException
      */
     @SuppressWarnings("initialization") // For getColumns()
-    public EditableRecordSet(List<? extends FunctionInt<RecordSet, ? extends EditableColumn>> columns, SimulationSupplier<Integer> loadLength) throws InternalException, UserException
+    public EditableRecordSet(List<? extends ExFunction<RecordSet, ? extends EditableColumn>> columns, SimulationSupplier<Integer> loadLength) throws InternalException, UserException
     {
         super(columns);
         // Can't fail given the type we require above:
@@ -59,7 +60,7 @@ public class EditableRecordSet extends RecordSet
         this(Utility.mapList(copyFrom.getColumns(), EditableRecordSet::copyColumn), copyFrom::getLength);
     }
 
-    private static FunctionInt<RecordSet, EditableColumn> copyColumn(@NonNull Column original)
+    private static ExFunction<RecordSet, EditableColumn> copyColumn(@NonNull Column original)
     {
         return rs -> original.getType().applyGet(new DataTypeVisitorGet<EditableColumn>()
         {

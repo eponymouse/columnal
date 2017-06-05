@@ -33,7 +33,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(JUnitQuickcheck.class)
 public class PropInsertRemoveRows
 {
-    @Property(trials = 1000)
+    @Property(trials = 200)
     @OnThread(Tag.Simulation)
     public void insertRows(@From(GenEditableColumn.class) EditableColumn column, @From(GenRandom.class) Random r) throws InternalException, UserException
     {

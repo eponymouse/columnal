@@ -54,11 +54,11 @@ public abstract class RecordSet
     protected @MonotonicNonNull RecordSetListener listener;
 
     @SuppressWarnings("initialization")
-    public RecordSet(List<? extends FunctionInt<RecordSet, ? extends Column>> columns) throws InternalException, UserException
+    public RecordSet(List<? extends ExFunction<RecordSet, ? extends Column>> columns) throws InternalException, UserException
     {
         this.columns = new ArrayList<>();
         Set<ColumnId> colNames = new HashSet<>();
-        for (FunctionInt<RecordSet, ? extends Column> f : columns)
+        for (ExFunction<RecordSet, ? extends Column> f : columns)
         {
             Column newCol = f.apply(this);
             this.columns.add(newCol);

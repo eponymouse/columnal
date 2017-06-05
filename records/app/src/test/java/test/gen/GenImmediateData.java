@@ -19,6 +19,7 @@ import test.gen.GenImmediateData.ImmediateData_Mgr;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiFunction;
+import utility.ExFunction;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +71,7 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                 final int length = r.nextBoolean() ? r.nextInt(0, 10) : r.nextInt(0, 1111);
 
                 int numColumns = r.nextInt(1, 12);
-                List<FunctionInt<RecordSet, EditableColumn>> columns = new ArrayList<>();
+                List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
                 GenColumn genColumn = new GenColumn(mgr);
                 for (int i = 0; i < numColumns; i++)
                 {

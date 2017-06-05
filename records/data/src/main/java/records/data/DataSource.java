@@ -151,7 +151,7 @@ public abstract class DataSource extends Table
     {
         public LoadedRecordSet(List<ColumnMaker<?>> columns, DataSourceImmediateContext immed, List<Pair<ColumnId, DataType>> format) throws InternalException, UserException
         {
-            super(columns, () -> loadData(immed.detail(), row ->
+            super(Utility.mapList(columns, c -> c::apply), () -> loadData(immed.detail(), row ->
             {
                 for (int i = 0; i < format.size(); i++)
                 {

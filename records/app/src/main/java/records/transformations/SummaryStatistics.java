@@ -40,6 +40,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
@@ -154,7 +155,7 @@ public class SummaryStatistics extends TransformationEditable
             RecordSet src = this.src.getData();
             List<JoinedSplit> splits = calcSplits(src, splitBy);
 
-            List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
+            List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
 
             // Will be zero by default, which we take advantage of:
             int[] splitIndexes = new int[src.getLength()];

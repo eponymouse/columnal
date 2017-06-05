@@ -32,6 +32,7 @@ import records.grammar.MainLexer;
 import records.importers.GuessFormat.ImportInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.TaggedValue;
 import utility.Utility;
@@ -104,7 +105,7 @@ public class TextImport
     @OnThread(Tag.Simulation)
     public static RecordSet makeRecordSet(TypeManager typeManager, File textFile, TextFormat format, @Nullable TextFileColumnListener listener) throws IOException, InternalException, UserException
     {
-        List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
+        List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
         int totalColumns = format.columnTypes.size();
         for (int i = 0; i < totalColumns; i++)
         {

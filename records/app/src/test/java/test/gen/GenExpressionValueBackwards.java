@@ -107,7 +107,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
         super(ExpressionValue.class);
     }
 
-    private List<FunctionInt<RecordSet, Column>> columns;
+    private List<ExFunction<RecordSet, Column>> columns;
     private int nextVar = 0;
 
     @Override
@@ -615,42 +615,49 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
         columns.add(rs -> type.apply(new DataTypeVisitor<Column>()
         {
             @Override
+            @OnThread(Tag.Simulation)
             public Column number(NumberInfo numberInfo) throws InternalException, UserException
             {
                 return new MemoryNumericColumn(rs, name, numberInfo, Stream.of(Utility.toBigDecimal((Number) value).toPlainString()));
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Column text() throws InternalException, UserException
             {
                 return new MemoryStringColumn(rs, name, Collections.singletonList((String)value));
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Column date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 return new MemoryTemporalColumn(rs, name, new DateTimeInfo(DateTimeType.YEARMONTHDAY), Collections.singletonList((Temporal)value));
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Column bool() throws InternalException, UserException
             {
                 return new MemoryBooleanColumn(rs, name, Collections.singletonList((Boolean) value));
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Column tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return new MemoryTaggedColumn(rs, name, typeName, tags, Collections.singletonList((TaggedValue) value));
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Column tuple(List<DataType> inner) throws InternalException, UserException
             {
                 throw new UnimplementedException();
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Column array(@Nullable DataType inner) throws InternalException, UserException
             {
                 throw new UnimplementedException();

@@ -8,6 +8,7 @@ import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import records.data.*;
 import records.data.datatype.DataTypeUtility;
+import utility.ExFunction;
 import utility.TaggedValue;
 import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
@@ -70,7 +71,7 @@ public class HTMLImport
 
             Format format = GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals);
 
-            List<FunctionInt<RecordSet, EditableColumn>> columns = new ArrayList<>();
+            List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
             for (int i = 0; i < format.columnTypes.size(); i++)
             {
                 ColumnInfo columnInfo = format.columnTypes.get(i);

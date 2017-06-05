@@ -3,6 +3,7 @@ package records.data;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
+import utility.ExFunction;
 
 import java.util.List;
 
@@ -13,7 +14,7 @@ public class KnownLengthRecordSet extends RecordSet
 {
     private final int length;
 
-    public KnownLengthRecordSet(List<FunctionInt<RecordSet, Column>> columns, int length) throws InternalException, UserException
+    public KnownLengthRecordSet(List<ExFunction<RecordSet, Column>> columns, int length) throws InternalException, UserException
     {
         super(columns);
         this.length = length;

@@ -972,7 +972,7 @@ public class DataType
         }
 
         @Override
-        public final EditableColumn apply(RecordSet rs) throws InternalException, UserException
+        public final EditableColumn apply(RecordSet rs) throws InternalException
         {
             column = makeColumn.apply(rs);
             if (editable)
@@ -996,48 +996,55 @@ public class DataType
     }
 
     @OnThread(Tag.Simulation)
-    public FunctionInt<RecordSet, EditableColumn> makeImmediateColumn(ColumnId columnId, List<@Value Object> value) throws InternalException, UserException
+    public ExFunction<RecordSet, EditableColumn> makeImmediateColumn(ColumnId columnId, List<@Value Object> value) throws InternalException, UserException
     {
-        return apply(new DataTypeVisitor<FunctionInt<RecordSet, EditableColumn>>()
+        return apply(new DataTypeVisitor<ExFunction<RecordSet, EditableColumn>>()
         {
             @Override
-            public FunctionInt<RecordSet, EditableColumn> number(NumberInfo displayInfo) throws InternalException, UserException
+            @OnThread(Tag.Simulation)
+            public ExFunction<RecordSet, EditableColumn> number(NumberInfo displayInfo) throws InternalException, UserException
             {
                 return rs -> new MemoryNumericColumn(rs, columnId, displayInfo, Utility.mapListEx(value, Utility::valueNumber));
             }
 
             @Override
-            public FunctionInt<RecordSet, EditableColumn> text() throws InternalException, UserException
+            @OnThread(Tag.Simulation)
+            public ExFunction<RecordSet, EditableColumn> text() throws InternalException, UserException
             {
                 return rs -> new MemoryStringColumn(rs, columnId, Utility.mapListEx(value, Utility::valueString));
             }
 
             @Override
-            public FunctionInt<RecordSet, EditableColumn> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            @OnThread(Tag.Simulation)
+            public ExFunction<RecordSet, EditableColumn> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 return rs -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Utility.mapListEx(value, Utility::valueTemporal));
             }
 
             @Override
-            public FunctionInt<RecordSet, EditableColumn> bool() throws InternalException, UserException
+            @OnThread(Tag.Simulation)
+            public ExFunction<RecordSet, EditableColumn> bool() throws InternalException, UserException
             {
                 return rs -> new MemoryBooleanColumn(rs, columnId, Utility.mapListEx(value, Utility::valueBoolean));
             }
 
             @Override
-            public FunctionInt<RecordSet, EditableColumn> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            @OnThread(Tag.Simulation)
+            public ExFunction<RecordSet, EditableColumn> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return rs -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Utility.mapListEx(value, Utility::valueTagged));
             }
 
             @Override
-            public FunctionInt<RecordSet, EditableColumn> tuple(List<DataType> inner) throws InternalException, UserException
+            @OnThread(Tag.Simulation)
+            public ExFunction<RecordSet, EditableColumn> tuple(List<DataType> inner) throws InternalException, UserException
             {
                 return rs -> new MemoryTupleColumn(rs, columnId, inner, Utility.mapListEx(value, t -> Utility.valueTuple(t, inner.size())));
             }
 
             @Override
-            public FunctionInt<RecordSet, EditableColumn> array(@Nullable DataType inner) throws InternalException, UserException
+            @OnThread(Tag.Simulation)
+            public ExFunction<RecordSet, EditableColumn> array(@Nullable DataType inner) throws InternalException, UserException
             {
                 if (inner == null)
                     throw new UserException("Cannot create column with empty array type");

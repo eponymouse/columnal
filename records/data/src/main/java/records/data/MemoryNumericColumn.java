@@ -19,13 +19,13 @@ public class MemoryNumericColumn extends EditableColumn
 {
     private final NumericColumnStorage storage;
 
-    private MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo) throws InternalException, UserException
+    private MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo) throws InternalException
     {
         super(rs, title);
         storage = new NumericColumnStorage(numberInfo);
     }
 
-    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, List<Number> values) throws InternalException, UserException
+    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, List<Number> values) throws InternalException
     {
         this(rs, title, numberInfo);
         storage.addAll(values);

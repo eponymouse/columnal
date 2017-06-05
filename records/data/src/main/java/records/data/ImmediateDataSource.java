@@ -11,6 +11,7 @@ import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.Utility;
 
 import java.io.File;
@@ -98,7 +99,7 @@ public class ImmediateDataSource extends DataSource
     @Override
     public Table addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException, UserException
     {
-        List<FunctionInt<RecordSet, EditableColumn>> allColumns = new ArrayList<>();
+        List<ExFunction<RecordSet, EditableColumn>> allColumns = new ArrayList<>();
         for (Column column : data.getColumns())
         {
             allColumns.add(rs -> {

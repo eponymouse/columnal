@@ -28,6 +28,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.SimulationSupplier;
 import utility.Utility;
@@ -77,7 +78,7 @@ public class Transform extends TransformationEditable
         try
         {
             RecordSet srcRecordSet = this.src.getData();
-            List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
+            List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
             for (Column c : srcRecordSet.getColumns())
             {
                 if (!newColumns.containsKey(c.getName()))

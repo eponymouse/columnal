@@ -13,6 +13,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -43,7 +44,7 @@ public class GenEditableColumn extends GenValueBase<EditableColumn>
             {
                 values.add(makeValue(type));
             }
-            final FunctionInt<RecordSet, EditableColumn> create = type.makeImmediateColumn(new ColumnId("C"), values);
+            final ExFunction<RecordSet, EditableColumn> create = type.makeImmediateColumn(new ColumnId("C"), values);
             RecordSet recordSet = new EditableRecordSet(Collections.singletonList(create), () -> length);
             return (EditableColumn)recordSet.getColumns().get(0);
         }

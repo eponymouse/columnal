@@ -56,6 +56,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.*;
 import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
+import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -71,6 +72,15 @@ public class Utility
     public static final String MRU_FILE_NAME = "recent.mru";
 
     public static <T, R> List<@NonNull R> mapList(List<@NonNull T> list, Function<@NonNull T, @NonNull R> func)
+    {
+        ArrayList<@NonNull R> r = new ArrayList<>(list.size());
+        for (T t : list)
+            r.add(func.apply(t));
+        return r;
+    }
+
+    @OnThread(Tag.Simulation)
+    public static <T, R> List<@NonNull R> mapListInt(List<@NonNull T> list, FunctionInt<@NonNull T, @NonNull R> func) throws InternalException
     {
         ArrayList<@NonNull R> r = new ArrayList<>(list.size());
         for (T t : list)

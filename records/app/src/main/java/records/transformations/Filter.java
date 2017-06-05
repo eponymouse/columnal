@@ -56,6 +56,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
@@ -108,7 +109,7 @@ public class Filter extends TransformationEditable
         {
             if (src != null)
             {
-                List<FunctionInt<RecordSet, Column>> columns = new ArrayList<>();
+                List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
                 RecordSet data = src.getData();
                 for (Column c : data.getColumns())
                 {

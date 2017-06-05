@@ -1,23 +1,30 @@
 package records.data;
 
 import annotation.qual.Value;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
+import records.data.datatype.DataTypeValue.DataTypeVisitorGetEx;
 import records.data.datatype.DataTypeValue.GetValue;
+import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.SimulationRunnable;
 import utility.TaggedValue;
 import utility.Utility;
 
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -76,9 +83,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             if (inner != null)
             {
                 ColumnStorage<?> result = DataTypeUtility.makeColumnStorage(inner, null);
-                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), result.getType().copyReorder((rowIndex, prog) -> {
-                    return innerValueIndex.getInt(rowIndex);
-                })));
+                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), reMap(result.getType())));
                 valueStores.add(result);
             }
             else
@@ -103,6 +108,81 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                 tagStore.set(OptionalInt.of(index), value);
                 //TODO:
                 return () -> {};
+            }
+        });
+    }
+
+    /**
+     * Given the inner storage used to store those items, returns a DataTypeValue
+     * for the wrapped type, which has to map the indexes
+     */
+    private DataTypeValue reMap(DataTypeValue innerStore) throws InternalException
+    {
+        return innerStore.applyGet(new DataTypeVisitorGetEx<DataTypeValue, InternalException>()
+        {
+            // We are given the GetValue for the inner storage
+            // We must map through innerValueIndex
+            private <T> GetValue<T> reMap(GetValue<T> g)
+            {
+                return new GetValue<T>()
+                {
+                    @Override
+                    public @NonNull T getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                    {
+                        return g.getWithProgress(innerValueIndex.getInt(index), progressListener);
+                    }
+
+                    @Override
+                    public SimulationRunnable set(int index, T value) throws InternalException, UserException
+                    {
+                        throw new InternalException("TODO: set inner tagged");
+                    }
+                };
+            }
+
+            @Override
+            public DataTypeValue number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException
+            {
+                return DataTypeValue.number(displayInfo, reMap(g));
+            }
+
+            @Override
+            public DataTypeValue text(GetValue<String> g) throws InternalException
+            {
+                return DataTypeValue.text(reMap(g));
+            }
+
+            @Override
+            public DataTypeValue bool(GetValue<Boolean> g) throws InternalException
+            {
+                return DataTypeValue.bool(reMap(g));
+            }
+
+            @Override
+            public DataTypeValue date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException
+            {
+                return DataTypeValue.date(dateTimeInfo, reMap(g));
+            }
+
+            @Override
+            public DataTypeValue tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
+            {
+                throw new InternalException("Argh!");
+                //return DataTypeValue.tagged(typeName, Uti);
+            }
+
+            @Override
+            public DataTypeValue tuple(List<DataTypeValue> types) throws InternalException
+            {
+                return DataTypeValue.tupleV(Utility.mapListInt(types, TaggedColumnStorage.this::reMap));
+            }
+
+            @Override
+            public DataTypeValue array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException
+            {
+                if (inner == null)
+                    throw new InternalException("Tagged type cannot contain empty array");
+                return DataTypeValue.arrayV(inner, reMap(g));
             }
         });
     }
