@@ -159,7 +159,7 @@ public class EditableRecordSet extends RecordSet
     }
 
     // The return is for testing
-    public @Nullable SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    public @Nullable SimulationRunnable insertRows(int index, int count)
     {
         List<SimulationRunnable> revert = new ArrayList<>();
         try
@@ -169,7 +169,7 @@ public class EditableRecordSet extends RecordSet
                 revert.add(column.insertRows(index, count));
             }
         }
-        catch (InternalException e)
+        catch (InternalException | UserException e)
         {
             Platform.runLater(() -> Utility.showError(e));
             for (SimulationRunnable revertOne : revert)
@@ -186,12 +186,11 @@ public class EditableRecordSet extends RecordSet
             return null;
         }
 
-        int newRowIndex = curLength;
         curLength += count;
         if (listener != null)
         {
             RecordSetListener listenerFinal = listener;
-            Platform.runLater(() -> listenerFinal.removedAddedRows(newRowIndex, 0, count));
+            Platform.runLater(() -> listenerFinal.removedAddedRows(index, 0, count));
         }
         // TODO re-run dependents
 
@@ -204,9 +203,49 @@ public class EditableRecordSet extends RecordSet
         };
     }
 
-    public void deleteRows(int deleteRowFrom, int deleteRowCount)
+    // The return is for testing
+    public @Nullable SimulationRunnable removeRows(int deleteIndex, int count)
     {
-        // TODO
+        List<SimulationRunnable> revert = new ArrayList<>();
+        try
+        {
+            for (EditableColumn column : editableColumns)
+            {
+                revert.add(column.removeRows(deleteIndex, count));
+            }
+        }
+        catch (InternalException | UserException e)
+        {
+            Platform.runLater(() -> Utility.showError(e));
+            for (SimulationRunnable revertOne : revert)
+            {
+                try
+                {
+                    revertOne.run();
+                }
+                catch (InternalException | UserException e2)
+                {
+                    Platform.runLater(() -> Utility.showError(e2));
+                }
+            }
+            return null;
+        }
+
+        curLength -= count;
+        if (listener != null)
+        {
+            RecordSetListener listenerFinal = listener;
+            Platform.runLater(() -> listenerFinal.removedAddedRows(deleteIndex, count, 0));
+        }
+        // TODO re-run dependents
+
+        return () -> {
+            for (SimulationRunnable revertOne : revert)
+            {
+                revertOne.run();
+            }
+            curLength += count;
+        };
     }
 
 

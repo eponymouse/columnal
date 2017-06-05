@@ -197,7 +197,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                 columnStorage.removeRows(firstRemovedInnerValueIndex[i], lastRemovedInnerValueIndex[i] - firstRemovedInnerValueIndex[i] + 1);
             }
         }
-        //TODO:
+        //TODO we could implement this by using get, then insert/set, but we don't have a set!
         return () -> {};
     }
 

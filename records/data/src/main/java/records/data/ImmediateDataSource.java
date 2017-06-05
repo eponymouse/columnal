@@ -1,7 +1,6 @@
 package records.data;
 
 import annotation.qual.Value;
-import javafx.application.Platform;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.FunctionInt;
@@ -12,7 +11,6 @@ import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.SimulationRunnable;
 import utility.Utility;
 
 import java.io.File;
@@ -93,7 +91,7 @@ public class ImmediateDataSource extends DataSource
                 data.insertRows(data.getLength(), appendRowCount);
             });
         }, null /*TODO*/, (deleteRowFrom, deleteRowCount) -> {
-            Utility.alertOnError_(() -> data.deleteRows(deleteRowFrom, deleteRowCount));
+            Utility.alertOnError_(() -> data.removeRows(deleteRowFrom, deleteRowCount));
         });
     }
 

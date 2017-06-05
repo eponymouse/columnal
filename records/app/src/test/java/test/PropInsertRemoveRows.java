@@ -3,7 +3,6 @@ package test;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
@@ -66,7 +65,7 @@ public class PropInsertRemoveRows
             assertTrue("Valid index " + i + " with insertAtIndex " + insertAtIndex + " and count " + insertCount + " and prev " + prevValues.size(), column.indexValid(i + insertCount));
             assertEquals("Comparing " + column.getType() + " index " + i + " with insertAtIndex " + insertAtIndex + " and count " + insertCount + "\n  " + DataTypeUtility.valueToString(prevValues.get(i)) + " vs\n  " + DataTypeUtility.valueToString(column.getType().getCollapsed(i + insertCount)), 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i + insertCount)));
         }
-        assertFalse(column.indexValid(prevValues.size() + insertCount + 1));
+        assertFalse(column.indexValid(prevValues.size() + insertCount));
 
         // Test revert:
         assertNotNull(revert);
@@ -83,6 +82,46 @@ public class PropInsertRemoveRows
         }
     }
 
+    @Property(trials = 1000)
+    @OnThread(Tag.Simulation)
+    public void removeRows(@From(GenEditableColumn.class) EditableColumn column, @From(GenRandom.class) Random r) throws InternalException, UserException
+    {
+        List<@Value Object> prevValues = new ArrayList<>();
+        for (int i = 0; column.indexValid(i); i++)
+        {
+            prevValues.add(column.getType().getCollapsed(i));
+        }
 
-    // TODO add removeRows test
+        int removeAtIndex = r.nextInt(column.getLength());
+        int removeCount = r.nextInt(column.getLength() - removeAtIndex);
+
+        // Do it via RecordSet to get the validIndex function updated:
+        @Nullable SimulationRunnable revert = ((EditableRecordSet) column.getRecordSet()).removeRows(removeAtIndex, removeCount);
+
+        for (int i = 0; i < removeAtIndex; i++)
+        {
+            assertTrue(column.indexValid(i));
+            assertEquals("Comparing values at index " + i + "\n  " + DataTypeUtility.valueToString(prevValues.get(i)) + " vs\n  " + DataTypeUtility.valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i)));
+        }
+        for (int i = removeAtIndex; i < prevValues.size() - removeCount; i++)
+        {
+            assertTrue("Valid index " + i + " with removeAtIndex " + removeAtIndex + " and count " + removeCount + " and prev " + prevValues.size(), column.indexValid(i));
+            assertEquals("Comparing " + column.getType() + " index " + i + " with removeAtIndex " + removeAtIndex + " and count " + removeCount + "\n  " + DataTypeUtility.valueToString(prevValues.get(i + removeCount)) + " vs\n  " + DataTypeUtility.valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(prevValues.get(i + removeCount), column.getType().getCollapsed(i)));
+        }
+        assertFalse(column.indexValid(prevValues.size() - removeCount));
+
+        // Test revert:
+        assertNotNull(revert);
+        if (revert != null) // Not really needed because above will throw if it's null.  Satisfies checker.
+            revert.run();
+        assertEquals("Type: " + column.getType(), prevValues.size(), column.getLength());
+        assertTrue(column.indexValid(prevValues.size() - 1));
+        assertFalse(column.indexValid(prevValues.size()));
+
+        for (int i = 0; i < prevValues.size(); i++)
+        {
+            assertTrue(column.indexValid(i));
+            assertEquals("Comparing values at index " + i + " removed at " + removeAtIndex + "\n  " + DataTypeUtility.valueToString(prevValues.get(i)) + " vs\n  " + DataTypeUtility.valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i)));
+        }
+    }
 }
