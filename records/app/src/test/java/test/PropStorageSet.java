@@ -13,6 +13,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.data.datatype.DataTypeValue.GetValue;
@@ -30,6 +31,7 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
+import utility.Utility.ListEx;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -60,6 +62,8 @@ public class PropStorageSet
         DataTypeValue columnType = c.getType();
         setValue(rowIndex, value, columnType);
         TestUtil.assertValueEqual("Type: " + typeAndValueGen.getType() + " index " + rowIndex, value, c.getType().getCollapsed(rowIndex));
+
+        //TODO test overwriting and reverting
     }
 
     private static void setValue(int rowIndex, Object value, DataTypeValue typeValue) throws InternalException, UserException
@@ -99,8 +103,19 @@ public class PropStorageSet
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Void tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
+                TaggedValue taggedValue = (TaggedValue)value;
+                g.set(rowIndex, taggedValue.getTagIndex());
+                @Nullable DataTypeValue innerType = tagTypes.get(((TaggedValue) value).getTagIndex()).getInner();
+                if (innerType != null)
+                {
+                    @Nullable @Value Object innerValue = ((TaggedValue) value).getInner();
+                    if (innerValue == null)
+                        throw new InternalException("Inner value present but no slot for it");
+                    setValue(rowIndex, innerValue, innerType);
+                }
                 return null;
             }
 
@@ -116,8 +131,13 @@ public class PropStorageSet
             }
 
             @Override
+            @OnThread(Tag.Simulation)
             public Void array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
             {
+                if (inner == null)
+                    throw new InternalException("Attempting to set value in empty array");
+                ListEx listEx = (ListEx)value;
+                g.set(rowIndex, new Pair<>(listEx.size(), DataTypeUtility.listToType(inner, listEx)));
                 return null;
             }
         });

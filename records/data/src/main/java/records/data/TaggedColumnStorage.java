@@ -2,10 +2,12 @@ package records.data;
 
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UnimplementedException;
@@ -85,10 +87,23 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                 valueStores.add(null);
             }
         }
-        dataType = DataTypeValue.tagged(typeName, tagTypes, (i, prog) -> {
-            if (beforeGet != null)
-                beforeGet.beforeGet(this, i, prog);
-            return tagStore.getInt(i);
+        dataType = DataTypeValue.tagged(typeName, tagTypes, new GetValue<Integer>()
+        {
+            @Override
+            public Integer getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
+            {
+                if (beforeGet != null)
+                    beforeGet.beforeGet(TaggedColumnStorage.this, i, prog);
+                return tagStore.getInt(i);
+            }
+
+            @Override
+            public SimulationRunnable set(int index, Integer value) throws InternalException, UserException
+            {
+                tagStore.set(OptionalInt.of(index), value);
+                //TODO:
+                return () -> {};
+            }
         });
     }
 

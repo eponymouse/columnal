@@ -7,6 +7,7 @@ import records.data.Column.ProgressListener;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
@@ -88,7 +89,22 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.date(dateTimeInfo, (i, prog) -> get(i, prog));
+            dataType = DataTypeValue.date(dateTimeInfo, new GetValue<TemporalAccessor>()
+            {
+                @Override
+                public TemporalAccessor getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+                {
+                    return TemporalColumnStorage.this.get(i, prog);
+                }
+
+                @Override
+                public SimulationRunnable set(int index, TemporalAccessor value) throws InternalException, UserException
+                {
+                    values.set(index, value);
+                    //TODO
+                    return () -> {};
+                }
+            });
         }
         return dataType;
     }

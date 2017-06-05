@@ -279,4 +279,9 @@ public class DataTypeUtility
 
         return item.toString();
     }
+
+    public static DataTypeValue listToType(DataType elementType, ListEx listEx) throws InternalException, UserException
+    {
+        return elementType.fromCollapsed((i, prog) -> listEx.get(i));
+    }
 }

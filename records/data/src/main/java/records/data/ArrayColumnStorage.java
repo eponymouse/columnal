@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
@@ -33,8 +34,8 @@ import java.util.List;
  */
 public class ArrayColumnStorage implements ColumnStorage<ListEx>
 {
-    // For arrays, each element is storage for an individual array element (i.e. a row)
-    // Thus confusing, ColumnStorage here is being used as RowStorage (think of it as VectorStorage)
+    // We are a column storage.  Each element here is one row, which is also
+    // a list because it is an array.  We are a list of lists (column of arrays)
     private final ArrayList<ListEx> storage = new ArrayList<>();
     @OnThread(Tag.Any)
     private final DataTypeValue type;
@@ -48,17 +49,43 @@ public class ArrayColumnStorage implements ColumnStorage<ListEx>
         else
         {
             DataType innerFinal = innerToCopy;
-            this.type = DataTypeValue.arrayV(innerToCopy, (i, prog) ->
+            this.type = DataTypeValue.arrayV(innerToCopy, new GetValue<Pair<Integer, DataTypeValue>>()
             {
-                if (beforeGet != null)
-                    beforeGet.beforeGet(this, i, prog);
-                try
+                @Override
+                public Pair<Integer, DataTypeValue> getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
                 {
-                    ListEx list = storage.get(i);
-                    return new Pair<>(list.size(), innerFinal.fromCollapsed((i2, prog2) -> list.get(i2)));
-                } catch (ClassCastException e)
+                    if (beforeGet != null)
+                        beforeGet.beforeGet(ArrayColumnStorage.this, i, prog);
+                    try
+                    {
+                        ListEx list = storage.get(i);
+                        return new Pair<>(list.size(), innerFinal.fromCollapsed((i2, prog2) -> list.get(i2)));
+                    }
+                    catch (ClassCastException e)
+                    {
+                        throw new InternalException("Incorrect type in array storage", e);
+                    }
+                }
+
+                @Override
+                public SimulationRunnable set(int index, Pair<Integer, DataTypeValue> value) throws InternalException, UserException
                 {
-                    throw new InternalException("Incorrect type in array storage", e);
+                    storage.set(index, new ListEx()
+                    {
+                        @Override
+                        public int size() throws InternalException, UserException
+                        {
+                            return value.getFirst();
+                        }
+
+                        @Override
+                        public @Value Object get(int index) throws InternalException, UserException
+                        {
+                            return value.getSecond().getCollapsed(index);
+                        }
+                    });
+                    //TODO:
+                    return () -> {};
                 }
             });
         }
