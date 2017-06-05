@@ -47,7 +47,7 @@ public abstract class GenValueBase<T> extends Generator<T>
         super(type);
     }
 
-    protected  @Value Object makeValue(DataType t) throws UserException, InternalException
+    protected @Value Object makeValue(DataType t) throws UserException, InternalException
     {
         return t.apply(new DataTypeVisitor<@Value Object>()
         {

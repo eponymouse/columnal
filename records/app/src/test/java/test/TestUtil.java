@@ -64,12 +64,23 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.fail;
 
 /**
  * Created by neil on 05/11/2016.
  */
 public class TestUtil
 {
+    @OnThread(Tag.Simulation)
+    public static void assertValueEqual(String prefix, @Value Object a, @Value Object b) throws UserException, InternalException
+    {
+        int compare = Utility.compareValues(a, b);
+        if (compare != 0)
+        {
+            fail(prefix + " comparing " + DataTypeUtility.valueToString(a) + " against " + DataTypeUtility.valueToString(b) + " result: " + compare);
+        }
+    }
+
     public static void assertEqualList(List<?> a, List<?> b)
     {
         if (a.size() != b.size())
