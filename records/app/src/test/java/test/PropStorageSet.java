@@ -37,7 +37,10 @@ import utility.Utility.ListEx;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
@@ -58,13 +61,24 @@ public class PropStorageSet
         recordSet.insertRows(0, 10);
         assertEquals(10, c.getLength());
 
-        int rowIndex = r.nextInt(10);
-        @Value Object value = typeAndValueGen.makeValue();
-        DataTypeValue columnType = c.getType();
-        setValue(rowIndex, value, columnType);
-        TestUtil.assertValueEqual("Type: " + typeAndValueGen.getType() + " index " + rowIndex, value, c.getType().getCollapsed(rowIndex));
+        Map<Integer, @Value Object> vals = new HashMap<>();
 
-        //TODO test overwriting and reverting
+        // Do many writes:
+        for (int i = 0; i < 10; i++)
+        {
+            int rowIndex = r.nextInt(10);
+            @Value Object value = typeAndValueGen.makeValue();
+            DataTypeValue columnType = c.getType();
+            setValue(rowIndex, value, columnType);
+            TestUtil.assertValueEqual("Type: " + typeAndValueGen.getType() + " index " + rowIndex, value, c.getType().getCollapsed(rowIndex));
+            vals.put(rowIndex, value);
+        }
+        // Test all at end, helps test post overwrites:
+        for (Entry<Integer, Object> entry : vals.entrySet())
+        {
+            TestUtil.assertValueEqual("Type: " + typeAndValueGen.getType() + " index " + entry.getKey(), entry.getValue(), c.getType().getCollapsed(entry.getKey()));
+        }
+        // TODO test reverting
     }
 
     private static void setValue(int rowIndex, Object value, DataTypeValue typeValue) throws InternalException, UserException
@@ -108,7 +122,7 @@ public class PropStorageSet
             public Void tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 TaggedValue taggedValue = (TaggedValue)value;
-                // Important to do inner first:
+                g.set(rowIndex, taggedValue.getTagIndex());
                 @Nullable DataTypeValue innerType = tagTypes.get(((TaggedValue) value).getTagIndex()).getInner();
                 if (innerType != null)
                 {
@@ -117,7 +131,6 @@ public class PropStorageSet
                         throw new InternalException("Inner value present but no slot for it");
                     setValue(rowIndex, innerValue, innerType);
                 }
-                g.set(rowIndex, taggedValue.getTagIndex());
                 return null;
             }
 

@@ -103,9 +103,25 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             }
 
             @Override
-            public SimulationRunnable set(int index, Integer value) throws InternalException, UserException
+            public SimulationRunnable set(int index, Integer newTag) throws InternalException, UserException
             {
-                tagStore.set(OptionalInt.of(index), value);
+                int oldTag = tagStore.getInt(index);
+                tagStore.set(OptionalInt.of(index), newTag);
+
+                // Must remove old value here, because there may not a new inner value (and if there is, we don't know it here):
+                @Nullable ColumnStorage<?> oldInner = valueStores.get(oldTag);
+                if (oldInner != null)
+                {
+                    oldInner.removeRows(innerValueIndex.getInt(index), 1);
+                    for (int i = index + 1; i < tagStore.filled(); i++)
+                    {
+                        if (tagStore.getInt(i) == oldTag)
+                        {
+                            innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) - 1);
+                        }
+                    }
+                }
+
                 //TODO:
                 return () -> {};
             }
@@ -141,33 +157,15 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                     @Override
                     public SimulationRunnable set(int index, T value) throws InternalException, UserException
                     {
-                        // Because this inner set should be called first, tagStore should still show the old index:
-                        int oldTag = tagStore.getInt(index);
-                        // If tags match or we're not responsible, no extra work to be done
-                        if (!innerStoreTagIndex.isPresent() || oldTag == innerStoreTagIndex.getAsInt())
+                        // If we're not responsible for updating store, no extra work to be done:
+                        if (!innerStoreTagIndex.isPresent())
                         {
                             g.set(innerValueIndex.getInt(index), value);
                         }
                         else
                         {
                             int newTag = innerStoreTagIndex.getAsInt();
-                            // Need to remove the old one and set the new one:
-
-                            // First, remove old:
-                            @Nullable ColumnStorage<?> oldInner = valueStores.get(oldTag);
-                            if (oldInner != null)
-                            {
-                                oldInner.removeRows(innerValueIndex.getInt(index), 1);
-                                for (int i = index; i < tagStore.filled(); i++)
-                                {
-                                    if (tagStore.getInt(i) == oldTag)
-                                    {
-                                        innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) - 1);
-                                    }
-                                }
-                            }
-
-                            // Now add new:
+                            // Add new:
                             int newValueIndex = 0;
                             for (int i = 0; i < index; i++)
                             {
