@@ -3,6 +3,7 @@ package test;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
@@ -47,7 +48,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class PropStorageSet
 {
-    @Property
+    @Property(trials = 1000)
     @OnThread(Tag.Simulation)
     public void testSet(@From(GenTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen typeAndValueGen, @From(GenRandom.class) Random r) throws UserException, InternalException
     {
@@ -107,7 +108,7 @@ public class PropStorageSet
             public Void tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 TaggedValue taggedValue = (TaggedValue)value;
-                g.set(rowIndex, taggedValue.getTagIndex());
+                // Important to do inner first:
                 @Nullable DataTypeValue innerType = tagTypes.get(((TaggedValue) value).getTagIndex()).getInner();
                 if (innerType != null)
                 {
@@ -116,6 +117,7 @@ public class PropStorageSet
                         throw new InternalException("Inner value present but no slot for it");
                     setValue(rowIndex, innerValue, innerType);
                 }
+                g.set(rowIndex, taggedValue.getTagIndex());
                 return null;
             }
 

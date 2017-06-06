@@ -83,7 +83,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             if (inner != null)
             {
                 ColumnStorage<?> result = DataTypeUtility.makeColumnStorage(inner, null);
-                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), reMap(result.getType())));
+                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), reMap(result.getType(), OptionalInt.of(i))));
                 valueStores.add(result);
             }
             else
@@ -115,8 +115,14 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     /**
      * Given the inner storage used to store those items, returns a DataTypeValue
      * for the wrapped type, which has to map the indexes
+     *
+     * @param innerStore The storage to store in
+     * @param innerStoreTagIndex If present, it means we are responsible for updating the indexes,
+     *                           and should update them for the given inner store.  If missing,
+     *                           it's not up to us (e.g. we're second in a tuple, and first is responsible)
+     *                           so leave them alone, and assume they've already been done.
      */
-    private DataTypeValue reMap(DataTypeValue innerStore) throws InternalException
+    private DataTypeValue reMap(DataTypeValue innerStore, OptionalInt innerStoreTagIndex) throws InternalException
     {
         return innerStore.applyGet(new DataTypeVisitorGetEx<DataTypeValue, InternalException>()
         {
@@ -135,7 +141,58 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                     @Override
                     public SimulationRunnable set(int index, T value) throws InternalException, UserException
                     {
-                        throw new InternalException("TODO: set inner tagged");
+                        // Because this inner set should be called first, tagStore should still show the old index:
+                        int oldTag = tagStore.getInt(index);
+                        // If tags match or we're not responsible, no extra work to be done
+                        if (!innerStoreTagIndex.isPresent() || oldTag == innerStoreTagIndex.getAsInt())
+                        {
+                            g.set(innerValueIndex.getInt(index), value);
+                        }
+                        else
+                        {
+                            int newTag = innerStoreTagIndex.getAsInt();
+                            // Need to remove the old one and set the new one:
+
+                            // First, remove old:
+                            @Nullable ColumnStorage<?> oldInner = valueStores.get(oldTag);
+                            if (oldInner != null)
+                            {
+                                oldInner.removeRows(innerValueIndex.getInt(index), 1);
+                                for (int i = index; i < tagStore.filled(); i++)
+                                {
+                                    if (tagStore.getInt(i) == oldTag)
+                                    {
+                                        innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) - 1);
+                                    }
+                                }
+                            }
+
+                            // Now add new:
+                            int newValueIndex = 0;
+                            for (int i = 0; i < index; i++)
+                            {
+                                if (tagStore.getInt(i) == newTag)
+                                {
+                                    newValueIndex++;
+                                }
+                            }
+                            ColumnStorage<?> newStore = valueStores.get(newTag);
+                            if (newStore != null)
+                            {
+                                newStore.insertRows(newValueIndex, 1);
+                                g.set(newValueIndex, value);
+                                for (int i = index; i < tagStore.filled(); i++)
+                                {
+                                    if (tagStore.getInt(i) == newTag)
+                                    {
+                                        innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) + 1);
+                                    }
+                                }
+                            }
+                            innerValueIndex.set(OptionalInt.of(index), newValueIndex);
+                        }
+                        //TODO:
+                        return () -> {};
                     }
                 };
             }
@@ -174,7 +231,13 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             @Override
             public DataTypeValue tuple(List<DataTypeValue> types) throws InternalException
             {
-                return DataTypeValue.tupleV(Utility.mapListInt(types, TaggedColumnStorage.this::reMap));
+                List<DataTypeValue> reMapped = new ArrayList<>();
+                for (int i = 0; i < types.size(); i++)
+                {
+                    // First one is reponsible if any of us must be:
+                    reMapped.add(TaggedColumnStorage.this.reMap(types.get(i), i == 0 ? innerStoreTagIndex : OptionalInt.empty()));
+                }
+                return DataTypeValue.tupleV(reMapped);
             }
 
             @Override
