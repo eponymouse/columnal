@@ -230,7 +230,7 @@ public class DataTypeValue extends DataType
         default @NonNull T get(int index) throws UserException, InternalException { return getWithProgress(index, null); }
 
         @OnThread(Tag.Simulation)
-        default SimulationRunnable set(int index, T value) throws InternalException, UserException
+        default void set(int index, T value) throws InternalException, UserException
         {
             throw new InternalException("Attempted to set value for uneditable column: " + getClass());
         };

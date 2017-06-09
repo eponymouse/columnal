@@ -89,20 +89,16 @@ public class StringColumnStorage implements ColumnStorage<String>
                 }
 
                 @Override
-                public @OnThread(Tag.Simulation) SimulationRunnable set(int index, @Value String value) throws InternalException
+                public @OnThread(Tag.Simulation) void set(int index, @Value String value) throws InternalException
                 {
                     if (index == values.size())
                     {
                         values.add(pool.pool(value));
-                        // Not values.size() because that will change:
-                        return () -> values.remove(index);
 
                     }
                     else
                     {
-                        String old = values.get(index);
                         values.set(index, pool.pool(value));
-                        return () -> values.set(index, old);
                     }
                 }
             });

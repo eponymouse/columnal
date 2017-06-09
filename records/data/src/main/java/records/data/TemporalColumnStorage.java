@@ -98,11 +98,9 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
                 }
 
                 @Override
-                public SimulationRunnable set(int index, TemporalAccessor value) throws InternalException, UserException
+                public void set(int index, TemporalAccessor value) throws InternalException, UserException
                 {
                     values.set(index, value);
-                    //TODO
-                    return () -> {};
                 }
             });
         }

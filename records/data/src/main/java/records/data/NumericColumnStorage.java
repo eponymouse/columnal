@@ -461,19 +461,15 @@ public class NumericColumnStorage implements ColumnStorage<Number>
                 }
 
                 @Override
-                public @OnThread(Tag.Simulation) SimulationRunnable set(int index, @Value Number value) throws InternalException, UserException
+                public @OnThread(Tag.Simulation) void set(int index, @Value Number value) throws InternalException, UserException
                 {
                     if (index == filled)
                     {
                         NumericColumnStorage.this.set(OptionalInt.empty(), value);
-                        // TODO implement remove properly
-                        return () -> {throw new UnimplementedException();};
                     }
                     else
                     {
-                        Number old = get(index);
                         NumericColumnStorage.this.set(OptionalInt.of(index), value);
-                        return () -> NumericColumnStorage.this.set(OptionalInt.of(index), old);
                     }
                 }
             });

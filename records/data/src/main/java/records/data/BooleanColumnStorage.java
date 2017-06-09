@@ -43,11 +43,9 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
             }
 
             @Override
-            public @OnThread(Tag.Simulation) SimulationRunnable set(int index, @Value Boolean value) throws InternalException
+            public @OnThread(Tag.Simulation) void set(int index, @Value Boolean value) throws InternalException
             {
-                boolean old = data.get(index);
                 data.set(index, value);
-                return () -> data.set(index, old);
             }
         });
     }

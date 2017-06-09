@@ -68,7 +68,7 @@ public class ArrayColumnStorage implements ColumnStorage<ListEx>
                 }
 
                 @Override
-                public SimulationRunnable set(int index, Pair<Integer, DataTypeValue> value) throws InternalException, UserException
+                public void set(int index, Pair<Integer, DataTypeValue> value) throws InternalException, UserException
                 {
                     storage.set(index, new ListEx()
                     {
@@ -84,8 +84,6 @@ public class ArrayColumnStorage implements ColumnStorage<ListEx>
                             return value.getSecond().getCollapsed(index);
                         }
                     });
-                    //TODO:
-                    return () -> {};
                 }
             });
         }

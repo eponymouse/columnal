@@ -103,7 +103,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             }
 
             @Override
-            public SimulationRunnable set(int index, Integer newTag) throws InternalException, UserException
+            public void set(int index, Integer newTag) throws InternalException, UserException
             {
                 int oldTag = tagStore.getInt(index);
                 tagStore.set(OptionalInt.of(index), newTag);
@@ -121,9 +121,6 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                         }
                     }
                 }
-
-                //TODO:
-                return () -> {};
             }
         });
     }
@@ -155,7 +152,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                     }
 
                     @Override
-                    public SimulationRunnable set(int index, T value) throws InternalException, UserException
+                    public void set(int index, T value) throws InternalException, UserException
                     {
                         // If we're not responsible for updating store, no extra work to be done:
                         if (!innerStoreTagIndex.isPresent())
@@ -189,8 +186,6 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                             }
                             innerValueIndex.set(OptionalInt.of(index), newValueIndex);
                         }
-                        //TODO:
-                        return () -> {};
                     }
                 };
             }
