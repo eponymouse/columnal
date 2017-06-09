@@ -37,8 +37,13 @@ public interface ColumnStorage<T>
 
     default public ImmutableList<T> getAllCollapsed(int arrayLength) throws UserException, InternalException
     {
-        List<T> r = new ArrayList<>();
-        for (int i = 0; i < arrayLength; i++)
+        return getAllCollapsed(0, arrayLength);
+    }
+
+    default public ImmutableList<T> getAllCollapsed(int fromIncl, int toExcl) throws UserException, InternalException
+    {
+        List<T> r = new ArrayList<>(toExcl - fromIncl);
+        for (int i = fromIncl; i < toExcl; i++)
         {
             r.add((T)getType().getCollapsed(i));
         }

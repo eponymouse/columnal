@@ -487,6 +487,7 @@ public class NumericColumnStorage implements ColumnStorage<Number>
     @Override
     public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
+        List<Number> old = getAllCollapsed(index, index + count);
         if (bytes != null)
             System.arraycopy(bytes, index + count, bytes, index, filled - (index + count));
         else if (shorts != null)
@@ -501,8 +502,13 @@ public class NumericColumnStorage implements ColumnStorage<Number>
                 System.arraycopy(bigDecimals, index + count, bigDecimals, index, filled - (index + count));
         }
         filled -= count;
-        //TODO
-        return () -> {};
+        return () -> {
+            insertRows(index, count);
+            for (int i = index; i < index + count; i++)
+            {
+                set(OptionalInt.of(i), old.get(i - index));
+            }
+        };
     }
 
     @Override
