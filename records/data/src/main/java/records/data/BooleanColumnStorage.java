@@ -118,6 +118,10 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
         for (int i = index; i < length - count; i++)
             data.set(i, data.get(i + count));
         length -= count;
-        return () -> {data.clear();data.or(old);};
+        return () -> {
+            data.clear();
+            data.or(old);
+            length += count;
+        };
     }
 }
