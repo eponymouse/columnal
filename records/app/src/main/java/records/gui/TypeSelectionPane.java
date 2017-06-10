@@ -83,6 +83,7 @@ public class TypeSelectionPane
         dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)));
         dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)));
         dateTimeComboBox.getSelectionModel().selectFirst();
+        dateTimeComboBox.getStyleClass().add("type-datetime-combo");
         dateNotSelected = addType("type.datetime", dateTimeComboBox.valueProperty(), dateTimeComboBox);
         dateTimeComboBox.disableProperty().bind(dateNotSelected);
 
@@ -153,6 +154,7 @@ public class TypeSelectionPane
 
 
         Pair<Button, ObservableObjectValue<@Nullable DataType>> listSubType = makeTypeButton(typeManager);
+        listSubType.getFirst().getStyleClass().add("type-list-of-set");
         listNotSelected = addType("type.list.of", listSubType.getSecond(), listSubType.getFirst());
         listSubType.getFirst().disableProperty().bind(listNotSelected);
 
@@ -199,6 +201,7 @@ public class TypeSelectionPane
     private BooleanBinding addType(@UnderInitialization(Object.class) TypeSelectionPane this, @LocalizableKey String typeKey, ObservableValue<@Nullable DataType> calculateType, Node... furtherDetails)
     {
         RadioButton radioButton = new RadioButton(TranslationUtility.getString(typeKey));
+        radioButton.getStyleClass().add("id-" + typeKey.replace(".", "-"));
         radioButton.setToggleGroup(typeGroup);
         HBox hbox = new Row(radioButton);
         hbox.getChildren().addAll(furtherDetails);

@@ -27,6 +27,7 @@ public class TypeDialog extends Dialog<DataType>
 
         getDialogPane().setContent(typeSelectionPane.getNode());
         getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+        getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
 
         setResultConverter(bt -> {
             if (bt == ButtonType.OK)
