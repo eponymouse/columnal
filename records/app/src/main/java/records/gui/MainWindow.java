@@ -53,10 +53,9 @@ public class MainWindow
     }
 
     // If src is null, make new
-    public static MainWindowActions show(File destinationFile, @Nullable String src) throws UserException, InternalException
+    public static MainWindowActions show(final Stage stage, File destinationFile, @Nullable String src) throws UserException, InternalException
     {
         View v = new View(destinationFile);
-        final Stage stage = new Stage();
         stage.titleProperty().bind(v.titleProperty());
         views.put(v, stage);
         stage.setOnHidden(e -> {
@@ -123,7 +122,7 @@ public class MainWindow
             {
                 try
                 {
-                    MainWindow.show(open, FileUtils.readFileToString(open, "UTF-8"));
+                    MainWindow.show(new Stage(), open, FileUtils.readFileToString(open, "UTF-8"));
                 }
                 catch (IOException | UserException | InternalException ex)
                 {
@@ -182,7 +181,7 @@ public class MainWindow
         }
 
         stage.show();
-        //org.scenicview.ScenicView.show(stage.getScene());
+        org.scenicview.ScenicView.show(stage.getScene());
         return new MainWindowActions()
         {
             @Override

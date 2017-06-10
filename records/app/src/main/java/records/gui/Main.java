@@ -38,7 +38,7 @@ public class Main extends Application
                 File paramFile = new File(param);
                 if (param.endsWith(".rec"))
                 {
-                    MainWindow.show(paramFile, FileUtils.readFileToString(paramFile, Charset.forName("UTF-8")));
+                    MainWindow.show(new Stage(), paramFile, FileUtils.readFileToString(paramFile, Charset.forName("UTF-8")));
                 }
                 else
                 {

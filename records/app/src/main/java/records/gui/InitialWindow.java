@@ -72,7 +72,7 @@ public class InitialWindow
         {
             try
             {
-                MainWindow.show(src, FileUtils.readFileToString(src, "UTF-8"));
+                MainWindow.show(new Stage(), src, FileUtils.readFileToString(src, "UTF-8"));
                 Utility.usedFile(src);
                 // Only hide us if the load and show completed successfully:
                 parent.hide();
@@ -100,7 +100,7 @@ public class InitialWindow
                 dest = new FileChooser().showSaveDialog(parent);
             }
             if (dest != null)
-                return MainWindow.show(dest, null);
+                return MainWindow.show(new Stage(), dest, null);
             else
                 return null;
         });

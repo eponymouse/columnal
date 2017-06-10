@@ -4,6 +4,7 @@ import annotation.help.qual.HelpKey;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
+import javafx.css.Styleable;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -23,6 +24,7 @@ import org.controlsfx.control.SegmentedButton;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
+import org.jetbrains.annotations.NotNull;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
@@ -43,9 +45,22 @@ public class GUI
     {
         Button button = new Button(TranslationUtility.getString(msgKey));
         button.setOnAction(e -> onAction.run());
-        button.getStyleClass().add("id-" + msgKey.replace(".", "-"));
+        addIdClass(button, msgKey);
         button.getStyleClass().addAll(styleClasses);
         return button;
+    }
+
+    // Used by TestFX to identify items in the GUI
+    private static <T extends Styleable> T addIdClass(T node, @LocalizableKey String msgKey)
+    {
+        node.getStyleClass().add(makeId(msgKey));
+        return node;
+    }
+
+    @NotNull
+    private static String makeId(@LocalizableKey String msgKey)
+    {
+        return "id-" + msgKey.replace(".", "-");
     }
 
     public static Label label(@LocalizableKey String msgKey, String... styleClasses)
@@ -57,7 +72,9 @@ public class GUI
 
     public static Menu menu(@LocalizableKey String menuNameKey, MenuItem... menuItems)
     {
-        return new Menu(TranslationUtility.getString(menuNameKey), null, menuItems);
+        Menu menu = new Menu(TranslationUtility.getString(menuNameKey), null, menuItems);
+        menu.setId(makeId(menuNameKey));
+        return addIdClass(menu, menuNameKey);
     }
 
     public static MenuItem menuItem(@LocalizableKey String menuItemKey, FXPlatformRunnable onAction)
@@ -67,6 +84,7 @@ public class GUI
         item.setOnAction(e -> onAction.run());
         if (stringAndShortcut.getSecond() != null)
             item.setAccelerator(stringAndShortcut.getSecond());
+        addIdClass(item, menuItemKey);
         return item;
     }
 
