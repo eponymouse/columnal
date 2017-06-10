@@ -33,6 +33,9 @@
     <orderEntry type="library" scope="TEST" name="Maven: javassist:javassist:3.11.0.GA" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: ru.vyarus:generics-resolver:2.0.1" level="project" />
     <orderEntry type="library" scope="TEST" name="Maven: com.pholser:junit-quickcheck-generators:0.7" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.testfx:testfx-core:4.0.1-alpha" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.hamcrest:hamcrest-all:1.3" level="project" />
+    <orderEntry type="library" scope="TEST" name="Maven: org.testfx:testfx-junit:4.0.1-alpha" level="project" />
     <orderEntry type="library" name="Maven: org.controlsfx:controlsfx:8.40.12" level="project" />
     <orderEntry type="library" name="Maven: org.fxmisc.richtext:richtextfx:0.7-M5" level="project" />
     <orderEntry type="library" name="Maven: org.fxmisc.undo:undofx:1.2.2" level="project" />

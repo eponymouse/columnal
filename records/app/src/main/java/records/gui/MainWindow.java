@@ -36,6 +36,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.IdentityHashMap;
+import java.util.Map;
 
 /**
  * Created by neil on 17/04/2017.
@@ -268,5 +269,10 @@ public class MainWindow
         }
 
 
+    }
+
+    public static Map<View, Stage> _test_getViews()
+    {
+        return views;
     }
 }

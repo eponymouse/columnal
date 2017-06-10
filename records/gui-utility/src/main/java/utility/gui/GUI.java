@@ -43,6 +43,7 @@ public class GUI
     {
         Button button = new Button(TranslationUtility.getString(msgKey));
         button.setOnAction(e -> onAction.run());
+        button.getStyleClass().add("id-" + msgKey.replace(".", "-"));
         button.getStyleClass().addAll(styleClasses);
         return button;
     }
