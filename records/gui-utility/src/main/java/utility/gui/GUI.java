@@ -84,6 +84,7 @@ public class GUI
         item.setOnAction(e -> onAction.run());
         if (stringAndShortcut.getSecond() != null)
             item.setAccelerator(stringAndShortcut.getSecond());
+        item.setId(makeId(menuItemKey));
         addIdClass(item, menuItemKey);
         return item;
     }

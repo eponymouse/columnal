@@ -13,6 +13,8 @@ import org.junit.AfterClass;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.MainWindow;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -21,6 +23,7 @@ import utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Random;
 
 import static org.junit.Assert.*;
 
@@ -58,13 +61,44 @@ public class TestBlankMainWindow extends ApplicationTest
     {
         assertTrue(mainWindow.isShowing());
         assertEquals(1, MainWindow._test_getViews().size());
+        assertTrue(MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().isEmpty());
     }
 
+    @Test
     public void testNewClick()
     {
         testStartState();
         clickOn("#id-menu-project").clickOn(".id-menu-project-new");
         assertEquals(2, MainWindow._test_getViews().size());
         assertTrue(MainWindow._test_getViews().values().stream().allMatch(Stage::isShowing));
+    }
+
+    @Test
+    public void testCloseMenu()
+    {
+        testStartState();
+        clickOn("#id-menu-project").clickOn(".id-menu-project-close");
+        assertTrue(MainWindow._test_getViews().isEmpty());
+    }
+
+    @Test
+    public void testNewEntryTable() throws InternalException, UserException
+    {
+        testStartState();
+        clickOn("#id-menu-data").clickOn(".id-menu-data-new");
+        assertEquals(1, MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size());
+        assertTrue(MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().isEmpty());
+    }
+
+    @Test
+    public void testAddColumnToEntryTable() throws UserException, InternalException
+    {
+        testNewEntryTable();
+        clickOn(".add-column");
+        String newColName = "Column " + new Random().nextInt();
+        write(newColName);
+        clickOn(".ok-button");
+        assertEquals(1, MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().size());
+        assertEquals(newColName, MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getName().getRaw());
     }
 }

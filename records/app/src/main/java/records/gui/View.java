@@ -116,9 +116,11 @@ public class View extends StackPane implements TableManager.TableManagerListener
                 }
             }
         };
+        //Exception e = new Exception();
         Workers.onWorkerThread("Saving", Priority.SAVE_TO_DISK, () ->
         {
             new Fetcher(getAllTables()).getNext();
+
         });
     }
 

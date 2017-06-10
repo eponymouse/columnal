@@ -2,6 +2,7 @@ package records.gui;
 
 import annotation.qual.Value;
 import javafx.event.ActionEvent;
+import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
@@ -42,6 +43,7 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
         contents = new VBox();
         contents.getStyleClass().add("new-column-content");
         name = new TextField();
+        name.getStyleClass().add("new-column-name");
         typeSelectionPane = new TypeSelectionPane(tableManager.getTypeManager());
         defaultValueEditor = new ExpressionEditor(new NumericLiteral(0, null), null, typeSelectionPane.selectedType(), tableManager, e -> {});
         Label nameLabel = new Label(TranslationUtility.getString("newcolumn.name"));
@@ -64,9 +66,14 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
             if (getSelectedType() == null)
                 e.consume();
         });
+        getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
 
         initModality(Modality.NONE);
-        setOnShown(e -> org.scenicview.ScenicView.show(getDialogPane().getScene()));
+        setOnShown(e -> {
+            // Have to use runAfter to combat ButtonBarSkin grabbing focus:
+            FXUtility.runAfter(name::requestFocus);
+            //org.scenicview.ScenicView.show(getDialogPane().getScene());
+        });
     }
 
     @RequiresNonNull({"typeSelectionPane"})
