@@ -26,6 +26,7 @@ import utility.Utility;
 import utility.Workers;
 import utility.gui.FXUtility;
 import records.gui.stable.StableView;
+import utility.gui.GUI;
 
 import java.util.ArrayList;
 import java.util.Optional;
@@ -167,7 +168,6 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     public TableDisplay(View parent, Table table)
     {
         this.table = table;
-        this.table.setDisplay(this);
         String error;
         RecordSet recordSet;
         try
@@ -200,9 +200,8 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         HBox header = new HBox(title, spacer);
         if (table.showAddColumnButton())
         {
-            Button addColumnButton = new Button("Add Column");
-            addColumnButton.setOnAction(e -> {
-                // TODO show a dialog to prompt for the name and type:
+            Button addColumnButton = GUI.button("tableDisplay.addColumn", () -> {
+                // Show a dialog to prompt for the name and type:
                 NewColumnDialog dialog = new NewColumnDialog(parent.getManager());
                 Optional<NewColumnDialog.NewColumnDetails> choice = dialog.showAndWait();
                 if (choice.isPresent())
@@ -216,7 +215,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                         });
                     });
                 }
-            });
+            }, "add-column");
             header.getChildren().add(addColumnButton);
         }
         header.getChildren().add(addButton);
@@ -282,6 +281,9 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
         mostRecentBounds = new AtomicReference<>(getBoundsInParent());
         FXUtility.addChangeListenerPlatformNN(boundsInParentProperty(), mostRecentBounds::set);
+
+        // Must be last line:
+        this.table.setDisplay(this);
     }
 
     private boolean dragResize(double sceneX, double sceneY)
