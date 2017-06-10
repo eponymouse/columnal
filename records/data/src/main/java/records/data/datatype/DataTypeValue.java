@@ -10,8 +10,8 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.SimulationRunnable;
 import utility.TaggedValue;
+import utility.Utility.ListEx;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -84,6 +84,83 @@ public class DataTypeValue extends DataType
     public static DataTypeValue tupleV(List<DataTypeValue> types)
     {
         return new DataTypeValue(Kind.TUPLE, null, null, null, new ArrayList<>(types), null, null, null, null, null, null);
+    }
+
+    public void setCollapsed(int rowIndex, @Value Object value) throws InternalException, UserException
+    {
+        applyGet(new DataTypeVisitorGet<Void>()
+        {
+            @Override
+            @OnThread(Tag.Simulation)
+            public Void number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
+            {
+                g.set(rowIndex, (Number)value);
+                return null;
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Void text(GetValue<String> g) throws InternalException, UserException
+            {
+                g.set(rowIndex, (String)value);
+                return null;
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Void bool(GetValue<Boolean> g) throws InternalException, UserException
+            {
+                g.set(rowIndex, (Boolean) value);
+                return null;
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Void date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+            {
+                g.set(rowIndex, (TemporalAccessor) value);
+                return null;
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Void tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            {
+                TaggedValue taggedValue = (TaggedValue)value;
+                g.set(rowIndex, taggedValue.getTagIndex());
+                @Nullable DataTypeValue innerType = tagTypes.get(((TaggedValue) value).getTagIndex()).getInner();
+                if (innerType != null)
+                {
+                    @Nullable @Value Object innerValue = ((TaggedValue) value).getInner();
+                    if (innerValue == null)
+                        throw new InternalException("Inner value present but no slot for it");
+                    innerType.setCollapsed(rowIndex, innerValue);
+                }
+                return null;
+            }
+
+            @Override
+            public Void tuple(List<DataTypeValue> types) throws InternalException, UserException
+            {
+                Object[] tuple = (Object[])value;
+                for (int i = 0; i < types.size(); i++)
+                {
+                    types.get(i).setCollapsed(rowIndex, tuple[i]);
+                }
+                return null;
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public Void array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException, UserException
+            {
+                if (inner == null)
+                    throw new InternalException("Attempting to set value in empty array");
+                ListEx listEx = (ListEx)value;
+                g.set(rowIndex, new Pair<>(listEx.size(), DataTypeUtility.listToType(inner, listEx)));
+                return null;
+            }
+        });
     }
 
     public static class SpecificDataTypeVisitorGet<R> implements DataTypeVisitorGet<R>
