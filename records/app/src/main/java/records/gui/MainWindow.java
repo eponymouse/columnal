@@ -181,7 +181,7 @@ public class MainWindow
         }
 
         stage.show();
-        org.scenicview.ScenicView.show(stage.getScene());
+        //org.scenicview.ScenicView.show(stage.getScene());
         return new MainWindowActions()
         {
             @Override

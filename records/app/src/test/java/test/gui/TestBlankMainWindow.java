@@ -1,6 +1,9 @@
 package test.gui;
 
 import javafx.application.Platform;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -9,9 +12,12 @@ import org.junit.After;
 import org.junit.AfterClass;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.util.WaitForAsyncUtils;
 import records.gui.MainWindow;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
+import utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -24,7 +30,8 @@ import static org.junit.Assert.*;
 @OnThread(value = Tag.FXPlatform, ignoreParent = true)
 public class TestBlankMainWindow extends ApplicationTest
 {
-    private @MonotonicNonNull Stage mainWindow;
+    @SuppressWarnings("nullness")
+    private @NonNull Stage mainWindow;
 
     @Override
     public void start(Stage stage) throws Exception
@@ -37,7 +44,6 @@ public class TestBlankMainWindow extends ApplicationTest
 
     @After
     @OnThread(Tag.Any)
-    @SuppressWarnings("nullness")
     public void hide()
     {
         Platform.runLater(() -> {
@@ -46,16 +52,14 @@ public class TestBlankMainWindow extends ApplicationTest
         });
     }
 
+    // Both a test, and used as utility method.
     @Test
-    @RequiresNonNull("mainWindow")
     public void testStartState()
     {
         assertTrue(mainWindow.isShowing());
         assertEquals(1, MainWindow._test_getViews().size());
     }
 
-    @Test
-    @RequiresNonNull("mainWindow")
     public void testNewClick()
     {
         testStartState();
