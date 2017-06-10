@@ -307,6 +307,8 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     @Override
     public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
+        List<TaggedValue> prevValues = getAllCollapsed(index, index + count);
+
         int[] firstRemovedInnerValueIndex = new int[valueStores.size()];
         int[] lastRemovedInnerValueIndex = new int[valueStores.size()];
         Arrays.fill(firstRemovedInnerValueIndex, -1);
@@ -348,8 +350,13 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                 columnStorage.removeRows(firstRemovedInnerValueIndex[i], lastRemovedInnerValueIndex[i] - firstRemovedInnerValueIndex[i] + 1);
             }
         }
-        //TODO we could implement this by using get, then insert/set, but we don't have a set!
-        return () -> {};
+        return () -> {
+            insertRows(index, count);
+            for (int i = index; i < index + count; i++)
+            {
+                getType().setCollapsed(i, prevValues.get(i - index));
+            }
+        };
     }
 
     @Override

@@ -497,9 +497,8 @@ public class NumericColumnStorage implements ColumnStorage<Number>
         else if (longs != null)
         {
             System.arraycopy(longs, index + count, longs, index, filled - (index + count));
-            // TODO this won't be right if bigDecimals isn't as long as longs
-            if (bigDecimals != null)
-                System.arraycopy(bigDecimals, index + count, bigDecimals, index, filled - (index + count));
+            if (bigDecimals != null && index + count < bigDecimals.length)
+                System.arraycopy(bigDecimals, index + count, bigDecimals, index, bigDecimals.length - (index + count));
         }
         filled -= count;
         return () -> {

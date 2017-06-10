@@ -34,7 +34,7 @@ import static org.junit.Assert.assertTrue;
 @RunWith(JUnitQuickcheck.class)
 public class PropInsertRemoveRows
 {
-    @Property(trials = 200)
+    @Property(trials = 100)
     @OnThread(Tag.Simulation)
     public void insertRows(@From(GenEditableColumn.class) EditableColumn column, @From(GenRandom.class) Random r) throws InternalException, UserException
     {
@@ -83,9 +83,9 @@ public class PropInsertRemoveRows
         }
     }
 
-    @Property(trials = 1000)
+    @Property(trials = 100)
     @OnThread(Tag.Simulation)
-    public void removeRows(@When(seed=-6162814064792124110L) @From(GenEditableColumn.class) EditableColumn column, @When(seed=-1964608850746491084L) @From(GenRandom.class) Random r) throws InternalException, UserException
+    public void removeRows(@From(GenEditableColumn.class) EditableColumn column, @From(GenRandom.class) Random r) throws InternalException, UserException
     {
         List<@Value Object> prevValues = new ArrayList<>();
         for (int i = 0; column.indexValid(i); i++)
