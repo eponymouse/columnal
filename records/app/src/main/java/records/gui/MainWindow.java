@@ -35,6 +35,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Map;
 
@@ -222,7 +223,8 @@ public class MainWindow
 
     public static void closeAll()
     {
-        views.forEach((v, s) -> {
+        // Take copy to avoid concurrent modification:
+        new HashMap<>(views).forEach((v, s) -> {
             v.ensureSaved();
             s.hide();
         });
