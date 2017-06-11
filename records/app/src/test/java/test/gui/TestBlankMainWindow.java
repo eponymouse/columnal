@@ -6,6 +6,7 @@ import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.scene.Node;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -52,7 +53,7 @@ import static org.junit.Assert.*;
  */
 @OnThread(value = Tag.FXPlatform, ignoreParent = true)
 @RunWith(JUnitQuickcheck.class)
-public class TestBlankMainWindow extends ApplicationTest
+public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTrait
 {
     @SuppressWarnings("nullness")
     private @NonNull Stage mainWindow;
@@ -157,9 +158,11 @@ public class TestBlankMainWindow extends ApplicationTest
             }
 
             @Override
+            @SuppressWarnings("nullness")
             public Void number(NumberInfo numberInfo) throws InternalException, UserException
             {
                 clickOnSub(".id-type-number");
+                ((TextField)lookupSub(".type-number-units")).setText(numberInfo.getUnit().toString());
                 return null;
             }
 
@@ -174,9 +177,9 @@ public class TestBlankMainWindow extends ApplicationTest
             public Void date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 clickOnSub(".id-type-datetime");
-                clickOnSub(".type-datetime-combo");
-                // Note clickOn, not clickOnSub, for combo children:
-                clickOn(dataType.toString());
+                @Nullable ComboBox<DataType> combo = (ComboBox<DataType>) lookupSub(".type-datetime-combo");
+                if (combo != null)
+                    selectGivenComboBoxItem(combo, dataType);
                 return null;
             }
 

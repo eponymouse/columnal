@@ -74,6 +74,7 @@ public class TypeSelectionPane
             ErrorableTextField.validate(() -> typeManager.getUnitManager().loadUse(unitSrc))
         );
         numberNotSelected = addType("type.number", new NumberTypeBinding(units.valueProperty(), typeManager), new Label(TranslationUtility.getString("newcolumn.number.units")), units.getNode());
+        units.getNode().getStyleClass().add("type-number-units");
         units.disableProperty().bind(numberNotSelected);
         addType("type.text", new ReadOnlyObjectWrapper<>(DataType.TEXT));
         addType("type.boolean", new ReadOnlyObjectWrapper<>(DataType.BOOLEAN));
@@ -180,6 +181,7 @@ public class TypeSelectionPane
     private Pair<Button, ObservableObjectValue<@Nullable DataType>> makeTypeButton(@UnknownInitialization(Object.class) TypeSelectionPane this, TypeManager typeManager)
     {
         Button listSubTypeButton = new Button(TranslationUtility.getString("type.select"));
+        listSubTypeButton.getStyleClass().add("type-select-button");
         SimpleObjectProperty<@Nullable DataType> listSubType = new SimpleObjectProperty<>(null);
         listSubTypeButton.setOnAction(e -> {
             Scene scene = contents.getScene();
