@@ -6,9 +6,11 @@ import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.scene.Node;
+import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -110,6 +112,20 @@ public class TestBlankMainWindow extends ApplicationTest
     }
 
     // TODO test that you can't click ok in new column dialog when it's not yet valid
+    @Test
+    @SuppressWarnings("nullness")
+    public void testAddColumnRequiresName() throws UserException, InternalException
+    {
+        testNewEntryTable();
+        clickOn(".add-column");
+        Window dialog = lookup(".ok-button").<Node>query().getScene().getWindow();
+        assertTrue(dialog.isShowing());
+        assertTrue(lookup(".new-column-name").<TextField>query().getText().isEmpty());
+        assertTrue(lookup(".error-label").<Text>query().getText().isEmpty());
+        clickOn(".ok-button");
+        assertTrue(dialog.isShowing());
+        assertFalse(lookup(".error-label").<Text>query().getText().isEmpty());
+    }
 
     @Property(trials = 10)
     public void propAddColumnToEntryTable(@When(seed=-7087735576975592678L) @From(GenDataType.class) DataType dataType) throws UserException, InternalException

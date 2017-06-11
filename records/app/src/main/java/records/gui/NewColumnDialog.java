@@ -22,6 +22,7 @@ import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.NumericLiteral;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.gui.ErrorLabel;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
@@ -35,6 +36,7 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
     private final VBox contents;
     private final TypeSelectionPane typeSelectionPane;
     private final ExpressionEditor defaultValueEditor;
+    private final ErrorLabel errorLabel;
 
     @OnThread(Tag.FXPlatform)
     public NewColumnDialog(TableManager tableManager)
@@ -47,10 +49,14 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
         typeSelectionPane = new TypeSelectionPane(tableManager.getTypeManager());
         defaultValueEditor = new ExpressionEditor(new NumericLiteral(0, null), null, typeSelectionPane.selectedType(), tableManager, e -> {});
         Label nameLabel = new Label(TranslationUtility.getString("newcolumn.name"));
-        contents.getChildren().add(new Row(nameLabel, name));
-        contents.getChildren().add(new Separator());
-        contents.getChildren().add(typeSelectionPane.getNode());
-        contents.getChildren().addAll(new Separator(), new HBox(new Label(TranslationUtility.getString("newcolumn.defaultvalue")), defaultValueEditor.getContainer()));
+        errorLabel = new ErrorLabel();
+        contents.getChildren().addAll(
+                new Row(nameLabel, name),
+                new Separator(),
+                typeSelectionPane.getNode(),
+                new Separator(),
+                new HBox(new Label(TranslationUtility.getString("newcolumn.defaultvalue")), defaultValueEditor.getContainer()),
+                errorLabel);
 
         setResultConverter(this::makeResult);
 
@@ -63,8 +69,16 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
         getDialogPane().setContent(contents);
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
         getDialogPane().lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, e -> {
-            if (getSelectedType() == null)
+            if (name.getText().trim().isEmpty())
+            {
                 e.consume();
+                errorLabel.setText(TranslationUtility.getString("column.name.required"));
+            }
+            if (getSelectedType() == null)
+            {
+                // TODO Show error
+                e.consume();
+            }
         });
         getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
 
