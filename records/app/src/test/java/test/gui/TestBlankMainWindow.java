@@ -111,7 +111,6 @@ public class TestBlankMainWindow extends ApplicationTest
         assertTrue(MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().isEmpty());
     }
 
-    // TODO test that you can't click ok in new column dialog when it's not yet valid
     @Test
     @SuppressWarnings("nullness")
     public void testAddColumnRequiresName() throws UserException, InternalException
@@ -146,9 +145,15 @@ public class TestBlankMainWindow extends ApplicationTest
     {
         dataType.apply(new DataTypeVisitor<Void>()
         {
+            @SuppressWarnings("nullness") // We'll accept the exception as it will fail the test
             private void clickOnSub(String subQuery)
             {
-                clickOn(new NodeQueryImpl().from(root).lookup(subQuery).<Node>query());
+                clickOn(lookupSub(subQuery));
+            }
+
+            private @Nullable Node lookupSub(String subQuery)
+            {
+                return new NodeQueryImpl().from(root).lookup(subQuery).<Node>query();
             }
 
             @Override
@@ -193,6 +198,22 @@ public class TestBlankMainWindow extends ApplicationTest
             public Void tuple(List<DataType> inner) throws InternalException, UserException
             {
                 clickOnSub(".id-type-tuple");
+                // Should start as pair:
+                assertNotNull(lookupSub(".type-tuple-element-0"));
+                assertNotNull(lookupSub(".type-tuple-element-1"));
+                assertNull(lookupSub(".type-tuple-element-2"));
+                for (int i = 2; i < inner.size(); i++)
+                {
+                    clickOnSub(".id-type-tuple-more");
+                }
+                // TODO check you can't click OK yet
+                for (int i = 0; i < inner.size(); i++)
+                {
+                    assertNotNull(lookupSub(".type-tuple-element-" + i));
+                    clickOnSub(".type-tuple-element-" + i);
+                    WaitForAsyncUtils.waitForFxEvents();
+                    clickForDataType(rootNode(window(Window::isFocused)), inner.get(i));
+                }
                 return null;
             }
 
@@ -200,6 +221,8 @@ public class TestBlankMainWindow extends ApplicationTest
             public Void array(@Nullable DataType inner) throws InternalException, UserException
             {
                 clickOnSub(".id-type-list-of");
+                // TODO check that clicking OK is not valid at this point
+
                 clickOnSub(".type-list-of-set");
                 WaitForAsyncUtils.waitForFxEvents();
                 //targetWindow(Window::isFocused);
@@ -212,6 +235,8 @@ public class TestBlankMainWindow extends ApplicationTest
         });
 
         // We press OK in this method because if we've recursed, we have one dialog per recursion to dismiss:
-        clickOn(new NodeQueryImpl().from(rootNode(window(Window::isFocused))).lookup(".ok-button").<Node>query());
+        Window window = window(Window::isFocused);
+        clickOn(new NodeQueryImpl().from(rootNode(window)).lookup(".ok-button").<Node>query());
+        assertFalse(window.isShowing());
     }
 }

@@ -6,4 +6,5 @@ class Assert
 {
     public static void assertEquals(@Nullable Object expected, @Nullable Object actual);
     public static void assertNotNull(@Nullable Object value);
+    public static void assertNull(@Nullable Object value);
 }

@@ -22,6 +22,7 @@ import javafx.scene.control.ToggleGroup;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
+import javafx.stage.Window;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -40,6 +41,7 @@ import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
@@ -101,23 +103,25 @@ public class TypeSelectionPane
         taggedComboBox.disableProperty().bind(taggedNotSelected);
         newTaggedTypeButton.disableProperty().bind(taggedNotSelected);
 
-        Button extendTupleButton = new Button(TranslationUtility.getString("type.tuple.more"));
-        Button shrinkTupleButton = new Button(TranslationUtility.getString("type.tuple.less"));
         ObservableList<ObservableObjectValue<@Nullable DataType>> tupleTypes = FXCollections.observableArrayList();
         ObservableList<Label> commas = FXCollections.observableArrayList();
-        FlowPane tupleTypesPane = new FlowPane(new Label("("), new HBox(new Label(")"), shrinkTupleButton, extendTupleButton));
+        FlowPane tupleTypesPane = new FlowPane();
         ObjectProperty<@Nullable DataType> tupleType = new SimpleObjectProperty<>(null);
-        FXUtility.listen(tupleTypes, c -> {
+        FXPlatformRunnable recalcTupleType = () -> {
             List<@NonNull DataType> types = new ArrayList<>();
             for (ObservableObjectValue<@Nullable DataType> obsType : tupleTypes)
             {
                 DataType type = obsType.get();
                 if (type == null)
+                {
+                    tupleType.setValue(null);
                     return;
+                }
                 types.add(type);
             }
             tupleType.setValue(DataType.tuple(types));
-        });
+        };
+        FXUtility.listen(tupleTypes, c -> recalcTupleType.run());
         FXUtility.listen(commas, c -> {
             for (int i = 0; i < commas.size(); i++)
             {
@@ -125,12 +129,16 @@ public class TypeSelectionPane
             }
         });
         tupleNotSelected = addType("type.tuple", tupleType,  tupleTypesPane);
-        extendTupleButton.disableProperty().bind(tupleNotSelected);
-        shrinkTupleButton.disableProperty().bind(tupleNotSelected);
+
 
         FXPlatformRunnable addTupleType = () -> {
             Pair<Button, ObservableObjectValue<@Nullable DataType>> typeButton = makeTypeButton(typeManager);
             typeButton.getFirst().disableProperty().bind(tupleNotSelected);
+            // For testing purposes, to identify the different buttons:
+            typeButton.getFirst().getStyleClass().add("type-tuple-element-" + tupleTypes.size());
+            FXUtility.addChangeListenerPlatform(typeButton.getSecond(), x -> {
+                recalcTupleType.run();
+            });
             tupleTypes.add(typeButton.getSecond());
             Label comma = new Label(",");
             commas.add(comma);
@@ -146,11 +154,16 @@ public class TypeSelectionPane
                 tupleTypesPane.getChildren().remove(tupleTypesPane.getChildren().size() - 2);
             }
         };
+
+        Button extendTupleButton = GUI.button("type.tuple.more", addTupleType);
+        Button shrinkTupleButton = GUI.button("type.tuple.less", removeTupleType);
+        extendTupleButton.disableProperty().bind(tupleNotSelected);
+        shrinkTupleButton.disableProperty().bind(tupleNotSelected);
+        tupleTypesPane.getChildren().setAll(new Label("("), new HBox(new Label(")"), shrinkTupleButton, extendTupleButton));
+
         // Make it a pair by default:
         addTupleType.run();
         addTupleType.run();
-        extendTupleButton.setOnAction(e -> addTupleType.run());
-        shrinkTupleButton.setOnAction(e -> removeTupleType.run());
 
 
         Pair<Button, ObservableObjectValue<@Nullable DataType>> listSubType = makeTypeButton(typeManager);
@@ -176,6 +189,12 @@ public class TypeSelectionPane
                 listSubType.setValue(newValue);
             @Nullable DataType dataType = listSubType.get();
             listSubTypeButton.setText(dataType == null ? TranslationUtility.getString("type.select") : dataType.toString());
+            if (scene != null)
+            {
+                Window window = scene.getWindow();
+                if (window != null)
+                    window.sizeToScene();
+            }
         });
         return new Pair<>(listSubTypeButton, listSubType);
     }
