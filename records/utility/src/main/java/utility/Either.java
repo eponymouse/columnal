@@ -3,6 +3,7 @@ package utility;
 import javafx.scene.layout.Region;
 import org.checkerframework.checker.nullness.qual.Nullable;
 
+import java.util.function.Consumer;
 import java.util.function.Function;
 
 /**
@@ -38,5 +39,14 @@ public class Either<A, B>
             return withLeft.apply(a);
         else
             return withRight.apply(b);
+    }
+
+    @SuppressWarnings("nullness") // No annotation to explain this is safe
+    public void either_(Consumer<A> withLeft, Consumer<B> withRight)
+    {
+        if (isA)
+            withLeft.accept(a);
+        else
+            withRight.accept(b);
     }
 }

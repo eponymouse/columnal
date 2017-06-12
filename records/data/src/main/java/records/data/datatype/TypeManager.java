@@ -77,6 +77,7 @@ public class TypeManager
         }
         else
         {
+            // TODO run sanity check for duplicate tag type names
             DataType newType = DataType.tagged(idealTypeId, tagTypes);
             knownTypes.put(idealTypeId, newType);
             return newType;

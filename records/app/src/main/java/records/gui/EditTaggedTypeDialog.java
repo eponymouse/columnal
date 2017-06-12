@@ -9,14 +9,20 @@ import javafx.scene.control.Separator;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.TagType;
 import records.data.datatype.TypeManager;
+import records.error.InternalException;
+import records.gui.ErrorableTextField.ConversionResult;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
+import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.TranslationUtility;
@@ -33,7 +39,7 @@ import java.util.Optional;
  * so there is no need for the caller to worry about that.
  */
 @OnThread(Tag.FXPlatform)
-public class EditTaggedTypeDialog extends Dialog<Void>
+public class EditTaggedTypeDialog extends ErrorableDialog<DataType>
 {
     private final VBox tagsList;
     private final ErrorableTextField<String> typeName;
@@ -46,7 +52,10 @@ public class EditTaggedTypeDialog extends Dialog<Void>
         tagsList = new VBox();
         tagInfo = new ArrayList<>();
         typeName = new ErrorableTextField<String>(name -> {
-            if (typeManager.lookupType(name) == null)
+            name = name.trim();
+            if (name.isEmpty())
+                return ErrorableTextField.ConversionResult.<@NonNull String>error(TranslationUtility.getString("taggedtype.name.missing"));
+            else if (typeManager.lookupType(name) == null)
                 return ErrorableTextField.ConversionResult.success(name);
             else
                 return ErrorableTextField.ConversionResult.<@NonNull String>error(TranslationUtility.getString("taggedtype.exists", name));
@@ -59,19 +68,50 @@ public class EditTaggedTypeDialog extends Dialog<Void>
         });
 
         setResizable(true);
-        getDialogPane().setContent(new VBox(new HBox(GUI.label("taggedtype.name"), typeName.getNode()), new Separator(), tagsList, addButton));
-        getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
-        setResultConverter(bt -> {
-            if (bt == ButtonType.OK)
+        getDialogPane().getStylesheets().addAll(
+            FXUtility.getStylesheet("general.css"),
+            FXUtility.getStylesheet("dialogs.css"),
+            FXUtility.getStylesheet("type-selection-pane.css")
+        );
+        getDialogPane().setContent(new VBox(new HBox(GUI.label("taggedtype.name"), typeName.getNode()), new Separator(), tagsList, addButton, getErrorLabel()));
+    }
+
+    @Override
+    protected Either<String, DataType> calculateResult()
+    {
+        @Nullable String name = typeName.valueProperty().get();
+        if (name == null)
+        {
+            return Either.left(TranslationUtility.getString("taggedtype.error.name.invalid"));
+        }
+        if (tagInfo.isEmpty())
+        {
+            return Either.left(TranslationUtility.getString("taggedtype.error.empty"));
+        }
+
+        List<TagType<DataType>> tagTypes = new ArrayList<>();
+        for (TagInfo info : tagInfo)
+        {
+            Either<@Localized String, TagType<DataType>> r = info.calculateResult();
+            @Nullable @Localized String err = r.<@Nullable @Localized String>either(e -> e, t -> {
+                tagTypes.add(t);
+                return null;
+            });
+            if (err != null)
             {
-                // Need at least one tag to be valid:
-                if (!tagInfo.isEmpty())
-                {
-                    // TODO check name is valid and unused
-                }
+                return Either.left(err);
             }
-            return null;
-        });
+        }
+        // TODO check for duplicate tag names
+
+        try
+        {
+            return Either.right(typeManager.registerTaggedType(name, tagTypes));
+        }
+        catch (InternalException e)
+        {
+            return Either.left(e.getLocalizedMessage());
+        }
     }
 
     private void sizeToFit(@UnknownInitialization(Object.class) EditTaggedTypeDialog this)
@@ -96,7 +136,10 @@ public class EditTaggedTypeDialog extends Dialog<Void>
         {
             tagName = new ErrorableTextField<String>(name -> {
                 // TODO check if tag name is valid
-                return ErrorableTextField.ConversionResult.<@NonNull String>error("");
+                if (name.trim().isEmpty())
+                    return ErrorableTextField.ConversionResult.<@NonNull String>error("taggedtype.error.tagName.empty");
+                else
+                    return ConversionResult.success(name.trim());
             });
             Pair<Button, ObservableObjectValue<@Nullable Optional<DataType>>> subTypeBits = TypeSelectionPane.makeTypeButton(typeManager, true);
             addSubType = subTypeBits.getFirst();
@@ -113,5 +156,20 @@ public class EditTaggedTypeDialog extends Dialog<Void>
 
         }
 
+        public Either<String, TagType<DataType>> calculateResult()
+        {
+            @Nullable String name = tagName.valueProperty().getValue();
+            if (name == null)
+            {
+                return Either.left("taggedtype.error.tagName.invalid");
+            }
+            @Nullable Optional<DataType> innerType = subType.get();
+            // Not actually sure this can ever occur, but no harm in handling it:
+            if (innerType == null)
+            {
+                return Either.left("taggedtype.error.tagType.invalid");
+            }
+            return Either.right(new DataType.TagType<>(name, innerType.orElse(null)));
+        }
     }
 }

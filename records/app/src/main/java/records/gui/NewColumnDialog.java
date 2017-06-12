@@ -11,6 +11,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Modality;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -18,11 +19,14 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.gui.NewColumnDialog.NewColumnDetails;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.NumericLiteral;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.gui.ErrorLabel;
+import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
@@ -32,13 +36,12 @@ import java.util.Optional;
  * Created by neil on 20/03/2017.
  */
 @OnThread(Tag.FXPlatform)
-public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
+public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
 {
     private final TextField name;
     private final VBox contents;
     private final TypeSelectionPane typeSelectionPane;
     private final ExpressionEditor defaultValueEditor;
-    private final ErrorLabel errorLabel;
 
     @OnThread(Tag.FXPlatform)
     public NewColumnDialog(TableManager tableManager)
@@ -51,16 +54,13 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
         typeSelectionPane = new TypeSelectionPane(tableManager.getTypeManager());
         defaultValueEditor = new ExpressionEditor(new NumericLiteral(0, null), null, FXUtility.<@Nullable Optional<DataType>, @Nullable DataType>mapBindingEager(typeSelectionPane.selectedType(), o -> o == null ? null : o.orElse(null)), tableManager, e -> {});
         Label nameLabel = new Label(TranslationUtility.getString("newcolumn.name"));
-        errorLabel = new ErrorLabel();
         contents.getChildren().addAll(
                 new Row(nameLabel, name),
                 new Separator(),
                 typeSelectionPane.getNode(),
                 new Separator(),
                 new HBox(new Label(TranslationUtility.getString("newcolumn.defaultvalue")), defaultValueEditor.getContainer()),
-                errorLabel);
-
-        setResultConverter(this::makeResult);
+                getErrorLabel());
 
         setResizable(true);
         getDialogPane().getStylesheets().addAll(
@@ -69,20 +69,6 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
                 FXUtility.getStylesheet("new-column-dialog.css")
         );
         getDialogPane().setContent(contents);
-        getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
-        getDialogPane().lookupButton(ButtonType.OK).addEventFilter(ActionEvent.ACTION, e -> {
-            if (name.getText().trim().isEmpty())
-            {
-                e.consume();
-                errorLabel.setText(TranslationUtility.getString("column.name.required"));
-            }
-            if (getSelectedType() == null)
-            {
-                // TODO Show error
-                e.consume();
-            }
-        });
-        getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
 
         initModality(Modality.NONE);
         setOnShown(e -> {
@@ -99,18 +85,23 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
         return maybeType == null ? null : maybeType.orElse(null);
     }
 
-    @RequiresNonNull({"typeSelectionPane", "name"})
-    private @Nullable NewColumnDetails makeResult(@UnderInitialization(Dialog.class) NewColumnDialog this, ButtonType bt)
+    protected Either<@Localized String, NewColumnDetails> calculateResult()
     {
-        if (bt == ButtonType.OK)
+        if (name.getText().trim().isEmpty())
         {
-            @Nullable DataType selectedType = getSelectedType();
-            if (selectedType == null) // Shouldn't happen given our event filter, but only reasonable option is to back out and act like cancel:
-                return null;
-            return new NewColumnDetails(name.getText(), selectedType, DataTypeUtility.value(""));
+            return Either.left(TranslationUtility.getString("column.name.required"));
+        }
+
+        // Should getSelectedType return an Either, too?
+        @Nullable DataType selectedType = getSelectedType();
+        if (selectedType == null)
+        {
+            return Either.left(TranslationUtility.getString("column.type.invalid"));
         }
         else
-            return null;
+        {
+            return Either.right(new NewColumnDetails(name.getText(), selectedType, DataTypeUtility.value("")));
+        }
     }
 
     public static class NewColumnDetails

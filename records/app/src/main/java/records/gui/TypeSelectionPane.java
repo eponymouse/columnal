@@ -102,14 +102,23 @@ public class TypeSelectionPane
 
         ComboBox<DataType> taggedComboBox = new ComboBox<>();
         taggedComboBox.getStyleClass().add("type-tagged-combo");
+        FXPlatformRunnable updateTaggedCombo = () -> {
+            for (Entry<TypeId, DataType> taggedType : typeManager.getKnownTaggedTypes().entrySet())
+            {
+                taggedComboBox.getItems().add(taggedType.getValue());
+            }
+        };
         Button newTaggedTypeButton = GUI.button("type.tagged.new", () -> {
-            new EditTaggedTypeDialog(typeManager).showAndWait();
+            @Nullable DataType newType = new EditTaggedTypeDialog(typeManager).showAndWait().orElse(null);
+            updateTaggedCombo.run();
+            if (newType != null)
+            {
+                taggedComboBox.getSelectionModel().select(newType);
+            }
         });
         taggedNotSelected = addType("type.tagged", FXUtility.<@Nullable DataType, @Nullable Optional<DataType>>mapBindingEager(taggedComboBox.valueProperty(), x -> x == null ? null : Optional.of(x)), taggedComboBox, newTaggedTypeButton);
-        for (Entry<TypeId, DataType> taggedType : typeManager.getKnownTaggedTypes().entrySet())
-        {
-            taggedComboBox.getItems().add(taggedType.getValue());
-        }
+
+        updateTaggedCombo.run();
         taggedComboBox.getSelectionModel().selectFirst();
         taggedComboBox.disableProperty().bind(taggedNotSelected);
         newTaggedTypeButton.disableProperty().bind(taggedNotSelected);
@@ -192,7 +201,7 @@ public class TypeSelectionPane
     {
         Button listSubTypeButton = new Button(TranslationUtility.getString("type.select"));
         listSubTypeButton.getStyleClass().add("type-select-button");
-        SimpleObjectProperty<@Nullable Optional<DataType>> listSubType = new SimpleObjectProperty<>(null);
+        SimpleObjectProperty<@Nullable Optional<DataType>> listSubType = new SimpleObjectProperty<>(emptyAllowed ? Optional.empty() : null);
         listSubTypeButton.setOnAction(e -> {
             Scene scene = listSubTypeButton.getScene();
             @Nullable Optional<DataType> newValue = new TypeDialog(scene == null ? null : scene.getWindow(), typeManager, emptyAllowed).showAndWait().orElse(null);
