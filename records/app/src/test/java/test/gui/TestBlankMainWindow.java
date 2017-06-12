@@ -128,7 +128,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     }
 
     @Property(trials = 10)
-    public void propAddColumnToEntryTable(@When(seed=-7087735576975592678L) @From(GenDataType.class) DataType dataType) throws UserException, InternalException
+    public void propAddColumnToEntryTable(@When(seed=-4729861188610523492L) @From(GenDataType.class) DataType dataType) throws UserException, InternalException
     {
         testNewEntryTable();
         clickOn(".add-column");
@@ -194,6 +194,44 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             public Void tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
                 clickOnSub(".id-type-tagged");
+                ComboBox<DataType> combo = (ComboBox<DataType>) lookupSub(".type-tagged-combo");
+                if (combo == null)
+                    return null; // Should then fail test
+                @Nullable DataType target = combo.getItems().stream()
+                        .filter(dt ->
+                        {
+                            try
+                            {
+                                return dt.isTagged() && dt.getTagTypes().equals(tags);
+                            }
+                            catch (InternalException e)
+                            {
+                                throw new RuntimeException(e);
+                            }
+                        })
+                        .findFirst().orElse(null);
+                if (target == null)
+                {
+                    clickOnSub(".id-type-tagged-new");
+                    // TODO fill in tag types details
+                    target = combo.getItems().stream()
+                            .filter(dt ->
+                            {
+                                try
+                                {
+                                    return dt.isTagged() && dt.getTagTypes().equals(tags);
+                                }
+                                catch (InternalException e)
+                                {
+                                    throw new RuntimeException(e);
+                                }
+                            })
+                            .findFirst().orElse(null);
+                }
+                if (target != null)
+                {
+                    selectGivenComboBoxItem(combo, target);
+                }
                 return null;
             }
 

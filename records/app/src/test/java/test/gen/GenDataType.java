@@ -25,9 +25,20 @@ import java.util.List;
  */
 public class GenDataType extends Generator<DataType>
 {
+
+    private final TypeManager typeManager;
+
     public GenDataType()
     {
         super(DataType.class);
+        try
+        {
+            typeManager = new TypeManager(new UnitManager());
+        }
+        catch (InternalException | UserException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
@@ -65,6 +76,10 @@ public class GenDataType extends Generator<DataType>
 
     public static class GenTaggedType extends GenDataType
     {
+        public GenTaggedType() throws UserException, InternalException
+        {
+        }
+
         @Override
         public DataType generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
         {
@@ -87,7 +102,6 @@ public class GenDataType extends Generator<DataType>
         {
             types.add(r.nextInt(types.size() + 1), null);
         }
-        TypeManager typeManager = new TypeManager(new UnitManager());
         return typeManager.registerTaggedType("A", Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<DataType>("T" + i, t)));
     }
 }

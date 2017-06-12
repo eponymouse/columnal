@@ -48,6 +48,7 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Optional;
 
 /**
  * A pane which shows a set of radio button and sub-items which allow you to
@@ -58,26 +59,35 @@ public class TypeSelectionPane
 {
     private final ToggleGroup typeGroup;
     private final VBox contents;
-    private final SimpleObjectProperty<@Nullable DataType> selectedType = new SimpleObjectProperty<>(DataType.NUMBER);
+    private final SimpleObjectProperty<@Nullable Optional<DataType>> selectedType = new SimpleObjectProperty<>(Optional.of(DataType.NUMBER));
     // Stored as fields to prevent GC.  We store not because we bind disable to it:
     private final BooleanBinding numberNotSelected, dateNotSelected, taggedNotSelected, tupleNotSelected, listNotSelected;
-    private final IdentityHashMap<Toggle, ObservableValue<@Nullable DataType>> types = new IdentityHashMap<>();
+    private final IdentityHashMap<Toggle, ObservableValue<@Nullable Optional<DataType>>> types = new IdentityHashMap<>();
 
     public TypeSelectionPane(TypeManager typeManager)
+    {
+        this(typeManager, false);
+    }
+
+    public TypeSelectionPane(TypeManager typeManager, boolean emptyAllowed)
     {
         typeGroup = new ToggleGroup();
         contents = new VBox();
         contents.getStylesheets().add(FXUtility.getStylesheet("type-selection-pane.css"));
         contents.getStyleClass().add("type-selection-pane");
 
+        if (emptyAllowed)
+        {
+            addType("type.none", new ReadOnlyObjectWrapper<>(Optional.empty()));
+        }
         ErrorableTextField<Unit> units = new ErrorableTextField<Unit>(unitSrc ->
             ErrorableTextField.validate(() -> typeManager.getUnitManager().loadUse(unitSrc))
         );
         numberNotSelected = addType("type.number", new NumberTypeBinding(units.valueProperty(), typeManager), new Label(TranslationUtility.getString("newcolumn.number.units")), units.getNode());
         units.getNode().getStyleClass().add("type-number-units");
         units.disableProperty().bind(numberNotSelected);
-        addType("type.text", new ReadOnlyObjectWrapper<>(DataType.TEXT));
-        addType("type.boolean", new ReadOnlyObjectWrapper<>(DataType.BOOLEAN));
+        addType("type.text", new ReadOnlyObjectWrapper<>(Optional.of(DataType.TEXT)));
+        addType("type.boolean", new ReadOnlyObjectWrapper<>(Optional.of(DataType.BOOLEAN)));
         ComboBox<DataType> dateTimeComboBox = new ComboBox<>();
         dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)));
         dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)));
@@ -87,15 +97,15 @@ public class TypeSelectionPane
         dateTimeComboBox.getItems().addAll(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)));
         dateTimeComboBox.getSelectionModel().selectFirst();
         dateTimeComboBox.getStyleClass().add("type-datetime-combo");
-        dateNotSelected = addType("type.datetime", dateTimeComboBox.valueProperty(), dateTimeComboBox);
+        dateNotSelected = addType("type.datetime", FXUtility.<@Nullable DataType, @Nullable Optional<DataType>>mapBindingEager(dateTimeComboBox.valueProperty(), x -> x == null ? null : Optional.of(x)), dateTimeComboBox);
         dateTimeComboBox.disableProperty().bind(dateNotSelected);
 
         ComboBox<DataType> taggedComboBox = new ComboBox<>();
-        Button newTaggedTypeButton = new Button(TranslationUtility.getString("type.tagged.new"));
-        newTaggedTypeButton.setOnAction(e -> {
+        taggedComboBox.getStyleClass().add("type-tagged-combo");
+        Button newTaggedTypeButton = GUI.button("type.tagged.new", () -> {
             new EditTaggedTypeDialog(typeManager).showAndWait();
         });
-        taggedNotSelected = addType("type.tagged", taggedComboBox.valueProperty(), taggedComboBox, newTaggedTypeButton);
+        taggedNotSelected = addType("type.tagged", FXUtility.<@Nullable DataType, @Nullable Optional<DataType>>mapBindingEager(taggedComboBox.valueProperty(), x -> x == null ? null : Optional.of(x)), taggedComboBox, newTaggedTypeButton);
         for (Entry<TypeId, DataType> taggedType : typeManager.getKnownTaggedTypes().entrySet())
         {
             taggedComboBox.getItems().add(taggedType.getValue());
@@ -104,15 +114,16 @@ public class TypeSelectionPane
         taggedComboBox.disableProperty().bind(taggedNotSelected);
         newTaggedTypeButton.disableProperty().bind(taggedNotSelected);
 
-        ObservableList<ObservableObjectValue<@Nullable DataType>> tupleTypes = FXCollections.observableArrayList();
+        ObservableList<ObservableObjectValue<@Nullable Optional<DataType>>> tupleTypes = FXCollections.observableArrayList();
         ObservableList<Label> commas = FXCollections.observableArrayList();
         FlowPane tupleTypesPane = new FlowPane();
-        ObjectProperty<@Nullable DataType> tupleType = new SimpleObjectProperty<>(null);
+        ObjectProperty<@Nullable Optional<DataType>> tupleType = new SimpleObjectProperty<>(null);
         FXPlatformRunnable recalcTupleType = () -> {
             List<@NonNull DataType> types = new ArrayList<>();
-            for (ObservableObjectValue<@Nullable DataType> obsType : tupleTypes)
+            for (ObservableObjectValue<@Nullable Optional<DataType>> obsType : tupleTypes)
             {
-                DataType type = obsType.get();
+                @Nullable Optional<DataType> opt = obsType.get();
+                @Nullable DataType type = opt == null ? null : opt.orElse(null);
                 if (type == null)
                 {
                     tupleType.setValue(null);
@@ -120,7 +131,7 @@ public class TypeSelectionPane
                 }
                 types.add(type);
             }
-            tupleType.setValue(DataType.tuple(types));
+            tupleType.setValue(Optional.of(DataType.tuple(types)));
         };
         FXUtility.listen(tupleTypes, c -> recalcTupleType.run());
         FXUtility.listen(commas, c -> {
@@ -133,7 +144,7 @@ public class TypeSelectionPane
 
 
         FXPlatformRunnable addTupleType = () -> {
-            Pair<Button, ObservableObjectValue<@Nullable DataType>> typeButton = makeTypeButton(typeManager);
+            Pair<Button, ObservableObjectValue<@Nullable Optional<DataType>>> typeButton = makeTypeButton(typeManager, false);
             typeButton.getFirst().disableProperty().bind(tupleNotSelected);
             // For testing purposes, to identify the different buttons:
             typeButton.getFirst().getStyleClass().add("type-tuple-element-" + tupleTypes.size());
@@ -167,9 +178,9 @@ public class TypeSelectionPane
         addTupleType.run();
 
 
-        Pair<Button, ObservableObjectValue<@Nullable DataType>> listSubType = makeTypeButton(typeManager);
+        Pair<Button, ObservableObjectValue<@Nullable Optional<DataType>>> listSubType = makeTypeButton(typeManager, false);
         listSubType.getFirst().getStyleClass().add("type-list-of-set");
-        listNotSelected = addType("type.list.of", FXUtility.<@Nullable DataType, @Nullable DataType>mapBindingEager(listSubType.getSecond(), inner -> inner == null ? null : DataType.array(inner)), listSubType.getFirst());
+        listNotSelected = addType("type.list.of", FXUtility.<@Nullable Optional<DataType>, @Nullable Optional<DataType>>mapBindingEager(listSubType.getSecond(), inner -> inner == null || inner.isPresent() ? null : Optional.of(DataType.array(inner.get()))), listSubType.getFirst());
         listSubType.getFirst().disableProperty().bind(listNotSelected);
 
         FXUtility.addChangeListenerPlatformNN(typeGroup.selectedToggleProperty(), toggle -> {
@@ -177,20 +188,21 @@ public class TypeSelectionPane
         });
     }
 
-    @RequiresNonNull("contents")
-    private Pair<Button, ObservableObjectValue<@Nullable DataType>> makeTypeButton(@UnknownInitialization(Object.class) TypeSelectionPane this, TypeManager typeManager)
+    public static Pair<Button, ObservableObjectValue<@Nullable Optional<DataType>>> makeTypeButton(TypeManager typeManager, boolean emptyAllowed)
     {
         Button listSubTypeButton = new Button(TranslationUtility.getString("type.select"));
         listSubTypeButton.getStyleClass().add("type-select-button");
-        SimpleObjectProperty<@Nullable DataType> listSubType = new SimpleObjectProperty<>(null);
+        SimpleObjectProperty<@Nullable Optional<DataType>> listSubType = new SimpleObjectProperty<>(null);
         listSubTypeButton.setOnAction(e -> {
-            Scene scene = contents.getScene();
-            @Nullable DataType newValue = new TypeDialog(scene == null ? null : scene.getWindow(), typeManager).showAndWait().orElse(null);
+            Scene scene = listSubTypeButton.getScene();
+            @Nullable Optional<DataType> newValue = new TypeDialog(scene == null ? null : scene.getWindow(), typeManager, emptyAllowed).showAndWait().orElse(null);
             // Don't overwrite existing one if they cancelled:
             if (newValue != null)
                 listSubType.setValue(newValue);
-            @Nullable DataType dataType = listSubType.get();
-            listSubTypeButton.setText(dataType == null ? TranslationUtility.getString("type.select") : dataType.toString());
+            @Nullable Optional<DataType> dataType = listSubType.get();
+            listSubTypeButton.setText(
+                    dataType == null ? TranslationUtility.getString("type.select") :
+                    (dataType.isPresent() ? dataType.get().toString() : TranslationUtility.getString("type.none")));
             if (scene != null)
             {
                 Window window = scene.getWindow();
@@ -205,7 +217,7 @@ public class TypeSelectionPane
     private void updateSelectedType(@UnderInitialization(Object.class) TypeSelectionPane this)
     {
         // This bit shouldn't be null, but we know what to do in that case: set selectedType to null:
-        @Nullable ObservableValue<@Nullable DataType> dataTypeObservableValue = types.get(typeGroup.getSelectedToggle());
+        @Nullable ObservableValue<@Nullable Optional<DataType>> dataTypeObservableValue = types.get(typeGroup.getSelectedToggle());
         selectedType.setValue(dataTypeObservableValue == null ? null : dataTypeObservableValue.getValue());
     }
 
@@ -219,7 +231,7 @@ public class TypeSelectionPane
      * @return An observable which is *false* when this type is selected (useful to disable sub-items) and *true* when it is *not* selected
      */
     @RequiresNonNull({"contents", "typeGroup", "types"})
-    private BooleanBinding addType(@UnderInitialization(Object.class) TypeSelectionPane this, @LocalizableKey String typeKey, ObservableValue<@Nullable DataType> calculateType, Node... furtherDetails)
+    private BooleanBinding addType(@UnderInitialization(Object.class) TypeSelectionPane this, @LocalizableKey String typeKey, ObservableValue<@Nullable Optional<DataType>> calculateType, Node... furtherDetails)
     {
         RadioButton radioButton = new RadioButton(TranslationUtility.getString(typeKey));
         radioButton.getStyleClass().add("id-" + typeKey.replace(".", "-"));
@@ -240,12 +252,14 @@ public class TypeSelectionPane
         return contents;
     }
 
-    public ObservableObjectValue<@Nullable DataType> selectedType()
+    // null means not valid
+    // Optional.empty() means that "None" was selected
+    public ObservableObjectValue<@Nullable Optional<DataType>> selectedType()
     {
         return selectedType;
     }
 
-    private static class NumberTypeBinding extends ObjectBinding<@Nullable DataType>
+    private static class NumberTypeBinding extends ObjectBinding<@Nullable Optional<DataType>>
     {
         private final @NonNull ObjectExpression<@Nullable Unit> units;
         private final TypeManager typeManager;
@@ -258,12 +272,12 @@ public class TypeSelectionPane
         }
 
         @Override
-        protected @Nullable DataType computeValue()
+        protected @Nullable Optional<DataType> computeValue()
         {
             Unit u = units.get();
             if (u == null)
                 return null;
-            return DataType.number(new NumberInfo(u, null));
+            return Optional.of(DataType.number(new NumberInfo(u, null)));
         }
     }
 }

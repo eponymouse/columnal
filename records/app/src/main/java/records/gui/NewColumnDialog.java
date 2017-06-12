@@ -26,6 +26,8 @@ import utility.gui.ErrorLabel;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
+import java.util.Optional;
+
 /**
  * Created by neil on 20/03/2017.
  */
@@ -47,7 +49,7 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
         name = new TextField();
         name.getStyleClass().add("new-column-name");
         typeSelectionPane = new TypeSelectionPane(tableManager.getTypeManager());
-        defaultValueEditor = new ExpressionEditor(new NumericLiteral(0, null), null, typeSelectionPane.selectedType(), tableManager, e -> {});
+        defaultValueEditor = new ExpressionEditor(new NumericLiteral(0, null), null, FXUtility.<@Nullable Optional<DataType>, @Nullable DataType>mapBindingEager(typeSelectionPane.selectedType(), o -> o == null ? null : o.orElse(null)), tableManager, e -> {});
         Label nameLabel = new Label(TranslationUtility.getString("newcolumn.name"));
         errorLabel = new ErrorLabel();
         contents.getChildren().addAll(
@@ -93,7 +95,8 @@ public class NewColumnDialog extends Dialog<NewColumnDialog.NewColumnDetails>
     @RequiresNonNull({"typeSelectionPane"})
     private @Nullable DataType getSelectedType(@UnknownInitialization(Object.class) NewColumnDialog this)
     {
-        return typeSelectionPane.selectedType().get();
+        @Nullable Optional<DataType> maybeType = typeSelectionPane.selectedType().get();
+        return maybeType == null ? null : maybeType.orElse(null);
     }
 
     @RequiresNonNull({"typeSelectionPane", "name"})
