@@ -349,7 +349,7 @@ public class FXUtility
 
     public static <T, R> ObjectExpression<R> mapBindingEager(ObservableObjectValue<T> original, FXPlatformFunction<T, R> extract)
     {
-        ObjectProperty<R> binding = new SimpleObjectProperty<>();
+        ObjectProperty<R> binding = new SimpleObjectProperty<>(extract.apply(original.get()));
         addChangeListenerPlatformNN(original, x -> binding.setValue(extract.apply(x)));
         return binding;
     }
