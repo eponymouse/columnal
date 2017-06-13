@@ -15,6 +15,7 @@ import records.data.Column;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataTypeValue.DataTypeVisitorGetEx;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
@@ -86,7 +87,7 @@ public class TableDisplayUtility
 
     private static Pair<String, ColumnHandler> getDisplay(@NonNull Column column) throws UserException, InternalException
     {
-        return new Pair<>(column.getName().getRaw(), column.getType().applyGet(new DataTypeVisitorGet<ColumnHandler>()
+        return new Pair<>(column.getName().getRaw(), column.getType().<ColumnHandler, UserException>applyGet(new DataTypeVisitorGetEx<ColumnHandler, UserException>()
         {
             @Override
             @OnThread(Tag.FXPlatform)
