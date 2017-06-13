@@ -6,24 +6,18 @@ import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.scene.Node;
+import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyCodeCombination;
-import javafx.scene.input.KeyCombination;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.Window;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.junit.After;
-import org.junit.AfterClass;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
-import org.testfx.service.query.NodeQuery;
 import org.testfx.service.query.impl.NodeQueryImpl;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.datatype.DataType;
@@ -38,8 +32,6 @@ import records.gui.MainWindow;
 import test.gen.GenDataType;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformRunnable;
-import utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -125,10 +117,14 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         clickOn(".ok-button");
         assertTrue(dialog.isShowing());
         assertFalse(lookup(".error-label").<Text>query().getText().isEmpty());
+        clickOn(".new-column-name");
+        write("C");
+        clickOn(".ok-button");
+        assertFalse(dialog.isShowing());
     }
 
     @Property(trials = 10)
-    public void propAddColumnToEntryTable(@When(seed=-4729861188610523492L) @From(GenDataType.class) DataType dataType) throws UserException, InternalException
+    public void propAddColumnToEntryTable(@From(GenDataType.class) DataType dataType) throws UserException, InternalException
     {
         testNewEntryTable();
         clickOn(".add-column");
@@ -141,18 +137,28 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         assertEquals(dataType, MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getType());
     }
 
+    private void clickOnSub(Node root, String subQuery)
+    {
+        assertTrue(subQuery.startsWith("."));
+        @Nullable Node sub = new NodeQueryImpl().from(root).lookup(subQuery).<Node>query();
+        assertNotNull(subQuery, sub);
+        clickOn(sub);
+    }
+
     // Important to use the query here, as we may have nested dialogs with items with the same class
     private void clickForDataType(Node root, DataType dataType) throws InternalException, UserException
     {
         dataType.apply(new DataTypeVisitor<Void>()
         {
             @SuppressWarnings("nullness") // We'll accept the exception as it will fail the test
-            private void clickOnSub(String subQuery)
+            private void clickOnSubOfDataTypeDialog(String subQuery)
             {
-                clickOn(lookupSub(subQuery));
+                @Nullable Node sub = lookupSubOfDataTypeDialog(subQuery);
+                assertNotNull("Looked up: " + subQuery, sub);
+                clickOn(sub);
             }
 
-            private @Nullable Node lookupSub(String subQuery)
+            private @Nullable Node lookupSubOfDataTypeDialog(String subQuery)
             {
                 return new NodeQueryImpl().from(root).lookup(subQuery).<Node>query();
             }
@@ -161,23 +167,23 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             @SuppressWarnings("nullness")
             public Void number(NumberInfo numberInfo) throws InternalException, UserException
             {
-                clickOnSub(".id-type-number");
-                ((TextField)lookupSub(".type-number-units")).setText(numberInfo.getUnit().toString());
+                clickOnSubOfDataTypeDialog(".id-type-number");
+                ((TextField) lookupSubOfDataTypeDialog(".type-number-units")).setText(numberInfo.getUnit().toString());
                 return null;
             }
 
             @Override
             public Void text() throws InternalException, UserException
             {
-                clickOnSub(".id-type-text");
+                clickOnSubOfDataTypeDialog(".id-type-text");
                 return null;
             }
 
             @Override
             public Void date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                clickOnSub(".id-type-datetime");
-                @Nullable ComboBox<DataType> combo = (ComboBox<DataType>) lookupSub(".type-datetime-combo");
+                clickOnSubOfDataTypeDialog(".id-type-datetime");
+                @Nullable ComboBox<DataType> combo = (ComboBox<DataType>) lookupSubOfDataTypeDialog(".type-datetime-combo");
                 if (combo != null)
                     selectGivenComboBoxItem(combo, dataType);
                 return null;
@@ -186,15 +192,15 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             @Override
             public Void bool() throws InternalException, UserException
             {
-                clickOnSub(".id-type-boolean");
+                clickOnSubOfDataTypeDialog(".id-type-boolean");
                 return null;
             }
 
             @Override
             public Void tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
             {
-                clickOnSub(".id-type-tagged");
-                ComboBox<DataType> combo = (ComboBox<DataType>) lookupSub(".type-tagged-combo");
+                clickOnSubOfDataTypeDialog(".id-type-tagged");
+                ComboBox<DataType> combo = (ComboBox<DataType>) lookupSubOfDataTypeDialog(".type-tagged-combo");
                 if (combo == null)
                     return null; // Should then fail test
                 @Nullable DataType target = combo.getItems().stream()
@@ -212,21 +218,44 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
                         .findFirst().orElse(null);
                 if (target == null)
                 {
-                    clickOnSub(".id-type-tagged-new");
-                    // TODO fill in tag types details
+                    clickOnSubOfDataTypeDialog(".id-type-tagged-new");
+                    Node tagDialogRoot = rootNode(window(Window::isFocused));
+                    // Fill in tag types details:
+                    clickOnSub(tagDialogRoot, ".taggedtype-type-name");
+                    write(typeName.getRaw());
+                    // First add all the tags
+                    for (int i = 1; i < tags.size(); i++)
+                    {
+                        clickOnSub(tagDialogRoot, ".id-taggedtype-addTag");
+                    }
+                    // Then go fill them in:
+                    for (int i = 0; i < tags.size(); i++)
+                    {
+                        clickOnSub(tagDialogRoot, ".taggedtype-tag-name-" + i);
+                        write(tags.get(i).getName());
+                        @Nullable DataType inner = tags.get(i).getInner();
+                        if (inner != null)
+                        {
+                            clickOnSub(tagDialogRoot, ".taggedtype-tag-set-subType-" + i);
+                            clickForDataType(rootNode(window(Window::isFocused)), inner);
+                        }
+                    }
+                    // Click OK in that dialog:
+                    clickOnSub(tagDialogRoot, ".ok-button");
+
                     target = combo.getItems().stream()
-                            .filter(dt ->
+                        .filter(dt ->
+                        {
+                            try
                             {
-                                try
-                                {
-                                    return dt.isTagged() && dt.getTagTypes().equals(tags);
-                                }
-                                catch (InternalException e)
-                                {
-                                    throw new RuntimeException(e);
-                                }
-                            })
-                            .findFirst().orElse(null);
+                                return dt.isTagged() && dt.getTagTypes().equals(tags);
+                            }
+                            catch (InternalException e)
+                            {
+                                throw new RuntimeException(e);
+                            }
+                        })
+                        .findFirst().orElse(null);
                 }
                 if (target != null)
                 {
@@ -238,20 +267,20 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             @Override
             public Void tuple(List<DataType> inner) throws InternalException, UserException
             {
-                clickOnSub(".id-type-tuple");
+                clickOnSubOfDataTypeDialog(".id-type-tuple");
                 // Should start as pair:
-                assertNotNull(lookupSub(".type-tuple-element-0"));
-                assertNotNull(lookupSub(".type-tuple-element-1"));
-                assertNull(lookupSub(".type-tuple-element-2"));
+                assertNotNull(lookupSubOfDataTypeDialog(".type-tuple-element-0"));
+                assertNotNull(lookupSubOfDataTypeDialog(".type-tuple-element-1"));
+                assertNull(lookupSubOfDataTypeDialog(".type-tuple-element-2"));
                 for (int i = 2; i < inner.size(); i++)
                 {
-                    clickOnSub(".id-type-tuple-more");
+                    clickOnSubOfDataTypeDialog(".id-type-tuple-more");
                 }
                 // TODO check you can't click OK yet
                 for (int i = 0; i < inner.size(); i++)
                 {
-                    assertNotNull(lookupSub(".type-tuple-element-" + i));
-                    clickOnSub(".type-tuple-element-" + i);
+                    assertNotNull(lookupSubOfDataTypeDialog(".type-tuple-element-" + i));
+                    clickOnSubOfDataTypeDialog(".type-tuple-element-" + i);
                     WaitForAsyncUtils.waitForFxEvents();
                     clickForDataType(rootNode(window(Window::isFocused)), inner.get(i));
                 }
@@ -261,10 +290,10 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             @Override
             public Void array(@Nullable DataType inner) throws InternalException, UserException
             {
-                clickOnSub(".id-type-list-of");
+                clickOnSubOfDataTypeDialog(".id-type-list-of");
                 // TODO check that clicking OK is not valid at this point
 
-                clickOnSub(".type-list-of-set");
+                clickOnSubOfDataTypeDialog(".type-list-of-set");
                 WaitForAsyncUtils.waitForFxEvents();
                 //targetWindow(Window::isFocused);
                 if (inner != null)
@@ -277,7 +306,10 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
         // We press OK in this method because if we've recursed, we have one dialog per recursion to dismiss:
         Window window = window(Window::isFocused);
+        Text errorLabel = new NodeQueryImpl().from(rootNode(window)).lookup(".error-label").<Text>query();
         clickOn(new NodeQueryImpl().from(rootNode(window)).lookup(".ok-button").<Node>query());
+        if (errorLabel != null)
+            assertEquals("", errorLabel.getText());
         assertFalse(window.isShowing());
     }
 }

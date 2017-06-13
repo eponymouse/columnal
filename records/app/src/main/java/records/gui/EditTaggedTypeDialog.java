@@ -3,8 +3,6 @@ package records.gui;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Separator;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
@@ -60,12 +58,15 @@ public class EditTaggedTypeDialog extends ErrorableDialog<DataType>
             else
                 return ErrorableTextField.ConversionResult.<@NonNull String>error(TranslationUtility.getString("taggedtype.exists", name));
         });
+        typeName.getNode().getStyleClass().add("taggedtype-type-name");
 
         Button addButton = GUI.button("taggedtype.addTag", () -> {
-            tagInfo.add(new TagInfo());
+            tagInfo.add(new TagInfo(tagInfo.size()));
             tagsList.getChildren().setAll(tagInfo);
             sizeToFit();
         });
+        // Add one to begin with:
+        addButton.fire();
 
         setResizable(true);
         getDialogPane().getStylesheets().addAll(
@@ -129,10 +130,10 @@ public class EditTaggedTypeDialog extends ErrorableDialog<DataType>
     private class TagInfo extends HBox
     {
         private final ErrorableTextField<String> tagName;
-        private final Button addSubType;
+        private final Button setSubType;
         private ObservableObjectValue<@Nullable Optional<DataType>> subType;
 
-        public TagInfo()
+        public TagInfo(int index)
         {
             tagName = new ErrorableTextField<String>(name -> {
                 // TODO check if tag name is valid
@@ -141,15 +142,17 @@ public class EditTaggedTypeDialog extends ErrorableDialog<DataType>
                 else
                     return ConversionResult.success(name.trim());
             });
+            tagName.getNode().getStyleClass().add("taggedtype-tag-name-" + index);
             Pair<Button, ObservableObjectValue<@Nullable Optional<DataType>>> subTypeBits = TypeSelectionPane.makeTypeButton(typeManager, true);
-            addSubType = subTypeBits.getFirst();
+            setSubType = subTypeBits.getFirst();
+            setSubType.getStyleClass().add("taggedtype-tag-set-subType-" + index);
             subType = subTypeBits.getSecond();
 
             getChildren().setAll(
                 GUI.label("taggedtype.tag.name"),
                 tagName.getNode(),
                 GUI.label("taggedtype.tag.subType"),
-                addSubType
+                setSubType
             );
 
             // TODO allow dragging of this item to other positions, and/or add up/down buttons

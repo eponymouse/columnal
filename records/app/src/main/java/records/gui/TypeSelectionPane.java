@@ -189,7 +189,7 @@ public class TypeSelectionPane
 
         Pair<Button, ObservableObjectValue<@Nullable Optional<DataType>>> listSubType = makeTypeButton(typeManager, false);
         listSubType.getFirst().getStyleClass().add("type-list-of-set");
-        listNotSelected = addType("type.list.of", FXUtility.<@Nullable Optional<DataType>, @Nullable Optional<DataType>>mapBindingEager(listSubType.getSecond(), inner -> inner == null || inner.isPresent() ? null : Optional.of(DataType.array(inner.get()))), listSubType.getFirst());
+        listNotSelected = addType("type.list.of", FXUtility.<@Nullable Optional<DataType>, @Nullable Optional<DataType>>mapBindingEager(listSubType.getSecond(), inner -> inner == null || !inner.isPresent() ? null : Optional.of(DataType.array(inner.get()))), listSubType.getFirst());
         listSubType.getFirst().disableProperty().bind(listNotSelected);
 
         FXUtility.addChangeListenerPlatformNN(typeGroup.selectedToggleProperty(), toggle -> {

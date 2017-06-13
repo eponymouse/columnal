@@ -172,7 +172,7 @@ public class TypeManager
             return str + "0";
         // Don't alter first char even if digit:
         int i;
-        for (i = str.length() - 1; i > 0; i--)
+        for (i = str.length() - 1; i >= 0; i--)
         {
             if (str.charAt(i) < '0' || str.charAt(i) > '9')
             {
