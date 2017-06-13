@@ -1,6 +1,7 @@
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
+import org.checkerframework.dataflow.qual.Pure;
 
 package javafx.scene;
 class Parent
@@ -17,7 +18,7 @@ class Node
     void setClip(@Nullable Node a);
     void setEffect(@Nullable Effect e) @UnknownInitialization;
     ObservableList<String> getStyleClass() @UnknownInitialization;
-    @Nullable Scene getScene() @UnknownInitialization;
+    @Pure @Nullable Scene getScene() @UnknownInitialization;
 
     void setOnMousePressed(EventHandler<? super MouseEvent> value) @UnknownInitialization;
     void setOnMouseReleased(EventHandler<? super MouseEvent> value) @UnknownInitialization;
@@ -34,7 +35,7 @@ class Node
 }
 class Scene
 {
-    @Nullable Window getWindow();
+    @Pure @Nullable Window getWindow();
 }
 
 package javafx.scene.control;
