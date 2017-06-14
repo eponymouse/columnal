@@ -18,6 +18,8 @@ import records.data.TableManager;
 import records.data.datatype.DataTypeUtility;
 import records.grammar.GrammarUtility;
 import records.importers.ChoicePoint.ChoiceType;
+import utility.SimulationRunnable;
+import utility.SimulationSupplier;
 import utility.TaggedValue;
 import records.data.Transformation;
 import records.data.datatype.DataType;
@@ -71,10 +73,11 @@ import static org.junit.Assert.fail;
  */
 public class TestUtil
 {
-    @OnThread(Tag.Simulation)
+    @OnThread(Tag.Any)
     public static void assertValueEqual(String prefix, @Value Object a, @Value Object b) throws UserException, InternalException
     {
-        int compare = Utility.compareValues(a, b);
+        SimulationSupplier<Integer> simulationSupplier = () -> Utility.compareValues(a, b);
+        int compare = ((ExSupplier<Integer>)simulationSupplier::get).get();
         if (compare != 0)
         {
             fail(prefix + " comparing " + DataTypeUtility.valueToString(a) + " against " + DataTypeUtility.valueToString(b) + " result: " + compare);

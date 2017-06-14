@@ -1,5 +1,6 @@
 package test.gui;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -9,6 +10,7 @@ import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
 import javafx.stage.Window;
@@ -20,23 +22,37 @@ import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.service.query.impl.NodeQueryImpl;
 import org.testfx.util.WaitForAsyncUtils;
+import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeUtility;
+import records.data.datatype.DataTypeValue;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow;
+import records.gui.View;
+import test.TestUtil;
 import test.gen.GenDataType;
+import test.gen.GenTypeAndValueGen;
+import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformSupplier;
+import utility.SimulationSupplier;
+import utility.Utility;
+import utility.Workers;
+import utility.Workers.Priority;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 
 import static org.junit.Assert.*;
 
@@ -71,11 +87,55 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     // Both a test, and used as utility method.
     @Test
+    @OnThread(Tag.Any)
     public void testStartState()
     {
-        assertTrue(mainWindow.isShowing());
-        assertEquals(1, MainWindow._test_getViews().size());
-        assertTrue(MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().isEmpty());
+        assertTrue(fx(() -> mainWindow.isShowing()));
+        assertEquals(1, (int)fx(() -> MainWindow._test_getViews().size()));
+        assertTrue(fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().isEmpty()));
+    }
+
+    private static interface FXPlatformSupplierEx<T>
+    {
+        @OnThread(Tag.FXPlatform)
+        public T get() throws InternalException, UserException;
+    }
+
+    @OnThread(Tag.Any)
+    private static <T> T fx(FXPlatformSupplierEx<T> action)
+    {
+        try
+        {
+            return WaitForAsyncUtils.asyncFx(action::get).get();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @OnThread(Tag.Any)
+    private static <T> T sim(SimulationSupplier<T> action)
+    {
+        try
+        {
+            CompletableFuture<T> f = new CompletableFuture<>();
+            Workers.onWorkerThread("Test.sim", Priority.FETCH, () -> {
+                try
+                {
+                    f.complete(action.get());
+                }
+                catch (Exception e)
+                {
+                    Utility.log(e);
+                }
+            });
+            return f.get(3, TimeUnit.SECONDS);
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 
     @Test
@@ -96,12 +156,13 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     }
 
     @Test
+    @OnThread(Tag.Any)
     public void testNewEntryTable() throws InternalException, UserException
     {
         testStartState();
         clickOn("#id-menu-data").clickOn(".id-menu-data-new");
-        assertEquals(1, MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size());
-        assertTrue(MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().isEmpty());
+        assertEquals(1, (int)fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
+        assertTrue(fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().isEmpty()));
     }
 
     @Test
@@ -124,6 +185,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     }
 
     @Property(trials = 10)
+    @OnThread(Tag.Any)
     public void propAddColumnToEntryTable(@From(GenDataType.class) DataType dataType) throws UserException, InternalException
     {
         testNewEntryTable();
@@ -132,9 +194,9 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         write(newColName);
         clickForDataType(rootNode(window(Window::isFocused)), dataType);
         WaitForAsyncUtils.waitForFxEvents();
-        assertEquals(1, MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().size());
-        assertEquals(newColName, MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getName().getRaw());
-        assertEquals(dataType, MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getType());
+        assertEquals(1, (int)fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().size()));
+        assertEquals(newColName, fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getName().getRaw()));
+        assertEquals(dataType, fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getType()));
     }
 
     private void clickOnSub(Node root, String subQuery)
@@ -146,6 +208,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     }
 
     // Important to use the query here, as we may have nested dialogs with items with the same class
+    @OnThread(Tag.Any)
     private void clickForDataType(Node root, DataType dataType) throws InternalException, UserException
     {
         dataType.apply(new DataTypeVisitor<Void>()
@@ -309,7 +372,93 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         Text errorLabel = new NodeQueryImpl().from(rootNode(window)).lookup(".error-label").<Text>query();
         clickOn(new NodeQueryImpl().from(rootNode(window)).lookup(".ok-button").<Node>query());
         if (errorLabel != null)
-            assertEquals("", errorLabel.getText());
-        assertFalse(window.isShowing());
+            assertEquals("", fx(() -> errorLabel.getText()));
+        assertFalse(fx(() -> window.isShowing()));
+    }
+
+    @Property
+    @OnThread(Tag.Any)
+    public void testEnterColumn(@From(GenTypeAndValueGen.class) @When(seed=1526344544435264499L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    {
+        propAddColumnToEntryTable(typeAndValueGen.getType());
+        // Now set the values
+        List<@Value Object> values = new ArrayList<>();
+        for (int i = 0; i < 10;i ++)
+        {
+            addNewRow();
+            @Value Object value = typeAndValueGen.makeValue();
+            values.add(value);
+
+            clickOn(".stable-view-row-cell");
+            push(KeyCode.END);
+            setValue(typeAndValueGen.getType(), value);
+        }
+        // Now test for equality:
+        @OnThread(Tag.Any) RecordSet recordSet = fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
+        DataTypeValue column = recordSet.getColumns().get(0).getType();
+        assertEquals(values.size(), (int)sim(() -> recordSet.getLength()));
+        for (int i = 0; i < values.size(); i++)
+        {
+            int iFinal = i;
+            TestUtil.assertValueEqual("" + i, values.get(i), sim(() -> column.getCollapsed(iFinal)));
+        }
+    }
+
+    @OnThread(Tag.Any)
+    private void setValue(DataType dataType, @Value Object value) throws UserException, InternalException
+    {
+        push(KeyCode.ENTER);
+        dataType.apply(new DataTypeVisitor<Void>()
+        {
+            @Override
+            public Void number(NumberInfo numberInfo) throws InternalException, UserException
+            {
+                write(DataTypeUtility.valueToString(value));
+                return null;
+            }
+
+            @Override
+            public Void text() throws InternalException, UserException
+            {
+                write(DataTypeUtility.valueToString(value));
+                return null;
+            }
+
+            @Override
+            public Void date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            {
+                return null;
+            }
+
+            @Override
+            public Void bool() throws InternalException, UserException
+            {
+                return null;
+            }
+
+            @Override
+            public Void tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            {
+                return null;
+            }
+
+            @Override
+            public Void tuple(List<DataType> inner) throws InternalException, UserException
+            {
+                return null;
+            }
+
+            @Override
+            public Void array(@Nullable DataType inner) throws InternalException, UserException
+            {
+                return null;
+            }
+        });
+    }
+
+    @OnThread(Tag.Any)
+    private void addNewRow()
+    {
+        clickOn(".id-stableView-append");
     }
 }
