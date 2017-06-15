@@ -16,6 +16,7 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.fxmisc.richtext.GenericStyledArea;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -407,12 +408,20 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @OnThread(Tag.Any)
     private void setValue(DataType dataType, @Value Object value) throws UserException, InternalException
     {
+        //TODO check colour of focused cell (either check background, or take snapshot)
+        Node prevFocused = fx(() -> window(Window::isFocused).getScene().getFocusOwner());
+        WaitForAsyncUtils.waitForFxEvents();
         push(KeyCode.ENTER);
+        WaitForAsyncUtils.waitForFxEvents();
+        Node focused = fx(() -> window(Window::isFocused).getScene().getFocusOwner());
+        assertNotNull(focused);
+        System.err.println("Was " + prevFocused.getClass() + " then pressed ENTER and was " + focused.getClass());
         dataType.apply(new DataTypeVisitor<Void>()
         {
             @Override
             public Void number(NumberInfo numberInfo) throws InternalException, UserException
             {
+                assertTrue("Was " + prevFocused.getClass() + " then pressed ENTER and was " + focused.getClass(), focused instanceof GenericStyledArea);
                 write(DataTypeUtility.valueToString(value));
                 return null;
             }

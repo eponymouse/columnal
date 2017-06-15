@@ -292,6 +292,10 @@ class NumberDisplay
                     // TODO use viewOrder from Java 9 to bring to front
                     // TODO when focused, make white and add drop shadow around it
                     textArea.requestFocus();
+                    if (scenePoint == null)
+                    {
+                        textArea.selectAll();
+                    }
                 }
             }
 

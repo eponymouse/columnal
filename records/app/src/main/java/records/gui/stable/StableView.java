@@ -23,6 +23,7 @@ import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
@@ -42,6 +43,9 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
 import org.fxmisc.flowless.VirtualizedScrollPane;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
 import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
 import records.error.InternalException;
@@ -50,7 +54,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.SimulationFunction;
-import utility.SimulationRunnable;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -516,8 +519,17 @@ public class StableView
                     {
                         columns.get(columnIndexFinal).edit(curRowIndex, new Point2D(e.getSceneX(), e.getSceneY()));
                     }
+                    else if (e.getClickCount() == 1 && e.getButton() == MouseButton.PRIMARY && curRowIndex >= 0)
+                    {
+                        pane.requestFocus();
+
+                    }
                     e.consume();
                 });
+                Nodes.addInputMap(pane, InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
+                    columns.get(columnIndexFinal).edit(curRowIndex, null);
+                    e.consume();
+                }));
                 cells.add(pane);
             }
             hBox.getChildren().setAll(cells);
@@ -600,9 +612,9 @@ public class StableView
     }
 
     @OnThread(Tag.FXPlatform)
-    public static interface ValueReceiver
+    public static interface CellContentReceiver
     {
-        public void setValue(int rowIndex, Region value);
+        public void setCellContent(int rowIndex, Region cellContent);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -611,7 +623,7 @@ public class StableView
         // Called to fetch a value.  Once available, receiver should be called.
         // Until then it will be blank.  You can call receiver multiple times though,
         // so you can just call it with a placeholder before returning.
-        public void fetchValue(int rowIndex, ValueReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl);
+        public void fetchValue(int rowIndex, CellContentReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl);
 
         // Called when the column gets resized (graphically).  Width is in pixels
         public void columnResized(double width);

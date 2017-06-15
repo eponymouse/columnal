@@ -25,7 +25,7 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.Workers.Worker;
 import records.gui.stable.StableView.ColumnHandler;
-import records.gui.stable.StableView.ValueReceiver;
+import records.gui.stable.StableView.CellContentReceiver;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -122,7 +122,7 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
     }
 
     @Override
-    public final void fetchValue(int rowIndex, ValueReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+    public final void fetchValue(int rowIndex, CellContentReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
     {
         this.firstVisibleRowIndexIncl = firstVisibleRowIndexIncl;
         this.lastVisibleRowIndexIncl = lastVisibleRowIndexIncl;
@@ -171,7 +171,7 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
         private @MonotonicNonNull Either<Pair<V, G>, @Localized String> loadedItemOrError;
         private double progress = 0;
         @OnThread(Tag.FXPlatform)
-        private @MonotonicNonNull ValueReceiver callback;
+        private @MonotonicNonNull CellContentReceiver callback;
 
         @SuppressWarnings("initialization") // ValueLoader, though I don't quite understand why
         public DisplayCacheItem(int index)
@@ -196,11 +196,11 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
             {
                 if (loadedItemOrError != null)
                 {
-                    callback.setValue(rowIndex, loadedItemOrError.either(p -> getNode.apply(p.getSecond()), Label::new));
+                    callback.setCellContent(rowIndex, loadedItemOrError.either(p -> getNode.apply(p.getSecond()), Label::new));
                 }
                 else
                 {
-                    callback.setValue(rowIndex, new Label("Loading: " + progress));
+                    callback.setCellContent(rowIndex, new Label("Loading: " + progress));
                 }
             }
         }
@@ -223,7 +223,7 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
             triggerCallback();
         }
 
-        public void setCallback(ValueReceiver receiver)
+        public void setCallback(CellContentReceiver receiver)
         {
             this.callback = receiver;
             triggerCallback();
@@ -285,7 +285,7 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
         }
 
         @Override
-        @OnThread(Tag.FX)
+        @OnThread(Tag.Any)
         public synchronized void addedToQueue(long finished, long us)
         {
             this.originalFinished = finished;

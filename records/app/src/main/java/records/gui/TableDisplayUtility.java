@@ -19,7 +19,6 @@ import records.data.datatype.DataTypeValue.DataTypeVisitorGetEx;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
-import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.TypeId;
 import records.error.InternalException;
@@ -28,10 +27,9 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.SimulationRunnable;
 import utility.Utility;
 import records.gui.stable.StableView.ColumnHandler;
-import records.gui.stable.StableView.ValueReceiver;
+import records.gui.stable.StableView.CellContentReceiver;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
@@ -58,9 +56,9 @@ public class TableDisplayUtility
                 return new Pair<>(col.getName().getRaw(), new ColumnHandler()
                 {
                     @Override
-                    public void fetchValue(int rowIndex, ValueReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+                    public void fetchValue(int rowIndex, CellContentReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
                     {
-                        receiver.setValue(rowIndex, new Label("Error: " + e.getLocalizedMessage()));
+                        receiver.setCellContent(rowIndex, new Label("Error: " + e.getLocalizedMessage()));
                     }
 
                     @Override
@@ -117,6 +115,11 @@ public class TableDisplayUtility
                         label.setTextOverrun(OverrunStyle.CLIP);
                         getChildren().addAll(beginQuote, label); //endQuote, label);
                         // TODO allow editing, and call column.modified when it happens
+                    }
+
+                    public void edit(boolean selectAll)
+                    {
+                        //TODO
                     }
                 }
 
