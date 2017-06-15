@@ -1,6 +1,7 @@
 package records.gui;
 
 import annotation.qual.Value;
+import javafx.beans.binding.BooleanBinding;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
@@ -53,6 +54,7 @@ class NumberDisplay
     private static final String ELLIPSIS = "\u2026";//"\u22EF";
 
     private final @NonNull StyleClassedTextArea textArea;
+    private final BooleanBinding notFocused;
     private String fullFracPart;
     private String fullIntegerPart;
     private @Nullable Number currentEditValue = null;
@@ -137,7 +139,8 @@ class NumberDisplay
         textArea.getStyleClass().add("number-display");
         StackPane.setAlignment(textArea, Pos.CENTER_RIGHT);
         // Doesn't get mouse events unless focused:
-        textArea.mouseTransparentProperty().bind(textArea.focusedProperty().not());
+        notFocused = textArea.focusedProperty().not();
+        textArea.mouseTransparentProperty().bind(notFocused);
     }
 
     @EnsuresNonNull({"fullIntegerPart", "fullFracPart"})

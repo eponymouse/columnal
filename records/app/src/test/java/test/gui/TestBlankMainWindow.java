@@ -390,7 +390,23 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             @Value Object value = typeAndValueGen.makeValue();
             values.add(value);
 
+            try
+            {
+                Thread.sleep(400);
+            }
+            catch (InterruptedException e)
+            {
+
+            }
             clickOn(".stable-view-row-cell");
+            try
+            {
+                Thread.sleep(400);
+            }
+            catch (InterruptedException e)
+            {
+
+            }
             push(KeyCode.END);
             setValue(typeAndValueGen.getType(), value);
         }
@@ -408,12 +424,13 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @OnThread(Tag.Any)
     private void setValue(DataType dataType, @Value Object value) throws UserException, InternalException
     {
+        targetWindow(lookup(".stable-view-row-cell").<Node>query());
         //TODO check colour of focused cell (either check background, or take snapshot)
-        Node prevFocused = fx(() -> window(Window::isFocused).getScene().getFocusOwner());
-        WaitForAsyncUtils.waitForFxEvents();
+        Node prevFocused = fx(() -> targetWindow().getScene().getFocusOwner());
         push(KeyCode.ENTER);
         WaitForAsyncUtils.waitForFxEvents();
-        Node focused = fx(() -> window(Window::isFocused).getScene().getFocusOwner());
+
+        Node focused = fx(() -> targetWindow().getScene().getFocusOwner());
         assertNotNull(focused);
         System.err.println("Was " + prevFocused.getClass() + " then pressed ENTER and was " + focused.getClass());
         dataType.apply(new DataTypeVisitor<Void>()
@@ -422,7 +439,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             public Void number(NumberInfo numberInfo) throws InternalException, UserException
             {
                 assertTrue("Was " + prevFocused.getClass() + " then pressed ENTER and was " + focused.getClass(), focused instanceof GenericStyledArea);
-                write(DataTypeUtility.valueToString(value));
+                clickOn(".number-display").write(DataTypeUtility.valueToString(value));
                 return null;
             }
 

@@ -25,6 +25,7 @@ import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -514,7 +515,8 @@ public class StableView
                 FXUtility.forcePrefSize(pane);
                 pane.prefWidthProperty().bind(columnSizes.get(columnIndex));
                 int columnIndexFinal = columnIndex;
-                pane.setOnMouseClicked(e -> {
+                pane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+                    System.err.println("" + e);
                     if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && columns.get(columnIndexFinal).isEditable() && curRowIndex >= 0)
                     {
                         columns.get(columnIndexFinal).edit(curRowIndex, new Point2D(e.getSceneX(), e.getSceneY()));
@@ -527,6 +529,7 @@ public class StableView
                     e.consume();
                 });
                 Nodes.addInputMap(pane, InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
+                    System.err.println("" + e);
                     columns.get(columnIndexFinal).edit(curRowIndex, null);
                     e.consume();
                 }));
