@@ -89,7 +89,7 @@ $stable-view-header-border: hsb(0, 0%, 40%);
     -fx-border-width: 0 1 1 0;
     -fx-border-color: gray(60%);
 }
-.stable-view-row-cell:focused-cell {
+.stable-view-row-cell:focused {
     -fx-background-color: pink;
 }
 .stable-view-matched .paragraph-text .selected-cell {

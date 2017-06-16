@@ -103,10 +103,7 @@ public class ImmediateDataSource extends DataSource
         for (Column column : data.getColumns())
         {
             allColumns.add(rs -> {
-                EditableColumn copiedColumn = column.getType().makeImmediateColumn(column.getName()).apply(rs);
-                if (column.isEditable())
-                    copiedColumn.markEditable();
-                return copiedColumn;
+                return column.getType().makeImmediateColumn(column.getName()).apply(rs);
             });
         }
         allColumns.add(rs -> newColumnType.makeImmediateColumn(new ColumnId(newColumnName), Utility.replicate(data.getLength(), newColumnValue)).apply(rs));

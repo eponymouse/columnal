@@ -51,10 +51,6 @@ import java.util.Optional;
 @OnThread(Tag.Simulation)
 public abstract class Column
 {
-    // TODO remove this now that we have EditableColumn
-    @OnThread(Tag.Any)
-    private boolean editable;
-
     protected final RecordSet recordSet;
     private final ColumnId name;
 
@@ -108,23 +104,10 @@ public abstract class Column
         return recordSet.getLength();
     }
 
-    /**
-     * Marks the column as having editable values in the interface.
-     * Intended for use directly after constructor as a builder pattern
-     * (You must at least call this before it is made visible in interface,
-     * as isEditable is only called once at beginning, and not checked again).
-     */
     @OnThread(Tag.Any)
-    public final Column markEditable()
+    public boolean isEditable()
     {
-        editable = true;
-        return this;
-    }
-
-    @OnThread(Tag.Any)
-    public final boolean isEditable()
-    {
-        return editable;
+        return false;
     }
 
     @OnThread(Tag.Simulation)

@@ -25,4 +25,10 @@ public abstract class EditableColumn extends Column
     // Returns a revert operation
     @OnThread(Tag.Simulation)
     public abstract SimulationRunnable removeRows(int index, int count) throws InternalException, UserException;
+
+    @OnThread(Tag.Any)
+    public boolean isEditable()
+    {
+        return true;
+    }
 }

@@ -960,7 +960,6 @@ public class DataType
 
     public static class ColumnMaker<C extends EditableColumn> implements FunctionInt<RecordSet, EditableColumn>
     {
-        private boolean editable = false;
         private @Nullable C column;
         private final FunctionInt<RecordSet, C> makeColumn;
         private final ExBiConsumer<C, ItemContext> loadData;
@@ -975,8 +974,6 @@ public class DataType
         public final EditableColumn apply(RecordSet rs) throws InternalException
         {
             column = makeColumn.apply(rs);
-            if (editable)
-                column.markEditable();
             return column;
         }
 
@@ -986,12 +983,6 @@ public class DataType
             if (column == null)
                 throw new InternalException("Calling loadRow before column creation");
             loadData.accept(column, ctx);
-        }
-
-        public ColumnMaker<?> markEditable()
-        {
-            editable = true;
-            return this;
         }
     }
 
