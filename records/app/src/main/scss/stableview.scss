@@ -106,7 +106,7 @@ $stable-view-header-border: hsb(0, 0%, 40%);
 .stable-view-row-append-button {
    -fx-max-width: 9999.0;
    -fx-background-color: gray(95%);
-   -fx-background-inserts: 0;
+   -fx-background-insets: 0;
    &:hover {
        -fx-background-color: white;
        -fx-cursor: hand;

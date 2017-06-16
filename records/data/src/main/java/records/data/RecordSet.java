@@ -48,7 +48,7 @@ import java.util.stream.IntStream;
 public abstract class RecordSet
 {
     @OnThread(Tag.Any)
-    private final List<Column> columns;
+    protected final List<Column> columns;
 
     @OnThread(Tag.FXPlatform)
     protected @MonotonicNonNull RecordSetListener listener;
@@ -329,5 +329,8 @@ public abstract class RecordSet
         // and in its place was added addedRowsCount (>= 0).
         @OnThread(Tag.FXPlatform)
         public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount);
+
+        @OnThread(Tag.FXPlatform)
+        public void addedColumn(Column newColumn);
     }
 }

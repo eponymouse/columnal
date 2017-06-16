@@ -15,6 +15,7 @@ import records.grammar.MainParser.PositionContext;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
 
 import javax.validation.constraints.NotNull;
 import java.io.File;
@@ -143,6 +144,17 @@ public abstract class Table
     @OnThread(Tag.FXPlatform)
     public synchronized void setDisplay(TableDisplayBase display)
     {
+        if (this.display != null)
+        {
+            try
+            {
+                throw new InternalException("Overwriting table display!");
+            }
+            catch (InternalException e)
+            {
+                Utility.report(e);
+            }
+        }
         this.display = display;
     }
 
@@ -219,10 +231,9 @@ public abstract class Table
     public abstract boolean showAddColumnButton();
 
     /**
-     * Add the given new column to the table.  Should return a new Table
-     * with the same Id as the original table.
+     * Add the given new column to the table.
      */
-    public abstract Table addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException, UserException;
+    public abstract void addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException, UserException;
 
     @OnThread(Tag.Any)
     public abstract TableOperations getOperations();

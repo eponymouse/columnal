@@ -97,17 +97,9 @@ public class ImmediateDataSource extends DataSource
     }
 
     @Override
-    public Table addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException, UserException
+    public void addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException, UserException
     {
-        List<ExFunction<RecordSet, EditableColumn>> allColumns = new ArrayList<>();
-        for (Column column : data.getColumns())
-        {
-            allColumns.add(rs -> {
-                return column.getType().makeImmediateColumn(column.getName()).apply(rs);
-            });
-        }
-        allColumns.add(rs -> newColumnType.makeImmediateColumn(new ColumnId(newColumnName), Utility.replicate(data.getLength(), newColumnValue)).apply(rs));
-        return new ImmediateDataSource(getManager(), getId(), new EditableRecordSet(allColumns, () -> data.getLength()));
+        data.addColumn(newColumnType.makeImmediateColumn(new ColumnId(newColumnName), Utility.replicate(data.getLength(), newColumnValue)));
     }
 
     @Override

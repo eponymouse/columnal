@@ -13,6 +13,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
+import records.data.Column;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.Table.TableDisplayBase;
@@ -97,13 +98,17 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     private static class TableDataDisplay extends StableView implements RecordSet.RecordSetListener
     {
         private final FXPlatformRunnable onModify;
+        private final RecordSet recordSet;
+        private final TableOperations operations;
 
         @SuppressWarnings("initialization")
         @UIEffect
         public TableDataDisplay(RecordSet recordSet, TableOperations operations, FXPlatformRunnable onModify)
         {
             super();
+            this.recordSet = recordSet;
             this.onModify = onModify;
+            this.operations = operations;
             recordSet.setListener(this);
             setColumns(TableDisplayUtility.makeStableViewColumns(recordSet), operations);
             setRows(recordSet::indexValid);
@@ -161,6 +166,13 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
             onModify.run();
         }
+
+        @Override
+        public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
+        {
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet), operations);
+            setRows(recordSet::indexValid);
+        }
     }
 
     @SuppressWarnings("initialization")
@@ -210,8 +222,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                     {
                         Utility.alertOnError_(() ->
                         {
-                            Table newTable = table.addColumn(choice.get().name, choice.get().type, choice.get().defaultValue);
-                            parent.getManager().edit(table.getId(), newTable);
+                            table.addColumn(choice.get().name, choice.get().type, choice.get().defaultValue);
                         });
                     });
                 }

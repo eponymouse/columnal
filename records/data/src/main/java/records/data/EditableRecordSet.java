@@ -249,5 +249,18 @@ public class EditableRecordSet extends RecordSet
         };
     }
 
-
+    public void addColumn(ExFunction<RecordSet, ? extends EditableColumn> makeNewColumn) throws InternalException, UserException
+    {
+        EditableColumn col = makeNewColumn.apply(this);
+        columns.add(col);
+        editableColumns.add(col);
+        if (columns.stream().map(Column::getName).distinct().count() != columns.size())
+        {
+            throw new InternalException("Duplicate column names found");
+        }
+        Platform.runLater(() -> {
+            if (listener != null)
+                listener.addedColumn(col);
+        });
+    }
 }
