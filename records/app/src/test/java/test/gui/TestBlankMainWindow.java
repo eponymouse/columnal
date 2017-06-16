@@ -6,13 +6,16 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
+import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -42,6 +45,7 @@ import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplier;
 import utility.SimulationSupplier;
 import utility.Utility;
@@ -70,6 +74,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @Override
     public void start(Stage stage) throws Exception
     {
+        stage.initStyle(StageStyle.DECORATED);
         File dest = File.createTempFile("blank", "rec");
         dest.deleteOnExit();
         MainWindow.show(stage, dest, null);
@@ -108,6 +113,19 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         try
         {
             return WaitForAsyncUtils.asyncFx(action::get).get();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @OnThread(Tag.Any)
+    private static void fx_(FXPlatformRunnable action)
+    {
+        try
+        {
+            WaitForAsyncUtils.asyncFx(action::run).get();
         }
         catch (Exception e)
         {
@@ -432,14 +450,13 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
         Node focused = fx(() -> targetWindow().getScene().getFocusOwner());
         assertNotNull(focused);
-        System.err.println("Was " + prevFocused.getClass() + " then pressed ENTER and was " + focused.getClass());
         dataType.apply(new DataTypeVisitor<Void>()
         {
             @Override
             public Void number(NumberInfo numberInfo) throws InternalException, UserException
             {
                 assertTrue("Was " + prevFocused.getClass() + " then pressed ENTER and was " + focused.getClass(), focused instanceof GenericStyledArea);
-                clickOn(".number-display").write(DataTypeUtility.valueToString(value));
+                write(DataTypeUtility.valueToString(value));
                 return null;
             }
 
@@ -485,6 +502,6 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @OnThread(Tag.Any)
     private void addNewRow()
     {
-        clickOn(".id-stableView-append");
+        clickOn(".stable-view-row-append-button");
     }
 }
