@@ -64,6 +64,8 @@ import utility.gui.GUI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
+import java.util.OptionalInt;
 
 /**
  * A customised equivalent of TableView
@@ -315,6 +317,17 @@ public class StableView
         return operations != null && operations.appendRows != null && index == items.size() - 1;
     }
 
+    private OptionalInt getLastContentRowIndex()
+    {
+        int last = items.size() - 1;
+        if (isAppendRow(last))
+            last -= 1;
+        if (last >= 0)
+            return OptionalInt.of(last);
+        else
+            return OptionalInt.empty();
+    }
+
     private void appendRow(int newRowIndex)
     {
         if (operations == null || operations.appendRows == null)
@@ -528,11 +541,30 @@ public class StableView
                     }
                     e.consume();
                 });
-                Nodes.addInputMap(pane, InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
-                    System.err.println("" + e);
-                    columns.get(columnIndexFinal).edit(curRowIndex, null);
-                    e.consume();
-                }));
+                Nodes.addInputMap(pane, InputMap.sequence(
+                    InputMap.consume(EventPattern.keyPressed(KeyCode.END), e -> {
+                        int lastContentRowIndex = getLastContentRowIndex().orElse(-1);
+                        if (lastContentRowIndex < 0)
+                            return;
+                        virtualFlow.show(lastContentRowIndex);
+                        Optional<StableRow> lastRow = virtualFlow.getCellIfVisible(lastContentRowIndex);
+                        if (!lastRow.isPresent())
+                        {
+                            virtualFlow.layout();
+                            lastRow = virtualFlow.getCellIfVisible(lastContentRowIndex);
+                        }
+
+                        if (lastRow.isPresent())
+                        {
+                            lastRow.get().cells.get(columnIndexFinal).requestFocus();
+                        }
+                        e.consume();
+                    }),
+                    InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
+                        columns.get(columnIndexFinal).edit(curRowIndex, null);
+                        e.consume();
+                    })
+                ));
                 cells.add(pane);
             }
             hBox.getChildren().setAll(cells);

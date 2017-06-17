@@ -300,6 +300,10 @@ class NumberDisplay
                         textArea.selectAll();
                     }
                 }
+                else
+                {
+                    System.err.println("Trying to edit row " + rowIndex + " but not showing");
+                }
             }
 
             @Override
