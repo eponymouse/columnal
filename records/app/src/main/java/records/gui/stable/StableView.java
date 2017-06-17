@@ -542,7 +542,9 @@ public class StableView
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         public boolean isReusable()
         {
-            return true;
+            // TODO set this to true, but in that case we also need to handle number of columns changing
+            // under our feet.
+            return false;
         }
 
         @Override
