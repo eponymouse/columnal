@@ -529,7 +529,6 @@ public class StableView
                 pane.prefWidthProperty().bind(columnSizes.get(columnIndex));
                 int columnIndexFinal = columnIndex;
                 pane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-                    System.err.println("" + e);
                     if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && columns.get(columnIndexFinal).isEditable() && curRowIndex >= 0)
                     {
                         columns.get(columnIndexFinal).edit(curRowIndex, new Point2D(e.getSceneX(), e.getSceneY()));

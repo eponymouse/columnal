@@ -6,7 +6,10 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
+import javafx.geometry.Bounds;
+import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
+import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
@@ -502,6 +505,35 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @OnThread(Tag.Any)
     private void addNewRow()
     {
+        // Click button to scroll to end, to ensure append is visible:
+        clickOn(".stable-view-button-bottom");
+        WaitForAsyncUtils.waitForFxEvents();
         clickOn(".stable-view-row-append-button");
+    }
+
+    @OnThread(Tag.Any)
+    private boolean actuallyVisible(String query)
+    {
+        Node original  = lookup(query).<Node>query();
+        if (original == null)
+            return false;
+        return fx(() -> {
+            Bounds b = original.getBoundsInLocal();
+            for (Node n = original, parent = original.getParent(); n != null && parent != null; n = parent, parent = parent.getParent())
+            {
+                b = n.localToParent(b);
+                System.err.println("Bounds in parent: " + b.getMinY() + "->"  + b.getMaxY());
+                System.err.println("  Parent bounds: " + parent.getBoundsInLocal().getMinY() + "->" + parent.getBoundsInLocal().getMaxY());
+                if (!parent.getBoundsInLocal().contains(getCentre(b)))
+                    return false;
+            }
+            // If we get to the top and all is well, it is visible
+            return true;
+        });
+    }
+
+    private static Point2D getCentre(Bounds b)
+    {
+        return new Point2D(b.getMinX(), b.getMinY()).midpoint(b.getMaxX(), b.getMaxY());
     }
 }
