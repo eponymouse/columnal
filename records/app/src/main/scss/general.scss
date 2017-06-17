@@ -135,6 +135,9 @@
     visibility: hidden;
 }
 
+.string-display {
+    -fx-background-color: transparent;
+}
 .string-display-quote {
     -fx-text-fill: gray(70%);
     -fx-font-family: "Source Code Pro";

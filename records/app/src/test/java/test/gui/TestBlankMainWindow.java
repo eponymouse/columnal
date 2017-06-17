@@ -401,7 +401,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     @Property
     @OnThread(Tag.Any)
-    public void testEnterColumn(@From(GenTypeAndValueGen.class) @When(seed=1526344544435264499L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    public void testEnterColumn(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         propAddColumnToEntryTable(typeAndValueGen.getType());
         // Now set the values
@@ -454,7 +454,15 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @OnThread(Tag.Any)
     private void setValue(DataType dataType, @Value Object value) throws UserException, InternalException
     {
-        targetWindow(lookup(".stable-view-row-cell").<Node>query());
+        targetWindow(lookup(new Predicate<Node>() {
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public boolean test(Node node)
+            {
+                // Don't click on the last row which has the append button:
+                return node.getStyleClass().contains("stable-view-row-cell") && node.lookup(".stable-view-row-append-button") == null;
+            };
+        }).<Node>query());
         //TODO check colour of focused cell (either check background, or take snapshot)
         Node prevFocused = fx(() -> targetWindow().getScene().getFocusOwner());
         // Enter to start editing:
@@ -479,6 +487,8 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             public Void text() throws InternalException, UserException
             {
                 write(DataTypeUtility.valueToString(value));
+                // Enter to finish editing:
+                push(KeyCode.ENTER);
                 return null;
             }
 
@@ -521,6 +531,15 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         clickOn(".stable-view-button-bottom");
         WaitForAsyncUtils.waitForFxEvents();
         clickOn(".stable-view-row-append-button");
+        try
+        {
+            Thread.sleep(400);
+        }
+        catch (InterruptedException e)
+        {
+
+        }
+        WaitForAsyncUtils.waitForFxEvents();
     }
 
     @OnThread(Tag.Any)
