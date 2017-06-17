@@ -26,6 +26,7 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import records.gui.stable.StableView.ColumnHandler;
@@ -68,7 +69,7 @@ public class TableDisplayUtility
                     }
 
                     @Override
-                    public void edit(int rowIndex, @Nullable Point2D scenePoint)
+                    public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable endEdit)
                     {
                         Utility.logStackTrace("Called edit when not editable");
                     }
@@ -131,7 +132,7 @@ public class TableDisplayUtility
                     }
 
                     @Override
-                    public void edit(int rowIndex, @Nullable Point2D scenePoint)
+                    public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable endEdit)
                     {
                         //TODO
                     }

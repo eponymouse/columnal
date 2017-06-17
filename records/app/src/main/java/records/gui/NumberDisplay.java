@@ -6,6 +6,7 @@ import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import javafx.scene.text.Text;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -21,6 +22,7 @@ import org.fxmisc.richtext.CharacterHit;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.StyledText;
 import org.fxmisc.undo.UndoManagerFactory;
+import org.fxmisc.wellbehaved.event.*;
 import records.data.Column;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue.GetValue;
@@ -55,6 +57,7 @@ class NumberDisplay
 
     private final @NonNull StyleClassedTextArea textArea;
     private final BooleanBinding notFocused;
+    private @Nullable FXPlatformRunnable endEdit;
     private String fullFracPart;
     private String fullIntegerPart;
     private @Nullable Number currentEditValue = null;
@@ -128,6 +131,12 @@ class NumberDisplay
         textArea.setEditable(column.isEditable());
         textArea.setUseInitialStyleForInsertion(false);
         textArea.setUndoManager(UndoManagerFactory.fixedSizeHistoryFactory(3));
+
+        Nodes.addInputMap(textArea, InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
+            if (endEdit != null)
+                endEdit.run();
+            e.consume();
+        }));
 
         if (ndi == null)
             ndi = NumberDisplayInfo.SYSTEMWIDE_DEFAULT; // TODO use file-wide default
@@ -278,7 +287,7 @@ class NumberDisplay
             }
 
             @Override
-            public void edit(int rowIndex, @Nullable Point2D scenePoint)
+            public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable endEdit)
             {
                 @Nullable NumberDisplay rowIfShowing = getRowIfShowing(rowIndex);
                 if (rowIfShowing != null)
@@ -294,6 +303,7 @@ class NumberDisplay
                     numberDisplay.expandToFullDisplayForEditing();
                     // TODO use viewOrder from Java 9 to bring to front
                     // TODO when focused, make white and add drop shadow around it
+                    numberDisplay.endEdit = endEdit;
                     textArea.requestFocus();
                     if (scenePoint == null)
                     {

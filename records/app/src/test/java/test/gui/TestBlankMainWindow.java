@@ -23,6 +23,7 @@ import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.GenericStyledArea;
+import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -61,6 +62,7 @@ import java.util.List;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Predicate;
 
 import static org.junit.Assert.*;
 
@@ -77,7 +79,6 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @Override
     public void start(Stage stage) throws Exception
     {
-        stage.initStyle(StageStyle.DECORATED);
         File dest = File.createTempFile("blank", "rec");
         dest.deleteOnExit();
         MainWindow.show(stage, dest, null);
@@ -419,7 +420,15 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             {
 
             }
-            clickOn(".stable-view-row-cell");
+            clickOn(new Predicate<Node>()
+            {
+                @Override
+                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+                public boolean test(Node n)
+                {
+                    return n.getStyleClass().contains("stable-view-row-cell") && actuallyVisible(n);
+                }
+            });
             try
             {
                 Thread.sleep(400);
@@ -438,7 +447,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         for (int i = 0; i < values.size(); i++)
         {
             int iFinal = i;
-            TestUtil.assertValueEqual("" + i, values.get(i), sim(() -> column.getCollapsed(iFinal)));
+            TestUtil.assertValueEqual("Index " + i, values.get(i), sim(() -> column.getCollapsed(iFinal)));
         }
     }
 
@@ -448,6 +457,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         targetWindow(lookup(".stable-view-row-cell").<Node>query());
         //TODO check colour of focused cell (either check background, or take snapshot)
         Node prevFocused = fx(() -> targetWindow().getScene().getFocusOwner());
+        // Enter to start editing:
         push(KeyCode.ENTER);
         WaitForAsyncUtils.waitForFxEvents();
 
@@ -460,6 +470,8 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             {
                 assertTrue("Was " + prevFocused.getClass() + " then pressed ENTER and was " + focused.getClass(), focused instanceof GenericStyledArea);
                 write(DataTypeUtility.valueToString(value));
+                // Enter to finish editing:
+                push(KeyCode.ENTER);
                 return null;
             }
 
@@ -514,22 +526,29 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @OnThread(Tag.Any)
     private boolean actuallyVisible(String query)
     {
-        Node original  = lookup(query).<Node>query();
+        Node original = lookup(query).<Node>query();
         if (original == null)
             return false;
         return fx(() -> {
-            Bounds b = original.getBoundsInLocal();
-            for (Node n = original, parent = original.getParent(); n != null && parent != null; n = parent, parent = parent.getParent())
-            {
-                b = n.localToParent(b);
-                System.err.println("Bounds in parent: " + b.getMinY() + "->"  + b.getMaxY());
-                System.err.println("  Parent bounds: " + parent.getBoundsInLocal().getMinY() + "->" + parent.getBoundsInLocal().getMaxY());
-                if (!parent.getBoundsInLocal().contains(getCentre(b)))
-                    return false;
-            }
-            // If we get to the top and all is well, it is visible
-            return true;
+            return actuallyVisible(original);
         });
+    }
+
+    @NotNull
+    @OnThread(Tag.FXPlatform)
+    private Boolean actuallyVisible(Node original)
+    {
+        Bounds b = original.getBoundsInLocal();
+        for (Node n = original, parent = original.getParent(); n != null && parent != null; n = parent, parent = parent.getParent())
+        {
+            b = n.localToParent(b);
+            //System.err.println("Bounds in parent: " + b.getMinY() + "->"  + b.getMaxY());
+            //System.err.println("  Parent bounds: " + parent.getBoundsInLocal().getMinY() + "->" + parent.getBoundsInLocal().getMaxY());
+            if (!parent.getBoundsInLocal().contains(getCentre(b)))
+                return false;
+        }
+        // If we get to the top and all is well, it is visible
+        return true;
     }
 
     private static Point2D getCentre(Bounds b)

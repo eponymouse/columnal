@@ -53,6 +53,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -523,7 +524,7 @@ public class StableView
             hBox.getStyleClass().add("stable-view-row");
             for (int columnIndex = 0; columnIndex < columns.size(); columnIndex++)
             {
-                Pane pane = new StackPane();
+                final Pane pane = new StackPane();
                 pane.getStyleClass().add("stable-view-row-cell");
                 FXUtility.forcePrefSize(pane);
                 pane.prefWidthProperty().bind(columnSizes.get(columnIndex));
@@ -531,7 +532,7 @@ public class StableView
                 pane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
                     if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && columns.get(columnIndexFinal).isEditable() && curRowIndex >= 0)
                     {
-                        columns.get(columnIndexFinal).edit(curRowIndex, new Point2D(e.getSceneX(), e.getSceneY()));
+                        columns.get(columnIndexFinal).edit(curRowIndex, new Point2D(e.getSceneX(), e.getSceneY()), pane::requestFocus);
                     }
                     else if (e.getClickCount() == 1 && e.getButton() == MouseButton.PRIMARY && curRowIndex >= 0)
                     {
@@ -560,7 +561,7 @@ public class StableView
                         e.consume();
                     }),
                     InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
-                        columns.get(columnIndexFinal).edit(curRowIndex, null);
+                        columns.get(columnIndexFinal).edit(curRowIndex, null, pane::requestFocus);
                         e.consume();
                     })
                 ));
@@ -668,7 +669,7 @@ public class StableView
         // (in which case the point is passed) or by pressing enter (in which case
         // point is null).
         // Will only be called if isEditable returns true
-        public void edit(int rowIndex, @Nullable Point2D scenePoint);
+        public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable endEdit);
 
         // Can this column be edited?
         public boolean isEditable();
