@@ -516,6 +516,7 @@ public class StableView
     {
         private final HBox hBox = new HBox();
         private final ArrayList<Pane> cells = new ArrayList<>();
+        private final ArrayList<@Nullable InputMap<?>> cellItemInputMaps = new ArrayList<>();
         private int curRowIndex = -1;
         private final List<Button> appendButtons = new ArrayList<>();
 
@@ -566,6 +567,7 @@ public class StableView
                     })
                 ));
                 cells.add(pane);
+                cellItemInputMaps.add(null);
             }
             hBox.getChildren().setAll(cells);
         }
@@ -622,6 +624,14 @@ public class StableView
                             });
                             cell.getChildren().setAll(n);
                         }, firstVisibleRow.curRowIndex, lastVisibleRow.curRowIndex);
+
+                        // Swap old input map (if any) for new (if any)
+                        if (cellItemInputMaps.get(columnIndex) != null)
+                            Nodes.removeInputMap(cells.get(columnIndex), cellItemInputMaps.get(columnIndex));
+                        @Nullable InputMap<?> inputMap = column.getInputMapForParent(rowIndex);
+                        cellItemInputMaps.set(columnIndex, inputMap);
+                        if (inputMap != null)
+                            Nodes.addInputMap(cells.get(columnIndex), inputMap);
                     }
                 }
             }
@@ -664,6 +674,10 @@ public class StableView
 
         // Called when the column gets resized (graphically).  Width is in pixels
         public void columnResized(double width);
+
+        // Should return an InputMap, if any, to put on the parent node of the display.
+        // Useful if you want to be able to press keys directly without beginning editing
+        public @Nullable InputMap<?> getInputMapForParent(int rowIndex);
 
         // Called when the user initiates an error, either by double-clicking
         // (in which case the point is passed) or by pressing enter (in which case

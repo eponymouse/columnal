@@ -401,7 +401,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     @Property
     @OnThread(Tag.Any)
-    public void testEnterColumn(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    public void testEnterColumn(@From(GenTypeAndValueGen.class) @When(seed=1908019459532933128L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         propAddColumnToEntryTable(typeAndValueGen.getType());
         // Now set the values
@@ -501,6 +501,9 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             @Override
             public Void bool() throws InternalException, UserException
             {
+                boolean b = (Boolean)value;
+                write(b ? 't' : 'f');
+                // No need to press enter to finish
                 return null;
             }
 

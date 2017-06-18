@@ -317,6 +317,12 @@ class NumberDisplay
             }
 
             @Override
+            public @Nullable InputMap<?> getInputMapForParent(int rowIndex)
+            {
+                return null; // TODO allow typing to start editing
+            }
+
+            @Override
             public boolean isEditable()
             {
                 return true;

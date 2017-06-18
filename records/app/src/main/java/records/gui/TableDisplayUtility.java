@@ -8,6 +8,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.OverrunStyle;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -39,7 +40,9 @@ import utility.Utility;
 import records.gui.stable.StableView.ColumnHandler;
 import records.gui.stable.StableView.CellContentReceiver;
 import utility.Workers;
+import utility.Workers.Priority;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
@@ -76,6 +79,12 @@ public class TableDisplayUtility
                     public void columnResized(double width)
                     {
 
+                    }
+
+                    @Override
+                    public @Nullable InputMap<?> getInputMapForParent(int rowIndex)
+                    {
+                        return null;
                     }
 
                     @Override
@@ -180,6 +189,12 @@ public class TableDisplayUtility
                     }
 
                     @Override
+                    public @Nullable InputMap<?> getInputMapForParent(int rowIndex)
+                    {
+                        return null; // TODO allow typing to start editing
+                    }
+
+                    @Override
                     public boolean isEditable()
                     {
                         return true;
@@ -190,7 +205,50 @@ public class TableDisplayUtility
             @Override
             public ColumnHandler bool(GetValue<@Value Boolean> g) throws InternalException, UserException
             {
-                throw new UnimplementedException();
+                @Localized String stringTrue = TranslationUtility.getString("boolean.true");
+                @Localized String stringFalse = TranslationUtility.getString("boolean.false");
+                return new DisplayCache<Boolean, Label>(g, null, l -> l) {
+                    @Override
+                    protected Label makeGraphical(int rowIndex, Boolean value)
+                    {
+                        Label label = new Label(value ? stringTrue : stringFalse);
+                        label.setMouseTransparent(true);
+                        return label;
+                    }
+
+                    @Override
+                    public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable endEdit)
+                    {
+                        @Nullable Label l = getRowIfShowing(rowIndex);
+                        if (l != null)
+                            l.getParent().requestFocus();
+                    }
+
+                    @Override
+                    public @Nullable InputMap<?> getInputMapForParent(int rowIndex)
+                    {
+                        return InputMap.sequence(
+                            InputMap.consume(EventPattern.keyTyped(c -> c.toLowerCase().charAt(0) == stringTrue.toLowerCase().charAt(0)), e -> {
+                                Workers.onWorkerThread("Setting true", Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> g.set(rowIndex, true)));
+                                @Nullable Label l = getRowIfShowing(rowIndex);
+                                if (l != null)
+                                    l.setText(stringTrue);
+                            }),
+                            InputMap.consume(EventPattern.keyTyped(c -> c.toLowerCase().charAt(0) == stringFalse.toLowerCase().charAt(0)), e -> {
+                                Workers.onWorkerThread("Setting false", Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> g.set(rowIndex, false)));
+                                @Nullable Label l = getRowIfShowing(rowIndex);
+                                if (l != null)
+                                    l.setText(stringFalse);
+                            })
+                        );
+                    }
+
+                    @Override
+                    public boolean isEditable()
+                    {
+                        return true;
+                    }
+                };
             }
 
             @Override
