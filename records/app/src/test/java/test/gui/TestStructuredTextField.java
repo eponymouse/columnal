@@ -33,6 +33,11 @@ public class TestStructuredTextField
         type(":1973", "17/3/1973$");
 
         f = TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 1, 1));
+        f.start(SelectionPolicy.CLEAR);
+        type("", "$1/1/1900");
+        type("2", "2$1/1/1900");
+
+        f = TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 1, 1));
         f.selectAll();
         type("31 11 86","31/11/1986", true);
     }
