@@ -401,7 +401,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     @Property
     @OnThread(Tag.Any)
-    public void testEnterColumn(@From(GenTypeAndValueGen.class) @When(seed=1908019459532933128L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    public void testEnterColumn(@From(GenTypeAndValueGen.class) @When(seed=-746430439083107785L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         propAddColumnToEntryTable(typeAndValueGen.getType());
         // Now set the values

@@ -21,6 +21,7 @@ import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.Pair;
+import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.Workers.Worker;
@@ -82,7 +83,7 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
             });
     }
 
-    protected abstract G makeGraphical(int rowIndex, V value);
+    protected abstract G makeGraphical(int rowIndex, V value) throws InternalException;
 
     public class VisibleDetails
     {
@@ -184,7 +185,9 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
 
         public synchronized void update(V loadedItem)
         {
-            this.loadedItemOrError = Either.left(new Pair<>(loadedItem, makeGraphical(rowIndex, loadedItem)));
+            Utility.alertOnErrorFX_(() -> {
+                this.loadedItemOrError = Either.left(new Pair<>(loadedItem, makeGraphical(rowIndex, loadedItem)));
+            });
             triggerCallback();
             formatVisible(OptionalInt.of(rowIndex));
         }

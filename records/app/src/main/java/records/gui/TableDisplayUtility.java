@@ -5,7 +5,6 @@ import javafx.beans.binding.BooleanBinding;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.control.OverrunStyle;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -32,6 +31,8 @@ import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.StructuredTextField.Item;
+import records.gui.StructuredTextField.ItemVariant;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
@@ -44,11 +45,11 @@ import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
+import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.OptionalInt;
 
 /**
  * Created by neil on 01/05/2017.
@@ -254,7 +255,38 @@ public class TableDisplayUtility
             @Override
             public ColumnHandler date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
             {
-                throw new UnimplementedException();
+                return new DisplayCache<TemporalAccessor, StructuredTextField>(g, cs -> {}, f -> f) {
+
+                    @Override
+                    public @Nullable InputMap<?> getInputMapForParent(int rowIndex)
+                    {
+                        return null;
+                    }
+
+                    @Override
+                    public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable endEdit)
+                    {
+                        @Nullable StructuredTextField display = getRowIfShowing(rowIndex);
+                        if (display != null)
+                        {
+                            display.edit(scenePoint, endEdit);
+                        }
+                    }
+
+                    @Override
+                    public boolean isEditable()
+                    {
+                        return true;
+                    }
+
+                    @Override
+                    protected StructuredTextField makeGraphical(int rowIndex, TemporalAccessor value) throws InternalException
+                    {
+                        StructuredTextField field = makeField(dateTimeInfo, value);
+                        field.mouseTransparentProperty().bind(field.focusedProperty().not());
+                        return field;
+                    }
+                };
             }
 
             @Override
@@ -286,5 +318,33 @@ public class TableDisplayUtility
             doc = doc.concat(ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromSegment(segments[i], Collections.emptyList(), Collections.emptyList(), StyledText.<Collection<String>>textOps()));
         }
         return doc;
+    }
+
+    // public for testing:
+    @OnThread(Tag.FXPlatform)
+    public static StructuredTextField makeField(DateTimeInfo dateTimeInfo, TemporalAccessor value) throws InternalException
+    {
+        switch (dateTimeInfo.getType())
+        {
+            case YEARMONTHDAY:
+                return new StructuredTextField(
+                        new Item(Integer.toString(value.get(ChronoField.DAY_OF_MONTH)), ItemVariant.EDITABLE_DAY),
+                        new Item("/", ItemVariant.DIVIDER),
+                        new Item(Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH),
+                        new Item("/", ItemVariant.DIVIDER),
+                        new Item(Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR)
+                );
+            case YEARMONTH:
+                break;
+            case TIMEOFDAY:
+                break;
+            case TIMEOFDAYZONED:
+                break;
+            case DATETIME:
+                break;
+            case DATETIMEZONED:
+                break;
+        }
+        throw new InternalException("Unknown type: " + dateTimeInfo.getType());
     }
 }
