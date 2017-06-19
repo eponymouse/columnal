@@ -30,11 +30,24 @@ public class TestStructuredTextField
         type("178", "17$/ / ");
         type("8", "17$/ / "); // Ignored
         type("/3", "17/3$/ ");
+        type(":1973", "17/3/1973$");
+
+        f = TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 1, 1));
+        f.selectAll();
+        type("31 11 86","31/11/1986", true);
     }
 
     private void type(String entry, String expected)
     {
+        type(entry, expected, false);
+    }
+
+
+    private void type(String entry, String expected, boolean endEdit)
+    {
         f.replaceSelection(entry);
+        if (endEdit)
+            f.endEdit();
         String actual = f.getText();
         // Add curly brackets to indicate selection:
         actual = actual.substring(0, f.getAnchor()) + "^" + actual.substring(f.getAnchor());
@@ -43,6 +56,8 @@ public class TestStructuredTextField
 
         if (!expected.contains("^"))
             expected = expected.replace("$", "^$");
+
+
         assertEquals(expected, actual);
     }
 }

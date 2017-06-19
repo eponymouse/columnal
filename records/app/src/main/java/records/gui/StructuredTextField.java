@@ -136,6 +136,12 @@ public class StructuredTextField extends GenericStyledArea<@Nullable Void, Item,
         return doc;
     }
 
+    public void endEdit()
+    {
+        //TODO check date is valid, convert year to four digits if needed
+        // If not valid, prompt user (or offer direct return for testing?)
+    }
+
     private static class CharEntryResult
     {
         public final String result;
