@@ -98,7 +98,7 @@ public class StructuredTextField extends GenericStyledArea<@Nullable Void, Item,
             // Find the next chunk of new text which could go here:
             int nextChar = 0;
             ItemVariant curStyle = existing.getStyleSpan(curExisting).getStyle();
-            String after = getText(curStart, curStart + existing.getStyleSpan(curExisting).getLength()); // TODO doesn't work if you edit partway through style
+            String after = getText(curStart, curStart + existing.getStyleSpan(curExisting).getLength());
             while (nextChar < next.length || curExisting < existing.getSpanCount())
             {
                 CharEntryResult result = enterChar(curStyle, cur, after, nextChar < next.length ? OptionalInt.of(next[nextChar]) : OptionalInt.empty());
@@ -158,9 +158,12 @@ public class StructuredTextField extends GenericStyledArea<@Nullable Void, Item,
             case EDITABLE_DAY:
                 if (c.isPresent())
                 {
-                    if (c.getAsInt() >= '0' && c.getAsInt() <= '9' && before.length() <= 1)
+                    if (c.getAsInt() >= '0' && c.getAsInt() <= '9')
                     {
-                        return new CharEntryResult(before + cStr, true, false);
+                        if (before.length() <= 1)
+                            return new CharEntryResult(before + cStr, true, false);
+                        else
+                            return new CharEntryResult(before, true, true);
                     }
                     return new CharEntryResult(before, false, true);
                 }
