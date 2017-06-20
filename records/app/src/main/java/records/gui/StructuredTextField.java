@@ -40,7 +40,6 @@ import java.util.OptionalInt;
 @OnThread(Tag.FXPlatform)
 public abstract class StructuredTextField<T> extends StyleClassedTextArea
 {
-    private final ImmutableList<Item> template;
     private final List<Item> curValue = new ArrayList<>();
     private T completedValue;
 
@@ -54,7 +53,6 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
             }
         });
 
-        template = ImmutableList.copyOf(subItems);
         curValue.addAll(Arrays.asList(subItems));
         @Nullable T val = endEdit().<@Nullable T>either(err -> null, v -> v);
         if (val == null)
