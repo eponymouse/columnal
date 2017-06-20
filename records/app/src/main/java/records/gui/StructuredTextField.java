@@ -9,11 +9,14 @@ import javafx.beans.value.ObservableValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.text.Text;
+import one.util.streamex.StreamEx;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.CharacterHit;
 import org.fxmisc.richtext.GenericStyledArea;
 import org.fxmisc.richtext.model.*;
+import org.jetbrains.annotations.NotNull;
 import org.reactfx.EventStream;
 import org.reactfx.SuspendableNo;
 import org.reactfx.collection.LiveList;
@@ -27,20 +30,25 @@ import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 
+import java.time.Year;
+import java.time.temporal.ChronoField;
+import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 18/06/2017.
  */
 @OnThread(Tag.FXPlatform)
-public class StructuredTextField extends GenericStyledArea<@Nullable Void, Item, ItemVariant>
+public abstract class StructuredTextField extends GenericStyledArea<@Nullable Void, Item, ItemVariant>
 {
-    public StructuredTextField(Item... subItems) throws InternalException
+    private StructuredTextField(Item... subItems) throws InternalException
     {
         super(null, (t, s) -> {}, ItemVariant.DIVIDER, segmentOps(), false, Item::makeNode);
         // Call super to avoid our own validation:
@@ -63,6 +71,85 @@ public class StructuredTextField extends GenericStyledArea<@Nullable Void, Item,
         {
             throw new InternalException("Empty document based on items " + subItems);
         }
+    }
+
+    @NotNull
+    static StructuredTextField dateYMD(TemporalAccessor value) throws InternalException
+    {
+        return new StructuredTextField(
+                new Item(Integer.toString(value.get(ChronoField.DAY_OF_MONTH)), ItemVariant.EDITABLE_DAY),
+                new Item("/", ItemVariant.DIVIDER),
+                new Item(Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH),
+                new Item("/", ItemVariant.DIVIDER),
+                new Item(Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR)
+        ) {
+            @Override
+            @OnThread(Tag.FXPlatform)
+            public @Nullable List<Pair<@Localized String, FXPlatformRunnable>> endEdit()
+            {
+                // TODO check for misordering (e.g. year first), or dates like 31st November
+
+                try
+                {
+                    int day = Integer.parseInt(getItem(ItemVariant.EDITABLE_DAY));
+                    // TODO allow month names
+                    int month = Integer.parseInt(getItem(ItemVariant.EDITABLE_MONTH));
+                    int year = Integer.parseInt(getItem(ItemVariant.EDITABLE_YEAR));
+
+                    if (year < 100)
+                    {
+                        // Apply 80/20 rule (20 years into future, or 80 years into past):
+                        int fourYear = Year.now().getValue() - (Year.now().getValue() % 100) + year;
+                        if (fourYear - Year.now().getValue() > 20)
+                            fourYear -= 100;
+                        setItem(ItemVariant.EDITABLE_YEAR, Integer.toString(fourYear));
+                    }
+                }
+                catch (NumberFormatException e)
+                {
+
+                }
+
+                //TODO check date is valid
+                return null;
+            }
+        };
+    }
+
+    protected String getItem(ItemVariant item)
+    {
+        return splitByStyle().stream().filter(ss -> ss.style == item).findFirst().map(ss -> getText(ss.start, ss.end)).orElse("");
+    }
+
+    protected void setItem(ItemVariant item, String content)
+    {
+        splitByStyle().stream().filter(ss -> ss.style == item).findFirst().ifPresent(ss -> super.replace(ss.start, ss.end, ReadOnlyStyledDocument.<@Nullable Void, Item, ItemVariant>fromString(content, null, item, segmentOps())));
+    }
+
+    private static class Split
+    {
+        public final ItemVariant style;
+        public final int start;
+        public final int end;
+
+        public Split(ItemVariant style, int start, int end)
+        {
+            this.style = style;
+            this.start = start;
+            this.end = end;
+        }
+    }
+
+    private ArrayList<Split> splitByStyle()
+    {
+        int start = 0;
+        ArrayList<Split> r = new ArrayList<>();
+        for (StyleSpan<ItemVariant> ss : getStyleSpans(0))
+        {
+            r.add(new Split(ss.getStyle(), start, start + ss.getLength()));
+            start += ss.getLength();
+        }
+        return r;
     }
 
     @Override
@@ -98,7 +185,9 @@ public class StructuredTextField extends GenericStyledArea<@Nullable Void, Item,
             // Find the next chunk of new text which could go here:
             int nextChar = 0;
             ItemVariant curStyle = existing.getStyleSpan(curExisting).getStyle();
-            String after = getText(curStart, curStart + existing.getStyleSpan(curExisting).getLength());
+            String after = curStyle == ItemVariant.DIVIDER ?
+                    getText(curStart, curStart + existing.getStyleSpan(curExisting).getLength()) :
+                    getText(Math.max(curStart, end), Math.max(end, curStart + existing.getStyleSpan(curExisting).getLength()));
             while (nextChar < next.length || curExisting < existing.getSpanCount())
             {
                 CharEntryResult result = enterChar(curStyle, cur, after, nextChar < next.length ? OptionalInt.of(next[nextChar]) : OptionalInt.empty());
@@ -136,11 +225,12 @@ public class StructuredTextField extends GenericStyledArea<@Nullable Void, Item,
         return doc;
     }
 
-    public void endEdit()
-    {
-        //TODO check date is valid, convert year to four digits if needed
-        // If not valid, prompt user (or offer direct return for testing?)
-    }
+    /**
+     * If return is null, successful.  Otherwise list is of alternatives for fixing the error (may be empty)
+     * @return
+     */
+    @OnThread(Tag.FXPlatform)
+    public abstract @Nullable List<Pair<@Localized String, FXPlatformRunnable>> endEdit();
 
     private static class CharEntryResult
     {
@@ -158,38 +248,36 @@ public class StructuredTextField extends GenericStyledArea<@Nullable Void, Item,
 
     private CharEntryResult enterChar(ItemVariant style, String before, String after, OptionalInt c)
     {
+        if (style == ItemVariant.DIVIDER)
+            return new CharEntryResult(after, true, true);
+
         String cStr = c.isPresent() ? new String(new int[] {c.getAsInt()}, 0, 1) : "";
+        if (c.isPresent())
+        {
+            // TODO allow month names
+            if (c.getAsInt() >= '0' && c.getAsInt() <= '9')
+            {
+                if (before.length() < maxLength(style))
+                    return new CharEntryResult(before + cStr, true, false);
+                else
+                    return new CharEntryResult(before, true, true);
+            }
+            return new CharEntryResult(before, false, true);
+        }
+        else
+            return new CharEntryResult(before + after.trim(), true, true);
+
+    }
+
+    private int maxLength(ItemVariant style)
+    {
         switch (style)
         {
-            case EDITABLE_DAY:
-                if (c.isPresent())
-                {
-                    if (c.getAsInt() >= '0' && c.getAsInt() <= '9')
-                    {
-                        if (before.length() <= 1)
-                            return new CharEntryResult(before + cStr, true, false);
-                        else
-                            return new CharEntryResult(before, true, true);
-                    }
-                    return new CharEntryResult(before, false, true);
-                }
-                else
-                    return new CharEntryResult(before, true, true);
-            case EDITABLE_MONTH:
-                // TODO allow month names
-                if (c.isPresent())
-                    return c.getAsInt() >= '0' && c.getAsInt() <= '9' ? new CharEntryResult(before + cStr, true, false) : new CharEntryResult(before, false, true);
-                else
-                    return new CharEntryResult(before, true, true);
             case EDITABLE_YEAR:
-                if (c.isPresent())
-                    return c.getAsInt() >= '0' && c.getAsInt() <= '9' ? new CharEntryResult(before + cStr, true, false) : new CharEntryResult(before, false, true);
-                else
-                    return new CharEntryResult(before, true, true);
-            case DIVIDER:
-                break;
+                return 4;
+            default:
+                return 2;
         }
-        return new CharEntryResult(after, true, true);
     }
 
     /*

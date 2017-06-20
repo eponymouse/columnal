@@ -31,8 +31,6 @@ import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.StructuredTextField.Item;
-import records.gui.StructuredTextField.ItemVariant;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
@@ -45,7 +43,6 @@ import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
-import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 import java.util.Collections;
@@ -327,13 +324,7 @@ public class TableDisplayUtility
         switch (dateTimeInfo.getType())
         {
             case YEARMONTHDAY:
-                return new StructuredTextField(
-                        new Item(Integer.toString(value.get(ChronoField.DAY_OF_MONTH)), ItemVariant.EDITABLE_DAY),
-                        new Item("/", ItemVariant.DIVIDER),
-                        new Item(Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH),
-                        new Item("/", ItemVariant.DIVIDER),
-                        new Item(Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR)
-                );
+                return StructuredTextField.dateYMD(value);
             case YEARMONTH:
                 break;
             case TIMEOFDAY:
@@ -347,4 +338,5 @@ public class TableDisplayUtility
         }
         throw new InternalException("Unknown type: " + dateTimeInfo.getType());
     }
+
 }

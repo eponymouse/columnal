@@ -24,7 +24,7 @@ public class TestStructuredTextField
     @Test
     public void testYMD() throws InternalException
     {
-        f = TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 1, 1));
+        f = TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1));
         f.selectAll();
         type("", "$ / / ");
         type("178", "17$/ / ");
@@ -32,14 +32,14 @@ public class TestStructuredTextField
         type("/3", "17/3$/ ");
         type(":1973", "17/3/1973$");
 
-        f = TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 1, 1));
+        f = TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1));
         f.start(SelectionPolicy.CLEAR);
-        type("", "$1/1/1900");
-        type("2", "2$1/1/1900");
+        type("", "$1/4/1900");
+        type("2", "2$1/4/1900");
 
-        f = TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 1, 1));
+        f = TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1));
         f.selectAll();
-        type("31 11 86","31/11/1986", true);
+        type("31 11 86","31/11/1986$", true);
     }
 
     private void type(String entry, String expected)
