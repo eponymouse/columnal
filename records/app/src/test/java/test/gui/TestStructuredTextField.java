@@ -1,5 +1,6 @@
 package test.gui;
 
+import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Scene;
@@ -7,9 +8,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.units.qual.A;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.util.WaitForAsyncUtils;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.error.InternalException;
@@ -21,6 +25,7 @@ import utility.gui.FXUtility;
 
 import java.time.Instant;
 import java.time.LocalDate;
+import java.time.temporal.TemporalAccessor;
 
 import static org.junit.Assert.assertEquals;
 
@@ -44,8 +49,12 @@ public class TestStructuredTextField extends ApplicationTest
         stage.show();
         dummy = new TextField();
         FXUtility.addChangeListenerPlatformNN(f, field -> {
-            scene.setRoot(new VBox(field, dummy));
-            field.requestFocus();
+            FXUtility.runAfter(() ->
+            {
+                scene.setRoot(new VBox(field, dummy));
+                field.requestFocus();
+            });
+            WaitForAsyncUtils.waitForFxEvents();
         });
     }
 
@@ -54,46 +63,46 @@ public class TestStructuredTextField extends ApplicationTest
     {
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
-        type("178", "17$/ / ");
-        type("8", "17$/ / "); // Ignored
-        type("/3", "17/3$/ ");
-        type(":1973", "17/3/1973$");
+        type("178", "17$//");
+        type("8", "17$//"); // Ignored
+        type("/3", "17/3$/");
+        type(":1973", "17/3/1973$", LocalDate.of(1973, 3, 17));
 
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().start(SelectionPolicy.CLEAR);
         type("", "$1/4/1900");
-        type("2", "2$1/4/1900");
+        type("2", "2$1/4/1900", LocalDate.of(1900, 4, 21));
 
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
-        type("31 11 86","31/11/1986$", true);
+        type("31 10 86","31/10/1986$", LocalDate.of(1986, 10, 31));
 
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
-        type("5 6 27","5/6/2027$", true);
+        type("5 6 27","5/6/2027$", LocalDate.of(2027, 6, 5));
 
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
-        type("", "$/ / ");
-        type("6", "6$/ / ");
-        type("-", "6/$/ ");
-        type("7", "6/7$/ ");
+        type("6", "6$//");
+        type("-", "6/$/");
+        type("7", "6/7$/");
         type("-", "6/7/$");
-        type("3", "6/7/2003$", true);
+        type("3", "6/7/2003$", LocalDate.of(2003, 7, 6));
     }
 
     private void type(String entry, String expected)
     {
-        type(entry, expected, false);
+        type(entry, expected, null);
     }
 
 
-    private void type(String entry, String expected, boolean endEdit)
+    private void type(String entry, String expected, @Nullable TemporalAccessor endEditAndCompareTo)
     {
         write(entry);
-        if (endEdit)
+        if (endEditAndCompareTo != null)
         {
-            dummy.requestFocus();
+            FXUtility.runAfter(() -> dummy.requestFocus());
+            WaitForAsyncUtils.waitForFxEvents();
         }
         String actual = f.get().getText();
         // Add curly brackets to indicate selection:
@@ -106,5 +115,9 @@ public class TestStructuredTextField extends ApplicationTest
 
 
         assertEquals(expected, actual);
+        if (endEditAndCompareTo != null)
+        {
+            assertEquals(endEditAndCompareTo, f.get().getCompletedValue());
+        }
     }
 }

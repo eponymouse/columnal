@@ -1,66 +1,77 @@
 package records.gui;
 
-import javafx.beans.property.IntegerProperty;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleIntegerProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.value.ObservableValue;
+import com.google.common.collect.ImmutableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.text.Text;
-import one.util.streamex.StreamEx;
-import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.fxmisc.richtext.CharacterHit;
-import org.fxmisc.richtext.GenericStyledArea;
+import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.*;
 import org.jetbrains.annotations.NotNull;
-import org.reactfx.EventStream;
-import org.reactfx.SuspendableNo;
-import org.reactfx.collection.LiveList;
-import org.reactfx.value.SuspendableVal;
-import org.reactfx.value.Val;
 import records.error.InternalException;
-import records.gui.StructuredTextField.Item;
-import records.gui.StructuredTextField.ItemVariant;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.FXPlatformRunnable;
 import utility.Pair;
+import utility.Utility;
+import utility.gui.FXUtility;
 
+import java.time.LocalDate;
 import java.time.Year;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.stream.Stream;
 
 /**
  * Created by neil on 18/06/2017.
  */
 @OnThread(Tag.FXPlatform)
-public abstract class StructuredTextField extends GenericStyledArea<@Nullable Void, Item, ItemVariant>
+public abstract class StructuredTextField<T> extends StyleClassedTextArea
 {
+    private final ImmutableList<Item> template;
+    private final List<Item> curValue = new ArrayList<>();
+    private T completedValue;
+
     private StructuredTextField(Item... subItems) throws InternalException
     {
-        super(null, (t, s) -> {}, ItemVariant.DIVIDER, segmentOps(), false, Item::makeNode);
+        super(false);
+        FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
+            if (!focused)
+            {
+                endEdit().either_(err -> {/*TODO show dialog */}, v -> {completedValue = v;});
+            }
+        });
+
+        template = ImmutableList.copyOf(subItems);
+        curValue.addAll(Arrays.asList(subItems));
+        @Nullable T val = endEdit().<@Nullable T>either(err -> null, v -> v);
+        if (val == null)
+        {
+            throw new InternalException("Starting field off with invalid completed value: " + Utility.listToString(Arrays.asList(subItems)));
+        }
+        completedValue = val;
         // Call super to avoid our own validation:
-        super.replace(0, 0, makeInitialDoc(subItems));
+        super.replace(0, 0, makeDoc(subItems));
     }
 
-    private static ReadOnlyStyledDocument<Void, Item, ItemVariant> makeInitialDoc(Item[] subItems) throws InternalException
+    private static ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> makeDoc(Item[] subItems)
     {
-        @MonotonicNonNull ReadOnlyStyledDocument<Void, Item, ItemVariant> doc = null;
+        @MonotonicNonNull ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = null;
         for (Item subItem : subItems)
         {
-            ReadOnlyStyledDocument<Void, Item, ItemVariant> nextSeg = ReadOnlyStyledDocument.<@Nullable Void, Item, ItemVariant>fromSegment(subItem, null, subItem.itemVariant, segmentOps());
+            ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> nextSeg = ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromSegment(subItem.toStyledText(), Collections.emptyList(), subItem.toStyles(), StyledText.<Collection<String>>textOps());
             doc = doc == null ? nextSeg : doc.concat(nextSeg);
         }
         if (doc != null)
@@ -69,126 +80,75 @@ public abstract class StructuredTextField extends GenericStyledArea<@Nullable Vo
         }
         else
         {
-            throw new InternalException("Empty document based on items " + subItems);
+            return ReadOnlyStyledDocument.fromString("", Collections.emptyList(), Collections.emptyList(), StyledText.<Collection<String>>textOps());
         }
     }
 
     @NotNull
-    static StructuredTextField dateYMD(TemporalAccessor value) throws InternalException
+    static StructuredTextField<? extends TemporalAccessor> dateYMD(TemporalAccessor value) throws InternalException
     {
-        return new StructuredTextField(
-                new Item(Integer.toString(value.get(ChronoField.DAY_OF_MONTH)), ItemVariant.EDITABLE_DAY),
-                new Item("/", ItemVariant.DIVIDER),
-                new Item(Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH),
-                new Item("/", ItemVariant.DIVIDER),
-                new Item(Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR)
-        ) {
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public @Nullable List<Pair<@Localized String, FXPlatformRunnable>> endEdit()
-            {
-                // TODO check for misordering (e.g. year first), or dates like 31st November
-
-                try
-                {
-                    int day = Integer.parseInt(getItem(ItemVariant.EDITABLE_DAY));
-                    // TODO allow month names
-                    int month = Integer.parseInt(getItem(ItemVariant.EDITABLE_MONTH));
-                    int year = Integer.parseInt(getItem(ItemVariant.EDITABLE_YEAR));
-
-                    if (year < 100)
-                    {
-                        // Apply 80/20 rule (20 years into future, or 80 years into past):
-                        int fourYear = Year.now().getValue() - (Year.now().getValue() % 100) + year;
-                        if (fourYear - Year.now().getValue() > 20)
-                            fourYear -= 100;
-                        setItem(ItemVariant.EDITABLE_YEAR, Integer.toString(fourYear));
-                    }
-                }
-                catch (NumberFormatException e)
-                {
-
-                }
-
-                //TODO check date is valid
-                return null;
-            }
-        };
+        return new YMD(value);
     }
 
-    protected String getItem(ItemVariant item)
+    @RequiresNonNull("curValue")
+    protected String getItem(@UnknownInitialization(Object.class) StructuredTextField<T> this, ItemVariant item)
     {
-        return splitByStyle().stream().filter(ss -> ss.style == item).findFirst().map(ss -> getText(ss.start, ss.end)).orElse("");
+        return curValue.stream().filter(ss -> ss.itemVariant == item).findFirst().map(ss -> ss.content).orElse("");
     }
 
-    protected void setItem(ItemVariant item, String content)
+    @RequiresNonNull("curValue")
+    protected void setItem(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this, ItemVariant item, String content)
     {
-        splitByStyle().stream().filter(ss -> ss.style == item).findFirst().ifPresent(ss -> super.replace(ss.start, ss.end, ReadOnlyStyledDocument.<@Nullable Void, Item, ItemVariant>fromString(content, null, item, segmentOps())));
-    }
-
-    private static class Split
-    {
-        public final ItemVariant style;
-        public final int start;
-        public final int end;
-
-        public Split(ItemVariant style, int start, int end)
-        {
-            this.style = style;
-            this.start = start;
-            this.end = end;
-        }
-    }
-
-    private ArrayList<Split> splitByStyle()
-    {
-        int start = 0;
-        ArrayList<Split> r = new ArrayList<>();
-        for (StyleSpan<ItemVariant> ss : getStyleSpans(0))
-        {
-            r.add(new Split(ss.getStyle(), start, start + ss.getLength()));
-            start += ss.getLength();
-        }
-        return r;
+        curValue.replaceAll(old -> old.itemVariant == item ? new Item(content, item) : old);
+        super.replace(0, getLength(), makeDoc(curValue.toArray(new Item[0])));
     }
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void replace(int start, int end, StyledDocument<@Nullable Void, Item, ItemVariant> replacement)
+    public void replace(final int start, final int end, StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> replacement)
     {
-        StyleSpans<ItemVariant> existing = getStyleSpans(0);
+        List<Item> existing = new ArrayList<>(curValue);
 
-        List<Pair<String, ItemVariant>> newContent = new ArrayList<>();
+        List<Item> newContent = new ArrayList<>();
         int[] next = replacement.getText().codePoints().toArray();
         // Need to zip together the spans, in effect.  But should never delete the boilerplate parts
         int curExisting = 0;
         int curStart = 0;
         String cur = "";
-        while (curStart < start)
+        // We want to copy across spans that end before us, and then for the one we are in, store the content
+        // before us into the cur String.
+        // e.g. given "17//" and start == 3, we want to copy day and divider, and set cur to ""
+        //      given "17//" and start == 2, we want to copy day and set cur to "/"
+        //      given "17//" and start == 1, we want to just set cur to "1"
+        while (curStart <= start)
         {
-            int spanEnd = curStart + existing.getStyleSpan(curExisting).getLength();
-            if (spanEnd < start)
+            int spanEnd = curStart + existing.get(curExisting).getLength();
+            // If we're just before divider, count as being at the beginning of it, not the end:
+            if (start == spanEnd && (curExisting + 1 >= existing.size() || existing.get(curExisting + 1).itemVariant == ItemVariant.DIVIDER))
+                break;
+
+            if (spanEnd <= start)
             {
-                newContent.add(new Pair<>(getText(curStart, spanEnd), existing.getStyleSpan(curExisting).getStyle()));
+                newContent.add(new Item(existing.get(curExisting).content, existing.get(curExisting).itemVariant));
                 curExisting += 1;
                 curStart = spanEnd;
             }
             else
             {
-                cur = getText(curStart, start);
                 break;
             }
         }
+        cur = getText(curStart, start);
         int replacementEnd = start;
-        while (curExisting < existing.getSpanCount())
+        while (curExisting < existing.size())
         {
             // Find the next chunk of new text which could go here:
             int nextChar = 0;
-            ItemVariant curStyle = existing.getStyleSpan(curExisting).getStyle();
+            ItemVariant curStyle = existing.get(curExisting).itemVariant;
             String after = curStyle == ItemVariant.DIVIDER ?
-                    getText(curStart, curStart + existing.getStyleSpan(curExisting).getLength()) :
-                    getText(Math.max(curStart, end), Math.max(end, curStart + existing.getStyleSpan(curExisting).getLength()));
-            while (nextChar < next.length || curExisting < existing.getSpanCount())
+                    getText(curStart, curStart + existing.get(curExisting).getLength()) :
+                    getText(Math.max(curStart, end), Math.max(end, curStart + existing.get(curExisting).getLength()));
+            while (nextChar < next.length || curExisting < existing.size())
             {
                 CharEntryResult result = enterChar(curStyle, cur, after, nextChar < next.length ? OptionalInt.of(next[nextChar]) : OptionalInt.empty());
                 cur = result.result;
@@ -200,37 +160,30 @@ public abstract class StructuredTextField extends GenericStyledArea<@Nullable Vo
                 if (result.moveToNext)
                     break;
             }
-            newContent.add(new Pair<>(cur.isEmpty() ? " " : cur, curStyle));
+            newContent.add(new Item(cur, curStyle));
             next = Arrays.copyOfRange(next, nextChar, next.length);
-            curStart += existing.getStyleSpan(curExisting).getLength();
+            curStart += existing.get(curExisting).getLength();
             curExisting += 1;
             cur = "";
         }
-        @Nullable StyledDocument<Void, Item, ItemVariant> doc = makeDoc(newContent);
-        if (doc != null)
-        {
-            super.replace(0, getLength(), doc);
-            selectRange(replacementEnd, replacementEnd);
-        }
-    }
-
-    private @Nullable StyledDocument<Void, Item, ItemVariant> makeDoc(List<Pair<String, ItemVariant>> content)
-    {
-        @MonotonicNonNull StyledDocument<Void, Item, ItemVariant> doc = null;
-        for (Pair<String, ItemVariant> c : content)
-        {
-            StyledDocument<Void, Item, ItemVariant> next = ReadOnlyStyledDocument.fromString(c.getFirst(), null, c.getSecond(), segmentOps());
-            doc = doc == null ? next : doc.concat(next);
-        }
-        return doc;
+        StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = makeDoc(newContent.toArray(new Item[0]));
+        super.replace(0, getLength(), doc);
+        curValue.clear();
+        curValue.addAll(newContent);
+        selectRange(replacementEnd, replacementEnd);
     }
 
     /**
      * If return is null, successful.  Otherwise list is of alternatives for fixing the error (may be empty)
      * @return
      */
-    @OnThread(Tag.FXPlatform)
-    public abstract @Nullable List<Pair<@Localized String, FXPlatformRunnable>> endEdit();
+    @RequiresNonNull("curValue")
+    public abstract Either<List<Pair<String, FXPlatformRunnable>>, T> endEdit(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this);
+
+    public T getCompletedValue()
+    {
+        return completedValue;
+    }
 
     private static class CharEntryResult
     {
@@ -469,6 +422,21 @@ public abstract class StructuredTextField extends GenericStyledArea<@Nullable Vo
         {
             return new Text(content);
         }
+
+        public StyledText<Collection<String>> toStyledText()
+        {
+            return new StyledText<>(content, toStyles());
+        }
+
+        public Collection<String> toStyles()
+        {
+            return Collections.emptyList();
+        }
+
+        public int getLength()
+        {
+            return content.length();
+        }
     }
 
     @OnThread(Tag.FXPlatform)
@@ -542,5 +510,46 @@ public abstract class StructuredTextField extends GenericStyledArea<@Nullable Vo
                 return new Item("", ItemVariant.DIVIDER);
             }
         };
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private static class YMD extends StructuredTextField<TemporalAccessor>
+    {
+        public YMD(TemporalAccessor value) throws InternalException
+        {
+            super(new Item(Integer.toString(value.get(ChronoField.DAY_OF_MONTH)), ItemVariant.EDITABLE_DAY), new Item("/", ItemVariant.DIVIDER), new Item(Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH), new Item("/", ItemVariant.DIVIDER), new Item(Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR));
+        }
+
+        @Override
+        @OnThread(Tag.FXPlatform)
+        public Either<List<Pair<String, FXPlatformRunnable>>, TemporalAccessor> endEdit(@UnknownInitialization(StyleClassedTextArea.class) YMD this)
+        {
+            // TODO check for misordering (e.g. year first), or dates like 31st November
+
+            try
+            {
+                int day = Integer.parseInt(getItem(ItemVariant.EDITABLE_DAY));
+                // TODO allow month names
+                int month = Integer.parseInt(getItem(ItemVariant.EDITABLE_MONTH));
+                int year = Integer.parseInt(getItem(ItemVariant.EDITABLE_YEAR));
+
+                if (year < 100)
+                {
+                    // Apply 80/20 rule (20 years into future, or 80 years into past):
+                    int fourYear = Year.now().getValue() - (Year.now().getValue() % 100) + year;
+                    if (fourYear - Year.now().getValue() > 20)
+                        fourYear -= 100;
+                    setItem(ItemVariant.EDITABLE_YEAR, Integer.toString(fourYear));
+                    year = fourYear;
+                }
+
+                //TODO check date is valid
+                return Either.right(LocalDate.of(year, month, day));
+            }
+            catch (NumberFormatException e)
+            {
+                return Either.left(Collections.emptyList());
+            }
+        }
     }
 }
