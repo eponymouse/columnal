@@ -27,6 +27,7 @@ import utility.gui.FXUtility;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
 
 import static org.junit.Assert.assertEquals;
 import static test.TestUtil.fx;
@@ -65,16 +66,71 @@ public class TestStructuredTextField extends ApplicationTest
     public void testPrompt() throws InternalException
     {
         resetToPrompt();
-        StructuredTextField f = this.f.get();
-        assertEquals(2, f.getAnchor());
-        assertEquals(2, f.getCaretPosition());
-        push(KeyCode.RIGHT);
-        assertEquals(8, f.getAnchor());
-        assertEquals(8, f.getCaretPosition());
-        push(KeyCode.LEFT);
-        assertEquals(2, f.getAnchor());
-        assertEquals(2, f.getCaretPosition());
+        //         1/Month/1900
+        testPositions(
+            new int[] {0, 1},
+            null,
+            new int[] {2},
+            null,
+            new int[] {8, 9, 10, 11, 12}
+        );
+    }
 
+    private void testPositions(int[]... positions)
+    {
+        // Check home and end:
+        push(KeyCode.HOME);
+        assertEquals(positions[0][0], f.get().getCaretPosition());
+        push(KeyCode.END);
+        assertEquals(positions[positions.length - 1][positions[positions.length - 1].length - 1], f.get().getCaretPosition());
+        push(KeyCode.HOME);
+        assertEquals(positions[0][0], f.get().getCaretPosition());
+
+        ArrayList<Integer> collapsed = new ArrayList<>();
+        int major = 0;
+        int minor = 0;
+        while (major < positions.length)
+        {
+            if (positions[major] == null)
+            {
+                major += 1;
+                minor = 0;
+            }
+            else
+            {
+                while (minor < positions[major].length)
+                {
+                    collapsed.add(positions[major][minor]);
+                    minor += 1;
+                }
+                major += 1;
+                minor = 0;
+            }
+        }
+
+        // Now go through one at a time using LEFT and RIGHT, backing up and advancing each stage:
+        for (int i = 0; i < collapsed.size(); i++)
+        {
+            assertEquals(collapsed.get(i), fx(() -> f.get().getCaretPosition()));
+            // Forward then back:
+            if (i + 1 < collapsed.size())
+            {
+                push(KeyCode.RIGHT);
+                push(KeyCode.LEFT);
+            }
+            assertEquals(collapsed.get(i), fx(() -> f.get().getCaretPosition()));
+            // Back then forward:
+            if (i > 0)
+            {
+                push(KeyCode.LEFT);
+                push(KeyCode.RIGHT);
+            }
+            assertEquals(collapsed.get(i), fx(() -> f.get().getCaretPosition()));
+            push(KeyCode.RIGHT);
+        }
+        assertEquals(collapsed.get(collapsed.size() - 1), fx(() -> f.get().getCaretPosition()));
+
+        // TODO do with selection, with ctrl-left/ctrl-right, and with clicking (and shift-clicking)
     }
 
     private void resetToPrompt() throws InternalException

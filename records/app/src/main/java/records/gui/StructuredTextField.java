@@ -550,7 +550,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
                 else
                     break;
             }
-            cur = new Pair<>(field, 0);
+            cur = new Pair<>(field, curValue.get(field).getLength());
         }
         moveTo(structuredToPlain(cur), selectionPolicy);
     }
