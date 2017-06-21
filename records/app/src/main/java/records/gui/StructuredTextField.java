@@ -435,7 +435,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
 
         public StyledText<Collection<String>> toStyledText()
         {
-            return new StyledText<>(content.isEmpty() ? prompt : content, toStyles());
+            return new StyledText<>(getScreenText(), toStyles());
         }
 
         public Collection<String> toStyles()
@@ -446,6 +446,16 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
         public int getLength()
         {
             return content.length();
+        }
+
+        public int getScreenLength()
+        {
+            return content.isEmpty() ? prompt.length() : content.length();
+        }
+
+        public String getScreenText()
+        {
+            return content.isEmpty() ? prompt : content;
         }
     }
 
@@ -492,5 +502,83 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
                 return Either.left(Collections.emptyList());
             }
         }
+    }
+
+    // Field, index within field
+    private Pair<Integer, Integer> plainToStructured(int position)
+    {
+        for (int i = 0; i < curValue.size(); i++)
+        {
+            Item item = curValue.get(i);
+            if (item.itemVariant != ItemVariant.DIVIDER && position <= item.getScreenLength())
+                return new Pair<>(i, position);
+            position -= item.getScreenLength();
+        }
+        // Return end as a fallback:
+        return new Pair<>(curValue.size() - 1, curValue.get(curValue.size() - 1).getScreenLength());
+    }
+
+    private int structuredToPlain(Pair<Integer, Integer> structured)
+    {
+        int pos = 0;
+        for (int i = 0; i < structured.getFirst(); i++)
+        {
+            pos += curValue.get(i).getScreenLength();
+        }
+        return pos + structured.getSecond();
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public void previousChar(SelectionPolicy selectionPolicy)
+    {
+        Pair<Integer, Integer> cur = plainToStructured(getCaretPosition());
+        Item curItem = curValue.get(cur.getFirst());
+        if (cur.getSecond() > 0)
+        {
+            // Can advance backwards within the field:
+            cur = new Pair<>(cur.getFirst(), Character.offsetByCodePoints(curItem.getScreenText(), cur.getSecond(), -1));
+        }
+        else
+        {
+            // Move to previous field:
+            int field = cur.getFirst() - 1;
+            while (field > 0)
+            {
+                if (curValue.get(field).itemVariant == ItemVariant.DIVIDER)
+                    field -= 1;
+                else
+                    break;
+            }
+            cur = new Pair<>(field, 0);
+        }
+        moveTo(structuredToPlain(cur), selectionPolicy);
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public void nextChar(SelectionPolicy selectionPolicy)
+    {
+        Pair<Integer, Integer> cur = plainToStructured(getCaretPosition());
+        Item curItem = curValue.get(cur.getFirst());
+        if (cur.getSecond() < curItem.getLength()) // Note: getLength here, not getScreenLength. Can't move within prompt
+        {
+            // Can advance within the field:
+            cur = new Pair<>(cur.getFirst(), Character.offsetByCodePoints(curItem.getScreenText(), cur.getSecond(), 1));
+        }
+        else
+        {
+            // Move to next field:
+            int field = cur.getFirst() + 1;
+            while (field < curValue.size())
+            {
+                if (curValue.get(field).itemVariant == ItemVariant.DIVIDER)
+                    field += 1;
+                else
+                    break;
+            }
+            cur = new Pair<>(field, 0);
+        }
+        moveTo(structuredToPlain(cur), selectionPolicy);
     }
 }

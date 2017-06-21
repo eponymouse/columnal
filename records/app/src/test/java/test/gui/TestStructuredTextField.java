@@ -6,6 +6,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -28,6 +29,8 @@ import java.time.LocalDate;
 import java.time.temporal.TemporalAccessor;
 
 import static org.junit.Assert.assertEquals;
+import static test.TestUtil.fx;
+import static test.TestUtil.fx_;
 
 /**
  * Created by neil on 19/06/2017.
@@ -56,6 +59,33 @@ public class TestStructuredTextField extends ApplicationTest
             });
             WaitForAsyncUtils.waitForFxEvents();
         });
+    }
+
+    @Test
+    public void testPrompt() throws InternalException
+    {
+        resetToPrompt();
+        StructuredTextField f = this.f.get();
+        assertEquals(2, f.getAnchor());
+        assertEquals(2, f.getCaretPosition());
+        push(KeyCode.RIGHT);
+        assertEquals(8, f.getAnchor());
+        assertEquals(8, f.getCaretPosition());
+        push(KeyCode.LEFT);
+        assertEquals(2, f.getAnchor());
+        assertEquals(2, f.getCaretPosition());
+
+    }
+
+    private void resetToPrompt() throws InternalException
+    {
+        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        WaitForAsyncUtils.waitForFxEvents();
+        push(KeyCode.HOME);
+        push(KeyCode.RIGHT);
+        push(KeyCode.RIGHT);
+        push(KeyCode.DELETE);
+        assertEquals("1/Month/1900", fx(() -> f.get().getText()));
     }
 
     @Test

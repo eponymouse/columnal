@@ -10,6 +10,7 @@ import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.testfx.util.WaitForAsyncUtils;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -18,6 +19,7 @@ import records.data.TableManager;
 import records.data.datatype.DataTypeUtility;
 import records.grammar.GrammarUtility;
 import records.importers.ChoicePoint.ChoiceType;
+import utility.FXPlatformRunnable;
 import utility.SimulationRunnable;
 import utility.SimulationSupplier;
 import utility.TaggedValue;
@@ -515,6 +517,38 @@ public class TestUtil
         }
         sb.append("]");
         return sb.toString();
+    }
+
+    @OnThread(Tag.Any)
+    public static <T> T fx(FXPlatformSupplierEx<T> action)
+    {
+        try
+        {
+            return WaitForAsyncUtils.asyncFx(action::get).get();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @OnThread(Tag.Any)
+    public static void fx_(FXPlatformRunnable action)
+    {
+        try
+        {
+            WaitForAsyncUtils.asyncFx(action::run).get();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static interface FXPlatformSupplierEx<T>
+    {
+        @OnThread(Tag.FXPlatform)
+        public T get() throws InternalException, UserException;
     }
 
     public static class ChoicePick<C extends Choice>

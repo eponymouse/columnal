@@ -8,17 +8,12 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
-import javafx.geometry.Pos;
-import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
-import javafx.scene.Scene;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
-import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import javafx.stage.Stage;
-import javafx.stage.StageStyle;
 import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -42,15 +37,12 @@ import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow;
-import records.gui.View;
 import test.TestUtil;
 import test.gen.GenDataType;
 import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformRunnable;
-import utility.FXPlatformSupplier;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.Workers;
@@ -100,41 +92,9 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @OnThread(Tag.Any)
     public void testStartState()
     {
-        assertTrue(fx(() -> mainWindow.isShowing()));
-        assertEquals(1, (int)fx(() -> MainWindow._test_getViews().size()));
-        assertTrue(fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().isEmpty()));
-    }
-
-    private static interface FXPlatformSupplierEx<T>
-    {
-        @OnThread(Tag.FXPlatform)
-        public T get() throws InternalException, UserException;
-    }
-
-    @OnThread(Tag.Any)
-    private static <T> T fx(FXPlatformSupplierEx<T> action)
-    {
-        try
-        {
-            return WaitForAsyncUtils.asyncFx(action::get).get();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
-    }
-
-    @OnThread(Tag.Any)
-    private static void fx_(FXPlatformRunnable action)
-    {
-        try
-        {
-            WaitForAsyncUtils.asyncFx(action::run).get();
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
+        assertTrue(TestUtil.fx(() -> mainWindow.isShowing()));
+        assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().size()));
+        assertTrue(TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().isEmpty()));
     }
 
     @OnThread(Tag.Any)
@@ -184,8 +144,8 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     {
         testStartState();
         clickOn("#id-menu-data").clickOn(".id-menu-data-new");
-        assertEquals(1, (int)fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
-        assertTrue(fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().isEmpty()));
+        assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().size()));
+        assertTrue(TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().isEmpty()));
     }
 
     @Test
@@ -217,9 +177,9 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         write(newColName);
         clickForDataType(rootNode(window(Window::isFocused)), dataType);
         WaitForAsyncUtils.waitForFxEvents();
-        assertEquals(1, (int)fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().size()));
-        assertEquals(newColName, fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getName().getRaw()));
-        assertEquals(dataType, fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getType()));
+        assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().size()));
+        assertEquals(newColName, TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getName().getRaw()));
+        assertEquals(dataType, TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getType()));
     }
 
     private void clickOnSub(Node root, String subQuery)
@@ -395,8 +355,8 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         Text errorLabel = new NodeQueryImpl().from(rootNode(window)).lookup(".error-label").<Text>query();
         clickOn(new NodeQueryImpl().from(rootNode(window)).lookup(".ok-button").<Node>query());
         if (errorLabel != null)
-            assertEquals("", fx(() -> errorLabel.getText()));
-        assertFalse(fx(() -> window.isShowing()));
+            assertEquals("", TestUtil.fx(() -> errorLabel.getText()));
+        assertFalse(TestUtil.fx(() -> window.isShowing()));
     }
 
     @Property
@@ -441,7 +401,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             setValue(typeAndValueGen.getType(), value);
         }
         // Now test for equality:
-        @OnThread(Tag.Any) RecordSet recordSet = fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
+        @OnThread(Tag.Any) RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
         DataTypeValue column = recordSet.getColumns().get(0).getType();
         assertEquals(values.size(), (int)sim(() -> recordSet.getLength()));
         for (int i = 0; i < values.size(); i++)
@@ -464,12 +424,12 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             };
         }).<Node>query());
         //TODO check colour of focused cell (either check background, or take snapshot)
-        Node prevFocused = fx(() -> targetWindow().getScene().getFocusOwner());
+        Node prevFocused = TestUtil.fx(() -> targetWindow().getScene().getFocusOwner());
         // Enter to start editing:
         push(KeyCode.ENTER);
         WaitForAsyncUtils.waitForFxEvents();
 
-        Node focused = fx(() -> targetWindow().getScene().getFocusOwner());
+        Node focused = TestUtil.fx(() -> targetWindow().getScene().getFocusOwner());
         assertNotNull(focused);
         dataType.apply(new DataTypeVisitor<Void>()
         {
@@ -551,7 +511,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         Node original = lookup(query).<Node>query();
         if (original == null)
             return false;
-        return fx(() -> {
+        return TestUtil.fx(() -> {
             return actuallyVisible(original);
         });
     }
