@@ -55,7 +55,8 @@ public class TranslationUtility
                     ResourceBundle.getBundle("expression"),
                     ResourceBundle.getBundle("function"),
                     ResourceBundle.getBundle("main"),
-                    ResourceBundle.getBundle("newcolumn")
+                    ResourceBundle.getBundle("newcolumn"),
+                    ResourceBundle.getBundle("dataentry")
                 );
             }
             catch (MissingResourceException e)

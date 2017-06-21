@@ -63,9 +63,9 @@ public class TestStructuredTextField extends ApplicationTest
     {
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
-        type("178", "17$//");
-        type("8", "17$//"); // Ignored
-        type("/3", "17/3$/");
+        type("178", "17$/Month/Year");
+        type("8", "17$/Month/Year"); // Ignored
+        type("/3", "17/3$/Year");
         type(":1973", "17/3/1973$", LocalDate.of(1973, 3, 17));
 
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
@@ -83,10 +83,10 @@ public class TestStructuredTextField extends ApplicationTest
 
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
-        type("6", "6$//");
-        type("-", "6/$/");
-        type("7", "6/7$/");
-        type("-", "6/7/$");
+        type("6", "6$/Month/Year");
+        type("-", "6/$Month/Year");
+        type("7", "6/7$/Year");
+        type("-", "6/7/$Year");
         type("3", "6/7/2003$", LocalDate.of(2003, 7, 6));
     }
 

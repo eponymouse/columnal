@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.text.Text;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -20,6 +21,7 @@ import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.time.LocalDate;
 import java.time.Year;
@@ -95,9 +97,15 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
     }
 
     @RequiresNonNull("curValue")
-    protected void setItem(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this, ItemVariant item, String content)
+    protected @Localized String getPrompt(@UnknownInitialization(Object.class) StructuredTextField<T> this, ItemVariant item)
     {
-        curValue.replaceAll(old -> old.itemVariant == item ? new Item(content, item) : old);
+        return curValue.stream().filter(ss -> ss.itemVariant == item).findFirst().map(ss -> ss.prompt).orElse("");
+    }
+
+    @RequiresNonNull("curValue")
+    protected void setItem(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this, ItemVariant item, String content, String prompt)
+    {
+        curValue.replaceAll(old -> old.itemVariant == item ? new Item(content, item, prompt) : old);
         super.replace(0, getLength(), makeDoc(curValue.toArray(new Item[0])));
     }
 
@@ -127,7 +135,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
 
             if (spanEnd <= start)
             {
-                newContent.add(new Item(existing.get(curExisting).content, existing.get(curExisting).itemVariant));
+                newContent.add(new Item(existing.get(curExisting).content, existing.get(curExisting).itemVariant, existing.get(curExisting).prompt));
                 curExisting += 1;
                 curStart = spanEnd;
             }
@@ -142,10 +150,11 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
         {
             // Find the next chunk of new text which could go here:
             int nextChar = 0;
-            ItemVariant curStyle = existing.get(curExisting).itemVariant;
+            Item existingItem = existing.get(curExisting);
+            ItemVariant curStyle = existingItem.itemVariant;
             String after = curStyle == ItemVariant.DIVIDER ?
-                    getText(curStart, curStart + existing.get(curExisting).getLength()) :
-                    getText(Math.max(curStart, end), Math.max(end, curStart + existing.get(curExisting).getLength()));
+                    existingItem.content :
+                    existingItem.content.substring(Math.min(Math.max(0, end - curStart), existingItem.content.length()));
             while (nextChar < next.length || curExisting < existing.size())
             {
                 CharEntryResult result = enterChar(curStyle, cur, after, nextChar < next.length ? OptionalInt.of(next[nextChar]) : OptionalInt.empty());
@@ -158,9 +167,9 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
                 if (result.moveToNext)
                     break;
             }
-            newContent.add(new Item(cur, curStyle));
+            newContent.add(new Item(cur, curStyle, existingItem.prompt));
             next = Arrays.copyOfRange(next, nextChar, next.length);
-            curStart += existing.get(curExisting).getLength();
+            curStart += existingItem.getLength();
             curExisting += 1;
             cur = "";
         }
@@ -409,21 +418,24 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
     {
         private final String content;
         private final ItemVariant itemVariant;
+        private final @Localized String prompt;
 
-        public Item(String content, ItemVariant ItemVariant)
+        // Divider:
+        public Item(String divider)
+        {
+            this(divider, ItemVariant.DIVIDER, "");
+        }
+
+        public Item(String content, ItemVariant ItemVariant, @Localized String prompt)
         {
             this.content = content;
             this.itemVariant = ItemVariant;
-        }
-
-        public Node makeNode()
-        {
-            return new Text(content);
+            this.prompt = prompt;
         }
 
         public StyledText<Collection<String>> toStyledText()
         {
-            return new StyledText<>(content, toStyles());
+            return new StyledText<>(content.isEmpty() ? prompt : content, toStyles());
         }
 
         public Collection<String> toStyles()
@@ -438,84 +450,15 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
     }
 
     @OnThread(Tag.FXPlatform)
-    private static TextOps<Item, ItemVariant> segmentOps()
-    {
-        return new TextOps<Item, ItemVariant>()
-        {
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public Item create(String content, ItemVariant ItemVariant)
-            {
-                return new Item(content, ItemVariant);
-            }
-
-            @Override
-            public int length(Item item)
-            {
-                return item.content.length();
-            }
-
-            @Override
-            public char charAt(Item item, int i)
-            {
-                return item.content.charAt(i);
-            }
-
-            @Override
-            public String getText(Item item)
-            {
-                return item.content;
-            }
-
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public Item subSequence(Item item, int begin, int end)
-            {
-                return new Item(item.content.substring(begin, end), item.itemVariant);
-            }
-
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public Item subSequence(Item item, int begin)
-            {
-                return new Item(item.content.substring(begin), item.itemVariant);
-            }
-
-            @Override
-            public ItemVariant getStyle(Item item)
-            {
-                return item.itemVariant;
-            }
-
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public Item setStyle(Item item, ItemVariant itemVariant)
-            {
-                return new Item(item.content, itemVariant);
-            }
-
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public Optional<Item> join(Item left, Item right)
-            {
-                return Objects.equals(left.itemVariant, right.itemVariant) && left.itemVariant != ItemVariant.DIVIDER ? Optional.of(new Item(left.content + right.content, left.itemVariant)) : Optional.empty();
-            }
-
-            @Override
-            @OnThread(Tag.FXPlatform)
-            public Item createEmpty()
-            {
-                return new Item("", ItemVariant.DIVIDER);
-            }
-        };
-    }
-
-    @OnThread(Tag.FXPlatform)
     private static class YMD extends StructuredTextField<TemporalAccessor>
     {
         public YMD(TemporalAccessor value) throws InternalException
         {
-            super(new Item(Integer.toString(value.get(ChronoField.DAY_OF_MONTH)), ItemVariant.EDITABLE_DAY), new Item("/", ItemVariant.DIVIDER), new Item(Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH), new Item("/", ItemVariant.DIVIDER), new Item(Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR));
+            super(new Item(Integer.toString(value.get(ChronoField.DAY_OF_MONTH)), ItemVariant.EDITABLE_DAY, TranslationUtility.getString("entry.prompt.day")),
+                  new Item("/"),
+                  new Item(Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
+                  new Item("/"),
+                  new Item(Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year")));
         }
 
         @Override
@@ -537,7 +480,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
                     int fourYear = Year.now().getValue() - (Year.now().getValue() % 100) + year;
                     if (fourYear - Year.now().getValue() > 20)
                         fourYear -= 100;
-                    setItem(ItemVariant.EDITABLE_YEAR, Integer.toString(fourYear));
+                    setItem(ItemVariant.EDITABLE_YEAR, Integer.toString(fourYear), getPrompt(ItemVariant.EDITABLE_YEAR));
                     year = fourYear;
                 }
 
