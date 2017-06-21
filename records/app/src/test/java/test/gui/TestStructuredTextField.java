@@ -3,6 +3,7 @@ package test.gui;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.Bounds;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -12,6 +13,7 @@ import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.units.qual.A;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
+import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
@@ -28,8 +30,11 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Optional;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertThat;
 import static test.TestUtil.fx;
 import static test.TestUtil.fx_;
 
@@ -56,6 +61,9 @@ public class TestStructuredTextField extends ApplicationTest
             FXUtility.runAfter(() ->
             {
                 scene.setRoot(new VBox(field, dummy));
+                scene.getRoot().layout();
+                stage.sizeToScene();
+                scene.getRoot().layout();
                 field.requestFocus();
             });
             WaitForAsyncUtils.waitForFxEvents();
@@ -87,6 +95,7 @@ public class TestStructuredTextField extends ApplicationTest
         assertEquals(positions[0][0], f.get().getCaretPosition());
 
         ArrayList<Integer> collapsed = new ArrayList<>();
+        ArrayList<Double> collapsedX = new ArrayList<>();
         int major = 0;
         int minor = 0;
         while (major < positions.length)
@@ -100,7 +109,13 @@ public class TestStructuredTextField extends ApplicationTest
             {
                 while (minor < positions[major].length)
                 {
-                    collapsed.add(positions[major][minor]);
+                    int newPos = positions[major][minor];
+                    collapsed.add(newPos);
+                    collapsedX.add(fx(() -> newPos == 0 ?
+                        // No idea why I need these casts here:
+                        ((Optional<Bounds>)f.get().getCharacterBoundsOnScreen(newPos, newPos + 1)).get().getMinX() :
+                        ((Optional<Bounds>)f.get().getCharacterBoundsOnScreen(newPos - 1, newPos)).get().getMaxX()));
+
                     minor += 1;
                 }
                 major += 1;
@@ -130,7 +145,41 @@ public class TestStructuredTextField extends ApplicationTest
         }
         assertEquals(collapsed.get(collapsed.size() - 1), fx(() -> f.get().getCaretPosition()));
 
-        // TODO do with selection, with ctrl-left/ctrl-right, and with clicking (and shift-clicking)
+        // TODO do test with shift-left/right, with ctrl-left/ctrl-right, and with shift-clicking
+
+        // Basic click tests:
+        Bounds screenBounds = fx(() -> f.get().localToScreen(f.get().getBoundsInLocal()));
+        for (int i = 0; i < collapsed.size(); i++)
+        {
+            // Clicking on the exact divide should end up at the right character position:
+            clickOn(collapsedX.get(i), screenBounds.getMinY() + 4.0);
+            delay();
+            assertEquals(collapsed.get(i), fx(() -> f.get().getCaretPosition()));
+            if (i + 1 < collapsed.size())
+            {
+                // Clicking progressively between the two positions should end up in one, or the other:
+                // (In particular, clicking on a prompt should not end up in the prompt, it should glue to one side or other)
+                for (double x = collapsedX.get(i); x <= collapsedX.get(i + 1); x += 2.0)
+                {
+                    clickOn(x, screenBounds.getMinY() + 4.0);
+                    delay();
+                    assertThat("Aiming for " + i + " by clicking at offset " + (x - screenBounds.getMinX()), fx(() -> f.get().getCaretPosition()), Matchers.isIn(Arrays.asList(collapsed.get(i), collapsed.get(i + 1))));
+                }
+            }
+        }
+    }
+
+    // Wait.  Useful to stop multiple consecutive clicks turning into double clicks
+    private static void delay()
+    {
+        try
+        {
+            Thread.sleep(500);
+        }
+        catch (InterruptedException e)
+        {
+
+        }
     }
 
     private void resetToPrompt() throws InternalException

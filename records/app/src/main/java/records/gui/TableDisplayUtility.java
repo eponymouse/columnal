@@ -280,7 +280,7 @@ public class TableDisplayUtility
                     protected StructuredTextField makeGraphical(int rowIndex, TemporalAccessor value) throws InternalException
                     {
                         StructuredTextField field = makeField(dateTimeInfo, value);
-                        field.mouseTransparentProperty().bind(field.focusedProperty().not());
+                        //field.mouseTransparentProperty().bind(field.focusedProperty().not());
                         return field;
                     }
                 };

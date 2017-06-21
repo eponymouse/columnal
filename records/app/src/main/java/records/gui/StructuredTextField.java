@@ -581,4 +581,30 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
         }
         moveTo(structuredToPlain(cur), selectionPolicy);
     }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public CharacterHit hit(double x, double y)
+    {
+        CharacterHit hit = super.hit(x, y);
+        // Character index may be missing if for example they clicked beyond extents of field.
+
+        // We need to find the structured index, and if it's in a prompt then clamp to one side or other
+        return makeHit(Utility.mapOptionalInt(hit.getCharacterIndex(), p -> structuredToPlain(clamp(plainToStructured(p)))), structuredToPlain(clamp(plainToStructured(hit.getInsertionIndex()))));
+    }
+
+    private CharacterHit makeHit(OptionalInt charIdx, int insertionIdx)
+    {
+        // TODO this isn't quite right if the positions get split over a prompt; is that an issue?
+        return charIdx.isPresent() ? CharacterHit.leadingHalfOf(insertionIdx) : CharacterHit.insertionAt(insertionIdx);
+    }
+
+    // If position is in a prompt, move it to nearest side
+    private Pair<Integer, Integer> clamp(Pair<Integer, Integer> pos)
+    {
+        if (pos.getSecond() >= curValue.get(pos.getFirst()).getLength())
+            return new Pair<>(pos.getFirst(), curValue.get(pos.getFirst()).getLength());
+        else
+            return pos;
+    }
 }

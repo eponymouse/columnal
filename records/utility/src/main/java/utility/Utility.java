@@ -22,8 +22,10 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Properties;
 import java.util.function.Function;
+import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -1306,5 +1308,13 @@ public class Utility
             }
             return p;
         });
+    }
+
+    public static OptionalInt mapOptionalInt(OptionalInt src, UnaryOperator<Integer> op)
+    {
+        if (src.isPresent())
+            return OptionalInt.of(op.apply(src.getAsInt()));
+        else
+            return OptionalInt.empty();
     }
 }
