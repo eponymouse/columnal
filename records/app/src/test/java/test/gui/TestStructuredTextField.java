@@ -31,7 +31,12 @@ import java.time.LocalDate;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
@@ -75,7 +80,7 @@ public class TestStructuredTextField extends ApplicationTest
     {
         resetToPrompt();
         //         1/Month/1900
-        testPositions(
+        testPositions(new Random(0),
             new int[] {0, 1},
             null,
             new int[] {2},
@@ -84,7 +89,7 @@ public class TestStructuredTextField extends ApplicationTest
         );
     }
 
-    private void testPositions(int[]... positions)
+    private void testPositions(Random r, int[]... positions)
     {
         // Check home and end:
         push(KeyCode.HOME);
@@ -149,6 +154,7 @@ public class TestStructuredTextField extends ApplicationTest
 
         // Basic click tests:
         Bounds screenBounds = fx(() -> f.get().localToScreen(f.get().getBoundsInLocal()));
+        Map<Double, Integer> xToPos = new HashMap<>();
         for (int i = 0; i < collapsed.size(); i++)
         {
             // Clicking on the exact divide should end up at the right character position:
@@ -165,10 +171,31 @@ public class TestStructuredTextField extends ApplicationTest
                     clickOn(x, screenBounds.getMinY() + 4.0);
                     // Move so we don't treat as double click:
                     moveBy(10, 0);
-                    assertThat("Aiming for " + i + " by clicking at offset " + (x - screenBounds.getMinX()), fx(() -> f.get().getCaretPosition()), Matchers.isIn(Arrays.asList(collapsed.get(i), collapsed.get(i + 1))));
+                    int outcome = fx(() -> f.get().getCaretPosition());
+                    assertThat("Aiming for " + i + " by clicking at offset " + (x - screenBounds.getMinX()), outcome, Matchers.isIn(Arrays.asList(collapsed.get(i), collapsed.get(i + 1))));
+                    xToPos.put(x, outcome);
                 }
             }
         }
+
+        // Try shift-click to select some randomly selected pairs of positions:
+        List<Entry<Double, Integer>> allPos = new ArrayList<>(xToPos.entrySet());
+        for (int i = 0; i < 40; i++)
+        {
+            Entry<Double, Integer> a = allPos.get(r.nextInt(allPos.size()));
+            Entry<Double, Integer> b = allPos.get(r.nextInt(allPos.size()));
+
+            clickOn(a.getKey(), screenBounds.getMinY() + 4.0);
+            press(KeyCode.SHIFT);
+            clickOn(b.getKey(), screenBounds.getMinY() + 4.0);
+            release(KeyCode.SHIFT);
+            String label = "#" + i + " from " + a.getKey() + "->" + a.getValue() + " to " + b.getKey() + "->" + b.getValue();
+            assertEquals(label, a.getValue(), fx(() -> f.get().getAnchor()));
+            assertEquals(label, b.getValue(), fx(() -> f.get().getCaretPosition()));
+            // Move so we don't treat as double click:
+            moveBy(10, 0);
+        }
+
     }
 
     // Wait.  Useful to stop multiple consecutive clicks turning into double clicks
