@@ -1,6 +1,5 @@
 package test.gui;
 
-import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Bounds;
@@ -8,10 +7,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyCombination.Modifier;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.units.qual.A;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import org.hamcrest.Matchers;
 import org.junit.Test;
@@ -26,7 +27,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.gui.FXUtility;
 
-import java.time.Instant;
 import java.time.LocalDate;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -40,8 +40,8 @@ import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertThat;
+import static org.junit.Assert.assertTrue;
 import static test.TestUtil.fx;
-import static test.TestUtil.fx_;
 
 /**
  * Created by neil on 19/06/2017.
@@ -78,8 +78,13 @@ public class TestStructuredTextField extends ApplicationTest
     @Test
     public void testPrompt() throws InternalException
     {
-        resetToPrompt();
-        //         1/Month/1900
+        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        // Delete the month:
+        push(KeyCode.HOME);
+        push(KeyCode.RIGHT);
+        push(KeyCode.RIGHT);
+        push(KeyCode.DELETE);
+        assertEquals("1/Month/1900", fx(() -> f.get().getText()));
         testPositions(new Random(0),
             new int[] {0, 1},
             null,
@@ -150,8 +155,6 @@ public class TestStructuredTextField extends ApplicationTest
         }
         assertEquals(collapsed.get(collapsed.size() - 1), fx(() -> f.get().getCaretPosition()));
 
-        // TODO do test with shift-left/right, with ctrl-left/ctrl-right, and with shift-clicking
-
         // Basic click tests:
         Bounds screenBounds = fx(() -> f.get().localToScreen(f.get().getBoundsInLocal()));
         Map<Double, Integer> xToPos = new HashMap<>();
@@ -196,6 +199,104 @@ public class TestStructuredTextField extends ApplicationTest
             moveBy(10, 0);
         }
 
+        // TODO do test with shift-left/right, with ctrl-left/ctrl-right
+        // TODO test double and triple clicking
+        for (int i = 0; i < 40; i++)
+        {
+            Entry<Double, Integer> start = allPos.get(r.nextInt(allPos.size()));
+            // Home will deselect:
+            push(KeyCode.HOME);
+            // Avoid a double click:
+            moveTo(start.getKey() + 10, screenBounds.getMinY() + 4.0);
+            // Use click to initially position:
+            clickOn(start.getKey(), screenBounds.getMinY() + 4.0);
+            assertEquals(start.getValue(), fx(() -> f.get().getCaretPosition()));
+            assertEquals(start.getValue(), fx(() -> f.get().getAnchor()));
+            // Then press ctrl-left or ctrl-right some number of times:
+            boolean useSelection = r.nextBoolean();
+
+            int number = r.nextInt(positions.length);
+            boolean right = r.nextBoolean();
+
+            int pos = start.getValue();
+            for (int repetition = 0; repetition < number; repetition++)
+            {
+                List<Modifier> mods = new ArrayList<>();
+                // TODO should be Alt on Mac, Control on Windows
+                mods.add(KeyCombination.META_DOWN);
+                if (useSelection)
+                    mods.add(KeyCombination.SHIFT_DOWN);
+                push(new KeyCodeCombination(right ? KeyCode.RIGHT : KeyCode.LEFT, mods.toArray(new KeyCombination.Modifier[0])));
+                pos = calculateExpectedWordMove(positions, pos, right);
+            }
+
+            String label = "From " + start.getValue() + " sel:" + useSelection + " right:" + right + " x " + number;
+            // Work out where we expect it to end up:
+            assertEquals(label, useSelection ? (int)start.getValue() : pos, (int)fx(() -> f.get().getAnchor()));
+            assertEquals(label, pos, (int)fx(() -> f.get().getCaretPosition()));
+        }
+    }
+
+    private int calculateExpectedWordMove(int[][] positions, int startCaretPos, boolean right)
+    {
+        int major;
+        int minor = 0;
+        boolean found = false;
+        outer: for (major = 0; major < positions.length; major++)
+        {
+            if (positions[major] == null)
+                continue outer;
+
+            for (minor = 0; minor < positions[major].length; minor++)
+            {
+                if (positions[major][minor] == startCaretPos)
+                {
+                    found = true;
+                    break outer;
+                }
+            }
+        }
+        assertTrue(found);
+        if (right)
+        {
+            if (minor == positions[major].length - 1)
+            {
+                int fallback = positions[major][minor];
+                major += 1;
+                // Need to find next valid:
+                while (major < positions.length)
+                {
+                    if (positions[major] != null)
+                        return positions[major][0];
+                    major += 1;
+                }
+                return fallback;
+            }
+            else
+            {
+                return positions[major][positions[major].length - 1];
+            }
+        }
+        else
+        {
+            if (minor == 0)
+            {
+                int fallback = positions[major][minor];
+                major -= 1;
+                // Need to find earlier valid:
+                while (major >= 0)
+                {
+                    if (positions[major] != null)
+                        return positions[major][positions[major].length - 1];
+                    major -= 1;
+                }
+                return fallback;
+            }
+            else
+            {
+                return positions[major][0];
+            }
+        }
     }
 
     // Wait.  Useful to stop multiple consecutive clicks turning into double clicks
@@ -209,17 +310,6 @@ public class TestStructuredTextField extends ApplicationTest
         {
 
         }
-    }
-
-    private void resetToPrompt() throws InternalException
-    {
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
-        WaitForAsyncUtils.waitForFxEvents();
-        push(KeyCode.HOME);
-        push(KeyCode.RIGHT);
-        push(KeyCode.RIGHT);
-        push(KeyCode.DELETE);
-        assertEquals("1/Month/1900", fx(() -> f.get().getText()));
     }
 
     @Test

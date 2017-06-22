@@ -533,11 +533,23 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
     public void previousChar(SelectionPolicy selectionPolicy)
     {
         Pair<Integer, Integer> cur = plainToStructured(getCaretPosition());
+        cur = calculatePreviousChar(cur);
+        moveTo(structuredToPlain(cur), selectionPolicy);
+    }
+
+    @NotNull
+    private Pair<Integer, Integer> calculatePreviousChar(Pair<Integer, Integer> cur)
+    {
         Item curItem = curValue.get(cur.getFirst());
         if (cur.getSecond() > 0)
         {
             // Can advance backwards within the field:
             cur = new Pair<>(cur.getFirst(), Character.offsetByCodePoints(curItem.getScreenText(), cur.getSecond(), -1));
+        }
+        else if (cur.getFirst() == 0)
+        {
+            // Can't go left; already at beginning:
+            return cur;
         }
         else
         {
@@ -552,7 +564,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
             }
             cur = new Pair<>(field, curValue.get(field).getLength());
         }
-        moveTo(structuredToPlain(cur), selectionPolicy);
+        return cur;
     }
 
     @Override
@@ -560,6 +572,13 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
     public void nextChar(SelectionPolicy selectionPolicy)
     {
         Pair<Integer, Integer> cur = plainToStructured(getCaretPosition());
+        cur = calculateNextChar(cur);
+        moveTo(structuredToPlain(cur), selectionPolicy);
+    }
+
+    @NotNull
+    private Pair<Integer, Integer> calculateNextChar(Pair<Integer, Integer> cur)
+    {
         Item curItem = curValue.get(cur.getFirst());
         if (cur.getSecond() < curItem.getLength()) // Note: getLength here, not getScreenLength. Can't move within prompt
         {
@@ -578,6 +597,45 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
                     break;
             }
             cur = new Pair<>(field, 0);
+        }
+        return cur;
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public void wordBreaksBackwards(int n, SelectionPolicy selectionPolicy)
+    {
+        Pair<Integer, Integer> cur = plainToStructured(getCaretPosition());
+        for (int i = 0; i < n; i++)
+        {
+            if (cur.getSecond() > 0)
+            {
+                cur = new Pair<>(cur.getFirst(), 0);
+            }
+            else
+            {
+                cur = calculatePreviousChar(cur);
+            }
+        }
+        moveTo(structuredToPlain(cur), selectionPolicy);
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public void wordBreaksForwards(int n, SelectionPolicy selectionPolicy)
+    {
+        int old = getCaretPosition();
+        Pair<Integer, Integer> cur = plainToStructured(getCaretPosition());
+        for (int i = 0; i < n; i++)
+        {
+            if (cur.getSecond() < curValue.get(cur.getFirst()).getLength())
+            {
+                cur = new Pair<>(cur.getFirst(), curValue.get(cur.getFirst()).getLength());
+            }
+            else
+            {
+                cur = calculateNextChar(cur);
+            }
         }
         moveTo(structuredToPlain(cur), selectionPolicy);
     }
