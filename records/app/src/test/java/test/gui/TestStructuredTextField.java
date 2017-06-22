@@ -78,6 +78,16 @@ public class TestStructuredTextField extends ApplicationTest
     @Test
     public void testPrompt() throws InternalException
     {
+        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(2034, 10, 29)));
+        assertEquals("29/10/2034", fx(() -> f.get().getText()));
+        testPositions(new Random(0),
+                new int[] {0, 1, 2},
+                null,
+                new int[] {3, 4, 5},
+                null,
+                new int[] {6, 7, 8, 9, 10}
+        );
+
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         // Delete the month:
         push(KeyCode.HOME);
@@ -91,6 +101,20 @@ public class TestStructuredTextField extends ApplicationTest
             new int[] {2},
             null,
             new int[] {8, 9, 10, 11, 12}
+        );
+
+        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        // Delete all:
+        push(KeyCode.HOME);
+        push(new KeyCodeCombination(KeyCode.END, KeyCombination.SHIFT_DOWN));
+        push(KeyCode.DELETE);
+        assertEquals("Day/Month/Year", fx(() -> f.get().getText()));
+        testPositions(new Random(0),
+                new int[] {0},
+                null,
+                new int[] {4},
+                null,
+                new int[] {10}
         );
     }
 
@@ -199,7 +223,7 @@ public class TestStructuredTextField extends ApplicationTest
             moveBy(10, 0);
         }
 
-        // TODO do test with shift-left/right, with ctrl-left/ctrl-right
+        // TODO test with shift-left/right
         // TODO test double and triple clicking
         for (int i = 0; i < 40; i++)
         {
