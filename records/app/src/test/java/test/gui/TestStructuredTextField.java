@@ -153,7 +153,8 @@ public class TestStructuredTextField extends ApplicationTest
         {
             // Clicking on the exact divide should end up at the right character position:
             clickOn(collapsedX.get(i), screenBounds.getMinY() + 4.0);
-            delay();
+            // Move so we don't treat as double click:
+            moveBy(10, 0);
             assertEquals(collapsed.get(i), fx(() -> f.get().getCaretPosition()));
             if (i + 1 < collapsed.size())
             {
@@ -162,7 +163,8 @@ public class TestStructuredTextField extends ApplicationTest
                 for (double x = collapsedX.get(i); x <= collapsedX.get(i + 1); x += 2.0)
                 {
                     clickOn(x, screenBounds.getMinY() + 4.0);
-                    delay();
+                    // Move so we don't treat as double click:
+                    moveBy(10, 0);
                     assertThat("Aiming for " + i + " by clicking at offset " + (x - screenBounds.getMinX()), fx(() -> f.get().getCaretPosition()), Matchers.isIn(Arrays.asList(collapsed.get(i), collapsed.get(i + 1))));
                 }
             }
