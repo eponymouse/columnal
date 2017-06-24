@@ -424,14 +424,15 @@ public class TestStructuredTextField extends ApplicationTest
         // Now delete again:
         clickOn(f.get());
         push(ctrlCmd(), KeyCode.A);
-        type("", "^8/7/2169");
+        type("", "^8/7/2169$");
         push(KeyCode.DELETE);
         clickOn(dummy);
         // New popup should show most recent value:
         assertNotNull(lookup(".invalid-data-input-popup").query());
         assertThat(lookup(".invalid-data-input-popup .invalid-data-revert").<Label>query().getText(), Matchers.containsString("8/7/2169"));
 
-        //TODO test for fixs like swapped dates
+        //TODO test for fixes like swapped dates
+        // TODO add a property test for entering dates, and test month names
     }
 
     private KeyCode ctrlCmd()

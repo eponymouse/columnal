@@ -47,7 +47,7 @@ import java.util.OptionalInt;
 public abstract class StructuredTextField<T> extends StyleClassedTextArea
 {
     private final List<Item> curValue = new ArrayList<>();
-    private @Nullable State valueBeforeFocus;
+    private @Nullable State lastValidValue;
     private @Nullable PopOver fixPopup;
     private T completedValue;
 
@@ -55,13 +55,12 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
     {
         super(false);
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
-            if (focused)
+            if (!focused)
             {
-                valueBeforeFocus = captureState();
-            }
-            else
-            {
-                endEdit().either_(this::showFixPopup, v -> {completedValue = v;});
+                endEdit().either_(this::showFixPopup, v -> {
+                    completedValue = v;
+                    lastValidValue = captureState();
+                });
             }
         });
 
@@ -74,6 +73,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
         completedValue = val;
         // Call super to avoid our own validation:
         super.replace(0, 0, makeDoc(subItems));
+        lastValidValue = captureState();
     }
 
     private @Nullable State captureState(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this)
@@ -245,10 +245,10 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
 
     protected Optional<ErrorFix> revertEditFix(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this)
     {
-        if (valueBeforeFocus == null)
+        if (lastValidValue == null)
             return Optional.empty();
         // Only needed out here for null checker:
-        @NonNull State prev = valueBeforeFocus;
+        @NonNull State prev = lastValidValue;
         return Optional.of(new ErrorFix(TranslationUtility.getString("entry.fix.revert", prev.doc.getText()), "invalid-data-revert")
         {
             @Override
