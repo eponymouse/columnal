@@ -3,6 +3,7 @@ package test.gui;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Bounds;
+import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -431,8 +432,34 @@ public class TestStructuredTextField extends ApplicationTest
         assertNotNull(lookup(".invalid-data-input-popup").query());
         assertThat(lookup(".invalid-data-input-popup .invalid-data-revert").<Label>query().getText(), Matchers.containsString("8/7/2169"));
 
-        //TODO test for fixes like swapped dates
-        // TODO add a property test for entering dates, and test month names
+        // Check swapped or invalid dates have the right suggestions:
+        checkFix("0/3/2000", "1/3/2000");
+        checkFix("8/0/2000", "8/1/2000");
+        checkFix("4/13/2000", "13/4/2000");
+        checkFix("13/13/2000", "13/12/2000");
+        checkFix("31/9/2000", "30/9/2000");
+        checkFix("31/9/2000", "1/10/2000");
+        checkFix("32/9/2000", "30/9/2000");
+        checkFix("1968/3/4", "4/3/1968");
+        checkFix("32/9/1", "1/9/2032");
+        checkFix("32/9/1", "30/9/2001");
+        checkFix("68/3/4", "4/3/1968");
+
+        // TODO add a property test for entering random dates, and also test month names and two digit years
+        // TODO add a test involving leading zeroes
+    }
+
+    private void checkFix(String input, String suggestedFix)
+    {
+        clickOn(f.get());
+        push(ctrlCmd(), KeyCode.A);
+        type(input, input + "$");
+        clickOn(dummy);
+        assertNotNull(lookup(".invalid-data-input-popup").query());
+        Node fix = lookup(".invalid-data-input-popup .invalid-data-fix").lookup((Label l) -> l.getText().contains(suggestedFix)).query();
+        assertNotNull(fix);
+        clickOn(fix);
+        type("", suggestedFix + "$");
     }
 
     private KeyCode ctrlCmd()

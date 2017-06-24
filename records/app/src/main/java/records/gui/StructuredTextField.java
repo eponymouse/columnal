@@ -5,6 +5,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -28,8 +29,10 @@ import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
+import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.Year;
+import java.time.YearMonth;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -37,6 +40,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -98,6 +102,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
         {
             ErrorFix errorFix = errorFixes.get(i);
             Label label = new Label(errorFix.label);
+            label.getStyleClass().add("invalid-data-fix");
             label.getStyleClass().addAll(errorFix.styleClasses);
             label.setOnMouseClicked(e -> {
                 if (e.getButton() == MouseButton.PRIMARY)
@@ -285,6 +290,16 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
         // Call super to avoid our own validation:
         super.replace(0, getLength(), valueBeforeFocus.doc);
         completedValue = valueBeforeFocus.value;
+    }
+
+    // Intended for use by subclasses during fixes.  Applies content and ends edit
+    protected void setValue(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this, String content)
+    {
+        replaceText(content);
+        endEdit().either_(err -> {}, v -> {
+            completedValue = v;
+            lastValidValue = captureState();
+        });
     }
 
     private static abstract class ErrorFix
@@ -599,6 +614,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
         {
             List<ErrorFix> fixes = new ArrayList<>();
             revertEditFix().ifPresent(fixes::add);
+            int standardFixes = fixes.size();
             // TODO check for misordering (e.g. year first), or dates like 31st November
 
             try
@@ -606,25 +622,94 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
                 int day = Integer.parseInt(getItem(ItemVariant.EDITABLE_DAY));
                 // TODO allow month names
                 int month = Integer.parseInt(getItem(ItemVariant.EDITABLE_MONTH));
-                int year = Integer.parseInt(getItem(ItemVariant.EDITABLE_YEAR));
+                int prelimYear = Integer.parseInt(getItem(ItemVariant.EDITABLE_YEAR));
 
-                if (year < 100)
+                if (prelimYear < 100)
                 {
                     // Apply 80/20 rule (20 years into future, or 80 years into past):
-                    int fourYear = Year.now().getValue() - (Year.now().getValue() % 100) + year;
+                    int fourYear = Year.now().getValue() - (Year.now().getValue() % 100) + prelimYear;
                     if (fourYear - Year.now().getValue() > 20)
                         fourYear -= 100;
                     setItem(ItemVariant.EDITABLE_YEAR, Integer.toString(fourYear), getPrompt(ItemVariant.EDITABLE_YEAR));
-                    year = fourYear;
+                    prelimYear = fourYear;
                 }
 
-                //TODO check date is valid
-                return Either.right(LocalDate.of(year, month, day));
+                int year = prelimYear;
+
+                if (day <= 0)
+                {
+                    clampFix(fixes,1, month, year);
+                }
+                try
+                {
+                    int monthLength = YearMonth.of(year, month).lengthOfMonth();
+                    if (day > monthLength)
+                    {
+                        clampFix(fixes, monthLength, month, year);
+                        if (day <= 31 && day - 1 == monthLength)
+                        {
+                            // Can't happen for December, so don't need to worry about year roll-over:
+                            fix(fixes, "entry.fix.adjustByDay", 1, month + 1, year);
+                        }
+                    }
+                }
+                catch (DateTimeException e)
+                {
+                    // Not a valid year-month anyway, so don't suggest
+                }
+
+                if (month <= 0)
+                {
+                    clampFix(fixes, day, 1, year);
+                }
+                else if (month >= 13)
+                {
+                    clampFix(fixes, day, 12, year);
+                    if (1 <= day && day <= 12)
+                    {
+                        // Possible transposition:
+                        fix(fixes, "entry.fix.dayMonthSwap", month, day, year);
+                    }
+                }
+
+                if (fixes.size() == standardFixes)
+                {
+                    return Either.right(LocalDate.of(prelimYear, month, day));
+                }
             }
-            catch (NumberFormatException e)
+            catch (NumberFormatException | DateTimeException e)
             {
             }
             return Either.left(fixes);
+        }
+
+        public void clampFix(@UnknownInitialization(StyleClassedTextArea.class) YMD this, List<ErrorFix> fixes, int day, int month, int year)
+        {
+            fix(fixes, "entry.fix.clamp", day, month, year);
+        }
+
+        public void fix(@UnknownInitialization(StyleClassedTextArea.class) YMD this, List<ErrorFix> fixes, @LocalizableKey String labelKey, int day, int month, int year)
+        {
+            try
+            {
+                LocalDate.of(year, month, day);
+            }
+            catch (DateTimeException e)
+            {
+                // Don't add a fix if the destination date isn't valid either!
+                return;
+            }
+
+            final String value = day + "/" + month + "/" + year;
+            fixes.add(new ErrorFix(TranslationUtility.getString(labelKey, value))
+            {
+                @Override
+                @OnThread(Tag.FXPlatform)
+                public void performFix()
+                {
+                    setValue(value);
+                }
+            });
         }
 
     }

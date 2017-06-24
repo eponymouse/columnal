@@ -190,6 +190,7 @@ class StyleClassedTextArea
     void setText(String s) @UnknownInitialization;
     int getLength() @UnknownInitialization;
     StyledDocument getDocument() @UnknownInitialization;
+    void replaceText(String s) @UnknownInitialization;
 }
 class GenericStyledArea
 {
