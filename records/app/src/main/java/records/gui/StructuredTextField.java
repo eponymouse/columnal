@@ -585,6 +585,11 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
             // Can advance within the field:
             cur = new Pair<>(cur.getFirst(), Character.offsetByCodePoints(curItem.getScreenText(), cur.getSecond(), 1));
         }
+        else if (cur.getFirst() == curValue.size() - 1)
+        {
+            // Can't go right; already at end:
+            return cur;
+        }
         else
         {
             // Move to next field:
@@ -649,6 +654,13 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
 
         // We need to find the structured index, and if it's in a prompt then clamp to one side or other
         return makeHit(Utility.mapOptionalInt(hit.getCharacterIndex(), p -> structuredToPlain(clamp(plainToStructured(p)))), structuredToPlain(clamp(plainToStructured(hit.getInsertionIndex()))));
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public void lineEnd(SelectionPolicy policy)
+    {
+        moveTo(structuredToPlain(new Pair<>(curValue.size() - 1, curValue.get(curValue.size() - 1).getLength())), policy);
     }
 
     private CharacterHit makeHit(OptionalInt charIdx, int insertionIdx)
