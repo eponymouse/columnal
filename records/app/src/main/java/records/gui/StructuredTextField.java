@@ -1,14 +1,18 @@
 package records.gui;
 
-import com.google.common.collect.ImmutableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.text.Text;
+import javafx.scene.control.Label;
+import javafx.scene.input.MouseButton;
+import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import org.controlsfx.control.PopOver;
+import org.controlsfx.control.PopOver.ArrowLocation;
 import org.fxmisc.richtext.CharacterHit;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.*;
@@ -21,6 +25,7 @@ import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
 import java.time.LocalDate;
@@ -32,7 +37,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 
@@ -43,15 +47,22 @@ import java.util.OptionalInt;
 public abstract class StructuredTextField<T> extends StyleClassedTextArea
 {
     private final List<Item> curValue = new ArrayList<>();
+    private @Nullable State valueBeforeFocus;
+    private @Nullable PopOver fixPopup;
     private T completedValue;
 
     private StructuredTextField(Item... subItems) throws InternalException
     {
         super(false);
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
-            if (!focused)
+            if (focused)
             {
-                endEdit().either_(err -> {/*TODO show dialog */}, v -> {completedValue = v;});
+                valueBeforeFocus = captureState();
+                hidePopup();
+            }
+            else
+            {
+                endEdit().either_(this::showFixPopup, v -> {completedValue = v;});
             }
         });
 
@@ -64,6 +75,57 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
         completedValue = val;
         // Call super to avoid our own validation:
         super.replace(0, 0, makeDoc(subItems));
+    }
+
+    private @Nullable State captureState(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this)
+    {
+        if (curValue != null && completedValue != null)
+        {
+            @NonNull T val = completedValue;
+            return new State(curValue, ReadOnlyStyledDocument.from(getDocument()), val);
+        }
+        else
+            return null;
+    }
+
+    private void showFixPopup(List<ErrorFix> errorFixes)
+    {
+        hidePopup();
+        PopOver popup = new PopOver();
+        popup.getStyleClass().add("invalid-data-input-popup");
+        List<Node> fixNodes = new ArrayList<>();
+        fixNodes.add(GUI.label("entry.error"));
+        for (int i = 0; i < errorFixes.size(); i++)
+        {
+            ErrorFix errorFix = errorFixes.get(i);
+            Label label = new Label(errorFix.label);
+            label.getStyleClass().addAll(errorFix.styleClasses);
+            label.setOnMouseClicked(e -> {
+                if (e.getButton() == MouseButton.PRIMARY)
+                {
+                    errorFix.performFix();
+                    hidePopup();
+                    e.consume();
+                }
+            });
+            fixNodes.add(label);
+        }
+
+        popup.setContentNode(new VBox(fixNodes.toArray(new Node[0])));
+        popup.setDetachable(false);
+        popup.setAnimated(false);
+        popup.setArrowLocation(ArrowLocation.BOTTOM_CENTER);
+        fixPopup = popup;
+        popup.show(this);
+    }
+
+    private void hidePopup(@UnknownInitialization(Object.class) StructuredTextField<T> this)
+    {
+        if (fixPopup != null)
+        {
+            fixPopup.hide();
+            fixPopup = null;
+        }
     }
 
     private static ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> makeDoc(Item[] subItems)
@@ -180,12 +242,71 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
         selectRange(replacementEnd, replacementEnd);
     }
 
+    protected Optional<ErrorFix> revertEditFix(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this)
+    {
+        if (valueBeforeFocus == null)
+            return Optional.empty();
+        // Only needed out here for null checker:
+        @NonNull State prev = valueBeforeFocus;
+        return Optional.of(new ErrorFix(TranslationUtility.getString("entry.fix.revert", prev.doc.getText()), "invalid-data-revert")
+        {
+            @Override
+            @OnThread(Tag.FXPlatform)
+            @RequiresNonNull("curValue")
+            public void performFix()
+            {
+                if (prev != null)
+                {
+                    setState(prev);
+                }
+            }
+        });
+    }
+
+    private class State
+    {
+        public final List<Item> items;
+        public final ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc;
+        public final T value;
+
+        public State(List<Item> items, ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc, T value)
+        {
+            this.items = items;
+            this.doc = doc;
+            this.value = value;
+        }
+    }
+
+    private void setState(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this, State valueBeforeFocus)
+    {
+        curValue.clear();
+        curValue.addAll(valueBeforeFocus.items);
+        // Call super to avoid our own validation:
+        super.replace(0, getLength(), valueBeforeFocus.doc);
+        completedValue = valueBeforeFocus.value;
+    }
+
+    private static abstract class ErrorFix
+    {
+        public final @Localized String label;
+        public final List<String> styleClasses;
+
+        protected ErrorFix(@Localized String label, String... styleClasses)
+        {
+            this.label = label;
+            this.styleClasses = Arrays.asList(styleClasses);
+        }
+
+        @RequiresNonNull("curValue")
+        public abstract void performFix();
+    }
+
     /**
      * If return is null, successful.  Otherwise list is of alternatives for fixing the error (may be empty)
      * @return
      */
     @RequiresNonNull("curValue")
-    public abstract Either<List<Pair<String, FXPlatformRunnable>>, T> endEdit(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this);
+    public abstract Either<List<ErrorFix>, T> endEdit(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this);
 
     public T getCompletedValue()
     {
@@ -473,8 +594,10 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
 
         @Override
         @OnThread(Tag.FXPlatform)
-        public Either<List<Pair<String, FXPlatformRunnable>>, TemporalAccessor> endEdit(@UnknownInitialization(StyleClassedTextArea.class) YMD this)
+        public Either<List<ErrorFix>, TemporalAccessor> endEdit(@UnknownInitialization(StyleClassedTextArea.class) YMD this)
         {
+            List<ErrorFix> fixes = new ArrayList<>();
+            revertEditFix().ifPresent(fixes::add);
             // TODO check for misordering (e.g. year first), or dates like 31st November
 
             try
@@ -499,9 +622,10 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
             }
             catch (NumberFormatException e)
             {
-                return Either.left(Collections.emptyList());
             }
+            return Either.left(fixes);
         }
+
     }
 
     // Field, index within field

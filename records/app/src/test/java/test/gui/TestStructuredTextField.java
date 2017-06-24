@@ -41,6 +41,7 @@ import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static test.TestUtil.fx;
@@ -379,9 +380,13 @@ public class TestStructuredTextField extends ApplicationTest
         type("", "^1/4/1900$");
         push(KeyCode.DELETE);
         type("", "$Day/Month/Year");
-        fx_(()->dummy.requestFocus());
+        fx_(()-> dummy.requestFocus());
         type("", "$Day/Month/Year");
-        //assertNotNull(lookup(".invalid-data-input-popup").query());
+        assertNotNull(lookup(".invalid-data-input-popup").query());
+        clickOn(".invalid-data-input-popup .invalid-data-revert");
+        WaitForAsyncUtils.waitForFxEvents();
+        assertNull(lookup(".invalid-data-input-popup").query());
+        type("", "1/4/1900$");
     }
 
     private KeyCode ctrlCmd()

@@ -189,6 +189,7 @@ class StyleClassedTextArea
     String getText() @UnknownInitialization;
     void setText(String s) @UnknownInitialization;
     int getLength() @UnknownInitialization;
+    StyledDocument getDocument() @UnknownInitialization;
 }
 class GenericStyledArea
 {
