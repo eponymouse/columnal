@@ -58,7 +58,6 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
             if (focused)
             {
                 valueBeforeFocus = captureState();
-                hidePopup();
             }
             else
             {
@@ -175,6 +174,8 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void replace(final int start, final int end, StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> replacement)
     {
+        hidePopup();
+
         List<Item> existing = new ArrayList<>(curValue);
 
         List<Item> newContent = new ArrayList<>();

@@ -383,10 +383,55 @@ public class TestStructuredTextField extends ApplicationTest
         fx_(()-> dummy.requestFocus());
         type("", "$Day/Month/Year");
         assertNotNull(lookup(".invalid-data-input-popup").query());
+        assertNotNull(lookup(".invalid-data-input-popup .invalid-data-revert").query());
+        // Click on the revert fix:
         clickOn(".invalid-data-input-popup .invalid-data-revert");
         WaitForAsyncUtils.waitForFxEvents();
         assertNull(lookup(".invalid-data-input-popup").query());
         type("", "1/4/1900$");
+
+        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        push(ctrlCmd(), KeyCode.A);
+        type("", "^1/4/1900$");
+        push(KeyCode.DELETE);
+        type("", "$Day/Month/Year");
+        clickOn(dummy);
+        type("", "$Day/Month/Year");
+        assertNotNull(lookup(".invalid-data-input-popup").query());
+        // Now edit again:
+        clickOn(f.get());
+        // Popup should still show for now:
+        assertNotNull(lookup(".invalid-data-input-popup").query());
+        // Now we type in something:
+        push(KeyCode.HOME);
+        type("8", "8$/Month/Year");
+        // Popup should disappear:
+        assertNull(lookup(".invalid-data-input-popup").query());
+        // Click off:
+        clickOn(dummy);
+        // Popup should be back:
+        assertNotNull(lookup(".invalid-data-input-popup").query());
+        // Should show the first value as a fix:
+        assertThat(lookup(".invalid-data-input-popup .invalid-data-revert").<Label>query().getText(), Matchers.containsString("1/4/1900"));
+        // Click in again:
+        clickOn(f.get());
+        push(KeyCode.HOME);
+        push(KeyCode.RIGHT);
+        type("/7/2169", "8/7/2169$");
+        clickOn(dummy);
+        // Should be no popup:
+        assertNull(lookup(".invalid-data-input-popup").query());
+        // Now delete again:
+        clickOn(f.get());
+        push(ctrlCmd(), KeyCode.A);
+        type("", "^8/7/2169");
+        push(KeyCode.DELETE);
+        clickOn(dummy);
+        // New popup should show most recent value:
+        assertNotNull(lookup(".invalid-data-input-popup").query());
+        assertThat(lookup(".invalid-data-input-popup .invalid-data-revert").<Label>query().getText(), Matchers.containsString("8/7/2169"));
+
+        //TODO test for fixs like swapped dates
     }
 
     private KeyCode ctrlCmd()
