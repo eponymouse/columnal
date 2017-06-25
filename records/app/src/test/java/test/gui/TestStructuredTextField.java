@@ -33,9 +33,11 @@ import test.gen.GenDate;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.time.LocalDate;
+import java.time.Year;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -465,6 +467,35 @@ public class TestStructuredTextField extends ApplicationTest
         push(KeyCode.CONTROL, KeyCode.A);
         String value = localDate.getDayOfMonth() + "/" + localDate.getMonthValue() + "/" + localDate.getYear();
         type(value, value + "$", localDate);
+        if (localDate.getYear() > Year.now().getValue() - 80 && localDate.getYear() < Year.now().getValue() + 20)
+        {
+            // Do two digits:
+            clickOn(f.get());
+            push(KeyCode.CONTROL, KeyCode.A);
+            String twoDig = localDate.getDayOfMonth() + "/" + localDate.getMonthValue() + "/" + Integer.toString(localDate.getYear()).substring(2);
+            type(twoDig, value + "$", localDate);
+        }
+        // Try slight variant, such as other dividers or leading zeros:
+        // TODO also try month names
+        int[] vals = new int[] {localDate.getDayOfMonth(), localDate.getMonthValue(), localDate.getYear()};
+        List<String> divs = Arrays.asList("/","-"," ",":", ".");
+        for (int attempt = 0; attempt < 3; attempt++)
+        {
+            String variant = "";
+            for (int i = 0; i < 3; i++)
+            {
+                variant += String.join("", Utility.replicate(r.nextInt(3), "0"));
+                variant += vals[i];
+                if (i < 2)
+                {
+                    variant += divs.get(r.nextInt(divs.size()));
+                }
+            }
+            fx_(() -> f.get().requestFocus());
+            push(KeyCode.CONTROL, KeyCode.A);
+            type(variant, value + "$", localDate);
+        }
+        // TODO try errors and fixes?
     }
 
     private void checkFix(String input, String suggestedFix)
