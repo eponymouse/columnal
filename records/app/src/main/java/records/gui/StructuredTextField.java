@@ -282,7 +282,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
 
         public State(List<Item> items, ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc, T value)
         {
-            this.items = items;
+            this.items = new ArrayList<>(items);
             this.doc = doc;
             this.value = value;
         }

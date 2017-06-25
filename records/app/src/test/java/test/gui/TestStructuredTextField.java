@@ -2,6 +2,7 @@ package test.gui;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -64,7 +65,7 @@ import static test.TestUtil.fx_;
 @RunWith(JUnitQuickcheck.class)
 public class TestStructuredTextField extends ApplicationTest
 {
-    private final ObjectProperty<StructuredTextField> f = new SimpleObjectProperty<>();
+    private final ObjectProperty<StructuredTextField<?>> f = new SimpleObjectProperty<>();
     private TextField dummy;
 
     @Override
@@ -459,7 +460,7 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
     @Property(trials = 15)
-    public void propYMD(@From(GenDate.class) LocalDate localDate, @From(GenRandom.class) Random r) throws InternalException
+    public void propYMD(@From(GenDate.class) @When(seed=-5401696886865637170L) LocalDate localDate, @From(GenRandom.class) @When(seed=-2675316684223940997L) Random r) throws InternalException
     {
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         // Try it in valid form with four digit year:
@@ -517,7 +518,18 @@ public class TestStructuredTextField extends ApplicationTest
             push(KeyCode.CONTROL, KeyCode.A);
             type(variant, value + "$", localDate);
         }
-        // TODO try errors and fixes?  Transposition, etc
+        // Try errors and fixes; transposition, etc:
+        if (vals[0] > 12)
+        {
+            // Swap day and month:
+            String wrongVal = vals[1] + "/" + vals[0] + "/" + vals[2];
+            checkFix(wrongVal, value);
+        }
+        if (vals[2] % 100 >= 32)
+        {
+            String wrongVal = vals[2] + "/" + vals[1] + "/" + vals[0];
+            checkFix(wrongVal, value);
+        }
     }
 
     private void checkFix(String input, String suggestedFix)
