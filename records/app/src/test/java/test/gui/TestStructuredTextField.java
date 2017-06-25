@@ -39,6 +39,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
@@ -349,15 +350,14 @@ public class TestStructuredTextField extends ApplicationTest
     {
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
-        type("178", "17$/Month/Year");
-        type("8", "17$/Month/Year"); // Ignored
+        type("17", "17$/Month/Year");
         type("/3", "17/3$/Year");
         type(":1973", "17/3/1973$", LocalDate.of(1973, 3, 17));
 
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
-        f.get().start(SelectionPolicy.CLEAR);
+        push(KeyCode.HOME);
         type("", "$1/4/1900");
-        type("2", "2$1/4/1900", LocalDate.of(1900, 4, 21));
+        type("2", "21/4/1900$", LocalDate.of(1900, 4, 21));
 
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
@@ -457,7 +457,7 @@ public class TestStructuredTextField extends ApplicationTest
         clickOn(dummy);
         assertNotNull(lookup(".invalid-data-input-popup").query());
         Node fix = lookup(".invalid-data-input-popup .invalid-data-fix").lookup((Label l) -> l.getText().contains(suggestedFix)).query();
-        assertNotNull(fix);
+        assertNotNull(lookup(".invalid-data-input-popup .invalid-data-fix").<Label>queryAll().stream().map(l -> l.getText()).collect(Collectors.joining(" | ")),fix);
         clickOn(fix);
         type("", suggestedFix + "$");
     }

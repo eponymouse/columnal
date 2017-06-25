@@ -69,14 +69,14 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
         });
 
         curValue.addAll(Arrays.asList(subItems));
+        // Call super to avoid our own validation:
+        super.replace(0, 0, makeDoc(subItems));
         @Nullable T val = endEdit().<@Nullable T>either(err -> null, v -> v);
         if (val == null)
         {
             throw new InternalException("Starting field off with invalid completed value: " + Utility.listToString(Arrays.asList(subItems)));
         }
         completedValue = val;
-        // Call super to avoid our own validation:
-        super.replace(0, 0, makeDoc(subItems));
         lastValidValue = captureState();
     }
 
@@ -169,9 +169,9 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
     }
 
     @RequiresNonNull("curValue")
-    protected void setItem(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this, ItemVariant item, String content, String prompt)
+    protected void setItem(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this, ItemVariant item, String content)
     {
-        curValue.replaceAll(old -> old.itemVariant == item ? new Item(content, item, prompt) : old);
+        curValue.replaceAll(old -> old.itemVariant == item ? new Item(content, item, old.prompt) : old);
         super.replace(0, getLength(), makeDoc(curValue.toArray(new Item[0])));
     }
 
@@ -370,10 +370,8 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
     {
         switch (style)
         {
-            case EDITABLE_YEAR:
-                return 4;
             default:
-                return 2;
+                return 10;
         }
     }
 
@@ -608,6 +606,29 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
                   new Item(Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year")));
         }
 
+        private static int adjustYear2To4(int day, int month, String originalYearText, final int year)
+        {
+            if (year < 100 && originalYearText.length() < 4)
+            {
+                // Apply 80/20 rule (20 years into future, or 80 years into past):
+                int fourYear = Year.now().getValue() - (Year.now().getValue() % 100) + year;
+                if (fourYear - Year.now().getValue() > 20)
+                    fourYear -= 100;
+
+                try
+                {
+                    LocalDate.of(fourYear, month, day);
+                    // Only if valid:
+                    return fourYear;
+                }
+                catch (DateTimeException e)
+                {
+                    // Not valid if we change year to four digits, may be another fault, so we wait
+                }
+            }
+            return year;
+        }
+
         @Override
         @OnThread(Tag.FXPlatform)
         public Either<List<ErrorFix>, TemporalAccessor> endEdit(@UnknownInitialization(StyleClassedTextArea.class) YMD this)
@@ -615,41 +636,38 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
             List<ErrorFix> fixes = new ArrayList<>();
             revertEditFix().ifPresent(fixes::add);
             int standardFixes = fixes.size();
-            // TODO check for misordering (e.g. year first), or dates like 31st November
 
             try
             {
-                int day = Integer.parseInt(getItem(ItemVariant.EDITABLE_DAY));
+                String dayText = getItem(ItemVariant.EDITABLE_DAY);
+                final int day = Integer.parseInt(dayText);
                 // TODO allow month names
-                int month = Integer.parseInt(getItem(ItemVariant.EDITABLE_MONTH));
-                int prelimYear = Integer.parseInt(getItem(ItemVariant.EDITABLE_YEAR));
-
-                if (prelimYear < 100)
-                {
-                    // Apply 80/20 rule (20 years into future, or 80 years into past):
-                    int fourYear = Year.now().getValue() - (Year.now().getValue() % 100) + prelimYear;
-                    if (fourYear - Year.now().getValue() > 20)
-                        fourYear -= 100;
-                    setItem(ItemVariant.EDITABLE_YEAR, Integer.toString(fourYear), getPrompt(ItemVariant.EDITABLE_YEAR));
-                    prelimYear = fourYear;
-                }
-
-                int year = prelimYear;
-
+                final int month = Integer.parseInt(getItem(ItemVariant.EDITABLE_MONTH));
+                String yearText = getItem(ItemVariant.EDITABLE_YEAR);
+                final int year = Integer.parseInt(yearText);
+                // For fixes, we always use fourYear.  If they really want a two digit year, they should enter the leading zeroes
                 if (day <= 0)
                 {
-                    clampFix(fixes,1, month, year);
+                    clampFix(fixes,1, month, yearText, year);
                 }
                 try
                 {
-                    int monthLength = YearMonth.of(year, month).lengthOfMonth();
+                    int adjYear = adjustYear2To4(1, month, yearText, year);
+                    int monthLength = YearMonth.of(adjYear, month).lengthOfMonth();
                     if (day > monthLength)
                     {
-                        clampFix(fixes, monthLength, month, year);
+                        clampFix(fixes, monthLength, month, yearText, year);
+                        // If it's like 31st September, suggest 1st October:
                         if (day <= 31 && day - 1 == monthLength)
                         {
                             // Can't happen for December, so don't need to worry about year roll-over:
-                            fix(fixes, "entry.fix.adjustByDay", 1, month + 1, year);
+                            fix(fixes, "entry.fix.adjustByDay", 1, month + 1, yearText, year);
+                        }
+
+                        if (day >= 32 && year <= monthLength)
+                        {
+                            // They may have entered year, month, day, so swap day and year:
+                            clampFix(fixes, year, month, dayText, day);
                         }
                     }
                 }
@@ -660,21 +678,25 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
 
                 if (month <= 0)
                 {
-                    clampFix(fixes, day, 1, year);
+                    clampFix(fixes, day, 1, yearText, year);
                 }
                 else if (month >= 13)
                 {
-                    clampFix(fixes, day, 12, year);
+                    clampFix(fixes, day, 12, yearText, year);
                     if (1 <= day && day <= 12)
                     {
-                        // Possible transposition:
-                        fix(fixes, "entry.fix.dayMonthSwap", month, day, year);
+                        // Possible day-month transposition:
+                        fix(fixes, "entry.fix.dayMonthSwap", month, day, yearText, year);
                     }
                 }
 
                 if (fixes.size() == standardFixes)
                 {
-                    return Either.right(LocalDate.of(prelimYear, month, day));
+                    int adjYear = adjustYear2To4(day, month, yearText, year);
+                    setItem(ItemVariant.EDITABLE_DAY, Integer.toString(day));
+                    setItem(ItemVariant.EDITABLE_MONTH, Integer.toString(month));
+                    setItem(ItemVariant.EDITABLE_YEAR, Integer.toString(adjYear));
+                    return Either.right(LocalDate.of(adjYear, month, day));
                 }
             }
             catch (NumberFormatException | DateTimeException e)
@@ -683,13 +705,15 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
             return Either.left(fixes);
         }
 
-        public void clampFix(@UnknownInitialization(StyleClassedTextArea.class) YMD this, List<ErrorFix> fixes, int day, int month, int year)
+        public void clampFix(@UnknownInitialization(StyleClassedTextArea.class) YMD this, List<ErrorFix> fixes, int day, int month, String yearText, int year)
         {
-            fix(fixes, "entry.fix.clamp", day, month, year);
+            fix(fixes, "entry.fix.clamp", day, month, yearText, year);
         }
 
-        public void fix(@UnknownInitialization(StyleClassedTextArea.class) YMD this, List<ErrorFix> fixes, @LocalizableKey String labelKey, int day, int month, int year)
+        public void fix(@UnknownInitialization(StyleClassedTextArea.class) YMD this, List<ErrorFix> fixes, @LocalizableKey String labelKey, int day, int month, String yearText, int year)
         {
+            // For fixes, we always use fourYear.  If they really want a two digit year, they should enter the leading zeroes
+            year = adjustYear2To4(day, month, yearText, year);
             try
             {
                 LocalDate.of(year, month, day);
