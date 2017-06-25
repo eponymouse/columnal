@@ -454,9 +454,6 @@ public class TestStructuredTextField extends ApplicationTest
         checkFix("32/9/1", "1/9/2032");
         checkFix("32/9/1", "30/9/2001");
         checkFix("68/3/4", "4/3/1968");
-
-        // TODO add a property test for entering random dates, and also test month names and two digit years
-        // TODO add a test involving leading zeroes
     }
 
     @Property(trials = 15)
@@ -477,7 +474,7 @@ public class TestStructuredTextField extends ApplicationTest
             type(twoDig, value + "$", localDate);
         }
         // Try slight variant, such as other dividers or leading zeros:
-        // TODO also try month names
+        // Also try month names:
         int[] vals = new int[] {localDate.getDayOfMonth(), localDate.getMonthValue(), localDate.getYear()};
         List<List<String>> monthNames = Arrays.asList(
             Arrays.asList("Ja", "Jan", "January"),
@@ -517,6 +514,13 @@ public class TestStructuredTextField extends ApplicationTest
             fx_(() -> f.get().requestFocus());
             push(KeyCode.CONTROL, KeyCode.A);
             type(variant, value + "$", localDate);
+
+            // Also try Month name, day, year:
+            List<String> monthPoss = monthNames.get(vals[1] - 1);
+            String variantMD = monthPoss.get(r.nextInt(monthPoss.size())) + "/" + vals[0] + "/" + vals[2];
+            fx_(() -> f.get().requestFocus());
+            push(KeyCode.CONTROL, KeyCode.A);
+            type(variantMD, value + "$", localDate);
         }
         // Try errors and fixes; transposition, etc:
         if (vals[0] > 12)

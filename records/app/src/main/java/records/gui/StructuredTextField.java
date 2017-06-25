@@ -644,11 +644,24 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
             try
             {
                 String dayText = getItem(ItemVariant.EDITABLE_DAY);
-                final int day = Integer.parseInt(dayText);
-                // TODO allow month names
-                final int month = parseMonth(getItem(ItemVariant.EDITABLE_MONTH));
+                int day, month;
+                try
+                {
+                    day = Integer.parseInt(dayText);
+                    month = parseMonth(getItem(ItemVariant.EDITABLE_MONTH));
+                }
+                catch (NumberFormatException e)
+                {
+                    // If this throws, we'll fall out to the outer catch block
+                    // Try swapping day and month:
+                    month = parseMonth(dayText);
+                    day = Integer.parseInt(getItem(ItemVariant.EDITABLE_MONTH));
+                    dayText = getItem(ItemVariant.EDITABLE_MONTH);
+                }
+
+
                 String yearText = getItem(ItemVariant.EDITABLE_YEAR);
-                final int year = Integer.parseInt(yearText);
+                int year = Integer.parseInt(yearText);
                 // For fixes, we always use fourYear.  If they really want a two digit year, they should enter the leading zeroes
                 if (day <= 0)
                 {
