@@ -44,25 +44,32 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Set;
+import java.util.function.BiFunction;
 
 /**
  * Created by neil on 18/06/2017.
  */
 @OnThread(Tag.FXPlatform)
-public abstract class StructuredTextField<T> extends StyleClassedTextArea
+public final class StructuredTextField<T> extends StyleClassedTextArea
 {
     private final List<Item> curValue = new ArrayList<>();
+    private final Component<T> contentComponent;
     private @Nullable State lastValidValue;
     private @Nullable PopOver fixPopup;
     private T completedValue;
 
-    private StructuredTextField(Item... subItems) throws InternalException
+    @SuppressWarnings("initialization")
+    private StructuredTextField(Component<T> content) throws InternalException
     {
         super(false);
+        this.contentComponent = content;
+        List<Item> initialItems = content.getInitialItems();
+        curValue.addAll(initialItems);
+
+
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
             if (!focused)
             {
@@ -73,13 +80,12 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
             }
         });
 
-        curValue.addAll(Arrays.asList(subItems));
         // Call super to avoid our own validation:
-        super.replace(0, 0, makeDoc(subItems));
+        super.replace(0, 0, makeDoc(initialItems));
         @Nullable T val = endEdit().<@Nullable T>either(err -> null, v -> v);
         if (val == null)
         {
-            throw new InternalException("Starting field off with invalid completed value: " + Utility.listToString(Arrays.asList(subItems)));
+            throw new InternalException("Starting field off with invalid completed value: " + Utility.listToString(Arrays.asList(initialItems)));
         }
         completedValue = val;
         lastValidValue = captureState();
@@ -137,7 +143,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
         }
     }
 
-    private static ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> makeDoc(Item[] subItems)
+    private static ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> makeDoc(List<Item> subItems)
     {
         @MonotonicNonNull ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = null;
         for (Item subItem : subItems)
@@ -158,26 +164,23 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
     @NotNull
     static StructuredTextField<? extends TemporalAccessor> dateYMD(TemporalAccessor value) throws InternalException
     {
-        return new YMD(value);
+        return new StructuredTextField<>(new YMD(value));
     }
 
-    @RequiresNonNull("curValue")
-    protected String getItem(@UnknownInitialization(Object.class) StructuredTextField<T> this, ItemVariant item)
+    protected String getItem(ItemVariant item)
     {
         return curValue.stream().filter(ss -> ss.itemVariant == item).findFirst().map(ss -> ss.content).orElse("");
     }
 
-    @RequiresNonNull("curValue")
-    protected @Localized String getPrompt(@UnknownInitialization(Object.class) StructuredTextField<T> this, ItemVariant item)
+    protected @Localized String getPrompt(ItemVariant item)
     {
         return curValue.stream().filter(ss -> ss.itemVariant == item).findFirst().map(ss -> ss.prompt).orElse("");
     }
 
-    @RequiresNonNull("curValue")
-    protected void setItem(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this, ItemVariant item, String content)
+    protected void setItem(ItemVariant item, String content)
     {
         curValue.replaceAll(old -> old.itemVariant == item ? new Item(content, item, old.prompt) : old);
-        super.replace(0, getLength(), makeDoc(curValue.toArray(new Item[0])));
+        super.replace(0, getLength(), makeDoc(curValue));
     }
 
     @Override
@@ -246,7 +249,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
             curExisting += 1;
             cur = "";
         }
-        StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = makeDoc(newContent.toArray(new Item[0]));
+        StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = makeDoc(newContent);
         super.replace(0, getLength(), doc);
         curValue.clear();
         curValue.addAll(newContent);
@@ -298,7 +301,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
     }
 
     // Intended for use by subclasses during fixes.  Applies content and ends edit
-    protected void setValue(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this, String content)
+    protected void setValue(String content)
     {
         replaceText(content);
         endEdit().either_(err -> {}, v -> {
@@ -326,8 +329,10 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
      * If return is null, successful.  Otherwise list is of alternatives for fixing the error (may be empty)
      * @return
      */
-    @RequiresNonNull("curValue")
-    public abstract Either<List<ErrorFix>, T> endEdit(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this);
+    public Either<List<ErrorFix>, T> endEdit()
+    {
+        return contentComponent.endEdit(this);
+    }
 
     public T getCompletedValue()
     {
@@ -599,11 +604,55 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
     }
 
     @OnThread(Tag.FXPlatform)
-    private static class YMD extends StructuredTextField<TemporalAccessor>
+    static interface Component<T>
     {
+        public List<Item> getInitialItems();
+        public Either<List<ErrorFix>, T> endEdit(StructuredTextField<?> field);
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static class Component2<R, A, B> implements Component<R>
+    {
+        private final Component<A> a;
+        private final Component<B> b;
+        private final BiFunction<A, B, R> combine;
+
+        public Component2(Component<A> a, Component<B> b, BiFunction<A, B, R> combine)
+        {
+            this.a = a;
+            this.b = b;
+            this.combine = combine;
+        }
+
+        @Override
+        public List<Item> getInitialItems()
+        {
+            return Utility.concat(a.getInitialItems(), b.getInitialItems());
+        }
+
+        @Override
+        public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field)
+        {
+            Either<List<ErrorFix>, A> ax = a.endEdit(field);
+            Either<List<ErrorFix>, B> bx = b.endEdit(field);
+            return ax.either(ea -> bx.either(eb -> Either.left(Utility.concat(ea, eb)), rb -> Either.left(ea)),
+                ra -> bx.either(eb -> Either.left(eb), rb -> Either.right(combine.apply(ra, rb))));
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private static class YMD implements Component<TemporalAccessor>
+    {
+        private final TemporalAccessor value;
+
         public YMD(TemporalAccessor value) throws InternalException
         {
-            super(new Item(Integer.toString(value.get(ChronoField.DAY_OF_MONTH)), ItemVariant.EDITABLE_DAY, TranslationUtility.getString("entry.prompt.day")),
+            this.value = value;
+        }
+
+        public List<Item> getInitialItems()
+        {
+            return Arrays.asList(new Item(Integer.toString(value.get(ChronoField.DAY_OF_MONTH)), ItemVariant.EDITABLE_DAY, TranslationUtility.getString("entry.prompt.day")),
                   new Item("/"),
                   new Item(Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
                   new Item("/"),
@@ -635,37 +684,37 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
 
         @Override
         @OnThread(Tag.FXPlatform)
-        public Either<List<ErrorFix>, TemporalAccessor> endEdit(@UnknownInitialization(StyleClassedTextArea.class) YMD this)
+        public Either<List<ErrorFix>, TemporalAccessor> endEdit(StructuredTextField<?> field)
         {
             List<ErrorFix> fixes = new ArrayList<>();
-            revertEditFix().ifPresent(fixes::add);
+            field.revertEditFix().ifPresent(fixes::add);
             int standardFixes = fixes.size();
 
             try
             {
-                String dayText = getItem(ItemVariant.EDITABLE_DAY);
+                String dayText = field.getItem(ItemVariant.EDITABLE_DAY);
                 int day, month;
                 try
                 {
                     day = Integer.parseInt(dayText);
-                    month = parseMonth(getItem(ItemVariant.EDITABLE_MONTH));
+                    month = parseMonth(field.getItem(ItemVariant.EDITABLE_MONTH));
                 }
                 catch (NumberFormatException e)
                 {
                     // If this throws, we'll fall out to the outer catch block
                     // Try swapping day and month:
                     month = parseMonth(dayText);
-                    day = Integer.parseInt(getItem(ItemVariant.EDITABLE_MONTH));
-                    dayText = getItem(ItemVariant.EDITABLE_MONTH);
+                    day = Integer.parseInt(field.getItem(ItemVariant.EDITABLE_MONTH));
+                    dayText = field.getItem(ItemVariant.EDITABLE_MONTH);
                 }
 
 
-                String yearText = getItem(ItemVariant.EDITABLE_YEAR);
+                String yearText = field.getItem(ItemVariant.EDITABLE_YEAR);
                 int year = Integer.parseInt(yearText);
                 // For fixes, we always use fourYear.  If they really want a two digit year, they should enter the leading zeroes
                 if (day <= 0)
                 {
-                    clampFix(fixes,1, month, yearText, year);
+                    clampFix(field, fixes,1, month, yearText, year);
                 }
                 try
                 {
@@ -673,18 +722,18 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
                     int monthLength = YearMonth.of(adjYear, month).lengthOfMonth();
                     if (day > monthLength)
                     {
-                        clampFix(fixes, monthLength, month, yearText, year);
+                        clampFix(field, fixes, monthLength, month, yearText, year);
                         // If it's like 31st September, suggest 1st October:
                         if (day <= 31 && day - 1 == monthLength)
                         {
                             // Can't happen for December, so don't need to worry about year roll-over:
-                            fix(fixes, "entry.fix.adjustByDay", 1, month + 1, yearText, year);
+                            fix(field, fixes, "entry.fix.adjustByDay", 1, month + 1, yearText, year);
                         }
 
                         if (day >= 32 && year <= monthLength)
                         {
                             // They may have entered year, month, day, so swap day and year:
-                            clampFix(fixes, year, month, dayText, day);
+                            clampFix(field, fixes, year, month, dayText, day);
                         }
                     }
                 }
@@ -695,24 +744,24 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
 
                 if (month <= 0)
                 {
-                    clampFix(fixes, day, 1, yearText, year);
+                    clampFix(field, fixes, day, 1, yearText, year);
                 }
                 else if (month >= 13)
                 {
-                    clampFix(fixes, day, 12, yearText, year);
+                    clampFix(field, fixes, day, 12, yearText, year);
                     if (1 <= day && day <= 12)
                     {
                         // Possible day-month transposition:
-                        fix(fixes, "entry.fix.dayMonthSwap", month, day, yearText, year);
+                        fix(field, fixes, "entry.fix.dayMonthSwap", month, day, yearText, year);
                     }
                 }
 
                 if (fixes.size() == standardFixes)
                 {
                     int adjYear = adjustYear2To4(day, month, yearText, year);
-                    setItem(ItemVariant.EDITABLE_DAY, Integer.toString(day));
-                    setItem(ItemVariant.EDITABLE_MONTH, Integer.toString(month));
-                    setItem(ItemVariant.EDITABLE_YEAR, Integer.toString(adjYear));
+                    field.setItem(ItemVariant.EDITABLE_DAY, Integer.toString(day));
+                    field.setItem(ItemVariant.EDITABLE_MONTH, Integer.toString(month));
+                    field.setItem(ItemVariant.EDITABLE_YEAR, Integer.toString(adjYear));
                     return Either.right(LocalDate.of(adjYear, month, day));
                 }
             }
@@ -749,12 +798,12 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
             throw new NumberFormatException();
         }
 
-        public void clampFix(@UnknownInitialization(StyleClassedTextArea.class) YMD this, List<ErrorFix> fixes, int day, int month, String yearText, int year)
+        public void clampFix(StructuredTextField<?> field, List<ErrorFix> fixes, int day, int month, String yearText, int year)
         {
-            fix(fixes, "entry.fix.clamp", day, month, yearText, year);
+            fix(field, fixes, "entry.fix.clamp", day, month, yearText, year);
         }
 
-        public void fix(@UnknownInitialization(StyleClassedTextArea.class) YMD this, List<ErrorFix> fixes, @LocalizableKey String labelKey, int day, int month, String yearText, int year)
+        public void fix(StructuredTextField<?> field, List<ErrorFix> fixes, @LocalizableKey String labelKey, int day, int month, String yearText, int year)
         {
             // For fixes, we always use fourYear.  If they really want a two digit year, they should enter the leading zeroes
             year = adjustYear2To4(day, month, yearText, year);
@@ -775,7 +824,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
                 @OnThread(Tag.FXPlatform)
                 public void performFix()
                 {
-                    setValue(value);
+                    field.setValue(value);
                 }
             });
         }

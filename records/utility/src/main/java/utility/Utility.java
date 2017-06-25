@@ -756,6 +756,14 @@ public class Utility
         });
     }
 
+    public static <T> List<T> concat(List<T> a, List<T> b)
+    {
+        ArrayList<T> r = new ArrayList<>(a.size() + b.size());
+        r.addAll(a);
+        r.addAll(b);
+        return r;
+    }
+
     public static class ReadState
     {
         private final File file;
