@@ -1,5 +1,8 @@
 package test.gui;
 
+import com.pholser.junit.quickcheck.From;
+import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.geometry.Bounds;
@@ -18,6 +21,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import org.hamcrest.Matchers;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -25,6 +29,8 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.error.InternalException;
 import records.gui.StructuredTextField;
 import records.gui.TableDisplayUtility;
+import test.gen.GenDate;
+import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.gui.FXUtility;
@@ -53,6 +59,7 @@ import static test.TestUtil.fx_;
  * Created by neil on 19/06/2017.
  */
 @SuppressWarnings("initialization")
+@RunWith(JUnitQuickcheck.class)
 public class TestStructuredTextField extends ApplicationTest
 {
     private final ObjectProperty<StructuredTextField> f = new SimpleObjectProperty<>();
@@ -447,6 +454,17 @@ public class TestStructuredTextField extends ApplicationTest
 
         // TODO add a property test for entering random dates, and also test month names and two digit years
         // TODO add a test involving leading zeroes
+    }
+
+    @Property(trials = 15)
+    public void propYMD(@From(GenDate.class) LocalDate localDate, @From(GenRandom.class) Random r) throws InternalException
+    {
+        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        // Try it in valid form with four digit year:
+        clickOn(f.get());
+        push(KeyCode.CONTROL, KeyCode.A);
+        String value = localDate.getDayOfMonth() + "/" + localDate.getMonthValue() + "/" + localDate.getYear();
+        type(value, value + "$", localDate);
     }
 
     private void checkFix(String input, String suggestedFix)

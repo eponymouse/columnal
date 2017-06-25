@@ -352,7 +352,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
         if (c.isPresent())
         {
             // TODO allow month names
-            if (c.getAsInt() >= '0' && c.getAsInt() <= '9')
+            if ((c.getAsInt() >= '0' && c.getAsInt() <= '9') || c.getAsInt() == '-')
             {
                 if (before.length() < maxLength(style))
                     return new CharEntryResult(before + cStr, true, false);

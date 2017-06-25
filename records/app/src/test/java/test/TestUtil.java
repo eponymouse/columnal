@@ -432,10 +432,16 @@ public class TestUtil
 
     private static LocalDate MIN_DATE = LocalDate.of(1, 1, 1);
     private static LocalDate MAX_DATE = LocalDate.of(9999, 12, 31);
+    private static LocalDate MIN_CLOSE_DATE = LocalDate.of(1900, 1, 1);
+    private static LocalDate MAX_CLOSE_DATE = LocalDate.of(2050, 12, 31);
 
     public static @Value LocalDate generateDate(SourceOfRandomness r, GenerationStatus gs)
     {
-        return (LocalDate) DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.ofEpochDay(r.nextLong(MIN_DATE.toEpochDay(), MAX_DATE.toEpochDay())));
+        // Usually, generate dates in sensible range (1900->2050)
+        if (r.nextInt(4) != 0)
+            return (LocalDate) DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.ofEpochDay(r.nextLong(MIN_CLOSE_DATE.toEpochDay(), MAX_CLOSE_DATE.toEpochDay())));
+        else
+            return (LocalDate) DataTypeUtility.value(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.ofEpochDay(r.nextLong(MIN_DATE.toEpochDay(), MAX_DATE.toEpochDay())));
     }
 
     public static @Value LocalTime generateTime(SourceOfRandomness r, GenerationStatus gs)
