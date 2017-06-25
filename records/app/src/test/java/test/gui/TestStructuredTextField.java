@@ -457,7 +457,7 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
     @Property(trials = 15)
-    public void propYMD(@From(GenDate.class) @When(seed=-5401696886865637170L) LocalDate localDate, @From(GenRandom.class) @When(seed=-2675316684223940997L) Random r) throws InternalException
+    public void propYMD(@From(GenDate.class) LocalDate localDate, @From(GenRandom.class) Random r) throws InternalException
     {
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         // Try it in valid form with four digit year:
