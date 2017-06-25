@@ -31,18 +31,23 @@ import utility.gui.TranslationUtility;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.format.TextStyle;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.Set;
 
 /**
  * Created by neil on 18/06/2017.
@@ -351,8 +356,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
         String cStr = c.isPresent() ? new String(new int[] {c.getAsInt()}, 0, 1) : "";
         if (c.isPresent())
         {
-            // TODO allow month names
-            if ((c.getAsInt() >= '0' && c.getAsInt() <= '9') || c.getAsInt() == '-')
+            if ((c.getAsInt() >= '0' && c.getAsInt() <= '9') || (c.getAsInt() == '-' && before.isEmpty()) || Character.isAlphabetic(c.getAsInt()))
             {
                 if (before.length() < maxLength(style))
                     return new CharEntryResult(before + cStr, true, false);
@@ -642,7 +646,7 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
                 String dayText = getItem(ItemVariant.EDITABLE_DAY);
                 final int day = Integer.parseInt(dayText);
                 // TODO allow month names
-                final int month = Integer.parseInt(getItem(ItemVariant.EDITABLE_MONTH));
+                final int month = parseMonth(getItem(ItemVariant.EDITABLE_MONTH));
                 String yearText = getItem(ItemVariant.EDITABLE_YEAR);
                 final int year = Integer.parseInt(yearText);
                 // For fixes, we always use fourYear.  If they really want a two digit year, they should enter the leading zeroes
@@ -703,6 +707,33 @@ public abstract class StructuredTextField<T> extends StyleClassedTextArea
             {
             }
             return Either.left(fixes);
+        }
+
+        private static int parseMonth(String item) throws NumberFormatException
+        {
+            try
+            {
+                return Integer.parseInt(item);
+            }
+            catch (NumberFormatException e)
+            {
+                // Try as month name...
+            }
+
+            Set<Integer> possibles = new HashSet<>();
+            for (int i = 1; i <= 12; i++)
+            {
+                for (TextStyle textStyle : TextStyle.values())
+                {
+                    if (Month.of(i).getDisplayName(textStyle, Locale.getDefault()).toLowerCase().startsWith(item.toLowerCase()))
+                        possibles.add(i);
+                }
+
+            }
+            if (possibles.size() == 1)
+                return possibles.iterator().next();
+
+            throw new NumberFormatException();
         }
 
         public void clampFix(@UnknownInitialization(StyleClassedTextArea.class) YMD this, List<ErrorFix> fixes, int day, int month, String yearText, int year)

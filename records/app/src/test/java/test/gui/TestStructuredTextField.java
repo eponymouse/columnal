@@ -478,14 +478,36 @@ public class TestStructuredTextField extends ApplicationTest
         // Try slight variant, such as other dividers or leading zeros:
         // TODO also try month names
         int[] vals = new int[] {localDate.getDayOfMonth(), localDate.getMonthValue(), localDate.getYear()};
+        List<List<String>> monthNames = Arrays.asList(
+            Arrays.asList("Ja", "Jan", "January"),
+            Arrays.asList("F", "Feb", "February"),
+            Arrays.asList("Mar", "March"),
+            Arrays.asList("Ap", "Apr", "April"),
+            Arrays.asList("May"),
+            Arrays.asList("Jun", "June"),
+            Arrays.asList("Jul", "July"),
+            Arrays.asList("Au", "Aug", "August"),
+            Arrays.asList("S", "Sep", "September"),
+            Arrays.asList("O", "Oct", "October"),
+            Arrays.asList("N", "Nov", "November"),
+            Arrays.asList("D", "Dec", "December")
+        );
         List<String> divs = Arrays.asList("/","-"," ",":", ".");
         for (int attempt = 0; attempt < 3; attempt++)
         {
             String variant = "";
             for (int i = 0; i < 3; i++)
             {
-                variant += String.join("", Utility.replicate(r.nextInt(3), "0"));
-                variant += vals[i];
+                if (i == 1 && r.nextBoolean())
+                {
+                    List<String> monthPoss = monthNames.get(vals[i] - 1);
+                    variant += monthPoss.get(r.nextInt(monthPoss.size()));
+                }
+                else
+                {
+                    variant += String.join("", Utility.replicate(r.nextInt(3), "0"));
+                    variant += vals[i];
+                }
                 if (i < 2)
                 {
                     variant += divs.get(r.nextInt(divs.size()));
@@ -495,7 +517,7 @@ public class TestStructuredTextField extends ApplicationTest
             push(KeyCode.CONTROL, KeyCode.A);
             type(variant, value + "$", localDate);
         }
-        // TODO try errors and fixes?
+        // TODO try errors and fixes?  Transposition, etc
     }
 
     private void checkFix(String input, String suggestedFix)
