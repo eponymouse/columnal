@@ -35,6 +35,7 @@ import test.gen.GenDate;
 import test.gen.GenDateTime;
 import test.gen.GenOffsetTime;
 import test.gen.GenRandom;
+import test.gen.GenTime;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -43,6 +44,7 @@ import utility.gui.FXUtility;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.Year;
 import java.time.ZoneOffset;
@@ -523,6 +525,17 @@ public class TestStructuredTextField extends ApplicationTest
             timeVal += new BigDecimal("0." + String.format("%09d", t.get(ChronoField.NANO_OF_SECOND))).stripTrailingZeros().toPlainString().substring(1);
         }
         return timeVal;
+    }
+
+    @Property(trials = 15)
+    public void propTime(@From(GenTime.class) LocalTime localTime, @From(GenRandom.class) Random r) throws InternalException
+    {
+        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.TIMEOFDAY), LocalTime.of(1, 1, 1, 1)));
+        String timeVal = timeString(localTime);
+        clickOn(f.get());
+        push(KeyCode.CONTROL, KeyCode.A);
+        type(timeVal, timeVal + "$", localTime);
+        // TODO also test errors
     }
 
     @Property(trials = 15)

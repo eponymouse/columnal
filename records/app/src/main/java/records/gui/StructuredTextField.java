@@ -175,6 +175,11 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         return new StructuredTextField<>(new Component2<LocalDateTime, LocalDate, LocalTime>(new YMD(value), " ", new TimeComponent(value), LocalDateTime::of));
     }
 
+    public static StructuredTextField<? extends TemporalAccessor> time(TemporalAccessor value) throws InternalException
+    {
+        return new StructuredTextField<>(new TimeComponent(value));
+    }
+
     public static StructuredTextField<? extends TemporalAccessor> timeZoned(TemporalAccessor value) throws InternalException
     {
         return new StructuredTextField<>(new PlusMinusOffsetComponent<>(new TimeComponent(value), value.get(ChronoField.OFFSET_SECONDS), OffsetTime::of));

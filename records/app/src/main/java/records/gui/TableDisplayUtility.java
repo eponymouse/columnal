@@ -328,7 +328,7 @@ public class TableDisplayUtility
             case YEARMONTH:
                 break;
             case TIMEOFDAY:
-                break;
+                return StructuredTextField.time(value);
             case TIMEOFDAYZONED:
                 return StructuredTextField.timeZoned(value);
             case DATETIME:
