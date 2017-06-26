@@ -474,7 +474,7 @@ public class TestUtil
 
     public static ZoneOffset generateZoneOffset(SourceOfRandomness r, GenerationStatus gs)
     {
-        return ZoneOffset.ofTotalSeconds(r.nextInt(-12*60*60, 12*60*60));
+        return ZoneOffset.ofTotalSeconds(r.nextInt(-12*60, 12*60) * 60);
     }
 
     public static String generateZoneString(SourceOfRandomness r, GenerationStatus gs)

@@ -34,8 +34,10 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.Month;
+import java.time.OffsetTime;
 import java.time.Year;
 import java.time.YearMonth;
+import java.time.ZoneOffset;
 import java.time.format.TextStyle;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
@@ -87,7 +89,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         @Nullable T val = endEdit().<@Nullable T>either(err -> null, v -> v);
         if (val == null)
         {
-            throw new InternalException("Starting field off with invalid completed value: " + Utility.listToString(Arrays.asList(initialItems)));
+            throw new InternalException("Starting field off with invalid completed value: " + Utility.listToString(Utility.mapList(initialItems, item -> item.getScreenText())));
         }
         completedValue = val;
         lastValidValue = captureState();
@@ -173,6 +175,11 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         return new StructuredTextField<>(new Component2<LocalDateTime, LocalDate, LocalTime>(new YMD(value), " ", new TimeComponent(value), LocalDateTime::of));
     }
 
+    public static StructuredTextField<? extends TemporalAccessor> timeZoned(TemporalAccessor value) throws InternalException
+    {
+        return new StructuredTextField<>(new PlusMinusOffsetComponent<>(new TimeComponent(value), value.get(ChronoField.OFFSET_SECONDS), OffsetTime::of));
+    }
+
     protected String getItem(ItemVariant item)
     {
         return curValue.stream().filter(ss -> ss.itemVariant == item).findFirst().map(ss -> ss.content).orElse("");
@@ -212,7 +219,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         {
             int spanEnd = curStart + existing.get(curExisting).getLength();
             // If we're just before divider, count as being at the beginning of it, not the end:
-            if (start == spanEnd && (curExisting + 1 >= existing.size() || existing.get(curExisting + 1).itemVariant == ItemVariant.DIVIDER))
+            if (start == spanEnd && (curExisting + 1 >= existing.size() || existing.get(curExisting + 1).itemVariant == ItemVariant.DIVIDER || existing.get(curExisting + 1).itemVariant == ItemVariant.TIMEZONE_PLUS_MINUS))
                 break;
 
             if (spanEnd <= start)
@@ -300,7 +307,6 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                 new Item(":"),
                 new Item(Integer.toString(value.get(ChronoField.MINUTE_OF_HOUR)), ItemVariant.EDITABLE_MINUTE, TranslationUtility.getString("entry.prompt.minute")),
                 new Item(":"),
-                // TODO allow fractional seconds
                 new Item(Integer.toString(value.get(ChronoField.SECOND_OF_MINUTE)), ItemVariant.EDITABLE_SECOND, TranslationUtility.getString("entry.prompt.second")));
         }
 
@@ -340,6 +346,50 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
             }
             return Either.left(fixes);
+        }
+    }
+
+    // Takes a component and adds {+|-}HH:MM on the end for a timezone offset.
+    private static class PlusMinusOffsetComponent<R, A> implements Component<R>
+    {
+        private final int seconds;
+        private final Component<A> a;
+        private final BiFunction<A, ZoneOffset, R> combine;
+
+        public PlusMinusOffsetComponent(Component<A> a, int seconds, BiFunction<A, ZoneOffset, R> combine)
+        {
+            this.a = a;
+            this.seconds = seconds;
+            this.combine = combine;
+        }
+
+        @Override
+        public List<Item> getInitialItems()
+        {
+            int hours = seconds / 3600;
+            int minutes = (seconds - (hours * 3600)) / 60;
+            return Utility.concat(a.getInitialItems(), Arrays.asList(
+                new Item("", ItemVariant.TIMEZONE_PLUS_MINUS, "\u00B1"),
+                new Item(Integer.toString(hours), ItemVariant.EDITABLE_OFFSET_HOUR, "Zone Hours"),
+                new Item(":"),
+                new Item(Integer.toString(minutes), ItemVariant.EDITABLE_OFFSET_MINUTE, "Zone Minutes")));
+        }
+
+        @Override
+        public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field)
+        {
+            Either<List<ErrorFix>, A> ea = a.endEdit(field);
+
+            int sign = field.getItem(ItemVariant.TIMEZONE_PLUS_MINUS).equals("-") ? -1 : 1;
+
+            int hour = sign * Integer.parseInt(field.getItem(ItemVariant.EDITABLE_OFFSET_HOUR));
+            int minute = sign * Integer.parseInt(field.getItem(ItemVariant.EDITABLE_OFFSET_MINUTE));
+
+            if (hour >= -18 && hour <= 18 && minute >= -59 && minute <= 59)
+            {
+                return ea.either(err -> Either.left(err), ra -> Either.right(combine.apply(ra, ZoneOffset.ofHoursMinutes(hour, minute))));
+            }
+            return Either.left(Collections.emptyList() /*TODO*/);
         }
     }
 
@@ -427,7 +477,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         String cStr = c.isPresent() ? new String(new int[] {c.getAsInt()}, 0, 1) : "";
         if (c.isPresent())
         {
-            if ((c.getAsInt() >= '0' && c.getAsInt() <= '9') || (c.getAsInt() == '-' && before.isEmpty()) || Character.isAlphabetic(c.getAsInt()) || (c.getAsInt() == '.' && canHaveDot(style)))
+            if (validCharacterForItem(style, before, c.getAsInt()))
             {
                 if (before.length() < maxLength(style))
                     return new CharEntryResult(before + cStr, true, false);
@@ -441,9 +491,23 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
     }
 
-    private boolean canHaveDot(ItemVariant style)
+    private boolean validCharacterForItem(ItemVariant style, String before, int c)
     {
-        return style == ItemVariant.EDITABLE_SECOND;
+        switch (style)
+        {
+            case TIMEZONE_PLUS_MINUS:
+                return c == '+' || c == '-';
+            case EDITABLE_HOUR:
+            case EDITABLE_MINUTE:
+            case EDITABLE_OFFSET_HOUR:
+            case EDITABLE_OFFSET_MINUTE:
+                return (c >= '0' && c <= '9');
+            case EDITABLE_SECOND:
+                return (c >= '0' && c <= '9') || c == '.';
+            // Day, Month Year allow month names in any of them:
+            default:
+                return (c >= '0' && c <= '9') || Character.isAlphabetic(c);
+        }
     }
 
     private int maxLength(ItemVariant style)
@@ -630,6 +694,9 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         EDITABLE_HOUR,
         EDITABLE_MINUTE,
         EDITABLE_SECOND,
+        EDITABLE_OFFSET_HOUR,
+        EDITABLE_OFFSET_MINUTE,
+        TIMEZONE_PLUS_MINUS,
         DIVIDER;
     }
 

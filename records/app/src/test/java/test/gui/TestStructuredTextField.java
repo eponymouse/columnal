@@ -32,6 +32,7 @@ import records.gui.StructuredTextField;
 import records.gui.TableDisplayUtility;
 import test.gen.GenDate;
 import test.gen.GenDateTime;
+import test.gen.GenOffsetTime;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -41,7 +42,9 @@ import utility.gui.FXUtility;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.OffsetTime;
 import java.time.Year;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -515,6 +518,24 @@ public class TestStructuredTextField extends ApplicationTest
         enterDate(localDateTime, r, " " + timeVal);
     }
 
+    @Property(trials = 15)
+    public void propTimeZoned(@From(GenOffsetTime.class) OffsetTime timeZoned, @From(GenRandom.class) Random r) throws InternalException
+    {
+        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED), OffsetTime.of(1, 1, 1, 1, ZoneOffset.ofHours(3))));
+        String timeVal = timeZoned.get(ChronoField.HOUR_OF_DAY) + ":" + timeZoned.get(ChronoField.MINUTE_OF_HOUR) + ":" + timeZoned.get(ChronoField.SECOND_OF_MINUTE);
+        if (timeZoned.getNano() != 0)
+        {
+            timeVal += new BigDecimal("0." + String.format("%09d", timeZoned.getNano())).stripTrailingZeros().toPlainString().substring(1);
+        }
+        int offsetHour = timeZoned.getOffset().getTotalSeconds() / 3600;
+        int offsetMinute = Math.abs(timeZoned.getOffset().getTotalSeconds() / 60 - offsetHour * 60);
+        timeVal += (timeZoned.getOffset().getTotalSeconds() < 0 ? "-" : "+") + Math.abs(offsetHour) + ":" + offsetMinute;
+        clickOn(f.get());
+        push(KeyCode.CONTROL, KeyCode.A);
+        type(timeVal, timeVal + "$", timeZoned);
+        // TODO also test errors
+    }
+
     private void enterDate(TemporalAccessor localDate, Random r, String extra) throws InternalException
     {
         // Try it in valid form with four digit year:
@@ -638,7 +659,7 @@ public class TestStructuredTextField extends ApplicationTest
         assertEquals(expected, actual);
         if (endEditAndCompareTo != null)
         {
-            assertEquals(endEditAndCompareTo, f.get().getCompletedValue());
+            assertEquals(f.get().getText(), endEditAndCompareTo, f.get().getCompletedValue());
         }
     }
 }
