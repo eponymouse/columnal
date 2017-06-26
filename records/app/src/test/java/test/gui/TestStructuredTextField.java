@@ -21,6 +21,7 @@ import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import org.hamcrest.Matchers;
+import org.jetbrains.annotations.NotNull;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
@@ -510,23 +511,25 @@ public class TestStructuredTextField extends ApplicationTest
     public void propDateTime(@From(GenDateTime.class) LocalDateTime localDateTime, @From(GenRandom.class) Random r) throws InternalException
     {
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(1900, 4, 1, 1, 1, 1)));
-        String timeVal = localDateTime.get(ChronoField.HOUR_OF_DAY) + ":" + localDateTime.get(ChronoField.MINUTE_OF_HOUR) + ":" + localDateTime.get(ChronoField.SECOND_OF_MINUTE);
-        if (localDateTime.getNano() != 0)
-        {
-            timeVal += new BigDecimal("0." + String.format("%09d", localDateTime.getNano())).stripTrailingZeros().toPlainString().substring(1);
-        }
+        String timeVal = timeString(localDateTime);
         enterDate(localDateTime, r, " " + timeVal);
+    }
+
+    private static String timeString(TemporalAccessor t)
+    {
+        String timeVal = t.get(ChronoField.HOUR_OF_DAY) + ":" + t.get(ChronoField.MINUTE_OF_HOUR) + ":" + t.get(ChronoField.SECOND_OF_MINUTE);
+        if (t.get(ChronoField.NANO_OF_SECOND) != 0)
+        {
+            timeVal += new BigDecimal("0." + String.format("%09d", t.get(ChronoField.NANO_OF_SECOND))).stripTrailingZeros().toPlainString().substring(1);
+        }
+        return timeVal;
     }
 
     @Property(trials = 15)
     public void propTimeZoned(@From(GenOffsetTime.class) OffsetTime timeZoned, @From(GenRandom.class) Random r) throws InternalException
     {
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED), OffsetTime.of(1, 1, 1, 1, ZoneOffset.ofHours(3))));
-        String timeVal = timeZoned.get(ChronoField.HOUR_OF_DAY) + ":" + timeZoned.get(ChronoField.MINUTE_OF_HOUR) + ":" + timeZoned.get(ChronoField.SECOND_OF_MINUTE);
-        if (timeZoned.getNano() != 0)
-        {
-            timeVal += new BigDecimal("0." + String.format("%09d", timeZoned.getNano())).stripTrailingZeros().toPlainString().substring(1);
-        }
+        String timeVal = timeString(timeZoned);
         int offsetHour = timeZoned.getOffset().getTotalSeconds() / 3600;
         int offsetMinute = Math.abs(timeZoned.getOffset().getTotalSeconds() / 60 - offsetHour * 60);
         timeVal += (timeZoned.getOffset().getTotalSeconds() < 0 ? "-" : "+") + Math.abs(offsetHour) + ":" + offsetMinute;
