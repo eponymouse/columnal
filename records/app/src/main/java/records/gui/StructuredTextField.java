@@ -31,6 +31,8 @@ import utility.gui.TranslationUtility;
 
 import java.time.DateTimeException;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.time.Month;
 import java.time.Year;
 import java.time.YearMonth;
@@ -161,10 +163,14 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         }
     }
 
-    @NotNull
-    static StructuredTextField<? extends TemporalAccessor> dateYMD(TemporalAccessor value) throws InternalException
+    public static StructuredTextField<? extends TemporalAccessor> dateYMD(TemporalAccessor value) throws InternalException
     {
         return new StructuredTextField<>(new YMD(value));
+    }
+
+    public static StructuredTextField<? extends TemporalAccessor> dateTime(TemporalAccessor value) throws InternalException
+    {
+        return new StructuredTextField<>(new Component2<LocalDateTime, LocalDate, LocalTime>(new YMD(value), " ", new TimeComponent(value), LocalDateTime::of));
     }
 
     protected String getItem(ItemVariant item)
@@ -277,6 +283,66 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         });
     }
 
+    private static class TimeComponent implements Component<LocalTime>
+    {
+        private final TemporalAccessor value;
+
+        public TimeComponent(TemporalAccessor value)
+        {
+            this.value = value;
+        }
+
+        @Override
+        public List<Item> getInitialItems()
+        {
+            return Arrays.asList(
+                new Item(Integer.toString(value.get(ChronoField.HOUR_OF_DAY)), ItemVariant.EDITABLE_HOUR, TranslationUtility.getString("entry.prompt.hour")),
+                new Item(":"),
+                new Item(Integer.toString(value.get(ChronoField.MINUTE_OF_HOUR)), ItemVariant.EDITABLE_MINUTE, TranslationUtility.getString("entry.prompt.minute")),
+                new Item(":"),
+                // TODO allow fractional seconds
+                new Item(Integer.toString(value.get(ChronoField.SECOND_OF_MINUTE)), ItemVariant.EDITABLE_SECOND, TranslationUtility.getString("entry.prompt.second")));
+        }
+
+        @Override
+        public Either<List<ErrorFix>, LocalTime> endEdit(StructuredTextField<?> field)
+        {
+            List<ErrorFix> fixes = new ArrayList<>();
+            field.revertEditFix().ifPresent(fixes::add);
+            try
+            {
+                int hour = Integer.parseInt(field.getItem(ItemVariant.EDITABLE_HOUR));
+                int minute = Integer.parseInt(field.getItem(ItemVariant.EDITABLE_MINUTE));
+                int second;
+                int nano;
+                String secondText = field.getItem(ItemVariant.EDITABLE_SECOND);
+                if (secondText.contains("."))
+                {
+                    second = Integer.parseInt(secondText.substring(0, secondText.indexOf('.')));
+                    String nanoText = secondText.substring(secondText.indexOf('.') + 1);
+                    while (nanoText.length() < 9)
+                        nanoText += "0";
+                    nano = Integer.parseInt(nanoText);
+                }
+                else
+                {
+                    second = Integer.parseInt(secondText);
+                    nano = 0;
+                }
+
+                if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59 && second >= 0 && second <= 59)
+                {
+                    return Either.right(LocalTime.of(hour, minute, second, nano));
+                }
+            }
+            catch (NumberFormatException e)
+            {
+
+            }
+            return Either.left(fixes);
+        }
+    }
+
     private class State
     {
         public final List<Item> items;
@@ -361,7 +427,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         String cStr = c.isPresent() ? new String(new int[] {c.getAsInt()}, 0, 1) : "";
         if (c.isPresent())
         {
-            if ((c.getAsInt() >= '0' && c.getAsInt() <= '9') || (c.getAsInt() == '-' && before.isEmpty()) || Character.isAlphabetic(c.getAsInt()))
+            if ((c.getAsInt() >= '0' && c.getAsInt() <= '9') || (c.getAsInt() == '-' && before.isEmpty()) || Character.isAlphabetic(c.getAsInt()) || (c.getAsInt() == '.' && canHaveDot(style)))
             {
                 if (before.length() < maxLength(style))
                     return new CharEntryResult(before + cStr, true, false);
@@ -375,12 +441,19 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
     }
 
+    private boolean canHaveDot(ItemVariant style)
+    {
+        return style == ItemVariant.EDITABLE_SECOND;
+    }
+
     private int maxLength(ItemVariant style)
     {
         switch (style)
         {
+            case EDITABLE_SECOND:
+                return 2 + 1 + 9;
             default:
-                return 10;
+                return 12;
         }
     }
 
@@ -554,6 +627,9 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         EDITABLE_DAY,
         EDITABLE_MONTH,
         EDITABLE_YEAR,
+        EDITABLE_HOUR,
+        EDITABLE_MINUTE,
+        EDITABLE_SECOND,
         DIVIDER;
     }
 
@@ -616,18 +692,20 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         private final Component<A> a;
         private final Component<B> b;
         private final BiFunction<A, B, R> combine;
+        private final String divider;
 
-        public Component2(Component<A> a, Component<B> b, BiFunction<A, B, R> combine)
+        public Component2(Component<A> a, String divider, Component<B> b, BiFunction<A, B, R> combine)
         {
             this.a = a;
             this.b = b;
+            this.divider = divider;
             this.combine = combine;
         }
 
         @Override
         public List<Item> getInitialItems()
         {
-            return Utility.concat(a.getInitialItems(), b.getInitialItems());
+            return Utility.concat(a.getInitialItems(), Arrays.asList(new Item(divider)), b.getInitialItems());
         }
 
         @Override
@@ -641,7 +719,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     }
 
     @OnThread(Tag.FXPlatform)
-    private static class YMD implements Component<TemporalAccessor>
+    private static class YMD implements Component<LocalDate>
     {
         private final TemporalAccessor value;
 
@@ -684,7 +762,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
         @Override
         @OnThread(Tag.FXPlatform)
-        public Either<List<ErrorFix>, TemporalAccessor> endEdit(StructuredTextField<?> field)
+        public Either<List<ErrorFix>, LocalDate> endEdit(StructuredTextField<?> field)
         {
             List<ErrorFix> fixes = new ArrayList<>();
             field.revertEditFix().ifPresent(fixes::add);
@@ -937,6 +1015,10 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void wordBreaksBackwards(int n, SelectionPolicy selectionPolicy)
     {
+        // So it seems that RichTextFX goes back two if the neighbouring character is whitespace, but that's not the behaviour we want
+        // So just override the count to be 1:
+        n = 1;
+
         Pair<Integer, Integer> cur = plainToStructured(getCaretPosition());
         for (int i = 0; i < n; i++)
         {
@@ -956,7 +1038,10 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void wordBreaksForwards(int n, SelectionPolicy selectionPolicy)
     {
-        int old = getCaretPosition();
+        // So it seems that RichTextFX goes back two if the neighbouring character is whitespace, but that's not the behaviour we want
+        // So just override the count to be 1:
+        n = 1;
+
         Pair<Integer, Integer> cur = plainToStructured(getCaretPosition());
         for (int i = 0; i < n; i++)
         {

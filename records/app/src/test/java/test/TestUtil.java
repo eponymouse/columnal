@@ -446,7 +446,15 @@ public class TestUtil
 
     public static @Value LocalTime generateTime(SourceOfRandomness r, GenerationStatus gs)
     {
-        return (LocalTime) DataTypeUtility.value(new DateTimeInfo(DateTimeType.TIMEOFDAY), new LocalTimeGenerator().generate(r, gs));
+        LocalTime localTime = (LocalTime) DataTypeUtility.value(new DateTimeInfo(DateTimeType.TIMEOFDAY), new LocalTimeGenerator().generate(r, gs));
+        // Produce half the dates without partial seconds (and perhaps seconds set to zero): common case
+        if (r.nextBoolean())
+        {
+            localTime = localTime.minusNanos(localTime.getNano());
+            if (r.nextBoolean())
+                localTime = localTime.minusSeconds(localTime.getSecond());
+        }
+        return localTime;
     }
 
     public static @Value LocalDateTime generateDateTime(SourceOfRandomness r, GenerationStatus gs)

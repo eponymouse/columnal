@@ -756,11 +756,20 @@ public class Utility
         });
     }
 
+    // Having different arity versions of this prevents the varargs/generics warning
     public static <T> List<T> concat(List<T> a, List<T> b)
     {
         ArrayList<T> r = new ArrayList<>(a.size() + b.size());
         r.addAll(a);
         r.addAll(b);
+        return r;
+    }
+    public static <T> List<T> concat(List<T> a, List<T> b, List<T> c)
+    {
+        ArrayList<T> r = new ArrayList<>(a.size() + b.size() + c.size());
+        r.addAll(a);
+        r.addAll(b);
+        r.addAll(c);
         return r;
     }
 

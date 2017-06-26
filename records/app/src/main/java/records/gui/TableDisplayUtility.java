@@ -332,7 +332,7 @@ public class TableDisplayUtility
             case TIMEOFDAYZONED:
                 break;
             case DATETIME:
-                break;
+                return StructuredTextField.dateTime(value);
             case DATETIMEZONED:
                 break;
         }

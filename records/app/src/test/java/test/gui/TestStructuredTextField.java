@@ -31,14 +31,18 @@ import records.error.InternalException;
 import records.gui.StructuredTextField;
 import records.gui.TableDisplayUtility;
 import test.gen.GenDate;
+import test.gen.GenDateTime;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 import utility.gui.FXUtility;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.Year;
+import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,6 +85,7 @@ public class TestStructuredTextField extends ApplicationTest
         FXUtility.addChangeListenerPlatformNN(f, field -> {
             FXUtility.runAfter(() ->
             {
+                field.setMinWidth(600);
                 scene.setRoot(new VBox(field, dummy));
                 scene.getRoot().layout();
                 stage.sizeToScene();
@@ -102,6 +107,22 @@ public class TestStructuredTextField extends ApplicationTest
                 new int[] {3, 4, 5},
                 null,
                 new int[] {6, 7, 8, 9, 10}
+        );
+
+        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(2034, 10, 29, 13, 56, 22)));
+        assertEquals("29/10/2034 13:56:22", fx(() -> f.get().getText()));
+        testPositions(new Random(0),
+            new int[] {0, 1, 2},
+            null,
+            new int[] {3, 4, 5},
+            null,
+            new int[] {6, 7, 8, 9, 10},
+            null,
+            new int[] {11, 12, 13},
+            null,
+            new int[] {14, 15, 16},
+            null,
+            new int[] {17, 18, 19}
         );
 
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
@@ -130,6 +151,25 @@ public class TestStructuredTextField extends ApplicationTest
             new int[] {4},
             null,
             new int[] {10}
+        );
+
+        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(1900, 1, 1, 1, 1, 1)));
+        // Delete all:
+        push(KeyCode.SHORTCUT, KeyCode.A);
+        push(KeyCode.DELETE);
+        assertEquals("Day/Month/Year Hour:Minute:Second", fx(() -> f.get().getText()));
+        testPositions(new Random(0),
+            new int[] {0},
+            null,
+            new int[] {4},
+            null,
+            new int[] {10},
+            null,
+            new int[] {15},
+            null,
+            new int[] {20},
+            null,
+            new int[] {27}
         );
     }
 
@@ -273,7 +313,7 @@ public class TestStructuredTextField extends ApplicationTest
                 pos = calculateExpectedWordMove(positions, pos, right);
             }
 
-            String label = "From " + start.getValue() + " sel:" + useSelection + " right:" + right + " x " + number;
+            String label = "From " + start.getValue() + " sel:" + useSelection + " right:" + right + " x " + number + " content " + f.get().getText();
             // Work out where we expect it to end up:
             assertEquals(label, useSelection ? (int)start.getValue() : pos, (int)fx(() -> f.get().getAnchor()));
             assertEquals(label, pos, (int)fx(() -> f.get().getCaretPosition()));
@@ -460,22 +500,39 @@ public class TestStructuredTextField extends ApplicationTest
     public void propYMD(@From(GenDate.class) LocalDate localDate, @From(GenRandom.class) Random r) throws InternalException
     {
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        enterDate(localDate, r, "");
+    }
+
+    @Property(trials = 15)
+    public void propDateTime(@From(GenDateTime.class) LocalDateTime localDateTime, @From(GenRandom.class) Random r) throws InternalException
+    {
+        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(1900, 4, 1, 1, 1, 1)));
+        String timeVal = localDateTime.get(ChronoField.HOUR_OF_DAY) + ":" + localDateTime.get(ChronoField.MINUTE_OF_HOUR) + ":" + localDateTime.get(ChronoField.SECOND_OF_MINUTE);
+        if (localDateTime.getNano() != 0)
+        {
+            timeVal += new BigDecimal("0." + String.format("%09d", localDateTime.getNano())).stripTrailingZeros().toPlainString().substring(1);
+        }
+        enterDate(localDateTime, r, " " + timeVal);
+    }
+
+    private void enterDate(TemporalAccessor localDate, Random r, String extra) throws InternalException
+    {
         // Try it in valid form with four digit year:
         clickOn(f.get());
         push(KeyCode.CONTROL, KeyCode.A);
-        String value = localDate.getDayOfMonth() + "/" + localDate.getMonthValue() + "/" + localDate.getYear();
-        type(value, value + "$", localDate);
-        if (localDate.getYear() > Year.now().getValue() - 80 && localDate.getYear() < Year.now().getValue() + 20)
+        String value = localDate.get(ChronoField.DAY_OF_MONTH) + "/" + localDate.get(ChronoField.MONTH_OF_YEAR) + "/" + String.format("%04d", localDate.get(ChronoField.YEAR));
+        type(value + extra, value + extra + "$", localDate);
+        if (localDate.get(ChronoField.YEAR) > Year.now().getValue() - 80 && localDate.get(ChronoField.YEAR) < Year.now().getValue() + 20)
         {
             // Do two digits:
             clickOn(f.get());
             push(KeyCode.CONTROL, KeyCode.A);
-            String twoDig = localDate.getDayOfMonth() + "/" + localDate.getMonthValue() + "/" + Integer.toString(localDate.getYear()).substring(2);
-            type(twoDig, value + "$", localDate);
+            String twoDig = localDate.get(ChronoField.DAY_OF_MONTH) + "/" + localDate.get(ChronoField.MONTH_OF_YEAR) + "/" + Integer.toString(localDate.get(ChronoField.YEAR)).substring(2);
+            type(twoDig + extra, value + extra + "$", localDate);
         }
         // Try slight variant, such as other dividers or leading zeros:
         // Also try month names:
-        int[] vals = new int[] {localDate.getDayOfMonth(), localDate.getMonthValue(), localDate.getYear()};
+        int[] vals = new int[] {localDate.get(ChronoField.DAY_OF_MONTH), localDate.get(ChronoField.MONTH_OF_YEAR), localDate.get(ChronoField.YEAR)};
         List<List<String>> monthNames = Arrays.asList(
             Arrays.asList("Ja", "Jan", "January"),
             Arrays.asList("F", "Feb", "February"),
@@ -513,26 +570,26 @@ public class TestStructuredTextField extends ApplicationTest
             }
             fx_(() -> f.get().requestFocus());
             push(KeyCode.CONTROL, KeyCode.A);
-            type(variant, value + "$", localDate);
+            type(variant + extra, value + extra + "$", localDate);
 
             // Also try Month name, day, year:
             List<String> monthPoss = monthNames.get(vals[1] - 1);
             String variantMD = monthPoss.get(r.nextInt(monthPoss.size())) + "/" + vals[0] + "/" + vals[2];
             fx_(() -> f.get().requestFocus());
             push(KeyCode.CONTROL, KeyCode.A);
-            type(variantMD, value + "$", localDate);
+            type(variantMD + extra, value + extra + "$", localDate);
         }
         // Try errors and fixes; transposition, etc:
         if (vals[0] > 12)
         {
             // Swap day and month:
             String wrongVal = vals[1] + "/" + vals[0] + "/" + vals[2];
-            checkFix(wrongVal, value);
+            checkFix(wrongVal + extra, value + extra);
         }
         if (vals[2] % 100 >= 32)
         {
             String wrongVal = vals[2] + "/" + vals[1] + "/" + vals[0];
-            checkFix(wrongVal, value);
+            checkFix(wrongVal + extra, value + extra);
         }
     }
 
