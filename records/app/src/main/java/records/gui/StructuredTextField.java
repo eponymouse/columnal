@@ -911,7 +911,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                     int adjYear = adjustYear2To4(day, month, yearText, year);
                     field.setItem(ItemVariant.EDITABLE_DAY, Integer.toString(day));
                     field.setItem(ItemVariant.EDITABLE_MONTH, Integer.toString(month));
-                    field.setItem(ItemVariant.EDITABLE_YEAR, Integer.toString(adjYear));
+                    field.setItem(ItemVariant.EDITABLE_YEAR, String.format("%04d", adjYear));
                     return Either.right(LocalDate.of(adjYear, month, day));
                 }
             }

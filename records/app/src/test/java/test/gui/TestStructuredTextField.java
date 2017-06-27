@@ -36,6 +36,7 @@ import test.gen.GenDateTime;
 import test.gen.GenOffsetTime;
 import test.gen.GenRandom;
 import test.gen.GenTime;
+import test.gen.GenYearMonth;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -47,6 +48,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.Year;
+import java.time.YearMonth;
 import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
@@ -500,6 +502,19 @@ public class TestStructuredTextField extends ApplicationTest
         checkFix("32/9/1", "1/9/2032");
         checkFix("32/9/1", "30/9/2001");
         checkFix("68/3/4", "4/3/1968");
+
+        clickOn(f.get());
+        push(ctrlCmd(), KeyCode.A);
+        type("10/12/0378", "10/12/0378$", LocalDate.of(378, 12, 10));
+        clickOn(f.get());
+        push(ctrlCmd(), KeyCode.A);
+        type("01/02/3", "1/2/2003$", LocalDate.of(2003, 2, 1));
+        clickOn(f.get());
+        push(ctrlCmd(), KeyCode.A);
+        type("10/12/03", "10/12/2003$", LocalDate.of(2003, 12, 10));
+        clickOn(f.get());
+        push(ctrlCmd(), KeyCode.A);
+        type("10/12/0003", "10/12/0003$", LocalDate.of(3, 12, 10));
     }
 
     @Property(trials = 15)
@@ -525,6 +540,17 @@ public class TestStructuredTextField extends ApplicationTest
             timeVal += new BigDecimal("0." + String.format("%09d", t.get(ChronoField.NANO_OF_SECOND))).stripTrailingZeros().toPlainString().substring(1);
         }
         return timeVal;
+    }
+
+    @Property(trials = 15)
+    public void propYM(@From(GenYearMonth.class) YearMonth yearMonth, @From(GenRandom.class) Random r) throws InternalException
+    {
+        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTH), YearMonth.of(1900, 1)));
+        String timeVal = yearMonth.getMonth() + "/" + yearMonth.getYear();
+        clickOn(f.get());
+        push(KeyCode.CONTROL, KeyCode.A);
+        type(timeVal, timeVal + "$", yearMonth);
+        // TODO also test errors, and other variants
     }
 
     @Property(trials = 15)
