@@ -546,11 +546,11 @@ public class TestStructuredTextField extends ApplicationTest
     public void propYM(@From(GenYearMonth.class) YearMonth yearMonth, @From(GenRandom.class) Random r) throws InternalException
     {
         f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTH), YearMonth.of(1900, 1)));
-        String timeVal = yearMonth.getMonth() + "/" + yearMonth.getYear();
+        String timeVal = yearMonth.getMonthValue() + "/" + yearMonth.getYear();
         clickOn(f.get());
         push(KeyCode.CONTROL, KeyCode.A);
         type(timeVal, timeVal + "$", yearMonth);
-        // TODO also test errors, and other variants
+        // TODO also test errors, and other variants (e.g. text months)
     }
 
     @Property(trials = 15)

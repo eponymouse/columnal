@@ -326,7 +326,7 @@ public class TableDisplayUtility
             case YEARMONTHDAY:
                 return StructuredTextField.dateYMD(value);
             case YEARMONTH:
-                break;
+                return StructuredTextField.dateYM(value);
             case TIMEOFDAY:
                 return StructuredTextField.time(value);
             case TIMEOFDAYZONED:
