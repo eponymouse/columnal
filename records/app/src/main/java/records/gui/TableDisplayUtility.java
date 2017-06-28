@@ -31,6 +31,12 @@ import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.stf.Component2;
+import records.gui.stf.PlusMinusOffsetComponent;
+import records.gui.stf.StructuredTextField;
+import records.gui.stf.TimeComponent;
+import records.gui.stf.YM;
+import records.gui.stf.YMD;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
@@ -43,6 +49,11 @@ import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.OffsetTime;
+import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.Collection;
 import java.util.Collections;
@@ -324,15 +335,15 @@ public class TableDisplayUtility
         switch (dateTimeInfo.getType())
         {
             case YEARMONTHDAY:
-                return StructuredTextField.dateYMD(value);
+                return new StructuredTextField<>(new YMD(value));
             case YEARMONTH:
-                return StructuredTextField.dateYM(value);
+                return new StructuredTextField<>(new YM(value));
             case TIMEOFDAY:
-                return StructuredTextField.time(value);
+                return new StructuredTextField<>(new TimeComponent(value));
             case TIMEOFDAYZONED:
-                return StructuredTextField.timeZoned(value);
+                return new StructuredTextField<>(new PlusMinusOffsetComponent<>(new TimeComponent(value), value.get(ChronoField.OFFSET_SECONDS), OffsetTime::of));
             case DATETIME:
-                return StructuredTextField.dateTime(value);
+                return new StructuredTextField<>(new Component2<LocalDateTime, LocalDate, LocalTime>(new YMD(value), " ", new TimeComponent(value), LocalDateTime::of));
             case DATETIMEZONED:
                 break;
         }

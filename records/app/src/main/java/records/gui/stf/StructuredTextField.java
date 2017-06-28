@@ -1,11 +1,10 @@
-package records.gui;
+package records.gui.stf;
 
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -29,29 +28,19 @@ import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
-import java.time.DateTimeException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Month;
 import java.time.OffsetTime;
-import java.time.Year;
-import java.time.YearMonth;
-import java.time.ZoneOffset;
-import java.time.format.TextStyle;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Optional;
 import java.util.OptionalInt;
-import java.util.Set;
-import java.util.function.BiFunction;
 
 /**
  * Created by neil on 18/06/2017.
@@ -66,7 +55,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     private T completedValue;
 
     @SuppressWarnings("initialization")
-    private StructuredTextField(Component<T> content) throws InternalException
+    public StructuredTextField(Component<T> content) throws InternalException
     {
         super(false);
         this.contentComponent = content;
@@ -163,31 +152,6 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         {
             return ReadOnlyStyledDocument.fromString("", Collections.emptyList(), Collections.emptyList(), StyledText.<Collection<String>>textOps());
         }
-    }
-
-    public static StructuredTextField<? extends TemporalAccessor> dateYMD(TemporalAccessor value) throws InternalException
-    {
-        return new StructuredTextField<>(new YMD(value));
-    }
-
-    public static StructuredTextField<? extends TemporalAccessor> dateYM(TemporalAccessor value) throws InternalException
-    {
-        return new StructuredTextField<>(new YM(value));
-    }
-
-    public static StructuredTextField<? extends TemporalAccessor> dateTime(TemporalAccessor value) throws InternalException
-    {
-        return new StructuredTextField<>(new Component2<LocalDateTime, LocalDate, LocalTime>(new YMD(value), " ", new TimeComponent(value), LocalDateTime::of));
-    }
-
-    public static StructuredTextField<? extends TemporalAccessor> time(TemporalAccessor value) throws InternalException
-    {
-        return new StructuredTextField<>(new TimeComponent(value));
-    }
-
-    public static StructuredTextField<? extends TemporalAccessor> timeZoned(TemporalAccessor value) throws InternalException
-    {
-        return new StructuredTextField<>(new PlusMinusOffsetComponent<>(new TimeComponent(value), value.get(ChronoField.OFFSET_SECONDS), OffsetTime::of));
     }
 
     protected String getItem(ItemVariant item)
@@ -300,109 +264,6 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         });
     }
 
-    private static class TimeComponent implements Component<LocalTime>
-    {
-        private final TemporalAccessor value;
-
-        public TimeComponent(TemporalAccessor value)
-        {
-            this.value = value;
-        }
-
-        @Override
-        public List<Item> getInitialItems()
-        {
-            return Arrays.asList(
-                new Item(Integer.toString(value.get(ChronoField.HOUR_OF_DAY)), ItemVariant.EDITABLE_HOUR, TranslationUtility.getString("entry.prompt.hour")),
-                new Item(":"),
-                new Item(Integer.toString(value.get(ChronoField.MINUTE_OF_HOUR)), ItemVariant.EDITABLE_MINUTE, TranslationUtility.getString("entry.prompt.minute")),
-                new Item(":"),
-                new Item(Integer.toString(value.get(ChronoField.SECOND_OF_MINUTE)), ItemVariant.EDITABLE_SECOND, TranslationUtility.getString("entry.prompt.second")));
-        }
-
-        @Override
-        public Either<List<ErrorFix>, LocalTime> endEdit(StructuredTextField<?> field)
-        {
-            List<ErrorFix> fixes = new ArrayList<>();
-            field.revertEditFix().ifPresent(fixes::add);
-            try
-            {
-                int hour = Integer.parseInt(field.getItem(ItemVariant.EDITABLE_HOUR));
-                int minute = Integer.parseInt(field.getItem(ItemVariant.EDITABLE_MINUTE));
-                int second;
-                int nano;
-                String secondText = field.getItem(ItemVariant.EDITABLE_SECOND);
-                if (secondText.contains("."))
-                {
-                    second = Integer.parseInt(secondText.substring(0, secondText.indexOf('.')));
-                    String nanoText = secondText.substring(secondText.indexOf('.') + 1);
-                    while (nanoText.length() < 9)
-                        nanoText += "0";
-                    nano = Integer.parseInt(nanoText);
-                }
-                else
-                {
-                    second = Integer.parseInt(secondText);
-                    nano = 0;
-                }
-
-                if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59 && second >= 0 && second <= 59)
-                {
-                    return Either.right(LocalTime.of(hour, minute, second, nano));
-                }
-            }
-            catch (NumberFormatException e)
-            {
-
-            }
-            return Either.left(fixes);
-        }
-    }
-
-    // Takes a component and adds {+|-}HH:MM on the end for a timezone offset.
-    private static class PlusMinusOffsetComponent<R, A> implements Component<R>
-    {
-        private final int seconds;
-        private final Component<A> a;
-        private final BiFunction<A, ZoneOffset, R> combine;
-
-        public PlusMinusOffsetComponent(Component<A> a, int seconds, BiFunction<A, ZoneOffset, R> combine)
-        {
-            this.a = a;
-            this.seconds = seconds;
-            this.combine = combine;
-        }
-
-        @Override
-        public List<Item> getInitialItems()
-        {
-            int hours = seconds / 3600;
-            int minutes = (seconds - (hours * 3600)) / 60;
-            return Utility.concat(a.getInitialItems(), Arrays.asList(
-                new Item("", ItemVariant.TIMEZONE_PLUS_MINUS, "\u00B1"),
-                new Item(Integer.toString(hours), ItemVariant.EDITABLE_OFFSET_HOUR, "Zone Hours"),
-                new Item(":"),
-                new Item(Integer.toString(minutes), ItemVariant.EDITABLE_OFFSET_MINUTE, "Zone Minutes")));
-        }
-
-        @Override
-        public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field)
-        {
-            Either<List<ErrorFix>, A> ea = a.endEdit(field);
-
-            int sign = field.getItem(ItemVariant.TIMEZONE_PLUS_MINUS).equals("-") ? -1 : 1;
-
-            int hour = sign * Integer.parseInt(field.getItem(ItemVariant.EDITABLE_OFFSET_HOUR));
-            int minute = sign * Integer.parseInt(field.getItem(ItemVariant.EDITABLE_OFFSET_MINUTE));
-
-            if (hour >= -18 && hour <= 18 && minute >= -59 && minute <= 59)
-            {
-                return ea.either(err -> Either.left(err), ra -> Either.right(combine.apply(ra, ZoneOffset.ofHoursMinutes(hour, minute))));
-            }
-            return Either.left(Collections.emptyList() /*TODO*/);
-        }
-    }
-
     private class State
     {
         public final List<Item> items;
@@ -436,7 +297,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         });
     }
 
-    private static abstract class ErrorFix
+    //package-visible
+    static abstract class ErrorFix
     {
         public final @Localized String label;
         public final List<String> styleClasses;
@@ -761,382 +623,6 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     {
         public List<Item> getInitialItems();
         public Either<List<ErrorFix>, T> endEdit(StructuredTextField<?> field);
-    }
-
-    @OnThread(Tag.FXPlatform)
-    public static class Component2<R, A, B> implements Component<R>
-    {
-        private final Component<A> a;
-        private final Component<B> b;
-        private final BiFunction<A, B, R> combine;
-        private final String divider;
-
-        public Component2(Component<A> a, String divider, Component<B> b, BiFunction<A, B, R> combine)
-        {
-            this.a = a;
-            this.b = b;
-            this.divider = divider;
-            this.combine = combine;
-        }
-
-        @Override
-        public List<Item> getInitialItems()
-        {
-            return Utility.concat(a.getInitialItems(), Arrays.asList(new Item(divider)), b.getInitialItems());
-        }
-
-        @Override
-        public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field)
-        {
-            Either<List<ErrorFix>, A> ax = a.endEdit(field);
-            Either<List<ErrorFix>, B> bx = b.endEdit(field);
-            return ax.either(ea -> bx.either(eb -> Either.left(Utility.concat(ea, eb)), rb -> Either.left(ea)),
-                ra -> bx.either(eb -> Either.left(eb), rb -> Either.right(combine.apply(ra, rb))));
-        }
-    }
-
-    @OnThread(Tag.FXPlatform)
-    private static class YMD implements Component<LocalDate>
-    {
-        private final TemporalAccessor value;
-
-        public YMD(TemporalAccessor value) throws InternalException
-        {
-            this.value = value;
-        }
-
-        public List<Item> getInitialItems()
-        {
-            return Arrays.asList(new Item(Integer.toString(value.get(ChronoField.DAY_OF_MONTH)), ItemVariant.EDITABLE_DAY, TranslationUtility.getString("entry.prompt.day")),
-                  new Item("/"),
-                  new Item(Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
-                  new Item("/"),
-                  new Item(Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year")));
-        }
-
-        private static int adjustYear2To4(int day, int month, String originalYearText, final int year)
-        {
-            if (year < 100 && originalYearText.length() < 4)
-            {
-                // Apply 80/20 rule (20 years into future, or 80 years into past):
-                int fourYear = Year.now().getValue() - (Year.now().getValue() % 100) + year;
-                if (fourYear - Year.now().getValue() > 20)
-                    fourYear -= 100;
-
-                try
-                {
-                    LocalDate.of(fourYear, month, day);
-                    // Only if valid:
-                    return fourYear;
-                }
-                catch (DateTimeException e)
-                {
-                    // Not valid if we change year to four digits, may be another fault, so we wait
-                }
-            }
-            return year;
-        }
-
-        @Override
-        @OnThread(Tag.FXPlatform)
-        public Either<List<ErrorFix>, LocalDate> endEdit(StructuredTextField<?> field)
-        {
-            List<ErrorFix> fixes = new ArrayList<>();
-            field.revertEditFix().ifPresent(fixes::add);
-            int standardFixes = fixes.size();
-
-            try
-            {
-                String dayText = field.getItem(ItemVariant.EDITABLE_DAY);
-                int day, month;
-                try
-                {
-                    day = Integer.parseInt(dayText);
-                    month = parseMonth(field.getItem(ItemVariant.EDITABLE_MONTH));
-                }
-                catch (NumberFormatException e)
-                {
-                    // If this throws, we'll fall out to the outer catch block
-                    // Try swapping day and month:
-                    month = parseMonth(dayText);
-                    day = Integer.parseInt(field.getItem(ItemVariant.EDITABLE_MONTH));
-                    dayText = field.getItem(ItemVariant.EDITABLE_MONTH);
-                }
-
-
-                String yearText = field.getItem(ItemVariant.EDITABLE_YEAR);
-                int year = Integer.parseInt(yearText);
-                // For fixes, we always use fourYear.  If they really want a two digit year, they should enter the leading zeroes
-                if (day <= 0)
-                {
-                    clampFix(field, fixes,1, month, yearText, year);
-                }
-                try
-                {
-                    int adjYear = adjustYear2To4(1, month, yearText, year);
-                    int monthLength = YearMonth.of(adjYear, month).lengthOfMonth();
-                    if (day > monthLength)
-                    {
-                        clampFix(field, fixes, monthLength, month, yearText, year);
-                        // If it's like 31st September, suggest 1st October:
-                        if (day <= 31 && day - 1 == monthLength)
-                        {
-                            // Can't happen for December, so don't need to worry about year roll-over:
-                            fix(field, fixes, "entry.fix.adjustByDay", 1, month + 1, yearText, year);
-                        }
-
-                        if (day >= 32 && year <= monthLength)
-                        {
-                            // They may have entered year, month, day, so swap day and year:
-                            clampFix(field, fixes, year, month, dayText, day);
-                        }
-                    }
-                }
-                catch (DateTimeException e)
-                {
-                    // Not a valid year-month anyway, so don't suggest
-                }
-
-                if (month <= 0)
-                {
-                    clampFix(field, fixes, day, 1, yearText, year);
-                }
-                else if (month >= 13)
-                {
-                    clampFix(field, fixes, day, 12, yearText, year);
-                    if (1 <= day && day <= 12)
-                    {
-                        // Possible day-month transposition:
-                        fix(field, fixes, "entry.fix.dayMonthSwap", month, day, yearText, year);
-                    }
-                }
-
-                if (fixes.size() == standardFixes)
-                {
-                    int adjYear = adjustYear2To4(day, month, yearText, year);
-                    field.setItem(ItemVariant.EDITABLE_DAY, Integer.toString(day));
-                    field.setItem(ItemVariant.EDITABLE_MONTH, Integer.toString(month));
-                    field.setItem(ItemVariant.EDITABLE_YEAR, String.format("%04d", adjYear));
-                    return Either.right(LocalDate.of(adjYear, month, day));
-                }
-            }
-            catch (NumberFormatException | DateTimeException e)
-            {
-            }
-            return Either.left(fixes);
-        }
-
-        private static int parseMonth(String item) throws NumberFormatException
-        {
-            try
-            {
-                return Integer.parseInt(item);
-            }
-            catch (NumberFormatException e)
-            {
-                // Try as month name...
-            }
-
-            Set<Integer> possibles = new HashSet<>();
-            for (int i = 1; i <= 12; i++)
-            {
-                for (TextStyle textStyle : TextStyle.values())
-                {
-                    if (Month.of(i).getDisplayName(textStyle, Locale.getDefault()).toLowerCase().startsWith(item.toLowerCase()))
-                        possibles.add(i);
-                }
-
-            }
-            if (possibles.size() == 1)
-                return possibles.iterator().next();
-
-            throw new NumberFormatException();
-        }
-
-        public void clampFix(StructuredTextField<?> field, List<ErrorFix> fixes, int day, int month, String yearText, int year)
-        {
-            fix(field, fixes, "entry.fix.clamp", day, month, yearText, year);
-        }
-
-        public void fix(StructuredTextField<?> field, List<ErrorFix> fixes, @LocalizableKey String labelKey, int day, int month, String yearText, int year)
-        {
-            // For fixes, we always use fourYear.  If they really want a two digit year, they should enter the leading zeroes
-            year = adjustYear2To4(day, month, yearText, year);
-            try
-            {
-                LocalDate.of(year, month, day);
-            }
-            catch (DateTimeException e)
-            {
-                // Don't add a fix if the destination date isn't valid either!
-                return;
-            }
-
-            final String value = day + "/" + month + "/" + year;
-            fixes.add(new ErrorFix(TranslationUtility.getString(labelKey, value))
-            {
-                @Override
-                @OnThread(Tag.FXPlatform)
-                public void performFix()
-                {
-                    field.setValue(value);
-                }
-            });
-        }
-
-    }
-
-    @OnThread(Tag.FXPlatform)
-    private static class YM implements Component<YearMonth>
-    {
-        private final TemporalAccessor value;
-
-        public YM(TemporalAccessor value) throws InternalException
-        {
-            this.value = value;
-        }
-
-        public List<Item> getInitialItems()
-        {
-            return Arrays.asList(
-                new Item(Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
-                new Item("/"),
-                new Item(Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year")));
-        }
-
-        private static int adjustYear2To4(int month, String originalYearText, final int year)
-        {
-            if (year < 100 && originalYearText.length() < 4)
-            {
-                // Apply 80/20 rule (20 years into future, or 80 years into past):
-                int fourYear = Year.now().getValue() - (Year.now().getValue() % 100) + year;
-                if (fourYear - Year.now().getValue() > 20)
-                    fourYear -= 100;
-
-                try
-                {
-                    YearMonth.of(fourYear, month);
-                    // Only if valid:
-                    return fourYear;
-                }
-                catch (DateTimeException e)
-                {
-                    // Not valid if we change year to four digits, may be another fault, so we wait
-                }
-            }
-            return year;
-        }
-
-        @Override
-        @OnThread(Tag.FXPlatform)
-        public Either<List<ErrorFix>, YearMonth> endEdit(StructuredTextField<?> field)
-        {
-            List<ErrorFix> fixes = new ArrayList<>();
-            field.revertEditFix().ifPresent(fixes::add);
-            int standardFixes = fixes.size();
-
-            try
-            {
-                String yearText = field.getItem(ItemVariant.EDITABLE_YEAR);
-                int year;
-                int month;
-                try
-                {
-                    year = Integer.parseInt(yearText);
-                    month = parseMonth(field.getItem(ItemVariant.EDITABLE_MONTH));
-                }
-                catch (NumberFormatException e)
-                {
-                    // If this throws, we'll fall out to the outer catch block
-                    // Try swapping month and year:
-                    month = parseMonth(yearText);
-                    year = Integer.parseInt(field.getItem(ItemVariant.EDITABLE_MONTH));
-                }
-
-
-
-                // For fixes, we always use fourYear.  If they really want a two digit year, they should enter the leading zeroes
-                if (month <= 0)
-                {
-                    clampFix(field, fixes, 1, yearText, year);
-                }
-                else if (month >= 13)
-                {
-                    clampFix(field, fixes, 12, yearText, year);
-                }
-
-                if (fixes.size() == standardFixes)
-                {
-                    int adjYear = adjustYear2To4(month, yearText, year);
-                    field.setItem(ItemVariant.EDITABLE_MONTH, Integer.toString(month));
-                    field.setItem(ItemVariant.EDITABLE_YEAR, String.format("%04d", adjYear));
-                    return Either.right(YearMonth.of(adjYear, month));
-                }
-            }
-            catch (NumberFormatException | DateTimeException e)
-            {
-            }
-            return Either.left(fixes);
-        }
-
-        private static int parseMonth(String item) throws NumberFormatException
-        {
-            try
-            {
-                return Integer.parseInt(item);
-            }
-            catch (NumberFormatException e)
-            {
-                // Try as month name...
-            }
-
-            Set<Integer> possibles = new HashSet<>();
-            for (int i = 1; i <= 12; i++)
-            {
-                for (TextStyle textStyle : TextStyle.values())
-                {
-                    if (Month.of(i).getDisplayName(textStyle, Locale.getDefault()).toLowerCase().startsWith(item.toLowerCase()))
-                        possibles.add(i);
-                }
-
-            }
-            if (possibles.size() == 1)
-                return possibles.iterator().next();
-
-            throw new NumberFormatException();
-        }
-
-        public void clampFix(StructuredTextField<?> field, List<ErrorFix> fixes, int month, String yearText, int year)
-        {
-            fix(field, fixes, "entry.fix.clamp", month, yearText, year);
-        }
-
-        public void fix(StructuredTextField<?> field, List<ErrorFix> fixes, @LocalizableKey String labelKey, int month, String yearText, int year)
-        {
-            // For fixes, we always use fourYear.  If they really want a two digit year, they should enter the leading zeroes
-            year = adjustYear2To4(month, yearText, year);
-            try
-            {
-                YearMonth.of(year, month);
-            }
-            catch (DateTimeException e)
-            {
-                // Don't add a fix if the destination date isn't valid either!
-                return;
-            }
-
-            final String value = month + "/" + year;
-            fixes.add(new ErrorFix(TranslationUtility.getString(labelKey, value))
-            {
-                @Override
-                @OnThread(Tag.FXPlatform)
-                public void performFix()
-                {
-                    field.setValue(value);
-                }
-            });
-        }
-
     }
 
     // Field, index within field
