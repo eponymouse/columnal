@@ -39,6 +39,7 @@ import records.gui.stf.YM;
 import records.gui.stf.YMD;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
@@ -104,6 +105,12 @@ public class TableDisplayUtility
 
                     @Override
                     public boolean isEditable()
+                    {
+                        return false;
+                    }
+
+                    @Override
+                    public boolean editHasFocus(int rowIndex)
                     {
                         return false;
                     }
@@ -208,6 +215,15 @@ public class TableDisplayUtility
                     {
                         return true;
                     }
+
+                    @Override
+                    public boolean editHasFocus(int rowIndex)
+                    {
+                        @Nullable StringDisplay display = getRowIfShowing(rowIndex);
+                        if (display != null)
+                            return display.isFocused();
+                        return false;
+                    }
                 };
             }
 
@@ -257,44 +273,23 @@ public class TableDisplayUtility
                     {
                         return true;
                     }
+
+                    @Override
+                    public boolean editHasFocus(int rowIndex)
+                    {
+                        @Nullable Label l = getRowIfShowing(rowIndex);
+                        if (l != null)
+                            l.getParent().isFocused();
+                        return false;
+                    }
                 };
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public ColumnHandler date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
             {
-                return new DisplayCache<TemporalAccessor, StructuredTextField>(g, cs -> {}, f -> f) {
-
-                    @Override
-                    public @Nullable InputMap<?> getInputMapForParent(int rowIndex)
-                    {
-                        return null;
-                    }
-
-                    @Override
-                    public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable endEdit)
-                    {
-                        @Nullable StructuredTextField display = getRowIfShowing(rowIndex);
-                        if (display != null)
-                        {
-                            display.edit(scenePoint, endEdit);
-                        }
-                    }
-
-                    @Override
-                    public boolean isEditable()
-                    {
-                        return true;
-                    }
-
-                    @Override
-                    protected StructuredTextField makeGraphical(int rowIndex, TemporalAccessor value) throws InternalException
-                    {
-                        StructuredTextField field = makeField(dateTimeInfo, value);
-                        //field.mouseTransparentProperty().bind(field.focusedProperty().not());
-                        return field;
-                    }
-                };
+                return makeField(column.getType());
             }
 
             @Override
@@ -330,24 +325,122 @@ public class TableDisplayUtility
 
     // public for testing:
     @OnThread(Tag.FXPlatform)
-    public static StructuredTextField makeField(DateTimeInfo dateTimeInfo, TemporalAccessor value) throws InternalException
+    public static DisplayCacheSTF<?> makeField(DataTypeValue dataTypeValue) throws InternalException
     {
-        switch (dateTimeInfo.getType())
+        return dataTypeValue.applyGet(new DataTypeVisitorGetEx<DisplayCacheSTF<?>, InternalException>()
         {
-            case YEARMONTHDAY:
-                return new StructuredTextField<>(new YMD(value));
-            case YEARMONTH:
-                return new StructuredTextField<>(new YM(value));
-            case TIMEOFDAY:
-                return new StructuredTextField<>(new TimeComponent(value));
-            case TIMEOFDAYZONED:
-                return new StructuredTextField<>(new PlusMinusOffsetComponent<>(new TimeComponent(value), value.get(ChronoField.OFFSET_SECONDS), OffsetTime::of));
-            case DATETIME:
-                return new StructuredTextField<>(new Component2<LocalDateTime, LocalDate, LocalTime>(new YMD(value), " ", new TimeComponent(value), LocalDateTime::of));
-            case DATETIMEZONED:
-                break;
-        }
-        throw new InternalException("Unknown type: " + dateTimeInfo.getType());
+            @Override
+            public DisplayCacheSTF<?> number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException
+            {
+                throw new UnimplementedException();
+            }
+
+            @Override
+            public DisplayCacheSTF<?> text(GetValue<String> g) throws InternalException
+            {
+                throw new UnimplementedException();
+            }
+
+            @Override
+            public DisplayCacheSTF<?> bool(GetValue<Boolean> g) throws InternalException
+            {
+                throw new UnimplementedException();
+            }
+
+            @Override
+            public DisplayCacheSTF<?> date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException
+            {
+                switch (dateTimeInfo.getType())
+                {
+                    case YEARMONTHDAY:
+                        return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(new YMD(value)));
+                    case YEARMONTH:
+                        return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(new YM(value)));
+                    case TIMEOFDAY:
+                        return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(new TimeComponent(value)));
+                    case TIMEOFDAYZONED:
+                        return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(new PlusMinusOffsetComponent<>(new TimeComponent(value), value.get(ChronoField.OFFSET_SECONDS), OffsetTime::of)));
+                    case DATETIME:
+                        return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(new Component2<LocalDateTime, LocalDate, LocalTime>(new YMD(value), " ", new TimeComponent(value), LocalDateTime::of)));
+                    case DATETIMEZONED:
+                        break;
+                }
+                throw new InternalException("Unknown type: " + dateTimeInfo.getType());
+            }
+
+            @Override
+            public DisplayCacheSTF<?> tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
+            {
+                throw new UnimplementedException();
+            }
+
+            @Override
+            public DisplayCacheSTF<?> tuple(List<DataTypeValue> types) throws InternalException
+            {
+                throw new UnimplementedException();
+            }
+
+            @Override
+            public DisplayCacheSTF<?> array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException
+            {
+                throw new UnimplementedException();
+            }
+        });
     }
 
+    private static interface FieldMaker<V>
+    {
+        @OnThread(Tag.FXPlatform)
+        public StructuredTextField<? extends V> make(V value) throws InternalException;
+    }
+
+    public static class DisplayCacheSTF<V> extends DisplayCache<V, StructuredTextField<? extends V>>
+    {
+        private final FieldMaker<V> makeField;
+
+        public DisplayCacheSTF(GetValue<V> g, FieldMaker<V> makeField)
+        {
+            super(g, cs -> {}, f -> f);
+            this.makeField = makeField;
+        }
+
+        @Override
+        public @Nullable InputMap<?> getInputMapForParent(int rowIndex)
+        {
+            return null;
+        }
+
+        @Override
+        public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable endEdit)
+        {
+            @Nullable StructuredTextField<? extends V> display = getRowIfShowing(rowIndex);
+            if (display != null)
+            {
+                display.edit(scenePoint, endEdit);
+            }
+        }
+
+        @Override
+        public boolean isEditable()
+        {
+            return true;
+        }
+
+        @Override
+        public boolean editHasFocus(int rowIndex)
+        {
+            @Nullable StructuredTextField<? extends V> display = getRowIfShowing(rowIndex);
+            if (display != null)
+                return display.isFocused();
+            return false;
+        }
+
+        @Override
+        protected StructuredTextField<? extends V> makeGraphical(int rowIndex, V value) throws InternalException
+        {
+            StructuredTextField<? extends V> field = makeField.make(value);
+            //field.mouseTransparentProperty().bind(field.focusedProperty().not());
+            return field;
+        }
+    }
 }

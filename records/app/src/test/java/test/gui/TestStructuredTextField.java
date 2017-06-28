@@ -23,9 +23,13 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
+import records.data.TemporalColumnStorage;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
+import records.gui.TableDisplayUtility.DisplayCacheSTF;
+import records.gui.stable.StableView;
 import records.gui.stf.StructuredTextField;
 import records.gui.TableDisplayUtility;
 import test.gen.GenDate;
@@ -36,7 +40,11 @@ import test.gen.GenTime;
 import test.gen.GenYearMonth;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.Utility;
+import utility.Workers;
+import utility.Workers.Priority;
+import utility.Workers.Worker;
 import utility.gui.FXUtility;
 
 import java.math.BigDecimal;
@@ -51,12 +59,15 @@ import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -74,6 +85,7 @@ import static test.TestUtil.fx_;
 @RunWith(JUnitQuickcheck.class)
 public class TestStructuredTextField extends ApplicationTest
 {
+    private StableView stableView;
     private final ObjectProperty<StructuredTextField<?>> f = new SimpleObjectProperty<>();
     private TextField dummy;
 
@@ -81,17 +93,16 @@ public class TestStructuredTextField extends ApplicationTest
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void start(Stage stage) throws Exception
     {
-        Scene scene = new Scene(new Label());
+        stableView = new StableView();
+        dummy = new TextField();
+        Scene scene = new Scene(new VBox(dummy, stableView.getNode()));
         stage.setScene(scene);
         stage.setMinWidth(800);
         stage.setMinHeight(300);
         stage.show();
-        dummy = new TextField();
         FXUtility.addChangeListenerPlatformNN(f, field -> {
             FXUtility.runAfter(() ->
             {
-                field.setMinWidth(600);
-                scene.setRoot(new VBox(field, dummy));
                 scene.getRoot().layout();
                 stage.sizeToScene();
                 scene.getRoot().layout();
@@ -104,7 +115,7 @@ public class TestStructuredTextField extends ApplicationTest
     @Test
     public void testPrompt() throws InternalException
     {
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(2034, 10, 29)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(2034, 10, 29)));
         assertEquals("29/10/2034", fx(() -> f.get().getText()));
         testPositions(new Random(0),
                 new int[] {0, 1, 2},
@@ -114,7 +125,7 @@ public class TestStructuredTextField extends ApplicationTest
                 new int[] {6, 7, 8, 9, 10}
         );
 
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(2034, 10, 29, 13, 56, 22)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(2034, 10, 29, 13, 56, 22)));
         assertEquals("29/10/2034 13:56:22", fx(() -> f.get().getText()));
         testPositions(new Random(0),
             new int[] {0, 1, 2},
@@ -130,7 +141,7 @@ public class TestStructuredTextField extends ApplicationTest
             new int[] {17, 18, 19}
         );
 
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         // Delete the month:
         push(KeyCode.HOME);
         push(KeyCode.RIGHT);
@@ -145,7 +156,7 @@ public class TestStructuredTextField extends ApplicationTest
             new int[] {8, 9, 10, 11, 12}
         );
 
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         // Delete all:
         push(KeyCode.SHORTCUT, KeyCode.A);
         push(KeyCode.DELETE);
@@ -158,7 +169,7 @@ public class TestStructuredTextField extends ApplicationTest
             new int[] {10}
         );
 
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(1900, 1, 1, 1, 1, 1)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(1900, 1, 1, 1, 1, 1)));
         // Delete all:
         push(KeyCode.SHORTCUT, KeyCode.A);
         push(KeyCode.DELETE);
@@ -176,6 +187,51 @@ public class TestStructuredTextField extends ApplicationTest
             null,
             new int[] {27}
         );
+    }
+
+    private StructuredTextField<?> dateField(DateTimeInfo dateTimeInfo, TemporalAccessor t) throws InternalException
+    {
+        CompletableFuture<TemporalColumnStorage> fut = new CompletableFuture<>();
+        Workers.onWorkerThread("", Priority.SAVE_ENTRY, () ->
+        {
+            try
+            {
+                TemporalColumnStorage tcs = new TemporalColumnStorage(dateTimeInfo);
+                tcs.add(t);
+                fut.complete(tcs);
+            }
+            catch (InternalException e)
+            {
+                Utility.log(e);
+            }
+        });
+
+        fx_(() ->
+        {
+            try
+            {
+                DisplayCacheSTF<?> cacheSTF = TableDisplayUtility.makeField(fut.get().getType());
+                stableView.setColumns(Collections.singletonList(new Pair<>("C", cacheSTF)), null);
+                stableView.setRows(i -> i == 0);
+                stableView.resizeColumn(0, 600);
+            }
+            catch (InterruptedException | ExecutionException | InternalException e)
+            {
+                throw new RuntimeException(e);
+            }
+        });
+
+        for (int i = 0; i < 5; i++)
+        {
+            @Nullable StructuredTextField<?> stf = fx(() -> {
+                stableView.getNode().applyCss();
+                return (@Nullable StructuredTextField<?>) stableView.getNode().lookup(".structured-text-field");
+            });
+            if (stf != null)
+                return stf;
+            delay(200);
+        }
+        throw new RuntimeException("Couldn't find STF");
     }
 
     private void testPositions(Random r, int[]... positions)
@@ -248,7 +304,7 @@ public class TestStructuredTextField extends ApplicationTest
             clickOn(collapsedX.get(i), screenBounds.getMinY() + 4.0);
             // Move so we don't treat as double click:
             moveBy(10, 0);
-            assertEquals(collapsed.get(i), fx(() -> f.get().getCaretPosition()));
+            assertEquals("Clicked: " + collapsedX.get(i) + ", " + (screenBounds.getMinY() + 4.0), collapsed.get(i), fx(() -> f.get().getCaretPosition()));
             if (i + 1 < collapsed.size())
             {
                 // Clicking progressively between the two positions should end up in one, or the other:
@@ -388,11 +444,11 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
     // Wait.  Useful to stop multiple consecutive clicks turning into double clicks
-    private static void delay()
+    private static void delay(int millis)
     {
         try
         {
-            Thread.sleep(500);
+            Thread.sleep(millis);
         }
         catch (InterruptedException e)
         {
@@ -403,26 +459,26 @@ public class TestStructuredTextField extends ApplicationTest
     @Test
     public void testYMD() throws InternalException
     {
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
         type("17", "17$/Month/Year");
         type("/3", "17/3$/Year");
         type(":1973", "17/3/1973$", LocalDate.of(1973, 3, 17));
 
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         push(KeyCode.HOME);
         type("", "$1/4/1900");
         type("2", "21/4/1900$", LocalDate.of(1900, 4, 21));
 
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
         type("31 10 86","31/10/1986$", LocalDate.of(1986, 10, 31));
 
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
         type("5 6 27","5/6/2027$", LocalDate.of(2027, 6, 5));
 
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
         type("6", "6$/Month/Year");
         type("-", "6/$Month/Year");
@@ -431,7 +487,7 @@ public class TestStructuredTextField extends ApplicationTest
         type("3", "6/7/2003$", LocalDate.of(2003, 7, 6));
 
         // Check prompts for invalid dates:
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         push(ctrlCmd(), KeyCode.A);
         type("", "^1/4/1900$");
         push(KeyCode.DELETE);
@@ -446,7 +502,7 @@ public class TestStructuredTextField extends ApplicationTest
         assertNull(lookup(".invalid-data-input-popup").query());
         type("", "1/4/1900$");
 
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         push(ctrlCmd(), KeyCode.A);
         type("", "^1/4/1900$");
         push(KeyCode.DELETE);
@@ -455,7 +511,7 @@ public class TestStructuredTextField extends ApplicationTest
         type("", "$Day/Month/Year");
         assertNotNull(lookup(".invalid-data-input-popup").query());
         // Now edit again:
-        clickOn(f.get());
+        targetF();
         // Popup should still show for now:
         assertNotNull(lookup(".invalid-data-input-popup").query());
         // Now we type in something:
@@ -470,7 +526,7 @@ public class TestStructuredTextField extends ApplicationTest
         // Should show the first value as a fix:
         assertThat(lookup(".invalid-data-input-popup .invalid-data-revert").<Label>query().getText(), Matchers.containsString("1/4/1900"));
         // Click in again:
-        clickOn(f.get());
+        targetF();
         push(KeyCode.HOME);
         push(KeyCode.RIGHT);
         type("/7/2169", "8/7/2169$");
@@ -478,7 +534,7 @@ public class TestStructuredTextField extends ApplicationTest
         // Should be no popup:
         assertNull(lookup(".invalid-data-input-popup").query());
         // Now delete again:
-        clickOn(f.get());
+        targetF();
         push(ctrlCmd(), KeyCode.A);
         type("", "^8/7/2169$");
         push(KeyCode.DELETE);
@@ -500,31 +556,36 @@ public class TestStructuredTextField extends ApplicationTest
         checkFix("32/9/1", "30/9/2001");
         checkFix("68/3/4", "4/3/1968");
 
-        clickOn(f.get());
+        targetF();
         push(ctrlCmd(), KeyCode.A);
         type("10/12/0378", "10/12/0378$", LocalDate.of(378, 12, 10));
-        clickOn(f.get());
+        targetF();
         push(ctrlCmd(), KeyCode.A);
         type("01/02/3", "1/2/2003$", LocalDate.of(2003, 2, 1));
-        clickOn(f.get());
+        targetF();
         push(ctrlCmd(), KeyCode.A);
         type("10/12/03", "10/12/2003$", LocalDate.of(2003, 12, 10));
-        clickOn(f.get());
+        targetF();
         push(ctrlCmd(), KeyCode.A);
         type("10/12/0003", "10/12/0003$", LocalDate.of(3, 12, 10));
+    }
+
+    public void targetF()
+    {
+        doubleClickOn(f.get());
     }
 
     @Property(trials = 15)
     public void propYMD(@From(GenDate.class) LocalDate localDate, @From(GenRandom.class) Random r) throws InternalException
     {
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         enterDate(localDate, r, "");
     }
 
     @Property(trials = 15)
     public void propDateTime(@From(GenDateTime.class) LocalDateTime localDateTime, @From(GenRandom.class) Random r) throws InternalException
     {
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(1900, 4, 1, 1, 1, 1)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(1900, 4, 1, 1, 1, 1)));
         String timeVal = timeString(localDateTime);
         enterDate(localDateTime, r, " " + timeVal);
     }
@@ -542,9 +603,9 @@ public class TestStructuredTextField extends ApplicationTest
     @Property(trials = 15)
     public void propYM(@From(GenYearMonth.class) YearMonth yearMonth, @From(GenRandom.class) Random r) throws InternalException
     {
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.YEARMONTH), YearMonth.of(1900, 1)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTH), YearMonth.of(1900, 1)));
         String timeVal = yearMonth.getMonthValue() + "/" + yearMonth.getYear();
-        clickOn(f.get());
+        targetF();
         push(KeyCode.CONTROL, KeyCode.A);
         type(timeVal, timeVal + "$", yearMonth);
         // TODO also test errors, and other variants (e.g. text months)
@@ -553,9 +614,9 @@ public class TestStructuredTextField extends ApplicationTest
     @Property(trials = 15)
     public void propTime(@From(GenTime.class) LocalTime localTime, @From(GenRandom.class) Random r) throws InternalException
     {
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.TIMEOFDAY), LocalTime.of(1, 1, 1, 1)));
+        f.set(dateField(new DateTimeInfo(DateTimeType.TIMEOFDAY), LocalTime.of(1, 1, 1, 1)));
         String timeVal = timeString(localTime);
-        clickOn(f.get());
+        targetF();
         push(KeyCode.CONTROL, KeyCode.A);
         type(timeVal, timeVal + "$", localTime);
         // TODO also test errors
@@ -564,12 +625,12 @@ public class TestStructuredTextField extends ApplicationTest
     @Property(trials = 15)
     public void propTimeZoned(@From(GenOffsetTime.class) OffsetTime timeZoned, @From(GenRandom.class) Random r) throws InternalException
     {
-        f.set(TableDisplayUtility.makeField(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED), OffsetTime.of(1, 1, 1, 1, ZoneOffset.ofHours(3))));
+        f.set(dateField(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED), OffsetTime.of(1, 1, 1, 1, ZoneOffset.ofHours(3))));
         String timeVal = timeString(timeZoned);
         int offsetHour = timeZoned.getOffset().getTotalSeconds() / 3600;
         int offsetMinute = Math.abs(timeZoned.getOffset().getTotalSeconds() / 60 - offsetHour * 60);
         timeVal += (timeZoned.getOffset().getTotalSeconds() < 0 ? "-" : "+") + Math.abs(offsetHour) + ":" + offsetMinute;
-        clickOn(f.get());
+        targetF();
         push(KeyCode.CONTROL, KeyCode.A);
         type(timeVal, timeVal + "$", timeZoned);
         // TODO also test errors
@@ -578,14 +639,14 @@ public class TestStructuredTextField extends ApplicationTest
     private void enterDate(TemporalAccessor localDate, Random r, String extra) throws InternalException
     {
         // Try it in valid form with four digit year:
-        clickOn(f.get());
+        targetF();
         push(KeyCode.CONTROL, KeyCode.A);
         String value = localDate.get(ChronoField.DAY_OF_MONTH) + "/" + localDate.get(ChronoField.MONTH_OF_YEAR) + "/" + String.format("%04d", localDate.get(ChronoField.YEAR));
         type(value + extra, value + extra + "$", localDate);
         if (localDate.get(ChronoField.YEAR) > Year.now().getValue() - 80 && localDate.get(ChronoField.YEAR) < Year.now().getValue() + 20)
         {
             // Do two digits:
-            clickOn(f.get());
+            targetF();
             push(KeyCode.CONTROL, KeyCode.A);
             String twoDig = localDate.get(ChronoField.DAY_OF_MONTH) + "/" + localDate.get(ChronoField.MONTH_OF_YEAR) + "/" + Integer.toString(localDate.get(ChronoField.YEAR)).substring(2);
             type(twoDig + extra, value + extra + "$", localDate);
@@ -655,7 +716,7 @@ public class TestStructuredTextField extends ApplicationTest
 
     private void checkFix(String input, String suggestedFix)
     {
-        clickOn(f.get());
+        targetF();
         push(ctrlCmd(), KeyCode.A);
         type(input, input + "$");
         clickOn(dummy);

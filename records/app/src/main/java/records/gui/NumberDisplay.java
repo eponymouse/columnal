@@ -327,6 +327,17 @@ class NumberDisplay
             {
                 return true;
             }
+
+            @Override
+            public boolean editHasFocus(int rowIndex)
+            {
+                @Nullable NumberDisplay rowIfShowing = getRowIfShowing(rowIndex);
+                if (rowIfShowing != null)
+                {
+                    return rowIfShowing.textArea.isFocused();
+                }
+                return false;
+            }
         };
     }
 

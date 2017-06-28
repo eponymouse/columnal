@@ -58,6 +58,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     public StructuredTextField(Component<T> content) throws InternalException
     {
         super(false);
+        getStyleClass().add("structured-text-field");
         this.contentComponent = content;
         List<Item> initialItems = content.getInitialItems();
         curValue.addAll(initialItems);
@@ -779,6 +780,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     {
         CharacterHit hit = super.hit(x, y);
         // Character index may be missing if for example they clicked beyond extents of field.
+
+        System.err.println("Hit " + x + ", " + y + " result: " + hit);
 
         // We need to find the structured index, and if it's in a prompt then clamp to one side or other
         return makeHit(Utility.mapOptionalInt(hit.getCharacterIndex(), p -> structuredToPlain(clamp(plainToStructured(p)))), structuredToPlain(clamp(plainToStructured(hit.getInsertionIndex()))));
