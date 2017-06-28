@@ -146,6 +146,7 @@ public class StableView
             e.consume();
         });
         final BorderPane lineNumberWrapper = new BorderPane(lineNumbers);
+        lineNumberWrapper.setPickOnBounds(false);
         lineNumberWrapper.getStyleClass().add("stable-view-side");
         placeholder = new Label("<Empty>");
         placeholder.getStyleClass().add(".stable-view-placeholder");
@@ -173,6 +174,7 @@ public class StableView
         FXUtility.forcePrefSize(leftButton);
         BorderPane.setAlignment(leftButton, Pos.BOTTOM_RIGHT);
         Pane left = new BorderPane(lineNumberWrapper, null, null, GUI.wrap(leftButton, "stable-button-left-wrapper"), null);
+        left.setPickOnBounds(false);
         left.getStyleClass().add("stable-view-left");
 
         Button bottomButton = new Button("", makeButtonArrow());
@@ -531,6 +533,9 @@ public class StableView
                 pane.prefWidthProperty().bind(columnSizes.get(columnIndex));
                 int columnIndexFinal = columnIndex;
                 pane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+                    boolean editing = curRowIndex >= 0 && columns.get(columnIndexFinal).editHasFocus(curRowIndex);
+                    if (editing)
+                        return; // Not for us to take mouse click
                     if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && columns.get(columnIndexFinal).isEditable() && curRowIndex >= 0)
                     {
                         columns.get(columnIndexFinal).edit(curRowIndex, new Point2D(e.getSceneX(), e.getSceneY()), pane::requestFocus);
@@ -538,7 +543,6 @@ public class StableView
                     else if (e.getClickCount() == 1 && e.getButton() == MouseButton.PRIMARY && curRowIndex >= 0)
                     {
                         pane.requestFocus();
-
                     }
                     e.consume();
                 });
@@ -687,6 +691,9 @@ public class StableView
 
         // Can this column be edited?
         public boolean isEditable();
+
+        // Is this column value currently being edited?
+        public boolean editHasFocus(int rowIndex);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -763,5 +770,10 @@ public class StableView
             }
         }
         return r;
+    }
+
+    public void resizeColumn(int columnIndex, double size)
+    {
+        columnSizes.get(columnIndex).set(size);
     }
 }
