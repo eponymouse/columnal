@@ -34,6 +34,7 @@ import records.error.UserException;
 import records.gui.stf.Component2;
 import records.gui.stf.PlusMinusOffsetComponent;
 import records.gui.stf.StructuredTextField;
+import records.gui.stf.TextEntry;
 import records.gui.stf.TimeComponent;
 import records.gui.stf.YM;
 import records.gui.stf.YMD;
@@ -338,7 +339,7 @@ public class TableDisplayUtility
             @Override
             public DisplayCacheSTF<?> text(GetValue<String> g) throws InternalException
             {
-                throw new UnimplementedException();
+                return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(new TextEntry(value)));
             }
 
             @Override

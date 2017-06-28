@@ -368,6 +368,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     {
         switch (style)
         {
+            case EDITABLE_TEXT:
+                return true;
             case TIMEZONE_PLUS_MINUS:
                 return c == '+' || c == '-';
             case EDITABLE_HOUR:
@@ -387,6 +389,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     {
         switch (style)
         {
+            case EDITABLE_TEXT:
+                return 10000;
             case EDITABLE_SECOND:
                 return 2 + 1 + 9;
             default:
@@ -561,6 +565,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     // E.g. time might be Hour, fixed-:, minute, optional fixed-:, optional second (we don't bother having the dot as fixed boilerplate)
     public static enum ItemVariant
     {
+        EDITABLE_TEXT,
+
         EDITABLE_DAY,
         EDITABLE_MONTH,
         EDITABLE_YEAR,
@@ -780,8 +786,6 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     {
         CharacterHit hit = super.hit(x, y);
         // Character index may be missing if for example they clicked beyond extents of field.
-
-        System.err.println("Hit " + x + ", " + y + " result: " + hit);
 
         // We need to find the structured index, and if it's in a prompt then clamp to one side or other
         return makeHit(Utility.mapOptionalInt(hit.getCharacterIndex(), p -> structuredToPlain(clamp(plainToStructured(p)))), structuredToPlain(clamp(plainToStructured(hit.getInsertionIndex()))));

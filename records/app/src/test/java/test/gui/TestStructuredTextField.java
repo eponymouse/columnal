@@ -1,7 +1,13 @@
 package test.gui;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
+import com.pholser.junit.quickcheck.generator.Generator;
+import com.pholser.junit.quickcheck.generator.java.lang.AbstractStringGenerator;
+import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
+import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -23,11 +29,15 @@ import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
+import records.data.ColumnId;
+import records.data.EditableRecordSet;
 import records.data.TemporalColumnStorage;
+import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
+import records.error.UserException;
 import records.gui.TableDisplayUtility.DisplayCacheSTF;
 import records.gui.stable.StableView;
 import records.gui.stf.StructuredTextField;
@@ -68,6 +78,8 @@ import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -191,16 +203,20 @@ public class TestStructuredTextField extends ApplicationTest
 
     private StructuredTextField<?> dateField(DateTimeInfo dateTimeInfo, TemporalAccessor t) throws InternalException
     {
-        CompletableFuture<TemporalColumnStorage> fut = new CompletableFuture<>();
+        return field(DataType.date(dateTimeInfo), t);
+    }
+
+    private StructuredTextField<?> field(DataType dataType, Object value) throws InternalException
+    {
+        CompletableFuture<DataTypeValue> fut = new CompletableFuture<>();
         Workers.onWorkerThread("", Priority.SAVE_ENTRY, () ->
         {
             try
             {
-                TemporalColumnStorage tcs = new TemporalColumnStorage(dateTimeInfo);
-                tcs.add(t);
-                fut.complete(tcs);
+                EditableRecordSet rs = new EditableRecordSet(Collections.singletonList(dataType.makeImmediateColumn(new ColumnId("C"), Collections.singletonList(value))), () -> 1);
+                fut.complete(rs.getColumns().get(0).getType());
             }
-            catch (InternalException e)
+            catch (InternalException | UserException e)
             {
                 Utility.log(e);
             }
@@ -210,12 +226,12 @@ public class TestStructuredTextField extends ApplicationTest
         {
             try
             {
-                DisplayCacheSTF<?> cacheSTF = TableDisplayUtility.makeField(fut.get().getType());
+                DisplayCacheSTF<?> cacheSTF = TableDisplayUtility.makeField(fut.get(2000, TimeUnit.MILLISECONDS));
                 stableView.setColumns(Collections.singletonList(new Pair<>("C", cacheSTF)), null);
                 stableView.setRows(i -> i == 0);
                 stableView.resizeColumn(0, 600);
             }
-            catch (InterruptedException | ExecutionException | InternalException e)
+            catch (InterruptedException | ExecutionException | TimeoutException | InternalException e)
             {
                 throw new RuntimeException(e);
             }
@@ -582,6 +598,20 @@ public class TestStructuredTextField extends ApplicationTest
         enterDate(localDate, r, "");
     }
 
+    @Property(trials = 20)
+    public void propString(@From(StringGenerator.class) String s) throws InternalException
+    {
+        int[] cs = s.codePoints().filter(c -> c <= 0x7dff && !Character.isISOControl(c)).toArray();
+        s = new String(cs, 0, cs.length);
+
+        f.set(field(DataType.TEXT, "initial value"));
+        targetF();
+        push(KeyCode.CONTROL, KeyCode.A);
+        if (s.isEmpty())
+            push(KeyCode.DELETE);
+        type(s, s + "^$", s);
+    }
+
     @Property(trials = 15)
     public void propDateTime(@From(GenDateTime.class) LocalDateTime localDateTime, @From(GenRandom.class) Random r) throws InternalException
     {
@@ -738,7 +768,7 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
 
-    private void type(String entry, String expected, @Nullable TemporalAccessor endEditAndCompareTo)
+    private void type(String entry, String expected, @Nullable Object endEditAndCompareTo)
     {
         write(entry);
         if (endEditAndCompareTo != null)
