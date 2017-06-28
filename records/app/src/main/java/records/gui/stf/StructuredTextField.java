@@ -370,6 +370,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         {
             case EDITABLE_TEXT:
                 return true;
+            case EDITABLE_NUMBER:
+                return (before.isEmpty() && (c == '+' || c == '-')) || (c >= '0' && c <= '9') || c == '.';
             case TIMEZONE_PLUS_MINUS:
                 return c == '+' || c == '-';
             case EDITABLE_HOUR:
@@ -391,6 +393,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         {
             case EDITABLE_TEXT:
                 return 10000;
+            case EDITABLE_NUMBER:
+                return 100;
             case EDITABLE_SECOND:
                 return 2 + 1 + 9;
             default:
@@ -566,6 +570,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     public static enum ItemVariant
     {
         EDITABLE_TEXT,
+        EDITABLE_NUMBER,
 
         EDITABLE_DAY,
         EDITABLE_MONTH,

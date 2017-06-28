@@ -32,6 +32,7 @@ import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.stf.Component2;
+import records.gui.stf.NumberEntry;
 import records.gui.stf.PlusMinusOffsetComponent;
 import records.gui.stf.StructuredTextField;
 import records.gui.stf.TextEntry;
@@ -333,7 +334,7 @@ public class TableDisplayUtility
             @Override
             public DisplayCacheSTF<?> number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException
             {
-                throw new UnimplementedException();
+                return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(new NumberEntry(value)));
             }
 
             @Override

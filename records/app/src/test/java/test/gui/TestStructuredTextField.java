@@ -36,6 +36,8 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataTypeValue;
+import records.data.datatype.NumberInfo;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.TableDisplayUtility.DisplayCacheSTF;
@@ -44,12 +46,15 @@ import records.gui.stf.StructuredTextField;
 import records.gui.TableDisplayUtility;
 import test.gen.GenDate;
 import test.gen.GenDateTime;
+import test.gen.GenNumber;
+import test.gen.GenNumberAsString;
 import test.gen.GenOffsetTime;
 import test.gen.GenRandom;
 import test.gen.GenTime;
 import test.gen.GenYearMonth;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 import utility.Workers;
@@ -58,6 +63,7 @@ import utility.Workers.Worker;
 import utility.gui.FXUtility;
 
 import java.math.BigDecimal;
+import java.math.MathContext;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -87,6 +93,7 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import static test.TestUtil.fx;
 import static test.TestUtil.fx_;
 
@@ -612,6 +619,16 @@ public class TestStructuredTextField extends ApplicationTest
         type(s, s + "^$", s);
     }
 
+    @Property(trials = 20)
+    public void propNumber(@From(GenNumberAsString.class) String numAsString, @From(GenNumber.class) Number initial) throws InternalException
+    {
+        BigDecimal num = new BigDecimal(numAsString, MathContext.DECIMAL128);
+        f.set(field(DataType.number(new NumberInfo(Unit.SCALAR, null)), initial));
+        targetF();
+        push(KeyCode.CONTROL, KeyCode.A);
+        type(numAsString, numAsString + "^$", num);
+    }
+
     @Property(trials = 15)
     public void propDateTime(@From(GenDateTime.class) LocalDateTime localDateTime, @From(GenRandom.class) Random r) throws InternalException
     {
@@ -789,7 +806,26 @@ public class TestStructuredTextField extends ApplicationTest
         assertEquals(expected, actual);
         if (endEditAndCompareTo != null)
         {
-            assertEquals(f.get().getText(), endEditAndCompareTo, f.get().getCompletedValue());
+            CompletableFuture<Either<Exception, Integer>> fut = new CompletableFuture<Either<Exception, Integer>>();
+            Object value = f.get().getCompletedValue();
+            Workers.onWorkerThread("", Priority.LOAD_FROM_DISK, () -> {
+                try
+                {
+                    fut.complete(Either.right(Utility.compareValues(endEditAndCompareTo, value)));
+                }
+                catch (InternalException | UserException e)
+                {
+                    fut.complete(Either.left(e));
+                }
+            });
+            try
+            {
+                fut.get().either_(e -> fail(e.getLocalizedMessage()), x -> assertEquals(f.get().getText(), 0, x.intValue()));
+            }
+            catch (Exception e)
+            {
+                fail(e.getLocalizedMessage());
+            }
         }
     }
 }
