@@ -131,6 +131,8 @@ public class TestStructuredTextField extends ApplicationTest
         });
     }
 
+    // TODO add tests for cut, copy, paste, select-then-type
+
     @Test
     public void testPrompt() throws InternalException
     {
@@ -617,6 +619,19 @@ public class TestStructuredTextField extends ApplicationTest
         if (s.isEmpty())
             push(KeyCode.DELETE);
         type(s, s + "^$", s);
+    }
+
+    @Property(trials = 20)
+    public void propNumberPair(@From(GenNumberAsString.class) String numAsStringA, @From(GenNumberAsString.class) String numAsStringB, @From(GenNumber.class) Number initial) throws InternalException
+    {
+        BigDecimal numA = new BigDecimal(numAsStringA, MathContext.DECIMAL128);
+        BigDecimal numB = new BigDecimal(numAsStringB, MathContext.DECIMAL128);
+        DataType numType = DataType.number(new NumberInfo(Unit.SCALAR, null));
+        f.set(field(DataType.tuple(numType, numType), new Object[] {initial, initial}));
+        targetF();
+        push(KeyCode.CONTROL, KeyCode.A);
+        type("", "^(" + initial.toString() + "," + initial.toString() + ")$");
+        type(numAsStringA + ", " + numAsStringB, "(" + numAsStringA + "," + numAsStringB + "^$)", new Object[]{numA, numB});
     }
 
     @Property(trials = 20)

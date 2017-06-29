@@ -631,7 +631,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     }
 
     @OnThread(Tag.FXPlatform)
-    static interface Component<T>
+    public static interface Component<T>
     {
         public List<Item> getInitialItems();
         public Either<List<ErrorFix>, T> endEdit(StructuredTextField<?> field);

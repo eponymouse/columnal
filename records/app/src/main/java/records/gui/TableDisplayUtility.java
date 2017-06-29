@@ -1,6 +1,7 @@
 package records.gui;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanBinding;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -18,6 +19,7 @@ import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import records.data.Column;
+import records.data.Column.ProgressListener;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -28,20 +30,23 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.TypeId;
+import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.stf.Component2;
+import records.gui.stf.ComponentList;
 import records.gui.stf.NumberEntry;
 import records.gui.stf.PlusMinusOffsetComponent;
 import records.gui.stf.StructuredTextField;
+import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.TextEntry;
 import records.gui.stf.TimeComponent;
 import records.gui.stf.YM;
 import records.gui.stf.YMD;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformFunction;
+import utility.FXPlatformFunctionInt;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
@@ -58,9 +63,11 @@ import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * Created by neil on 01/05/2017.
@@ -325,45 +332,68 @@ public class TableDisplayUtility
         return doc;
     }
 
+    public static class GetValueAndComponent<T>
+    {
+        public final GetValue<T> g;
+        public final FXPlatformFunctionInt<T, Component<? extends T>> makeComponent;
+
+        public GetValueAndComponent(GetValue<T> g, FXPlatformFunctionInt<T, Component<? extends T>> makeComponent)
+        {
+            this.g = g;
+            this.makeComponent = makeComponent;
+        }
+
+        public DisplayCacheSTF<T> makeDisplayCache()
+        {
+            return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(makeComponent.apply(value)));
+        }
+    }
+
     // public for testing:
     @OnThread(Tag.FXPlatform)
     public static DisplayCacheSTF<?> makeField(DataTypeValue dataTypeValue) throws InternalException
     {
-        return dataTypeValue.applyGet(new DataTypeVisitorGetEx<DisplayCacheSTF<?>, InternalException>()
+        return valueAndComponent(dataTypeValue).makeDisplayCache();
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private static GetValueAndComponent<?> valueAndComponent(DataTypeValue dataTypeValue) throws InternalException
+    {
+        return dataTypeValue.applyGet(new DataTypeVisitorGetEx<GetValueAndComponent<?>, InternalException>()
         {
             @Override
-            public DisplayCacheSTF<?> number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException
+            public GetValueAndComponent<?> number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException
             {
-                return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(new NumberEntry(value)));
+                return new GetValueAndComponent<>(g, NumberEntry::new);
             }
 
             @Override
-            public DisplayCacheSTF<?> text(GetValue<String> g) throws InternalException
+            public GetValueAndComponent<?> text(GetValue<String> g) throws InternalException
             {
-                return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(new TextEntry(value)));
+                return new GetValueAndComponent<>(g, TextEntry::new);
             }
 
             @Override
-            public DisplayCacheSTF<?> bool(GetValue<Boolean> g) throws InternalException
+            public GetValueAndComponent<?> bool(GetValue<Boolean> g) throws InternalException
             {
                 throw new UnimplementedException();
             }
 
             @Override
-            public DisplayCacheSTF<?> date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException
+            public GetValueAndComponent<?> date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException
             {
                 switch (dateTimeInfo.getType())
                 {
                     case YEARMONTHDAY:
-                        return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(new YMD(value)));
+                        return new GetValueAndComponent<>(g, YMD::new);
                     case YEARMONTH:
-                        return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(new YM(value)));
+                        return new GetValueAndComponent<>(g, YM::new);
                     case TIMEOFDAY:
-                        return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(new TimeComponent(value)));
+                        return new GetValueAndComponent<>(g, TimeComponent::new);
                     case TIMEOFDAYZONED:
-                        return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(new PlusMinusOffsetComponent<>(new TimeComponent(value), value.get(ChronoField.OFFSET_SECONDS), OffsetTime::of)));
+                        return new GetValueAndComponent<>(g, value -> new PlusMinusOffsetComponent<>(new TimeComponent(value), value.get(ChronoField.OFFSET_SECONDS), OffsetTime::of));
                     case DATETIME:
-                        return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(new Component2<LocalDateTime, LocalDate, LocalTime>(new YMD(value), " ", new TimeComponent(value), LocalDateTime::of)));
+                        return new GetValueAndComponent<>(g, value -> new Component2<LocalDateTime, LocalDate, LocalTime>(new YMD(value), " ", new TimeComponent(value), LocalDateTime::of));
                     case DATETIMEZONED:
                         break;
                 }
@@ -371,19 +401,60 @@ public class TableDisplayUtility
             }
 
             @Override
-            public DisplayCacheSTF<?> tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
+            public GetValueAndComponent<?> tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
                 throw new UnimplementedException();
             }
 
             @Override
-            public DisplayCacheSTF<?> tuple(List<DataTypeValue> types) throws InternalException
+            @OnThread(Tag.FXPlatform)
+            public GetValueAndComponent<?> tuple(List<DataTypeValue> types) throws InternalException
             {
-                throw new UnimplementedException();
+                List<GetValueAndComponent<?>> gvacs = new ArrayList<>(types.size());
+                for (DataTypeValue type : types)
+                {
+                    gvacs.add(valueAndComponent(type));
+                }
+                GetValue<Object[]> tupleGet = new GetValue<Object[]>()
+                {
+                    @Override
+                    public Object @OnThread(Tag.Simulation) @NonNull [] getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                    {
+                        Object[] r = new Object[types.size()];
+                        for (int i = 0; i < r.length; i++)
+                        {
+                            r[i] = gvacs.get(i).g.getWithProgress(index, progressListener);
+                        }
+                        return r;
+                    }
+
+                    @Override
+                    public @OnThread(Tag.Simulation) void set(int index, Object[] value) throws InternalException, UserException
+                    {
+                        for (int i = 0; i < value.length; i++)
+                        {
+                            // Cast because we can't express type safety:
+                            ((GetValue)gvacs.get(i).g).set(index, value[i]);
+                        }
+                    }
+                };
+
+
+                return new GetValueAndComponent<Object[]>(tupleGet, value -> {
+                    ArrayList<Component<Object>> components = new ArrayList<>(types.size());
+                    for (int i = 0; i < types.size(); i++)
+                    {
+                        GetValueAndComponent<?> gvac = gvacs.get(i);
+                        // Have to use some casts because we can't express the type safety:
+                        FXPlatformFunctionInt<Object, Component> makeComponent = (FXPlatformFunctionInt) gvac.makeComponent;
+                        components.add(makeComponent.apply(value[i]));
+                    }
+                    return new ComponentList<Object[], Object>("(", ImmutableList.copyOf(components), ",", ")", List::toArray);
+                });
             }
 
             @Override
-            public DisplayCacheSTF<?> array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException
+            public GetValueAndComponent<?> array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException
             {
                 throw new UnimplementedException();
             }
