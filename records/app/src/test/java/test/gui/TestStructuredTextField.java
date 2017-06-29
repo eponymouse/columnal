@@ -179,7 +179,7 @@ public class TestStructuredTextField extends ApplicationTest
 
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         // Delete all:
-        push(KeyCode.SHORTCUT, KeyCode.A);
+        pushSelectAll();
         push(KeyCode.DELETE);
         assertEquals("Day/Month/Year", fx(() -> f.get().getText()));
         testPositions(new Random(0),
@@ -192,7 +192,7 @@ public class TestStructuredTextField extends ApplicationTest
 
         f.set(dateField(new DateTimeInfo(DateTimeType.DATETIME), LocalDateTime.of(1900, 1, 1, 1, 1, 1)));
         // Delete all:
-        push(KeyCode.SHORTCUT, KeyCode.A);
+        pushSelectAll();
         push(KeyCode.DELETE);
         assertEquals("Day/Month/Year Hour:Minute:Second", fx(() -> f.get().getText()));
         testPositions(new Random(0),
@@ -513,7 +513,7 @@ public class TestStructuredTextField extends ApplicationTest
 
         // Check prompts for invalid dates:
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
-        push(ctrlCmd(), KeyCode.A);
+        pushSelectAll();
         type("", "^1/4/1900$");
         push(KeyCode.DELETE);
         type("", "$Day/Month/Year");
@@ -528,7 +528,7 @@ public class TestStructuredTextField extends ApplicationTest
         type("", "1/4/1900$");
 
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
-        push(ctrlCmd(), KeyCode.A);
+        pushSelectAll();
         type("", "^1/4/1900$");
         push(KeyCode.DELETE);
         type("", "$Day/Month/Year");
@@ -560,7 +560,7 @@ public class TestStructuredTextField extends ApplicationTest
         assertNull(lookup(".invalid-data-input-popup").query());
         // Now delete again:
         targetF();
-        push(ctrlCmd(), KeyCode.A);
+        pushSelectAll();
         type("", "^8/7/2169$");
         push(KeyCode.DELETE);
         clickOn(dummy);
@@ -582,17 +582,26 @@ public class TestStructuredTextField extends ApplicationTest
         checkFix("68/3/4", "4/3/1968");
 
         targetF();
-        push(ctrlCmd(), KeyCode.A);
+        pushSelectAll();
         type("10/12/0378", "10/12/0378$", LocalDate.of(378, 12, 10));
         targetF();
-        push(ctrlCmd(), KeyCode.A);
+        pushSelectAll();
         type("01/02/3", "1/2/2003$", LocalDate.of(2003, 2, 1));
         targetF();
-        push(ctrlCmd(), KeyCode.A);
+        pushSelectAll();
         type("10/12/03", "10/12/2003$", LocalDate.of(2003, 12, 10));
         targetF();
-        push(ctrlCmd(), KeyCode.A);
+        pushSelectAll();
         type("10/12/0003", "10/12/0003$", LocalDate.of(3, 12, 10));
+    }
+
+    private void pushSelectAll()
+    {
+        // Some sort of bug on OS X prevents Cmd-A working in TestFX:
+        if (SystemUtils.IS_OS_MAC_OSX)
+            f.get().selectAll();
+        else
+            push(ctrlCmd(), KeyCode.A);
     }
 
     public void targetF()
@@ -615,7 +624,7 @@ public class TestStructuredTextField extends ApplicationTest
 
         f.set(field(DataType.TEXT, "initial value"));
         targetF();
-        push(KeyCode.CONTROL, KeyCode.A);
+        pushSelectAll();
         if (s.isEmpty())
             push(KeyCode.DELETE);
         type(s, s + "^$", s);
@@ -629,7 +638,7 @@ public class TestStructuredTextField extends ApplicationTest
         DataType numType = DataType.number(new NumberInfo(Unit.SCALAR, null));
         f.set(field(DataType.tuple(numType, numType), new Object[] {initial, initial}));
         targetF();
-        push(KeyCode.CONTROL, KeyCode.A);
+        pushSelectAll();
         type("", "^(" + initial.toString() + "," + initial.toString() + ")$");
         type(numAsStringA + ", " + numAsStringB, "(" + numAsStringA + "," + numAsStringB + "^$)", new Object[]{numA, numB});
     }
@@ -640,7 +649,7 @@ public class TestStructuredTextField extends ApplicationTest
         BigDecimal num = new BigDecimal(numAsString, MathContext.DECIMAL128);
         f.set(field(DataType.number(new NumberInfo(Unit.SCALAR, null)), initial));
         targetF();
-        push(KeyCode.CONTROL, KeyCode.A);
+        pushSelectAll();
         type(numAsString, numAsString + "^$", num);
     }
 
@@ -668,7 +677,7 @@ public class TestStructuredTextField extends ApplicationTest
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTH), YearMonth.of(1900, 1)));
         String timeVal = yearMonth.getMonthValue() + "/" + yearMonth.getYear();
         targetF();
-        push(KeyCode.CONTROL, KeyCode.A);
+        pushSelectAll();
         type(timeVal, timeVal + "$", yearMonth);
         // TODO also test errors, and other variants (e.g. text months)
     }
@@ -679,7 +688,7 @@ public class TestStructuredTextField extends ApplicationTest
         f.set(dateField(new DateTimeInfo(DateTimeType.TIMEOFDAY), LocalTime.of(1, 1, 1, 1)));
         String timeVal = timeString(localTime);
         targetF();
-        push(KeyCode.CONTROL, KeyCode.A);
+        pushSelectAll();
         type(timeVal, timeVal + "$", localTime);
         // TODO also test errors
     }
@@ -693,7 +702,7 @@ public class TestStructuredTextField extends ApplicationTest
         int offsetMinute = Math.abs(timeZoned.getOffset().getTotalSeconds() / 60 - offsetHour * 60);
         timeVal += (timeZoned.getOffset().getTotalSeconds() < 0 ? "-" : "+") + Math.abs(offsetHour) + ":" + offsetMinute;
         targetF();
-        push(KeyCode.CONTROL, KeyCode.A);
+        pushSelectAll();
         type(timeVal, timeVal + "$", timeZoned);
         // TODO also test errors
     }
@@ -702,14 +711,14 @@ public class TestStructuredTextField extends ApplicationTest
     {
         // Try it in valid form with four digit year:
         targetF();
-        push(KeyCode.CONTROL, KeyCode.A);
+        pushSelectAll();
         String value = localDate.get(ChronoField.DAY_OF_MONTH) + "/" + localDate.get(ChronoField.MONTH_OF_YEAR) + "/" + String.format("%04d", localDate.get(ChronoField.YEAR));
         type(value + extra, value + extra + "$", localDate);
         if (localDate.get(ChronoField.YEAR) > Year.now().getValue() - 80 && localDate.get(ChronoField.YEAR) < Year.now().getValue() + 20)
         {
             // Do two digits:
             targetF();
-            push(KeyCode.CONTROL, KeyCode.A);
+            pushSelectAll();
             String twoDig = localDate.get(ChronoField.DAY_OF_MONTH) + "/" + localDate.get(ChronoField.MONTH_OF_YEAR) + "/" + Integer.toString(localDate.get(ChronoField.YEAR)).substring(2);
             type(twoDig + extra, value + extra + "$", localDate);
         }
@@ -752,14 +761,14 @@ public class TestStructuredTextField extends ApplicationTest
                 }
             }
             fx_(() -> f.get().requestFocus());
-            push(KeyCode.CONTROL, KeyCode.A);
+            pushSelectAll();
             type(variant + extra, value + extra + "$", localDate);
 
             // Also try Month name, day, year:
             List<String> monthPoss = monthNames.get(vals[1] - 1);
             String variantMD = monthPoss.get(r.nextInt(monthPoss.size())) + "/" + vals[0] + "/" + vals[2];
             fx_(() -> f.get().requestFocus());
-            push(KeyCode.CONTROL, KeyCode.A);
+            pushSelectAll();
             type(variantMD + extra, value + extra + "$", localDate);
         }
         // Try errors and fixes; transposition, etc:
@@ -779,7 +788,7 @@ public class TestStructuredTextField extends ApplicationTest
     private void checkFix(String input, String suggestedFix)
     {
         targetF();
-        push(ctrlCmd(), KeyCode.A);
+        pushSelectAll();
         type(input, input + "$");
         clickOn(dummy);
         assertNotNull(lookup(".invalid-data-input-popup").query());
@@ -791,7 +800,7 @@ public class TestStructuredTextField extends ApplicationTest
 
     private KeyCode ctrlCmd()
     {
-        return SystemUtils.IS_OS_MAC_OSX ? KeyCode.COMMAND : KeyCode.CONTROL;
+        return SystemUtils.IS_OS_MAC_OSX ? KeyCode.SHORTCUT : KeyCode.CONTROL;
     }
 
     private void type(String entry, String expected)
