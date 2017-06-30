@@ -28,12 +28,6 @@ import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
-import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.LocalTime;
-import java.time.OffsetTime;
-import java.time.temporal.ChronoField;
-import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -60,7 +54,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         super(false);
         getStyleClass().add("structured-text-field");
         this.contentComponent = content;
-        List<Item> initialItems = content.getInitialItems();
+        List<Item> initialItems = content.getItems();
         curValue.addAll(initialItems);
 
 
@@ -153,16 +147,6 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         {
             return ReadOnlyStyledDocument.fromString("", Collections.emptyList(), Collections.emptyList(), StyledText.<Collection<String>>textOps());
         }
-    }
-
-    protected String getItem(ItemVariant item)
-    {
-        return curValue.stream().filter(ss -> ss.itemVariant == item).findFirst().map(ss -> ss.content).orElse("");
-    }
-
-    protected @Localized String getPrompt(ItemVariant item)
-    {
-        return curValue.stream().filter(ss -> ss.itemVariant == item).findFirst().map(ss -> ss.prompt).orElse("");
     }
 
     protected void setItem(ItemVariant item, String content)
@@ -320,7 +304,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
      */
     public Either<List<ErrorFix>, T> endEdit()
     {
-        return contentComponent.endEdit(this);
+        return contentComponent.endEdit(this, curValue);
     }
 
     public T getCompletedValue()
@@ -628,13 +612,23 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         {
             return content.isEmpty() ? prompt : content;
         }
+
+        public String getValue()
+        {
+            return content;
+        }
     }
 
     @OnThread(Tag.FXPlatform)
     public static interface Component<T>
     {
-        public List<Item> getInitialItems();
-        public Either<List<ErrorFix>, T> endEdit(StructuredTextField<?> field);
+        public List<Item> getItems();
+        public Either<List<ErrorFix>, T> endEdit(StructuredTextField<?> field, List<Item> endResult);
+
+        public default String getItem(List<Item> curValue, ItemVariant item)
+        {
+            return curValue.stream().filter(ss -> ss.itemVariant == item).findFirst().map(ss -> ss.content).orElse("");
+        }
     }
 
     // Field, index within field

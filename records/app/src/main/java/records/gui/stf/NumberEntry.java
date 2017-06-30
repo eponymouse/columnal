@@ -25,17 +25,17 @@ public class NumberEntry implements Component<Number>
     }
 
     @Override
-    public List<Item> getInitialItems()
+    public List<Item> getItems()
     {
         return Collections.singletonList(new Item(initial instanceof BigDecimal ? ((BigDecimal)initial).toPlainString() : initial.toString(), ItemVariant.EDITABLE_NUMBER, ""));
     }
 
     @Override
-    public Either<List<ErrorFix>, Number> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, Number> endEdit(StructuredTextField<?> field, List<Item> endResult)
     {
         try
         {
-            return Either.right(Utility.parseNumber(field.getItem(ItemVariant.EDITABLE_NUMBER)));
+            return Either.right(Utility.parseNumber(getItem(endResult, ItemVariant.EDITABLE_NUMBER)));
         }
         catch (UserException e)
         {

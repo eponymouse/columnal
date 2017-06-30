@@ -39,7 +39,7 @@ public class YMD implements Component<LocalDate>
         this.value = value;
     }
 
-    public List<Item> getInitialItems()
+    public List<Item> getItems()
     {
         return Arrays.asList(new Item(Integer.toString(value.get(ChronoField.DAY_OF_MONTH)), ItemVariant.EDITABLE_DAY, TranslationUtility.getString("entry.prompt.day")),
             new Item("/"),
@@ -72,7 +72,7 @@ public class YMD implements Component<LocalDate>
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public Either<List<ErrorFix>, LocalDate> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, LocalDate> endEdit(StructuredTextField<?> field, List<Item> endResult)
     {
         List<ErrorFix> fixes = new ArrayList<>();
         field.revertEditFix().ifPresent(fixes::add);
@@ -80,23 +80,23 @@ public class YMD implements Component<LocalDate>
 
         try
         {
-            String dayText = field.getItem(ItemVariant.EDITABLE_DAY);
+            String dayText = getItem(endResult, ItemVariant.EDITABLE_DAY);
             int day, month;
             try
             {
                 day = Integer.parseInt(dayText);
-                month = parseMonth(field.getItem(ItemVariant.EDITABLE_MONTH));
+                month = parseMonth(getItem(endResult, ItemVariant.EDITABLE_MONTH));
             } catch (NumberFormatException e)
             {
                 // If this throws, we'll fall out to the outer catch block
                 // Try swapping day and month:
                 month = parseMonth(dayText);
-                day = Integer.parseInt(field.getItem(ItemVariant.EDITABLE_MONTH));
-                dayText = field.getItem(ItemVariant.EDITABLE_MONTH);
+                day = Integer.parseInt(getItem(endResult, ItemVariant.EDITABLE_MONTH));
+                dayText = getItem(endResult, ItemVariant.EDITABLE_MONTH);
             }
 
 
-            String yearText = field.getItem(ItemVariant.EDITABLE_YEAR);
+            String yearText = getItem(endResult, ItemVariant.EDITABLE_YEAR);
             int year = Integer.parseInt(yearText);
             // For fixes, we always use fourYear.  If they really want a two digit year, they should enter the leading zeroes
             if (day <= 0)

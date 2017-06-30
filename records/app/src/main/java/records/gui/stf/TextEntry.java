@@ -22,14 +22,14 @@ public class TextEntry implements Component<String>
     }
 
     @Override
-    public List<Item> getInitialItems()
+    public List<Item> getItems()
     {
         return Collections.singletonList(new Item(initial, ItemVariant.EDITABLE_TEXT, ""));
     }
 
     @Override
-    public Either<List<ErrorFix>, String> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, String> endEdit(StructuredTextField<?> field, List<Item> endResult)
     {
-        return Either.right(field.getItem(ItemVariant.EDITABLE_TEXT));
+        return Either.right(getItem(endResult, ItemVariant.EDITABLE_TEXT));
     }
 }

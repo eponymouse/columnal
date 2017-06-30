@@ -21,6 +21,7 @@ public class PlusMinusOffsetComponent<R, A> implements Component<R>
     private final int seconds;
     private final Component<A> a;
     private final BiFunction<A, ZoneOffset, R> combine;
+    private int aLength;
 
     public PlusMinusOffsetComponent(Component<A> a, int seconds, BiFunction<A, ZoneOffset, R> combine)
     {
@@ -30,11 +31,13 @@ public class PlusMinusOffsetComponent<R, A> implements Component<R>
     }
 
     @Override
-    public List<Item> getInitialItems()
+    public List<Item> getItems()
     {
         int hours = seconds / 3600;
         int minutes = (seconds - (hours * 3600)) / 60;
-        return Utility.concat(a.getInitialItems(), Arrays.asList(
+        List<Item> aItems = a.getItems();
+        aLength = aItems.size();
+        return Utility.concat(aItems, Arrays.asList(
             new Item("", ItemVariant.TIMEZONE_PLUS_MINUS, "\u00B1"),
             new Item(Integer.toString(hours), ItemVariant.EDITABLE_OFFSET_HOUR, "Zone Hours"),
             new Item(":"),
@@ -42,14 +45,14 @@ public class PlusMinusOffsetComponent<R, A> implements Component<R>
     }
 
     @Override
-    public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field, List<Item> endResult)
     {
-        Either<List<ErrorFix>, A> ea = a.endEdit(field);
+        Either<List<ErrorFix>, A> ea = a.endEdit(field, endResult.subList(0, aLength));
 
-        int sign = field.getItem(ItemVariant.TIMEZONE_PLUS_MINUS).equals("-") ? -1 : 1;
+        int sign = getItem(endResult, ItemVariant.TIMEZONE_PLUS_MINUS).equals("-") ? -1 : 1;
 
-        int hour = sign * Integer.parseInt(field.getItem(ItemVariant.EDITABLE_OFFSET_HOUR));
-        int minute = sign * Integer.parseInt(field.getItem(ItemVariant.EDITABLE_OFFSET_MINUTE));
+        int hour = sign * Integer.parseInt(getItem(endResult, ItemVariant.EDITABLE_OFFSET_HOUR));
+        int minute = sign * Integer.parseInt(getItem(endResult, ItemVariant.EDITABLE_OFFSET_MINUTE));
 
         if (hour >= -18 && hour <= 18 && minute >= -59 && minute <= 59)
         {

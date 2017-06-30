@@ -27,7 +27,7 @@ public class TimeComponent implements Component<LocalTime>
     }
 
     @Override
-    public List<Item> getInitialItems()
+    public List<Item> getItems()
     {
         return Arrays.asList(
             new Item(Integer.toString(value.get(ChronoField.HOUR_OF_DAY)), ItemVariant.EDITABLE_HOUR, TranslationUtility.getString("entry.prompt.hour")),
@@ -38,17 +38,17 @@ public class TimeComponent implements Component<LocalTime>
     }
 
     @Override
-    public Either<List<ErrorFix>, LocalTime> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, LocalTime> endEdit(StructuredTextField<?> field, List<Item> endResult)
     {
         List<ErrorFix> fixes = new ArrayList<>();
         field.revertEditFix().ifPresent(fixes::add);
         try
         {
-            int hour = Integer.parseInt(field.getItem(ItemVariant.EDITABLE_HOUR));
-            int minute = Integer.parseInt(field.getItem(ItemVariant.EDITABLE_MINUTE));
+            int hour = Integer.parseInt(getItem(endResult, ItemVariant.EDITABLE_HOUR));
+            int minute = Integer.parseInt(getItem(endResult, ItemVariant.EDITABLE_MINUTE));
             int second;
             int nano;
-            String secondText = field.getItem(ItemVariant.EDITABLE_SECOND);
+            String secondText = getItem(endResult, ItemVariant.EDITABLE_SECOND);
             if (secondText.contains("."))
             {
                 second = Integer.parseInt(secondText.substring(0, secondText.indexOf('.')));

@@ -8,13 +8,11 @@ import records.gui.stf.StructuredTextField.Item;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.Utility;
+import utility.Pair;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 
 /**
@@ -28,6 +26,8 @@ public class ComponentList<R, T> implements Component<R>
     private final String divider;
     private final @Nullable String prefix;
     private final @Nullable String suffix;
+    private List<Pair<Integer, Integer>> subLists = new ArrayList<>();
+
     public ComponentList(@Nullable String prefix, ImmutableList<Component<T>> components, String divider, @Nullable String suffix, Function<List<T>, R> combine)
 
     {
@@ -39,14 +39,16 @@ public class ComponentList<R, T> implements Component<R>
     }
 
     @Override
-    public List<Item> getInitialItems()
+    public List<Item> getItems()
     {
         List<Item> r = new ArrayList<>();
         if (prefix != null)
             r.add(new Item(prefix));
         for (int i = 0; i < components.size(); i++)
         {
-            r.addAll(components.get(i).getInitialItems());
+            List<Item> items = components.get(i).getItems();
+            subLists.add(new Pair<>(r.size(), r.size() + items.size()));
+            r.addAll(items);
             if (i < components.size() - 1)
                 r.add(new Item(divider));
         }
@@ -56,13 +58,13 @@ public class ComponentList<R, T> implements Component<R>
     }
 
     @Override
-    public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field, List<Item> endResult)
     {
         // This is a bit iffy as it threads a mutable array list through the
         // immutable-looking Either instances, but it is safe:
-        Either<List<ErrorFix>, ArrayList<T>> result = components.get(0).endEdit(field).map(x -> new ArrayList<>(Collections.singletonList(x)));
+        Either<List<ErrorFix>, ArrayList<T>> result = components.get(0).endEdit(field, endResult.subList(subLists.get(0).getFirst(), subLists.get(0).getSecond())).map(x -> new ArrayList<>(Collections.singletonList(x)));
         for (int i = 1; i < components.size(); i++)
-            result = Either.combineConcatError(result, components.get(i).endEdit(field), (a, x) -> {a.add(x); return a;});
+            result = Either.combineConcatError(result, components.get(i).endEdit(field, endResult.subList(subLists.get(i).getFirst(), subLists.get(i).getSecond())), (a, x) -> {a.add(x); return a;});
         return result.map(combine);
     }
 }

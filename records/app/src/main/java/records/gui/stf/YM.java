@@ -38,7 +38,7 @@ public class YM implements Component<YearMonth>
         this.value = value;
     }
 
-    public List<Item> getInitialItems()
+    public List<Item> getItems()
     {
         return Arrays.asList(
             new Item(Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
@@ -70,7 +70,7 @@ public class YM implements Component<YearMonth>
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public Either<List<ErrorFix>, YearMonth> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, YearMonth> endEdit(StructuredTextField<?> field, List<Item> endResult)
     {
         List<ErrorFix> fixes = new ArrayList<>();
         field.revertEditFix().ifPresent(fixes::add);
@@ -78,19 +78,19 @@ public class YM implements Component<YearMonth>
 
         try
         {
-            String yearText = field.getItem(ItemVariant.EDITABLE_YEAR);
+            String yearText = getItem(endResult, ItemVariant.EDITABLE_YEAR);
             int year;
             int month;
             try
             {
                 year = Integer.parseInt(yearText);
-                month = parseMonth(field.getItem(ItemVariant.EDITABLE_MONTH));
+                month = parseMonth(getItem(endResult, ItemVariant.EDITABLE_MONTH));
             } catch (NumberFormatException e)
             {
                 // If this throws, we'll fall out to the outer catch block
                 // Try swapping month and year:
                 month = parseMonth(yearText);
-                year = Integer.parseInt(field.getItem(ItemVariant.EDITABLE_MONTH));
+                year = Integer.parseInt(getItem(endResult, ItemVariant.EDITABLE_MONTH));
             }
 
 

@@ -22,6 +22,7 @@ public class Component2<R, A, B> implements Component<R>
     private final Component<B> b;
     private final BiFunction<A, B, R> combine;
     private final String divider;
+    private int aLength;
 
     public Component2(Component<A> a, String divider, Component<B> b, BiFunction<A, B, R> combine)
     {
@@ -32,16 +33,18 @@ public class Component2<R, A, B> implements Component<R>
     }
 
     @Override
-    public List<Item> getInitialItems()
+    public List<Item> getItems()
     {
-        return Utility.concat(a.getInitialItems(), Arrays.asList(new Item(divider)), b.getInitialItems());
+        List<Item> aItems = a.getItems();
+        aLength = aItems.size();
+        return Utility.concat(aItems, Arrays.asList(new Item(divider)), b.getItems());
     }
 
     @Override
-    public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field, List<Item> endResult)
     {
-        Either<List<ErrorFix>, A> ax = a.endEdit(field);
-        Either<List<ErrorFix>, B> bx = b.endEdit(field);
+        Either<List<ErrorFix>, A> ax = a.endEdit(field, endResult.subList(0, aLength));
+        Either<List<ErrorFix>, B> bx = b.endEdit(field, endResult.subList(aLength + 1, endResult.size()));
         return ax.either(ea -> bx.either(eb -> Either.left(Utility.concat(ea, eb)), rb -> Either.left(ea)),
             ra -> bx.either(eb -> Either.left(eb), rb -> Either.right(combine.apply(ra, rb))));
     }
