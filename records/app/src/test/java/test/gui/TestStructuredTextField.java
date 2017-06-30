@@ -35,6 +35,7 @@ import records.data.TemporalColumnStorage;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.NumberInfo;
 import records.data.unit.Unit;
@@ -639,8 +640,8 @@ public class TestStructuredTextField extends ApplicationTest
         f.set(field(DataType.tuple(numType, numType), new Object[] {initial, initial}));
         targetF();
         pushSelectAll();
-        type("", "^(" + initial.toString() + "," + initial.toString() + ")$");
-        type(numAsStringA + ", " + numAsStringB, "(" + numAsStringA + "," + numAsStringB + "^$)", new Object[]{numA, numB});
+        type("", "(^" + initial.toString() + "," + initial.toString() + "$)");
+        type(numAsStringA + "," + numAsStringB, "(" + numAsStringA + "," + numAsStringB + "^$)", new Object[]{numA, numB});
     }
 
     @Property(trials = 20)
@@ -844,9 +845,9 @@ public class TestStructuredTextField extends ApplicationTest
             });
             try
             {
-                fut.get().either_(e -> fail(e.getLocalizedMessage()), x -> assertEquals(f.get().getText(), 0, x.intValue()));
+                fut.get().either_(e -> fail(e.getLocalizedMessage()), x -> assertEquals(f.get().getText() + " " + DataTypeUtility.valueToString(endEditAndCompareTo) + " vs " + DataTypeUtility.valueToString(value), 0, x.intValue()));
             }
-            catch (Exception e)
+            catch (InterruptedException | ExecutionException e)
             {
                 fail(e.getLocalizedMessage());
             }

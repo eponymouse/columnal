@@ -25,6 +25,7 @@ import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Properties;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -771,6 +772,30 @@ public class Utility
         r.addAll(b);
         r.addAll(c);
         return r;
+    }
+
+    public static <T> OptionalInt findFirstIndex(List<T> curValue, Predicate<T> match)
+    {
+        for (int i = 0; i < curValue.size(); i++)
+        {
+            if (match.test(curValue.get(i)))
+            {
+                return OptionalInt.of(i);
+            }
+        }
+        return OptionalInt.empty();
+    }
+
+    public static <T> OptionalInt findLastIndex(List<T> curValue, Predicate<T> match)
+    {
+        for (int i = curValue.size() - 1; i >= 0; i--)
+        {
+            if (match.test(curValue.get(i)))
+            {
+                return OptionalInt.of(i);
+            }
+        }
+        return OptionalInt.empty();
     }
 
     public static class ReadState

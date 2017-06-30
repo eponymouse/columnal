@@ -371,7 +371,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
             case EDITABLE_TEXT:
                 return true;
             case EDITABLE_NUMBER:
-                return (before.isEmpty() && (c == '+' || c == '-')) || (c >= '0' && c <= '9') || c == '.';
+                return (before.isEmpty() && c == '-') || (c >= '0' && c <= '9') || (!before.contains(".") && c == '.');
             case TIMEZONE_PLUS_MINUS:
                 return c == '+' || c == '-';
             case EDITABLE_HOUR:
@@ -800,7 +800,28 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void lineEnd(SelectionPolicy policy)
     {
-        moveTo(structuredToPlain(new Pair<>(curValue.size() - 1, curValue.get(curValue.size() - 1).getLength())), policy);
+        OptionalInt lastEditableEntry = Utility.findLastIndex(curValue, item -> item.itemVariant != ItemVariant.DIVIDER);
+        lastEditableEntry.ifPresent(i ->
+            moveTo(structuredToPlain(new Pair<>(i, curValue.get(i).getLength())), policy)
+        );
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public void lineStart(SelectionPolicy policy)
+    {
+        OptionalInt firstEditableEntry = Utility.findFirstIndex(curValue, item -> item.itemVariant != ItemVariant.DIVIDER);
+        firstEditableEntry.ifPresent(i ->
+            moveTo(structuredToPlain(new Pair<>(i, 0)), policy)
+        );
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    public void selectAll()
+    {
+        lineStart(SelectionPolicy.CLEAR);
+        lineEnd(SelectionPolicy.EXTEND);
     }
 
     private CharacterHit makeHit(OptionalInt charIdx, int insertionIdx)
