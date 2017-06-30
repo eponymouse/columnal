@@ -555,6 +555,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     {
         EDITABLE_TEXT,
         EDITABLE_NUMBER,
+        EDITABLE_BOOLEAN,
 
         EDITABLE_DAY,
         EDITABLE_MONTH,

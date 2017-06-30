@@ -43,6 +43,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.TableDisplayUtility.DisplayCacheSTF;
 import records.gui.stable.StableView;
+import records.gui.stf.STFAutoCompleteCell;
 import records.gui.stf.StructuredTextField;
 import records.gui.TableDisplayUtility;
 import test.gen.GenDate;
@@ -87,6 +88,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
@@ -260,6 +262,16 @@ public class TestStructuredTextField extends ApplicationTest
         throw new RuntimeException("Couldn't find STF");
     }
 
+    /**
+     * Keyboard shortcuts for STF:
+     * - Left/Right move one character.  If you are next to a divider, skip to the other side.
+     * - Ctrl/Alt-Left/Right moves one word.  If you're in a field with spaces, act like
+     *   in a normal text control.  If you're in the first/last word of a slot, go to edge of slot.
+     *   If at edge of slot, act like left/right and skip divider.
+     * - Enter finishes editing
+     * - Escape finishes editing (and pops up undo reminder?)
+     * - Tab selects from an auto-complete list
+     */
     private void testPositions(Random r, int[]... positions)
     {
         // Check home and end:
@@ -706,6 +718,28 @@ public class TestStructuredTextField extends ApplicationTest
         pushSelectAll();
         type(timeVal, timeVal + "$", timeZoned);
         // TODO also test errors
+    }
+
+    // There's only two possible values, so no need to make it a property!
+    @Test
+    public void testBool() throws InternalException
+    {
+        f.set(field(DataType.BOOLEAN, false));
+        targetF();
+        // Should immediately show the popup:
+        assertNotNull(lookup(".stf-autocomplete"));
+        assertEquals(2, lookup(".stf-autocomplete .stf-autocomplete-item").queryAll().size());
+        // Deliberate capital A:
+        pushSelectAll();
+        type("fAlse", "false$", false);
+        targetF();
+        pushSelectAll();
+        type("True", "true$", true);targetF();
+        pushSelectAll();
+        push(KeyCode.DELETE);
+        type("", "$");
+        clickOn(lookup(".stf-autocomplete .stf-autocomplete-item").<STFAutoCompleteCell>lookup((Predicate<STFAutoCompleteCell>)((STFAutoCompleteCell c) -> c.getValue().equals(true))).<STFAutoCompleteCell>query());
+        type("", "true$", true);
     }
 
     private void enterDate(TemporalAccessor localDate, Random r, String extra) throws InternalException

@@ -34,6 +34,7 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.stf.BoolEntry;
 import records.gui.stf.Component2;
 import records.gui.stf.ComponentList;
 import records.gui.stf.NumberEntry;
@@ -376,7 +377,7 @@ public class TableDisplayUtility
             @Override
             public GetValueAndComponent<?> bool(GetValue<Boolean> g) throws InternalException
             {
-                throw new UnimplementedException();
+                return new GetValueAndComponent<>(g, BoolEntry::new);
             }
 
             @Override
