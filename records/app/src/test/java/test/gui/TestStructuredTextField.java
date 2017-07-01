@@ -22,6 +22,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyCombination.Modifier;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.Matchers;
@@ -103,6 +104,7 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
+import static org.junit.Assume.assumeThat;
 import static test.TestUtil.fx;
 import static test.TestUtil.fx_;
 
@@ -663,13 +665,26 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
     @Property(trials = 20)
-    public void propNumber(@From(GenNumberAsString.class) String numAsString, @From(GenNumber.class) Number initial) throws InternalException
+    public void propNumber(@From(GenNumberAsString.class) String numAsString, @From(GenNumber.class) Number initial, char c) throws InternalException
     {
+        // c should be a non-numeric char:
+        assumeThat(c, Matchers.not(Matchers.isIn(ArrayUtils.toObject("-.0123456789".toCharArray()))));
+        assumeThat(c, Matchers.greaterThan(' '));
+
         BigDecimal num = new BigDecimal(numAsString, MathContext.DECIMAL128);
         f.set(field(DataType.number(new NumberInfo(Unit.SCALAR, null)), initial));
         targetF();
         pushSelectAll();
         type(numAsString, numAsString + "^$", num);
+
+        // Random character in middle should be ignored:
+        targetF();
+        push(KeyCode.HOME);
+        for (int i = 0; i < numAsString.length() / 2; i++)
+            push(KeyCode.RIGHT);
+        write(c);
+        push(KeyCode.HOME);
+        type(numAsString, "$" + numAsString, num);
     }
 
     @Property(trials = 15)
@@ -745,8 +760,9 @@ public class TestStructuredTextField extends ApplicationTest
         assertEquals(2, items.size());
         assertEquals(Arrays.asList("false", "true"), items.stream().map(c -> c.getItem().suggestion).sorted().collect(Collectors.toList()));
         assertEquals(Arrays.asList("false", "true"), items.stream().map(c -> c.getText()).sorted().collect(Collectors.toList()));
-        // Deliberate capital A:
+
         pushSelectAll();
+        // Deliberate capital A, should still work:
         type("fAlse", "false$", false);
         targetF();
         pushSelectAll();
@@ -757,6 +773,14 @@ public class TestStructuredTextField extends ApplicationTest
         clickOn(lookup(".stf-autocomplete .stf-autocomplete-item").<STFAutoCompleteCell>lookup((Predicate<STFAutoCompleteCell>)((STFAutoCompleteCell c) -> !c.isEmpty() && "true".equals(c.getItem().suggestion))).<STFAutoCompleteCell>query());
         type("", "true$", true);
         assertNull(lookup(".stf-autocomplete").query());
+
+        // Tab should auto-complete plausible option:
+        targetF();
+        pushSelectAll();
+        type("F", "F$");
+        push(KeyCode.TAB);
+        type("", "false$", false);
+
     }
 
     private void enterDate(TemporalAccessor localDate, Random r, String extra) throws InternalException
