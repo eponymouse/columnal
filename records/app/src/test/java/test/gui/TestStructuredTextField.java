@@ -85,6 +85,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -740,7 +741,10 @@ public class TestStructuredTextField extends ApplicationTest
         assertThat(autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinX(), is(both(greaterThan(fScreen.getMinX() - 10)).and(lessThan(fScreen.getMaxX()))));
         assertThat(autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinY(), is(both(greaterThan(fScreen.getMaxY() - 2)).and(lessThan(fScreen.getMaxY() + 5))));
         // Tried using the :filled pseudo-class here but that didn't seem to work:
-        assertEquals(2, lookup(".stf-autocomplete .stf-autocomplete-item").lookup((STFAutoCompleteCell c) -> !c.isEmpty()).queryAll().size());
+        Set<STFAutoCompleteCell> items = lookup(".stf-autocomplete .stf-autocomplete-item").lookup((STFAutoCompleteCell c) -> !c.isEmpty()).queryAll();
+        assertEquals(2, items.size());
+        assertEquals(Arrays.asList("false", "true"), items.stream().map(c -> c.getItem().suggestion).sorted().collect(Collectors.toList()));
+        assertEquals(Arrays.asList("false", "true"), items.stream().map(c -> c.getText()).sorted().collect(Collectors.toList()));
         // Deliberate capital A:
         pushSelectAll();
         type("fAlse", "false$", false);

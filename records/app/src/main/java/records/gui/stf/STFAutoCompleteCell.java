@@ -28,4 +28,14 @@ public class STFAutoCompleteCell extends ListCell<Suggestion>
             }
         });
     }
+
+    @Override
+    protected void updateItem(Suggestion item, boolean empty)
+    {
+        super.updateItem(item, empty);
+        if (item != null && !empty)
+            setText(item.suggestion);
+        else
+            setText("");
+    }
 }
