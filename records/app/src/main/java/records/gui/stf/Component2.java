@@ -3,6 +3,7 @@ package records.gui.stf;
 import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
+import records.gui.stf.StructuredTextField.Suggestion;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -45,7 +46,14 @@ public class Component2<R, A, B> implements Component<R>
     {
         Either<List<ErrorFix>, A> ax = a.endEdit(field, endResult.subList(0, aLength));
         Either<List<ErrorFix>, B> bx = b.endEdit(field, endResult.subList(aLength + 1, endResult.size()));
-        return ax.either(ea -> bx.either(eb -> Either.left(Utility.concat(ea, eb)), rb -> Either.left(ea)),
-            ra -> bx.either(eb -> Either.left(eb), rb -> Either.right(combine.apply(ra, rb))));
+        return Either.combineConcatError(ax, bx, combine);
+    }
+
+    @Override
+    public List<Suggestion> getSuggestions()
+    {
+        List<Suggestion> suggA = a.getSuggestions();
+        List<Suggestion> suggB = b.getSuggestions();
+        return Utility.concat(suggA, Utility.mapList(suggB, s -> s.offsetBy(aLength + 1)));
     }
 }

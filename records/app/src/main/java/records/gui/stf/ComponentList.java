@@ -29,7 +29,6 @@ public class ComponentList<R, T> implements Component<R>
     private List<Pair<Integer, Integer>> subLists = new ArrayList<>();
 
     public ComponentList(@Nullable String prefix, ImmutableList<Component<T>> components, String divider, @Nullable String suffix, Function<List<T>, R> combine)
-
     {
         this.components = components;
         this.divider = divider;

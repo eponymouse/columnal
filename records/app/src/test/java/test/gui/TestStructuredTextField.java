@@ -43,6 +43,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.TableDisplayUtility.DisplayCacheSTF;
 import records.gui.stable.StableView;
+import records.gui.stf.STFAutoComplete;
 import records.gui.stf.STFAutoCompleteCell;
 import records.gui.stf.StructuredTextField;
 import records.gui.TableDisplayUtility;
@@ -91,6 +92,10 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import static org.hamcrest.Matchers.both;
+import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.is;
+import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -726,9 +731,16 @@ public class TestStructuredTextField extends ApplicationTest
     {
         f.set(field(DataType.BOOLEAN, false));
         targetF();
+        push(KeyCode.HOME);
         // Should immediately show the popup:
-        assertNotNull(lookup(".stf-autocomplete"));
-        assertEquals(2, lookup(".stf-autocomplete .stf-autocomplete-item").queryAll().size());
+        Node autoComplete = lookup(".stf-autocomplete").query();
+        assertNotNull(autoComplete);
+        // In the right place:
+        Bounds fScreen = f.get().localToScreen(f.get().getBoundsInLocal());
+        assertThat(autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinX(), is(both(greaterThan(fScreen.getMinX() - 10)).and(lessThan(fScreen.getMaxX()))));
+        assertThat(autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinY(), is(both(greaterThan(fScreen.getMaxY() - 2)).and(lessThan(fScreen.getMaxY() + 5))));
+        // Tried using the :filled pseudo-class here but that didn't seem to work:
+        assertEquals(2, lookup(".stf-autocomplete .stf-autocomplete-item").lookup((STFAutoCompleteCell c) -> !c.isEmpty()).queryAll().size());
         // Deliberate capital A:
         pushSelectAll();
         type("fAlse", "false$", false);
@@ -738,8 +750,9 @@ public class TestStructuredTextField extends ApplicationTest
         pushSelectAll();
         push(KeyCode.DELETE);
         type("", "$");
-        clickOn(lookup(".stf-autocomplete .stf-autocomplete-item").<STFAutoCompleteCell>lookup((Predicate<STFAutoCompleteCell>)((STFAutoCompleteCell c) -> c.getValue().equals(true))).<STFAutoCompleteCell>query());
+        clickOn(lookup(".stf-autocomplete .stf-autocomplete-item").<STFAutoCompleteCell>lookup((Predicate<STFAutoCompleteCell>)((STFAutoCompleteCell c) -> !c.isEmpty() && "true".equals(c.getItem().suggestion))).<STFAutoCompleteCell>query());
         type("", "true$", true);
+        assertNull(lookup(".stf-autocomplete").query());
     }
 
     private void enterDate(TemporalAccessor localDate, Random r, String extra) throws InternalException

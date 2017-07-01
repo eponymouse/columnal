@@ -588,6 +588,7 @@ public class Utility
         log("", e);
     }
 
+    @Pure
     public static void logStackTrace(String s)
     {
         try

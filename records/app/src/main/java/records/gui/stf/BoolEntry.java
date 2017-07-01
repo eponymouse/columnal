@@ -4,8 +4,10 @@ import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;
+import records.gui.stf.StructuredTextField.Suggestion;
 import utility.Either;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -32,10 +34,22 @@ public class BoolEntry implements Component<Boolean>
     {
         String val = getItem(endResult, ItemVariant.EDITABLE_BOOLEAN).trim().toLowerCase();
         if (val.equals("true"))
+        {
+            field.setItem(ItemVariant.EDITABLE_BOOLEAN, "true");
             return Either.right(true);
+        }
         else if (val.equals("false"))
+        {
+            field.setItem(ItemVariant.EDITABLE_BOOLEAN, "false");
             return Either.right(false);
+        }
         else
             return Either.left(Collections.emptyList());
+    }
+
+    @Override
+    public List<Suggestion> getSuggestions()
+    {
+        return Arrays.asList(new Suggestion(0, 0, "true"), new Suggestion(0,0, "false"));
     }
 }

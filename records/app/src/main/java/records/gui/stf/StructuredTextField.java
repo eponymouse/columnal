@@ -1,5 +1,6 @@
 package records.gui.stf;
 
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
@@ -24,6 +25,7 @@ import utility.Either;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
+import utility.Utility.IndexRange;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.TranslationUtility;
@@ -32,9 +34,13 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 18/06/2017.
@@ -44,9 +50,12 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 {
     private final List<Item> curValue = new ArrayList<>();
     private final Component<T> contentComponent;
+    private final List<Suggestion> suggestions;
     private @Nullable State lastValidValue;
     private @Nullable PopOver fixPopup;
     private T completedValue;
+    private @Nullable STFAutoComplete autoComplete;
+    private int completingForItem = -1;
 
     @SuppressWarnings("initialization")
     public StructuredTextField(Component<T> content) throws InternalException
@@ -56,9 +65,11 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         this.contentComponent = content;
         List<Item> initialItems = content.getItems();
         curValue.addAll(initialItems);
+        suggestions = content.getSuggestions();
 
 
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
+            updateAutoComplete(getSelection());
             if (!focused)
             {
                 endEdit().either_(this::showFixPopup, v -> {
@@ -66,6 +77,10 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                     lastValidValue = captureState();
                 });
             }
+        });
+
+        FXUtility.addChangeListenerPlatformNN(selectionProperty(), sel -> {
+            updateAutoComplete(sel);
         });
 
         // Call super to avoid our own validation:
@@ -77,6 +92,37 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         }
         completedValue = val;
         lastValidValue = captureState();
+    }
+
+    private void updateAutoComplete(javafx.scene.control.IndexRange selection)
+    {
+        //Utility.logStackTrace("Sel: " + this + " " + selection);
+
+        Pair<Integer, Integer> selStr = plainToStructured(selection.getStart());
+        int selLength = selection.getLength();
+        if (autoComplete != null && (!isFocused() || selLength != 0 || selStr.getFirst() != completingForItem))
+        {
+            // Current one no longer applicable; hide
+            autoComplete.hide();
+            autoComplete = null;
+            completingForItem = -1;
+        }
+
+        if (autoComplete == null && selLength == 0 && isFocused())
+        {
+            // See if there are any relevant suggestions:
+            @Nullable Entry<Integer, List<Suggestion>> possSugg = new TreeMap<>(suggestions.stream().filter(s -> s.startIndexIncl <= selStr.getFirst() && selStr.getFirst() <= s.endIndexIncl)
+                .collect(Collectors.groupingBy(s -> s.getLength()))).firstEntry();
+            if (possSugg != null && possSugg.getValue().size() > 0) // Size should always be > 0, but just in case
+            {
+                Bounds screenBounds = localToScreen(getBoundsInLocal());
+                autoComplete = new STFAutoComplete(this, possSugg.getValue());
+                // TODO should show at X of relevant character?
+                autoComplete.show(this, screenBounds.getMinX(), screenBounds.getMaxY());
+                completingForItem = selStr.getFirst();
+            }
+        }
+
     }
 
     private @Nullable State captureState(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this)
@@ -247,6 +293,11 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                 }
             }
         });
+    }
+
+    public void fire(Suggestion item)
+    {
+        replaceText(structuredToPlain(new Pair<>(item.startIndexIncl, 0)), structuredToPlain(new Pair<>(item.endIndexIncl, curValue.get(item.endIndexIncl).getLength())), item.suggestion);
     }
 
     private class State
@@ -624,11 +675,39 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     public static interface Component<T>
     {
         public List<Item> getItems();
+        public default List<Suggestion> getSuggestions()
+        {
+            return Collections.emptyList();
+        }
         public Either<List<ErrorFix>, T> endEdit(StructuredTextField<?> field, List<Item> endResult);
 
         public default String getItem(List<Item> curValue, ItemVariant item)
         {
             return curValue.stream().filter(ss -> ss.itemVariant == item).findFirst().map(ss -> ss.content).orElse("");
+        }
+    }
+
+    public static class Suggestion
+    {
+        public final int startIndexIncl;
+        public final int endIndexIncl;
+        public final String suggestion;
+
+        public Suggestion(int startIndexIncl, int endIndexIncl, String suggestion)
+        {
+            this.startIndexIncl = startIndexIncl;
+            this.endIndexIncl = endIndexIncl;
+            this.suggestion = suggestion;
+        }
+
+        public Suggestion offsetBy(int amount)
+        {
+            return new Suggestion(startIndexIncl + amount, endIndexIncl + amount, suggestion);
+        }
+
+        public int getLength()
+        {
+            return endIndexIncl - startIndexIncl + 1;
         }
     }
 

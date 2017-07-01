@@ -32,6 +32,7 @@ class Node
     double getHeight() @UnknownInitialization;
 
     BooleanProperty focusedProperty() @UnknownInitialization;
+    @Pure boolean isFocused() @UnknownInitialization;
 }
 class Scene
 {
@@ -80,8 +81,13 @@ class ListCell
 {
      StringProperty textProperty() @UnknownInitialization;
 }
+class Cell<T>
+{
+     @Nullable T getItem() @UnknownInitialization;
+}
 class PopupControl
 {
+    ObservableList<String> getStyleClass() @UnknownInitialization;
     void setSkin(Skin<?> value) @UnknownInitialization;
 }
 class Menu
@@ -154,6 +160,7 @@ class Window
 }
 class PopupWindow
 {
+    ObservableList<String> getStyleClass() @UnknownInitialization;
     void show(Node ownerNode, double anchorX, double anchorY) @UnknownInitialization;
     void setAnchorX(final double value) @UnknownInitialization;
     void setAnchorY(final double value) @UnknownInitialization;

@@ -1,28 +1,31 @@
 package records.gui.stf;
 
+import javafx.application.Platform;
+import javafx.css.PseudoClass;
+import javafx.scene.control.ListCell;
+import javafx.scene.control.Skin;
+import javafx.scene.input.MouseButton;
 import javafx.scene.text.TextFlow;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.flowless.Cell;
+import records.gui.stf.StructuredTextField.Suggestion;
 
 /**
  * Created by neil on 30/06/2017.
  */
-public class STFAutoCompleteCell extends TextFlow implements Cell<Object, STFAutoCompleteCell>
+public class STFAutoCompleteCell extends ListCell<Suggestion>
 {
-    private Object value;
-
-    public STFAutoCompleteCell(Object value)
+    public STFAutoCompleteCell(STFAutoComplete autoComplete)
     {
-        this.value = value;
-    }
-
-    public Object getValue()
-    {
-        return value;
-    }
-
-    @Override
-    public STFAutoCompleteCell getNode()
-    {
-        return this;
+        getStyleClass().add("stf-autocomplete-item");
+        setOnMouseClicked(e -> {
+            Suggestion item = getItem();
+            if (e.getButton() == MouseButton.PRIMARY && item != null)
+            {
+                autoComplete.fire(item);
+                e.consume();
+            }
+        });
     }
 }
