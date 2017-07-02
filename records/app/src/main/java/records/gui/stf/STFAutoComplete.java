@@ -7,7 +7,6 @@ import javafx.scene.control.PopupControl;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
-import javafx.scene.layout.BorderPane;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
@@ -44,8 +43,32 @@ public class STFAutoComplete extends PopupControl
         disableListViewKeybindings(parent, completions);
     }
 
+    public void update()
+    {
+        List<Suggestion> suggestions = completions.getItems();
+        boolean[] eligible = new boolean[suggestions.size()];
+        for (int i = 0; i < suggestions.size(); i++)
+        {
+            Suggestion sugg = suggestions.get(i);
+            String text = parent.getTextForItems(sugg.startIndexIncl, sugg.endIndexIncl);
+            eligible[i] = sugg.suggestion.toLowerCase().startsWith(text.toLowerCase());
+        }
+        int sel = completions.getSelectionModel().getSelectedIndex();
+        if (sel < 0 || !eligible[sel])
+        {
+            for (int i = 0; i < eligible.length; i++)
+            {
+                if (eligible[i])
+                {
+                    completions.getSelectionModel().select(i);
+                    break;
+                }
+            }
+        }
+    }
+
     @OnThread(Tag.FXPlatform)
-    private static void disableListViewKeybindings(StructuredTextField<?> parent, ListView<Suggestion> listView)
+    private void disableListViewKeybindings(StructuredTextField<?> parent, ListView<Suggestion> listView)
     {
         // This is a list of default bindings on ListView, most of which we want to disable:
         /*
@@ -110,14 +133,22 @@ public class STFAutoComplete extends PopupControl
                 new Pair<>(new KeyCodeCombination(KeyCode.HOME, KeyCombination.SHIFT_DOWN), () -> parent.lineStart(SelectionPolicy.EXTEND)),
                 new Pair<>(new KeyCodeCombination(KeyCode.END), () -> parent.lineEnd(SelectionPolicy.CLEAR)),
                 new Pair<>(new KeyCodeCombination(KeyCode.END, KeyCombination.SHIFT_DOWN), () -> parent.lineEnd(SelectionPolicy.EXTEND)),
-                new Pair<>(new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN), () -> parent.selectAll())
+                new Pair<>(new KeyCodeCombination(KeyCode.A, KeyCombination.SHORTCUT_DOWN), () -> parent.selectAll()),
+                new Pair<>(new KeyCodeCombination(KeyCode.TAB), () -> fireSelected())
             ).stream().map(k -> InputMap.consume(EventPattern.keyPressed(k.getFirst()), ev -> k.getSecond().run())).toArray(InputMap[]::new)
         ));
     }
 
     public void fire(Suggestion item)
     {
-        parent.fire(item);
+        parent.fireSuggestion(item);
+    }
+
+    public void fireSelected()
+    {
+        Suggestion selectedItem = completions.getSelectionModel().getSelectedItem();
+        if (selectedItem != null)
+            fire(selectedItem);
     }
 
     private class Skin implements javafx.scene.control.Skin<STFAutoComplete>

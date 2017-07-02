@@ -5,10 +5,12 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
+import records.gui.stf.StructuredTextField.Suggestion;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -65,5 +67,17 @@ public class ComponentList<R, T> implements Component<R>
         for (int i = 1; i < components.size(); i++)
             result = Either.combineConcatError(result, components.get(i).endEdit(field, endResult.subList(subLists.get(i).getFirst(), subLists.get(i).getSecond())), (a, x) -> {a.add(x); return a;});
         return result.map(combine);
+    }
+
+    @Override
+    public List<Suggestion> getSuggestions()
+    {
+        List<Suggestion> r = new ArrayList<>();
+        for (int i = 0; i < components.size(); i++)
+        {
+            int offset = subLists.get(i).getFirst();
+            r.addAll(Utility.mapList(components.get(i).getSuggestions(), s -> s.offsetBy(offset)));
+        }
+        return r;
     }
 }

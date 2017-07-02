@@ -258,9 +258,10 @@ public class TableDisplayUtility
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public ColumnHandler tuple(List<DataTypeValue> types) throws InternalException, UserException
             {
-                throw new UnimplementedException();
+                return makeField(column.getType());
             }
 
             @Override

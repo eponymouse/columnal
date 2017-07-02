@@ -101,6 +101,7 @@ import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
@@ -662,6 +663,71 @@ public class TestStructuredTextField extends ApplicationTest
         pushSelectAll();
         type("", "(^" + initial.toString() + "," + initial.toString() + "$)");
         type(numAsStringA + "," + numAsStringB, "(" + numAsStringA + "," + numAsStringB + "^$)", new Object[]{numA, numB});
+        targetF();
+        push(KeyCode.END);
+        type("", "(" + numAsStringA + "," + numAsStringB + "^$)");
+        push(KeyCode.RIGHT);
+        type("", "(" + numAsStringA + "," + numAsStringB + "^$)");
+        push(KeyCode.HOME);
+        type("", "(^$" + numAsStringA + "," + numAsStringB + ")");
+        push(KeyCode.LEFT);
+        type("", "(^$" + numAsStringA + "," + numAsStringB + ")");
+    }
+
+    @Property(trials = 20)
+    public void propNumberBoolPair(@When(seed=7840144566697435388L) @From(GenNumberAsString.class) String numAsString, @When(seed=8243187474969914274L) boolean boolValue, @When(seed=-3637275760914315407L) @From(GenRandom.class) Random r) throws InternalException
+    {
+        BigDecimal num = new BigDecimal(numAsString, MathContext.DECIMAL128);
+        DataType numType = DataType.number(new NumberInfo(Unit.SCALAR, null));
+        boolean numFirst = r.nextBoolean();
+        DataType tupleType = numFirst ? DataType.tuple(numType, DataType.BOOLEAN) : DataType.tuple(DataType.BOOLEAN, numType);
+        f.set(field(tupleType, numFirst ? new Object[] {0, !boolValue} : new Object[] {!boolValue, 0}));
+        targetF();
+        pushSelectAll();
+        if (numFirst)
+        {
+            type("", "(^0," + !boolValue + "$)");
+            type(numAsString, "(" + numAsString + "$,)");
+            type(",", "(" + numAsString + ",$)");
+            if (r.nextBoolean())
+            {
+                // Type full:
+                type(Boolean.toString(boolValue), "(" + numAsString + "," + boolValue + "$)", new Object[]{num, boolValue});
+            }
+            else
+            {
+                // Use completion:
+                type(Boolean.toString(boolValue).substring(0, 1), "(" + numAsString + "," + Boolean.toString(boolValue).substring(0, 1) + "$)");
+                Node n = assertAutoCompleteVisible(1 + numAsString.length() + 1, null);
+                type(Boolean.toString(boolValue).substring(1, 2), "(" + numAsString + "," + Boolean.toString(boolValue).substring(0, 2) + "$)");
+                assertAutoCompleteVisible(1 + numAsString.length() + 2, n);
+                push(KeyCode.TAB);
+                type("", "(" + numAsString + "," + boolValue + "$)", new Object[]{num, boolValue});
+            }
+        }
+        else
+        {
+            type("", "(^" + !boolValue + ",0$)");
+            if (r.nextBoolean())
+            {
+                // Type full:
+                type(Boolean.toString(boolValue), "(" + boolValue + "$,)");
+                if (r.nextBoolean())
+                    push(KeyCode.RIGHT);
+                else
+                    write(",");
+            }
+            else
+            {
+                // Use completion:
+                type(Boolean.toString(boolValue).substring(0 ,1), "(" + Boolean.toString(boolValue).substring(0, 1) + "$,)");
+                assertAutoCompleteVisible(1, null);
+                push(KeyCode.TAB);
+                type("", "(" + boolValue + ",$)");
+            }
+            type("", "(" + boolValue + ",$)");
+            type(numAsString, "(" + boolValue + "," + numAsString + "$)", new Object[]{boolValue, num});
+        }
     }
 
     @Property(trials = 20)
@@ -749,12 +815,7 @@ public class TestStructuredTextField extends ApplicationTest
         targetF();
         push(KeyCode.HOME);
         // Should immediately show the popup:
-        Node autoComplete = lookup(".stf-autocomplete").query();
-        assertNotNull(autoComplete);
-        // In the right place:
-        Bounds fScreen = f.get().localToScreen(f.get().getBoundsInLocal());
-        assertThat(autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinX(), is(both(greaterThan(fScreen.getMinX() - 10)).and(lessThan(fScreen.getMaxX()))));
-        assertThat(autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinY(), is(both(greaterThan(fScreen.getMaxY() - 2)).and(lessThan(fScreen.getMaxY() + 5))));
+        assertAutoCompleteVisible(0, null);
         // Tried using the :filled pseudo-class here but that didn't seem to work:
         Set<STFAutoCompleteCell> items = lookup(".stf-autocomplete .stf-autocomplete-item").lookup((STFAutoCompleteCell c) -> !c.isEmpty()).queryAll();
         assertEquals(2, items.size());
@@ -781,6 +842,20 @@ public class TestStructuredTextField extends ApplicationTest
         push(KeyCode.TAB);
         type("", "false$", false);
 
+    }
+
+    public Node assertAutoCompleteVisible(int atChar, @Nullable Node sameAs)
+    {
+        Node autoComplete = lookup(".stf-autocomplete").query();
+        assertNotNull(autoComplete);
+        if (sameAs != null)
+            assertSame(sameAs, autoComplete);
+        // In the right place:
+        Bounds fScreen = f.get().localToScreen(f.get().getBoundsInLocal());
+        Bounds charBounds = f.get().getCharacterBoundsOnScreen(atChar, atChar + 1).get();
+        assertThat(autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinX(), is(both(greaterThan(charBounds.getMinX() - 8)).and(lessThan(charBounds.getMaxX() + 2))));
+        assertThat(autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinY(), is(both(greaterThan(charBounds.getMaxY() - 2)).and(lessThan(charBounds.getMaxY() + 5))));
+        return autoComplete;
     }
 
     private void enterDate(TemporalAccessor localDate, Random r, String extra) throws InternalException

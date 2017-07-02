@@ -4,6 +4,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -17,6 +18,9 @@ import org.controlsfx.control.PopOver.ArrowLocation;
 import org.fxmisc.richtext.CharacterHit;
 import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.*;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
 import org.jetbrains.annotations.NotNull;
 import records.error.InternalException;
 import threadchecker.OnThread;
@@ -56,6 +60,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     private T completedValue;
     private @Nullable STFAutoComplete autoComplete;
     private int completingForItem = -1;
+    private boolean inSuperReplace;
 
     @SuppressWarnings("initialization")
     public StructuredTextField(Component<T> content) throws InternalException
@@ -80,8 +85,21 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         });
 
         FXUtility.addChangeListenerPlatformNN(selectionProperty(), sel -> {
-            updateAutoComplete(sel);
+            if (!inSuperReplace)
+            {
+                updateAutoComplete(sel);
+            }
         });
+
+        Nodes.addInputMap(this, InputMap.sequence(
+            InputMap.consume(EventPattern.keyPressed(KeyCode.TAB), e -> {
+                if (autoComplete != null)
+                {
+                    autoComplete.fireSelected();
+                    e.consume();
+                }
+            })
+        ));
 
         // Call super to avoid our own validation:
         super.replace(0, 0, makeDoc(initialItems));
@@ -115,11 +133,14 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                 .collect(Collectors.groupingBy(s -> s.getLength()))).firstEntry();
             if (possSugg != null && possSugg.getValue().size() > 0) // Size should always be > 0, but just in case
             {
-                Bounds screenBounds = localToScreen(getBoundsInLocal());
-                autoComplete = new STFAutoComplete(this, possSugg.getValue());
-                // TODO should show at X of relevant character?
-                autoComplete.show(this, screenBounds.getMinX(), screenBounds.getMaxY());
-                completingForItem = selStr.getFirst();
+                int startCharIndex = structuredToPlain(new Pair<>(possSugg.getValue().get(0).startIndexIncl, 0));
+                Optional<Bounds> charBounds = getCharacterBoundsOnScreen(startCharIndex, startCharIndex + 1);
+                if (charBounds.isPresent())
+                {
+                    autoComplete = new STFAutoComplete(this, possSugg.getValue());
+                    autoComplete.show(this, charBounds.get().getMinX(), charBounds.get().getMaxY());
+                    completingForItem = selStr.getFirst();
+                }
             }
         }
 
@@ -198,7 +219,9 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     protected void setItem(ItemVariant item, String content)
     {
         curValue.replaceAll(old -> old.itemVariant == item ? new Item(content, item, old.prompt) : old);
+        Pair<Integer, Integer> oldPos = plainToStructured(getCaretPosition());
         super.replace(0, getLength(), makeDoc(curValue));
+        moveTo(structuredToPlain(clamp(oldPos)));
     }
 
     @Override
@@ -268,10 +291,16 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
             cur = "";
         }
         StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = makeDoc(newContent);
+        inSuperReplace = true;
         super.replace(0, getLength(), doc);
+        inSuperReplace = false;
         curValue.clear();
         curValue.addAll(newContent);
         selectRange(replacementEnd, replacementEnd);
+        if (autoComplete != null)
+        {
+            autoComplete.update();
+        }
     }
 
     protected Optional<ErrorFix> revertEditFix(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this)
@@ -295,9 +324,21 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         });
     }
 
-    public void fire(Suggestion item)
+    public void fireSuggestion(Suggestion item)
     {
         replaceText(structuredToPlain(new Pair<>(item.startIndexIncl, 0)), structuredToPlain(new Pair<>(item.endIndexIncl, curValue.get(item.endIndexIncl).getLength())), item.suggestion);
+        // Go to next field if there is one:
+        nextChar(SelectionPolicy.CLEAR);
+    }
+
+    public String getTextForItems(int startIndexIncl, int endIndexIncl)
+    {
+        StringBuilder sb = new StringBuilder();
+        for (int i = startIndexIncl; i <= endIndexIncl; i++)
+        {
+            sb.append(curValue.get(i).content);
+        }
+        return sb.toString();
     }
 
     private class State
@@ -806,9 +847,11 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                 if (curValue.get(field).itemVariant == ItemVariant.DIVIDER)
                     field += 1;
                 else
+                {
+                    cur = new Pair<>(field, 0);
                     break;
+                }
             }
-            cur = new Pair<>(field, 0);
         }
         return cur;
     }

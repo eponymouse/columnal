@@ -19,6 +19,6 @@ public class GenRandom extends Generator<Random>
     @Override
     public Random generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        return sourceOfRandomness.toJDKRandom();
+        return new Random(sourceOfRandomness.nextLong());
     }
 }
