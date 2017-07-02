@@ -3,6 +3,7 @@ package test.gen;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.jetbrains.annotations.NotNull;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
@@ -46,12 +47,17 @@ public class GenTypeAndValueGen extends GenValueBase<TypeAndValueGen>
     @Override
     public TypeAndValueGen generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        GenDataType genDataType = new GenDataType();
+        GenDataType genDataType = typeGenerator();
         DataType type = genDataType.generate(sourceOfRandomness, generationStatus);
 
         this.r = sourceOfRandomness;
         this.gs = generationStatus;
 
         return new TypeAndValueGen(type);
+    }
+
+    public GenDataType typeGenerator()
+    {
+        return new GenDataType();
     }
 }

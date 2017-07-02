@@ -1,5 +1,6 @@
 package records.gui.stf;
 
+import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
@@ -36,11 +37,13 @@ public class BoolEntry implements Component<Boolean>
         if (val.equals("true"))
         {
             field.setItem(ItemVariant.EDITABLE_BOOLEAN, "true");
+            field.lineEnd(SelectionPolicy.CLEAR);
             return Either.right(true);
         }
         else if (val.equals("false"))
         {
             field.setItem(ItemVariant.EDITABLE_BOOLEAN, "false");
+            field.lineEnd(SelectionPolicy.CLEAR);
             return Either.right(false);
         }
         else

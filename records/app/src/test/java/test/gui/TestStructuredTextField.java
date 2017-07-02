@@ -48,18 +48,22 @@ import records.gui.stf.STFAutoComplete;
 import records.gui.stf.STFAutoCompleteCell;
 import records.gui.stf.StructuredTextField;
 import records.gui.TableDisplayUtility;
+import test.gen.GenDataType.GenTaggedType;
 import test.gen.GenDate;
 import test.gen.GenDateTime;
 import test.gen.GenNumber;
 import test.gen.GenNumberAsString;
 import test.gen.GenOffsetTime;
 import test.gen.GenRandom;
+import test.gen.GenTaggedTypeAndValueGen;
 import test.gen.GenTime;
+import test.gen.GenTypeAndValueGen;
 import test.gen.GenYearMonth;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.TaggedValue;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -675,7 +679,7 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
     @Property(trials = 20)
-    public void propNumberBoolPair(@When(seed=7840144566697435388L) @From(GenNumberAsString.class) String numAsString, @When(seed=8243187474969914274L) boolean boolValue, @When(seed=-3637275760914315407L) @From(GenRandom.class) Random r) throws InternalException
+    public void propNumberBoolPair(@From(GenNumberAsString.class) String numAsString, boolean boolValue, @From(GenRandom.class) Random r) throws InternalException
     {
         BigDecimal num = new BigDecimal(numAsString, MathContext.DECIMAL128);
         DataType numType = DataType.number(new NumberInfo(Unit.SCALAR, null));
@@ -744,13 +748,16 @@ public class TestStructuredTextField extends ApplicationTest
         type(numAsString, numAsString + "^$", num);
 
         // Random character in middle should be ignored:
+        moveBy(10, 0);
         targetF();
         push(KeyCode.HOME);
-        for (int i = 0; i < numAsString.length() / 2; i++)
+        type("", "$" + numAsString, num);
+        int mid = numAsString.length() / 2;
+        for (int i = 0; i < mid; i++)
             push(KeyCode.RIGHT);
         write(c);
         push(KeyCode.HOME);
-        type(numAsString, "$" + numAsString, num);
+        type("", "$" + numAsString, num);
     }
 
     @Property(trials = 15)
@@ -827,11 +834,14 @@ public class TestStructuredTextField extends ApplicationTest
         type("fAlse", "false$", false);
         targetF();
         pushSelectAll();
-        type("True", "true$", true);targetF();
+        type("True", "true$", true);
+        targetF();
         pushSelectAll();
         push(KeyCode.DELETE);
         type("", "$");
-        clickOn(lookup(".stf-autocomplete .stf-autocomplete-item").<STFAutoCompleteCell>lookup((Predicate<STFAutoCompleteCell>)((STFAutoCompleteCell c) -> !c.isEmpty() && "true".equals(c.getItem().suggestion))).<STFAutoCompleteCell>query());
+        STFAutoCompleteCell autoSuggestTrue = lookup(".stf-autocomplete .stf-autocomplete-item").<STFAutoCompleteCell>lookup((Predicate<STFAutoCompleteCell>) ((STFAutoCompleteCell c) -> !c.isEmpty() && "true".equals(c.getItem().suggestion))).<STFAutoCompleteCell>query();
+        assertNotNull(autoSuggestTrue);
+        clickOn(autoSuggestTrue);
         type("", "true$", true);
         assertNull(lookup(".stf-autocomplete").query());
 
@@ -841,7 +851,25 @@ public class TestStructuredTextField extends ApplicationTest
         type("F", "F$");
         push(KeyCode.TAB);
         type("", "false$", false);
+    }
 
+    @Property(trials=20)
+    public void propTagged(@From(GenTaggedTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen taggedTypeAndValueGen) throws UserException, InternalException
+    {
+        f.set(field(taggedTypeAndValueGen.getType(), taggedTypeAndValueGen.makeValue()));
+        targetF();
+        pushSelectAll();
+        TaggedValue value = (TaggedValue)taggedTypeAndValueGen.makeValue();
+        String tagName = taggedTypeAndValueGen.getType().getTagTypes().get(value.getTagIndex()).getName();
+        type(tagName, tagName + "$ ");
+        if (value.getInner() == null)
+        {
+            type("", tagName + "$ ", value);
+        }
+        else
+        {
+            // TODO get text for inner item, enter that, check value.
+        }
     }
 
     public Node assertAutoCompleteVisible(int atChar, @Nullable Node sameAs)
@@ -968,11 +996,13 @@ public class TestStructuredTextField extends ApplicationTest
             FXUtility.runAfter(() -> dummy.requestFocus());
             WaitForAsyncUtils.waitForFxEvents();
         }
-        String actual = f.get().getText();
+        String actual = fx(() -> f.get().getText());
         // Add curly brackets to indicate selection:
-        actual = actual.substring(0, f.get().getAnchor()) + "^" + actual.substring(f.get().getAnchor());
-        boolean anchorBeforeCaret = f.get().getAnchor() <= f.get().getCaretPosition();
-        actual = actual.substring(0, f.get().getCaretPosition() + (anchorBeforeCaret ? 1 : 0)) + "$" + actual.substring(f.get().getCaretPosition() + (anchorBeforeCaret ? 1 : 0));
+        int anchor = fx(() -> f.get().getAnchor());
+        actual = actual.substring(0, anchor) + "^" + actual.substring(anchor);
+        int caretPos = fx(() -> f.get().getCaretPosition());
+        boolean anchorBeforeCaret = anchor <= caretPos;
+        actual = actual.substring(0, caretPos + (anchorBeforeCaret ? 1 : 0)) + "$" + actual.substring(caretPos + (anchorBeforeCaret ? 1 : 0));
 
         if (!expected.contains("^"))
             expected = expected.replace("$", "^$");

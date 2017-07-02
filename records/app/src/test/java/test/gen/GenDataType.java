@@ -76,7 +76,7 @@ public class GenDataType extends Generator<DataType>
 
     public static class GenTaggedType extends GenDataType
     {
-        public GenTaggedType() throws UserException, InternalException
+        public GenTaggedType()
         {
         }
 

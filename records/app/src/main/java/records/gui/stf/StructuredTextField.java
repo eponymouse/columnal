@@ -114,8 +114,6 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
     private void updateAutoComplete(javafx.scene.control.IndexRange selection)
     {
-        //Utility.logStackTrace("Sel: " + this + " " + selection);
-
         Pair<Integer, Integer> selStr = plainToStructured(selection.getStart());
         int selLength = selection.getLength();
         if (autoComplete != null && (!isFocused() || selLength != 0 || selStr.getFirst() != completingForItem))
@@ -134,16 +132,17 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
             if (possSugg != null && possSugg.getValue().size() > 0) // Size should always be > 0, but just in case
             {
                 int startCharIndex = structuredToPlain(new Pair<>(possSugg.getValue().get(0).startIndexIncl, 0));
-                Optional<Bounds> charBounds = getCharacterBoundsOnScreen(startCharIndex, startCharIndex + 1);
-                if (charBounds.isPresent())
-                {
-                    autoComplete = new STFAutoComplete(this, possSugg.getValue());
-                    autoComplete.show(this, charBounds.get().getMinX(), charBounds.get().getMaxY());
-                    completingForItem = selStr.getFirst();
-                }
+                @Nullable Bounds charBounds = startCharIndex + 1 <= getLength() ? getCharacterBoundsOnScreen(startCharIndex, startCharIndex + 1).orElse(null) : null;
+                if (charBounds == null)
+                    charBounds = localToScreen(getBoundsInLocal());
+                autoComplete = new STFAutoComplete(this, possSugg.getValue());
+                autoComplete.show(this, charBounds.getMinX(), charBounds.getMaxY());
+                completingForItem = selStr.getFirst();
             }
         }
 
+        if (autoComplete != null)
+            autoComplete.update();
     }
 
     private @Nullable State captureState(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this)
@@ -221,7 +220,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         curValue.replaceAll(old -> old.itemVariant == item ? new Item(content, item, old.prompt) : old);
         Pair<Integer, Integer> oldPos = plainToStructured(getCaretPosition());
         super.replace(0, getLength(), makeDoc(curValue));
-        moveTo(structuredToPlain(clamp(oldPos)));
+        moveTo(structuredToPlain(clamp(oldPos)), SelectionPolicy.CLEAR);
     }
 
     @Override
@@ -297,10 +296,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         curValue.clear();
         curValue.addAll(newContent);
         selectRange(replacementEnd, replacementEnd);
-        if (autoComplete != null)
-        {
-            autoComplete.update();
-        }
+        updateAutoComplete(getSelection());
     }
 
     protected Optional<ErrorFix> revertEditFix(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this)
@@ -431,9 +427,15 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                 if (before.length() < maxLength(style))
                     return new CharEntryResult(before + cStr, true, false);
                 else
-                    return new CharEntryResult(before, true, true);
+                    return new CharEntryResult(before, true, after.isEmpty());
             }
-            return new CharEntryResult(before, false, true);
+            else
+            {
+                if (after.isEmpty())
+                    return new CharEntryResult(before, false, true);
+                else
+                    return new CharEntryResult(before, true, false);
+            }
         }
         else
             return new CharEntryResult(before + after.trim(), true, true);

@@ -1,6 +1,7 @@
 package records.gui.stf;
 
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import records.error.InternalException;
 import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
@@ -108,6 +109,7 @@ public class YM implements Component<YearMonth>
                 int adjYear = adjustYear2To4(month, yearText, year);
                 field.setItem(ItemVariant.EDITABLE_MONTH, Integer.toString(month));
                 field.setItem(ItemVariant.EDITABLE_YEAR, String.format("%04d", adjYear));
+                field.lineEnd(SelectionPolicy.CLEAR);
                 return Either.right(YearMonth.of(adjYear, month));
             }
         } catch (NumberFormatException | DateTimeException e)
