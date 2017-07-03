@@ -1,5 +1,6 @@
 package test;
 
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.generator.Ctor;
@@ -235,13 +236,13 @@ public class PropTypecheck
             }
 
             @Override
-            public DataType tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public DataType tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return typeManager.registerTaggedType(typeName.getRaw(), Utility.mapListEx(tags, tt -> new TagType<DataType>(tt.getName(), tt.getInner() == null  ? null : blankArray(tt.getInner(), r))));
             }
 
             @Override
-            public DataType tuple(List<DataType> inner) throws InternalException, UserException
+            public DataType tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 return DataType.tuple(Utility.mapListEx(inner, t -> blankArray(t, r)));
             }
@@ -286,13 +287,13 @@ public class PropTypecheck
             }
 
             @Override
-            public DataTypeValue tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public DataTypeValue tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return DataTypeValue.tagged(typeName, Utility.mapListEx(tags, tt -> new TagType<DataTypeValue>(tt.getName(), tt.getInner() == null ? null : toValue(tt.getInner()))), (i, prog) -> {throw new InternalException("");});
             }
 
             @Override
-            public DataTypeValue tuple(List<DataType> inner) throws InternalException, UserException
+            public DataTypeValue tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 return DataTypeValue.tupleV(Utility.mapListEx(inner, t -> toValue(t)));
             }

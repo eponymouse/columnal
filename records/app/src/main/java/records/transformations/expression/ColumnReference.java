@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -165,13 +166,13 @@ public class ColumnReference extends NonOperatorExpression
             }
 
             @Override
-            public Formula tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Formula tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 throw new UserException("Can't do tags...");
             }
 
             @Override
-            public Formula tuple(List<DataType> inner) throws InternalException, UserException
+            public Formula tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 throw new UserException("Can't do tuples...");
             }

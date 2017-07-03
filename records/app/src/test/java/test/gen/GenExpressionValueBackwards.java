@@ -455,7 +455,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
 
             @Override
             @OnThread(Tag.Simulation)
-            public Expression tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Expression tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
@@ -482,7 +482,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
 
             @Override
             @OnThread(Tag.Simulation)
-            public Expression tuple(List<DataType> inner) throws InternalException, UserException
+            public Expression tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 @Value Object[] target = (@Value Object[]) targetValue;
                 List<ExpressionMaker> terminals = new ArrayList<>();
@@ -644,14 +644,14 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Column tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return new MemoryTaggedColumn(rs, name, typeName, tags, Collections.singletonList((TaggedValue) value));
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column tuple(List<DataType> inner) throws InternalException, UserException
+            public Column tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 throw new UnimplementedException();
             }
@@ -750,7 +750,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 return t.apply(new SpecificDataTypeVisitor<Pair<Expression, @Nullable Expression>>()
                 {
                     @Override
-                    public Pair<Expression, @Nullable Expression> tagged(TypeId typeName, List<TagType<DataType>> tagTypes) throws InternalException, UserException
+                    public Pair<Expression, @Nullable Expression> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tagTypes) throws InternalException, UserException
                     {
                         TagType<DataType> tagType = tagTypes.get(p.getTagIndex());
                         @Nullable DataType inner = tagType.getInner();

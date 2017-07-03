@@ -1,5 +1,6 @@
 package records.data;
 
+import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
@@ -43,7 +44,7 @@ public class MemoryTaggedColumn extends EditableColumn
         List<TagType<DataType>> tags = getType().apply(new SpecificDataTypeVisitor<List<TagType<DataType>>>()
         {
             @Override
-            public List<TagType<DataType>> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public List<TagType<DataType>> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return tags;
             }

@@ -1,6 +1,7 @@
 package test.gui;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -243,7 +244,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             }
 
             @Override
-            public Void tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Void tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 clickOnSubOfDataTypeDialog(".id-type-tagged");
                 ComboBox<DataType> combo = (ComboBox<DataType>) lookupSubOfDataTypeDialog(".type-tagged-combo");
@@ -311,7 +312,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             }
 
             @Override
-            public Void tuple(List<DataType> inner) throws InternalException, UserException
+            public Void tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 clickOnSubOfDataTypeDialog(".id-type-tuple");
                 // Should start as pair:
@@ -468,13 +469,13 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             }
 
             @Override
-            public Void tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Void tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return null;
             }
 
             @Override
-            public Void tuple(List<DataType> inner) throws InternalException, UserException
+            public Void tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 return null;
             }

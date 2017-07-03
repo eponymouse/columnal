@@ -1,6 +1,7 @@
 package records.data.datatype;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
@@ -124,7 +125,7 @@ public class DataTypeValue extends DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public Void tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public Void tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 TaggedValue taggedValue = (TaggedValue)value;
                 g.set(rowIndex, taggedValue.getTagIndex());
@@ -140,7 +141,7 @@ public class DataTypeValue extends DataType
             }
 
             @Override
-            public Void tuple(List<DataTypeValue> types) throws InternalException, UserException
+            public Void tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
             {
                 Object[] tuple = (Object[])value;
                 for (int i = 0; i < types.size(); i++)
@@ -214,7 +215,7 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R tagged(TypeId typeName, List<TagType<DataTypeValue>> tags, GetValue<Integer> g) throws InternalException, UserException
+        public R tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tags, GetValue<Integer> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected tagged data type");
         }
@@ -232,7 +233,7 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R tuple(List<DataTypeValue> types) throws InternalException, UserException
+        public R tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
         {
             return defaultOp("Unexpected tuple type");
         }
@@ -251,8 +252,8 @@ public class DataTypeValue extends DataType
         R bool(GetValue<@Value Boolean> g) throws InternalException, E;
         R date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, E;
 
-        R tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
-        R tuple(List<DataTypeValue> types) throws InternalException, E;
+        R tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
+        R tuple(ImmutableList<DataTypeValue> types) throws InternalException, E;
 
         // Each item is a pair of size and accessor.  The inner type gives the type
         // of each entry (but is null when the array is empty)
@@ -280,9 +281,9 @@ public class DataTypeValue extends DataType
             case BOOLEAN:
                 return visitor.bool(getBoolean);
             case TAGGED:
-                return visitor.tagged(taggedTypeName, (List<TagType<DataTypeValue>>)(List)tagTypes, getTag);
+                return visitor.tagged(taggedTypeName, (ImmutableList<TagType<DataTypeValue>>)(ImmutableList)tagTypes, getTag);
             case TUPLE:
-                return visitor.tuple((List<DataTypeValue>)(List)memberType);
+                return visitor.tuple((ImmutableList<DataTypeValue>)(ImmutableList)memberType);
             case ARRAY:
                 DataType arrayType = memberType.get(0);
                 return visitor.array(arrayType, getArrayContent);
@@ -346,7 +347,7 @@ public class DataTypeValue extends DataType
 
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public @Value Object tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public @Value Object tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 Integer tagIndex = g.get(index);
                 @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();;
@@ -355,7 +356,7 @@ public class DataTypeValue extends DataType
 
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public @Value Object tuple(List<DataTypeValue> types) throws InternalException, UserException
+            public @Value Object tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
             {
                 @Value Object [] array = new Object[types.size()];
                 for (int i = 0; i < types.size(); i++)

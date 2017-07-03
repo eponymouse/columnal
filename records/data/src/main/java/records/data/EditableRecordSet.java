@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -99,7 +100,7 @@ public class EditableRecordSet extends RecordSet
             }
 
             @Override
-            public EditableColumn tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public EditableColumn tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 List<TaggedValue> r = new ArrayList<>();
                 for (int i = 0; original.indexValid(i); i++)
@@ -112,7 +113,7 @@ public class EditableRecordSet extends RecordSet
             }
 
             @Override
-            public EditableColumn tuple(List<DataTypeValue> types) throws InternalException, UserException
+            public EditableColumn tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
             {
                 List<Object[]> r = new ArrayList<>();
                 for (int index = 0; original.indexValid(index); index++)

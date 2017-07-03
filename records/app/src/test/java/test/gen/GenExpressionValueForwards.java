@@ -512,7 +512,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
 
             @Override
             @OnThread(value = Tag.Simulation,ignoreParent = true)
-            public Pair<List<@Value Object>, Expression> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Pair<List<@Value Object>, Expression> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
@@ -538,7 +538,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
 
             @Override
             @OnThread(value = Tag.Simulation,ignoreParent = true)
-            public Pair<List<@Value Object>, Expression> tuple(List<DataType> inner) throws InternalException, UserException
+            public Pair<List<@Value Object>, Expression> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 if (inner.size() < 2)
                     throw new InternalException("Invalid tuple type of size " + inner.size() + " during generation");

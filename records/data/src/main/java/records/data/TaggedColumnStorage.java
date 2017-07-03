@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column.ProgressListener;
@@ -215,14 +216,14 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             }
 
             @Override
-            public DataTypeValue tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
+            public DataTypeValue tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
                 throw new InternalException("Argh!");
                 //return DataTypeValue.tagged(typeName, Uti);
             }
 
             @Override
-            public DataTypeValue tuple(List<DataTypeValue> types) throws InternalException
+            public DataTypeValue tuple(ImmutableList<DataTypeValue> types) throws InternalException
             {
                 List<DataTypeValue> reMapped = new ArrayList<>();
                 for (int i = 0; i < types.size(); i++)

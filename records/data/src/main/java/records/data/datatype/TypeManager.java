@@ -1,5 +1,6 @@
 package records.data.datatype;
 
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Table.Saver;
@@ -238,7 +239,7 @@ public class TypeManager
                 }
 
                 @Override
-                public UnitType tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+                public UnitType tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                 {
                     if (!topLevel)
                     {
@@ -257,7 +258,7 @@ public class TypeManager
                 }
 
                 @Override
-                public UnitType tuple(List<DataType> inner) throws InternalException, UserException
+                public UnitType tuple(ImmutableList<DataType> inner) throws InternalException, UserException
                 {
                     for (DataType type : inner)
                     {

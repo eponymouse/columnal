@@ -2,6 +2,7 @@ package records.data.datatype;
 
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -129,7 +130,7 @@ public class DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Column tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return new CachedCalculatedColumn<TaggedColumnStorage>(rs, name, (BeforeGet<TaggedColumnStorage> g) -> new TaggedColumnStorage(typeName, tags, g), cache -> {
                     cache.add(castTo(TaggedValue.class, getItem.apply(cache.filled())));
@@ -138,7 +139,7 @@ public class DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column tuple(List<DataType> inner) throws InternalException, UserException
+            public Column tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 return new CachedCalculatedColumn<TupleColumnStorage>(rs, name, (BeforeGet<TupleColumnStorage> g) -> new TupleColumnStorage(inner, g), cache -> {
                     cache.add(castTo(Object[].class, getItem.apply(cache.filled())));
@@ -205,7 +206,7 @@ public class DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public DataTypeValue tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public DataTypeValue tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 GetValue<TaggedValue> getTaggedValue = castTo(TaggedValue.class);
                 return DataTypeValue.tagged(typeName, Utility.mapListEx(tags, tag -> {
@@ -224,7 +225,7 @@ public class DataType
             @Override
             @OnThread(Tag.Simulation)
             @SuppressWarnings("value")
-            public DataTypeValue tuple(List<DataType> inner) throws InternalException, UserException
+            public DataTypeValue tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 List<DataTypeValue> innerValues = new ArrayList<>();
                 for (int type = 0; type < inner.size(); type++)
@@ -262,10 +263,10 @@ public class DataType
     final @Nullable DateTimeInfo dateTimeInfo;
     // For TAGGED:
     final @Nullable TypeId taggedTypeName;
-    final @Nullable List<TagType<DataType>> tagTypes;
+    final @Nullable ImmutableList<TagType<DataType>> tagTypes;
     // For TUPLE (2+) and ARRAY (1).  If ARRAY and memberType is empty, indicates
     // the empty array (which can type-check against any array type)
-    final @Nullable List<DataType> memberType;
+    final @Nullable ImmutableList<DataType> memberType;
 
     // package-visible
     DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataType>>> tagInfo, @Nullable List<DataType> memberType)
@@ -274,8 +275,8 @@ public class DataType
         this.numberInfo = numberInfo;
         this.dateTimeInfo = dateTimeInfo;
         this.taggedTypeName = tagInfo == null ? null : tagInfo.getFirst();
-        this.tagTypes = tagInfo == null ? null : tagInfo.getSecond();
-        this.memberType = memberType;
+        this.tagTypes = tagInfo == null ? null : ImmutableList.copyOf(tagInfo.getSecond());
+        this.memberType = memberType == null ? null : ImmutableList.copyOf(memberType);
     }
 
     public static final DataType NUMBER = DataType.number(NumberInfo.DEFAULT);
@@ -314,8 +315,8 @@ public class DataType
         R date(DateTimeInfo dateTimeInfo) throws InternalException, E;
         R bool() throws InternalException, E;
 
-        R tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, E;
-        R tuple(List<DataType> inner) throws InternalException, E;
+        R tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, E;
+        R tuple(ImmutableList<DataType> inner) throws InternalException, E;
         // If null, array is empty and thus of unknown type
         R array(@Nullable DataType inner) throws InternalException, E;
     }
@@ -340,7 +341,7 @@ public class DataType
         }
 
         @Override
-        public R tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+        public R tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
         {
             throw new InternalException("Unexpected tagged data type");
         }
@@ -358,7 +359,7 @@ public class DataType
         }
 
         @Override
-        public R tuple(List<DataType> inner) throws InternalException, UserException
+        public R tuple(ImmutableList<DataType> inner) throws InternalException, UserException
         {
             throw new InternalException("Unexpected tuple type");
         }
@@ -483,13 +484,13 @@ public class DataType
             }
 
             @Override
-            public String tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public String tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return typeName.getRaw();
             }
 
             @Override
-            public String tuple(List<DataType> inner) throws InternalException, UserException
+            public String tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 StringBuilder s = new StringBuilder("(");
                 boolean first = true;
@@ -1021,14 +1022,14 @@ public class DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public ExFunction<RecordSet, EditableColumn> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public ExFunction<RecordSet, EditableColumn> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return rs -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Utility.mapListEx(value, Utility::valueTagged));
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public ExFunction<RecordSet, EditableColumn> tuple(List<DataType> inner) throws InternalException, UserException
+            public ExFunction<RecordSet, EditableColumn> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 return rs -> new MemoryTupleColumn(rs, columnId, inner, Utility.mapListEx(value, t -> Utility.valueTuple(t, inner.size())));
             }
@@ -1109,7 +1110,7 @@ public class DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnMaker<?> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public ColumnMaker<?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return new ColumnMaker<MemoryTaggedColumn>(rs -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Collections.emptyList()), (column, data) -> {
                     TaggedContext b = data.tagged();
@@ -1121,7 +1122,7 @@ public class DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnMaker<?> tuple(List<DataType> inner) throws InternalException, UserException
+            public ColumnMaker<?> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 return new ColumnMaker<MemoryTupleColumn>(rs -> new MemoryTupleColumn(rs, columnId, inner), (column, data) -> {
                     TupleContext c = data.tuple();
@@ -1251,13 +1252,13 @@ public class DataType
             }
 
             @Override
-            public @Value Object tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public @Value Object tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return loadValue(tags, item.tagged());
             }
 
             @Override
-            public @Value Object tuple(List<DataType> inner) throws InternalException, UserException
+            public @Value Object tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 TupleContext tupleContext = item.tuple();
                 if (tupleContext == null)
@@ -1348,7 +1349,7 @@ public class DataType
 
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public UnitType tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, InternalException
+            public UnitType tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
                 b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
                 if (topLevelDeclaration)
@@ -1371,7 +1372,7 @@ public class DataType
 
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public UnitType tuple(List<DataType> inner) throws InternalException, InternalException
+            public UnitType tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
             {
                 b.t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
                 boolean first = true;
@@ -1404,7 +1405,7 @@ public class DataType
     {
         return apply(new SpecificDataTypeVisitor<Boolean>() {
             @Override
-            public Boolean tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public Boolean tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return tags.stream().anyMatch(tt -> tt.getName().equals(tagName));
             }

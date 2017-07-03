@@ -41,6 +41,7 @@ import records.gui.stf.NumberEntry;
 import records.gui.stf.PlusMinusOffsetComponent;
 import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.Component;
+import records.gui.stf.TaggedComponent;
 import records.gui.stf.TextEntry;
 import records.gui.stf.TimeComponent;
 import records.gui.stf.YM;
@@ -50,6 +51,7 @@ import threadchecker.Tag;
 import utility.FXPlatformFunctionInt;
 import utility.FXPlatformRunnable;
 import utility.Pair;
+import utility.TaggedValue;
 import utility.Utility;
 import records.gui.stable.StableView.ColumnHandler;
 import records.gui.stable.StableView.CellContentReceiver;
@@ -252,14 +254,14 @@ public class TableDisplayUtility
             }
 
             @Override
-            public ColumnHandler tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public ColumnHandler tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 throw new UnimplementedException();
             }
 
             @Override
             @OnThread(Tag.FXPlatform)
-            public ColumnHandler tuple(List<DataTypeValue> types) throws InternalException, UserException
+            public ColumnHandler tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
             {
                 return makeField(column.getType());
             }
@@ -352,14 +354,15 @@ public class TableDisplayUtility
             }
 
             @Override
-            public GetValueAndComponent<?> tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
+            public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
-                throw new UnimplementedException();
+                GetValue<TaggedValue> getTagged = DataTypeUtility.toTagged(g, tagTypes);
+                return new GetValueAndComponent<>(getTagged, v -> new TaggedComponent(tagTypes, v));
             }
 
             @Override
             @OnThread(Tag.FXPlatform)
-            public GetValueAndComponent<?> tuple(List<DataTypeValue> types) throws InternalException
+            public GetValueAndComponent<?> tuple(ImmutableList<DataTypeValue> types) throws InternalException
             {
                 List<GetValueAndComponent<?>> gvacs = new ArrayList<>(types.size());
                 for (DataTypeValue type : types)

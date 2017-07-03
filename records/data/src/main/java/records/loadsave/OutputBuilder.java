@@ -1,6 +1,7 @@
 package records.loadsave;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.antlr.v4.runtime.Vocabulary;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -212,7 +213,7 @@ public class OutputBuilder
 
             @Override
             @OnThread(Tag.Simulation)
-            public String tagged(TypeId typeName, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public String tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 TagType<DataTypeValue> t = tagTypes.get(g.get(index));
                 @Nullable DataTypeValue inner = t.getInner();
@@ -238,7 +239,7 @@ public class OutputBuilder
 
             @Override
             @OnThread(Tag.Simulation)
-            public String tuple(List<DataTypeValue> types) throws InternalException, UserException
+            public String tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
             {
                 OutputBuilder b = new OutputBuilder();
                 b.raw("(");

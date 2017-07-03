@@ -1,6 +1,7 @@
 package test.gen;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.time.ZoneOffsetGenerator;
@@ -101,7 +102,7 @@ public abstract class GenValueBase<T> extends Generator<T>
             }
 
             @Override
-            public @Value Object tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public @Value Object tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 @Nullable @Value Object o;
@@ -114,7 +115,7 @@ public abstract class GenValueBase<T> extends Generator<T>
             }
 
             @Override
-            public @Value Object tuple(List<DataType> inner) throws InternalException, UserException
+            public @Value Object tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 return DataTypeUtility.value(Utility.mapListEx(inner, t -> makeValue(t)).toArray(new @Value Object[0]));
             }

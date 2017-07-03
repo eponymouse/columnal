@@ -3,10 +3,12 @@ package records.data.datatype;
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import annotation.userindex.qual.UserIndex;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ArrayColumnStorage;
 import records.data.BooleanColumnStorage;
+import records.data.Column.ProgressListener;
 import records.data.ColumnStorage;
 import records.data.ColumnStorage.BeforeGet;
 import records.data.NumericColumnStorage;
@@ -18,6 +20,7 @@ import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.DataTypeValue.GetValue;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
@@ -76,7 +79,7 @@ public class DataTypeUtility
             }
 
             @Override
-            public @Value TaggedValue tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException, UserException
+            public @Value TaggedValue tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tag = index % tags.size();
                 @Nullable DataType inner = tags.get(tag).getInner();
@@ -87,7 +90,7 @@ public class DataTypeUtility
             }
 
             @Override
-            public @Value Object tuple(List<DataType> inner) throws InternalException, UserException
+            public @Value Object tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 return value(Utility.<DataType, @Value Object>mapListEx(inner, t -> generateExample(t, index)).toArray(new @Value Object[0]));
             }
@@ -135,14 +138,14 @@ public class DataTypeUtility
 
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnStorage<?> tagged(TypeId typeName, List<TagType<DataType>> tags) throws InternalException
+            public ColumnStorage<?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
                 return new TaggedColumnStorage(typeName, tags, (BeforeGet<TaggedColumnStorage>)beforeGet);
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnStorage<?> tuple(List<DataType> innerTypes) throws InternalException
+            public ColumnStorage<?> tuple(ImmutableList<DataType> innerTypes) throws InternalException
             {
                 return new TupleColumnStorage(innerTypes, beforeGet);
             }
@@ -283,5 +286,41 @@ public class DataTypeUtility
     public static DataTypeValue listToType(DataType elementType, ListEx listEx) throws InternalException, UserException
     {
         return elementType.fromCollapsed((i, prog) -> listEx.get(i));
+    }
+
+    public static GetValue<TaggedValue> toTagged(GetValue<Integer> g, ImmutableList<TagType<DataTypeValue>> tagTypes)
+    {
+        return new GetValue<TaggedValue>()
+        {
+            @Override
+            public TaggedValue getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+            {
+                int tagIndex = g.getWithProgress(index, progressListener);
+                @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();
+                if (inner == null)
+                {
+                    return new TaggedValue(tagIndex, null);
+                }
+                else
+                {
+                    @Value Object innerVal = inner.getCollapsed(index);
+                    return new TaggedValue(tagIndex, innerVal);
+                }
+            }
+
+            @Override
+            public @OnThread(Tag.Simulation) void set(int index, TaggedValue value) throws InternalException, UserException
+            {
+                g.set(index, value.getTagIndex());
+                @Nullable DataTypeValue inner = tagTypes.get(value.getTagIndex()).getInner();
+                if (inner != null)
+                {
+                    @Nullable @Value Object innerVal = value.getInner();
+                    if (innerVal == null)
+                        throw new InternalException("Inner type present but not inner value " + tagTypes);
+                    inner.setCollapsed(index, innerVal);
+                }
+            }
+        };
     }
 }
