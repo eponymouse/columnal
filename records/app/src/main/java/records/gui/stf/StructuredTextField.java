@@ -427,11 +427,11 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                 if (before.length() < maxLength(style))
                     return new CharEntryResult(before + cStr, true, false);
                 else
-                    return new CharEntryResult(before, true, after.isEmpty());
+                    return new CharEntryResult(before, true, !before.isEmpty() && after.isEmpty());
             }
             else
             {
-                if (after.isEmpty())
+                if (!before.isEmpty() && after.isEmpty())
                     return new CharEntryResult(before, false, true);
                 else
                     return new CharEntryResult(before, true, false);
@@ -446,6 +446,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     {
         switch (style)
         {
+            case TAG_NAME:
+                return Character.isAlphabetic(c) || c == '_' || (!before.isEmpty() && c >= '0' && c <= '9');
             case EDITABLE_TEXT:
                 return true;
             case EDITABLE_NUMBER:

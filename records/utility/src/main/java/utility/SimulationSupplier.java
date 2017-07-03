@@ -12,5 +12,6 @@ import threadchecker.Tag;
 @OnThread(Tag.Simulation)
 public interface SimulationSupplier<T>
 {
+    @OnThread(Tag.Simulation)
     public T get() throws InternalException, UserException;
 }

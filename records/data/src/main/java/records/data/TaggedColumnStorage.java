@@ -218,8 +218,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             @Override
             public DataTypeValue tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
-                throw new InternalException("Argh!");
-                //return DataTypeValue.tagged(typeName, Uti);
+                return DataTypeValue.tagged(typeName, Utility.mapListInt(tagTypes, (TagType<DataTypeValue> tt) -> new TagType<DataTypeValue>(tt.getName(), tt.getInner() == null ? null : TaggedColumnStorage.this.reMap(tt.getInner(), OptionalInt.empty()))), reMap(g));
             }
 
             @Override

@@ -1,13 +1,8 @@
 package test.gui;
 
-import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
-import com.pholser.junit.quickcheck.generator.Generator;
-import com.pholser.junit.quickcheck.generator.java.lang.AbstractStringGenerator;
 import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
-import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -32,10 +27,10 @@ import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.ColumnId;
 import records.data.EditableRecordSet;
-import records.data.TemporalColumnStorage;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.NumberInfo;
@@ -44,11 +39,9 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.TableDisplayUtility.DisplayCacheSTF;
 import records.gui.stable.StableView;
-import records.gui.stf.STFAutoComplete;
 import records.gui.stf.STFAutoCompleteCell;
 import records.gui.stf.StructuredTextField;
 import records.gui.TableDisplayUtility;
-import test.gen.GenDataType.GenTaggedType;
 import test.gen.GenDate;
 import test.gen.GenDateTime;
 import test.gen.GenNumber;
@@ -63,11 +56,11 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
+import utility.SimulationSupplier;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
-import utility.Workers.Worker;
 import utility.gui.FXUtility;
 
 import java.math.BigDecimal;
@@ -112,6 +105,7 @@ import static org.junit.Assert.fail;
 import static org.junit.Assume.assumeThat;
 import static test.TestUtil.fx;
 import static test.TestUtil.fx_;
+import static test.TestUtil.sim;
 
 /**
  * Created by neil on 19/06/2017.
@@ -657,7 +651,7 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
     @Property(trials = 20)
-    public void propNumberPair(@From(GenNumberAsString.class) String numAsStringA, @From(GenNumberAsString.class) String numAsStringB, @From(GenNumber.class) Number initial) throws InternalException
+    public void propNumberPair(@From(GenNumberAsString.class) String numAsStringA, @From(GenNumberAsString.class) String numAsStringB, @From(GenNumber.class) Number initial, boolean space) throws InternalException
     {
         BigDecimal numA = new BigDecimal(numAsStringA, MathContext.DECIMAL128);
         BigDecimal numB = new BigDecimal(numAsStringB, MathContext.DECIMAL128);
@@ -666,7 +660,7 @@ public class TestStructuredTextField extends ApplicationTest
         targetF();
         pushSelectAll();
         type("", "(^" + initial.toString() + "," + initial.toString() + "$)");
-        type(numAsStringA + "," + numAsStringB, "(" + numAsStringA + "," + numAsStringB + "^$)", new Object[]{numA, numB});
+        type(numAsStringA + "," + (space ? " " : "") + numAsStringB, "(" + numAsStringA + "," + numAsStringB + "^$)", new Object[]{numA, numB});
         targetF();
         push(KeyCode.END);
         type("", "(" + numAsStringA + "," + numAsStringB + "^$)");
@@ -860,15 +854,26 @@ public class TestStructuredTextField extends ApplicationTest
         targetF();
         pushSelectAll();
         TaggedValue value = (TaggedValue)taggedTypeAndValueGen.makeValue();
-        String tagName = taggedTypeAndValueGen.getType().getTagTypes().get(value.getTagIndex()).getName();
-        type(tagName, tagName + "$ ");
+        TagType<DataType> tag = taggedTypeAndValueGen.getType().getTagTypes().get(value.getTagIndex());
+        String tagName = tag.getName();
+        type(tagName, tagName + "$");
         if (value.getInner() == null)
         {
-            type("", tagName + "$ ", value);
+            type("", tagName + "$", value);
         }
         else
         {
             // TODO get text for inner item, enter that, check value.
+            String inner = sim(new SimulationSupplier<String>()
+            {
+                @Override
+                @OnThread(Tag.Simulation)
+                public String get() throws InternalException, UserException
+                {
+                    return DataTypeUtility.valueToString(tag.getInner(), value.getInner());
+                }
+            });
+            type(inner, tagName + "(" + inner + ")$", value);
         }
     }
 

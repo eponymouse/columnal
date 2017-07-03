@@ -283,6 +283,89 @@ public class DataTypeUtility
         return item.toString();
     }
 
+    @OnThread(Tag.Simulation)
+    public static String valueToString(DataType dataType, @Value Object item) throws UserException, InternalException
+    {
+        return dataType.apply(new DataTypeVisitor<String>()
+        {
+            @Override
+            public String number(NumberInfo numberInfo) throws InternalException, UserException
+            {
+                return item.toString();
+            }
+
+            @Override
+            public String text() throws InternalException, UserException
+            {
+                return item.toString();
+            }
+
+            @Override
+            public String date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            {
+                return item.toString();
+            }
+
+            @Override
+            public String bool() throws InternalException, UserException
+            {
+                return item.toString();
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public String tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            {
+                TaggedValue tv = (TaggedValue)item;
+                String tagName = tags.get(tv.getTagIndex()).getName();
+                @Nullable @Value Object tvInner = tv.getInner();
+                if (tvInner != null)
+                {
+                    @Nullable DataType typeInner = tags.get(tv.getTagIndex()).getInner();
+                    if (typeInner == null)
+                        throw new InternalException("Tag value inner but missing type inner: " + typeName + " " + tagName);
+                    return tagName + "(" + valueToString(typeInner, tvInner);
+                }
+                else
+                {
+                    return tagName;
+                }
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public String tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            {
+                @Value Object[] tuple = (@Value Object[])item;
+                StringBuilder s = new StringBuilder("(");
+                for (int i = 0; i < tuple.length; i++)
+                {
+                    if (i != 0)
+                        s.append(", ");
+                    s.append(valueToString(inner.get(i), tuple[i]));
+                }
+                return s.append(")").toString();
+            }
+
+            @Override
+            @OnThread(Tag.Simulation)
+            public String array(@Nullable DataType inner) throws InternalException, UserException
+            {
+                StringBuilder s = new StringBuilder("[");
+                ListEx listEx = (ListEx)item;
+                for (int i = 0; i < listEx.size(); i++)
+                {
+                    if (i != 0)
+                        s.append(", ");
+                    if (inner == null)
+                        throw new InternalException("Array has empty type but is not empty");
+                    s.append(valueToString(inner, listEx.get(i)));
+                }
+                return s.append("]").toString();
+            }
+        });
+    }
+
     public static DataTypeValue listToType(DataType elementType, ListEx listEx) throws InternalException, UserException
     {
         return elementType.fromCollapsed((i, prog) -> listEx.get(i));

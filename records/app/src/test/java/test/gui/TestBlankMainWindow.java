@@ -44,17 +44,11 @@ import test.gen.GenTypeAndValueGen;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.SimulationSupplier;
-import utility.Utility;
-import utility.Workers;
-import utility.Workers.Priority;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Predicate;
 
 import static org.junit.Assert.*;
@@ -96,30 +90,6 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         assertTrue(TestUtil.fx(() -> mainWindow.isShowing()));
         assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().size()));
         assertTrue(TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().isEmpty()));
-    }
-
-    @OnThread(Tag.Any)
-    private static <T> T sim(SimulationSupplier<T> action)
-    {
-        try
-        {
-            CompletableFuture<T> f = new CompletableFuture<>();
-            Workers.onWorkerThread("Test.sim", Priority.FETCH, () -> {
-                try
-                {
-                    f.complete(action.get());
-                }
-                catch (Exception e)
-                {
-                    Utility.log(e);
-                }
-            });
-            return f.get(3, TimeUnit.SECONDS);
-        }
-        catch (Exception e)
-        {
-            throw new RuntimeException(e);
-        }
     }
 
     @Test
@@ -404,11 +374,11 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         // Now test for equality:
         @OnThread(Tag.Any) RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
         DataTypeValue column = recordSet.getColumns().get(0).getType();
-        assertEquals(values.size(), (int)sim(() -> recordSet.getLength()));
+        assertEquals(values.size(), (int) TestUtil.sim(() -> recordSet.getLength()));
         for (int i = 0; i < values.size(); i++)
         {
             int iFinal = i;
-            TestUtil.assertValueEqual("Index " + i, values.get(i), sim(() -> column.getCollapsed(iFinal)));
+            TestUtil.assertValueEqual("Index " + i, values.get(i), TestUtil.sim(() -> column.getCollapsed(iFinal)));
         }
     }
 

@@ -47,6 +47,8 @@ import utility.ExSupplier;
 import utility.Pair;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Workers;
+import utility.Workers.Priority;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -62,6 +64,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -552,6 +556,30 @@ public class TestUtil
         try
         {
             WaitForAsyncUtils.asyncFx(action::run).get();
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @OnThread(Tag.Any)
+    public static <T> T sim(SimulationSupplier<T> action)
+    {
+        try
+        {
+            CompletableFuture<T> f = new CompletableFuture<>();
+            Workers.onWorkerThread("Test.sim", Priority.FETCH, () -> {
+                try
+                {
+                    f.complete(action.get());
+                }
+                catch (Exception e)
+                {
+                    Utility.log(e);
+                }
+            });
+            return f.get(3, TimeUnit.SECONDS);
         }
         catch (Exception e)
         {
