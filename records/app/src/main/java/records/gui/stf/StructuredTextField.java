@@ -106,7 +106,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         @Nullable T val = endEdit().<@Nullable T>either(err -> null, v -> v);
         if (val == null)
         {
-            throw new InternalException("Starting field off with invalid completed value: " + Utility.listToString(Utility.mapList(initialItems, item -> item.getScreenText())));
+            throw new InternalException("Starting field off with invalid completed value: " + Utility.listToString(Utility.<Item, String>mapList(initialItems, item -> item.getScreenText())));
         }
         completedValue = val;
         lastValidValue = captureState();
@@ -128,7 +128,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         {
             // See if there are any relevant suggestions:
             @Nullable Entry<Integer, List<Suggestion>> possSugg = new TreeMap<>(suggestions.stream().filter(s -> s.startIndexIncl <= selStr.getFirst() && selStr.getFirst() <= s.endIndexIncl)
-                .collect(Collectors.groupingBy(s -> s.getLength()))).firstEntry();
+                .collect(Collectors.<Suggestion, Integer>groupingBy(s -> s.getLength()))).firstEntry();
             if (possSugg != null && possSugg.getValue().size() > 0) // Size should always be > 0, but just in case
             {
                 int startCharIndex = structuredToPlain(new Pair<>(possSugg.getValue().get(0).startIndexIncl, 0));
@@ -217,7 +217,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
     protected void setItem(ItemVariant item, String content)
     {
-        curValue.replaceAll(old -> old.itemVariant == item ? new Item(content, item, old.prompt) : old);
+        curValue.replaceAll(old -> old.itemVariant == item ? new Item(old.parent, content, item, old.prompt) : old);
         Pair<Integer, Integer> oldPos = plainToStructured(getCaretPosition());
         super.replace(0, getLength(), makeDoc(curValue));
         moveTo(structuredToPlain(clamp(oldPos)), SelectionPolicy.CLEAR);
@@ -251,7 +251,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
             if (spanEnd <= start)
             {
-                newContent.add(new Item(existing.get(curExisting).content, existing.get(curExisting).itemVariant, existing.get(curExisting).prompt));
+                Item existingItem = existing.get(curExisting);
+                newContent.add(new Item(existingItem.parent, existingItem.content, existingItem.itemVariant, existingItem.prompt));
                 curExisting += 1;
                 curStart = spanEnd;
             }
@@ -283,7 +284,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                 if (result.moveToNext)
                     break;
             }
-            newContent.add(new Item(cur, curStyle, existingItem.prompt));
+            newContent.add(new Item(existingItem.parent, cur, curStyle, existingItem.prompt));
             next = Arrays.copyOfRange(next, nextChar, next.length);
             curStart += existingItem.getLength();
             curExisting += 1;
@@ -297,6 +298,10 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         curValue.addAll(newContent);
         selectRange(replacementEnd, replacementEnd);
         updateAutoComplete(getSelection());
+        for (Item item : curValue)
+        {
+            item.parent.valueIsNow(item);
+        }
     }
 
     protected Optional<ErrorFix> revertEditFix(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this)
@@ -671,18 +676,20 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     @OnThread(Tag.FXPlatform)
     public static class Item
     {
+        private final Component<?> parent;
         private final String content;
         private final ItemVariant itemVariant;
         private final @Localized String prompt;
 
         // Divider:
-        public Item(String divider)
+        public Item(Component<?> parent, String divider)
         {
-            this(divider, ItemVariant.DIVIDER, "");
+            this(parent, divider, ItemVariant.DIVIDER, "");
         }
 
-        public Item(String content, ItemVariant ItemVariant, @Localized String prompt)
+        public Item(Component<?> parent, String content, ItemVariant ItemVariant, @Localized String prompt)
         {
+            this.parent = parent;
             this.content = content;
             this.itemVariant = ItemVariant;
             this.prompt = prompt;
@@ -717,6 +724,11 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         {
             return content;
         }
+
+        public ItemVariant getType()
+        {
+            return itemVariant;
+        }
     }
 
     @OnThread(Tag.FXPlatform)
@@ -733,6 +745,14 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         {
             return curValue.stream().filter(ss -> ss.itemVariant == item).findFirst().map(ss -> ss.content).orElse("");
         }
+
+        /**
+         * This method isn't called valueChanged, because it may be called even if the value hasn't changed.
+         * It's just called on all values when any of them change.
+         *
+         * @return If present, the list of items to replace *all* this component's items with.  If empty, nothing happens.
+         */
+        public default Optional<List<Item>> valueIsNow(Item item) { return Optional.empty(); };
     }
 
     public static class Suggestion

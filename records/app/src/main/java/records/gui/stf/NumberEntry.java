@@ -27,7 +27,7 @@ public class NumberEntry implements Component<Number>
     @Override
     public List<Item> getItems()
     {
-        return Collections.singletonList(new Item(initial instanceof BigDecimal ? ((BigDecimal)initial).toPlainString() : initial.toString(), ItemVariant.EDITABLE_NUMBER, ""));
+        return Collections.singletonList(new Item(this, initial instanceof BigDecimal ? ((BigDecimal)initial).toPlainString() : initial.toString(), ItemVariant.EDITABLE_NUMBER, ""));
     }
 
     @Override

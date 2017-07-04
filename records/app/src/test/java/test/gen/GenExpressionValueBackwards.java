@@ -247,7 +247,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 {
                     case YEARMONTHDAY:
                     {
-                        DateTimeType dateTimeType = r.choose(Arrays.asList(DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
+                        @NonNull DateTimeType dateTimeType = r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
                         DataType t = DataType.date(new DateTimeInfo(dateTimeType));
                         deep.add(() -> new CallExpression("date", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
                         LocalDate target = (LocalDate) targetValue;
@@ -264,7 +264,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         break;
                     case YEARMONTH:
                     {
-                        DateTimeType dateTimeType = r.choose(Arrays.asList(DateTimeType.YEARMONTHDAY, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
+                        DateTimeType dateTimeType = r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
                         DataType t = DataType.date(new DateTimeInfo(dateTimeType));
                         deep.add(() -> new CallExpression("dateym", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
                         YearMonth target = (YearMonth) targetValue;
@@ -276,7 +276,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         break;
                     case TIMEOFDAY:
                     {
-                        DateTimeType dateTimeType = r.choose(Arrays.asList(DateTimeType.TIMEOFDAYZONED, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
+                        DateTimeType dateTimeType = r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAYZONED, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
                         DataType t = DataType.date(new DateTimeInfo(dateTimeType));
                         deep.add(() -> new CallExpression("time", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
                         LocalTime target = (LocalTime) targetValue;
@@ -290,7 +290,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         break;
                     case TIMEOFDAYZONED:
                     {
-                        DateTimeType dateTimeType = r.choose(Arrays.asList(DateTimeType.DATETIMEZONED));
+                        DateTimeType dateTimeType = r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIMEZONED));
                         DataType t = DataType.date(new DateTimeInfo(dateTimeType));
                         deep.add(() -> new CallExpression("timez", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
                         OffsetTime target = (OffsetTime) targetValue;
@@ -590,7 +590,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
     private Unit makeUnit() throws InternalException, UserException
     {
         UnitManager m = DummyManager.INSTANCE.getUnitManager();
-        return r.choose(Arrays.asList(
+        return r.<@NonNull Unit>choose(Arrays.asList(
             m.loadUse("m"),
             m.loadUse("cm"),
             m.loadUse("inch"),

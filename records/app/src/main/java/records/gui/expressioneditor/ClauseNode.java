@@ -124,7 +124,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
 
     private void updateNodes(@UnknownInitialization(ClauseNode.class) ClauseNode this)
     {
-        List<Node> childrenNodes = new ArrayList<Node>(Stream.concat(
+        List<Node> childrenNodes = new ArrayList<Node>(Stream.<Node>concat(
             matches.stream().flatMap((Pair<ConsecutiveBase, @Nullable ConsecutiveBase> p) -> Stream.concat(p.getFirst().nodes().stream(), p.getSecond() == null ? Stream.<@NonNull Node>empty() : p.getSecond().nodes().stream())),
             outcome.nodes().stream()).collect(Collectors.<Node>toList()));
         nodes.setAll(childrenNodes);

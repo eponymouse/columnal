@@ -35,7 +35,7 @@ public class Either<A, B>
     }
 
     @SuppressWarnings("nullness") // No annotation to explain this is safe
-    public <R> R either(Function<A, R> withLeft, Function<B, R> withRight)
+    public <R> R either(Function<? super A, R> withLeft, Function<? super B, R> withRight)
     {
         if (isA)
             return withLeft.apply(a);
@@ -44,7 +44,7 @@ public class Either<A, B>
     }
 
     @SuppressWarnings("nullness") // No annotation to explain this is safe
-    public void either_(Consumer<A> withLeft, Consumer<B> withRight)
+    public void either_(Consumer<? super A> withLeft, Consumer<? super B> withRight)
     {
         if (isA)
             withLeft.accept(a);
@@ -55,7 +55,7 @@ public class Either<A, B>
     // Bit like liftA2/liftM2 for Either monad, but it does examine both Eithers
     // and it concatenates the errors rather than just using the first one
     // Right is only returned if both inputs are right, otherwise Left will be returned.
-    public static <E, A, B, C> Either<List<E>, C> combineConcatError(Either<List<E>, A> ea, Either<List<E>, B> eb, BiFunction<A, B, C> combine)
+    public static <E, A, B, C> Either<List<E>, C> combineConcatError(Either<List<E>, ? extends A> ea, Either<List<E>, ? extends B> eb, BiFunction<A, B, C> combine)
     {
         return ea.either(errsA -> eb.either(errsB -> Either.left(Utility.concat(errsA, errsB)), bx -> Either.left(errsA)),
                   ax -> eb.either(errsB -> Either.left(errsB), bx -> Either.right(combine.apply(ax, bx))));

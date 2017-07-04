@@ -215,7 +215,7 @@ public class IfThenElseNode implements OperandNode, ExpressionParent, ErrorDispl
     @Override
     public Stream<String> getParentStyles()
     {
-        return Stream.concat(parent.getParentStyles(), Stream.of("if-parent"));
+        return Stream.<String>concat(parent.getParentStyles(), Stream.of("if-parent"));
     }
 
     @Override

@@ -1,6 +1,7 @@
 package test;
 
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.checkerframework.checker.nullness.qual.NonNull;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -22,7 +23,7 @@ public class TestTextFile
 
     public TestTextFile(SourceOfRandomness rnd) throws IOException
     {
-        charset = rnd.choose(Charset.availableCharsets().values().stream().filter(c -> !c.displayName().contains("JIS") && !c.displayName().contains("2022") && !c.displayName().contains("IBM")).collect(Collectors.<Charset>toList()));
+        charset = rnd.<@NonNull Charset>choose(Charset.availableCharsets().values().stream().filter(c -> !c.displayName().contains("JIS") && !c.displayName().contains("2022") && !c.displayName().contains("IBM")).collect(Collectors.<Charset>toList()));
         file = File.createTempFile("aaa", "bbb");
         file.deleteOnExit();
 

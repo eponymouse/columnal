@@ -36,8 +36,8 @@ public class PropUtility
             for (int maxDP = Math.max(1, minDP); maxDP <= 20; maxDP++)
             {
                 String fracPartAsString = Utility.getFracPartAsString(n, minDP, maxDP);
-                assertThat(fracPartAsString.length(), Matchers.greaterThanOrEqualTo(minDP));
-                assertThat(fracPartAsString.length(), Matchers.lessThanOrEqualTo(maxDP));
+                assertThat(fracPartAsString.length(), Matchers.<Integer>greaterThanOrEqualTo(minDP));
+                assertThat(fracPartAsString.length(), Matchers.<Integer>lessThanOrEqualTo(maxDP));
                 if (!fracPartAsString.isEmpty())
                     fracPartAsString = "." + fracPartAsString;
                 if (fracPartAsString.endsWith("\u2026"))

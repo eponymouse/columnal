@@ -27,7 +27,7 @@ public class BoolEntry implements Component<Boolean>
     @Override
     public List<Item> getItems()
     {
-        return Collections.singletonList(new Item(Boolean.toString(initial), ItemVariant.EDITABLE_BOOLEAN, ""));
+        return Collections.singletonList(new Item(this, Boolean.toString(initial), ItemVariant.EDITABLE_BOOLEAN, ""));
     }
 
     @Override

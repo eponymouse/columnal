@@ -1,6 +1,5 @@
 package utility.gui;
 
-import edu.emory.mathcs.backport.java.util.Collections;
 import javafx.animation.KeyFrame;
 import javafx.animation.KeyValue;
 import javafx.animation.Timeline;

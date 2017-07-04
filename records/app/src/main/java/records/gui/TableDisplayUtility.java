@@ -22,6 +22,7 @@ import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGetEx;
@@ -70,6 +71,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -357,7 +359,7 @@ public class TableDisplayUtility
             public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
                 GetValue<TaggedValue> getTagged = DataTypeUtility.toTagged(g, tagTypes);
-                return new GetValueAndComponent<>(getTagged, v -> new TaggedComponent(tagTypes, v));
+                return new GetValueAndComponent<TaggedValue>(getTagged, v -> new TaggedComponent(tagTypes, v));
             }
 
             @Override
@@ -409,6 +411,77 @@ public class TableDisplayUtility
 
             @Override
             public GetValueAndComponent<?> array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException
+            {
+                throw new UnimplementedException();
+            }
+        });
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static Component<@NonNull ?> component(DataType dataType) throws InternalException
+    {
+        return dataType.apply(new DataTypeVisitorEx<Component<@NonNull ?>, InternalException>()
+        {
+            @Override
+            public Component<@NonNull ?> number(NumberInfo displayInfo) throws InternalException
+            {
+                return new NumberEntry(0);
+            }
+
+            @Override
+            public Component<@NonNull ?> text() throws InternalException
+            {
+                return new TextEntry("");
+            }
+
+            @Override
+            public Component<@NonNull ?> bool() throws InternalException
+            {
+                return new BoolEntry(false);
+            }
+
+            @Override
+            @OnThread(Tag.FXPlatform)
+            public Component<@NonNull ?> date(DateTimeInfo dateTimeInfo) throws InternalException
+            {
+                switch (dateTimeInfo.getType())
+                {
+                    case YEARMONTHDAY:
+                        return new YMD(dateTimeInfo.getDefaultValue());
+                    case YEARMONTH:
+                        return new YM(dateTimeInfo.getDefaultValue());
+                    case TIMEOFDAY:
+                        return new TimeComponent(dateTimeInfo.getDefaultValue());
+                    case TIMEOFDAYZONED:
+                        return new PlusMinusOffsetComponent<>(new TimeComponent(dateTimeInfo.getDefaultValue()), dateTimeInfo.getDefaultValue().get(ChronoField.OFFSET_SECONDS), OffsetTime::of);
+                    case DATETIME:
+                        return new Component2<LocalDateTime, LocalDate, LocalTime>(new YMD(dateTimeInfo.getDefaultValue()), " ", new TimeComponent(dateTimeInfo.getDefaultValue()), LocalDateTime::of);
+                    case DATETIMEZONED:
+                        break;
+                }
+                throw new InternalException("Unknown type: " + dateTimeInfo.getType());
+            }
+
+            @Override
+            public Component<@NonNull ?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
+            {
+                return new TaggedComponent(tagTypes, DataTypeUtility.makeDefaultTaggedValue(tagTypes));
+            }
+
+            @Override
+            @OnThread(Tag.FXPlatform)
+            public Component<@NonNull ?> tuple(ImmutableList<DataType> types) throws InternalException
+            {
+                List<Component<? extends Object>> comps = new ArrayList<>(types.size());
+                for (DataType type : types)
+                {
+                    comps.add(component(type));
+                }
+                return new ComponentList<Object[], Object>("(", ImmutableList.copyOf(comps), ",", ")", List::toArray);
+            }
+
+            @Override
+            public Component<@NonNull ?> array(@Nullable DataType inner) throws InternalException
             {
                 throw new UnimplementedException();
             }

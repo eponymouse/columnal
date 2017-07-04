@@ -155,7 +155,7 @@ public class PropTypecheckIndividual
     public void testEquals(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException, UserException
     {
         boolean same = DataType.checkSame(a, b, s -> {}) != null;
-        Assume.assumeThat(same, Matchers.equalTo(false));
+        Assume.assumeThat(same, Matchers.<Boolean>equalTo(false));
 
         assertEquals(null, new EqualExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
         assertEquals(DataType.BOOLEAN, new EqualExpression(new DummyExpression(a), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
@@ -188,7 +188,7 @@ public class PropTypecheckIndividual
     public void testArray(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException, UserException
     {
         boolean same = DataType.checkSame(a, b, s -> {}) != null;
-        Assume.assumeThat(same, Matchers.equalTo(false));
+        Assume.assumeThat(same, Matchers.<Boolean>equalTo(false));
 
         List<DataType> types = new ArrayList<>();
         for (int length = 1; length < 10; length++)

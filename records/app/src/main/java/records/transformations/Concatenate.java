@@ -295,7 +295,7 @@ public class Concatenate extends TransformationEditable
     private static LinkedHashMap<ColumnId, DataType> getColumnsNameAndType(Table t) throws InternalException, UserException
     {
         List<Column> columns = new ArrayList<>(t.getData().getColumns());
-        Collections.sort(columns, Comparator.comparing(c -> c.getName()));
+        Collections.sort(columns, Comparator.<Column, ColumnId>comparing(c -> c.getName()));
         LinkedHashMap<ColumnId, DataType> r = new LinkedHashMap<>();
         for (Column c : columns)
         {

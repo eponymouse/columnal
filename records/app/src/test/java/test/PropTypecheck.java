@@ -159,10 +159,10 @@ public class PropTypecheck
     @Property
     public void checkTuple(@From(GenDataType.class) DataType typeA, @From(GenDataType.class) DataType typeB, @From(DataTypeListGenerator.class)  List typeRest) throws InternalException, UserException
     {
-        List<DataType> all = Stream.concat(Stream.<@NonNull DataType>of(typeA, typeB), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
+        List<DataType> all = Stream.<DataType>concat(Stream.<@NonNull DataType>of(typeA, typeB), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
         DataType type = DataType.tuple(all);
         DataTypeValue typeV = DataTypeValue.tupleV(Utility.mapListEx(all, t -> toValue(t)));
-        List<DataType> allSwapped = Stream.concat(Stream.of(typeB, typeA), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
+        List<DataType> allSwapped = Stream.<DataType>concat(Stream.of(typeB, typeA), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
         DataType typeS = DataType.tuple(allSwapped);
         DataTypeValue typeSV = DataTypeValue.tupleV(Utility.mapListEx(allSwapped, t -> toValue(t)));
         // Swapped is same as unswapped only if typeA and typeB are same:

@@ -38,7 +38,7 @@ public class Component2<R, A, B> implements Component<R>
     {
         List<Item> aItems = a.getItems();
         aLength = aItems.size();
-        return Utility.concat(aItems, Arrays.asList(new Item(divider)), b.getItems());
+        return Utility.concat(aItems, Arrays.asList(new Item(this, divider)), b.getItems());
     }
 
     @Override
@@ -54,6 +54,6 @@ public class Component2<R, A, B> implements Component<R>
     {
         List<Suggestion> suggA = a.getSuggestions();
         List<Suggestion> suggB = b.getSuggestions();
-        return Utility.concat(suggA, Utility.mapList(suggB, s -> s.offsetBy(aLength + 1)));
+        return Utility.<Suggestion>concat(suggA, Utility.<Suggestion, Suggestion>mapList(suggB, s -> s.offsetBy(aLength + 1)));
     }
 }

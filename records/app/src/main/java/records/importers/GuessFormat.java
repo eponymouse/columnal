@@ -766,7 +766,7 @@ public class GuessFormat
                         Stream<Choice> inner = findBestGuess(next);
                         if (inner != null)
                         {
-                            return Stream.concat(Stream.of(choice), inner);
+                            return Stream.<Choice>concat(Stream.of(choice), inner);
                         }
                         // Otherwise try next choice
                     }

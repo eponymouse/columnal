@@ -42,9 +42,9 @@ public class YM implements Component<YearMonth>
     public List<Item> getItems()
     {
         return Arrays.asList(
-            new Item(Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
-            new Item("/"),
-            new Item(Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year")));
+            new Item(this, Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
+            new Item(this, "/"),
+            new Item(this, Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year")));
     }
 
     private static int adjustYear2To4(int month, String originalYearText, final int year)

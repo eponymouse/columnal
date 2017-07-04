@@ -245,7 +245,7 @@ public class MatchExpression extends NonOperatorExpression
     @Override
     public Stream<ColumnId> allColumnNames()
     {
-        return Stream.concat(expression.allColumnNames(), clauses.stream().flatMap(c -> c.outcome.allColumnNames()));
+        return Stream.<ColumnId>concat(expression.allColumnNames(), clauses.stream().flatMap(c -> c.outcome.allColumnNames()));
     }
 
     @Override

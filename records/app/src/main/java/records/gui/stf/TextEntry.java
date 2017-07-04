@@ -24,7 +24,7 @@ public class TextEntry implements Component<String>
     @Override
     public List<Item> getItems()
     {
-        return Collections.singletonList(new Item(initial, ItemVariant.EDITABLE_TEXT, ""));
+        return Collections.singletonList(new Item(this, initial, ItemVariant.EDITABLE_TEXT, ""));
     }
 
     @Override

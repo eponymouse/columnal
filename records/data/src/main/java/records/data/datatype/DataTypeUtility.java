@@ -42,6 +42,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
 /**
@@ -405,5 +406,87 @@ public class DataTypeUtility
                 }
             }
         };
+    }
+
+    public static TaggedValue makeDefaultTaggedValue(ImmutableList<TagType<DataType>> tagTypes) throws InternalException
+    {
+        OptionalInt noInnerIndex = Utility.findFirstIndex(tagTypes, tt -> tt.getInner() == null);
+        if (noInnerIndex.isPresent())
+        {
+            return new TaggedValue(noInnerIndex.getAsInt(), null);
+        }
+        else
+        {
+            @Nullable DataType inner = tagTypes.get(0).getInner();
+            if (inner == null)
+                throw new InternalException("Impossible: no tags without inner value, yet no inner value!");
+            return new TaggedValue(0, makeDefaultValue(inner));
+        }
+    }
+
+    private static @Value Object makeDefaultValue(DataType dataType) throws InternalException
+    {
+        return dataType.apply(new DataTypeVisitorEx<@Value Object, InternalException>()
+        {
+            @Override
+            public @Value Object number(NumberInfo numberInfo) throws InternalException, InternalException
+            {
+                return 0;
+            }
+
+            @Override
+            public @Value Object text() throws InternalException, InternalException
+            {
+                return "";
+            }
+
+            @Override
+            public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+            {
+                return dateTimeInfo.getDefaultValue();
+            }
+
+            @Override
+            public @Value Object bool() throws InternalException, InternalException
+            {
+                return false;
+            }
+
+            @Override
+            public @Value Object tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+            {
+                return makeDefaultTaggedValue(tags);
+            }
+
+            @Override
+            public @Value Object tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+            {
+                Object[] tuple = new Object[inner.size()];
+                for (int i = 0; i < inner.size(); i++)
+                {
+                    tuple[i] = makeDefaultValue(inner.get(i));
+                }
+                return tuple;
+            }
+
+            @Override
+            public @Value Object array(@Nullable DataType inner) throws InternalException, InternalException
+            {
+                return new ListEx()
+                {
+                    @Override
+                    public int size() throws InternalException, UserException
+                    {
+                        return 0;
+                    }
+
+                    @Override
+                    public @Value Object get(int index) throws InternalException, UserException
+                    {
+                        return 0; // Won't get called.
+                    }
+                };
+            }
+        });
     }
 }

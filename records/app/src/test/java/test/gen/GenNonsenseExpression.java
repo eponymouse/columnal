@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.Op;
@@ -75,15 +76,15 @@ public class GenNonsenseExpression extends Generator<Expression>
         else
         {
             // Non-terminal:
-            return r.choose(Arrays.<Supplier<Expression>>asList(
+            return r.<Supplier<Expression>>choose(Arrays.<Supplier<Expression>>asList(
                 () -> new NotEqualExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new EqualExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> {
-                    List<Expression> expressions = TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
+                    List<Expression> expressions = TestUtil.<Expression>makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
                     List<ComparisonOperator> operators = r.nextBoolean() ? Arrays.asList(ComparisonOperator.GREATER_THAN, ComparisonOperator.GREATER_THAN_OR_EQUAL_TO) : Arrays.asList(ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_THAN_OR_EQUAL_TO);
-                    return new ComparisonExpression(expressions, ImmutableList.copyOf(TestUtil.makeList(expressions.size() - 1, (Generator<ComparisonOperator>)(Generator<?>)new EnumGenerator(ComparisonOperator.class) {
+                    return new ComparisonExpression(expressions, ImmutableList.<ComparisonOperator>copyOf(TestUtil.<ComparisonOperator>makeList(expressions.size() - 1, (Generator<ComparisonOperator>)(Generator)new EnumGenerator(ComparisonOperator.class) {
                         @Override
-                        public Enum<?> generate(SourceOfRandomness random, GenerationStatus status)
+                        public Enum<ComparisonOperator> generate(SourceOfRandomness random, GenerationStatus status)
                         {
                             return random.choose(operators);
                         }
@@ -102,8 +103,8 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> new RaiseExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new CallExpression(TestUtil.generateVarName(r), TestUtil.makeList(r.nextInt(0, 2), new GenUnit(), r, gs), genDepth(true, r, depth + 1, gs)),
                 () -> new MatchExpression(genDepth(false, r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1))),
-                () -> new ArrayExpression(ImmutableList.copyOf(TestUtil.makeList(r, 0, 6, () -> genDepth(r, depth + 1, gs)))),
-                () -> new TupleExpression(ImmutableList.copyOf(TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs)))),
+                () -> new ArrayExpression(ImmutableList.<Expression>copyOf(TestUtil.makeList(r, 0, 6, () -> genDepth(r, depth + 1, gs)))),
+                () -> new TupleExpression(ImmutableList.<Expression>copyOf(TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs)))),
                 () ->
                 {
                     List<Expression> expressions = TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
@@ -117,7 +118,7 @@ public class GenNonsenseExpression extends Generator<Expression>
     {
         try
         {
-            return r.choose(Arrays.asList(
+            return r.<Expression>choose(Arrays.asList(
                 new NumericLiteral(Utility.parseNumber(r.nextBigInteger(160).toString()), null), // TODO gen unit
                 new BooleanLiteral(r.nextBoolean()),
                 new StringLiteral(TestUtil.generateColumnId(r).getOutput()),
@@ -160,7 +161,7 @@ public class GenNonsenseExpression extends Generator<Expression>
     @Override
     public List<Expression> doShrink(SourceOfRandomness random, Expression larger)
     {
-        return larger._test_childMutationPoints().map(Pair::getFirst).collect(Collectors.toList());
+        return larger._test_childMutationPoints().map(Pair::getFirst).collect(Collectors.<Expression>toList());
     }
 
     private class GenRandomOp extends Generator<String>
@@ -173,7 +174,7 @@ public class GenNonsenseExpression extends Generator<Expression>
         @Override
         public String generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
         {
-            return sourceOfRandomness.choose(Arrays.asList(
+            return sourceOfRandomness.<@NonNull String>choose(Arrays.asList(
                 "<", ">", "+", "-", "*", "/", "<=", ">=", "=", "<>", "&", "|", "^", ","
             ));
         }

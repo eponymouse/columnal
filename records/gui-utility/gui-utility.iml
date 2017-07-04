@@ -20,9 +20,10 @@
     <orderEntry type="library" name="Maven: com.google.guava:guava:19.0" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:smtinterpol:comp:2.1-255-gcdd5908" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:smtinterpol:sources:2.1-255-gcdd5908" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.1.10" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.1.10" level="project" />
-    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.1.10" level="project" />
+    <orderEntry type="library" name="Maven: commons-io:commons-io:2.5" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.1.13" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker:2.1.13" level="project" />
+    <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:jdk8:2.1.13" level="project" />
     <orderEntry type="library" name="Maven: org.controlsfx:controlsfx:8.40.12" level="project" />
     <orderEntry type="library" name="Maven: org.fxmisc.wellbehaved:wellbehavedfx:0.3" level="project" />
     <orderEntry type="library" name="Maven: org.fxmisc.flowless:flowless:0.5.2" level="project" />

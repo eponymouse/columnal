@@ -42,7 +42,7 @@ public class PropDAG
             for (Object from : g.incoming.getOrDefault(linear.get(i), new ArrayList<>()))
             {
                 // Our index must be beyond that of all incoming nodes:
-                Assert.assertThat(i, Matchers.greaterThan(linear.indexOf(from)));
+                Assert.assertThat(i, Matchers.<Integer>greaterThan(linear.indexOf(from)));
             }
         }
     }

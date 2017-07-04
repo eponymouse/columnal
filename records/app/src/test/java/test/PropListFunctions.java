@@ -85,7 +85,7 @@ public class PropListFunctions
             // Try valid values:
             for (int i = 0; i < src.list.size(); i++)
             {
-                @Value Object actual = checked.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{DataTypeUtility.value(src.list), DataTypeUtility.value(i + 1 /* one-based index */)}));
+                @Value Object actual = checked.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{DataTypeUtility.value(src.list), DataTypeUtility.<Integer>value(i + 1 /* one-based index */)}));
                 assertSame(src.list.get(i), actual);
             }
             // Try invalid integer values:
@@ -93,7 +93,7 @@ public class PropListFunctions
             {
                 try
                 {
-                    checked.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{DataTypeUtility.value(src.list), DataTypeUtility.value(i)}));
+                    checked.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{DataTypeUtility.value(src.list), DataTypeUtility.<Integer>value(i)}));
                     fail("Expected user exception for index " + i);
                 }
                 catch (UserException e)

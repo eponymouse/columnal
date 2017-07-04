@@ -65,12 +65,12 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
         if (sourceAndClauses == null)
             clauses.add(new ClauseNode(this, null));
         else
-            clauses.addAll(Utility.mapList(sourceAndClauses.getSecond(), c -> c.load(this)));
+            clauses.addAll(Utility.<MatchClause, ClauseNode>mapList(sourceAndClauses.getSecond(), c -> c.load(this)));
     }
 
     private void updateNodes()
     {
-        nodes.setAll(Stream.concat(source.nodes().stream(), clauses.stream().flatMap(c -> c.nodes().stream())).collect(Collectors.<Node>toList()));
+        nodes.setAll(Stream.<Node>concat(source.nodes().stream(), clauses.stream().flatMap(c -> c.nodes().stream())).collect(Collectors.<Node>toList()));
     }
 
     private void updateListeners()
@@ -272,7 +272,7 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
     {
         Pair<ConsecutiveChild, Double> startDist = new Pair<>(this, FXUtility.distanceToLeft(matchLabel, loc));
 
-        return Stream.concat(Stream.of(startDist), clauses.stream().map(c -> c.findClosestDrop(loc)))
+        return Stream.<Pair<ConsecutiveChild, Double>>concat(Stream.of(startDist), clauses.stream().map(c -> c.findClosestDrop(loc)))
             .min(Comparator.comparing(Pair::getSecond)).get();
     }
 

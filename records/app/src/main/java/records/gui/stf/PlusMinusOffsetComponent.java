@@ -38,10 +38,10 @@ public class PlusMinusOffsetComponent<R, A> implements Component<R>
         List<Item> aItems = a.getItems();
         aLength = aItems.size();
         return Utility.concat(aItems, Arrays.asList(
-            new Item("", ItemVariant.TIMEZONE_PLUS_MINUS, "\u00B1"),
-            new Item(Integer.toString(hours), ItemVariant.EDITABLE_OFFSET_HOUR, "Zone Hours"),
-            new Item(":"),
-            new Item(Integer.toString(minutes), ItemVariant.EDITABLE_OFFSET_MINUTE, "Zone Minutes")));
+            new Item(this, "", ItemVariant.TIMEZONE_PLUS_MINUS, "\u00B1"),
+            new Item(this, Integer.toString(hours), ItemVariant.EDITABLE_OFFSET_HOUR, "Zone Hours"),
+            new Item(this, ":"),
+            new Item(this, Integer.toString(minutes), ItemVariant.EDITABLE_OFFSET_MINUTE, "Zone Minutes")));
     }
 
     @Override

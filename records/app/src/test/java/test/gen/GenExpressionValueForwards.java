@@ -304,7 +304,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 {
                     case YEARMONTHDAY:
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
                             return map(dateTimes, v -> LocalDate.from((TemporalAccessor) v), e -> new CallExpression("date", e));
                         });
                         deep.add(() -> {
@@ -319,23 +319,23 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                         break;
                     case YEARMONTH:
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.YEARMONTHDAY, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
                             return map(dateTimes, v -> YearMonth.from((TemporalAccessor) v), e -> new CallExpression("dateym", e));
                         });
                         break;
                     case TIMEOFDAY:
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAYZONED, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAYZONED, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
                             return map(dateTimes, v -> LocalTime.from((TemporalAccessor) v), e -> new CallExpression("time", e));
                         });
                         break;
                     case TIMEOFDAYZONED:
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
                             return map(dateTimes, v -> OffsetTime.from((TemporalAccessor) v), e -> new CallExpression("timez", e));
                         });
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
                             return map(dateTimes, v -> OffsetTime.of((LocalTime)v, zone), e -> new CallExpression("timez", e, new StringLiteral(zone.toString())));
                         });
@@ -343,27 +343,27 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                     case DATETIME:
                         // down cast:
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
                             return map(dateTimes, v -> LocalDateTime.from((TemporalAccessor) v), e -> new CallExpression("datetime", e));
                         });
                         // date + time:
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
-                            Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
                             return map2(dates, times, (date, time) -> LocalDateTime.of((LocalDate) date, (LocalTime) time), (dateE, timeE) -> new CallExpression("datetime", dateE, timeE));
                         });
                         break;
                     case DATETIMEZONED:
                         // datetime + zone:
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.DATETIME)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIME)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
                             return map(dateTimes, v -> ZonedDateTime.of((LocalDateTime)v, zone).withFixedOffsetZone(), e -> new CallExpression("datetimez", e, new StringLiteral(zone.toString())));
                         });
                         // date+time+zone:
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
-                            Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
                             return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone).withFixedOffsetZone(), (dateE, timeE) -> new CallExpression("datetimez", dateE, timeE, new StringLiteral(zone.toString())));
                         });
@@ -616,7 +616,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
     private Unit makeUnit() throws InternalException, UserException
     {
         UnitManager m = DummyManager.INSTANCE.getUnitManager();
-        return r.choose(Arrays.asList(
+        return r.<@NonNull Unit>choose(Arrays.asList(
             m.loadUse("m"),
             m.loadUse("cm"),
             m.loadUse("inch"),

@@ -732,8 +732,8 @@ public class TestStructuredTextField extends ApplicationTest
     public void propNumber(@From(GenNumberAsString.class) String numAsString, @From(GenNumber.class) Number initial, char c) throws InternalException
     {
         // c should be a non-numeric char:
-        assumeThat(c, Matchers.not(Matchers.isIn(ArrayUtils.toObject("-.0123456789".toCharArray()))));
-        assumeThat(c, Matchers.greaterThan(' '));
+        assumeThat(c, Matchers.<Character>not(Matchers.isIn(ArrayUtils.toObject("-.0123456789".toCharArray()))));
+        assumeThat(c, Matchers.<Character>greaterThan(' '));
 
         BigDecimal num = new BigDecimal(numAsString, MathContext.DECIMAL128);
         f.set(field(DataType.number(new NumberInfo(Unit.SCALAR, null)), initial));
@@ -886,8 +886,8 @@ public class TestStructuredTextField extends ApplicationTest
         // In the right place:
         Bounds fScreen = f.get().localToScreen(f.get().getBoundsInLocal());
         Bounds charBounds = f.get().getCharacterBoundsOnScreen(atChar, atChar + 1).get();
-        assertThat(autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinX(), is(both(greaterThan(charBounds.getMinX() - 8)).and(lessThan(charBounds.getMaxX() + 2))));
-        assertThat(autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinY(), is(both(greaterThan(charBounds.getMaxY() - 2)).and(lessThan(charBounds.getMaxY() + 5))));
+        assertThat(autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinX(), Matchers.<Double>is(Matchers.<Double>both(Matchers.<Double>greaterThan(charBounds.getMinX() - 8)).<Double>and(Matchers.<Double>lessThan(charBounds.getMaxX() + 2))));
+        assertThat(autoComplete.localToScreen(autoComplete.getBoundsInLocal()).getMinY(), Matchers.<Double>is(Matchers.<Double>both(Matchers.<Double>greaterThan(charBounds.getMaxY() - 2)).<Double>and(Matchers.<Double>lessThan(charBounds.getMaxY() + 5))));
         return autoComplete;
     }
 

@@ -23,14 +23,14 @@ import java.util.function.Function;
 @OnThread(Tag.FXPlatform)
 public class ComponentList<R, T> implements Component<R>
 {
-    private final ImmutableList<Component<T>> components;
+    private final ImmutableList<Component<? extends T>> components;
     private final Function<List<T>, R> combine;
     private final String divider;
     private final @Nullable String prefix;
     private final @Nullable String suffix;
     private List<Pair<Integer, Integer>> subLists = new ArrayList<>();
 
-    public ComponentList(@Nullable String prefix, ImmutableList<Component<T>> components, String divider, @Nullable String suffix, Function<List<T>, R> combine)
+    public ComponentList(@Nullable String prefix, ImmutableList<Component<? extends T>> components, String divider, @Nullable String suffix, Function<List<T>, R> combine)
     {
         this.components = components;
         this.divider = divider;
@@ -44,17 +44,17 @@ public class ComponentList<R, T> implements Component<R>
     {
         List<Item> r = new ArrayList<>();
         if (prefix != null)
-            r.add(new Item(prefix));
+            r.add(new Item(this, prefix));
         for (int i = 0; i < components.size(); i++)
         {
             List<Item> items = components.get(i).getItems();
             subLists.add(new Pair<>(r.size(), r.size() + items.size()));
             r.addAll(items);
             if (i < components.size() - 1)
-                r.add(new Item(divider));
+                r.add(new Item(this, divider));
         }
         if (suffix != null)
-            r.add(new Item(suffix));
+            r.add(new Item(this, suffix));
         return r;
     }
 

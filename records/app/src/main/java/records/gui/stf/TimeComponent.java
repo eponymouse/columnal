@@ -30,11 +30,11 @@ public class TimeComponent implements Component<LocalTime>
     public List<Item> getItems()
     {
         return Arrays.asList(
-            new Item(Integer.toString(value.get(ChronoField.HOUR_OF_DAY)), ItemVariant.EDITABLE_HOUR, TranslationUtility.getString("entry.prompt.hour")),
-            new Item(":"),
-            new Item(Integer.toString(value.get(ChronoField.MINUTE_OF_HOUR)), ItemVariant.EDITABLE_MINUTE, TranslationUtility.getString("entry.prompt.minute")),
-            new Item(":"),
-            new Item(Integer.toString(value.get(ChronoField.SECOND_OF_MINUTE)), ItemVariant.EDITABLE_SECOND, TranslationUtility.getString("entry.prompt.second")));
+            new Item(this, Integer.toString(value.get(ChronoField.HOUR_OF_DAY)), ItemVariant.EDITABLE_HOUR, TranslationUtility.getString("entry.prompt.hour")),
+            new Item(this, ":"),
+            new Item(this, Integer.toString(value.get(ChronoField.MINUTE_OF_HOUR)), ItemVariant.EDITABLE_MINUTE, TranslationUtility.getString("entry.prompt.minute")),
+            new Item(this, ":"),
+            new Item(this, Integer.toString(value.get(ChronoField.SECOND_OF_MINUTE)), ItemVariant.EDITABLE_SECOND, TranslationUtility.getString("entry.prompt.second")));
     }
 
     @Override

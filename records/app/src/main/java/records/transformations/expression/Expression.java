@@ -255,7 +255,7 @@ public abstract class Expression
         {
             try
             {
-                return new ComparisonExpression(Utility.mapList(ctx.expression(), this::visitExpression), Utility.mapListExI(ctx.GREATER_THAN(), op -> ComparisonOperator.parse(op.getText())));
+                return new ComparisonExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), Utility.<TerminalNode, ComparisonOperator>mapListExI(ctx.GREATER_THAN(), op -> ComparisonOperator.parse(op.getText())));
             }
             catch (InternalException | UserException e)
             {
@@ -268,7 +268,7 @@ public abstract class Expression
         {
             try
             {
-                return new ComparisonExpression(Utility.mapList(ctx.expression(), this::visitExpression), Utility.mapListExI(ctx.LESS_THAN(), op -> ComparisonOperator.parse(op.getText())));
+                return new ComparisonExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), this::visitExpression), Utility.<TerminalNode, ComparisonOperator>mapListExI(ctx.LESS_THAN(), op -> ComparisonOperator.parse(op.getText())));
             }
             catch (InternalException | UserException e)
             {
@@ -324,7 +324,7 @@ public abstract class Expression
             if (ctx.topLevelExpression() != null)
                 args = visitTopLevelExpression(ctx.topLevelExpression());
             else
-                args = new TupleExpression(ImmutableList.copyOf(Utility.mapList(ctx.expression(), e -> visitExpression(e))));
+                args = new TupleExpression(ImmutableList.copyOf(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), e -> visitExpression(e))));
             return new CallExpression(ctx.functionName().getText(), Collections.emptyList(), args);
         }
 
@@ -362,13 +362,13 @@ public abstract class Expression
         @Override
         public Expression visitArrayExpression(ArrayExpressionContext ctx)
         {
-            return new ArrayExpression(ImmutableList.copyOf(Utility.mapList(ctx.expression(), c -> visitExpression(c))));
+            return new ArrayExpression(ImmutableList.copyOf(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), c -> visitExpression(c))));
         }
 
         @Override
         public Expression visitTupleExpression(TupleExpressionContext ctx)
         {
-            return new TupleExpression(ImmutableList.copyOf(Utility.mapList(ctx.expression(), c -> visitExpression(c))));
+            return new TupleExpression(ImmutableList.copyOf(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), c -> visitExpression(c))));
         }
 
         @Override
@@ -386,7 +386,7 @@ public abstract class Expression
         @Override
         public Expression visitInvalidOpExpression(InvalidOpExpressionContext ctx)
         {
-            return new InvalidOperatorExpression(Utility.mapList(ctx.expression(), c -> visitExpression(c)), Utility.mapList(ctx.anyOperator(), op -> op.getText()));
+            return new InvalidOperatorExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), c -> visitExpression(c)), Utility.mapList(ctx.anyOperator(), op -> op.getText()));
         }
 
         public Expression visitChildren(RuleNode node) {
@@ -419,7 +419,7 @@ public abstract class Expression
     // Used for testing
     public final Stream<Pair<Expression, Function<Expression, Expression>>> _test_allMutationPoints()
     {
-        return Stream.concat(Stream.of(new Pair<>(this, e -> e)), _test_childMutationPoints());
+        return Stream.<Pair<Expression, Function<Expression, Expression>>>concat(Stream.of(new Pair<>(this, e -> e)), _test_childMutationPoints());
     }
 
     public abstract Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints();
