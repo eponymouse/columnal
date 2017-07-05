@@ -1,6 +1,7 @@
 package records.gui.stf;
 
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
@@ -18,18 +19,18 @@ import java.util.List;
  */
 public class BoolEntry extends Component<Boolean>
 {
-    private final boolean initial;
+    private final String initialContent;
 
-    public BoolEntry(ImmutableList<Component<?>> parents, boolean initial)
+    public BoolEntry(ImmutableList<Component<?>> parents, @Nullable Boolean initial)
     {
         super(parents);
-        this.initial = initial;
+        this.initialContent = initial == null ? "" : Boolean.toString(initial);
     }
 
     @Override
     public List<Item> getInitialItems()
     {
-        return Collections.singletonList(new Item(getItemParents(), Boolean.toString(initial), ItemVariant.EDITABLE_BOOLEAN, ""));
+        return Collections.singletonList(new Item(getItemParents(), initialContent, ItemVariant.EDITABLE_BOOLEAN, ""));
     }
 
     @Override

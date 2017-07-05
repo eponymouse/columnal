@@ -2,6 +2,7 @@ package records.gui.stf;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import records.error.InternalException;
 import records.gui.stf.StructuredTextField.Component;
@@ -36,7 +37,7 @@ public class YMD extends Component<LocalDate>
 {
     private final TemporalAccessor value;
 
-    public YMD(ImmutableList<Component<?>> parents, TemporalAccessor value)
+    public YMD(ImmutableList<Component<?>> parents, @Nullable TemporalAccessor value)
     {
         super(parents);
         this.value = value;

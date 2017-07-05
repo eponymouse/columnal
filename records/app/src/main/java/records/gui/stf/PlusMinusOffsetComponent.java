@@ -1,6 +1,7 @@
 package records.gui.stf;
 
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
@@ -28,7 +29,7 @@ public class PlusMinusOffsetComponent<R, A> extends Component<R>
     private int aLength;
 
     @OnThread(Tag.FXPlatform)
-    public PlusMinusOffsetComponent(ImmutableList<Component<?>> parents, Function<ImmutableList<Component<?>>, Component<A>> a, int seconds, BiFunction<A, ZoneOffset, R> combine)
+    public PlusMinusOffsetComponent(ImmutableList<Component<?>> parents, Function<ImmutableList<Component<?>>, Component<A>> a, @Nullable Integer seconds, BiFunction<A, ZoneOffset, R> combine)
     {
         super(parents);
         this.a = a.apply(getItemParents());

@@ -429,7 +429,7 @@ public class TableDisplayUtility
             @Override
             public Component<@NonNull ?> number(NumberInfo displayInfo) throws InternalException
             {
-                return new NumberEntry(parents, 0);
+                return new NumberEntry(parents, null);
             }
 
             @Override
@@ -441,26 +441,25 @@ public class TableDisplayUtility
             @Override
             public Component<@NonNull ?> bool() throws InternalException
             {
-                return new BoolEntry(parents, false);
+                return new BoolEntry(parents, null);
             }
 
             @Override
             @OnThread(Tag.FXPlatform)
             public Component<@NonNull ?> date(DateTimeInfo dateTimeInfo) throws InternalException
             {
-                TemporalAccessor defaultValue = dateTimeInfo.getDefaultValue();
                 switch (dateTimeInfo.getType())
                 {
                     case YEARMONTHDAY:
-                        return new YMD(parents, defaultValue);
+                        return new YMD(parents, null);
                     case YEARMONTH:
-                        return new YM(parents, defaultValue);
+                        return new YM(parents, null);
                     case TIMEOFDAY:
-                        return new TimeComponent(parents, defaultValue);
+                        return new TimeComponent(parents, null);
                     case TIMEOFDAYZONED:
-                        return new PlusMinusOffsetComponent<OffsetTime, LocalTime>(parents, subParents -> new TimeComponent(subParents, defaultValue), defaultValue.get(ChronoField.OFFSET_SECONDS), OffsetTime::of);
+                        return new PlusMinusOffsetComponent<OffsetTime, LocalTime>(parents, subParents -> new TimeComponent(subParents, null), null, OffsetTime::of);
                     case DATETIME:
-                        return new Component2<LocalDateTime, LocalDate, LocalTime>(parents, subParents -> new YMD(subParents, defaultValue), " ", subParents -> new TimeComponent(subParents, defaultValue), LocalDateTime::of);
+                        return new Component2<LocalDateTime, LocalDate, LocalTime>(parents, subParents -> new YMD(subParents, null), " ", subParents -> new TimeComponent(subParents, null), LocalDateTime::of);
                     case DATETIMEZONED:
                         break;
                 }

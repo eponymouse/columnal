@@ -1,6 +1,7 @@
 package records.gui.stf;
 
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.UserException;
 import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
@@ -18,18 +19,18 @@ import java.util.List;
  */
 public class NumberEntry extends Component<Number>
 {
-    private final Number initial;
+    private final String initialContent;
 
-    public NumberEntry(ImmutableList<Component<?>> parents, Number initial)
+    public NumberEntry(ImmutableList<Component<?>> parents, @Nullable Number initial)
     {
         super(parents);
-        this.initial = initial;
+        this.initialContent = initial == null ? "" : (initial instanceof BigDecimal ? ((BigDecimal) initial).toPlainString() : initial.toString());
     }
 
     @Override
     public List<Item> getInitialItems()
     {
-        return Collections.singletonList(new Item(getItemParents(), initial instanceof BigDecimal ? ((BigDecimal)initial).toPlainString() : initial.toString(), ItemVariant.EDITABLE_NUMBER, ""));
+        return Collections.singletonList(new Item(getItemParents(), initialContent, ItemVariant.EDITABLE_NUMBER, ""));
     }
 
     @Override

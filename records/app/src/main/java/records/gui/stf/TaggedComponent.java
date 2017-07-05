@@ -67,10 +67,10 @@ public class TaggedComponent extends Component<TaggedValue>
                         // Just return as is:
                         return Optional.of(r);
                     }
-                    //if (!innerComponent.hasOuterBrackets())
+                    if (!innerComponent.hasOuterBrackets())
                         r.add(new Item(getItemParents(), "("));
                     r.addAll(innerComponent.getInitialItems());
-                    //if (!innerComponent.hasOuterBrackets())
+                    if (!innerComponent.hasOuterBrackets())
                         r.add(new Item(getItemParents(), ")"));
                 }
                 return Optional.of(r);

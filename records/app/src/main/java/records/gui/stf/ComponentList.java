@@ -100,4 +100,10 @@ public class ComponentList<R, T> extends Component<R>
         }
         return r;
     }
+
+    @Override
+    public boolean hasOuterBrackets()
+    {
+        return prefix != null && prefix.equals("(");
+    }
 }

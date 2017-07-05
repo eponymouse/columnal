@@ -830,6 +830,11 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
          * @return If present, the list of items to replace *all* this component's items with.  If empty, nothing happens.
          */
         public Optional<List<Item>> valueChanged(Item oldVal, Item newVal) { return Optional.empty(); };
+
+        public boolean hasOuterBrackets()
+        {
+            return false;
+        }
     }
 
     public static class Suggestion
