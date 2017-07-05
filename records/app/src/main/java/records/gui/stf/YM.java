@@ -1,5 +1,6 @@
 package records.gui.stf;
 
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import records.error.InternalException;
@@ -30,21 +31,22 @@ import java.util.Set;
  * Created by neil on 28/06/2017.
  */
 @OnThread(Tag.FXPlatform)
-public class YM implements Component<YearMonth>
+public class YM extends Component<YearMonth>
 {
     private final TemporalAccessor value;
 
-    public YM(TemporalAccessor value) throws InternalException
+    public YM(ImmutableList<Component<?>> parents, TemporalAccessor value)
     {
+        super(parents);
         this.value = value;
     }
 
-    public List<Item> getItems()
+    public List<Item> getInitialItems()
     {
         return Arrays.asList(
-            new Item(this, Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
-            new Item(this, "/"),
-            new Item(this, Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year")));
+            new Item(getItemParents(), Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
+            new Item(getItemParents(), "/"),
+            new Item(getItemParents(), Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year")));
     }
 
     private static int adjustYear2To4(int month, String originalYearText, final int year)

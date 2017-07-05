@@ -49,6 +49,8 @@ import records.gui.stf.YM;
 import records.gui.stf.YMD;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformBiFunction;
+import utility.FXPlatformBiFunctionInt;
 import utility.FXPlatformFunctionInt;
 import utility.FXPlatformRunnable;
 import utility.Pair;
@@ -256,9 +258,10 @@ public class TableDisplayUtility
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public ColumnHandler tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
-                throw new UnimplementedException();
+                return makeField(column.getType());
             }
 
             @Override
@@ -290,9 +293,9 @@ public class TableDisplayUtility
     public static class GetValueAndComponent<T>
     {
         public final GetValue<T> g;
-        public final FXPlatformFunctionInt<T, Component<? extends T>> makeComponent;
+        public final FXPlatformBiFunction<ImmutableList<Component<?>>, T, Component<? extends T>> makeComponent;
 
-        public GetValueAndComponent(GetValue<T> g, FXPlatformFunctionInt<T, Component<? extends T>> makeComponent)
+        public GetValueAndComponent(GetValue<T> g, FXPlatformBiFunction<ImmutableList<Component<?>>, T, Component<? extends T>> makeComponent)
         {
             this.g = g;
             this.makeComponent = makeComponent;
@@ -300,7 +303,7 @@ public class TableDisplayUtility
 
         public DisplayCacheSTF<T> makeDisplayCache()
         {
-            return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(makeComponent.apply(value)));
+            return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(makeComponent.apply(ImmutableList.of(), value)));
         }
     }
 
@@ -346,9 +349,9 @@ public class TableDisplayUtility
                     case TIMEOFDAY:
                         return new GetValueAndComponent<>(g, TimeComponent::new);
                     case TIMEOFDAYZONED:
-                        return new GetValueAndComponent<>(g, value -> new PlusMinusOffsetComponent<>(new TimeComponent(value), value.get(ChronoField.OFFSET_SECONDS), OffsetTime::of));
+                        return new GetValueAndComponent<>(g, (parents, value) -> new PlusMinusOffsetComponent<OffsetTime, LocalTime>(parents, subParents -> new TimeComponent(subParents, value), value.get(ChronoField.OFFSET_SECONDS), OffsetTime::of));
                     case DATETIME:
-                        return new GetValueAndComponent<>(g, value -> new Component2<LocalDateTime, LocalDate, LocalTime>(new YMD(value), " ", new TimeComponent(value), LocalDateTime::of));
+                        return new GetValueAndComponent<>(g, (parents, value) -> new Component2<LocalDateTime, LocalDate, LocalTime>(parents, subParents -> new YMD(subParents, value), " ", subParents -> new TimeComponent(subParents, value), LocalDateTime::of));
                     case DATETIMEZONED:
                         break;
                 }
@@ -359,7 +362,7 @@ public class TableDisplayUtility
             public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
                 GetValue<TaggedValue> getTagged = DataTypeUtility.toTagged(g, tagTypes);
-                return new GetValueAndComponent<TaggedValue>(getTagged, v -> new TaggedComponent(tagTypes, v));
+                return new GetValueAndComponent<TaggedValue>(getTagged, (parents, v) -> new TaggedComponent(parents, tagTypes, v));
             }
 
             @Override
@@ -396,16 +399,17 @@ public class TableDisplayUtility
                 };
 
 
-                return new GetValueAndComponent<Object[]>(tupleGet, value -> {
-                    ArrayList<Component<Object>> components = new ArrayList<>(types.size());
+                return new GetValueAndComponent<Object[]>(tupleGet, (parents, value) -> {
+                    ArrayList<Function<ImmutableList<Component<?>>, Component<? extends Object>>> components = new ArrayList<>(types.size());
                     for (int i = 0; i < types.size(); i++)
                     {
                         GetValueAndComponent<?> gvac = gvacs.get(i);
                         // Have to use some casts because we can't express the type safety:
-                        FXPlatformFunctionInt<Object, Component> makeComponent = (FXPlatformFunctionInt) gvac.makeComponent;
-                        components.add(makeComponent.apply(value[i]));
+                        FXPlatformBiFunction<ImmutableList<Component<?>>, Object, Component<Object>> makeComponent = (FXPlatformBiFunction)gvac.makeComponent;
+                        int iFinal = i;
+                        components.add(subParents -> makeComponent.apply(subParents, value[iFinal]));
                     }
-                    return new ComponentList<Object[], Object>("(", ImmutableList.copyOf(components), ",", ")", List::toArray);
+                    return new ComponentList<Object[], Object>(parents, "(", components, ",", ")", List::toArray);
                 });
             }
 
@@ -418,44 +422,45 @@ public class TableDisplayUtility
     }
 
     @OnThread(Tag.FXPlatform)
-    public static Component<@NonNull ?> component(DataType dataType) throws InternalException
+    public static Component<@NonNull ?> component(ImmutableList<Component<?>> parents, DataType dataType) throws InternalException
     {
         return dataType.apply(new DataTypeVisitorEx<Component<@NonNull ?>, InternalException>()
         {
             @Override
             public Component<@NonNull ?> number(NumberInfo displayInfo) throws InternalException
             {
-                return new NumberEntry(0);
+                return new NumberEntry(parents, 0);
             }
 
             @Override
             public Component<@NonNull ?> text() throws InternalException
             {
-                return new TextEntry("");
+                return new TextEntry(parents, "");
             }
 
             @Override
             public Component<@NonNull ?> bool() throws InternalException
             {
-                return new BoolEntry(false);
+                return new BoolEntry(parents, false);
             }
 
             @Override
             @OnThread(Tag.FXPlatform)
             public Component<@NonNull ?> date(DateTimeInfo dateTimeInfo) throws InternalException
             {
+                TemporalAccessor defaultValue = dateTimeInfo.getDefaultValue();
                 switch (dateTimeInfo.getType())
                 {
                     case YEARMONTHDAY:
-                        return new YMD(dateTimeInfo.getDefaultValue());
+                        return new YMD(parents, defaultValue);
                     case YEARMONTH:
-                        return new YM(dateTimeInfo.getDefaultValue());
+                        return new YM(parents, defaultValue);
                     case TIMEOFDAY:
-                        return new TimeComponent(dateTimeInfo.getDefaultValue());
+                        return new TimeComponent(parents, defaultValue);
                     case TIMEOFDAYZONED:
-                        return new PlusMinusOffsetComponent<>(new TimeComponent(dateTimeInfo.getDefaultValue()), dateTimeInfo.getDefaultValue().get(ChronoField.OFFSET_SECONDS), OffsetTime::of);
+                        return new PlusMinusOffsetComponent<OffsetTime, LocalTime>(parents, subParents -> new TimeComponent(subParents, defaultValue), defaultValue.get(ChronoField.OFFSET_SECONDS), OffsetTime::of);
                     case DATETIME:
-                        return new Component2<LocalDateTime, LocalDate, LocalTime>(new YMD(dateTimeInfo.getDefaultValue()), " ", new TimeComponent(dateTimeInfo.getDefaultValue()), LocalDateTime::of);
+                        return new Component2<LocalDateTime, LocalDate, LocalTime>(parents, subParents -> new YMD(subParents, defaultValue), " ", subParents -> new TimeComponent(subParents, defaultValue), LocalDateTime::of);
                     case DATETIMEZONED:
                         break;
                 }
@@ -465,19 +470,19 @@ public class TableDisplayUtility
             @Override
             public Component<@NonNull ?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
             {
-                return new TaggedComponent(tagTypes, DataTypeUtility.makeDefaultTaggedValue(tagTypes));
+                return new TaggedComponent(parents, tagTypes, null);
             }
 
             @Override
             @OnThread(Tag.FXPlatform)
             public Component<@NonNull ?> tuple(ImmutableList<DataType> types) throws InternalException
             {
-                List<Component<? extends Object>> comps = new ArrayList<>(types.size());
+                List<FXPlatformFunctionInt<ImmutableList<Component<?>>, Component<? extends Object>>> comps = new ArrayList<>(types.size());
                 for (DataType type : types)
                 {
-                    comps.add(component(type));
+                    comps.add(subParents -> component(subParents, type));
                 }
-                return new ComponentList<Object[], Object>("(", ImmutableList.copyOf(comps), ",", ")", List::toArray);
+                return new ComponentList<Object[], Object>(parents, "(", ",", comps, ")", List::toArray);
             }
 
             @Override

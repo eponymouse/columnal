@@ -1,5 +1,6 @@
 package records.gui.stf;
 
+import com.google.common.collect.ImmutableList;
 import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
@@ -12,12 +13,13 @@ import utility.Utility;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Created by neil on 28/06/2017.
  */
 @OnThread(Tag.FXPlatform)
-public class Component2<R, A, B> implements Component<R>
+public class Component2<R, A, B> extends Component<R>
 {
     private final Component<A> a;
     private final Component<B> b;
@@ -25,20 +27,21 @@ public class Component2<R, A, B> implements Component<R>
     private final String divider;
     private int aLength;
 
-    public Component2(Component<A> a, String divider, Component<B> b, BiFunction<A, B, R> combine)
+    public Component2(ImmutableList<Component<?>> parents, Function<ImmutableList<Component<?>>, Component<A>> a, String divider, Function<ImmutableList<Component<?>>, Component<B>> b, BiFunction<A, B, R> combine)
     {
-        this.a = a;
-        this.b = b;
+        super(parents);
+        this.a = a.apply(getItemParents());
+        this.b = b.apply(getItemParents());
         this.divider = divider;
         this.combine = combine;
     }
 
     @Override
-    public List<Item> getItems()
+    public List<Item> getInitialItems()
     {
-        List<Item> aItems = a.getItems();
+        List<Item> aItems = a.getInitialItems();
         aLength = aItems.size();
-        return Utility.concat(aItems, Arrays.asList(new Item(this, divider)), b.getItems());
+        return Utility.concat(aItems, Arrays.asList(new Item(getItemParents(), divider)), b.getInitialItems());
     }
 
     @Override

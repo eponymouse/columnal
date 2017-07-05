@@ -1,5 +1,6 @@
 package records.gui.stf;
 
+import com.google.common.collect.ImmutableList;
 import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
@@ -12,19 +13,20 @@ import java.util.List;
 /**
  * Created by neil on 28/06/2017.
  */
-public class TextEntry implements Component<String>
+public class TextEntry extends Component<String>
 {
     private final String initial;
 
-    public TextEntry(String initial)
+    public TextEntry(ImmutableList<Component<?>> parents, String initial)
     {
+        super(parents);
         this.initial = initial;
     }
 
     @Override
-    public List<Item> getItems()
+    public List<Item> getInitialItems()
     {
-        return Collections.singletonList(new Item(this, initial, ItemVariant.EDITABLE_TEXT, ""));
+        return Collections.singletonList(new Item(getItemParents(), initial, ItemVariant.EDITABLE_TEXT, ""));
     }
 
     @Override

@@ -5,7 +5,6 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
-import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.gui.TableDisplayUtility;
 import records.gui.stf.StructuredTextField.Component;
@@ -26,40 +25,41 @@ import java.util.OptionalInt;
 /**
  * Created by neil on 03/07/2017.
  */
-public class TaggedComponent implements Component<TaggedValue>
+public class TaggedComponent extends Component<TaggedValue>
 {
     private final ImmutableList<TagType<DataType>> tagTypes;
-    private final TaggedValue initialValue;
+    private final @Nullable TaggedValue initialValue;
 
-    public <DT extends DataType> TaggedComponent(ImmutableList<TagType<DT>> tagTypes, TaggedValue initialValue)
+    public <DT extends DataType> TaggedComponent(ImmutableList<Component<?>> parents, ImmutableList<TagType<DT>> tagTypes, @Nullable TaggedValue initialValue)
     {
+        super(parents);
         this.tagTypes = (ImmutableList)tagTypes;
         this.initialValue = initialValue;
     }
 
     @Override
-    public List<Item> getItems()
+    public List<Item> getInitialItems()
     {
-        return Arrays.asList(new Item(this, tagTypes.get(initialValue.getTagIndex()).getName(), ItemVariant.TAG_NAME, "Tag"));
+        return Arrays.asList(new Item(getItemParents(), initialValue == null ? "" : tagTypes.get(initialValue.getTagIndex()).getName(), ItemVariant.TAG_NAME, "Tag"));
 
     }
 
     @Override
-    public Optional<List<Item>> valueIsNow(Item item)
+    public Optional<List<Item>> valueChanged(Item oldVal, Item item)
     {
         if (item.getType() == ItemVariant.TAG_NAME)
         {
             @Nullable TagType<? extends DataType> matchingTag = tagTypes.stream().filter(tt -> tt.getName().toLowerCase().equals(item.getValue().toLowerCase())).findFirst().orElse(null);
-            if (matchingTag != null)
+            if (matchingTag != null && !matchingTag.getName().equals(oldVal.getValue()))
             {
                 List<Item> r = new ArrayList<>();
-                r.add(new Item(this, matchingTag.getName(), ItemVariant.TAG_NAME, "Tag"));
+                r.add(new Item(getItemParents(), matchingTag.getName(), ItemVariant.TAG_NAME, "Tag"));
                 if (matchingTag.getInner() != null)
                 {
                     @MonotonicNonNull Component<?> innerComponent = null;
                     try
                     {
-                        innerComponent = TableDisplayUtility.component(matchingTag.getInner());
+                        innerComponent = TableDisplayUtility.component(getItemParents(), matchingTag.getInner());
                     }
                     catch (InternalException e)
                     {
@@ -67,9 +67,11 @@ public class TaggedComponent implements Component<TaggedValue>
                         // Just return as is:
                         return Optional.of(r);
                     }
-                    r.add(new Item(this, "("));
-                    r.addAll(innerComponent.getItems());
-                    r.add(new Item(this, ")"));
+                    //if (!innerComponent.hasOuterBrackets())
+                        r.add(new Item(getItemParents(), "("));
+                    r.addAll(innerComponent.getInitialItems());
+                    //if (!innerComponent.hasOuterBrackets())
+                        r.add(new Item(getItemParents(), ")"));
                 }
                 return Optional.of(r);
             }

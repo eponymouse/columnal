@@ -1,5 +1,6 @@
 package records.gui.stf;
 
+import com.google.common.collect.ImmutableList;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -13,6 +14,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import org.checkerframework.dataflow.qual.Pure;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.PopOver.ArrowLocation;
 import org.fxmisc.richtext.CharacterHit;
@@ -29,7 +31,6 @@ import utility.Either;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
-import utility.Utility.IndexRange;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.TranslationUtility;
@@ -38,8 +39,9 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -68,7 +70,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         super(false);
         getStyleClass().add("structured-text-field");
         this.contentComponent = content;
-        List<Item> initialItems = content.getItems();
+        List<Item> initialItems = content.getInitialItems();
         curValue.addAll(initialItems);
         suggestions = content.getSuggestions();
 
@@ -255,8 +257,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                 newContent.add(new Item(existingItem.parent, existingItem.content, existingItem.itemVariant, existingItem.prompt));
                 curExisting += 1;
                 curStart = spanEnd;
-            }
-            else
+            } else
             {
                 break;
             }
@@ -270,8 +271,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
             Item existingItem = existing.get(curExisting);
             ItemVariant curStyle = existingItem.itemVariant;
             String after = curStyle == ItemVariant.DIVIDER ?
-                    existingItem.content :
-                    existingItem.content.substring(Math.min(Math.max(0, end - curStart), existingItem.content.length()));
+                existingItem.content :
+                existingItem.content.substring(Math.min(Math.max(0, end - curStart), existingItem.content.length()));
             while (nextChar < next.length || curExisting < existing.size())
             {
                 CharEntryResult result = enterChar(curStyle, cur, after, nextChar < next.length ? OptionalInt.of(next[nextChar]) : OptionalInt.empty());
@@ -294,13 +295,64 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         inSuperReplace = true;
         super.replace(0, getLength(), doc);
         inSuperReplace = false;
+        ArrayList<Item> oldValue = new ArrayList<>(curValue);
         curValue.clear();
         curValue.addAll(newContent);
         selectRange(replacementEnd, replacementEnd);
         updateAutoComplete(getSelection());
-        for (Item item : curValue)
+
+        Map<Component<?>, List<Item>> replacementsToMake = new HashMap<>();
+        // Must notify in one loop and replace in another to remove concurrent modification:
+        for (int i = 0; i < curValue.size(); i++)
         {
-            item.parent.valueIsNow(item);
+            Item item = curValue.get(i);
+            if (!item.content.equals(oldValue.get(i).content))
+            {
+                // Should we notify all parents, or just innermost?  I think really only tagged acts on this,
+                // and that's for tag where it is the innermost parent.
+                Component<?> innermostParent = item.parent.get(item.parent.size() - 1);
+                Optional<List<Item>> replacementItems = innermostParent.valueChanged(oldValue.get(i), item);
+                if (replacementItems.isPresent())
+                {
+                    replacementsToMake.put(innermostParent, replacementItems.get());
+                }
+            }
+        }
+        if (!replacementsToMake.isEmpty())
+        {
+            for (int i = 0; i < curValue.size(); )
+            {
+                Item aCurValue = curValue.get(i);
+                boolean removed = false;
+                for (Entry<Component<?>, List<Item>> entry : replacementsToMake.entrySet())
+                {
+                    if (aCurValue.getParents().contains(entry.getKey()))
+                    {
+                        if (!removed)
+                        {
+                            curValue.remove(i);
+                            removed = true;
+                        }
+                        if (!entry.getValue().isEmpty())
+                        {
+                            curValue.addAll(i, entry.getValue());
+                            i += entry.getValue().size();
+                            // Only add once:
+                            entry.setValue(Collections.emptyList());
+                        }
+                    }
+                }
+                // Only do this if we haven't removed earlier in the loop:
+                if (!removed)
+                    i += 1;
+            }
+
+            doc = makeDoc(curValue);
+            inSuperReplace = true;
+            super.replace(0, getLength(), doc);
+            inSuperReplace = false;
+            selectRange(replacementEnd, replacementEnd);
+            updateAutoComplete(getSelection());
         }
     }
 
@@ -676,18 +728,21 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     @OnThread(Tag.FXPlatform)
     public static class Item
     {
-        private final Component<?> parent;
+        // Basically a walk down the tree.  First is highest parent, last is lowest parent.
+        // They nest because if you have say a tagged inside a tagged, the innermost has both tagged components
+        // as a parent (outermost first, innermost second)
+        private final ImmutableList<Component<?>> parent;
         private final String content;
         private final ItemVariant itemVariant;
         private final @Localized String prompt;
 
         // Divider:
-        public Item(Component<?> parent, String divider)
+        public Item(ImmutableList<Component<?>> parent, String divider)
         {
             this(parent, divider, ItemVariant.DIVIDER, "");
         }
 
-        public Item(Component<?> parent, String content, ItemVariant ItemVariant, @Localized String prompt)
+        public Item(ImmutableList<Component<?>> parent, String content, ItemVariant ItemVariant, @Localized String prompt)
         {
             this.parent = parent;
             this.content = content;
@@ -729,30 +784,52 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         {
             return itemVariant;
         }
+
+        public ImmutableList<Component<?>> getParents()
+        {
+            return parent;
+        }
     }
 
     @OnThread(Tag.FXPlatform)
-    public static interface Component<T>
+    public static abstract class Component<T>
     {
-        public List<Item> getItems();
-        public default List<Suggestion> getSuggestions()
+        private final ImmutableList<Component<?>> componentParentsAndSelf;
+
+        @SuppressWarnings("initialization") // Due to adding "this" to list
+        protected Component(ImmutableList<Component<?>> componentParents)
+        {
+            this.componentParentsAndSelf = ImmutableList.<Component<?>>builder().addAll(componentParents).add(this).build();
+        }
+
+        public abstract List<Item> getInitialItems();
+
+        public List<Suggestion> getSuggestions()
         {
             return Collections.emptyList();
         }
-        public Either<List<ErrorFix>, T> endEdit(StructuredTextField<?> field, List<Item> endResult);
 
-        public default String getItem(List<Item> curValue, ItemVariant item)
+        // Gets a list of parents, *including this node* to be passed as parent for an item.
+        @SuppressWarnings("nullness") // Not sure why checker can't see that field cannot be null
+        @Pure
+        protected final ImmutableList<Component<?>> getItemParents(@UnknownInitialization(Component.class) Component<T> this)
+        {
+            return componentParentsAndSelf;
+        }
+
+        public abstract Either<List<ErrorFix>, T> endEdit(StructuredTextField<?> field, List<Item> endResult);
+
+        protected final String getItem(List<Item> curValue, ItemVariant item)
         {
             return curValue.stream().filter(ss -> ss.itemVariant == item).findFirst().map(ss -> ss.content).orElse("");
         }
 
         /**
-         * This method isn't called valueChanged, because it may be called even if the value hasn't changed.
-         * It's just called on all values when any of them change.
+         * Called when content of item has changed.
          *
          * @return If present, the list of items to replace *all* this component's items with.  If empty, nothing happens.
          */
-        public default Optional<List<Item>> valueIsNow(Item item) { return Optional.empty(); };
+        public Optional<List<Item>> valueChanged(Item oldVal, Item newVal) { return Optional.empty(); };
     }
 
     public static class Suggestion

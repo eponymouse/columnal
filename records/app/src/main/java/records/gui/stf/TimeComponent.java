@@ -1,5 +1,6 @@
 package records.gui.stf;
 
+import com.google.common.collect.ImmutableList;
 import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
@@ -17,24 +18,25 @@ import java.util.List;
 /**
  * Created by neil on 28/06/2017.
  */
-public class TimeComponent implements Component<LocalTime>
+public class TimeComponent extends Component<LocalTime>
 {
     private final TemporalAccessor value;
 
-    public TimeComponent(TemporalAccessor value)
+    public TimeComponent(ImmutableList<Component<?>> parents, TemporalAccessor value)
     {
+        super(parents);
         this.value = value;
     }
 
     @Override
-    public List<Item> getItems()
+    public List<Item> getInitialItems()
     {
         return Arrays.asList(
-            new Item(this, Integer.toString(value.get(ChronoField.HOUR_OF_DAY)), ItemVariant.EDITABLE_HOUR, TranslationUtility.getString("entry.prompt.hour")),
-            new Item(this, ":"),
-            new Item(this, Integer.toString(value.get(ChronoField.MINUTE_OF_HOUR)), ItemVariant.EDITABLE_MINUTE, TranslationUtility.getString("entry.prompt.minute")),
-            new Item(this, ":"),
-            new Item(this, Integer.toString(value.get(ChronoField.SECOND_OF_MINUTE)), ItemVariant.EDITABLE_SECOND, TranslationUtility.getString("entry.prompt.second")));
+            new Item(getItemParents(), Integer.toString(value.get(ChronoField.HOUR_OF_DAY)), ItemVariant.EDITABLE_HOUR, TranslationUtility.getString("entry.prompt.hour")),
+            new Item(getItemParents(), ":"),
+            new Item(getItemParents(), Integer.toString(value.get(ChronoField.MINUTE_OF_HOUR)), ItemVariant.EDITABLE_MINUTE, TranslationUtility.getString("entry.prompt.minute")),
+            new Item(getItemParents(), ":"),
+            new Item(getItemParents(), Integer.toString(value.get(ChronoField.SECOND_OF_MINUTE)), ItemVariant.EDITABLE_SECOND, TranslationUtility.getString("entry.prompt.second")));
     }
 
     @Override

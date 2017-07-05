@@ -1,9 +1,12 @@
 package records.gui.stf;
 
+import com.google.common.collect.ImmutableList;
 import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.Utility;
 
@@ -12,36 +15,39 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.BiFunction;
+import java.util.function.Function;
 
 /**
  * Created by neil on 28/06/2017.
  */ // Takes a component and adds {+|-}HH:MM on the end for a timezone offset.
-public class PlusMinusOffsetComponent<R, A> implements Component<R>
+public class PlusMinusOffsetComponent<R, A> extends Component<R>
 {
     private final int seconds;
     private final Component<A> a;
     private final BiFunction<A, ZoneOffset, R> combine;
     private int aLength;
 
-    public PlusMinusOffsetComponent(Component<A> a, int seconds, BiFunction<A, ZoneOffset, R> combine)
+    @OnThread(Tag.FXPlatform)
+    public PlusMinusOffsetComponent(ImmutableList<Component<?>> parents, Function<ImmutableList<Component<?>>, Component<A>> a, int seconds, BiFunction<A, ZoneOffset, R> combine)
     {
-        this.a = a;
+        super(parents);
+        this.a = a.apply(getItemParents());
         this.seconds = seconds;
         this.combine = combine;
     }
 
     @Override
-    public List<Item> getItems()
+    public List<Item> getInitialItems()
     {
         int hours = seconds / 3600;
         int minutes = (seconds - (hours * 3600)) / 60;
-        List<Item> aItems = a.getItems();
+        List<Item> aItems = a.getInitialItems();
         aLength = aItems.size();
         return Utility.concat(aItems, Arrays.asList(
-            new Item(this, "", ItemVariant.TIMEZONE_PLUS_MINUS, "\u00B1"),
-            new Item(this, Integer.toString(hours), ItemVariant.EDITABLE_OFFSET_HOUR, "Zone Hours"),
-            new Item(this, ":"),
-            new Item(this, Integer.toString(minutes), ItemVariant.EDITABLE_OFFSET_MINUTE, "Zone Minutes")));
+            new Item(getItemParents(), "", ItemVariant.TIMEZONE_PLUS_MINUS, "\u00B1"),
+            new Item(getItemParents(), Integer.toString(hours), ItemVariant.EDITABLE_OFFSET_HOUR, "Zone Hours"),
+            new Item(getItemParents(), ":"),
+            new Item(getItemParents(), Integer.toString(minutes), ItemVariant.EDITABLE_OFFSET_MINUTE, "Zone Minutes")));
     }
 
     @Override

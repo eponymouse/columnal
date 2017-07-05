@@ -2,6 +2,7 @@ package test.gui;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.beans.property.ObjectProperty;
@@ -848,7 +849,7 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
     @Property(trials=20)
-    public void propTagged(@From(GenTaggedTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen taggedTypeAndValueGen) throws UserException, InternalException
+    public void propTagged(@When(seed=1L) @From(GenTaggedTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen taggedTypeAndValueGen) throws UserException, InternalException
     {
         f.set(field(taggedTypeAndValueGen.getType(), taggedTypeAndValueGen.makeValue()));
         targetF();
@@ -856,14 +857,14 @@ public class TestStructuredTextField extends ApplicationTest
         TaggedValue value = (TaggedValue)taggedTypeAndValueGen.makeValue();
         TagType<DataType> tag = taggedTypeAndValueGen.getType().getTagTypes().get(value.getTagIndex());
         String tagName = tag.getName();
-        type(tagName, tagName + "$");
+        type(tagName.substring(0, tagName.length() - 1), tagName.substring(0, tagName.length() - 1) + "$");
         if (value.getInner() == null)
         {
-            type("", tagName + "$", value);
+            type(tagName.substring(tagName.length() - 1), tagName + "$", value);
         }
         else
         {
-            // TODO get text for inner item, enter that, check value.
+            // Get text for inner item, enter that, check value.
             String inner = sim(new SimulationSupplier<String>()
             {
                 @Override
@@ -873,7 +874,7 @@ public class TestStructuredTextField extends ApplicationTest
                     return DataTypeUtility.valueToString(tag.getInner(), value.getInner());
                 }
             });
-            type(inner, tagName + "(" + inner + ")$", value);
+            type(tagName.substring(tagName.length() - 1) + "(" + inner, tagName + "(" + inner + "$)", value);
         }
     }
 
