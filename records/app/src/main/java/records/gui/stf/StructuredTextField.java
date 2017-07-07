@@ -270,20 +270,25 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
             int nextChar = 0;
             Item existingItem = existing.get(curExisting);
             ItemVariant curStyle = existingItem.itemVariant;
-            String after = curStyle == ItemVariant.DIVIDER ?
-                existingItem.content :
-                existingItem.content.substring(Math.min(Math.max(0, end - curStart), existingItem.content.length()));
-            while (nextChar < next.length || curExisting < existing.size())
+            String after = existingItem.content.substring(cur.length());
+            if (nextChar >= next.length)
             {
-                CharEntryResult result = enterChar(curStyle, cur, after, nextChar < next.length ? OptionalInt.of(next[nextChar]) : OptionalInt.empty());
-                cur = result.result;
-                if (nextChar < next.length && result.charConsumed)
+                cur = after;
+            }
+            else
+            {
+                while (nextChar < next.length)
                 {
-                    nextChar += 1;
-                    replacementEnd = curStart + cur.length();
+                    CharEntryResult result = enterChar(curStyle, cur, after, nextChar < next.length ? OptionalInt.of(next[nextChar]) : OptionalInt.empty());
+                    cur = result.result;
+                    if (nextChar < next.length && result.charConsumed)
+                    {
+                        nextChar += 1;
+                        replacementEnd = curStart + cur.length();
+                    }
+                    if (result.moveToNext)
+                        break;
                 }
-                if (result.moveToNext)
-                    break;
             }
             newContent.add(new Item(existingItem.parent, cur, curStyle, existingItem.prompt));
             next = Arrays.copyOfRange(next, nextChar, next.length);
@@ -473,10 +478,11 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
     private CharEntryResult enterChar(ItemVariant style, String before, String after, OptionalInt c)
     {
-        if (style == ItemVariant.DIVIDER)
-            return new CharEntryResult(after, true, true);
-
         String cStr = c.isPresent() ? new String(new int[] {c.getAsInt()}, 0, 1) : "";
+
+        if (style == ItemVariant.DIVIDER)
+            return new CharEntryResult(before + after, !after.isEmpty(), after.isEmpty() || cStr.equals(after));
+
         if (c.isPresent())
         {
             if (validCharacterForItem(style, before, c.getAsInt()))
@@ -506,7 +512,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
             case TAG_NAME:
                 return Character.isAlphabetic(c) || c == '_' || (!before.isEmpty() && c >= '0' && c <= '9');
             case EDITABLE_TEXT:
-                return true;
+                return c != '\"';
             case EDITABLE_NUMBER:
                 return (before.isEmpty() && c == '-') || (c >= '0' && c <= '9') || (!before.contains(".") && c == '.');
             case TIMEZONE_PLUS_MINUS:

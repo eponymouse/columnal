@@ -871,7 +871,7 @@ public class TestStructuredTextField extends ApplicationTest
                 @OnThread(Tag.Simulation)
                 public String get() throws InternalException, UserException
                 {
-                    return DataTypeUtility.valueToString(tag.getInner(), value.getInner());
+                    return DataTypeUtility.valueToString(tag.getInner(), value.getInner(), taggedTypeAndValueGen.getType());
                 }
             });
             type(tagName.substring(tagName.length() - 1) + "(" + inner, tagName + "(" + inner + "$)", value);

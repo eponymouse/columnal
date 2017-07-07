@@ -285,7 +285,7 @@ public class DataTypeUtility
     }
 
     @OnThread(Tag.Simulation)
-    public static String valueToString(DataType dataType, @Value Object item) throws UserException, InternalException
+    public static String valueToString(DataType dataType, @Value Object item, @Nullable DataType parent) throws UserException, InternalException
     {
         return dataType.apply(new DataTypeVisitor<String>()
         {
@@ -298,7 +298,7 @@ public class DataTypeUtility
             @Override
             public String text() throws InternalException, UserException
             {
-                return item.toString();
+                return parent == null ? item.toString() : "\"" + item.toString() + "\"";
             }
 
             @Override
@@ -325,7 +325,7 @@ public class DataTypeUtility
                     @Nullable DataType typeInner = tags.get(tv.getTagIndex()).getInner();
                     if (typeInner == null)
                         throw new InternalException("Tag value inner but missing type inner: " + typeName + " " + tagName);
-                    return tagName + "(" + valueToString(typeInner, tvInner);
+                    return tagName + "(" + valueToString(typeInner, tvInner, dataType) + ")";
                 }
                 else
                 {
@@ -338,14 +338,18 @@ public class DataTypeUtility
             public String tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
                 @Value Object[] tuple = (@Value Object[])item;
-                StringBuilder s = new StringBuilder("(");
+                StringBuilder s = new StringBuilder();
+                if (parent == null || !parent.isTagged())
+                    s.append("(");
                 for (int i = 0; i < tuple.length; i++)
                 {
                     if (i != 0)
-                        s.append(", ");
-                    s.append(valueToString(inner.get(i), tuple[i]));
+                        s.append(",");
+                    s.append(valueToString(inner.get(i), tuple[i], dataType));
                 }
-                return s.append(")").toString();
+                if (parent == null || !parent.isTagged())
+                    s.append(")");
+                return s.toString();
             }
 
             @Override
@@ -357,10 +361,10 @@ public class DataTypeUtility
                 for (int i = 0; i < listEx.size(); i++)
                 {
                     if (i != 0)
-                        s.append(", ");
+                        s.append(",");
                     if (inner == null)
                         throw new InternalException("Array has empty type but is not empty");
-                    s.append(valueToString(inner, listEx.get(i)));
+                    s.append(valueToString(inner, listEx.get(i), dataType));
                 }
                 return s.append("]").toString();
             }

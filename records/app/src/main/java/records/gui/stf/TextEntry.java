@@ -7,6 +7,7 @@ import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;
 import utility.Either;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -26,7 +27,7 @@ public class TextEntry extends Component<String>
     @Override
     public List<Item> getInitialItems()
     {
-        return Collections.singletonList(new Item(getItemParents(), initial, ItemVariant.EDITABLE_TEXT, ""));
+        return Arrays.asList(new Item(getItemParents(), "\""), new Item(getItemParents(), initial, ItemVariant.EDITABLE_TEXT, ""), new Item(getItemParents(), "\""));
     }
 
     @Override

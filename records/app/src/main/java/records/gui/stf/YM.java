@@ -2,6 +2,7 @@ package records.gui.stf;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import records.error.InternalException;
 import records.gui.stf.StructuredTextField.Component;
@@ -33,20 +34,30 @@ import java.util.Set;
 @OnThread(Tag.FXPlatform)
 public class YM extends Component<YearMonth>
 {
-    private final TemporalAccessor value;
+    private final String initialMonth;
+    private final String initialYear;
 
-    public YM(ImmutableList<Component<?>> parents, TemporalAccessor value)
+    public YM(ImmutableList<Component<?>> parents, @Nullable TemporalAccessor value)
     {
         super(parents);
-        this.value = value;
+        if (value != null)
+        {
+            initialMonth = Integer.toString(value.get(ChronoField.MONTH_OF_YEAR));
+            initialYear = Integer.toString(value.get(ChronoField.YEAR));
+        }
+        else
+        {
+            initialMonth = "";
+            initialYear = "";
+        }
     }
 
     public List<Item> getInitialItems()
     {
         return Arrays.asList(
-            new Item(getItemParents(), Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
+            new Item(getItemParents(), initialMonth, ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
             new Item(getItemParents(), "/"),
-            new Item(getItemParents(), Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year")));
+            new Item(getItemParents(), initialYear, ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year")));
     }
 
     private static int adjustYear2To4(int month, String originalYearText, final int year)

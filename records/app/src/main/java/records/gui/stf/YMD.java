@@ -35,21 +35,34 @@ import java.util.Set;
 @OnThread(Tag.FXPlatform)
 public class YMD extends Component<LocalDate>
 {
-    private final TemporalAccessor value;
+    private final String initialMonth;
+    private final String initialDay;
+    private final String initialYear;
 
     public YMD(ImmutableList<Component<?>> parents, @Nullable TemporalAccessor value)
     {
         super(parents);
-        this.value = value;
+        if (value != null)
+        {
+            initialMonth = Integer.toString(value.get(ChronoField.MONTH_OF_YEAR));
+            initialDay = Integer.toString(value.get(ChronoField.DAY_OF_MONTH));
+            initialYear = Integer.toString(value.get(ChronoField.YEAR));
+        }
+        else
+        {
+            initialDay = "";
+            initialMonth = "";
+            initialYear = "";
+        }
     }
 
     public List<Item> getInitialItems()
     {
-        return Arrays.asList(new Item(getItemParents(), Integer.toString(value.get(ChronoField.DAY_OF_MONTH)), ItemVariant.EDITABLE_DAY, TranslationUtility.getString("entry.prompt.day")),
+        return Arrays.asList(new Item(getItemParents(), initialDay, ItemVariant.EDITABLE_DAY, TranslationUtility.getString("entry.prompt.day")),
             new Item(getItemParents(), "/"),
-            new Item(getItemParents(), Integer.toString(value.get(ChronoField.MONTH_OF_YEAR)), ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
+            new Item(getItemParents(), initialMonth, ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
             new Item(getItemParents(), "/"),
-            new Item(getItemParents(), Integer.toString(value.get(ChronoField.YEAR)), ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year")));
+            new Item(getItemParents(), initialYear, ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year")));
     }
 
     private static int adjustYear2To4(int day, int month, String originalYearText, final int year)

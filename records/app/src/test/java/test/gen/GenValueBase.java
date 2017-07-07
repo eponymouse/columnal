@@ -25,6 +25,7 @@ import java.math.BigDecimal;
 import java.time.OffsetTime;
 import java.time.YearMonth;
 import java.time.ZoneId;
+import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
 import java.util.Collections;
 import java.util.List;
@@ -79,7 +80,7 @@ public abstract class GenValueBase<T> extends Generator<T>
                     case TIMEOFDAY:
                         return TestUtil.generateTime(r, gs);
                     case TIMEOFDAYZONED:
-                        return OffsetTime.of(TestUtil.generateTime(r, gs), new ZoneOffsetGenerator().generate(r, gs));
+                        return OffsetTime.of(TestUtil.generateTime(r, gs), ZoneOffset.ofTotalSeconds(60 * r.nextInt(-18*60, 18*60)));
                     case DATETIME:
                         return TestUtil.generateDateTime(r, gs);
                     case DATETIMEZONED:

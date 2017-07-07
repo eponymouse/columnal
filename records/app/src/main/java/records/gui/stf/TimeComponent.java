@@ -1,6 +1,7 @@
 package records.gui.stf;
 
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
@@ -20,23 +21,36 @@ import java.util.List;
  */
 public class TimeComponent extends Component<LocalTime>
 {
-    private final TemporalAccessor value;
+    private final String initialHour;
+    private final String initialMinute;
+    private final String initialSecond;
 
-    public TimeComponent(ImmutableList<Component<?>> parents, TemporalAccessor value)
+    public TimeComponent(ImmutableList<Component<?>> parents, @Nullable TemporalAccessor value)
     {
         super(parents);
-        this.value = value;
+        if (value != null)
+        {
+            initialHour = Integer.toString(value.get(ChronoField.HOUR_OF_DAY));
+            initialMinute = Integer.toString(value.get(ChronoField.MINUTE_OF_HOUR));
+            initialSecond = Integer.toString(value.get(ChronoField.SECOND_OF_MINUTE));
+        }
+        else
+        {
+            initialHour = "";
+            initialMinute = "";
+            initialSecond = "";
+        }
     }
 
     @Override
     public List<Item> getInitialItems()
     {
         return Arrays.asList(
-            new Item(getItemParents(), Integer.toString(value.get(ChronoField.HOUR_OF_DAY)), ItemVariant.EDITABLE_HOUR, TranslationUtility.getString("entry.prompt.hour")),
+            new Item(getItemParents(), initialHour, ItemVariant.EDITABLE_HOUR, TranslationUtility.getString("entry.prompt.hour")),
             new Item(getItemParents(), ":"),
-            new Item(getItemParents(), Integer.toString(value.get(ChronoField.MINUTE_OF_HOUR)), ItemVariant.EDITABLE_MINUTE, TranslationUtility.getString("entry.prompt.minute")),
+            new Item(getItemParents(), initialMinute, ItemVariant.EDITABLE_MINUTE, TranslationUtility.getString("entry.prompt.minute")),
             new Item(getItemParents(), ":"),
-            new Item(getItemParents(), Integer.toString(value.get(ChronoField.SECOND_OF_MINUTE)), ItemVariant.EDITABLE_SECOND, TranslationUtility.getString("entry.prompt.second")));
+            new Item(getItemParents(), initialSecond, ItemVariant.EDITABLE_SECOND, TranslationUtility.getString("entry.prompt.second")));
     }
 
     @Override
