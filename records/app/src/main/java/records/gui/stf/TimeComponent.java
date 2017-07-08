@@ -2,7 +2,6 @@ package records.gui.stf;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;
@@ -19,7 +18,7 @@ import java.util.List;
 /**
  * Created by neil on 28/06/2017.
  */
-public class TimeComponent extends Component<LocalTime>
+public class TimeComponent extends TerminalComponent<LocalTime>
 {
     private final String initialHour;
     private final String initialMinute;
@@ -40,21 +39,17 @@ public class TimeComponent extends Component<LocalTime>
             initialMinute = "";
             initialSecond = "";
         }
-    }
 
-    @Override
-    public List<Item> getInitialItems()
-    {
-        return Arrays.asList(
+        items.addAll(Arrays.asList(
             new Item(getItemParents(), initialHour, ItemVariant.EDITABLE_HOUR, TranslationUtility.getString("entry.prompt.hour")),
             new Item(getItemParents(), ":"),
             new Item(getItemParents(), initialMinute, ItemVariant.EDITABLE_MINUTE, TranslationUtility.getString("entry.prompt.minute")),
             new Item(getItemParents(), ":"),
-            new Item(getItemParents(), initialSecond, ItemVariant.EDITABLE_SECOND, TranslationUtility.getString("entry.prompt.second")));
+            new Item(getItemParents(), initialSecond, ItemVariant.EDITABLE_SECOND, TranslationUtility.getString("entry.prompt.second"))));
     }
 
     @Override
-    public Either<List<ErrorFix>, LocalTime> endEdit(StructuredTextField<?> field, List<Item> endResult)
+    public Either<List<ErrorFix>, LocalTime> endEdit(StructuredTextField<?> field)
     {
         List<ErrorFix> fixes = new ArrayList<>();
         field.revertEditFix().ifPresent(fixes::add);

@@ -3,7 +3,6 @@ package records.gui.stf;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
-import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;
@@ -17,24 +16,16 @@ import java.util.List;
 /**
  * Created by neil on 28/06/2017.
  */
-public class BoolEntry extends Component<Boolean>
+public class BoolComponent extends TerminalComponent<Boolean>
 {
-    private final String initialContent;
-
-    public BoolEntry(ImmutableList<Component<?>> parents, @Nullable Boolean initial)
+    public BoolComponent(ImmutableList<Component<?>> parents, @Nullable Boolean initial)
     {
         super(parents);
-        this.initialContent = initial == null ? "" : Boolean.toString(initial);
+        items.add(new Item(getItemParents(), initial == null ? "" : Boolean.toString(initial), ItemVariant.EDITABLE_BOOLEAN, ""));
     }
 
     @Override
-    public List<Item> getInitialItems()
-    {
-        return Collections.singletonList(new Item(getItemParents(), initialContent, ItemVariant.EDITABLE_BOOLEAN, ""));
-    }
-
-    @Override
-    public Either<List<ErrorFix>, Boolean> endEdit(StructuredTextField<?> field, List<Item> endResult)
+    public Either<List<ErrorFix>, Boolean> endEdit(StructuredTextField<?> field)
     {
         String val = getItem(endResult, ItemVariant.EDITABLE_BOOLEAN).trim().toLowerCase();
         if (val.equals("true"))

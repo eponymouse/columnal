@@ -36,6 +36,11 @@ public final class Pair<A, B>
         return second;
     }
 
+    public <C> Pair<C, B> mapFirst(Function<A, C> map)
+    {
+        return new Pair<>(map.apply(first), second);
+    }
+
     public <C> Pair<C, B> mapFirstEx(ExFunction<A, C> map) throws InternalException, UserException
     {
         return new Pair<>(map.apply(first), second);

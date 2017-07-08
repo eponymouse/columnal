@@ -14,7 +14,6 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import org.checkerframework.dataflow.qual.Pure;
 import org.controlsfx.control.PopOver;
 import org.controlsfx.control.PopOver.ArrowLocation;
 import org.fxmisc.richtext.CharacterHit;
@@ -25,6 +24,7 @@ import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import org.jetbrains.annotations.NotNull;
 import records.error.InternalException;
+import records.gui.stf.Component.InsertState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -39,9 +39,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -49,7 +47,25 @@ import java.util.TreeMap;
 import java.util.stream.Collectors;
 
 /**
- * Created by neil on 18/06/2017.
+ * A StructuredTextField, for the entry of (known a priori) statically-typed data values.  The field
+ * provides any structural dividers (e.g. for a time value, the colons between the numbers, for a tuple
+ * it's the brackets and commas between each item) which cannot be removed or added, and prevents
+ * certain invalid inputs (and/or corrects common mistakes), as well as giving contextual content assist.
+ *
+ * The arrangement is as follows.  A structed text field has a single top-level "component".  A component
+ * may have many sub-components, in a finite-depth nested tree.  (Actually, it's only finite-depth if the types
+ * are finite-depth; may revisit this if we allow recursive types.)  In general, a component corresponds to
+ * a type, although it's not always 1:1 (e.g. some of the date types are composites of a couple of helper
+ * components).
+ *
+ * Each component has 1 or more items.  An item is either an editable portion of the field (e.g. the hours
+ * in a time field), or a divider (e.g. the colon between the hours and the minutes).  Each non-divider item
+ * has a separate type, to enable validation and content assist.
+ *
+ * Fields are altered by removal (of 1 or more characters) or insertion (which is broken down into single
+ * sequential character insertions).  A removal only changes the structure (i.e. list of items and components)
+ * in a list component, otherwise content is removed from each editable item and dividers are left standing.
+ * Similarly, insertion only alters the structure in a list, otherwise it only alters content.
  */
 @OnThread(Tag.FXPlatform)
 public final class StructuredTextField<T> extends StyleClassedTextArea
@@ -70,7 +86,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         super(false);
         getStyleClass().add("structured-text-field");
         this.contentComponent = content;
-        List<Item> initialItems = content.getInitialItems();
+        List<Item> initialItems = content.getItems();
         curValue.addAll(initialItems);
         suggestions = content.getSuggestions();
 
@@ -230,7 +246,18 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     public void replace(final int start, final int end, StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> replacement)
     {
         hidePopup();
-
+        Pair<List<Item>, Integer> state = new Pair<>(curValue, start);
+        if (end > start)
+        {
+            state = contentComponent.delete(start, end);
+        }
+        ImmutableList<Integer> replacementCodepoints = replacement.getText().codePoints().boxed().collect(ImmutableList.toImmutableList());
+        if (!replacementCodepoints.isEmpty())
+        {
+            InsertState insertState = contentComponent.insert(state.getSecond(), replacementCodepoints);
+            state = new Pair<>(insertState.items, insertState.cursorPos);
+        }
+/*
         List<Item> existing = new ArrayList<>(curValue);
 
         List<Item> newContent = new ArrayList<>();
@@ -296,69 +323,16 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
             curExisting += 1;
             cur = "";
         }
-        StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = makeDoc(newContent);
+*/
+        StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = makeDoc(state.getFirst());
         inSuperReplace = true;
         super.replace(0, getLength(), doc);
         inSuperReplace = false;
         ArrayList<Item> oldValue = new ArrayList<>(curValue);
         curValue.clear();
-        curValue.addAll(newContent);
-        selectRange(replacementEnd, replacementEnd);
+        curValue.addAll(state.getFirst());
+        selectRange(state.getSecond(), state.getSecond());
         updateAutoComplete(getSelection());
-
-        Map<Component<?>, List<Item>> replacementsToMake = new HashMap<>();
-        // Must notify in one loop and replace in another to remove concurrent modification:
-        for (int i = 0; i < curValue.size(); i++)
-        {
-            Item item = curValue.get(i);
-            if (!item.content.equals(oldValue.get(i).content))
-            {
-                // Should we notify all parents, or just innermost?  I think really only tagged acts on this,
-                // and that's for tag where it is the innermost parent.
-                Component<?> innermostParent = item.parent.get(item.parent.size() - 1);
-                Optional<List<Item>> replacementItems = innermostParent.valueChanged(oldValue.get(i), item);
-                if (replacementItems.isPresent())
-                {
-                    replacementsToMake.put(innermostParent, replacementItems.get());
-                }
-            }
-        }
-        if (!replacementsToMake.isEmpty())
-        {
-            for (int i = 0; i < curValue.size(); )
-            {
-                Item aCurValue = curValue.get(i);
-                boolean removed = false;
-                for (Entry<Component<?>, List<Item>> entry : replacementsToMake.entrySet())
-                {
-                    if (aCurValue.getParents().contains(entry.getKey()))
-                    {
-                        if (!removed)
-                        {
-                            curValue.remove(i);
-                            removed = true;
-                        }
-                        if (!entry.getValue().isEmpty())
-                        {
-                            curValue.addAll(i, entry.getValue());
-                            i += entry.getValue().size();
-                            // Only add once:
-                            entry.setValue(Collections.emptyList());
-                        }
-                    }
-                }
-                // Only do this if we haven't removed earlier in the loop:
-                if (!removed)
-                    i += 1;
-            }
-
-            doc = makeDoc(curValue);
-            inSuperReplace = true;
-            super.replace(0, getLength(), doc);
-            inSuperReplace = false;
-            selectRange(replacementEnd, replacementEnd);
-            updateAutoComplete(getSelection());
-        }
     }
 
     protected Optional<ErrorFix> revertEditFix(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this)
@@ -454,7 +428,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
      */
     public Either<List<ErrorFix>, T> endEdit()
     {
-        return contentComponent.endEdit(this, curValue);
+        return contentComponent.endEdit(this);
     }
 
     public T getCompletedValue()
@@ -475,7 +449,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
             this.moveToNext = moveToNext;
         }
     }
-
+/*
     private CharEntryResult enterChar(Item item, String before, String after, OptionalInt c)
     {
         ItemVariant style = item.itemVariant;
@@ -494,7 +468,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
         if (c.isPresent())
         {
-            if (validCharacterForItem(style, before, c.getAsInt()))
+            if (style.validCharacterForItem(before, c.getAsInt()))
             {
                 if (before.length() < maxLength(style))
                     return new CharEntryResult(before + cStr, true, false);
@@ -513,32 +487,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
             return new CharEntryResult(before + after.trim(), true, true);
 
     }
-
-    private boolean validCharacterForItem(ItemVariant style, String before, int c)
-    {
-        switch (style)
-        {
-            case TAG_NAME:
-                return Character.isAlphabetic(c) || c == '_' || (!before.isEmpty() && c >= '0' && c <= '9');
-            case EDITABLE_TEXT:
-                return c != '\"';
-            case EDITABLE_NUMBER:
-                return (before.isEmpty() && c == '-') || (c >= '0' && c <= '9') || (!before.contains(".") && c == '.');
-            case TIMEZONE_PLUS_MINUS:
-                return c == '+' || c == '-';
-            case EDITABLE_HOUR:
-            case EDITABLE_MINUTE:
-            case EDITABLE_OFFSET_HOUR:
-            case EDITABLE_OFFSET_MINUTE:
-                return (c >= '0' && c <= '9');
-            case EDITABLE_SECOND:
-                return (c >= '0' && c <= '9') || c == '.';
-            // Day, Month Year allow month names in any of them:
-            default:
-                return (c >= '0' && c <= '9') || Character.isAlphabetic(c);
-        }
-    }
-
+*/
     private int maxLength(ItemVariant style)
     {
         switch (style)
@@ -554,149 +503,6 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         }
     }
 
-    /*
-        private static EditableStyledDocument<Void, Item, ItemVariant> makeDocument(Item[] subItems)
-        {
-            #error TODO need to fill all this in
-            return new EditableStyledDocument<Void, Item, ItemVariant>()
-            {
-                private final SimpleObjectProperty<Paragraph<Void, Item, ItemVariant>> para = new SimpleObjectProperty<>(new Paragraph<Void, Item, ItemVariant>(null, segmentOps(), subItems[0], Arrays.copyOfRange(subItems, 1, subItems.length)));
-                private final LiveList<Paragraph<Void, Item, ItemVariant>> paras = LiveList.wrapVal(new ReadOnlyObjectWrapper<>(para));
-                private final SimpleStringProperty stringContent = new SimpleStringProperty("");
-                private final Val<Integer> length;
-
-                {
-                    length = Val.create(() -> stringContent.get().length());
-                }
-
-                @Override
-                public ObservableValue<String> textProperty()
-                {
-                    return stringContent;
-                }
-
-                @Override
-                public int getLength()
-                {
-                    return stringContent.get().length();
-                }
-
-                @Override
-                public Val<Integer> lengthProperty()
-                {
-                    return length;
-                }
-
-                @Override
-                public LiveList<Paragraph<Void, Item, ItemVariant>> getParagraphs()
-                {
-                    return paras;
-                }
-
-                @Override
-                public ReadOnlyStyledDocument<Void, Item, ItemVariant> snapshot()
-                {
-                    return ReadOnlyStyledDocument.from(this);
-                }
-
-                @Override
-                public EventStream<RichTextChange<Void, Item, ItemVariant>> richChanges()
-                {
-                    return null;
-                }
-
-                @Override
-                public SuspendableNo beingUpdatedProperty()
-                {
-                    return null;
-                }
-
-                @Override
-                public boolean isBeingUpdated()
-                {
-                    return false;
-                }
-
-                @Override
-                public void replace(int i, int i1, StyledDocument<Void, Item, ItemVariant> styledDocument)
-                {
-
-                }
-
-                @Override
-                public void setStyle(int i, int i1, ItemVariant itemVariant)
-                {
-
-                }
-
-                @Override
-                public void setStyle(int i, ItemVariant itemVariant)
-                {
-
-                }
-
-                @Override
-                public void setStyle(int i, int i1, int i2, ItemVariant itemVariant)
-                {
-
-                }
-
-                @Override
-                public void setStyleSpans(int i, StyleSpans<? extends ItemVariant> styleSpans)
-                {
-
-                }
-
-                @Override
-                public void setStyleSpans(int i, int i1, StyleSpans<? extends ItemVariant> styleSpans)
-                {
-
-                }
-
-                @Override
-                public void setParagraphStyle(int i, Void aVoid)
-                {
-
-                }
-
-                @Override
-                public int length()
-                {
-                    return 0;
-                }
-
-                @Override
-                public String getText()
-                {
-                    return null;
-                }
-
-                @Override
-                public StyledDocument<Void, Item, ItemVariant> concat(StyledDocument<Void, Item, ItemVariant> styledDocument)
-                {
-                    return null;
-                }
-
-                @Override
-                public StyledDocument<Void, Item, ItemVariant> subSequence(int i, int i1)
-                {
-                    return null;
-                }
-
-                @Override
-                public Position position(int i, int i1)
-                {
-                    return null;
-                }
-
-                @Override
-                public Position offsetToPosition(int i, Bias bias)
-                {
-                    return null;
-                }
-            };
-        }
-    */
     public void edit(@Nullable Point2D scenePoint, FXPlatformRunnable endEdit)
     {
         //TODO store and use endEdit
@@ -739,6 +545,31 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
         DIVIDER,
         DIVIDER_SPECIAL; // Closing square bracket on a list that lets you add more.
+
+        public boolean validCharacterForItem(String before, int c)
+        {
+            switch (this)
+            {
+                case TAG_NAME:
+                    return Character.isAlphabetic(c) || c == '_' || (!before.isEmpty() && c >= '0' && c <= '9');
+                case EDITABLE_TEXT:
+                    return c != '\"';
+                case EDITABLE_NUMBER:
+                    return (before.isEmpty() && c == '-') || (c >= '0' && c <= '9') || (!before.contains(".") && c == '.');
+                case TIMEZONE_PLUS_MINUS:
+                    return c == '+' || c == '-';
+                case EDITABLE_HOUR:
+                case EDITABLE_MINUTE:
+                case EDITABLE_OFFSET_HOUR:
+                case EDITABLE_OFFSET_MINUTE:
+                    return (c >= '0' && c <= '9');
+                case EDITABLE_SECOND:
+                    return (c >= '0' && c <= '9') || c == '.';
+                // Day, Month Year allow month names in any of them:
+                default:
+                    return (c >= '0' && c <= '9') || Character.isAlphabetic(c);
+            }
+        }
     }
 
     @OnThread(Tag.FXPlatform)
@@ -806,56 +637,15 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         {
             return parent;
         }
-    }
 
-    @OnThread(Tag.FXPlatform)
-    public static abstract class Component<T>
-    {
-        private final ImmutableList<Component<?>> componentParentsAndSelf;
-
-        @SuppressWarnings("initialization") // Due to adding "this" to list
-        protected Component(ImmutableList<Component<?>> componentParents)
+        public Item withTrimmedContent(int startIncl, int endExcl)
         {
-            this.componentParentsAndSelf = ImmutableList.<Component<?>>builder().addAll(componentParents).add(this).build();
+            return new Item(parent, content.substring(startIncl, endExcl), itemVariant, prompt);
         }
 
-        public abstract List<Item> getInitialItems();
-
-        public List<Suggestion> getSuggestions()
+        public Item withInsertAt(int insertBefore, String newContent)
         {
-            return Collections.emptyList();
-        }
-
-        // Gets a list of parents, *including this node* to be passed as parent for an item.
-        @SuppressWarnings("nullness") // Not sure why checker can't see that field cannot be null
-        @Pure
-        protected final ImmutableList<Component<?>> getItemParents(@UnknownInitialization(Component.class) Component<T> this)
-        {
-            return componentParentsAndSelf;
-        }
-
-        public abstract Either<List<ErrorFix>, T> endEdit(StructuredTextField<?> field, List<Item> endResult);
-
-        protected final String getItem(List<Item> curValue, ItemVariant item)
-        {
-            return curValue.stream().filter(ss -> ss.itemVariant == item).findFirst().map(ss -> ss.content).orElse("");
-        }
-
-        /**
-         * Called when content of item has changed.
-         *
-         * @return If present, the list of items to replace *all* this component's items with.  If empty, nothing happens.
-         */
-        public Optional<List<Item>> valueChanged(Item oldVal, Item newVal) { return Optional.empty(); };
-
-        public boolean hasOuterBrackets()
-        {
-            return false;
-        }
-
-        public @Nullable CharEntryResult specialEntered(int character)
-        {
-            return null;
+            return new Item(parent, content.substring(0, insertBefore) + newContent + content.substring(insertBefore), itemVariant, prompt);
         }
     }
 

@@ -4,8 +4,6 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
-import records.error.InternalException;
-import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;
@@ -33,7 +31,7 @@ import java.util.Set;
  * Created by neil on 28/06/2017.
  */
 @OnThread(Tag.FXPlatform)
-public class YMD extends Component<LocalDate>
+public class YMD extends TerminalComponent<LocalDate>
 {
     private final String initialMonth;
     private final String initialDay;
@@ -54,15 +52,12 @@ public class YMD extends Component<LocalDate>
             initialMonth = "";
             initialYear = "";
         }
-    }
 
-    public List<Item> getInitialItems()
-    {
-        return Arrays.asList(new Item(getItemParents(), initialDay, ItemVariant.EDITABLE_DAY, TranslationUtility.getString("entry.prompt.day")),
+        items.addAll(Arrays.asList(new Item(getItemParents(), initialDay, ItemVariant.EDITABLE_DAY, TranslationUtility.getString("entry.prompt.day")),
             new Item(getItemParents(), "/"),
             new Item(getItemParents(), initialMonth, ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
             new Item(getItemParents(), "/"),
-            new Item(getItemParents(), initialYear, ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year")));
+            new Item(getItemParents(), initialYear, ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year"))));
     }
 
     private static int adjustYear2To4(int day, int month, String originalYearText, final int year)
@@ -89,7 +84,7 @@ public class YMD extends Component<LocalDate>
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public Either<List<ErrorFix>, LocalDate> endEdit(StructuredTextField<?> field, List<Item> endResult)
+    public Either<List<ErrorFix>, LocalDate> endEdit(StructuredTextField<?> field)
     {
         List<ErrorFix> fixes = new ArrayList<>();
         field.revertEditFix().ifPresent(fixes::add);

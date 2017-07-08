@@ -1,11 +1,9 @@
 package records.gui.stf;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableList.Builder;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.gui.stf.StructuredTextField.CharEntryResult;
-import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;
@@ -82,13 +80,13 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
     }
 
     @Override
-    public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field, List<Item> endResult)
+    public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field)
     {
         // This is a bit iffy as it threads a mutable array list through the
         // immutable-looking Either instances, but it is safe:
-        Either<List<ErrorFix>, ArrayList<T>> result = components.get(0).endEdit(field, endResult.subList(subLists.get(0).getFirst(), subLists.get(0).getSecond())).map(x -> new ArrayList<>(Collections.singletonList(x)));
+        Either<List<ErrorFix>, ArrayList<T>> result = components.get(0).endEdit(field).map(x -> new ArrayList<>(Collections.singletonList(x)));
         for (int i = 1; i < components.size(); i++)
-            result = Either.combineConcatError(result, components.get(i).endEdit(field, endResult.subList(subLists.get(i).getFirst(), subLists.get(i).getSecond())), (a, x) -> {a.add(x); return a;});
+            result = Either.combineConcatError(result, components.get(i).endEdit(field), (a, x) -> {a.add(x); return a;});
         return result.map(combine);
     }
 

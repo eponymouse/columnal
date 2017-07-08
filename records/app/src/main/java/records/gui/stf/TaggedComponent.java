@@ -7,7 +7,6 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
 import records.gui.TableDisplayUtility;
-import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;
@@ -25,7 +24,7 @@ import java.util.OptionalInt;
 /**
  * Created by neil on 03/07/2017.
  */
-public class TaggedComponent extends Component<TaggedValue>
+public class TaggedComponent extends ParentComponent<TaggedValue>
 {
     private final ImmutableList<TagType<DataType>> tagTypes;
     private final @Nullable TaggedValue initialValue;
@@ -80,7 +79,7 @@ public class TaggedComponent extends Component<TaggedValue>
     }
 
     @Override
-    public Either<List<ErrorFix>, TaggedValue> endEdit(StructuredTextField<?> field, List<Item> endResult)
+    public Either<List<ErrorFix>, TaggedValue> endEdit(StructuredTextField<?> field)
     {
         String tagName = getItem(endResult, ItemVariant.TAG_NAME);
         OptionalInt tagIndex = Utility.findFirstIndex(tagTypes, tt -> tt.getName().equals(tagName));

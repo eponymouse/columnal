@@ -33,13 +33,13 @@ import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.stf.BoolEntry;
+import records.gui.stf.BoolComponent;
 import records.gui.stf.Component2;
 import records.gui.stf.ComponentList;
 import records.gui.stf.NumberEntry;
 import records.gui.stf.PlusMinusOffsetComponent;
 import records.gui.stf.StructuredTextField;
-import records.gui.stf.StructuredTextField.Component;
+import records.gui.stf.Component;
 import records.gui.stf.TaggedComponent;
 import records.gui.stf.TextEntry;
 import records.gui.stf.TimeComponent;
@@ -331,7 +331,7 @@ public class TableDisplayUtility
             @Override
             public GetValueAndComponent<?> bool(GetValue<Boolean> g) throws InternalException
             {
-                return new GetValueAndComponent<>(g, BoolEntry::new);
+                return new GetValueAndComponent<>(g, BoolComponent::new);
             }
 
             @Override
@@ -438,7 +438,7 @@ public class TableDisplayUtility
             @Override
             public Component<@NonNull ?> bool() throws InternalException
             {
-                return new BoolEntry(parents, null);
+                return new BoolComponent(parents, null);
             }
 
             @Override
