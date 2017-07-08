@@ -50,11 +50,18 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
+import static java.time.temporal.ChronoField.DAY_OF_MONTH;
+import static java.time.temporal.ChronoField.HOUR_OF_DAY;
+import static java.time.temporal.ChronoField.MINUTE_OF_HOUR;
 import static java.time.temporal.ChronoField.MONTH_OF_YEAR;
+import static java.time.temporal.ChronoField.NANO_OF_SECOND;
+import static java.time.temporal.ChronoField.SECOND_OF_MINUTE;
 import static java.time.temporal.ChronoField.YEAR;
 
 /**
@@ -1414,38 +1421,45 @@ public class DataType
 
     public static class DateTimeInfo
     {
-        public DateTimeFormatter getFormatter() throws InternalException
+        private static final Map<DateTimeType, DateTimeFormatter> FORMATTERS = new HashMap<>();
+
+        public DateTimeFormatter getFormatter()
         {
-            DateTimeFormatter formatter;
-            switch (getType())
+            return FORMATTERS.computeIfAbsent(getType(), DateTimeInfo::makeFormatter);
+        }
+
+        private static DateTimeFormatter makeFormatter(DateTimeType type)
+        {
+            DateTimeFormatterBuilder builder = new DateTimeFormatterBuilder();
+            if (type.hasDay())
+                builder.appendValue(DAY_OF_MONTH, 2).appendLiteral('/');
+            if (type.hasYearMonth())
             {
-                case YEARMONTHDAY:
-                    formatter = DateTimeFormatter.ISO_LOCAL_DATE;
-                    break;
-                case YEARMONTH:
-                    // Not accessible in YearMonth, but taken from there:
-                    formatter = new DateTimeFormatterBuilder()
-                        .appendValue(YEAR, 4, 10, SignStyle.EXCEEDS_PAD)
-                        .appendLiteral('-')
-                        .appendValue(MONTH_OF_YEAR, 2)
-                        .toFormatter();
-                    break;
-                case TIMEOFDAY:
-                    formatter = DateTimeFormatter.ISO_LOCAL_TIME;
-                    break;
-                case TIMEOFDAYZONED:
-                    formatter = DateTimeFormatter.ISO_TIME;
-                    break;
-                case DATETIME:
-                    formatter = DateTimeFormatter.ISO_DATE_TIME;
-                    break;
-                case DATETIMEZONED:
-                    formatter = DateTimeFormatter.ISO_ZONED_DATE_TIME;
-                    break;
-                default:
-                    throw new InternalException("Unrecognised date/time type: " + getType());
+                builder.appendValue(MONTH_OF_YEAR, 2)
+                    .appendLiteral('/')
+                    .appendValue(YEAR, 4, 10, SignStyle.EXCEEDS_PAD);
+                if (type.hasTime())
+                    builder.appendLiteral(' ');
             }
-            return formatter;
+            if (type.hasTime())
+                builder.appendValue(HOUR_OF_DAY, 2)
+                    .appendLiteral(':')
+                    .appendValue(MINUTE_OF_HOUR, 2)
+                    .optionalStart()
+                    .appendLiteral(':')
+                    .appendValue(SECOND_OF_MINUTE, 2)
+                    .optionalStart()
+                    .appendFraction(NANO_OF_SECOND, 0, 9, true)
+                    .optionalEnd();
+            if (type.hasZoneOffset())
+                builder.optionalStart().appendOffsetId().optionalEnd();
+            if (type.hasZoneId())
+                builder.optionalStart()
+                    .appendLiteral(' ')
+                    .parseCaseSensitive()
+                    .appendZoneRegionId()
+                    .optionalEnd();
+            return builder.toFormatter();
         }
 
         public static enum DateTimeType
@@ -1462,6 +1476,59 @@ public class DataType
             DATETIME,
             /** ZonedDateTime */
             DATETIMEZONED;
+
+            public boolean hasDay()
+            {
+                switch (this)
+                {
+                    case YEARMONTHDAY:
+                    case DATETIME:
+                    case DATETIMEZONED:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+            public boolean hasYearMonth()
+            {
+                switch (this)
+                {
+                    case YEARMONTH:
+                    case YEARMONTHDAY:
+                    case DATETIME:
+                    case DATETIMEZONED:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+
+            public boolean hasTime()
+            {
+                switch (this)
+                {
+                    case TIMEOFDAY:
+                    case TIMEOFDAYZONED:
+                    case DATETIME:
+                    case DATETIMEZONED:
+                        return true;
+                    default:
+                        return false;
+                }
+            }
+
+
+            public boolean hasZoneOffset()
+            {
+                return this == TIMEOFDAYZONED;
+            }
+
+            public boolean hasZoneId()
+            {
+                return this == DATETIMEZONED;
+            }
         }
 
         private final DateTimeType type;
@@ -1491,47 +1558,6 @@ public class DataType
                     return ZonedDateTime.from(DEFAULT_VALUE);
             }
             throw new InternalException("Unknown type: " + type);
-        }
-
-        public boolean hasYearMonthDay()
-        {
-            switch (type)
-            {
-                case YEARMONTHDAY:
-                case DATETIME:
-                case DATETIMEZONED:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-
-        public boolean hasTime()
-        {
-            switch (type)
-            {
-                case TIMEOFDAY:
-                case TIMEOFDAYZONED:
-                case DATETIME:
-                case DATETIMEZONED:
-                    return true;
-                default:
-                    return false;
-            }
-        }
-
-
-        public boolean hasZone()
-        {
-            switch (type)
-            {
-                case TIMEOFDAYZONED:
-                case DATETIMEZONED:
-                    return true;
-                default:
-                    return false;
-            }
         }
 
         public DateTimeType getType()

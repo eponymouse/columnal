@@ -874,7 +874,7 @@ public class TestStructuredTextField extends ApplicationTest
                     return DataTypeUtility.valueToString(tag.getInner(), value.getInner(), taggedTypeAndValueGen.getType());
                 }
             });
-            type(tagName.substring(tagName.length() - 1) + "(" + inner, tagName + "(" + inner + "$)", value);
+            type(tagName.substring(tagName.length() - 1) + "(" + inner, tagName + "(" + inner + "^$)", value);
         }
     }
 

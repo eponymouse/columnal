@@ -304,7 +304,7 @@ public class DataTypeUtility
             @Override
             public String date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return item.toString();
+                return dateTimeInfo.getFormatter().format((TemporalAccessor) item);
             }
 
             @Override
