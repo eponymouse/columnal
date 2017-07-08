@@ -40,11 +40,9 @@ import javafx.collections.ObservableList;
 import javafx.css.Styleable;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
-import javafx.scene.Node;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ScrollBar;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
@@ -1159,6 +1157,28 @@ public class Utility
                     throw new InternalException("Cannot access element of empty list");
                 }
             };
+        }
+    }
+
+    public static class ListExList extends ListEx
+    {
+        private final List<@Value Object> items;
+
+        public ListExList(List<@Value Object> items)
+        {
+            this.items = items;
+        }
+
+        @Override
+        public int size() throws InternalException, UserException
+        {
+            return items.size();
+        }
+
+        @Override
+        public @Value Object get(int index) throws InternalException, UserException
+        {
+            return items.get(index);
         }
     }
 

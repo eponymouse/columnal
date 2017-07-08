@@ -279,7 +279,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
             {
                 while (nextChar < next.length)
                 {
-                    CharEntryResult result = enterChar(curStyle, cur, after, nextChar < next.length ? OptionalInt.of(next[nextChar]) : OptionalInt.empty());
+                    CharEntryResult result = enterChar(existingItem, cur, after, nextChar < next.length ? OptionalInt.of(next[nextChar]) : OptionalInt.empty());
                     cur = result.result;
                     if (nextChar < next.length && result.charConsumed)
                     {
@@ -462,7 +462,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         return completedValue;
     }
 
-    private static class CharEntryResult
+    public static class CharEntryResult
     {
         public final String result;
         public final boolean charConsumed;
@@ -476,11 +476,20 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         }
     }
 
-    private CharEntryResult enterChar(ItemVariant style, String before, String after, OptionalInt c)
+    private CharEntryResult enterChar(Item item, String before, String after, OptionalInt c)
     {
+        ItemVariant style = item.itemVariant;
         String cStr = c.isPresent() ? new String(new int[] {c.getAsInt()}, 0, 1) : "";
 
-        if (style == ItemVariant.DIVIDER)
+        if (style == ItemVariant.DIVIDER_SPECIAL && c.isPresent())
+        {
+            ImmutableList<Component<?>> parents = item.getParents();
+            CharEntryResult charEntryResult = parents.get(parents.size() - 1).specialEntered(c.getAsInt());
+            if (charEntryResult != null)
+                return charEntryResult;
+        }
+
+        if (style == ItemVariant.DIVIDER || style == ItemVariant.DIVIDER_SPECIAL)
             return new CharEntryResult(before + after, !after.isEmpty(), after.isEmpty() || cStr.equals(after));
 
         if (c.isPresent())
@@ -728,7 +737,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
         TAG_NAME,
 
-        DIVIDER;
+        DIVIDER,
+        DIVIDER_SPECIAL; // Closing square bracket on a list that lets you add more.
     }
 
     @OnThread(Tag.FXPlatform)
@@ -748,13 +758,14 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
             this(parent, divider, ItemVariant.DIVIDER, "");
         }
 
-        public Item(ImmutableList<Component<?>> parent, String content, ItemVariant ItemVariant, @Localized String prompt)
+        public Item(ImmutableList<Component<?>> parent, String content, ItemVariant itemVariant, @Localized String prompt)
         {
             this.parent = parent;
             this.content = content;
-            this.itemVariant = ItemVariant;
+            this.itemVariant = itemVariant;
             this.prompt = prompt;
         }
+
 
         public StyledText<Collection<String>> toStyledText()
         {
@@ -840,6 +851,11 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         public boolean hasOuterBrackets()
         {
             return false;
+        }
+
+        public @Nullable CharEntryResult specialEntered(int character)
+        {
+            return null;
         }
     }
 

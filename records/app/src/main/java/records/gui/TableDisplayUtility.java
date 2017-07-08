@@ -8,7 +8,6 @@ import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.StackPane;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -31,7 +30,6 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.TypeId;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
@@ -45,12 +43,12 @@ import records.gui.stf.StructuredTextField.Component;
 import records.gui.stf.TaggedComponent;
 import records.gui.stf.TextEntry;
 import records.gui.stf.TimeComponent;
+import records.gui.stf.VariableLengthComponentList;
 import records.gui.stf.YM;
 import records.gui.stf.YMD;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformBiFunction;
-import utility.FXPlatformBiFunctionInt;
 import utility.FXPlatformFunctionInt;
 import utility.FXPlatformRunnable;
 import utility.Pair;
@@ -58,10 +56,10 @@ import utility.TaggedValue;
 import utility.Utility;
 import records.gui.stable.StableView.ColumnHandler;
 import records.gui.stable.StableView.CellContentReceiver;
+import utility.Utility.ListEx;
+import utility.Utility.ListExList;
 import utility.Workers;
-import utility.Workers.Priority;
 import utility.gui.FXUtility;
-import utility.gui.TranslationUtility;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -73,7 +71,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 
 /**
@@ -487,7 +484,18 @@ public class TableDisplayUtility
             @Override
             public Component<@NonNull ?> array(@Nullable DataType inner) throws InternalException
             {
-                throw new UnimplementedException();
+                if (inner == null)
+                    throw new InternalException("Can't make components for the empty list type");
+
+                @NonNull DataType innerType = inner;
+                return new VariableLengthComponentList<ListEx, Object>(parents, "[", ",", Collections.emptyList(), "]", ListExList::new)
+                {
+                    @Override
+                    protected Component<? extends Object> makeNewEntry(ImmutableList<Component<?>> subParents) throws InternalException
+                    {
+                        return component(subParents, innerType);
+                    }
+                };
             }
         });
     }

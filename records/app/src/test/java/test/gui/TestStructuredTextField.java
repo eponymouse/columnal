@@ -849,7 +849,7 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
     @Property(trials=20)
-    public void propTagged(@When(seed=1L) @From(GenTaggedTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen taggedTypeAndValueGen) throws UserException, InternalException
+    public void propTagged(@When(seed=-1306588459139486136L) @From(GenTaggedTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen taggedTypeAndValueGen) throws UserException, InternalException
     {
         f.set(field(taggedTypeAndValueGen.getType(), taggedTypeAndValueGen.makeValue()));
         targetF();
