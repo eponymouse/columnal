@@ -10,6 +10,8 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.flowless.Cell;
 import records.gui.stf.StructuredTextField.Suggestion;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 
 /**
  * Created by neil on 30/06/2017.
@@ -30,6 +32,7 @@ public class STFAutoCompleteCell extends ListCell<Suggestion>
     }
 
     @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     protected void updateItem(Suggestion item, boolean empty)
     {
         super.updateItem(item, empty);

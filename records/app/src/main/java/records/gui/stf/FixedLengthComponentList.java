@@ -21,13 +21,13 @@ import java.util.function.Function;
  * Created by neil on 28/06/2017.
  */
 @OnThread(Tag.FXPlatform)
-public class ComponentList<R, T> extends ParentComponent<R>
+public class FixedLengthComponentList<R, T> extends ParentComponent<R>
 {
     private final ImmutableList<Component<? extends T>> contentComponents;
     private final Function<List<T>, R> combine;
     private final ImmutableList<Component<?>> allComponents;
 
-    public ComponentList(ImmutableList<Component<?>> parents, @Nullable String prefix, List<Function<ImmutableList<Component<?>>, Component<? extends T>>> components, String divider, @Nullable String suffix, Function<List<T>, R> combine)
+    public FixedLengthComponentList(ImmutableList<Component<?>> parents, @Nullable String prefix, List<Function<ImmutableList<Component<?>>, Component<? extends T>>> components, String divider, @Nullable String suffix, Function<List<T>, R> combine)
     {
         super(parents);
         this.contentComponents = ImmutableList.copyOf(Utility.<Function<ImmutableList<Component<?>>, Component<? extends T>>, Component<? extends T>>mapList(components, f -> f.apply(getItemParents())));
@@ -36,7 +36,7 @@ public class ComponentList<R, T> extends ParentComponent<R>
     }
 
     // Same as above but allows throwing an internal exception, and re-orders parameters to avoid having same erasure
-    public ComponentList(ImmutableList<Component<?>> parents, @Nullable String prefix, String divider, List<FXPlatformFunctionInt<ImmutableList<Component<?>>, Component<? extends T>>> components, @Nullable String suffix, Function<List<T>, R> combine) throws InternalException
+    public FixedLengthComponentList(ImmutableList<Component<?>> parents, @Nullable String prefix, String divider, List<FXPlatformFunctionInt<ImmutableList<Component<?>>, Component<? extends T>>> components, @Nullable String suffix, Function<List<T>, R> combine) throws InternalException
     {
         super(parents);
         Builder<Component<? extends T>> componentBuilder = ImmutableList.builder();
@@ -55,7 +55,7 @@ public class ComponentList<R, T> extends ParentComponent<R>
         return allComponents;
     }
 
-    private static <T> ImmutableList<Component<?>> makeAllComponents(ImmutableList<Component<?>> itemParents, String prefix, ImmutableList<Component<? extends T>> content, String divider, String suffix)
+    private static <T> ImmutableList<Component<?>> makeAllComponents(ImmutableList<Component<?>> itemParents, @Nullable String prefix, ImmutableList<Component<? extends T>> content, String divider, @Nullable String suffix)
     {
         Builder<Component<?>> build = ImmutableList.builder();
         if (prefix != null)
@@ -80,21 +80,6 @@ public class ComponentList<R, T> extends ParentComponent<R>
         for (int i = 1; i < contentComponents.size(); i++)
             result = Either.combineConcatError(result, contentComponents.get(i).endEdit(field), (a, x) -> {a.add(x); return a;});
         return result.map(combine);
-    }
-
-    @Override
-    public List<Suggestion> getSuggestions()
-    {
-        List<Suggestion> r = new ArrayList<>();
-        int offset = 0;
-        for (int i = 0; i < allComponents.size(); i++)
-        {
-            Component<?> component = allComponents.get(i);
-            int offsetFinal = offset;
-            r.addAll(Utility.mapList(component.getSuggestions(), s -> s.offsetBy(offsetFinal)));
-            offset += component.getItems().size();
-        }
-        return r;
     }
 
     @Override

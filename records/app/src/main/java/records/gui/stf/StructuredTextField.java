@@ -39,6 +39,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
@@ -145,11 +146,12 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         if (autoComplete == null && selLength == 0 && isFocused())
         {
             // See if there are any relevant suggestions:
-            @Nullable Entry<Integer, List<Suggestion>> possSugg = new TreeMap<>(suggestions.stream().filter(s -> s.startIndexIncl <= selStr.getFirst() && selStr.getFirst() <= s.endIndexIncl)
-                .collect(Collectors.<Suggestion, Integer>groupingBy(s -> s.getLength()))).firstEntry();
+            Comparator<Pair<Integer, Integer>> cmp = Pair.comparator();
+            @Nullable Entry<Integer, List<Suggestion>> possSugg = new TreeMap<>(suggestions.stream().filter(s -> cmp.compare(s.startIndexIncl, selStr) <= 0 && cmp.compare(s.endIndexIncl, selStr) >= 0)
+                .collect(Collectors.<Suggestion, Integer>groupingBy(s -> s.getItemsLength()))).firstEntry();
             if (possSugg != null && possSugg.getValue().size() > 0) // Size should always be > 0, but just in case
             {
-                int startCharIndex = structuredToPlain(new Pair<>(possSugg.getValue().get(0).startIndexIncl, 0));
+                int startCharIndex = structuredToPlain(possSugg.getValue().get(0).startIndexIncl);
                 @Nullable Bounds charBounds = startCharIndex + 1 <= getLength() ? getCharacterBoundsOnScreen(startCharIndex, startCharIndex + 1).orElse(null) : null;
                 if (charBounds == null)
                     charBounds = localToScreen(getBoundsInLocal());
@@ -328,7 +330,6 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         inSuperReplace = true;
         super.replace(0, getLength(), doc);
         inSuperReplace = false;
-        ArrayList<Item> oldValue = new ArrayList<>(curValue);
         curValue.clear();
         curValue.addAll(state.getFirst());
         selectRange(state.getSecond(), state.getSecond());
@@ -358,7 +359,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
     public void fireSuggestion(Suggestion item)
     {
-        replaceText(structuredToPlain(new Pair<>(item.startIndexIncl, 0)), structuredToPlain(new Pair<>(item.endIndexIncl, curValue.get(item.endIndexIncl).getLength())), item.suggestion);
+        replaceText(structuredToPlain(item.startIndexIncl), structuredToPlain(item.endIndexIncl), item.suggestion);
         // Go to next field if there is one:
         nextChar(SelectionPolicy.CLEAR);
     }
@@ -582,11 +583,13 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         private final String content;
         private final ItemVariant itemVariant;
         private final @Localized String prompt;
+        private final List<Integer> otherEntryOptions = new ArrayList<>();
 
         // Divider:
-        public Item(ImmutableList<Component<?>> parent, String divider)
+        public Item(ImmutableList<Component<?>> parent, String divider, String... otherEntryOptions)
         {
             this(parent, divider, ItemVariant.DIVIDER, "");
+            this.otherEntryOptions.addAll(Arrays.stream(otherEntryOptions).flatMapToInt(String::codePoints).boxed().collect(Collectors.toList()));
         }
 
         public Item(ImmutableList<Component<?>> parent, String content, ItemVariant itemVariant, @Localized String prompt)
@@ -597,6 +600,10 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
             this.prompt = prompt;
         }
 
+        public boolean isValidDividerEntry(int codepoint)
+        {
+            return getType() == ItemVariant.DIVIDER && content.codePointAt(0) == codepoint || otherEntryOptions.contains(codepoint);
+        }
 
         public StyledText<Collection<String>> toStyledText()
         {
@@ -638,9 +645,10 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
             return parent;
         }
 
-        public Item withTrimmedContent(int startIncl, int endExcl)
+        // Cuts the content in the given range, leaving any content that is before or after
+        public Item withCutContent(int startIncl, int endExcl)
         {
-            return new Item(parent, content.substring(startIncl, endExcl), itemVariant, prompt);
+            return new Item(parent, content.substring(0, startIncl) + content.substring(endExcl), itemVariant, prompt);
         }
 
         public Item withInsertAt(int insertBefore, String newContent)
@@ -651,25 +659,31 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
     public static class Suggestion
     {
-        public final int startIndexIncl;
-        public final int endIndexIncl;
+        // Item index, offset within item
+        public final Pair<Integer, Integer> startIndexIncl;
+        public final Pair<Integer, Integer> endIndexIncl;
         public final String suggestion;
 
-        public Suggestion(int startIndexIncl, int endIndexIncl, String suggestion)
+        public Suggestion(Item item, String suggestion)
+        {
+            this(new Pair<>(0, 0), new Pair<>(0, item.getLength()), suggestion);
+        }
+
+        public Suggestion(Pair<Integer, Integer> startIndexIncl, Pair<Integer, Integer> endIndexIncl, String suggestion)
         {
             this.startIndexIncl = startIndexIncl;
             this.endIndexIncl = endIndexIncl;
             this.suggestion = suggestion;
         }
 
-        public Suggestion offsetBy(int amount)
+        public Suggestion offsetByNumItems(int amount)
         {
-            return new Suggestion(startIndexIncl + amount, endIndexIncl + amount, suggestion);
+            return new Suggestion(startIndexIncl.mapFirst(i -> i + amount), endIndexIncl.mapFirst(i -> i + amount), suggestion);
         }
 
-        public int getLength()
+        public int getItemsLength()
         {
-            return endIndexIncl - startIndexIncl + 1;
+            return endIndexIncl.getFirst() - startIndexIncl.getFirst();
         }
     }
 
@@ -687,7 +701,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         return new Pair<>(curValue.size() - 1, curValue.get(curValue.size() - 1).getScreenLength());
     }
 
-    private int structuredToPlain(Pair<Integer, Integer> structured)
+    // package-visible
+    int structuredToPlain(Pair<Integer, Integer> structured)
     {
         int pos = 0;
         for (int i = 0; i < structured.getFirst(); i++)

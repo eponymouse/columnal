@@ -46,9 +46,9 @@ public abstract class Component<T>
 
     public abstract Either<List<ErrorFix>, T> endEdit(StructuredTextField<?> field);
 
-    protected final String getItem(List<Item> curValue, ItemVariant item)
+    protected final String getItem(ItemVariant item)
     {
-        return curValue.stream().filter(ss -> ss.getType() == item).findFirst().map(ss -> ss.getValue()).orElse("");
+        return getItems().stream().filter(ss -> ss.getType() == item).findFirst().map(ss -> ss.getValue()).orElse("");
     }
 
     // Gives back the content (list of items) and an integer delta corresponding to how much the start

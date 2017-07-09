@@ -508,8 +508,8 @@ public class TestStructuredTextField extends ApplicationTest
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
         type("17", "17$/Month/Year");
-        type("/3", "17/3$/Year");
-        type(":1973", "17/3/1973$", LocalDate.of(1973, 3, 17));
+        type("/3/", "17/3/$Year");
+        type("1973", "17/3/1973$", LocalDate.of(1973, 3, 17));
 
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         push(KeyCode.HOME);

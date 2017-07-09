@@ -49,12 +49,4 @@ public class Component2<R, A, B> extends ParentComponent<R>
         Either<List<ErrorFix>, B> bx = b.endEdit(field);
         return Either.combineConcatError(ax, bx, combine);
     }
-
-    @Override
-    public List<Suggestion> getSuggestions()
-    {
-        List<Suggestion> suggA = a.getSuggestions();
-        List<Suggestion> suggB = b.getSuggestions();
-        return Utility.<Suggestion>concat(suggA, Utility.<Suggestion, Suggestion>mapList(suggB, s -> s.offsetBy(aLength + 1)));
-    }
 }

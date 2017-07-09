@@ -46,10 +46,10 @@ public class PlusMinusOffsetComponent extends TerminalComponent<ZoneOffset>
     @Override
     public Either<List<ErrorFix>, ZoneOffset> endEdit(StructuredTextField<?> field)
     {
-        int sign = getItem(endResult, ItemVariant.TIMEZONE_PLUS_MINUS).equals("-") ? -1 : 1;
+        int sign = getItem(ItemVariant.TIMEZONE_PLUS_MINUS).equals("-") ? -1 : 1;
 
-        int hour = sign * Integer.parseInt(getItem(endResult, ItemVariant.EDITABLE_OFFSET_HOUR));
-        int minute = sign * Integer.parseInt(getItem(endResult, ItemVariant.EDITABLE_OFFSET_MINUTE));
+        int hour = sign * Integer.parseInt(getItem(ItemVariant.EDITABLE_OFFSET_HOUR));
+        int minute = sign * Integer.parseInt(getItem(ItemVariant.EDITABLE_OFFSET_MINUTE));
 
         if (hour >= -18 && hour <= 18 && minute >= -59 && minute <= 59)
         {

@@ -86,19 +86,19 @@ public class YM extends TerminalComponent<YearMonth>
 
         try
         {
-            String yearText = getItem(endResult, ItemVariant.EDITABLE_YEAR);
+            String yearText = getItem(ItemVariant.EDITABLE_YEAR);
             int year;
             int month;
             try
             {
                 year = Integer.parseInt(yearText);
-                month = parseMonth(getItem(endResult, ItemVariant.EDITABLE_MONTH));
+                month = parseMonth(getItem(ItemVariant.EDITABLE_MONTH));
             } catch (NumberFormatException e)
             {
                 // If this throws, we'll fall out to the outer catch block
                 // Try swapping month and year:
                 month = parseMonth(yearText);
-                year = Integer.parseInt(getItem(endResult, ItemVariant.EDITABLE_MONTH));
+                year = Integer.parseInt(getItem(ItemVariant.EDITABLE_MONTH));
             }
 
 

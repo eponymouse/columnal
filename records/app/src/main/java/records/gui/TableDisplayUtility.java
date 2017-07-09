@@ -35,7 +35,7 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.stf.BoolComponent;
 import records.gui.stf.Component2;
-import records.gui.stf.ComponentList;
+import records.gui.stf.FixedLengthComponentList;
 import records.gui.stf.NumberEntry;
 import records.gui.stf.PlusMinusOffsetComponent;
 import records.gui.stf.StructuredTextField;
@@ -65,6 +65,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetTime;
+import java.time.ZoneOffset;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -346,7 +347,7 @@ public class TableDisplayUtility
                     case TIMEOFDAY:
                         return new GetValueAndComponent<>(g, TimeComponent::new);
                     case TIMEOFDAYZONED:
-                        return new GetValueAndComponent<>(g, (parents, value) -> new PlusMinusOffsetComponent<OffsetTime, LocalTime>(parents, subParents -> new TimeComponent(subParents, value), value.get(ChronoField.OFFSET_SECONDS), OffsetTime::of));
+                        return new GetValueAndComponent<>(g, (parents, value) -> new Component2<OffsetTime, LocalTime, ZoneOffset>(parents, subParents -> new TimeComponent(subParents, value), " ", subParents -> new PlusMinusOffsetComponent(parents, value.get(ChronoField.OFFSET_SECONDS)), OffsetTime::of));
                     case DATETIME:
                         return new GetValueAndComponent<>(g, (parents, value) -> new Component2<LocalDateTime, LocalDate, LocalTime>(parents, subParents -> new YMD(subParents, value), " ", subParents -> new TimeComponent(subParents, value), LocalDateTime::of));
                     case DATETIMEZONED:
@@ -406,7 +407,7 @@ public class TableDisplayUtility
                         int iFinal = i;
                         components.add(subParents -> makeComponent.apply(subParents, value[iFinal]));
                     }
-                    return new ComponentList<Object[], Object>(parents, "(", components, ",", ")", List::toArray);
+                    return new FixedLengthComponentList<Object[], Object>(parents, "(", components, ",", ")", List::toArray);
                 });
             }
 
@@ -424,18 +425,21 @@ public class TableDisplayUtility
         return dataType.apply(new DataTypeVisitorEx<Component<@NonNull ?>, InternalException>()
         {
             @Override
+            @OnThread(Tag.FXPlatform)
             public Component<@NonNull ?> number(NumberInfo displayInfo) throws InternalException
             {
                 return new NumberEntry(parents, null);
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public Component<@NonNull ?> text() throws InternalException
             {
                 return new TextEntry(parents, "");
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public Component<@NonNull ?> bool() throws InternalException
             {
                 return new BoolComponent(parents, null);
@@ -454,7 +458,7 @@ public class TableDisplayUtility
                     case TIMEOFDAY:
                         return new TimeComponent(parents, null);
                     case TIMEOFDAYZONED:
-                        return new PlusMinusOffsetComponent<OffsetTime, LocalTime>(parents, subParents -> new TimeComponent(subParents, null), null, OffsetTime::of);
+                        return new Component2<OffsetTime, LocalTime, ZoneOffset>(parents, subParents -> new TimeComponent(subParents, null), " ", subParents -> new PlusMinusOffsetComponent(subParents, null), OffsetTime::of);
                     case DATETIME:
                         return new Component2<LocalDateTime, LocalDate, LocalTime>(parents, subParents -> new YMD(subParents, null), " ", subParents -> new TimeComponent(subParents, null), LocalDateTime::of);
                     case DATETIMEZONED:
@@ -464,6 +468,7 @@ public class TableDisplayUtility
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public Component<@NonNull ?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
             {
                 return new TaggedComponent(parents, tagTypes, null);
@@ -478,10 +483,11 @@ public class TableDisplayUtility
                 {
                     comps.add(subParents -> component(subParents, type));
                 }
-                return new ComponentList<Object[], Object>(parents, "(", ",", comps, ")", List::toArray);
+                return new FixedLengthComponentList<Object[], Object>(parents, "(", ",", comps, ")", List::toArray);
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public Component<@NonNull ?> array(@Nullable DataType inner) throws InternalException
             {
                 if (inner == null)

@@ -54,9 +54,9 @@ public class YMD extends TerminalComponent<LocalDate>
         }
 
         items.addAll(Arrays.asList(new Item(getItemParents(), initialDay, ItemVariant.EDITABLE_DAY, TranslationUtility.getString("entry.prompt.day")),
-            new Item(getItemParents(), "/"),
+            new Item(getItemParents(), "/", " ", "-", "."),
             new Item(getItemParents(), initialMonth, ItemVariant.EDITABLE_MONTH, TranslationUtility.getString("entry.prompt.month")),
-            new Item(getItemParents(), "/"),
+            new Item(getItemParents(), "/", " ", "-", "."),
             new Item(getItemParents(), initialYear, ItemVariant.EDITABLE_YEAR, TranslationUtility.getString("entry.prompt.year"))));
     }
 
@@ -92,23 +92,23 @@ public class YMD extends TerminalComponent<LocalDate>
 
         try
         {
-            String dayText = getItem(endResult, ItemVariant.EDITABLE_DAY);
+            String dayText = getItem(ItemVariant.EDITABLE_DAY);
             int day, month;
             try
             {
                 day = Integer.parseInt(dayText);
-                month = parseMonth(getItem(endResult, ItemVariant.EDITABLE_MONTH));
+                month = parseMonth(getItem(ItemVariant.EDITABLE_MONTH));
             } catch (NumberFormatException e)
             {
                 // If this throws, we'll fall out to the outer catch block
                 // Try swapping day and month:
                 month = parseMonth(dayText);
-                day = Integer.parseInt(getItem(endResult, ItemVariant.EDITABLE_MONTH));
-                dayText = getItem(endResult, ItemVariant.EDITABLE_MONTH);
+                day = Integer.parseInt(getItem(ItemVariant.EDITABLE_MONTH));
+                dayText = getItem(ItemVariant.EDITABLE_MONTH);
             }
 
 
-            String yearText = getItem(endResult, ItemVariant.EDITABLE_YEAR);
+            String yearText = getItem(ItemVariant.EDITABLE_YEAR);
             int year = Integer.parseInt(yearText);
             // For fixes, we always use fourYear.  If they really want a two digit year, they should enter the leading zeroes
             if (day <= 0)

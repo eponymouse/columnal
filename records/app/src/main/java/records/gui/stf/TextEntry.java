@@ -23,6 +23,6 @@ public class TextEntry extends TerminalComponent<String>
     @Override
     public Either<List<ErrorFix>, String> endEdit(StructuredTextField<?> field)
     {
-        return Either.right(getItem(endResult, ItemVariant.EDITABLE_TEXT));
+        return Either.right(getItem(ItemVariant.EDITABLE_TEXT));
     }
 }

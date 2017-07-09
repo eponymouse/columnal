@@ -29,7 +29,7 @@ public class NumberEntry extends TerminalComponent<Number>
     {
         try
         {
-            return Either.right(Utility.parseNumber(getItem(endResult, ItemVariant.EDITABLE_NUMBER)));
+            return Either.right(Utility.parseNumber(getItem(ItemVariant.EDITABLE_NUMBER)));
         }
         catch (UserException e)
         {

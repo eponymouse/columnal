@@ -55,11 +55,11 @@ public class TimeComponent extends TerminalComponent<LocalTime>
         field.revertEditFix().ifPresent(fixes::add);
         try
         {
-            int hour = Integer.parseInt(getItem(endResult, ItemVariant.EDITABLE_HOUR));
-            int minute = Integer.parseInt(getItem(endResult, ItemVariant.EDITABLE_MINUTE));
+            int hour = Integer.parseInt(getItem(ItemVariant.EDITABLE_HOUR));
+            int minute = Integer.parseInt(getItem(ItemVariant.EDITABLE_MINUTE));
             int second;
             int nano;
-            String secondText = getItem(endResult, ItemVariant.EDITABLE_SECOND);
+            String secondText = getItem(ItemVariant.EDITABLE_SECOND);
             if (secondText.contains("."))
             {
                 second = Integer.parseInt(secondText.substring(0, secondText.indexOf('.')));

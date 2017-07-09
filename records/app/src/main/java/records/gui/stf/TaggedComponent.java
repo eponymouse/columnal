@@ -1,6 +1,8 @@
 package records.gui.stf;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import javafx.collections.ListChangeListener;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -13,6 +15,7 @@ import records.gui.stf.StructuredTextField.ItemVariant;
 import utility.Either;
 import utility.TaggedValue;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,61 +30,68 @@ import java.util.OptionalInt;
 public class TaggedComponent extends ParentComponent<TaggedValue>
 {
     private final ImmutableList<TagType<DataType>> tagTypes;
-    private final @Nullable TaggedValue initialValue;
+    private final TagComponent tagComponent;
+    private final DividerComponent openBracket;
+    private final DividerComponent closeBracket;
+    private @Nullable Component<? extends @Value Object> currentChild;
 
     public <DT extends DataType> TaggedComponent(ImmutableList<Component<?>> parents, ImmutableList<TagType<DT>> tagTypes, @Nullable TaggedValue initialValue)
     {
         super(parents);
         this.tagTypes = (ImmutableList)tagTypes;
-        this.initialValue = initialValue;
+        openBracket = new DividerComponent(getItemParents(), "(");
+        closeBracket = new DividerComponent(getItemParents(), ")");
+        // Important to do TagComponent last as it uses the other fields:
+        this.tagComponent = new TagComponent(getItemParents(), initialValue == null ? "" : tagTypes.get(initialValue.getTagIndex()).getName());
     }
 
     @Override
-    public List<Item> getInitialItems()
+    protected List<Component<?>> getChildComponents()
     {
-        return Arrays.asList(new Item(getItemParents(), initialValue == null ? "" : tagTypes.get(initialValue.getTagIndex()).getName(), ItemVariant.TAG_NAME, "Tag"));
-
-    }
-
-    @Override
-    public Optional<List<Item>> valueChanged(Item oldVal, Item item)
-    {
-        if (item.getType() == ItemVariant.TAG_NAME)
+        if (currentChild == null)
+            return Collections.singletonList(tagComponent);
+        else
         {
-            @Nullable TagType<? extends DataType> matchingTag = tagTypes.stream().filter(tt -> tt.getName().toLowerCase().equals(item.getValue().toLowerCase())).findFirst().orElse(null);
-            if (matchingTag != null && !matchingTag.getName().equals(oldVal.getValue()))
+            if (currentChild.hasOuterBrackets())
+                return Arrays.asList(tagComponent, currentChild);
+            else
+                return Arrays.asList(tagComponent, openBracket, currentChild, closeBracket);
+        }
+    }
+
+    private void tagNameChanged(String newValue)
+    {
+        @Nullable TagType<? extends DataType> matchingTag = tagTypes.stream().filter(tt -> tt.getName().toLowerCase().equals(newValue.toLowerCase())).findFirst().orElse(null);
+        if (matchingTag != null)
+        {
+            if (matchingTag.getInner() != null)
             {
-                List<Item> r = new ArrayList<>();
-                r.add(new Item(getItemParents(), matchingTag.getName(), ItemVariant.TAG_NAME, "Tag"));
-                if (matchingTag.getInner() != null)
+                try
                 {
-                    @MonotonicNonNull Component<?> innerComponent = null;
-                    try
-                    {
-                        innerComponent = TableDisplayUtility.component(getItemParents(), matchingTag.getInner());
-                    }
-                    catch (InternalException e)
-                    {
-                        Utility.log(e);
-                        // Just return as is:
-                        return Optional.of(r);
-                    }
-                    if (!innerComponent.hasOuterBrackets())
-                        r.add(new Item(getItemParents(), "("));
-                    r.addAll(innerComponent.getInitialItems());
-                    if (!innerComponent.hasOuterBrackets())
-                        r.add(new Item(getItemParents(), ")"));
+                    currentChild = TableDisplayUtility.component(getItemParents(), matchingTag.getInner());
                 }
-                return Optional.of(r);
+                catch (InternalException e)
+                {
+                    Utility.log(e);
+                    // Just leave blank:
+                    currentChild = null;
+                }
+            }
+            else
+            {
+                currentChild = null;
             }
         }
-        return Optional.empty();
+        else
+        {
+            currentChild = null;
+        }
     }
 
     @Override
     public Either<List<ErrorFix>, TaggedValue> endEdit(StructuredTextField<?> field)
     {
-        String tagName = getItem(endResult, ItemVariant.TAG_NAME);
+        String tagName = getItem(ItemVariant.TAG_NAME);
         OptionalInt tagIndex = Utility.findFirstIndex(tagTypes, tt -> tt.getName().equals(tagName));
         if (tagIndex.isPresent())
         {
@@ -90,6 +100,29 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
         else
         {
             return Either.left(Collections.emptyList());
+        }
+    }
+
+    private class TagComponent extends TerminalComponent<String>
+    {
+        public TagComponent(ImmutableList<Component<?>> componentParents, String initialContent)
+        {
+            super(componentParents);
+            FXUtility.listen(items, c -> {
+                // There's only ever one item, so if the list has changed, we know that it affects the single item in the list
+                // We also know that the tag name will have changed
+                tagNameChanged(items.get(0).getValue());
+            });
+
+            items.add(new Item(getItemParents(), initialContent, ItemVariant.TAG_NAME, "Tag"));
+        }
+
+
+
+        @Override
+        public Either<List<ErrorFix>, String> endEdit(StructuredTextField<?> field)
+        {
+            return Either.right(getItem(ItemVariant.TAG_NAME));
         }
     }
 }
