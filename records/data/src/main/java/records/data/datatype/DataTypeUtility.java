@@ -4,7 +4,6 @@ import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import annotation.userindex.qual.UserIndex;
 import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ArrayColumnStorage;
 import records.data.BooleanColumnStorage;
@@ -21,7 +20,6 @@ import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue.GetValue;
-import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -36,9 +34,7 @@ import java.time.LocalTime;
 import java.time.OffsetTime;
 import java.time.YearMonth;
 import java.time.ZonedDateTime;
-import java.time.temporal.Temporal;
 import java.time.temporal.TemporalAccessor;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -273,12 +269,12 @@ public class DataTypeUtility
         };
     }
 
-    public static String valueToString(@Value Object item)
+    public static String _test_valueToString(@Value Object item)
     {
         if (item instanceof Object[])
         {
             @Value Object[] tuple = (@Value Object[])item;
-            return "(" + Arrays.stream(tuple).map(DataTypeUtility::valueToString).collect(Collectors.joining(", ")) + ")";
+            return "(" + Arrays.stream(tuple).map(DataTypeUtility::_test_valueToString).collect(Collectors.joining(", ")) + ")";
         }
 
         return item.toString();
@@ -298,7 +294,13 @@ public class DataTypeUtility
             @Override
             public String text() throws InternalException, UserException
             {
-                return parent == null ? item.toString() : "\"" + item.toString() + "\"";
+                return parent == null ? escapeChars(item.toString()) : "\"" + escapeChars(item.toString()) + "\"";
+            }
+
+            private String escapeChars(String s)
+            {
+                // Order matters; must replace ^ first:
+                return s.replace("^", "^^").replace("\"", "^\"").replace("\n", "^n");
             }
 
             @Override

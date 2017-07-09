@@ -20,7 +20,6 @@ import records.data.datatype.DataTypeUtility;
 import records.grammar.GrammarUtility;
 import records.importers.ChoicePoint.ChoiceType;
 import utility.FXPlatformRunnable;
-import utility.SimulationRunnable;
 import utility.SimulationSupplier;
 import utility.TaggedValue;
 import records.data.Transformation;
@@ -86,7 +85,7 @@ public class TestUtil
         int compare = ((ExSupplier<Integer>)simulationSupplier::get).get();
         if (compare != 0)
         {
-            fail(prefix + " comparing " + DataTypeUtility.valueToString(a) + " against " + DataTypeUtility.valueToString(b) + " result: " + compare);
+            fail(prefix + " comparing " + DataTypeUtility._test_valueToString(a) + " against " + DataTypeUtility._test_valueToString(b) + " result: " + compare);
         }
     }
 

@@ -3,7 +3,6 @@ package test;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
@@ -53,18 +52,18 @@ public class PropInsertRemoveRows
         for (int i = 0; i < insertAtIndex; i++)
         {
             assertTrue(column.indexValid(i));
-            assertEquals("Comparing values at index " + i + "\n  " + DataTypeUtility.valueToString(prevValues.get(i)) + " vs\n  " + DataTypeUtility.valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i)));
+            assertEquals("Comparing values at index " + i + "\n  " + DataTypeUtility._test_valueToString(prevValues.get(i)) + " vs\n  " + DataTypeUtility._test_valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i)));
         }
         for (int i = insertAtIndex; i < insertAtIndex + insertCount; i++)
         {
             assertTrue("Valid index: " + i + " insertAt: " + insertAtIndex + " count " + insertCount, column.indexValid(i));
             // Don't check here what they are, just that they are all same:
-            assertEquals("Comparing " + column.getType() + ": " + i + " insertAt: " + insertAtIndex + " count " + insertCount + "\n  " + DataTypeUtility.valueToString(column.getType().getCollapsed(insertAtIndex)) + " vs\n  " + DataTypeUtility.valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(column.getType().getCollapsed(insertAtIndex), column.getType().getCollapsed(i)));
+            assertEquals("Comparing " + column.getType() + ": " + i + " insertAt: " + insertAtIndex + " count " + insertCount + "\n  " + DataTypeUtility._test_valueToString(column.getType().getCollapsed(insertAtIndex)) + " vs\n  " + DataTypeUtility._test_valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(column.getType().getCollapsed(insertAtIndex), column.getType().getCollapsed(i)));
         }
         for (int i = insertAtIndex; i < prevValues.size(); i++)
         {
             assertTrue("Valid index " + i + " with insertAtIndex " + insertAtIndex + " and count " + insertCount + " and prev " + prevValues.size(), column.indexValid(i + insertCount));
-            assertEquals("Comparing " + column.getType() + " index " + i + " with insertAtIndex " + insertAtIndex + " and count " + insertCount + "\n  " + DataTypeUtility.valueToString(prevValues.get(i)) + " vs\n  " + DataTypeUtility.valueToString(column.getType().getCollapsed(i + insertCount)), 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i + insertCount)));
+            assertEquals("Comparing " + column.getType() + " index " + i + " with insertAtIndex " + insertAtIndex + " and count " + insertCount + "\n  " + DataTypeUtility._test_valueToString(prevValues.get(i)) + " vs\n  " + DataTypeUtility._test_valueToString(column.getType().getCollapsed(i + insertCount)), 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i + insertCount)));
         }
         assertFalse(column.indexValid(prevValues.size() + insertCount));
 
@@ -79,7 +78,7 @@ public class PropInsertRemoveRows
         for (int i = 0; i < prevValues.size(); i++)
         {
             assertTrue(column.indexValid(i));
-            assertEquals("Comparing values at index " + i + " inserted at " + insertAtIndex + "\n  " + DataTypeUtility.valueToString(prevValues.get(i)) + " vs\n  " + DataTypeUtility.valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i)));
+            assertEquals("Comparing values at index " + i + " inserted at " + insertAtIndex + "\n  " + DataTypeUtility._test_valueToString(prevValues.get(i)) + " vs\n  " + DataTypeUtility._test_valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i)));
         }
     }
 
@@ -102,12 +101,12 @@ public class PropInsertRemoveRows
         for (int i = 0; i < removeAtIndex; i++)
         {
             assertTrue(column.indexValid(i));
-            assertEquals("Comparing values at index " + i + "\n  " + DataTypeUtility.valueToString(prevValues.get(i)) + " vs\n  " + DataTypeUtility.valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i)));
+            assertEquals("Comparing values at index " + i + "\n  " + DataTypeUtility._test_valueToString(prevValues.get(i)) + " vs\n  " + DataTypeUtility._test_valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i)));
         }
         for (int i = removeAtIndex; i < prevValues.size() - removeCount; i++)
         {
             assertTrue("Valid index " + i + " with removeAtIndex " + removeAtIndex + " and count " + removeCount + " and prev " + prevValues.size(), column.indexValid(i));
-            assertEquals("Comparing " + column.getType() + " index " + i + " with removeAtIndex " + removeAtIndex + " and count " + removeCount + "\n  " + DataTypeUtility.valueToString(prevValues.get(i + removeCount)) + " vs\n  " + DataTypeUtility.valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(prevValues.get(i + removeCount), column.getType().getCollapsed(i)));
+            assertEquals("Comparing " + column.getType() + " index " + i + " with removeAtIndex " + removeAtIndex + " and count " + removeCount + "\n  " + DataTypeUtility._test_valueToString(prevValues.get(i + removeCount)) + " vs\n  " + DataTypeUtility._test_valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(prevValues.get(i + removeCount), column.getType().getCollapsed(i)));
         }
         assertFalse(column.indexValid(prevValues.size() - removeCount));
 
@@ -122,7 +121,7 @@ public class PropInsertRemoveRows
         for (int i = 0; i < prevValues.size(); i++)
         {
             assertTrue(column.indexValid(i));
-            assertEquals("Comparing values at index " + i + " removed at " + removeAtIndex + "\n  " + DataTypeUtility.valueToString(prevValues.get(i)) + " vs\n  " + DataTypeUtility.valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i)));
+            assertEquals("Comparing values at index " + i + " removed at " + removeAtIndex + "\n  " + DataTypeUtility._test_valueToString(prevValues.get(i)) + " vs\n  " + DataTypeUtility._test_valueToString(column.getType().getCollapsed(i)), 0, Utility.compareValues(prevValues.get(i), column.getType().getCollapsed(i)));
         }
     }
 }

@@ -1,6 +1,5 @@
 package test.gui;
 
-import com.google.common.primitives.Ints;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -84,7 +83,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
-import java.util.OptionalInt;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -94,10 +92,7 @@ import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import static org.hamcrest.Matchers.both;
-import static org.hamcrest.Matchers.greaterThan;
 import static org.hamcrest.Matchers.is;
-import static org.hamcrest.Matchers.lessThan;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
@@ -1038,7 +1033,7 @@ public class TestStructuredTextField extends ApplicationTest
             });
             try
             {
-                fut.get().either_(e -> fail(e.getLocalizedMessage()), x -> assertEquals(f.get().getText() + " " + DataTypeUtility.valueToString(endEditAndCompareTo) + " vs " + DataTypeUtility.valueToString(value), 0, x.intValue()));
+                fut.get().either_(e -> fail(e.getLocalizedMessage()), x -> assertEquals(f.get().getText() + " " + DataTypeUtility._test_valueToString(endEditAndCompareTo) + " vs " + DataTypeUtility._test_valueToString(value), 0, x.intValue()));
             }
             catch (InterruptedException | ExecutionException e)
             {

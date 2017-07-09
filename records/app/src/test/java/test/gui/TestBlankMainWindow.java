@@ -408,7 +408,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             public Void number(NumberInfo numberInfo) throws InternalException, UserException
             {
                 assertTrue("Was " + prevFocused.getClass() + " then pressed ENTER and was " + focused.getClass(), focused instanceof GenericStyledArea);
-                write(DataTypeUtility.valueToString(value));
+                write(DataTypeUtility._test_valueToString(value));
                 // Enter to finish editing:
                 push(KeyCode.ENTER);
                 return null;
@@ -417,7 +417,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             @Override
             public Void text() throws InternalException, UserException
             {
-                write(DataTypeUtility.valueToString(value));
+                write(DataTypeUtility._test_valueToString(value));
                 // Enter to finish editing:
                 push(KeyCode.ENTER);
                 return null;

@@ -555,7 +555,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                 case TAG_NAME:
                     return Character.isAlphabetic(c) || c == '_' || (!before.isEmpty() && c >= '0' && c <= '9');
                 case EDITABLE_TEXT:
-                    return c != '\"';
+                    return c != '\"' || endsWithEscapeStart(before);
                 case EDITABLE_NUMBER:
                     return (before.isEmpty() && c == '-') || (c >= '0' && c <= '9') || (!before.contains(".") && c == '.');
                 case TIMEZONE_PLUS_MINUS:
@@ -571,6 +571,19 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                 default:
                     return (c >= '0' && c <= '9') || Character.isAlphabetic(c);
             }
+        }
+
+        private static boolean endsWithEscapeStart(String before)
+        {
+            boolean nextEscaped = false;
+            for (int cp : before.codePoints().toArray())
+            {
+                if (!nextEscaped && cp == '^')
+                    nextEscaped = true;
+                else if (nextEscaped)
+                    nextEscaped = false;
+            }
+            return nextEscaped;
         }
     }
 
