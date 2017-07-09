@@ -42,19 +42,16 @@ public abstract class ParentComponent<T> extends Component<T>
     }
 
     @Override
-    public final InsertState insert(int lengthBeforeThisComponent, int insertBeforeIndex, ImmutableList<Integer> codepoints)
+    public final InsertState insert(InsertState state)
     {
         // Important to use indexed loop here and keep calling getChildComponents() as some
         // insertions will change the components (tagged components, or lists)
         for (int i = 0; i < getChildComponents().size(); i++)
         {
             Component<?> component = getChildComponents().get(i);
-            InsertState state = component.insert(lengthBeforeThisComponent, insertBeforeIndex, codepoints);
-            lengthBeforeThisComponent = state.lenSoFar;
-            insertBeforeIndex = state.cursorPos;
-            codepoints = state.remainingCharactersToInsert;
+            state = component.insert(state);
         }
-        return new InsertState(lengthBeforeThisComponent, insertBeforeIndex, codepoints);
+        return state;
     }
 
     @Override

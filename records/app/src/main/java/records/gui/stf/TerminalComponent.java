@@ -63,8 +63,11 @@ public abstract class TerminalComponent<T> extends Component<T>
     }
 
     @Override
-    public final InsertState insert(int lenSoFar, int cursorPos, ImmutableList<Integer> codepoints)
+    public final InsertState insert(InsertState s)
     {
+        int cursorPos = s.cursorPos;
+        int lenSoFar = s.lenSoFar;
+        ImmutableList<Integer> codepoints = s.remainingCodepointsToInsert;
         for (int i = 0; i < items.size(); i++)
         {
             if (codepoints.isEmpty())

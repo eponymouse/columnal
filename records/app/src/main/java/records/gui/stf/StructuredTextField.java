@@ -248,7 +248,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         ImmutableList<Integer> replacementCodepoints = replacement.getText().codePoints().boxed().collect(ImmutableList.toImmutableList());
         if (!replacementCodepoints.isEmpty())
         {
-            InsertState insertState = contentComponent.insert(0, insertPos, replacementCodepoints);
+            InsertState insertState = contentComponent.insert(new InsertState(0, insertPos, replacementCodepoints));
             insertPos = insertState.cursorPos;
         }
 /*

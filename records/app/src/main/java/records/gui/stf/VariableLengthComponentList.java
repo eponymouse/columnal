@@ -32,8 +32,6 @@ public abstract class VariableLengthComponentList<R, T> extends ParentComponent<
     private ImmutableList<Component<?>> allComponents;
     private final Function<List<T>, R> combine;
     private final String divider;
-    private final @Nullable String prefix;
-    private final @Nullable String suffix;
 
     // Same as above but allows throwing an internal exception, and re-orders parameters to avoid having same erasure
     public VariableLengthComponentList(ImmutableList<Component<?>> parents, @Nullable String prefix, String divider, List<FXPlatformFunctionInt<ImmutableList<Component<?>>, Component<? extends T>>> components, @Nullable String suffix, Function<List<T>, R> combine) throws InternalException
@@ -46,8 +44,6 @@ public abstract class VariableLengthComponentList<R, T> extends ParentComponent<
         }
         this.divider = divider;
         this.combine = combine;
-        this.prefix = prefix;
-        this.suffix = suffix;
         this.allComponents = makeAllComponents(getItemParents(), prefix, contentComponents, divider, suffix);
     }
 

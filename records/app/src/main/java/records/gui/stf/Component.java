@@ -55,7 +55,7 @@ public abstract class Component<T>
     public abstract int delete(int startIncl, int endExcl);
 
     // The characters are integer codepoints.
-    public abstract InsertState insert(int lengthBeforeThisComponent, int insertBeforeIndex, ImmutableList<Integer> codepoints);
+    public abstract InsertState insert(InsertState state);
 
     public boolean hasOuterBrackets()
     {
@@ -65,15 +65,18 @@ public abstract class Component<T>
     // State after an insertion
     public static class InsertState
     {
+        // The length of the items before this one.  Used to adjust cursorPos to be relative to the current item.
         public final int lenSoFar;
+        // The cursor pos, relative to the start of the whole field (lenSoFar is used to adjust)
         public final int cursorPos;
-        public final ImmutableList<Integer> remainingCharactersToInsert;
+        // The codepoints left to insert at the cursor position.
+        public final ImmutableList<Integer> remainingCodepointsToInsert;
 
-        public InsertState(int lenSoFar, int cursorPos, ImmutableList<Integer> remainingCharactersToInsert)
+        public InsertState(int lenSoFar, int cursorPos, ImmutableList<Integer> remainingCodepointsToInsert)
         {
             this.lenSoFar = lenSoFar;
             this.cursorPos = cursorPos;
-            this.remainingCharactersToInsert = remainingCharactersToInsert;
+            this.remainingCodepointsToInsert = remainingCodepointsToInsert;
         }
     }
 }
