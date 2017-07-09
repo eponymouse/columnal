@@ -347,7 +347,7 @@ public class TableDisplayUtility
                     case TIMEOFDAY:
                         return new GetValueAndComponent<>(g, TimeComponent::new);
                     case TIMEOFDAYZONED:
-                        return new GetValueAndComponent<>(g, (parents, value) -> new Component2<OffsetTime, LocalTime, ZoneOffset>(parents, subParents -> new TimeComponent(subParents, value), " ", subParents -> new PlusMinusOffsetComponent(parents, value.get(ChronoField.OFFSET_SECONDS)), OffsetTime::of));
+                        return new GetValueAndComponent<>(g, (parents, value) -> new Component2<OffsetTime, LocalTime, ZoneOffset>(parents, subParents -> new TimeComponent(subParents, value), null, subParents -> new PlusMinusOffsetComponent(parents, value.get(ChronoField.OFFSET_SECONDS)), OffsetTime::of));
                     case DATETIME:
                         return new GetValueAndComponent<>(g, (parents, value) -> new Component2<LocalDateTime, LocalDate, LocalTime>(parents, subParents -> new YMD(subParents, value), " ", subParents -> new TimeComponent(subParents, value), LocalDateTime::of));
                     case DATETIMEZONED:
@@ -458,7 +458,7 @@ public class TableDisplayUtility
                     case TIMEOFDAY:
                         return new TimeComponent(parents, null);
                     case TIMEOFDAYZONED:
-                        return new Component2<OffsetTime, LocalTime, ZoneOffset>(parents, subParents -> new TimeComponent(subParents, null), " ", subParents -> new PlusMinusOffsetComponent(subParents, null), OffsetTime::of);
+                        return new Component2<OffsetTime, LocalTime, ZoneOffset>(parents, subParents -> new TimeComponent(subParents, null), null, subParents -> new PlusMinusOffsetComponent(subParents, null), OffsetTime::of);
                     case DATETIME:
                         return new Component2<LocalDateTime, LocalDate, LocalTime>(parents, subParents -> new YMD(subParents, null), " ", subParents -> new TimeComponent(subParents, null), LocalDateTime::of);
                     case DATETIMEZONED:

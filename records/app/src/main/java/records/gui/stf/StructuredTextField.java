@@ -256,7 +256,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         ImmutableList<Integer> replacementCodepoints = replacement.getText().codePoints().boxed().collect(ImmutableList.toImmutableList());
         if (!replacementCodepoints.isEmpty())
         {
-            InsertState insertState = contentComponent.insert(insertPos, replacementCodepoints);
+            InsertState insertState = contentComponent.insert(0, insertPos, replacementCodepoints);
             insertPos = insertState.cursorPos;
         }
 /*
@@ -558,7 +558,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                 case EDITABLE_NUMBER:
                     return (before.isEmpty() && c == '-') || (c >= '0' && c <= '9') || (!before.contains(".") && c == '.');
                 case TIMEZONE_PLUS_MINUS:
-                    return c == '+' || c == '-';
+                    return before.isEmpty() && (c == '+' || c == '-');
                 case EDITABLE_HOUR:
                 case EDITABLE_MINUTE:
                 case EDITABLE_OFFSET_HOUR:

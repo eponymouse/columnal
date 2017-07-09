@@ -640,7 +640,7 @@ public class TestStructuredTextField extends ApplicationTest
     @Property(trials = 20)
     public void propString(@From(StringGenerator.class) String s) throws InternalException
     {
-        int[] cs = s.codePoints().filter(c -> c <= 0x7dff && !Character.isISOControl(c)).toArray();
+        int[] cs = s.codePoints().filter(c -> c <= 0x7dff && !Character.isISOControl(c) && c != '\"').toArray();
         s = new String(cs, 0, cs.length);
 
         f.set(field(DataType.TEXT, "initial value"));
@@ -648,7 +648,7 @@ public class TestStructuredTextField extends ApplicationTest
         pushSelectAll();
         if (s.isEmpty())
             push(KeyCode.DELETE);
-        type(s, s + "^$", s);
+        type(s, "\"" + s + "^$\"", s);
     }
 
     @Property(trials = 20)
@@ -924,7 +924,7 @@ public class TestStructuredTextField extends ApplicationTest
             Arrays.asList("N", "Nov", "November"),
             Arrays.asList("D", "Dec", "December")
         );
-        List<String> divs = Arrays.asList("/","-"," ",":", ".");
+        List<String> divs = Arrays.asList("/","-"," ",".");
         for (int attempt = 0; attempt < 3; attempt++)
         {
             String variant = "";

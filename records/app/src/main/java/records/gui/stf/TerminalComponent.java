@@ -6,7 +6,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;
-import utility.Pair;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -64,9 +63,8 @@ public abstract class TerminalComponent<T> extends Component<T>
     }
 
     @Override
-    public final InsertState insert(int cursorPos, ImmutableList<Integer> codepoints)
+    public final InsertState insert(int lenSoFar, int cursorPos, ImmutableList<Integer> codepoints)
     {
-        int lenSoFar = 0;
         for (int i = 0; i < items.size(); i++)
         {
             if (codepoints.isEmpty())
@@ -117,6 +115,6 @@ public abstract class TerminalComponent<T> extends Component<T>
             lenSoFar += items.get(i).getLength();
         }
 
-        return new InsertState(cursorPos, codepoints);
+        return new InsertState(lenSoFar, cursorPos, codepoints);
     }
 }

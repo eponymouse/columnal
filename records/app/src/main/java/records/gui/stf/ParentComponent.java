@@ -3,7 +3,6 @@ package records.gui.stf;
 import com.google.common.collect.ImmutableList;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.Suggestion;
-import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -41,18 +40,19 @@ public abstract class ParentComponent<T> extends Component<T>
     }
 
     @Override
-    public final InsertState insert(int beforeIndex, ImmutableList<Integer> codepoints)
+    public final InsertState insert(int lengthBeforeThisComponent, int insertBeforeIndex, ImmutableList<Integer> codepoints)
     {
         // Important to use indexed loop here and keep calling getChildComponents() as some
         // insertions will change the components (tagged components, or lists)
         for (int i = 0; i < getChildComponents().size(); i++)
         {
             Component<?> component = getChildComponents().get(i);
-            InsertState state = component.insert(beforeIndex, codepoints);
-            beforeIndex = state.cursorPos;
+            InsertState state = component.insert(lengthBeforeThisComponent, insertBeforeIndex, codepoints);
+            lengthBeforeThisComponent = state.lenSoFar;
+            insertBeforeIndex = state.cursorPos;
             codepoints = state.remainingCharactersToInsert;
         }
-        return new InsertState(beforeIndex, codepoints);
+        return new InsertState(lengthBeforeThisComponent, insertBeforeIndex, codepoints);
     }
 
     @Override

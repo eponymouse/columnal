@@ -10,7 +10,6 @@ import records.gui.stf.StructuredTextField.Suggestion;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.Pair;
 
 import java.util.Collections;
 import java.util.List;
@@ -56,7 +55,7 @@ public abstract class Component<T>
     public abstract int delete(int startIncl, int endExcl);
 
     // The characters are integer codepoints.
-    public abstract InsertState insert(int beforeIndex, ImmutableList<Integer> codepoints);
+    public abstract InsertState insert(int lengthBeforeThisComponent, int insertBeforeIndex, ImmutableList<Integer> codepoints);
 
     public boolean hasOuterBrackets()
     {
@@ -66,11 +65,13 @@ public abstract class Component<T>
     // State after an insertion
     public static class InsertState
     {
+        public final int lenSoFar;
         public final int cursorPos;
         public final ImmutableList<Integer> remainingCharactersToInsert;
 
-        public InsertState(int cursorPos, ImmutableList<Integer> remainingCharactersToInsert)
+        public InsertState(int lenSoFar, int cursorPos, ImmutableList<Integer> remainingCharactersToInsert)
         {
+            this.lenSoFar = lenSoFar;
             this.cursorPos = cursorPos;
             this.remainingCharactersToInsert = remainingCharactersToInsert;
         }

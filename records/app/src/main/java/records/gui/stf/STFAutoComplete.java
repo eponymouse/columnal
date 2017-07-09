@@ -50,7 +50,7 @@ public class STFAutoComplete extends PopupControl
         for (int i = 0; i < suggestions.size(); i++)
         {
             Suggestion sugg = suggestions.get(i);
-            String text = parent.getTextForItems(parent.structuredToPlain(sugg.startIndexIncl), parent.structuredToPlain(sugg.endIndexIncl));
+            String text = parent.getTextForItems(sugg.startIndexIncl.getFirst(), sugg.endIndexIncl.getFirst());
             eligible[i] = sugg.suggestion.toLowerCase().startsWith(text.toLowerCase());
         }
         int sel = completions.getSelectionModel().getSelectedIndex();
