@@ -33,13 +33,12 @@ import java.util.Set;
 @OnThread(Tag.FXPlatform)
 public class YMD extends TerminalComponent<LocalDate>
 {
-    private final String initialMonth;
-    private final String initialDay;
-    private final String initialYear;
-
     public YMD(ImmutableList<Component<?>> parents, @Nullable TemporalAccessor value)
     {
         super(parents);
+        String initialMonth;
+        String initialDay;
+        String initialYear;
         if (value != null)
         {
             initialMonth = Integer.toString(value.get(ChronoField.MONTH_OF_YEAR));

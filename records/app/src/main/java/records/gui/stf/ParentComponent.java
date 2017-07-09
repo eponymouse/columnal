@@ -29,23 +29,20 @@ public abstract class ParentComponent<T> extends Component<T>
     }
 
     @Override
-    public final Pair<List<Item>, Integer> delete(int startIncl, int endExcl)
+    public final int delete(int startIncl, int endExcl)
     {
-        List<Item> allItems = new ArrayList<>();
         for (Component<?> component : getChildComponents())
         {
-            Pair<List<Item>, Integer> after = component.delete(startIncl, endExcl);
-            startIncl += after.getSecond();
-            endExcl += after.getSecond();
-            allItems.addAll(after.getFirst());
+            int delta = component.delete(startIncl, endExcl);
+            startIncl += delta;
+            endExcl += delta;
         }
-        return new Pair<>(allItems, startIncl);
+        return startIncl;
     }
 
     @Override
     public final InsertState insert(int beforeIndex, ImmutableList<Integer> codepoints)
     {
-        List<Item> allItems = new ArrayList<>();
         // Important to use indexed loop here and keep calling getChildComponents() as some
         // insertions will change the components (tagged components, or lists)
         for (int i = 0; i < getChildComponents().size(); i++)
@@ -54,9 +51,8 @@ public abstract class ParentComponent<T> extends Component<T>
             InsertState state = component.insert(beforeIndex, codepoints);
             beforeIndex = state.cursorPos;
             codepoints = state.remainingCharactersToInsert;
-            allItems.addAll(state.items);
         }
-        return new InsertState(allItems, beforeIndex, codepoints);
+        return new InsertState(beforeIndex, codepoints);
     }
 
     @Override

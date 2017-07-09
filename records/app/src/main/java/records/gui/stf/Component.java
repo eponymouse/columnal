@@ -51,9 +51,9 @@ public abstract class Component<T>
         return getItems().stream().filter(ss -> ss.getType() == item).findFirst().map(ss -> ss.getValue()).orElse("");
     }
 
-    // Gives back the content (list of items) and an integer delta corresponding to how much the start
+    // Gives back an integer delta corresponding to how much the start
     // of the deleted region has moved.
-    public abstract Pair<List<Item>, Integer> delete(int startIncl, int endExcl);
+    public abstract int delete(int startIncl, int endExcl);
 
     // The characters are integer codepoints.
     public abstract InsertState insert(int beforeIndex, ImmutableList<Integer> codepoints);
@@ -66,13 +66,11 @@ public abstract class Component<T>
     // State after an insertion
     public static class InsertState
     {
-        public final List<Item> items;
         public final int cursorPos;
         public final ImmutableList<Integer> remainingCharactersToInsert;
 
-        public InsertState(List<Item> items, int cursorPos, ImmutableList<Integer> remainingCharactersToInsert)
+        public InsertState(int cursorPos, ImmutableList<Integer> remainingCharactersToInsert)
         {
-            this.items = items;
             this.cursorPos = cursorPos;
             this.remainingCharactersToInsert = remainingCharactersToInsert;
         }

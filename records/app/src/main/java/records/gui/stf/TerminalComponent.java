@@ -32,7 +32,7 @@ public abstract class TerminalComponent<T> extends Component<T>
     }
 
     @Override
-    public final Pair<List<Item>, Integer> delete(int startIncl, int endExcl)
+    public final int delete(int startIncl, int endExcl)
     {
         int delta = 0;
         for (int i = 0; i < items.size(); i++)
@@ -60,7 +60,7 @@ public abstract class TerminalComponent<T> extends Component<T>
             startIncl -= itemScreenLength;
             endExcl -= itemScreenLength;
         }
-        return new Pair<>(items, delta);
+        return delta;
     }
 
     @Override
@@ -114,9 +114,9 @@ public abstract class TerminalComponent<T> extends Component<T>
                 }
             }
 
-            lenSoFar += itemScreenLength;
+            lenSoFar += items.get(i).getLength();
         }
 
-        return new InsertState(items, cursorPos, codepoints);
+        return new InsertState(cursorPos, codepoints);
     }
 }

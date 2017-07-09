@@ -248,16 +248,16 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     public void replace(final int start, final int end, StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> replacement)
     {
         hidePopup();
-        Pair<List<Item>, Integer> state = new Pair<>(curValue, start);
+        int insertPos = start;
         if (end > start)
         {
-            state = contentComponent.delete(start, end);
+            insertPos += contentComponent.delete(start, end);
         }
         ImmutableList<Integer> replacementCodepoints = replacement.getText().codePoints().boxed().collect(ImmutableList.toImmutableList());
         if (!replacementCodepoints.isEmpty())
         {
-            InsertState insertState = contentComponent.insert(state.getSecond(), replacementCodepoints);
-            state = new Pair<>(insertState.items, insertState.cursorPos);
+            InsertState insertState = contentComponent.insert(insertPos, replacementCodepoints);
+            insertPos = insertState.cursorPos;
         }
 /*
         List<Item> existing = new ArrayList<>(curValue);
@@ -326,13 +326,13 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
             cur = "";
         }
 */
-        StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = makeDoc(state.getFirst());
+        curValue.clear();
+        curValue.addAll(contentComponent.getItems());
+        StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = makeDoc(curValue);
         inSuperReplace = true;
         super.replace(0, getLength(), doc);
         inSuperReplace = false;
-        curValue.clear();
-        curValue.addAll(state.getFirst());
-        selectRange(state.getSecond(), state.getSecond());
+        selectRange(insertPos, insertPos);
         updateAutoComplete(getSelection());
     }
 
