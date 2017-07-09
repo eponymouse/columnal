@@ -511,20 +511,20 @@ public class TestStructuredTextField extends ApplicationTest
         f.get().selectAll();
         type("17", "17$/Month/Year");
         type("/3/", "17/3/$Year");
-        type("1973", "17/3/1973$", LocalDate.of(1973, 3, 17));
+        type("1973", "17/3/1973", LocalDate.of(1973, 3, 17));
 
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         push(KeyCode.HOME);
         type("", "$1/4/1900");
-        type("2", "21/4/1900$", LocalDate.of(1900, 4, 21));
+        type("2", "21/4/1900", LocalDate.of(1900, 4, 21));
 
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
-        type("31 10 86","31/10/1986$", LocalDate.of(1986, 10, 31));
+        type("31 10 86","31/10/1986", LocalDate.of(1986, 10, 31));
 
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
-        type("5 6 27","5/6/2027$", LocalDate.of(2027, 6, 5));
+        type("5 6 27","5/6/2027", LocalDate.of(2027, 6, 5));
 
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
@@ -532,7 +532,7 @@ public class TestStructuredTextField extends ApplicationTest
         type("-", "6/$Month/Year");
         type("7", "6/7$/Year");
         type("-", "6/7/$Year");
-        type("3", "6/7/2003$", LocalDate.of(2003, 7, 6));
+        type("3", "6/7/2003", LocalDate.of(2003, 7, 6));
 
         // Check prompts for invalid dates:
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
@@ -606,16 +606,16 @@ public class TestStructuredTextField extends ApplicationTest
 
         targetF();
         pushSelectAll();
-        type("10/12/0378", "10/12/0378$", LocalDate.of(378, 12, 10));
+        type("10/12/0378", "10/12/0378", LocalDate.of(378, 12, 10));
         targetF();
         pushSelectAll();
-        type("01/02/3", "1/2/2003$", LocalDate.of(2003, 2, 1));
+        type("01/02/3", "1/2/2003", LocalDate.of(2003, 2, 1));
         targetF();
         pushSelectAll();
-        type("10/12/03", "10/12/2003$", LocalDate.of(2003, 12, 10));
+        type("10/12/03", "10/12/2003", LocalDate.of(2003, 12, 10));
         targetF();
         pushSelectAll();
-        type("10/12/0003", "10/12/0003$", LocalDate.of(3, 12, 10));
+        type("10/12/0003", "10/12/0003", LocalDate.of(3, 12, 10));
     }
 
     private void pushSelectAll()
@@ -650,7 +650,7 @@ public class TestStructuredTextField extends ApplicationTest
         pushSelectAll();
         if (s.isEmpty())
             push(KeyCode.DELETE);
-        type(s, "\"" + s + "^$\"", s);
+        type(s, "\"" + s + "\"", s);
     }
 
     @Property(trials = 20)
@@ -663,7 +663,7 @@ public class TestStructuredTextField extends ApplicationTest
         targetF();
         pushSelectAll();
         type("", "(^" + initial.toString() + "," + initial.toString() + "$)");
-        type(numAsStringA + "," + (space ? " " : "") + numAsStringB, "(" + numAsStringA + "," + numAsStringB + "^$)", new Object[]{numA, numB});
+        type(numAsStringA + "," + (space ? " " : "") + numAsStringB, "(" + numAsStringA + "," + numAsStringB + ")", new Object[]{numA, numB});
         targetF();
         push(KeyCode.END);
         type("", "(" + numAsStringA + "," + numAsStringB + "^$)");
@@ -693,7 +693,7 @@ public class TestStructuredTextField extends ApplicationTest
             if (r.nextBoolean())
             {
                 // Type full:
-                type(Boolean.toString(boolValue), "(" + numAsString + "," + boolValue + "$)", new Object[]{num, boolValue});
+                type(Boolean.toString(boolValue), "(" + numAsString + "," + boolValue + ")", new Object[]{num, boolValue});
             }
             else
             {
@@ -703,7 +703,7 @@ public class TestStructuredTextField extends ApplicationTest
                 type(Boolean.toString(boolValue).substring(1, 2), "(" + numAsString + "," + Boolean.toString(boolValue).substring(0, 2) + "$)");
                 assertAutoCompleteVisible(1 + numAsString.length() + 2, n);
                 push(KeyCode.TAB);
-                type("", "(" + numAsString + "," + boolValue + "$)", new Object[]{num, boolValue});
+                type("", "(" + numAsString + "," + boolValue + ")", new Object[]{num, boolValue});
             }
         }
         else
@@ -727,7 +727,7 @@ public class TestStructuredTextField extends ApplicationTest
                 type("", "(" + boolValue + ",$)");
             }
             type("", "(" + boolValue + ",$)");
-            type(numAsString, "(" + boolValue + "," + numAsString + "$)", new Object[]{boolValue, num});
+            type(numAsString, "(" + boolValue + "," + numAsString + ")", new Object[]{boolValue, num});
         }
     }
 
@@ -742,21 +742,20 @@ public class TestStructuredTextField extends ApplicationTest
         f.set(field(DataType.number(new NumberInfo(Unit.SCALAR, null)), initial));
         targetF();
         pushSelectAll();
-        type(numAsString, numAsString + "^$", num);
+        type(numAsString, numAsString, num);
 
         // Random character in middle should be ignored:
         moveBy(10, 0);
         targetF();
         push(KeyCode.HOME);
         type("", "$" + numAsString);
-        type("", numAsString + "$", num);
         int mid = numAsString.length() / 2;
         for (int i = 0; i < mid; i++)
             push(KeyCode.RIGHT);
         write(c);
         push(KeyCode.HOME);
         type("", "$" + numAsString);
-        type("", numAsString + "$", num);
+        type("", numAsString, num);
     }
 
     @Property(trials = 15)
@@ -784,7 +783,7 @@ public class TestStructuredTextField extends ApplicationTest
         String timeVal = yearMonth.getMonthValue() + "/" + yearMonth.getYear();
         targetF();
         pushSelectAll();
-        type(timeVal, timeVal + "$", yearMonth);
+        type(timeVal, timeVal, yearMonth);
         // TODO also test errors, and other variants (e.g. text months)
     }
 
@@ -795,7 +794,7 @@ public class TestStructuredTextField extends ApplicationTest
         String timeVal = timeString(localTime);
         targetF();
         pushSelectAll();
-        type(timeVal, timeVal + "$", localTime);
+        type(timeVal, timeVal, localTime);
         // TODO also test errors
     }
 
@@ -809,7 +808,7 @@ public class TestStructuredTextField extends ApplicationTest
         timeVal += (timeZoned.getOffset().getTotalSeconds() < 0 ? "-" : "+") + Math.abs(offsetHour) + ":" + offsetMinute;
         targetF();
         pushSelectAll();
-        type(timeVal, timeVal + "$", timeZoned);
+        type(timeVal, timeVal, timeZoned);
         // TODO also test errors
     }
 
@@ -830,10 +829,10 @@ public class TestStructuredTextField extends ApplicationTest
 
         pushSelectAll();
         // Deliberate capital A, should still work:
-        type("fAlse", "false$", false);
+        type("fAlse", "false", false);
         targetF();
         pushSelectAll();
-        type("True", "true$", true);
+        type("True", "true", true);
         targetF();
         pushSelectAll();
         push(KeyCode.DELETE);
@@ -841,7 +840,7 @@ public class TestStructuredTextField extends ApplicationTest
         STFAutoCompleteCell autoSuggestTrue = lookup(".stf-autocomplete .stf-autocomplete-item").<STFAutoCompleteCell>lookup((Predicate<STFAutoCompleteCell>) ((STFAutoCompleteCell c) -> !c.isEmpty() && "true".equals(c.getItem().suggestion))).<STFAutoCompleteCell>query();
         assertNotNull(autoSuggestTrue);
         clickOn(autoSuggestTrue);
-        type("", "true$", true);
+        type("", "true", true);
         assertNull(lookup(".stf-autocomplete").query());
 
         // Tab should auto-complete plausible option:
@@ -849,7 +848,7 @@ public class TestStructuredTextField extends ApplicationTest
         pushSelectAll();
         type("F", "F$");
         push(KeyCode.TAB);
-        type("", "false$", false);
+        type("", "false", false);
     }
 
     @Property(trials=20)
@@ -902,14 +901,14 @@ public class TestStructuredTextField extends ApplicationTest
         targetF();
         pushSelectAll();
         String value = localDate.get(ChronoField.DAY_OF_MONTH) + "/" + localDate.get(ChronoField.MONTH_OF_YEAR) + "/" + String.format("%04d", localDate.get(ChronoField.YEAR));
-        type(value + extra, value + extra + "$", localDate);
+        type(value + extra, value + extra, localDate);
         if (localDate.get(ChronoField.YEAR) > Year.now().getValue() - 80 && localDate.get(ChronoField.YEAR) < Year.now().getValue() + 20)
         {
             // Do two digits:
             targetF();
             pushSelectAll();
             String twoDig = localDate.get(ChronoField.DAY_OF_MONTH) + "/" + localDate.get(ChronoField.MONTH_OF_YEAR) + "/" + Integer.toString(localDate.get(ChronoField.YEAR)).substring(2);
-            type(twoDig + extra, value + extra + "$", localDate);
+            type(twoDig + extra, value + extra, localDate);
         }
         // Try slight variant, such as other dividers or leading zeros:
         // Also try month names:
@@ -951,14 +950,14 @@ public class TestStructuredTextField extends ApplicationTest
             }
             fx_(() -> f.get().requestFocus());
             pushSelectAll();
-            type(variant + extra, value + extra + "$", localDate);
+            type(variant + extra, value + extra, localDate);
 
             // Also try Month name, day, year:
             List<String> monthPoss = monthNames.get(vals[1] - 1);
             String variantMD = monthPoss.get(r.nextInt(monthPoss.size())) + "/" + vals[0] + "/" + vals[2];
             fx_(() -> f.get().requestFocus());
             pushSelectAll();
-            type(variantMD + extra, value + extra + "$", localDate);
+            type(variantMD + extra, value + extra, localDate);
         }
         // Try errors and fixes; transposition, etc:
         if (vals[0] > 12)
