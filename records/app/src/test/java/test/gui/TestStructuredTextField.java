@@ -1,5 +1,6 @@
 package test.gui;
 
+import com.google.common.primitives.Ints;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -83,6 +84,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
@@ -862,7 +864,7 @@ public class TestStructuredTextField extends ApplicationTest
         type(tagName.substring(0, tagName.length() - 1), tagName.substring(0, tagName.length() - 1) + "$");
         if (value.getInner() == null)
         {
-            type(tagName.substring(tagName.length() - 1), tagName + "$", value);
+            type(tagName.substring(tagName.length() - 1), tagName, value);
         }
         else
         {
@@ -876,7 +878,7 @@ public class TestStructuredTextField extends ApplicationTest
                     return DataTypeUtility.valueToString(tag.getInner(), value.getInner(), taggedTypeAndValueGen.getType());
                 }
             });
-            type(tagName.substring(tagName.length() - 1) + "(" + inner, tagName + "(" + inner + "^$)", value);
+            type(tagName.substring(tagName.length() - 1) + "(" + inner + ")", tagName + "(" + inner + ")", value);
         }
     }
 
@@ -1005,15 +1007,19 @@ public class TestStructuredTextField extends ApplicationTest
             WaitForAsyncUtils.waitForFxEvents();
         }
         String actual = fx(() -> f.get().getText());
-        // Add curly brackets to indicate selection:
-        int anchor = fx(() -> f.get().getAnchor());
-        actual = actual.substring(0, anchor) + "^" + actual.substring(anchor);
-        int caretPos = fx(() -> f.get().getCaretPosition());
-        boolean anchorBeforeCaret = anchor <= caretPos;
-        actual = actual.substring(0, caretPos + (anchorBeforeCaret ? 1 : 0)) + "$" + actual.substring(caretPos + (anchorBeforeCaret ? 1 : 0));
+        // We only care about cursor position if we haven't finished editing:
+        if (endEditAndCompareTo == null)
+        {
+            // Add curly brackets to indicate selection:
+            int anchor = fx(() -> f.get().getAnchor());
+            actual = actual.substring(0, anchor) + "^" + actual.substring(anchor);
+            int caretPos = fx(() -> f.get().getCaretPosition());
+            boolean anchorBeforeCaret = anchor <= caretPos;
+            actual = actual.substring(0, caretPos + (anchorBeforeCaret ? 1 : 0)) + "$" + actual.substring(caretPos + (anchorBeforeCaret ? 1 : 0));
 
-        if (!expected.contains("^"))
-            expected = expected.replace("$", "^$");
+            if (!expected.contains("^"))
+                expected = expected.replace("$", "^$");
+        }
 
 
         assertEquals("Typed: " + entry, expected, actual);

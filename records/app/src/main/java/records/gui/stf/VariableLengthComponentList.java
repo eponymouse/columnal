@@ -2,6 +2,8 @@ package records.gui.stf;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.gui.stf.StructuredTextField.CharEntryResult;
@@ -15,57 +17,77 @@ import utility.Either;
 import utility.FXPlatformFunctionInt;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 28/06/2017.
  */
 @OnThread(Tag.FXPlatform)
-public abstract class VariableLengthComponentList<R, T> extends ParentComponent<R>
+public abstract class VariableLengthComponentList<R, T> extends Component<R>
 {
-    private final ArrayList<Component<? extends T>> contentComponents;
+    private final ObservableList<Component<? extends T>> contentComponents;
     private ImmutableList<Component<?>> allComponents;
     private final Function<List<T>, R> combine;
-    private final String divider;
+    private final int suffixCodepoint;
+    private final int dividerCodepoint;
 
     // Same as above but allows throwing an internal exception, and re-orders parameters to avoid having same erasure
-    public VariableLengthComponentList(ImmutableList<Component<?>> parents, @Nullable String prefix, String divider, List<FXPlatformFunctionInt<ImmutableList<Component<?>>, Component<? extends T>>> components, @Nullable String suffix, Function<List<T>, R> combine) throws InternalException
+    public VariableLengthComponentList(ImmutableList<Component<?>> parents, String prefix, String divider, List<FXPlatformFunctionInt<ImmutableList<Component<?>>, Component<? extends T>>> components, String suffix, Function<List<T>, R> combine) throws InternalException
     {
         super(parents);
-        this.contentComponents = new ArrayList<>();
+        this.dividerCodepoint = divider.codePointAt(0);
+        this.suffixCodepoint = suffix.codePointAt(0);
+        this.combine = combine;
+        Component<?> prefixComponent = new DividerComponent(getItemParents(), prefix);
+        Component<?> suffixComponent = new DividerComponent(getItemParents(), suffix);
+        this.allComponents = ImmutableList.of(prefixComponent, suffixComponent);
+        this.contentComponents = FXCollections.observableArrayList();
+
+        // Must listen before adding initial items:
+        FXUtility.listen(contentComponents, change -> {
+            Builder<Component<?>> r = ImmutableList.builder();
+            r.add(prefixComponent);
+            for (int i = 0; i < contentComponents.size(); i++)
+            {
+                if (i != 0)
+                    r.add(new DividerComponent(getItemParents(), divider));
+                r.add(contentComponents.get(i));
+            }
+            r.add(suffixComponent);
+            allComponents = r.build();
+        });
+
         for (FXPlatformFunctionInt<ImmutableList<Component<?>>, Component<? extends T>> f : components)
         {
             this.contentComponents.add(f.apply(getItemParents()));
         }
-        this.divider = divider;
-        this.combine = combine;
-        this.allComponents = makeAllComponents(getItemParents(), prefix, contentComponents, divider, suffix);
     }
+
 
     @Override
-    protected List<Component<?>> getChildComponents()
+    public List<Item> getItems()
     {
-        return allComponents;
+        return allComponents.stream().flatMap(c -> c.getItems().stream()).collect(Collectors.toList());
     }
 
-    private static <T> ImmutableList<Component<?>> makeAllComponents(ImmutableList<Component<?>> itemParents, @Nullable String prefix, List<Component<? extends T>> content, String divider, @Nullable String suffix)
+    private static <T> ImmutableList<Component<?>> makeAllComponents(ImmutableList<Component<?>> itemParents, String prefix, List<Component<? extends T>> content, String divider, String suffix)
     {
         Builder<Component<?>> build = ImmutableList.builder();
-        if (prefix != null)
-            build.add(new DividerComponent(itemParents, prefix));
+        build.add(new DividerComponent(itemParents, prefix));
         for (int i = 0; i < content.size(); i++)
         {
             build.add(content.get(i));
             if (i < content.size() - 1)
                 build.add(new DividerComponent(itemParents, divider));
         }
-        if (suffix != null)
-            build.add(new DividerComponent(itemParents, suffix));
+        build.add(new DividerComponent(itemParents, suffix));
         return build.build();
     }
 
@@ -78,6 +100,79 @@ public abstract class VariableLengthComponentList<R, T> extends ParentComponent<
         for (int i = 1; i < contentComponents.size(); i++)
             result = Either.combineConcatError(result, contentComponents.get(i).endEdit(field), (a, x) -> {a.add(x); return a;});
         return result.map(combine);
+    }
+
+    // TODO add actual deletion of list items
+    @Override
+    public final int delete(int startIncl, int endExcl)
+    {
+        int lenSoFar = 0;
+        int totalDelta = 0;
+        for (Component<?> component : allComponents)
+        {
+            int len = component.getItems().stream().mapToInt(Item::getScreenLength).sum();
+            totalDelta += component.delete(startIncl - lenSoFar, endExcl - lenSoFar);
+            lenSoFar += len;
+        }
+        return totalDelta;
+    }
+
+    @Override
+    public final InsertState insert(InsertState state)
+    {
+        // Important to use indexed loop here as some
+        // insertions will change the components (tagged components, or lists)
+        for (int i = 0; i < allComponents.size(); i++)
+        {
+            // Special case: if currently empty (just open/close) and then type anything besides closing divider in the middle,
+            // we add a new item.
+            if (contentComponents.isEmpty() && i == 1 && !state.remainingCodepointsToInsert.isEmpty() && state.remainingCodepointsToInsert.get(0) != suffixCodepoint)
+            {
+                try
+                {
+                    contentComponents.add(makeNewEntry(getItemParents()));
+                }
+                catch (InternalException e)
+                {
+                    Utility.log(e);
+                    // Just cancel any further insertions:
+                    return new InsertState(state.lenSoFar, state.cursorPos, ImmutableList.of());
+                }
+            }
+
+            // Deliberate fall-through, not an else:
+            // Another special case: if we are at the end of an item (which we will be, if we are in the outer loop and i is odd, and they type the divider, add a new divider+item:
+            if (i > 0 && state.cursorPos == state.lenSoFar && !state.remainingCodepointsToInsert.isEmpty() && state.remainingCodepointsToInsert.get(0) == dividerCodepoint)
+            {
+                /*
+                    [23432,2343242]
+                    01    23      4
+
+                    If you are before A (in all components) and press comma, you get a new item at B (index in content components)
+                    1: 0
+                    2: 1
+                    3: 1
+                    4: 2
+
+                    Formula: i / 2
+                 */
+                try
+                {
+                    contentComponents.add(i / 2, makeNewEntry(getItemParents()));
+                }
+                catch (InternalException e)
+                {
+                    Utility.log(e);
+                    // Just cancel any further insertions:
+                    return new InsertState(state.lenSoFar, state.cursorPos, ImmutableList.of());
+                }
+            }
+
+            // Deliberate fall-through, not an else:
+            Component<?> component = allComponents.get(i);
+            state = component.insert(state);
+        }
+        return state;
     }
 
     /*TODO put back functionality for adding new item
