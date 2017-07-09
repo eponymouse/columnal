@@ -539,7 +539,7 @@ public class TestStructuredTextField extends ApplicationTest
         push(KeyCode.DELETE);
         type("", "$Day/Month/Year");
         fx_(()-> dummy.requestFocus());
-        type("", "$Day/Month/Year");
+        type("", "Day/Month/$Year");
         assertNotNull(lookup(".invalid-data-input-popup").query());
         assertNotNull(lookup(".invalid-data-input-popup .invalid-data-revert").query());
         // Click on the revert fix:
@@ -554,7 +554,7 @@ public class TestStructuredTextField extends ApplicationTest
         push(KeyCode.DELETE);
         type("", "$Day/Month/Year");
         clickOn(dummy);
-        type("", "$Day/Month/Year");
+        type("", "Day/Month/$Year");
         assertNotNull(lookup(".invalid-data-input-popup").query());
         // Now edit again:
         targetF();
@@ -631,7 +631,7 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
     @Property(trials = 15)
-    public void propYMD(@When(seed=1L) @From(GenDate.class) LocalDate localDate, @From(GenRandom.class) Random r) throws InternalException
+    public void propYMD(@From(GenDate.class) LocalDate localDate, @From(GenRandom.class) Random r) throws InternalException
     {
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         enterDate(localDate, r, "");
@@ -746,13 +746,15 @@ public class TestStructuredTextField extends ApplicationTest
         moveBy(10, 0);
         targetF();
         push(KeyCode.HOME);
-        type("", "$" + numAsString, num);
+        type("", "$" + numAsString);
+        type("", numAsString + "$", num);
         int mid = numAsString.length() / 2;
         for (int i = 0; i < mid; i++)
             push(KeyCode.RIGHT);
         write(c);
         push(KeyCode.HOME);
-        type("", "$" + numAsString, num);
+        type("", "$" + numAsString);
+        type("", numAsString + "$", num);
     }
 
     @Property(trials = 15)

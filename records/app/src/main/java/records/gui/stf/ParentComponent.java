@@ -30,13 +30,15 @@ public abstract class ParentComponent<T> extends Component<T>
     @Override
     public final int delete(int startIncl, int endExcl)
     {
+        int lenSoFar = 0;
+        int totalDelta = 0;
         for (Component<?> component : getChildComponents())
         {
-            int delta = component.delete(startIncl, endExcl);
-            startIncl += delta;
-            endExcl += delta;
+            int len = component.getItems().stream().mapToInt(Item::getScreenLength).sum();
+            totalDelta += component.delete(startIncl - lenSoFar, endExcl - lenSoFar);
+            lenSoFar += len;
         }
-        return startIncl;
+        return totalDelta;
     }
 
     @Override
