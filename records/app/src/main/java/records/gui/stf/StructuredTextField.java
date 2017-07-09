@@ -235,14 +235,6 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         }
     }
 
-    protected void setItem(ItemVariant item, String content)
-    {
-        curValue.replaceAll(old -> old.itemVariant == item ? new Item(old.parent, content, item, old.prompt) : old);
-        Pair<Integer, Integer> oldPos = plainToStructured(getCaretPosition());
-        super.replace(0, getLength(), makeDoc(curValue));
-        moveTo(structuredToPlain(clamp(oldPos)), SelectionPolicy.CLEAR);
-    }
-
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void replace(final int start, final int end, StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> replacement)
@@ -326,14 +318,19 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
             cur = "";
         }
 */
+        updateDocument();
+        selectRange(insertPos, insertPos);
+        updateAutoComplete(getSelection());
+    }
+
+    private void updateDocument()
+    {
         curValue.clear();
         curValue.addAll(contentComponent.getItems());
         StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = makeDoc(curValue);
         inSuperReplace = true;
         super.replace(0, getLength(), doc);
         inSuperReplace = false;
-        selectRange(insertPos, insertPos);
-        updateAutoComplete(getSelection());
     }
 
     protected Optional<ErrorFix> revertEditFix(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this)
@@ -429,7 +426,11 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
      */
     public Either<List<ErrorFix>, T> endEdit()
     {
-        return contentComponent.endEdit(this);
+        Either<List<ErrorFix>, T> errorOrValue = contentComponent.endEdit(this);
+        // May have been changed by errors or fixes:
+        updateDocument();
+        lineEnd(SelectionPolicy.CLEAR);
+        return errorOrValue;
     }
 
     public T getCompletedValue()
@@ -654,6 +655,11 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         public Item withInsertAt(int insertBefore, String newContent)
         {
             return new Item(parent, content.substring(0, insertBefore) + newContent + content.substring(insertBefore), itemVariant, prompt);
+        }
+
+        public Item replaceContent(String newContent)
+        {
+            return new Item(parent, newContent, itemVariant, prompt);
         }
     }
 

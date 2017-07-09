@@ -114,9 +114,8 @@ public class YM extends TerminalComponent<YearMonth>
             if (fixes.size() == standardFixes)
             {
                 int adjYear = adjustYear2To4(month, yearText, year);
-                field.setItem(ItemVariant.EDITABLE_MONTH, Integer.toString(month));
-                field.setItem(ItemVariant.EDITABLE_YEAR, String.format("%04d", adjYear));
-                field.lineEnd(SelectionPolicy.CLEAR);
+                items.set(0, items.get(0).replaceContent(Integer.toString(month)));
+                items.set(2, items.get(2).replaceContent(String.format("%04d", adjYear)));
                 return Either.right(YearMonth.of(adjYear, month));
             }
         } catch (NumberFormatException | DateTimeException e)

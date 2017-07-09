@@ -155,9 +155,9 @@ public class YMD extends TerminalComponent<LocalDate>
             if (fixes.size() == standardFixes)
             {
                 int adjYear = adjustYear2To4(day, month, yearText, year);
-                field.setItem(ItemVariant.EDITABLE_DAY, Integer.toString(day));
-                field.setItem(ItemVariant.EDITABLE_MONTH, Integer.toString(month));
-                field.setItem(ItemVariant.EDITABLE_YEAR, String.format("%04d", adjYear));
+                items.set(0, items.get(0).replaceContent(Integer.toString(day)));
+                items.set(2, items.get(2).replaceContent(Integer.toString(month)));
+                items.set(4, items.get(4).replaceContent(String.format("%04d", adjYear)));
                 field.lineEnd(SelectionPolicy.CLEAR);
                 return Either.right(LocalDate.of(adjYear, month, day));
             }

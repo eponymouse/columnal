@@ -631,7 +631,7 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
     @Property(trials = 15)
-    public void propYMD(@From(GenDate.class) LocalDate localDate, @From(GenRandom.class) Random r) throws InternalException
+    public void propYMD(@When(seed=1L) @From(GenDate.class) LocalDate localDate, @From(GenRandom.class) Random r) throws InternalException
     {
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         enterDate(localDate, r, "");
@@ -1014,7 +1014,7 @@ public class TestStructuredTextField extends ApplicationTest
             expected = expected.replace("$", "^$");
 
 
-        assertEquals(expected, actual);
+        assertEquals("Typed: " + entry, expected, actual);
         if (endEditAndCompareTo != null)
         {
             CompletableFuture<Either<Exception, Integer>> fut = new CompletableFuture<Either<Exception, Integer>>();

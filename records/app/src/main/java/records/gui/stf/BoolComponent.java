@@ -30,14 +30,12 @@ public class BoolComponent extends TerminalComponent<Boolean>
         String val = getItem(ItemVariant.EDITABLE_BOOLEAN).trim().toLowerCase();
         if (val.equals("true"))
         {
-            field.setItem(ItemVariant.EDITABLE_BOOLEAN, "true");
-            field.lineEnd(SelectionPolicy.CLEAR);
+            items.set(0, items.get(0).replaceContent("true"));
             return Either.right(true);
         }
         else if (val.equals("false"))
         {
-            field.setItem(ItemVariant.EDITABLE_BOOLEAN, "false");
-            field.lineEnd(SelectionPolicy.CLEAR);
+            items.set(0, items.get(0).replaceContent("false"));
             return Either.right(false);
         }
         else
