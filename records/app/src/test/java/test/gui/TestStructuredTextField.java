@@ -60,6 +60,7 @@ import utility.Pair;
 import utility.SimulationSupplier;
 import utility.TaggedValue;
 import utility.Utility;
+import utility.Utility.ListExList;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
@@ -874,6 +875,33 @@ public class TestStructuredTextField extends ApplicationTest
             });
             type(tagName.substring(tagName.length() - 1) + "(" + inner + ")", tagName + "(" + inner + ")", value);
         }
+    }
+
+    @Test
+    public void testList() throws InternalException
+    {
+        DataType dataType = DataType.array(DataType.NUMBER);
+        f.set(field(dataType, new ListExList(Collections.emptyList())));
+        targetF();
+        push(KeyCode.LEFT);
+        push(KeyCode.LEFT);
+        type("", "$[]");
+        push(KeyCode.RIGHT);
+        type("", "[$]");
+        type("0.1", "[0.1$]");
+        type(",", "[0.1,$Number]");
+        push(KeyCode.BACK_SPACE);
+        type("", "[0.1$]");
+        push(KeyCode.BACK_SPACE);
+        push(KeyCode.BACK_SPACE);
+        type("", "[0$]");
+        push(KeyCode.BACK_SPACE);
+        type("", "[$Number]");
+        push(KeyCode.LEFT);
+        type("", "$[]");
+
+        // TODO try with more structured slots, and with nested lists
+        // Test that deleting comma deletes the adjacent empty slot
     }
 
     public Node assertAutoCompleteVisible(int atChar, @Nullable Node sameAs)
