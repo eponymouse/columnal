@@ -21,6 +21,7 @@ import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeUtility;
@@ -48,8 +49,8 @@ import records.gui.stf.YM;
 import records.gui.stf.YMD;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformBiFunction;
 import utility.FXPlatformFunctionInt;
+import utility.FXPlatformFunctionIntUser;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.TaggedValue;
@@ -288,12 +289,18 @@ public class TableDisplayUtility
         return doc;
     }
 
+    public static interface ComponentMaker<T>
+    {
+        @OnThread(Tag.FXPlatform)
+        public Component<? extends T> makeComponent(ImmutableList<Component<?>> parents, T value) throws InternalException, UserException;
+    }
+
     public static class GetValueAndComponent<T>
     {
         public final GetValue<T> g;
-        public final FXPlatformBiFunction<ImmutableList<Component<?>>, T, Component<? extends T>> makeComponent;
+        public final ComponentMaker<T> makeComponent;
 
-        public GetValueAndComponent(GetValue<T> g, FXPlatformBiFunction<ImmutableList<Component<?>>, T, Component<? extends T>> makeComponent)
+        public GetValueAndComponent(GetValue<T> g, ComponentMaker<T> makeComponent)
         {
             this.g = g;
             this.makeComponent = makeComponent;
@@ -301,7 +308,7 @@ public class TableDisplayUtility
 
         public DisplayCacheSTF<T> makeDisplayCache()
         {
-            return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(makeComponent.apply(ImmutableList.of(), value)));
+            return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(makeComponent.makeComponent(ImmutableList.of(), value)));
         }
     }
 
@@ -398,23 +405,50 @@ public class TableDisplayUtility
 
 
                 return new GetValueAndComponent<Object[]>(tupleGet, (parents, value) -> {
-                    ArrayList<Function<ImmutableList<Component<?>>, Component<? extends Object>>> components = new ArrayList<>(types.size());
+                    ArrayList<FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends Object>>> components = new ArrayList<>(types.size());
                     for (int i = 0; i < types.size(); i++)
                     {
                         GetValueAndComponent<?> gvac = gvacs.get(i);
                         // Have to use some casts because we can't express the type safety:
-                        FXPlatformBiFunction<ImmutableList<Component<?>>, Object, Component<Object>> makeComponent = (FXPlatformBiFunction)gvac.makeComponent;
+                        ComponentMaker<Object> makeComponent = (ComponentMaker)gvac.makeComponent;
                         int iFinal = i;
-                        components.add(subParents -> makeComponent.apply(subParents, value[iFinal]));
+                        components.add(subParents -> makeComponent.makeComponent(subParents, value[iFinal]));
                     }
                     return new FixedLengthComponentList<Object[], Object>(parents, "(", components, ",", ")", List::toArray);
                 });
             }
 
             @Override
+            @OnThread(Tag.FXPlatform)
             public GetValueAndComponent<?> array(@Nullable DataType inner, GetValue<Pair<Integer, DataTypeValue>> g) throws InternalException
             {
-                throw new UnimplementedException();
+                if (inner == null)
+                    throw new InternalException("Can't make components for the empty list type");
+
+                @NonNull DataType innerType = inner;
+
+                return new GetValueAndComponent<ListEx>(DataTypeUtility.toListEx(innerType, g), (parents, value) ->
+                {
+                    List<@Value Object> fxList = DataTypeUtility.fetchList(value);
+
+                    // Have to use some casts because we can't express the type safety:
+                    ComponentMaker<Object> makeComponent = (ComponentMaker)valueAndComponent(innerType.fromCollapsed((index, prog) -> 0)).makeComponent;
+                    List<FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends @NonNull Object>>> components = new ArrayList<>(fxList.size());
+                    for (int i = 0; i < fxList.size(); i++)
+                    {
+                        int iFinal = i;
+                        components.add(subParents -> makeComponent.makeComponent(subParents, fxList.get(iFinal)));
+                    }
+
+                    return new VariableLengthComponentList<ListEx, Object>(parents, "[", ",", components, "]", ListExList::new)
+                    {
+                        @Override
+                        protected Component<? extends Object> makeNewEntry(ImmutableList<Component<?>> subParents) throws InternalException
+                        {
+                            return component(subParents, innerType);
+                        }
+                    };
+                });
             }
         });
     }
@@ -494,7 +528,7 @@ public class TableDisplayUtility
                     throw new InternalException("Can't make components for the empty list type");
 
                 @NonNull DataType innerType = inner;
-                return new VariableLengthComponentList<ListEx, Object>(parents, "[", ",", Collections.emptyList(), "]", ListExList::new)
+                return new VariableLengthComponentList<ListEx, Object>(parents, "[", ",", "]", ListExList::new)
                 {
                     @Override
                     protected Component<? extends Object> makeNewEntry(ImmutableList<Component<?>> subParents) throws InternalException
@@ -509,7 +543,7 @@ public class TableDisplayUtility
     private static interface FieldMaker<V>
     {
         @OnThread(Tag.FXPlatform)
-        public StructuredTextField<? extends V> make(V value) throws InternalException;
+        public StructuredTextField<? extends V> make(V value) throws InternalException, UserException;
     }
 
     public static class DisplayCacheSTF<V> extends DisplayCache<V, StructuredTextField<? extends V>>
@@ -554,7 +588,7 @@ public class TableDisplayUtility
         }
 
         @Override
-        protected StructuredTextField<? extends V> makeGraphical(int rowIndex, V value) throws InternalException
+        protected StructuredTextField<? extends V> makeGraphical(int rowIndex, V value) throws InternalException, UserException
         {
             StructuredTextField<? extends V> field = makeField.make(value);
             //field.mouseTransparentProperty().bind(field.focusedProperty().not());

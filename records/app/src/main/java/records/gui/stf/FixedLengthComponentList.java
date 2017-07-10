@@ -4,12 +4,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
+import records.error.UserException;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Suggestion;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformFunctionInt;
+import utility.FXPlatformFunctionIntUser;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -27,15 +29,20 @@ public class FixedLengthComponentList<R, T> extends ParentComponent<R>
     private final Function<List<T>, R> combine;
     private final ImmutableList<Component<?>> allComponents;
 
-    public FixedLengthComponentList(ImmutableList<Component<?>> parents, @Nullable String prefix, List<Function<ImmutableList<Component<?>>, Component<? extends T>>> components, String divider, @Nullable String suffix, Function<List<T>, R> combine)
+    public FixedLengthComponentList(ImmutableList<Component<?>> parents, @Nullable String prefix, List<FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends T>>> components, String divider, @Nullable String suffix, Function<List<T>, R> combine) throws InternalException, UserException
     {
         super(parents);
-        this.contentComponents = ImmutableList.copyOf(Utility.<Function<ImmutableList<Component<?>>, Component<? extends T>>, Component<? extends T>>mapList(components, f -> f.apply(getItemParents())));
+        Builder<Component<? extends T>> componentBuilder = ImmutableList.builder();
+        for (FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends T>> f : components)
+        {
+            componentBuilder.add(f.apply(getItemParents()));
+        }
+        this.contentComponents = componentBuilder.build();
         this.combine = combine;
         this.allComponents = makeAllComponents(getItemParents(), prefix, contentComponents, divider, suffix);
     }
 
-    // Same as above but allows throwing an internal exception, and re-orders parameters to avoid having same erasure
+    // Same as above but only allows throwing an internal exception, and re-orders parameters to avoid having same erasure
     public FixedLengthComponentList(ImmutableList<Component<?>> parents, @Nullable String prefix, String divider, List<FXPlatformFunctionInt<ImmutableList<Component<?>>, Component<? extends T>>> components, @Nullable String suffix, Function<List<T>, R> combine) throws InternalException
     {
         super(parents);

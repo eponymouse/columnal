@@ -2,6 +2,7 @@ package utility;
 
 import javafx.scene.layout.Region;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.error.InternalException;
 
 import java.util.List;
 import java.util.function.BiFunction;
@@ -69,5 +70,35 @@ public class Either<A, B>
             return Either.left(a);
         else
             return Either.right(applyRight.apply(b));
+    }
+
+    //Use either/either_ instead if at all possible
+    public A getLeft() throws InternalException
+    {
+        if (a != null)
+            return a;
+        else
+            throw new InternalException("Getting left out of right");
+    }
+
+    //Use either/either_ instead if at all possible
+    public B getRight() throws InternalException
+    {
+        if (b != null)
+            return b;
+        else
+            throw new InternalException("Getting left out of right");
+    }
+
+    //Use either/either_ instead if at all possible
+    public boolean isLeft()
+    {
+        return isA;
+    }
+
+    //Use either/either_ instead if at all possible
+    public boolean isRight()
+    {
+        return !isA;
     }
 }

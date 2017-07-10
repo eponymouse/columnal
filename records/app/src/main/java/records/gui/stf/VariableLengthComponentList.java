@@ -6,6 +6,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
+import records.error.UserException;
 import records.gui.stf.StructuredTextField.CharEntryResult;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
@@ -15,6 +16,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformFunctionInt;
+import utility.FXPlatformFunctionIntUser;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -39,7 +41,7 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
     private final int dividerCodepoint;
 
     // Same as above but allows throwing an internal exception, and re-orders parameters to avoid having same erasure
-    public VariableLengthComponentList(ImmutableList<Component<?>> parents, String prefix, String divider, List<FXPlatformFunctionInt<ImmutableList<Component<?>>, Component<? extends T>>> components, String suffix, Function<List<T>, R> combine) throws InternalException
+    public VariableLengthComponentList(ImmutableList<Component<?>> parents, String prefix, String divider, String suffix, Function<List<T>, R> combine) throws InternalException
     {
         super(parents);
         this.dividerCodepoint = divider.codePointAt(0);
@@ -51,7 +53,8 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
         this.contentComponents = FXCollections.observableArrayList();
 
         // Must listen before adding initial items:
-        FXUtility.listen(contentComponents, change -> {
+        FXUtility.listen(contentComponents, change ->
+        {
             Builder<Component<?>> r = ImmutableList.builder();
             r.add(prefixComponent);
             for (int i = 0; i < contentComponents.size(); i++)
@@ -63,8 +66,12 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
             r.add(suffixComponent);
             allComponents = r.build();
         });
+    }
 
-        for (FXPlatformFunctionInt<ImmutableList<Component<?>>, Component<? extends T>> f : components)
+    public VariableLengthComponentList(ImmutableList<Component<?>> parents, String prefix, String divider, List<FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends T>>> components, String suffix, Function<List<T>, R> combine) throws InternalException, UserException
+    {
+        this(parents, prefix, divider, suffix, combine);
+        for (FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends T>> f : components)
         {
             this.contentComponents.add(f.apply(getItemParents()));
         }
@@ -94,6 +101,9 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
     @Override
     public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field)
     {
+        if (contentComponents.isEmpty())
+            return Either.right(combine.apply(Collections.emptyList()));
+
         // This is a bit iffy as it threads a mutable array list through the
         // immutable-looking Either instances, but it is safe:
         Either<List<ErrorFix>, ArrayList<T>> result = contentComponents.get(0).endEdit(field).map(x -> new ArrayList<>(Collections.singletonList(x)));

@@ -4,6 +4,7 @@ import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import annotation.userindex.qual.UserIndex;
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ArrayColumnStorage;
 import records.data.BooleanColumnStorage;
@@ -24,9 +25,13 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
+import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Workers;
+import utility.Workers.Priority;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -35,10 +40,13 @@ import java.time.OffsetTime;
 import java.time.YearMonth;
 import java.time.ZonedDateTime;
 import java.time.temporal.TemporalAccessor;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.OptionalInt;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 /**
@@ -494,5 +502,72 @@ public class DataTypeUtility
                 };
             }
         });
+    }
+
+    public static GetValue<ListEx> toListEx(DataType innerType, GetValue<Pair<Integer, DataTypeValue>> g)
+    {
+        return new GetValue<ListEx>()
+        {
+            @Override
+            public ListEx getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+            {
+                Pair<Integer, DataTypeValue> p = g.getWithProgress(index, progressListener);
+                return new ListEx()
+                {
+                    @Override
+                    public int size() throws InternalException, UserException
+                    {
+                        return p.getFirst();
+                    }
+
+                    @Override
+                    public @Value Object get(int index) throws InternalException, UserException
+                    {
+                        return p.getSecond().getCollapsed(index);
+                    }
+                };
+            }
+
+            @Override
+            public @OnThread(Tag.Simulation) void set(int index, ListEx value) throws InternalException, UserException
+            {
+                g.set(index, new Pair<>(value.size(), innerType.fromCollapsed((i, prog) -> value.get(i))));
+            }
+        };
+    }
+
+    // Fetches a ListEx from the simulation thread and returns it as a flat list on the FX thread.
+    @OnThread(Tag.FXPlatform)
+    public static List<@Value Object> fetchList(ListEx simList) throws InternalException
+    {
+        CompletableFuture<Either<Exception, List<@Value Object>>> f = new CompletableFuture<>();
+        Workers.onWorkerThread("Fetch list", Priority.FETCH, () -> {
+            try
+            {
+                ArrayList<@Value Object> r = new ArrayList<>(simList.size());
+                for (int i = 0; i < simList.size(); i++)
+                {
+                    r.add(simList.get(i));
+                }
+                f.complete(Either.right(r));
+            }
+            catch (InternalException | UserException e)
+            {
+                f.complete(Either.left(e));
+            }
+        });
+        Either<Exception, List<Object>> either;
+        try
+        {
+            either = f.get();
+        }
+        catch (InterruptedException | ExecutionException e)
+        {
+            throw new InternalException("Error fetching list", e);
+        }
+        if (either.isLeft())
+            throw new InternalException("Error fetching list", either.getLeft());
+        else
+            return either.getRight();
     }
 }

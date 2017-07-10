@@ -882,7 +882,6 @@ public class TestStructuredTextField extends ApplicationTest
     {
         DataType dataType = DataType.array(DataType.NUMBER);
         f.set(field(dataType, new ListExList(Collections.emptyList())));
-        targetF();
         push(KeyCode.LEFT);
         push(KeyCode.LEFT);
         type("", "$[]");

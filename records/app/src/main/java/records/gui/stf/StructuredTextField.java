@@ -736,7 +736,9 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     public void previousChar(SelectionPolicy selectionPolicy)
     {
         Pair<Integer, Integer> cur = plainToStructured(getCaretPosition());
+        System.err.println("Was: " + cur);
         cur = calculatePreviousChar(cur);
+        System.err.println("Then: " + cur);
         moveTo(structuredToPlain(cur), selectionPolicy);
     }
 

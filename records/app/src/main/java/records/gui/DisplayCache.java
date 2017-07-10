@@ -83,7 +83,7 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
             });
     }
 
-    protected abstract G makeGraphical(int rowIndex, V value) throws InternalException;
+    protected abstract G makeGraphical(int rowIndex, V value) throws InternalException, UserException;
 
     public class VisibleDetails
     {
