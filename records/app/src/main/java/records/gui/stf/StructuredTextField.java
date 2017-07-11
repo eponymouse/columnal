@@ -570,7 +570,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                 case EDITABLE_SECOND:
                     return (c >= '0' && c <= '9') || c == '.';
                 case EDITABLE_ZONEID:
-                    return ZoneId.getAvailableZoneIds().stream().collect(Collectors.joining()).contains(new String(new int[] {c}, 0, 1));
+                    return ZoneId.getAvailableZoneIds().stream().collect(Collectors.joining()).contains(new String(new int[] {c}, 0, 1))
+                        || (c >= '0' && c <= '9') || c == '+' || c == ':';
                 // Day, Month Year allow month names in any of them:
                 default:
                     return (c >= '0' && c <= '9') || Character.isAlphabetic(c);

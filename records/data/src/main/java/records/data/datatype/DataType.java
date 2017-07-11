@@ -1452,13 +1452,12 @@ public class DataType
                     .appendFraction(NANO_OF_SECOND, 0, 9, true)
                     .optionalEnd();
             if (type.hasZoneOffset())
-                builder.optionalStart().appendOffsetId().optionalEnd();
+                builder.appendOffsetId();
             if (type.hasZoneId())
-                builder.optionalStart()
+                builder
                     .appendLiteral(' ')
                     .parseCaseSensitive()
-                    .appendZoneRegionId()
-                    .optionalEnd();
+                    .appendZoneOrOffsetId();
             return builder.toFormatter();
         }
 
