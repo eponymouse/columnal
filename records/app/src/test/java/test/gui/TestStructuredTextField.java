@@ -45,6 +45,7 @@ import records.gui.stf.StructuredTextField;
 import records.gui.TableDisplayUtility;
 import test.gen.GenDate;
 import test.gen.GenDateTime;
+import test.gen.GenDateTimeZoned;
 import test.gen.GenNumber;
 import test.gen.GenNumberAsString;
 import test.gen.GenOffsetTime;
@@ -74,6 +75,7 @@ import java.time.OffsetTime;
 import java.time.Year;
 import java.time.YearMonth;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -780,6 +782,33 @@ public class TestStructuredTextField extends ApplicationTest
         targetF();
         pushSelectAll();
         type(timeVal, timeVal, yearMonth);
+        // TODO also test errors, and other variants (e.g. text months)
+    }
+
+    @Property(trials = 15)
+    public void propDateTimeZoned(@From(GenDateTimeZoned.class) ZonedDateTime zonedDateTime) throws InternalException, UserException
+    {
+        f.set(dateField(new DateTimeInfo(DateTimeType.DATETIMEZONED), ZonedDateTime.from(DateTimeInfo.DEFAULT_VALUE)));
+        String timeVal = sim(new SimulationSupplier<String>()
+        {
+            @Override
+            @OnThread(Tag.Simulation)
+            public String get() throws InternalException, UserException
+            {
+                return DataTypeUtility.valueToString(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), zonedDateTime, null);
+            }
+        });
+        targetF();
+        pushSelectAll();
+        /*
+        StringBuilder expected = new StringBuilder();
+        expected.append(zonedDateTime.getDayOfMonth()).append("/").append(zonedDateTime.getMonthValue()).append("/").append(zonedDateTime.getYear());
+        expected.append(" ").append(zonedDateTime.getHour()).append(":").append(zonedDateTime.getMinute()).append(":").append(zonedDateTime.getSecond());
+        if (zonedDateTime.getNano() != 0)
+            expected.append(".").append(zonedDateTime.getNano());
+        expected.append(" ").append(zonedDateTime.getZone().getId());
+        */
+        type(timeVal, timeVal, zonedDateTime);
         // TODO also test errors, and other variants (e.g. text months)
     }
 

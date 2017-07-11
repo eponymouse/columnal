@@ -1538,7 +1538,7 @@ public class DataType
             this.type = type;
         }
 
-        private static final TemporalAccessor DEFAULT_VALUE = ZonedDateTime.of(1900, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
+        public static final TemporalAccessor DEFAULT_VALUE = ZonedDateTime.of(1900, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
 
         public TemporalAccessor getDefaultValue() throws InternalException
         {

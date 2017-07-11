@@ -35,6 +35,7 @@ import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -568,6 +569,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                     return (c >= '0' && c <= '9');
                 case EDITABLE_SECOND:
                     return (c >= '0' && c <= '9') || c == '.';
+                case EDITABLE_ZONEID:
+                    return ZoneId.getAvailableZoneIds().stream().collect(Collectors.joining()).contains(new String(new int[] {c}, 0, 1));
                 // Day, Month Year allow month names in any of them:
                 default:
                     return (c >= '0' && c <= '9') || Character.isAlphabetic(c);
