@@ -541,6 +541,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         EDITABLE_SECOND,
         EDITABLE_OFFSET_HOUR,
         EDITABLE_OFFSET_MINUTE,
+        EDITABLE_ZONEID,
         TIMEZONE_PLUS_MINUS,
 
         TAG_NAME,

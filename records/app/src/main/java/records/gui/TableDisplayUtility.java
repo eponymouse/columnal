@@ -34,19 +34,7 @@ import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.stf.BoolComponent;
-import records.gui.stf.Component2;
-import records.gui.stf.FixedLengthComponentList;
-import records.gui.stf.NumberEntry;
-import records.gui.stf.PlusMinusOffsetComponent;
-import records.gui.stf.StructuredTextField;
-import records.gui.stf.Component;
-import records.gui.stf.TaggedComponent;
-import records.gui.stf.TextEntry;
-import records.gui.stf.TimeComponent;
-import records.gui.stf.VariableLengthComponentList;
-import records.gui.stf.YM;
-import records.gui.stf.YMD;
+import records.gui.stf.*;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunctionInt;
@@ -66,7 +54,9 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.OffsetTime;
+import java.time.ZoneId;
 import java.time.ZoneOffset;
+import java.time.ZonedDateTime;
 import java.time.temporal.ChronoField;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -358,7 +348,13 @@ public class TableDisplayUtility
                     case DATETIME:
                         return new GetValueAndComponent<>(g, (parents, value) -> new Component2<LocalDateTime, LocalDate, LocalTime>(parents, subParents -> new YMD(subParents, value), " ", subParents -> new TimeComponent(subParents, value), LocalDateTime::of));
                     case DATETIMEZONED:
-                        break;
+                        return new GetValueAndComponent<>(g, (parents0, value) ->
+                            new Component2<ZonedDateTime, LocalDateTime, ZoneId>(parents0,
+                                parents1 -> new Component2<LocalDateTime, LocalDate, LocalTime>(
+                                        parents1, parents2 -> new YMD(parents2, value), " ", parents2 -> new TimeComponent(parents2, value), LocalDateTime::of),
+                                " ",
+                                parents1 -> new ZoneIdComponent(parents1, ((ZonedDateTime)value).getZone()), ZonedDateTime::of)
+                        );
                 }
                 throw new InternalException("Unknown type: " + dateTimeInfo.getType());
             }
@@ -496,7 +492,11 @@ public class TableDisplayUtility
                     case DATETIME:
                         return new Component2<LocalDateTime, LocalDate, LocalTime>(parents, subParents -> new YMD(subParents, null), " ", subParents -> new TimeComponent(subParents, null), LocalDateTime::of);
                     case DATETIMEZONED:
-                        break;
+                        return new Component2<ZonedDateTime, LocalDateTime, ZoneId>(parents,
+                                        parents1 -> new Component2<LocalDateTime, LocalDate, LocalTime>(
+                                                parents1, parents2 -> new YMD(parents2, null), " ", parents2 -> new TimeComponent(parents2, null), LocalDateTime::of),
+                                        " ",
+                                        parents1 -> new ZoneIdComponent(parents1, null), ZonedDateTime::of);
                 }
                 throw new InternalException("Unknown type: " + dateTimeInfo.getType());
             }

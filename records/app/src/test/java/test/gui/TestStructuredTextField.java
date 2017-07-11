@@ -618,7 +618,7 @@ public class TestStructuredTextField extends ApplicationTest
     {
         // Some sort of bug on OS X prevents Cmd-A working in TestFX:
         if (SystemUtils.IS_OS_MAC_OSX)
-            f.get().selectAll();
+            fx_(() -> f.get().selectAll());
         else
             push(ctrlCmd(), KeyCode.A);
     }
