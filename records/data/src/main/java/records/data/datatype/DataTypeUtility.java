@@ -302,7 +302,7 @@ public class DataTypeUtility
             @Override
             public String text() throws InternalException, UserException
             {
-                return parent == null ? escapeChars(item.toString()) : "\"" + escapeChars(item.toString()) + "\"";
+                return "\"" + escapeChars(item.toString()) + "\"";
             }
 
             private String escapeChars(String s)

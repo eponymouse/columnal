@@ -38,6 +38,7 @@ import utility.gui.TranslationUtility;
 import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -75,6 +76,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     private final List<Item> curValue = new ArrayList<>();
     private final Component<T> contentComponent;
     private final List<Suggestion> suggestions;
+    private final BitSet possibleCaretPositions = new BitSet();
     private @Nullable State lastValidValue;
     private @Nullable PopOver fixPopup;
     private T completedValue;
@@ -123,6 +125,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
         // Call super to avoid our own validation:
         super.replace(0, 0, makeDoc(initialItems));
+        updatePossibleCaretPositions();
         @Nullable T val = endEdit().<@Nullable T>either(err -> null, v -> v);
         if (val == null)
         {
@@ -332,6 +335,24 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         inSuperReplace = true;
         super.replace(0, getLength(), doc);
         inSuperReplace = false;
+        updatePossibleCaretPositions();
+    }
+
+    private void updatePossibleCaretPositions()
+    {
+        possibleCaretPositions.clear();
+        int curPos = 0;
+        boolean endLastWasValid = true;
+        for (int itemIndex = 0; itemIndex < curValue.size(); itemIndex++)
+        {
+            Item curItem = curValue.get(itemIndex);
+            for (int itemSubIndex = endLastWasValid ? 0 : 1; itemSubIndex <= curItem.getLength(); itemSubIndex++)
+            {
+                possibleCaretPositions.set(curPos + itemSubIndex);
+            }
+            curPos += curItem.getScreenLength();
+            endLastWasValid = curItem.getLength() < curItem.getScreenLength();
+        }
     }
 
     protected Optional<ErrorFix> revertEditFix(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this)
@@ -717,7 +738,10 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         for (int i = 0; i < curValue.size(); i++)
         {
             Item item = curValue.get(i);
-            if (item.itemVariant != ItemVariant.DIVIDER && position <= item.getScreenLength())
+            // If something falls on the borderline between a divider and a non-divider, we prefer the non-divider.
+            // If the non-divider is first, it will already have been returned.  If the divider is first, we wait
+            // until the next one:
+            if (position < item.getScreenLength() || (item.itemVariant != ItemVariant.DIVIDER && position == item.getScreenLength()))
                 return new Pair<>(i, position);
             position -= item.getScreenLength();
         }
@@ -740,11 +764,14 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void previousChar(SelectionPolicy selectionPolicy)
     {
-        Pair<Integer, Integer> cur = plainToStructured(getCaretPosition());
-        System.err.println("Was: " + cur);
-        cur = calculatePreviousChar(cur);
-        System.err.println("Then: " + cur);
-        moveTo(structuredToPlain(cur), selectionPolicy);
+        if (getCaretPosition() != 0)
+        {
+            int prev = possibleCaretPositions.previousSetBit(getCaretPosition() - 1);
+            if (prev != -1)
+            {
+                moveTo(prev, selectionPolicy);
+            }
+        }
     }
 
     @NotNull
@@ -763,16 +790,17 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         }
         else
         {
-            // Move to previous field:
+            // We are at start of current field.  Move to previous field:
+
+            // In general, we want to move one character before the end of the previous field.
+            // The special cases are :
+            //    - if the field before is empty, we should skip it
+
+            boolean prevWasDivider = curItem.itemVariant == ItemVariant.DIVIDER;
             int field = cur.getFirst() - 1;
-            while (field > 0)
-            {
-                if (curValue.get(field).itemVariant == ItemVariant.DIVIDER)
-                    field -= 1;
-                else
-                    break;
-            }
-            cur = new Pair<>(field, curValue.get(field).getLength());
+            while (curValue.get(field).getLength() == 0)
+                field -= 1;
+            cur = new Pair<>(field, curValue.get(field).getLength() - 1);
         }
         return cur;
     }
@@ -781,9 +809,11 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void nextChar(SelectionPolicy selectionPolicy)
     {
-        Pair<Integer, Integer> cur = plainToStructured(getCaretPosition());
-        cur = calculateNextChar(cur);
-        moveTo(structuredToPlain(cur), selectionPolicy);
+        int next = possibleCaretPositions.nextSetBit(getCaretPosition() + 1);
+        if (next != -1)
+        {
+            moveTo(next, selectionPolicy);
+        }
     }
 
     @NotNull
@@ -879,20 +909,22 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void lineEnd(SelectionPolicy policy)
     {
-        OptionalInt lastEditableEntry = Utility.findLastIndex(curValue, item -> item.itemVariant != ItemVariant.DIVIDER);
-        lastEditableEntry.ifPresent(i ->
-            moveTo(structuredToPlain(new Pair<>(i, curValue.get(i).getLength())), policy)
-        );
+        int pos = possibleCaretPositions.length() - 1;
+        if (pos != -1)
+        {
+            moveTo(pos, policy);
+        }
     }
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void lineStart(SelectionPolicy policy)
     {
-        OptionalInt firstEditableEntry = Utility.findFirstIndex(curValue, item -> item.itemVariant != ItemVariant.DIVIDER);
-        firstEditableEntry.ifPresent(i ->
-            moveTo(structuredToPlain(new Pair<>(i, 0)), policy)
-        );
+        int pos = possibleCaretPositions.nextSetBit(0);
+        if (pos != -1)
+        {
+            moveTo(pos, policy);
+        }
     }
 
     @Override

@@ -1,5 +1,6 @@
 package test.gui;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -53,6 +54,7 @@ import test.gen.GenRandom;
 import test.gen.GenTaggedTypeAndValueGen;
 import test.gen.GenTime;
 import test.gen.GenTypeAndValueGen;
+import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import test.gen.GenYearMonth;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -908,6 +910,69 @@ public class TestStructuredTextField extends ApplicationTest
             });
             type(tagName.substring(tagName.length() - 1) + "(" + inner + ")", tagName + "(" + inner + ")", value);
         }
+    }
+
+    // This doesn't check that all the positions make sense, it just checks some basic properties:
+    // HOME should go to zero
+    // LEFT and RIGHT should be reversible.
+    @Property(trials = 15)
+    public void propPositions(@When(seed=-8325242676710787694L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws UserException, InternalException
+    {
+        f.set(field(typeAndValueGen.getType(), typeAndValueGen.makeValue()));
+        checkPositions(typeAndValueGen.getType() + ":" + fx(() -> f.get().getText()));
+        targetF();
+        pushSelectAll();
+        push(KeyCode.DELETE);
+        checkPositions(typeAndValueGen.getType() + ":" + fx(() -> f.get().getText()));
+        @Value Object value = typeAndValueGen.makeValue();
+        String str = sim(new SimulationSupplier<String>()
+        {
+            @Override
+            @OnThread(Tag.Simulation)
+            public String get() throws InternalException, UserException
+            {
+                return DataTypeUtility.valueToString(typeAndValueGen.getType(), value, null);
+            }
+        });
+        type(str, str, value);
+        targetF();
+        checkPositions(typeAndValueGen.getType() + ":" + str);
+    }
+
+    private void checkPositions(String msg)
+    {
+        push(KeyCode.HOME);
+        assertEquals(msg, 0, getCaretPosition());
+        push(KeyCode.END);
+        // May not be actual end of the slot if last item is empty and showing a prompt:
+        int length = getCaretPosition();
+        push(KeyCode.HOME);
+        int pos = 0;
+        ArrayList<Integer> positions = new ArrayList<>();
+        int attempts = 0; // counter just to prevent test running forever if it fails.  Max pushes needed should be length of field
+        while (pos < length && attempts++ <= length)
+        {
+            positions.add(pos);
+            push(KeyCode.RIGHT);
+            pos = getCaretPosition();
+        }
+        // Check we did actually reach the end, not just time-out:
+        assertEquals(msg, length, pos);
+        // Now check that it reverses.  Note that array is deliberately missing the last position:
+        int index = positions.size() - 1;
+        int prevPosition = getCaretPosition();
+        while (index >= 0)
+        {
+            push(KeyCode.LEFT);
+            assertEquals(msg + " left from " + prevPosition, (int)positions.get(index), getCaretPosition());
+            prevPosition = getCaretPosition();
+            index -= 1;
+        }
+    }
+
+    private int getCaretPosition()
+    {
+        return fx(() -> f.get().getCaretPosition());
     }
 
     @Test
