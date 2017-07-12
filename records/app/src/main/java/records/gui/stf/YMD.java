@@ -211,7 +211,7 @@ public class YMD extends TerminalComponent<LocalDate>
             return;
         }
 
-        final String value = day + "/" + month + "/" + year;
+        final String value = String.format("%02d", day) + "/" + String.format("%02d", month) + "/" + String.format("%04d", year);
         fixes.add(new ErrorFix(TranslationUtility.getString(labelKey, value))
         {
             @Override

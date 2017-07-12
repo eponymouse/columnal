@@ -515,7 +515,8 @@ public class TestStructuredTextField extends ApplicationTest
 
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         push(KeyCode.HOME);
-        type("", "$1/4/1900");
+        push(KeyCode.DELETE);
+        type("", "$1/04/1900");
         type("2", "21/04/1900", LocalDate.of(1900, 4, 21));
 
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
@@ -537,7 +538,7 @@ public class TestStructuredTextField extends ApplicationTest
         // Check prompts for invalid dates:
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         pushSelectAll();
-        type("", "^1/4/1900$");
+        type("", "^01/04/1900$");
         push(KeyCode.DELETE);
         type("", "$Day/Month/Year");
         fx_(()-> dummy.requestFocus());
@@ -548,11 +549,11 @@ public class TestStructuredTextField extends ApplicationTest
         clickOn(".invalid-data-input-popup .invalid-data-revert");
         WaitForAsyncUtils.waitForFxEvents();
         assertNull(lookup(".invalid-data-input-popup").query());
-        type("", "1/4/1900$");
+        type("", "01/04/1900$");
 
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         pushSelectAll();
-        type("", "^1/4/1900$");
+        type("", "^01/04/1900$");
         push(KeyCode.DELETE);
         type("", "$Day/Month/Year");
         clickOn(dummy);
@@ -572,7 +573,7 @@ public class TestStructuredTextField extends ApplicationTest
         // Popup should be back:
         assertNotNull(lookup(".invalid-data-input-popup").query());
         // Should show the first value as a fix:
-        assertThat(lookup(".invalid-data-input-popup .invalid-data-revert").<Label>query().getText(), Matchers.containsString("1/4/1900"));
+        assertThat(lookup(".invalid-data-input-popup .invalid-data-revert").<Label>query().getText(), Matchers.containsString("01/04/1900"));
         // Click in again:
         targetF();
         push(KeyCode.HOME);
@@ -584,32 +585,33 @@ public class TestStructuredTextField extends ApplicationTest
         // Now delete again:
         targetF();
         pushSelectAll();
-        type("", "^8/7/2169$");
+        // Will have gained zeroes because it lost focus:
+        type("", "^08/07/2169$");
         push(KeyCode.DELETE);
         clickOn(dummy);
         // New popup should show most recent value:
         assertNotNull(lookup(".invalid-data-input-popup").query());
-        assertThat(lookup(".invalid-data-input-popup .invalid-data-revert").<Label>query().getText(), Matchers.containsString("8/7/2169"));
+        assertThat(lookup(".invalid-data-input-popup .invalid-data-revert").<Label>query().getText(), Matchers.containsString("08/07/2169"));
 
         // Check swapped or invalid dates have the right suggestions:
-        checkFix("0/3/2000", "1/3/2000");
-        checkFix("8/0/2000", "8/1/2000");
-        checkFix("4/13/2000", "13/4/2000");
+        checkFix("0/3/2000", "01/03/2000");
+        checkFix("8/0/2000", "08/01/2000");
+        checkFix("4/13/2000", "13/04/2000");
         checkFix("13/13/2000", "13/12/2000");
-        checkFix("31/9/2000", "30/9/2000");
-        checkFix("31/9/2000", "1/10/2000");
-        checkFix("32/9/2000", "30/9/2000");
-        checkFix("1968/3/4", "4/3/1968");
-        checkFix("32/9/1", "1/9/2032");
-        checkFix("32/9/1", "30/9/2001");
-        checkFix("68/3/4", "4/3/1968");
+        checkFix("31/9/2000", "30/09/2000");
+        checkFix("31/9/2000", "01/10/2000");
+        checkFix("32/9/2000", "30/09/2000");
+        checkFix("1968/3/4", "04/03/1968");
+        checkFix("32/9/1", "01/09/2032");
+        checkFix("32/9/1", "30/09/2001");
+        checkFix("68/3/4", "04/03/1968");
 
         targetF();
         pushSelectAll();
         type("10/12/0378", "10/12/0378", LocalDate.of(378, 12, 10));
         targetF();
         pushSelectAll();
-        type("01/02/3", "1/2/2003", LocalDate.of(2003, 2, 1));
+        type("01/02/3", "01/02/2003", LocalDate.of(2003, 2, 1));
         targetF();
         pushSelectAll();
         type("10/12/03", "10/12/2003", LocalDate.of(2003, 12, 10));
