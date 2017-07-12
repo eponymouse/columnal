@@ -176,8 +176,10 @@ public class TestStructuredTextField extends ApplicationTest
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         // Delete the month:
         push(KeyCode.HOME);
+        push(KeyCode.DELETE);
         push(KeyCode.RIGHT);
         push(KeyCode.RIGHT);
+        push(KeyCode.DELETE);
         push(KeyCode.DELETE);
         assertEquals("1/Month/1900", fx(() -> f.get().getText()));
         testPositions(new Random(0),
@@ -509,12 +511,12 @@ public class TestStructuredTextField extends ApplicationTest
         f.get().selectAll();
         type("17", "17$/Month/Year");
         type("/3/", "17/3/$Year");
-        type("1973", "17/3/1973", LocalDate.of(1973, 3, 17));
+        type("1973", "17/03/1973", LocalDate.of(1973, 3, 17));
 
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         push(KeyCode.HOME);
         type("", "$1/4/1900");
-        type("2", "21/4/1900", LocalDate.of(1900, 4, 21));
+        type("2", "21/04/1900", LocalDate.of(1900, 4, 21));
 
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
@@ -522,7 +524,7 @@ public class TestStructuredTextField extends ApplicationTest
 
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
-        type("5 6 27","5/6/2027", LocalDate.of(2027, 6, 5));
+        type("5 6 27","05/06/2027", LocalDate.of(2027, 6, 5));
 
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
         f.get().selectAll();
@@ -530,7 +532,7 @@ public class TestStructuredTextField extends ApplicationTest
         type("-", "6/$Month/Year");
         type("7", "6/7$/Year");
         type("-", "6/7/$Year");
-        type("3", "6/7/2003", LocalDate.of(2003, 7, 6));
+        type("3", "06/07/2003", LocalDate.of(2003, 7, 6));
 
         // Check prompts for invalid dates:
         f.set(dateField(new DateTimeInfo(DateTimeType.YEARMONTHDAY), LocalDate.of(1900, 4, 1)));
@@ -877,7 +879,7 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
     @Property(trials=20)
-    public void propTagged(@When(seed=-1306588459139486136L) @From(GenTaggedTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen taggedTypeAndValueGen) throws UserException, InternalException
+    public void propTagged(@From(GenTaggedTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen taggedTypeAndValueGen) throws UserException, InternalException
     {
         f.set(field(taggedTypeAndValueGen.getType(), taggedTypeAndValueGen.makeValue()));
         targetF();
@@ -951,15 +953,16 @@ public class TestStructuredTextField extends ApplicationTest
         // Try it in valid form with four digit year:
         targetF();
         pushSelectAll();
-        String value = localDate.get(ChronoField.DAY_OF_MONTH) + "/" + localDate.get(ChronoField.MONTH_OF_YEAR) + "/" + String.format("%04d", localDate.get(ChronoField.YEAR));
-        type(value + extra, value + extra, localDate);
+        String oneDigEntry = localDate.get(ChronoField.DAY_OF_MONTH) + "/" + localDate.get(ChronoField.MONTH_OF_YEAR) + "/" + String.format("%04d", localDate.get(ChronoField.YEAR));
+        String value = String.format("%02d", localDate.get(ChronoField.DAY_OF_MONTH)) + "/" + String.format("%02d", localDate.get(ChronoField.MONTH_OF_YEAR)) + "/" + String.format("%04d", localDate.get(ChronoField.YEAR));
+        type(oneDigEntry + extra, value + extra, localDate);
         if (localDate.get(ChronoField.YEAR) > Year.now().getValue() - 80 && localDate.get(ChronoField.YEAR) < Year.now().getValue() + 20)
         {
             // Do two digits:
             targetF();
             pushSelectAll();
-            String twoDig = localDate.get(ChronoField.DAY_OF_MONTH) + "/" + localDate.get(ChronoField.MONTH_OF_YEAR) + "/" + Integer.toString(localDate.get(ChronoField.YEAR)).substring(2);
-            type(twoDig + extra, value + extra, localDate);
+            String twoDigYear = localDate.get(ChronoField.DAY_OF_MONTH) + "/" + localDate.get(ChronoField.MONTH_OF_YEAR) + "/" + Integer.toString(localDate.get(ChronoField.YEAR)).substring(2);
+            type(twoDigYear + extra, value + extra, localDate);
         }
         // Try slight variant, such as other dividers or leading zeros:
         // Also try month names:
