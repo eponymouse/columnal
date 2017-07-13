@@ -1001,7 +1001,8 @@ public class TestStructuredTextField extends ApplicationTest
         type("", "$[]");
 
         // TODO try with more structured slots, and with nested lists
-        // Test that deleting comma deletes the adjacent empty slot
+        // TODO Test that deleting comma deletes the adjacent empty slot
+        // TODO test that deleting whole list item actually deletes the item, without leaving the comma
     }
 
     public Node assertAutoCompleteVisible(int atChar, @Nullable Node sameAs)

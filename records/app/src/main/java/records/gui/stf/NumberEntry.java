@@ -21,7 +21,7 @@ public class NumberEntry extends TerminalComponent<Number>
     public NumberEntry(ImmutableList<Component<?>> parents, @Nullable Number initial)
     {
         super(parents);
-        items.add(new Item(getItemParents(), initial == null ? "" : (initial instanceof BigDecimal ? ((BigDecimal) initial).toPlainString() : initial.toString()), ItemVariant.EDITABLE_NUMBER, ""));
+        items.add(new Item(getItemParents(), initial == null ? "" : (initial instanceof BigDecimal ? ((BigDecimal) initial).toPlainString() : initial.toString()), ItemVariant.EDITABLE_NUMBER, "Number"));
     }
 
     @Override

@@ -246,6 +246,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void replace(final int start, final int end, StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> replacement)
     {
+        System.err.println("Replacing: \"" + getText(start, end) + "\" with \"" + replacement.getText() + "\"");
+
         hidePopup();
         int insertPos = start;
         if (end > start)
