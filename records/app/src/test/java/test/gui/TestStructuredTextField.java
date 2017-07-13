@@ -946,27 +946,30 @@ public class TestStructuredTextField extends ApplicationTest
         push(KeyCode.END);
         // May not be actual end of the slot if last item is empty and showing a prompt:
         int length = getCaretPosition();
-        push(KeyCode.HOME);
-        int pos = 0;
-        ArrayList<Integer> positions = new ArrayList<>();
-        int attempts = 0; // counter just to prevent test running forever if it fails.  Max pushes needed should be length of field
-        while (pos < length && attempts++ <= length)
+        for (boolean byWord : new boolean[] {false, true})
         {
-            positions.add(pos);
-            push(KeyCode.RIGHT);
-            pos = getCaretPosition();
-        }
-        // Check we did actually reach the end, not just time-out:
-        assertEquals(msg, length, pos);
-        // Now check that it reverses.  Note that array is deliberately missing the last position:
-        int index = positions.size() - 1;
-        int prevPosition = getCaretPosition();
-        while (index >= 0)
-        {
-            push(KeyCode.LEFT);
-            assertEquals(msg + " left from " + prevPosition, (int)positions.get(index), getCaretPosition());
-            prevPosition = getCaretPosition();
-            index -= 1;
+            push(KeyCode.HOME);
+            int pos = 0;
+            ArrayList<Integer> positions = new ArrayList<>();
+            int attempts = 0; // counter just to prevent test running forever if it fails.  Max pushes needed should be length of field
+            while (pos < length && attempts++ <= length)
+            {
+                positions.add(pos);
+                if (byWord) push(KeyCode.CONTROL, KeyCode.RIGHT); else push(KeyCode.RIGHT);
+                pos = getCaretPosition();
+            }
+            // Check we did actually reach the end, not just time-out:
+            assertThat(msg, attempts, Matchers.<Integer>lessThanOrEqualTo(length));
+            // Now check that it reverses.  Note that array is deliberately missing the last position:
+            int index = positions.size() - 1;
+            int prevPosition = getCaretPosition();
+            while (index >= 0)
+            {
+                if (byWord) push(KeyCode.CONTROL, KeyCode.LEFT); else push(KeyCode.LEFT);
+                assertEquals(msg + " left from " + prevPosition, (int) positions.get(index), getCaretPosition());
+                prevPosition = getCaretPosition();
+                index -= 1;
+            }
         }
     }
 
