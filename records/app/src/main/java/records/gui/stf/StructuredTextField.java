@@ -76,7 +76,10 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     private final List<Item> curValue = new ArrayList<>();
     private final Component<T> contentComponent;
     private final List<Suggestion> suggestions;
+    // All positions in the text area which are valid:
     private final BitSet possibleCaretPositions = new BitSet();
+    // All positions in the text area which are valid and are beginning or end of words:
+    private final BitSet possibleCaretWordPositions = new BitSet();
     private @Nullable State lastValidValue;
     private @Nullable PopOver fixPopup;
     private T completedValue;
@@ -341,18 +344,24 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     private void updatePossibleCaretPositions()
     {
         possibleCaretPositions.clear();
+        possibleCaretWordPositions.clear();
         int curPos = 0;
         boolean endLastWasValid = true;
         for (int itemIndex = 0; itemIndex < curValue.size(); itemIndex++)
         {
+            if (endLastWasValid)
+                possibleCaretWordPositions.set(curPos);
+
             Item curItem = curValue.get(itemIndex);
             for (int itemSubIndex = endLastWasValid ? 0 : 1; itemSubIndex <= curItem.getLength(); itemSubIndex++)
             {
                 possibleCaretPositions.set(curPos + itemSubIndex);
             }
             curPos += curItem.getScreenLength();
-            endLastWasValid = curItem.getLength() < curItem.getScreenLength();
+            endLastWasValid = curItem.getLength() == curItem.getScreenLength();
         }
+        if (endLastWasValid)
+            possibleCaretWordPositions.set(curPos);
     }
 
     protected Optional<ErrorFix> revertEditFix(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this)
@@ -774,37 +783,6 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         }
     }
 
-    @NotNull
-    private Pair<Integer, Integer> calculatePreviousChar(Pair<Integer, Integer> cur)
-    {
-        Item curItem = curValue.get(cur.getFirst());
-        if (cur.getSecond() > 0)
-        {
-            // Can advance backwards within the field:
-            cur = new Pair<>(cur.getFirst(), Character.offsetByCodePoints(curItem.getScreenText(), cur.getSecond(), -1));
-        }
-        else if (cur.getFirst() == 0)
-        {
-            // Can't go left; already at beginning:
-            return cur;
-        }
-        else
-        {
-            // We are at start of current field.  Move to previous field:
-
-            // In general, we want to move one character before the end of the previous field.
-            // The special cases are :
-            //    - if the field before is empty, we should skip it
-
-            boolean prevWasDivider = curItem.itemVariant == ItemVariant.DIVIDER;
-            int field = cur.getFirst() - 1;
-            while (curValue.get(field).getLength() == 0)
-                field -= 1;
-            cur = new Pair<>(field, curValue.get(field).getLength() - 1);
-        }
-        return cur;
-    }
-
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void nextChar(SelectionPolicy selectionPolicy)
@@ -816,38 +794,6 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         }
     }
 
-    @NotNull
-    private Pair<Integer, Integer> calculateNextChar(Pair<Integer, Integer> cur)
-    {
-        Item curItem = curValue.get(cur.getFirst());
-        if (cur.getSecond() < curItem.getLength()) // Note: getLength here, not getScreenLength. Can't move within prompt
-        {
-            // Can advance within the field:
-            cur = new Pair<>(cur.getFirst(), Character.offsetByCodePoints(curItem.getScreenText(), cur.getSecond(), 1));
-        }
-        else if (cur.getFirst() == curValue.size() - 1)
-        {
-            // Can't go right; already at end:
-            return cur;
-        }
-        else
-        {
-            // Move to next field:
-            int field = cur.getFirst() + 1;
-            while (field < curValue.size())
-            {
-                if (curValue.get(field).itemVariant == ItemVariant.DIVIDER)
-                    field += 1;
-                else
-                {
-                    cur = new Pair<>(field, 0);
-                    break;
-                }
-            }
-        }
-        return cur;
-    }
-
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void wordBreaksBackwards(int n, SelectionPolicy selectionPolicy)
@@ -856,19 +802,14 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         // So just override the count to be 1:
         n = 1;
 
-        Pair<Integer, Integer> cur = plainToStructured(getCaretPosition());
-        for (int i = 0; i < n; i++)
+        if (getCaretPosition() != 0)
         {
-            if (cur.getSecond() > 0)
+            int prev = possibleCaretWordPositions.previousSetBit(getCaretPosition() - 1);
+            if (prev != -1)
             {
-                cur = new Pair<>(cur.getFirst(), 0);
-            }
-            else
-            {
-                cur = calculatePreviousChar(cur);
+                moveTo(prev, selectionPolicy);
             }
         }
-        moveTo(structuredToPlain(cur), selectionPolicy);
     }
 
     @Override
@@ -879,19 +820,11 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         // So just override the count to be 1:
         n = 1;
 
-        Pair<Integer, Integer> cur = plainToStructured(getCaretPosition());
-        for (int i = 0; i < n; i++)
+        int next = possibleCaretWordPositions.nextSetBit(getCaretPosition() + 1);
+        if (next != -1)
         {
-            if (cur.getSecond() < curValue.get(cur.getFirst()).getLength())
-            {
-                cur = new Pair<>(cur.getFirst(), curValue.get(cur.getFirst()).getLength());
-            }
-            else
-            {
-                cur = calculateNextChar(cur);
-            }
+            moveTo(next, selectionPolicy);
         }
-        moveTo(structuredToPlain(cur), selectionPolicy);
     }
 
     @Override
