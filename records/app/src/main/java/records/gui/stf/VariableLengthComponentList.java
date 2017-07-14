@@ -84,20 +84,6 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
         return allComponents.stream().flatMap(c -> c.getItems().stream()).collect(Collectors.toList());
     }
 
-    private static <T> ImmutableList<Component<?>> makeAllComponents(ImmutableList<Component<?>> itemParents, String prefix, List<Component<? extends T>> content, String divider, String suffix)
-    {
-        Builder<Component<?>> build = ImmutableList.builder();
-        build.add(new DividerComponent(itemParents, prefix));
-        for (int i = 0; i < content.size(); i++)
-        {
-            build.add(content.get(i));
-            if (i < content.size() - 1)
-                build.add(new DividerComponent(itemParents, divider));
-        }
-        build.add(new DividerComponent(itemParents, suffix));
-        return build.build();
-    }
-
     @Override
     public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field)
     {
@@ -114,17 +100,82 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
 
     // TODO add actual deletion of list items
     @Override
-    public final int delete(int startIncl, int endExcl)
+    public final DeleteState delete(int startIncl, int endExcl)
     {
         int lenSoFar = 0;
         int totalDelta = 0;
-        for (Component<?> component : allComponents)
+        boolean[] removedDividers = new boolean[contentComponents.size() - 1];
+        boolean[] emptyItems = new boolean[contentComponents.size()];
+        boolean removedStartOrEnd = false;
+        for (int i = 0; i < allComponents.size(); i++)
         {
+            Component<?> component = allComponents.get(i);
             int len = component.getItems().stream().mapToInt(Item::getScreenLength).sum();
-            totalDelta += component.delete(startIncl - lenSoFar, endExcl - lenSoFar);
+            DeleteState innerDelete = component.delete(startIncl - lenSoFar, endExcl - lenSoFar);
+            totalDelta += innerDelete.startDelta;
+            if (innerDelete.couldDeleteItem)
+            {
+                if (i == 0 || i == allComponents.size() - 1)
+                {
+                    removedStartOrEnd = true;
+                }
+                else
+                {
+                    int indexWithoutPrefix = i - 1;
+                    if ((indexWithoutPrefix % 2) == 0)
+                    {
+                        // Content item
+                        emptyItems[indexWithoutPrefix / 2] = true;
+                    } else
+                    {
+                        removedDividers[indexWithoutPrefix / 2] = true;
+                    }
+                }
+            }
             lenSoFar += len;
         }
-        return totalDelta;
+        // Now we have to work out which list items to actually remove.  The key is that the divider must be removed.
+        // If a divider is removed, we decide which adjacent item to remove.  We prefer the one that can be deleted,
+        // and if neither matches, we prefer the one inside the range.  If both inside the range, arbitrary pick
+        boolean removedItems[] = new boolean[emptyItems.length];
+        for (int i = 0; i < removedDividers.length; i++)
+        {
+            if (removedDividers[i])
+            {
+                if (emptyItems[i] && !removedItems[i])
+                {
+                    // Remember that this alters allComponents:
+                    contentComponents.remove(i);
+                    removedItems[i] = true;
+                    // TODO do we need to alter the delta?
+                }
+                else if (emptyItems[i + 1])
+                {
+                    // Remember that this alters allComponents:
+                    contentComponents.remove(i + 1);
+                    removedItems[i + 1] = true;
+                }
+                // TODO prefer the one not in the range
+                else
+                {
+                    // Remember that this alters allComponents:
+                    contentComponents.remove(i);
+                    removedItems[i] = true;
+                }
+            }
+        }
+
+        return new DeleteState(totalDelta, removedStartOrEnd && allTrue(removedDividers) && allTrue(emptyItems));
+    }
+
+    private boolean allTrue(boolean[] bs)
+    {
+        for (boolean b : bs)
+        {
+            if (b == false)
+                return false;
+        }
+        return true;
     }
 
     @Override

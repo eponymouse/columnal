@@ -52,7 +52,22 @@ public abstract class Component<T>
 
     // Gives back an integer delta corresponding to how much the start
     // of the deleted region has moved.
-    public abstract int delete(int startIncl, int endExcl);
+    public abstract DeleteState delete(int startIncl, int endExcl);
+
+    public static class DeleteState
+    {
+        // An amount that the start position of the deleted region has moved:
+        public final int startDelta;
+
+        // Suggests whether the entirety of the current item makes sense to remove (e.g.
+        public final boolean couldDeleteItem;
+
+        public DeleteState(int startDelta, boolean couldDeleteItem)
+        {
+            this.startDelta = startDelta;
+            this.couldDeleteItem = couldDeleteItem;
+        }
+    }
 
     // The characters are integer codepoints.
     public abstract InsertState insert(InsertState state);

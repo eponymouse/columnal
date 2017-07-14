@@ -987,20 +987,23 @@ public class TestStructuredTextField extends ApplicationTest
         push(KeyCode.LEFT);
         type("", "$[]");
         push(KeyCode.RIGHT);
+        // No item until we start typing:
         type("", "[$]");
         type("0.1", "[0.1$]");
         type(",", "[0.1,$Number]");
         push(KeyCode.BACK_SPACE);
         type("", "[0.1$]");
         push(KeyCode.BACK_SPACE);
+        type("", "[0.$]");
         push(KeyCode.BACK_SPACE);
         type("", "[0$]");
         push(KeyCode.BACK_SPACE);
         type("", "[$Number]");
+        // Blank item should be removed once cursor leaves it:
         push(KeyCode.LEFT);
         type("", "$[]");
 
-        // TODO try with more structured slots, and with nested lists
+        // TODO try with more structured slots (e.g. times), and with nested lists
         // TODO Test that deleting comma deletes the adjacent empty slot
         // TODO test that deleting whole list item actually deletes the item, without leaving the comma
     }

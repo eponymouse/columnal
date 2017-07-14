@@ -252,7 +252,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         int insertPos = start;
         if (end > start)
         {
-            insertPos += contentComponent.delete(start, end);
+            insertPos += contentComponent.delete(start, end).startDelta;
         }
         ImmutableList<Integer> replacementCodepoints = replacement.getText().codePoints().boxed().collect(ImmutableList.toImmutableList());
         if (!replacementCodepoints.isEmpty())
@@ -580,7 +580,8 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         TAG_NAME,
 
         DIVIDER,
-        DIVIDER_SPECIAL; // Closing square bracket on a list that lets you add more.
+        EXPANDABLE_LIST_DIVIDER, // Comma in a list that lets you add and remove items
+        EXPANDABLE_LIST_END; // Closing square bracket on a list that lets you add more.
 
         public boolean validCharacterForItem(String before, int c)
         {

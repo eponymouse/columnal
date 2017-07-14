@@ -28,17 +28,21 @@ public abstract class ParentComponent<T> extends Component<T>
     }
 
     @Override
-    public final int delete(int startIncl, int endExcl)
+    public final DeleteState delete(int startIncl, int endExcl)
     {
+        boolean allCanBeDeleted = true;
         int lenSoFar = 0;
         int totalDelta = 0;
         for (Component<?> component : getChildComponents())
         {
             int len = component.getItems().stream().mapToInt(Item::getScreenLength).sum();
-            totalDelta += component.delete(startIncl - lenSoFar, endExcl - lenSoFar);
+            DeleteState innerDelete = component.delete(startIncl - lenSoFar, endExcl - lenSoFar);
+            totalDelta += innerDelete.startDelta;
+            if (!innerDelete.couldDeleteItem)
+                allCanBeDeleted = false;
             lenSoFar += len;
         }
-        return totalDelta;
+        return new DeleteState(totalDelta, allCanBeDeleted);
     }
 
     @Override

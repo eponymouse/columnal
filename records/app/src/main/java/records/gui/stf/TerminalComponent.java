@@ -31,8 +31,9 @@ public abstract class TerminalComponent<T> extends Component<T>
     }
 
     @Override
-    public final int delete(int startIncl, int endExcl)
+    public final DeleteState delete(int startIncl, int endExcl)
     {
+        boolean allAreEmpty = true;
         int delta = 0;
         for (int i = 0; i < items.size(); i++)
         {
@@ -50,16 +51,19 @@ public abstract class TerminalComponent<T> extends Component<T>
                     {
                         delta -= (itemScreenLength - items.get(i).getScreenLength());
                     }
-                    else if (startIncl >= 0)
-                    {
-                        delta -= startIncl;
-                    }
+                    if (items.get(i).getLength() != 0)
+                        allAreEmpty = false;
                 }
+            }
+            else
+            {
+                if (items.get(i).getLength() != 0)
+                    allAreEmpty = false;
             }
             startIncl -= itemScreenLength;
             endExcl -= itemScreenLength;
         }
-        return delta;
+        return new DeleteState(delta, allAreEmpty);
     }
 
     @Override
