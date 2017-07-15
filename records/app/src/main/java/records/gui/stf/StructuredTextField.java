@@ -28,6 +28,7 @@ import records.gui.stf.Component.InsertState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
@@ -80,17 +81,20 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     private final BitSet possibleCaretPositions = new BitSet();
     // All positions in the text area which are valid and are beginning or end of words:
     private final BitSet possibleCaretWordPositions = new BitSet();
+    private final FXPlatformConsumer<? super T> store;
     private @Nullable State lastValidValue;
     private @Nullable PopOver fixPopup;
     private T completedValue;
     private @Nullable STFAutoComplete autoComplete;
     private int completingForItem = -1;
     private boolean inSuperReplace;
+    private FXPlatformRunnable endEdit;
 
     @SuppressWarnings("initialization")
-    public StructuredTextField(Component<T> content) throws InternalException
+    public StructuredTextField(Component<T> content, FXPlatformConsumer<? super T> store) throws InternalException
     {
         super(false);
+        this.store = store;
         getStyleClass().add("structured-text-field");
         this.contentComponent = content;
         List<Item> initialItems = content.getItems();
@@ -99,17 +103,20 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
 
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
+            Utility.logStackTrace("Focused now: " + focused);
             updateAutoComplete(getSelection());
             if (!focused)
             {
                 endEdit().either_(this::showFixPopup, v -> {
                     completedValue = v;
+                    store.consume(completedValue);
                     lastValidValue = captureState();
                 });
             }
         });
 
         FXUtility.addChangeListenerPlatformNN(selectionProperty(), sel -> {
+            Utility.logStackTrace("Selection now: " + sel);
             if (!inSuperReplace)
             {
                 if (contentComponent.selectionChanged(sel.getStart(), sel.getEnd()))
@@ -130,6 +137,10 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
                     autoComplete.fireSelected();
                     e.consume();
                 }
+            }),
+            InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
+                endEdit.run(); // Should move focus away from us
+                e.consume();
             })
         ));
 
@@ -547,7 +558,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
     public void edit(@Nullable Point2D scenePoint, FXPlatformRunnable endEdit)
     {
-        //TODO store and use endEdit
+        this.endEdit = endEdit;
         if (scenePoint != null)
         {
             Point2D local = sceneToLocal(scenePoint);

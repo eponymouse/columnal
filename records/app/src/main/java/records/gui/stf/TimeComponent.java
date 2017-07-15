@@ -18,7 +18,7 @@ import java.util.List;
 /**
  * Created by neil on 28/06/2017.
  */
-public class TimeComponent extends TerminalComponent<LocalTime>
+public class TimeComponent extends TerminalComponent<TemporalAccessor/*LocalTime*/>
 {
     private final String initialHour;
     private final String initialMinute;
@@ -49,7 +49,7 @@ public class TimeComponent extends TerminalComponent<LocalTime>
     }
 
     @Override
-    public Either<List<ErrorFix>, LocalTime> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, TemporalAccessor> endEdit(StructuredTextField<?> field)
     {
         List<ErrorFix> fixes = new ArrayList<>();
         field.revertEditFix().ifPresent(fixes::add);

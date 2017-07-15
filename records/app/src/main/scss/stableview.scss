@@ -91,6 +91,12 @@ $stable-view-header-border: hsb(0, 0%, 40%);
 }
 .stable-view-row-cell:focused {
     -fx-background-color: pink;
+    & .structured-text-field {
+        -fx-text-color: white;
+    }
+}
+.stable-view-row-cell .structured-text-field {
+    -fx-background-color: transparent;
 }
 .stable-view-matched .paragraph-text .selected-cell {
     -rtfx-background-color: pink;

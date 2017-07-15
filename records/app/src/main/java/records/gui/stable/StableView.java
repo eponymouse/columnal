@@ -529,22 +529,27 @@ public class StableView
             {
                 final Pane pane = new StackPane();
                 pane.getStyleClass().add("stable-view-row-cell");
+                if (columnIndex == 0)
+                {
+                    FXUtility.onceNotNull(pane.sceneProperty(), s -> {pane.requestFocus();});
+                }
                 FXUtility.forcePrefSize(pane);
                 pane.prefWidthProperty().bind(columnSizes.get(columnIndex));
                 int columnIndexFinal = columnIndex;
-                pane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+                pane.addEventFilter(MouseEvent.ANY, e -> {
                     boolean editing = curRowIndex >= 0 && columns.get(columnIndexFinal).editHasFocus(curRowIndex);
-                    if (editing)
+                    if (editing || isAppendRow(curRowIndex))
                         return; // Not for us to take mouse click
                     if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && columns.get(columnIndexFinal).isEditable() && curRowIndex >= 0)
                     {
                         columns.get(columnIndexFinal).edit(curRowIndex, new Point2D(e.getSceneX(), e.getSceneY()), pane::requestFocus);
+                        e.consume();
                     }
-                    else if (e.getClickCount() == 1 && e.getButton() == MouseButton.PRIMARY && curRowIndex >= 0)
+                    else if (!pane.isFocused() && e.getClickCount() == 1 && e.getButton() == MouseButton.PRIMARY && curRowIndex >= 0)
                     {
                         pane.requestFocus();
+                        e.consume();
                     }
-                    e.consume();
                 });
                 Nodes.addInputMap(pane, InputMap.sequence(
                     InputMap.consume(EventPattern.keyPressed(KeyCode.END), e -> {

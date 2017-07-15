@@ -351,6 +351,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             {
 
             }
+            /*
             clickOn(new Predicate<Node>()
             {
                 @Override
@@ -369,6 +370,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
             }
             push(KeyCode.END);
+            */
             setValue(typeAndValueGen.getType(), value);
         }
         // Now test for equality:
@@ -402,60 +404,9 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
         Node focused = TestUtil.fx(() -> targetWindow().getScene().getFocusOwner());
         assertNotNull(focused);
-        dataType.apply(new DataTypeVisitor<Void>()
-        {
-            @Override
-            public Void number(NumberInfo numberInfo) throws InternalException, UserException
-            {
-                assertTrue("Was " + prevFocused.getClass() + " then pressed ENTER and was " + focused.getClass(), focused instanceof GenericStyledArea);
-                write(DataTypeUtility._test_valueToString(value));
-                // Enter to finish editing:
-                push(KeyCode.ENTER);
-                return null;
-            }
-
-            @Override
-            public Void text() throws InternalException, UserException
-            {
-                write(DataTypeUtility._test_valueToString(value));
-                // Enter to finish editing:
-                push(KeyCode.ENTER);
-                return null;
-            }
-
-            @Override
-            public Void date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
-            {
-                return null;
-            }
-
-            @Override
-            public Void bool() throws InternalException, UserException
-            {
-                boolean b = (Boolean)value;
-                write(b ? 't' : 'f');
-                // No need to press enter to finish
-                return null;
-            }
-
-            @Override
-            public Void tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
-            {
-                return null;
-            }
-
-            @Override
-            public Void tuple(ImmutableList<DataType> inner) throws InternalException, UserException
-            {
-                return null;
-            }
-
-            @Override
-            public Void array(@Nullable DataType inner) throws InternalException, UserException
-            {
-                return null;
-            }
-        });
+        write(TestUtil.sim(() -> DataTypeUtility.valueToString(dataType, value, null)));
+        // Enter to finish editing:
+        push(KeyCode.ENTER);
     }
 
     @OnThread(Tag.Any)

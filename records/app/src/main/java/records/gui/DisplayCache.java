@@ -56,6 +56,7 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
     @OnThread(Tag.FXPlatform)
     private final LoadingCache<@NonNull Integer, @NonNull DisplayCacheItem> displayCacheItems;
 
+    @OnThread(Tag.Any)
     private final GetValue<V> getValue;
     private final @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells;
     private final FXPlatformFunction<G, Region> getNode;
@@ -154,6 +155,13 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
     {
         if (formatVisibleCells != null && firstVisibleRowIndexIncl != -1 && lastVisibleRowIndexIncl != -1 && latestWidth > 0)
             formatVisibleCells.consume(new VisibleDetails(rowIndexUpdated, firstVisibleRowIndexIncl, lastVisibleRowIndexIncl, latestWidth));
+    }
+
+
+    @OnThread(Tag.Simulation)
+    protected final void store(int rowIndex, V v) throws UserException, InternalException
+    {
+        getValue.set(rowIndex, v);
     }
 
     /**

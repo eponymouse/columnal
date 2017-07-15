@@ -37,6 +37,7 @@ import records.error.UserException;
 import records.gui.stf.*;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformFunctionInt;
 import utility.FXPlatformFunctionIntUser;
 import utility.FXPlatformRunnable;
@@ -282,7 +283,7 @@ public class TableDisplayUtility
     public static interface ComponentMaker<T>
     {
         @OnThread(Tag.FXPlatform)
-        public Component<? extends T> makeComponent(ImmutableList<Component<?>> parents, T value) throws InternalException, UserException;
+        public Component<T> makeComponent(ImmutableList<Component<?>> parents, T value) throws InternalException, UserException;
     }
 
     public static class GetValueAndComponent<T>
@@ -298,7 +299,7 @@ public class TableDisplayUtility
 
         public DisplayCacheSTF<T> makeDisplayCache()
         {
-            return new DisplayCacheSTF<>(g, value -> new StructuredTextField<>(makeComponent.makeComponent(ImmutableList.of(), value)));
+            return new DisplayCacheSTF<T>(g, (value, store) -> new StructuredTextField<T>(makeComponent.makeComponent(ImmutableList.of(), value), store));
         }
     }
 
@@ -344,16 +345,16 @@ public class TableDisplayUtility
                     case TIMEOFDAY:
                         return new GetValueAndComponent<>(g, TimeComponent::new);
                     case TIMEOFDAYZONED:
-                        return new GetValueAndComponent<>(g, (parents, value) -> new Component2<OffsetTime, LocalTime, ZoneOffset>(parents, subParents -> new TimeComponent(subParents, value), null, subParents -> new PlusMinusOffsetComponent(parents, value.get(ChronoField.OFFSET_SECONDS)), OffsetTime::of));
+                        return new GetValueAndComponent<>(g, (parents, value) -> new Component2<TemporalAccessor/*OffsetTime*/, TemporalAccessor /*LocalTime*/, ZoneOffset>(parents, subParents -> new TimeComponent(subParents, value), null, subParents -> new PlusMinusOffsetComponent(parents, value.get(ChronoField.OFFSET_SECONDS)), (a, b) -> OffsetTime.of((LocalTime)a, b)));
                     case DATETIME:
-                        return new GetValueAndComponent<>(g, (parents, value) -> new Component2<LocalDateTime, LocalDate, LocalTime>(parents, subParents -> new YMD(subParents, value), " ", subParents -> new TimeComponent(subParents, value), LocalDateTime::of));
+                        return new GetValueAndComponent<>(g, (parents, value) -> new Component2<TemporalAccessor/*LocalDateTime*/, TemporalAccessor /*LocalDate*/, TemporalAccessor /*LocalTime*/>(parents, subParents -> new YMD(subParents, value), " ", subParents -> new TimeComponent(subParents, value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)));
                     case DATETIMEZONED:
                         return new GetValueAndComponent<>(g, (parents0, value) ->
-                            new Component2<ZonedDateTime, LocalDateTime, ZoneId>(parents0,
-                                parents1 -> new Component2<LocalDateTime, LocalDate, LocalTime>(
-                                        parents1, parents2 -> new YMD(parents2, value), " ", parents2 -> new TimeComponent(parents2, value), LocalDateTime::of),
+                            new Component2<TemporalAccessor /*ZonedDateTime*/, TemporalAccessor /*LocalDateTime*/, ZoneId>(parents0,
+                                parents1 -> new Component2<TemporalAccessor /*LocalDateTime*/, TemporalAccessor /*LocalDate*/, TemporalAccessor /*LocalTime*/>(
+                                        parents1, parents2 -> new YMD(parents2, value), " ", parents2 -> new TimeComponent(parents2, value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)),
                                 " ",
-                                parents1 -> new ZoneIdComponent(parents1, ((ZonedDateTime)value).getZone()), ZonedDateTime::of)
+                                parents1 -> new ZoneIdComponent(parents1, ((ZonedDateTime)value).getZone()), (a, b) -> ZonedDateTime.of((LocalDateTime)a, b))
                         );
                 }
                 throw new InternalException("Unknown type: " + dateTimeInfo.getType());
@@ -488,15 +489,15 @@ public class TableDisplayUtility
                     case TIMEOFDAY:
                         return new TimeComponent(parents, null);
                     case TIMEOFDAYZONED:
-                        return new Component2<OffsetTime, LocalTime, ZoneOffset>(parents, subParents -> new TimeComponent(subParents, null), null, subParents -> new PlusMinusOffsetComponent(subParents, null), OffsetTime::of);
+                        return new Component2<TemporalAccessor /*OffsetTime*/, TemporalAccessor /*LocalTime*/, ZoneOffset>(parents, subParents -> new TimeComponent(subParents, null), null, subParents -> new PlusMinusOffsetComponent(subParents, null), (a, b) -> OffsetTime.of((LocalTime) a, b));
                     case DATETIME:
-                        return new Component2<LocalDateTime, LocalDate, LocalTime>(parents, subParents -> new YMD(subParents, null), " ", subParents -> new TimeComponent(subParents, null), LocalDateTime::of);
+                        return new Component2<TemporalAccessor /*LocalDateTime*/, TemporalAccessor /*LocalDate*/, TemporalAccessor /*LocalTime*/>(parents, subParents -> new YMD(subParents, null), " ", subParents -> new TimeComponent(subParents, null), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b));
                     case DATETIMEZONED:
-                        return new Component2<ZonedDateTime, LocalDateTime, ZoneId>(parents,
-                                        parents1 -> new Component2<LocalDateTime, LocalDate, LocalTime>(
-                                                parents1, parents2 -> new YMD(parents2, null), " ", parents2 -> new TimeComponent(parents2, null), LocalDateTime::of),
+                        return new Component2<TemporalAccessor /*ZonedDateTime*/, TemporalAccessor /*LocalDateTime*/, ZoneId>(parents,
+                                        parents1 -> new Component2<TemporalAccessor /*LocalDateTime*/, TemporalAccessor /*LocalDate*/, TemporalAccessor /*LocalTime*/>(
+                                                parents1, parents2 -> new YMD(parents2, null), " ", parents2 -> new TimeComponent(parents2, null), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)),
                                         " ",
-                                        parents1 -> new ZoneIdComponent(parents1, null), ZonedDateTime::of);
+                                        parents1 -> new ZoneIdComponent(parents1, null), (a, b) -> ZonedDateTime.of((LocalDateTime)a, b));
                 }
                 throw new InternalException("Unknown type: " + dateTimeInfo.getType());
             }
@@ -543,7 +544,7 @@ public class TableDisplayUtility
     private static interface FieldMaker<V>
     {
         @OnThread(Tag.FXPlatform)
-        public StructuredTextField<? extends V> make(V value) throws InternalException, UserException;
+        public StructuredTextField<? extends V> make(V value, FXPlatformConsumer<V> storeValue) throws InternalException, UserException;
     }
 
     public static class DisplayCacheSTF<V> extends DisplayCache<V, StructuredTextField<? extends V>>
@@ -590,7 +591,7 @@ public class TableDisplayUtility
         @Override
         protected StructuredTextField<? extends V> makeGraphical(int rowIndex, V value) throws InternalException, UserException
         {
-            StructuredTextField<? extends V> field = makeField.make(value);
+            StructuredTextField<? extends V> field = makeField.make(value, v -> Utility.alertOnError_(() -> store(rowIndex, v)));
             //field.mouseTransparentProperty().bind(field.focusedProperty().not());
             return field;
         }

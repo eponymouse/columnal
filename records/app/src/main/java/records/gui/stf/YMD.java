@@ -31,7 +31,7 @@ import java.util.Set;
  * Created by neil on 28/06/2017.
  */
 @OnThread(Tag.FXPlatform)
-public class YMD extends TerminalComponent<LocalDate>
+public class YMD extends TerminalComponent<TemporalAccessor/*LocalDate*/>
 {
     public YMD(ImmutableList<Component<?>> parents, @Nullable TemporalAccessor value)
     {
@@ -83,7 +83,7 @@ public class YMD extends TerminalComponent<LocalDate>
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public Either<List<ErrorFix>, LocalDate> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, TemporalAccessor> endEdit(StructuredTextField<?> field)
     {
         List<ErrorFix> fixes = new ArrayList<>();
         field.revertEditFix().ifPresent(fixes::add);

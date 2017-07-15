@@ -30,7 +30,7 @@ import java.util.Set;
  * Created by neil on 28/06/2017.
  */
 @OnThread(Tag.FXPlatform)
-public class YM extends TerminalComponent<YearMonth>
+public class YM extends TerminalComponent<TemporalAccessor/*YearMonth*/>
 {
     private final String initialMonth;
     private final String initialYear;
@@ -78,7 +78,7 @@ public class YM extends TerminalComponent<YearMonth>
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public Either<List<ErrorFix>, YearMonth> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, TemporalAccessor> endEdit(StructuredTextField<?> field)
     {
         List<ErrorFix> fixes = new ArrayList<>();
         field.revertEditFix().ifPresent(fixes::add);
