@@ -4,27 +4,20 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.stf.StructuredTextField.CharEntryResult;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
-import records.gui.stf.StructuredTextField.ItemVariant;
-import records.gui.stf.StructuredTextField.Suggestion;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.FXPlatformFunctionInt;
 import utility.FXPlatformFunctionIntUser;
-import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -77,6 +70,11 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
         }
     }
 
+    @Override
+    public boolean hasNoData()
+    {
+        return contentComponents.isEmpty() || (contentComponents.size() == 1 && contentComponents.get(0).hasNoData());
+    }
 
     @Override
     public List<Item> getItems()
@@ -98,7 +96,6 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
         return result.map(combine);
     }
 
-    // TODO add actual deletion of list items
     @Override
     public final DeleteState delete(int startIncl, int endExcl)
     {
@@ -272,4 +269,19 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
     }
     */
     protected abstract Component<? extends T> makeNewEntry(ImmutableList<Component<?>> subParents) throws InternalException;
+
+    @Override
+    public boolean selectionChanged(int startIncl, int endIncl)
+    {
+        if (contentComponents.size() == 1 && contentComponents.get(0).hasNoData())
+        {
+            int screenLength = allComponents.stream().flatMapToInt(c -> c.getItems().stream().mapToInt(Item::getScreenLength)).sum();
+            if ((endIncl <= 0) || (startIncl >= screenLength))
+            {
+                contentComponents.remove(0);
+                return true;
+            }
+        }
+        return false;
+    }
 }

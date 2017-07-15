@@ -28,6 +28,28 @@ public abstract class ParentComponent<T> extends Component<T>
     }
 
     @Override
+    public final boolean selectionChanged(int startIncl, int endIncl)
+    {
+        boolean anyChanged = false;
+        int lenSoFar = 0;
+        for (Component<?> component : getChildComponents())
+        {
+            int len = component.getItems().stream().mapToInt(Item::getScreenLength).sum();
+            // Don't use short-circuit or here, want to call even if others have changed:
+            boolean ch = component.selectionChanged(startIncl - lenSoFar, endIncl - lenSoFar);
+            anyChanged = anyChanged | ch;
+            lenSoFar += len;
+        }
+        return anyChanged;
+    }
+
+    @Override
+    public boolean hasNoData()
+    {
+        return getChildComponents().stream().allMatch(Component::hasNoData);
+    }
+
+    @Override
     public final DeleteState delete(int startIncl, int endExcl)
     {
         boolean allCanBeDeleted = true;

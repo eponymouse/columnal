@@ -31,6 +31,19 @@ public abstract class TerminalComponent<T> extends Component<T>
     }
 
     @Override
+    public final boolean selectionChanged(int startIncl, int endIncl)
+    {
+        // Nothing to do
+        return false;
+    }
+
+    @Override
+    public final boolean hasNoData()
+    {
+        return getItems().stream().allMatch(i -> i.getType() == ItemVariant.DIVIDER || i.getLength() == 0);
+    }
+
+    @Override
     public final DeleteState delete(int startIncl, int endExcl)
     {
         boolean allAreEmpty = true;

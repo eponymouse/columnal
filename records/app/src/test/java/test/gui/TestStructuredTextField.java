@@ -983,10 +983,10 @@ public class TestStructuredTextField extends ApplicationTest
     {
         DataType dataType = DataType.array(DataType.NUMBER);
         f.set(field(dataType, new ListExList(Collections.emptyList())));
-        push(KeyCode.LEFT);
-        push(KeyCode.LEFT);
-        type("", "$[]");
         push(KeyCode.RIGHT);
+        push(KeyCode.RIGHT);
+        type("", "[]$");
+        push(KeyCode.LEFT);
         // No item until we start typing:
         type("", "[$]");
         type("0.1", "[0.1$]");

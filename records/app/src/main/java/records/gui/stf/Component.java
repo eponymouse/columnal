@@ -54,6 +54,12 @@ public abstract class Component<T>
     // of the deleted region has moved.
     public abstract DeleteState delete(int startIncl, int endExcl);
 
+    // Return true if components changed
+    public abstract boolean selectionChanged(int startIncl, int endIncl);
+
+    // Essentially, could it be removed if it's the only item in a list and focus leaves the list?
+    public abstract boolean hasNoData();
+
     public static class DeleteState
     {
         // An amount that the start position of the deleted region has moved:

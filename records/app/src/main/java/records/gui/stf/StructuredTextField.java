@@ -112,6 +112,13 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         FXUtility.addChangeListenerPlatformNN(selectionProperty(), sel -> {
             if (!inSuperReplace)
             {
+                if (contentComponent.selectionChanged(sel.getStart(), sel.getEnd()))
+                {
+                    inSuperReplace = true;
+                    super.replace(0, getLength(), makeDoc(contentComponent.getItems()));
+                    selectRange(sel.getStart(), sel.getEnd());
+                    inSuperReplace = false;
+                }
                 updateAutoComplete(sel);
             }
         });
