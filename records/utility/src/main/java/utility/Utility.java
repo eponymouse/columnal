@@ -43,6 +43,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
+import javafx.stage.Modality;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
@@ -1025,7 +1026,9 @@ public class Utility
     {
         log(e);
         String localizedMessage = e.getLocalizedMessage();
-        new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK).showAndWait();
+        Alert alert = new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK);
+        alert.initModality(Modality.APPLICATION_MODAL);
+        alert.showAndWait();
     }
 
     @OnThread(Tag.Simulation)

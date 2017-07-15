@@ -103,7 +103,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
 
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
-            Utility.logStackTrace("Focused now: " + focused);
+            //Utility.logStackTrace("Focused now: " + focused);
             updateAutoComplete(getSelection());
             if (!focused)
             {
@@ -116,7 +116,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         });
 
         FXUtility.addChangeListenerPlatformNN(selectionProperty(), sel -> {
-            Utility.logStackTrace("Selection now: " + sel);
+            //Utility.logStackTrace("Selection now: " + sel);
             if (!inSuperReplace)
             {
                 if (contentComponent.selectionChanged(sel.getStart(), sel.getEnd()))
@@ -147,10 +147,11 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
         // Call super to avoid our own validation:
         super.replace(0, 0, makeDoc(initialItems));
         updatePossibleCaretPositions();
-        @Nullable T val = endEdit().<@Nullable T>either(err -> null, v -> v);
+        Either<List<ErrorFix>, T> endInitial = endEdit();
+        @Nullable T val = endInitial.<@Nullable T>either(err -> null, v -> v);
         if (val == null)
         {
-            throw new InternalException("Starting field off with invalid completed value: " + Utility.listToString(Utility.<Item, String>mapList(initialItems, item -> item.getScreenText())));
+            throw new InternalException("Starting field off with invalid completed value: \"" + makeDoc(initialItems).getText() + "\" with items " + Utility.listToString(Utility.<Item, String>mapList(initialItems, item -> item.getScreenText())) + " err: " + endInitial.either(errs -> errs.stream().map(err -> err.label).collect(Collectors.joining()), v -> "VALUE!"));
         }
         completedValue = val;
         lastValidValue = captureState();

@@ -95,7 +95,15 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
         OptionalInt tagIndex = Utility.findFirstIndex(tagTypes, tt -> tt.getName().equals(tagName));
         if (tagIndex.isPresent())
         {
-            return Either.right(new TaggedValue(tagIndex.getAsInt(), null)); // TODO do inner value
+            if (currentChild != null)
+            {
+                Either<List<ErrorFix>, ? extends @Value Object> inner = currentChild.endEdit(field);
+                return inner.either(Either::left, v -> Either.right(new TaggedValue(tagIndex.getAsInt(), v)));
+            }
+            else
+            {
+                return Either.right(new TaggedValue(tagIndex.getAsInt(), null));
+            }
         }
         else
         {

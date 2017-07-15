@@ -49,6 +49,7 @@ import records.gui.stable.StableView.CellContentReceiver;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
 import utility.Workers;
+import utility.Workers.Priority;
 import utility.gui.FXUtility;
 
 import java.time.LocalDate;
@@ -127,7 +128,8 @@ public class TableDisplayUtility
 
     private static Pair<String, ColumnHandler> getDisplay(@NonNull Column column) throws UserException, InternalException
     {
-        return new Pair<>(column.getName().getRaw(), column.getType().<ColumnHandler, UserException>applyGet(new DataTypeVisitorGetEx<ColumnHandler, UserException>()
+        return new Pair<>(column.getName().getRaw(), makeField(column.getType()));
+        /*column.getType().<ColumnHandler, UserException>applyGet(new DataTypeVisitorGetEx<ColumnHandler, UserException>()
         {
             @Override
             @OnThread(Tag.FXPlatform)
@@ -267,6 +269,7 @@ public class TableDisplayUtility
                 throw new UnimplementedException();
             }
         }));
+        */
     }
 
     // package-visible
@@ -591,7 +594,12 @@ public class TableDisplayUtility
         @Override
         protected StructuredTextField<? extends V> makeGraphical(int rowIndex, V value) throws InternalException, UserException
         {
-            StructuredTextField<? extends V> field = makeField.make(value, v -> Utility.alertOnError_(() -> store(rowIndex, v)));
+            StructuredTextField<? extends V> field = makeField.make(value, v -> {
+                Workers.onWorkerThread("Saving " + v, Priority.SAVE_ENTRY, () ->
+                {
+                    Utility.alertOnError_(() -> store(rowIndex, v));
+                });
+            });
             //field.mouseTransparentProperty().bind(field.focusedProperty().not());
             return field;
         }

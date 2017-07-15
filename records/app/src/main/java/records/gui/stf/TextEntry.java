@@ -1,6 +1,7 @@
 package records.gui.stf;
 
 import com.google.common.collect.ImmutableList;
+import records.grammar.GrammarUtility;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;
@@ -23,6 +24,6 @@ public class TextEntry extends TerminalComponent<String>
     @Override
     public Either<List<ErrorFix>, String> endEdit(StructuredTextField<?> field)
     {
-        return Either.right(getItem(ItemVariant.EDITABLE_TEXT));
+        return Either.right(GrammarUtility.processEscapes("\"" + getItem(ItemVariant.EDITABLE_TEXT) + "\""));
     }
 }
