@@ -43,6 +43,19 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
         closeBracket = new DividerComponent(getItemParents(), ")");
         // Important to do TagComponent last as it uses the other fields:
         this.tagComponent = new TagComponent(getItemParents(), initialValue == null ? "" : tagTypes.get(initialValue.getTagIndex()).getName());
+        if (initialValue != null && initialValue.getInner() != null)
+        {
+            try
+            {
+                currentChild = TableDisplayUtility.component(getItemParents(), initialValue.getInner());
+            }
+            catch (InternalException e)
+            {
+                Utility.log(e);
+                // Just leave blank:
+                currentChild = null;
+            }
+        }
     }
 
     @Override
