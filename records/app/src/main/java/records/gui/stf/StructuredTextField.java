@@ -588,12 +588,15 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
 
         DIVIDER,
         EXPANDABLE_LIST_DIVIDER, // Comma in a list that lets you add and remove items
-        EXPANDABLE_LIST_END; // Closing square bracket on a list that lets you add more.
+        EXPANDABLE_LIST_END, // Closing square bracket on a list that lets you add more.
+        EMPTY_LIST_PROMPT; // Empty item saying List as a prompt, where lists are optional
 
         public boolean validCharacterForItem(String before, int c)
         {
             switch (this)
             {
+                case EMPTY_LIST_PROMPT:
+                    return c == '[';
                 case TAG_NAME:
                     return Character.isAlphabetic(c) || c == '_' || (!before.isEmpty() && c >= '0' && c <= '9');
                 case EDITABLE_TEXT:

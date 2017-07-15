@@ -70,7 +70,7 @@ public abstract class TerminalComponent<T> extends Component<T>
             }
             else
             {
-                if (items.get(i).getLength() != 0)
+                if (item.getType() != ItemVariant.DIVIDER && items.get(i).getLength() != 0)
                     allAreEmpty = false;
             }
             startIncl -= itemScreenLength;

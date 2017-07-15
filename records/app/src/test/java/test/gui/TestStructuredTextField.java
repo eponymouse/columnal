@@ -1031,10 +1031,38 @@ public class TestStructuredTextField extends ApplicationTest
         type("", "[Hour:Minute:$Second]");
         push(KeyCode.RIGHT);
         type("", "[]$");
+        push(KeyCode.LEFT);
+        type("12:34:56", "[12:34:56$]");
+        for (int count = 0; count < 8; count++)
+            pushShiftLeft();
+        type("", "[$12:34:56^]");
+        push(KeyCode.DELETE);
+        type("", "[$Hour:Minute:Second]");
+
+        f.set(field(DataType.array(DataType.array(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)))), new ListExList(Collections.singletonList(new ListExList(Collections.emptyList())))));
+        for (int count = 0; count < 4;count++)
+            push(KeyCode.LEFT);
+        type("", "$[[]]");
+        push(KeyCode.DELETE);
+        type("", "$[[]]");
+        push(KeyCode.RIGHT);
+        pushShiftRight();
+        pushShiftRight();
+        push(KeyCode.DELETE);
+        type("", "[$]");
 
         // TODO try with nested lists
         // TODO Test that deleting comma deletes the adjacent empty slot
         // TODO test that deleting whole list item actually deletes the item, without leaving the comma
+    }
+
+    private void pushShiftLeft()
+    {
+        // Some sort of bug on Windows doesn't let shift work:
+        if (SystemUtils.IS_OS_WINDOWS)
+            fx_(() -> f.get().previousChar(SelectionPolicy.EXTEND));
+        else
+            push(KeyCode.SHIFT, KeyCode.LEFT);
     }
 
     private void pushShiftRight()

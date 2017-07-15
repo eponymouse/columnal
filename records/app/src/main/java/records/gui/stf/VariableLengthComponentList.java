@@ -2,16 +2,19 @@ package records.gui.stf;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableList.Builder;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
+import records.gui.stf.StructuredTextField.ItemVariant;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformFunctionIntUser;
+import utility.FXPlatformRunnable;
 import utility.Utility;
 import utility.gui.FXUtility;
 
@@ -28,6 +31,8 @@ import java.util.stream.Collectors;
 public abstract class VariableLengthComponentList<R, T> extends Component<R>
 {
     private final ObservableList<Component<? extends T>> contentComponents;
+    private final boolean canBeAbsent;
+    private final SimpleBooleanProperty isAbsent;
     private ImmutableList<Component<?>> allComponents;
     private final Function<List<T>, R> combine;
     private final int suffixCodepoint;
@@ -44,6 +49,9 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
         Component<?> suffixComponent = new DividerComponent(getItemParents(), suffix);
         this.allComponents = ImmutableList.of(prefixComponent, suffixComponent);
         this.contentComponents = FXCollections.observableArrayList();
+        // Nested lists can be completely removed:
+        this.canBeAbsent = !parents.isEmpty() && (parents.get(parents.size() - 1) instanceof VariableLengthComponentList);
+        this.isAbsent = new SimpleBooleanProperty(true);
 
         // Must listen before adding initial items:
         FXUtility.listen(contentComponents, change ->
@@ -59,11 +67,22 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
             r.add(suffixComponent);
             allComponents = r.build();
         });
+        FXUtility.addChangeListenerPlatformNN(isAbsent, absent -> {
+            if (absent)
+            {
+                allComponents = ImmutableList.of(new EmptyListComponent(getItemParents()));
+            }
+            else
+            {
+                allComponents = ImmutableList.of(prefixComponent, suffixComponent);
+            }
+        });
     }
 
     public VariableLengthComponentList(ImmutableList<Component<?>> parents, String prefix, String divider, List<FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends T>>> components, String suffix, Function<List<T>, R> combine) throws InternalException, UserException
     {
         this(parents, prefix, divider, suffix, combine);
+        isAbsent.set(false);
         for (FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends T>> f : components)
         {
             this.contentComponents.add(f.apply(getItemParents()));
@@ -73,7 +92,7 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
     @Override
     public boolean hasNoData()
     {
-        return contentComponents.isEmpty() || (contentComponents.size() == 1 && contentComponents.get(0).hasNoData());
+        return isAbsent.get(); //return contentComponents.isEmpty() || (contentComponents.size() == 1 && contentComponents.get(0).hasNoData());
     }
 
     @Override
@@ -101,7 +120,7 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
     {
         int lenSoFar = 0;
         int totalDelta = 0;
-        boolean[] removedDividers = new boolean[contentComponents.size() - 1];
+        boolean[] removedDividers = contentComponents.isEmpty() ? new boolean[0] : new boolean[contentComponents.size() - 1];
         boolean[] emptyItems = new boolean[contentComponents.size()];
         boolean removedStartOrEnd = false;
         for (int i = 0; i < allComponents.size(); i++)
@@ -123,7 +142,8 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
                     {
                         // Content item
                         emptyItems[indexWithoutPrefix / 2] = true;
-                    } else
+                    }
+                    else
                     {
                         removedDividers[indexWithoutPrefix / 2] = true;
                     }
@@ -162,7 +182,13 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
             }
         }
 
-        return new DeleteState(totalDelta, removedStartOrEnd && allTrue(removedDividers) && allTrue(emptyItems));
+        boolean couldDeleteItem = canBeAbsent && removedStartOrEnd && allTrue(removedDividers) && allTrue(emptyItems);
+        if (couldDeleteItem)
+        {
+            contentComponents.clear();
+            isAbsent.set(true);
+        }
+        return new DeleteState(totalDelta, couldDeleteItem);
     }
 
     private boolean allTrue(boolean[] bs)
@@ -283,5 +309,21 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
             }
         }
         return false;
+    }
+
+    private class EmptyListComponent extends TerminalComponent<Void>
+    {
+        public EmptyListComponent(ImmutableList<Component<?>> componentParents)
+        {
+            super(componentParents);
+            items.add(new Item(getItemParents(), "", ItemVariant.EMPTY_LIST_PROMPT, "List"));
+        }
+
+        // Shouldn't happen because parent won't call endEdit on us:
+        @Override
+        public Either<List<ErrorFix>, Void> endEdit(StructuredTextField<?> field)
+        {
+            return Either.left(Collections.emptyList());
+        }
     }
 }
