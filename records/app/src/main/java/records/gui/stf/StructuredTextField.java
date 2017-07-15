@@ -797,6 +797,7 @@ public final class StructuredTextField<T> extends StyleClassedTextArea
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void nextChar(SelectionPolicy selectionPolicy)
     {
+        System.err.println("Policy: " + selectionPolicy);
         int next = possibleCaretPositions.nextSetBit(getCaretPosition() + 1);
         if (next != -1)
         {

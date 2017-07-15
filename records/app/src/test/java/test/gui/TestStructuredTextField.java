@@ -22,6 +22,7 @@ import javafx.stage.Stage;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
 import org.hamcrest.Matchers;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -1003,9 +1004,46 @@ public class TestStructuredTextField extends ApplicationTest
         push(KeyCode.LEFT);
         type("", "$[]");
 
-        // TODO try with more structured slots (e.g. times), and with nested lists
+        f.set(field(DataType.array(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY))), new ListExList(Collections.emptyList())));
+        push(KeyCode.LEFT);
+        push(KeyCode.LEFT);
+        type("", "$[]");
+        push (KeyCode.RIGHT);
+        type("", "[$]");
+        type("5", "[5$:Minute:Second]");
+        push(KeyCode.LEFT);
+        push(KeyCode.LEFT);
+        // Shouldn't remove the item as it has data:
+        type("", "$[5:Minute:Second]");
+        pushShiftRight();
+        pushShiftRight();
+        type("", "^[5$:Minute:Second]");
+        push(KeyCode.DELETE);
+        // If the content is gone, the item should go too:
+        type("", "$[]");
+        push(KeyCode.RIGHT);
+        type("6", "[6$:Minute:Second]");
+        push(KeyCode.BACK_SPACE);
+        type("", "[$Hour:Minute:Second]");
+        push(KeyCode.RIGHT);
+        type("", "[Hour:$Minute:Second]");
+        push(KeyCode.RIGHT);
+        type("", "[Hour:Minute:$Second]");
+        push(KeyCode.RIGHT);
+        type("", "[]$");
+
+        // TODO try with nested lists
         // TODO Test that deleting comma deletes the adjacent empty slot
         // TODO test that deleting whole list item actually deletes the item, without leaving the comma
+    }
+
+    private void pushShiftRight()
+    {
+        // Some sort of bug on Windows doesn't let shift work:
+        if (SystemUtils.IS_OS_WINDOWS)
+            fx_(() -> f.get().nextChar(SelectionPolicy.EXTEND));
+        else
+            push(KeyCode.SHIFT, KeyCode.RIGHT);
     }
 
     public Node assertAutoCompleteVisible(int atChar, @Nullable Node sameAs)
