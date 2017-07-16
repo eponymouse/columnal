@@ -884,7 +884,7 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
     @Property(trials=20)
-    public void propTagged(@When(seed=1L) @From(GenTaggedTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen taggedTypeAndValueGen) throws UserException, InternalException
+    public void propTagged(@From(GenTaggedTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen taggedTypeAndValueGen) throws UserException, InternalException
     {
         @Value Object initialVal = taggedTypeAndValueGen.makeValue();
         f.set(field(taggedTypeAndValueGen.getType(), initialVal));

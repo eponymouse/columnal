@@ -131,7 +131,7 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
             int len = component.getItems().stream().mapToInt(Item::getScreenLength).sum();
             DeleteState innerDelete = component.delete(startIncl - lenSoFar, endExcl - lenSoFar);
             totalDelta += innerDelete.startDelta;
-            if (i >= 1 && (i % 2) == 1)
+            if (i >= 1 && i < allComponents.size() - 1 && (i % 2) == 1)
             {
                 itemScreenStarts[(i - 1) / 2] = lenSoFar;
                 // Calculate again because delete might have changed it:
