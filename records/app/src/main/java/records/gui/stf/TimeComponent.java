@@ -20,18 +20,23 @@ import java.util.List;
  */
 public class TimeComponent extends TerminalComponent<TemporalAccessor/*LocalTime*/>
 {
-    private final String initialHour;
-    private final String initialMinute;
-    private final String initialSecond;
 
     public TimeComponent(ImmutableList<Component<?>> parents, @Nullable TemporalAccessor value)
     {
         super(parents);
+        String initialHour;
+        String initialMinute;
+        String initialSecond;
         if (value != null)
         {
             initialHour = Integer.toString(value.get(ChronoField.HOUR_OF_DAY));
             initialMinute = Integer.toString(value.get(ChronoField.MINUTE_OF_HOUR));
             initialSecond = Integer.toString(value.get(ChronoField.SECOND_OF_MINUTE));
+            int nano = value.get(ChronoField.NANO_OF_SECOND);
+            if (nano != 0)
+            {
+                initialSecond += "." + String.format("%09d", nano);
+            }
         }
         else
         {
@@ -67,7 +72,8 @@ public class TimeComponent extends TerminalComponent<TemporalAccessor/*LocalTime
                 while (nanoText.length() < 9)
                     nanoText += "0";
                 nano = Integer.parseInt(nanoText);
-            } else
+            }
+            else
             {
                 second = Integer.parseInt(secondText);
                 nano = 0;
@@ -75,6 +81,14 @@ public class TimeComponent extends TerminalComponent<TemporalAccessor/*LocalTime
 
             if (hour >= 0 && hour <= 23 && minute >= 0 && minute <= 59 && second >= 0 && second <= 59)
             {
+                items.set(0, items.get(0).replaceContent(String.format("%02d", hour)));
+                items.set(2, items.get(2).replaceContent(String.format("%02d", minute)));
+                String canonicalSecondText = String.format("%02d", second);
+                if (nano != 0)
+                {
+                    canonicalSecondText += "." + String.format("%09d", nano);
+                }
+                items.set(4, items.get(4).replaceContent(canonicalSecondText));
                 return Either.right(LocalTime.of(hour, minute, second, nano));
             }
         } catch (NumberFormatException e)
