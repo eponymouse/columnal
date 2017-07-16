@@ -1061,7 +1061,7 @@ public class TestStructuredTextField extends ApplicationTest
         push(KeyCode.DELETE);
         type("", "[$]");
 
-        // TODO try with nested lists
+        // TODO try more with nested lists
         // TODO Test that deleting comma deletes the adjacent empty slot
         // TODO test that deleting whole list item actually deletes the item, without leaving the comma
     }

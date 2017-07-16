@@ -140,17 +140,17 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     @Property(trials = 10)
     @OnThread(Tag.Any)
-    public void propAddColumnToEntryTable(@From(GenDataType.class) DataType dataType) throws UserException, InternalException
+    public void propAddColumnToEntryTable(@From(GenDataType.class) TypeAndValueGen typeAndValueGen) throws UserException, InternalException
     {
         testNewEntryTable();
         clickOn(".add-column");
         String newColName = "Column " + new Random().nextInt();
         write(newColName);
-        clickForDataType(rootNode(window(Window::isFocused)), dataType);
+        clickForDataType(rootNode(window(Window::isFocused)), typeAndValueGen.getType());
         WaitForAsyncUtils.waitForFxEvents();
         assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().size()));
         assertEquals(newColName, TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getName().getRaw()));
-        assertEquals(dataType, TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getType()));
+        assertEquals(typeAndValueGen.getType(), TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getType()));
     }
 
     private void clickOnSub(Node root, String subQuery)
@@ -332,9 +332,32 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     @Property
     @OnThread(Tag.Any)
+    public void propDefaultValue(@From(GenTypeAndValueGen.class) @When(seed=-746430439083107785L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    {
+        propAddColumnToEntryTable(typeAndValueGen);
+        @Value Object initialVal = typeAndValueGen.makeValue();
+        List<@Value Object> values = new ArrayList<>();
+        for (int i = 0; i < 3; i++)
+        {
+            addNewRow();
+            values.add(initialVal);
+            // Now test for equality:
+            @OnThread(Tag.Any) RecordSet recordSet = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData());
+            DataTypeValue column = recordSet.getColumns().get(0).getType();
+            assertEquals(values.size(), (int) TestUtil.sim(() -> recordSet.getLength()));
+            for (int j = 0; j < values.size(); j++)
+            {
+                int jFinal = j;
+                TestUtil.assertValueEqual("Index " + j, values.get(j), TestUtil.sim(() -> column.getCollapsed(jFinal)));
+            }
+        }
+    }
+
+    @Property
+    @OnThread(Tag.Any)
     public void testEnterColumn(@From(GenTypeAndValueGen.class) @When(seed=-746430439083107785L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
-        propAddColumnToEntryTable(typeAndValueGen.getType());
+        propAddColumnToEntryTable(typeAndValueGen);
         // Now set the values
         List<@Value Object> values = new ArrayList<>();
         for (int i = 0; i < 10;i ++)

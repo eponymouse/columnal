@@ -125,10 +125,13 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
         int[] itemScreenStarts = new int[contentComponents.size()];
         int[] itemScreenLengths = new int[contentComponents.size()];
         boolean removedStartOrEnd = false;
+        boolean overlapsAnyItem = false;
         for (int i = 0; i < allComponents.size(); i++)
         {
             Component<?> component = allComponents.get(i);
             int len = component.getItems().stream().mapToInt(Item::getScreenLength).sum();
+            boolean overlapsItem = i != 0 && i != allComponents.size() - 1 && !(endExcl <= lenSoFar || startIncl >= lenSoFar + len);
+            overlapsAnyItem = overlapsAnyItem || overlapsItem;
             DeleteState innerDelete = component.delete(startIncl - lenSoFar, endExcl - lenSoFar);
             totalDelta += innerDelete.startDelta;
             if (i >= 1 && i < allComponents.size() - 1 && (i % 2) == 1)
@@ -152,7 +155,7 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
                         // Content item
                         emptyItems[indexWithoutPrefix / 2] = true;
                     }
-                    else
+                    else if (overlapsItem)
                     {
                         removedDividers[indexWithoutPrefix / 2] = true;
                     }
@@ -199,7 +202,7 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
             }
         }
 
-        boolean couldDeleteItem = canBeAbsent && removedStartOrEnd && allTrue(removedDividers) && allTrue(emptyItems);
+        boolean couldDeleteItem = canBeAbsent && removedStartOrEnd && ((removedDividers.length > 0 && allTrue(removedDividers)) || (removedDividers.length == 0 && overlapsAnyItem)) && allTrue(emptyItems);
         if (couldDeleteItem)
         {
             contentComponents.clear();
