@@ -43,11 +43,12 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
         closeBracket = new DividerComponent(getItemParents(), ")");
         // Important to do TagComponent last as it uses the other fields:
         this.tagComponent = new TagComponent(getItemParents(), initialValue == null ? "" : tagTypes.get(initialValue.getTagIndex()).getName());
-        if (initialValue != null && initialValue.getInner() != null)
+        @Nullable DT innerType = initialValue == null ? null : tagTypes.get(initialValue.getTagIndex()).getInner();
+        if (initialValue != null && initialValue.getInner() != null && innerType != null)
         {
             try
             {
-                currentChild = TableDisplayUtility.component(getItemParents(), initialValue.getInner());
+                currentChild = TableDisplayUtility.component(getItemParents(), innerType, initialValue.getInner());
             }
             catch (InternalException e)
             {
@@ -81,7 +82,7 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
             {
                 try
                 {
-                    currentChild = TableDisplayUtility.component(getItemParents(), matchingTag.getInner());
+                    currentChild = TableDisplayUtility.component(getItemParents(), matchingTag.getInner(), null);
                 }
                 catch (InternalException e)
                 {

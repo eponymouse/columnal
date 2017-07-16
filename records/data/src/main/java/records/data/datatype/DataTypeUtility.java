@@ -4,7 +4,6 @@ import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import annotation.userindex.qual.UserIndex;
 import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ArrayColumnStorage;
 import records.data.BooleanColumnStorage;
@@ -23,6 +22,7 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -302,13 +302,8 @@ public class DataTypeUtility
             @Override
             public String text() throws InternalException, UserException
             {
-                return "\"" + escapeChars(item.toString()) + "\"";
-            }
-
-            private String escapeChars(String s)
-            {
-                // Order matters; must replace ^ first:
-                return s.replace("^", "^^").replace("\"", "^\"").replace("\n", "^n");
+                System.err.println("Unescaped:\n" + item.toString());
+                return "\"" + GrammarUtility.escapeChars(item.toString()) + "\"";
             }
 
             @Override

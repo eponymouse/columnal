@@ -119,6 +119,15 @@ class BorderPane
     BorderPane(@Nullable Node a, @Nullable Node b, @Nullable Node c, @Nullable Node d, @Nullable Node e);
     //@Initialized void setTop(@Nullable Node a);
     void setCenter(@Nullable Node a);
+    ObservableList<String> getStyleClass() @UnknownInitialization;
+}
+class GridPane
+{
+    ObservableList<String> getStyleClass() @UnknownInitialization;
+}
+class StackPane
+{
+    ObservableList<String> getStyleClass() @UnknownInitialization;
 }
 class Pane
 {

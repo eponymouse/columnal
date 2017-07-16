@@ -884,9 +884,19 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
     @Property(trials=20)
-    public void propTagged(@From(GenTaggedTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen taggedTypeAndValueGen) throws UserException, InternalException
+    public void propTagged(@When(seed=1L) @From(GenTaggedTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen taggedTypeAndValueGen) throws UserException, InternalException
     {
-        f.set(field(taggedTypeAndValueGen.getType(), taggedTypeAndValueGen.makeValue()));
+        @Value Object initialVal = taggedTypeAndValueGen.makeValue();
+        f.set(field(taggedTypeAndValueGen.getType(), initialVal));
+        type("", sim(new SimulationSupplier<String>()
+        {
+            @Override
+            @OnThread(Tag.Simulation)
+            public String get() throws InternalException, UserException
+            {
+                return DataTypeUtility.valueToString(taggedTypeAndValueGen.getType(), initialVal, null);
+            }
+        }), initialVal);
         targetF();
         pushSelectAll();
         TaggedValue value = (TaggedValue)taggedTypeAndValueGen.makeValue();

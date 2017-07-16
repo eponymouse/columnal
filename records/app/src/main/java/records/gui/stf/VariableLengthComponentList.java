@@ -116,12 +116,14 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
     }
 
     @Override
-    public final DeleteState delete(int startIncl, int endExcl)
+    public final DeleteState delete(final int startIncl, final int endExcl)
     {
         int lenSoFar = 0;
         int totalDelta = 0;
         boolean[] removedDividers = contentComponents.isEmpty() ? new boolean[0] : new boolean[contentComponents.size() - 1];
         boolean[] emptyItems = new boolean[contentComponents.size()];
+        int[] itemScreenStarts = new int[contentComponents.size()];
+        int[] itemScreenLengths = new int[contentComponents.size()];
         boolean removedStartOrEnd = false;
         for (int i = 0; i < allComponents.size(); i++)
         {
@@ -129,6 +131,13 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
             int len = component.getItems().stream().mapToInt(Item::getScreenLength).sum();
             DeleteState innerDelete = component.delete(startIncl - lenSoFar, endExcl - lenSoFar);
             totalDelta += innerDelete.startDelta;
+            if (i >= 1 && (i % 2) == 1)
+            {
+                itemScreenStarts[(i - 1) / 2] = lenSoFar;
+                // Calculate again because delete might have changed it:
+                itemScreenLengths[(i - 1) / 2] = component.getItems().stream().mapToInt(Item::getScreenLength).sum();
+            }
+
             if (innerDelete.couldDeleteItem)
             {
                 if (i == 0 || i == allComponents.size() - 1)
@@ -162,22 +171,30 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
                 if (emptyItems[i] && !removedItems[i])
                 {
                     // Remember that this alters allComponents:
-                    contentComponents.remove(i);
+                    contentComponents.remove(i - sumBefore(removedItems, i));
                     removedItems[i] = true;
-                    // TODO do we need to alter the delta?
+                    // TODO does this work if start was in middle of item?
+                    if (startIncl >= itemScreenStarts[i])
+                        totalDelta -= itemScreenLengths[i];
                 }
                 else if (emptyItems[i + 1])
                 {
                     // Remember that this alters allComponents:
-                    contentComponents.remove(i + 1);
+                    contentComponents.remove(i + 1 - sumBefore(removedItems, i + 1));
                     removedItems[i + 1] = true;
+                    // TODO does this work if start was in middle of item?
+                    if (startIncl >= itemScreenStarts[i + 1])
+                        totalDelta -= itemScreenLengths[i + 1];
                 }
                 // TODO prefer the one not in the range
-                else
+                else if (!removedItems[i])
                 {
                     // Remember that this alters allComponents:
-                    contentComponents.remove(i);
+                    contentComponents.remove(i - sumBefore(removedItems, i));
                     removedItems[i] = true;
+                    // TODO does this work if start was in middle of item?
+                    if (startIncl >= itemScreenStarts[i])
+                        totalDelta -= itemScreenLengths[i];
                 }
             }
         }
@@ -189,6 +206,17 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
             isAbsent.set(true);
         }
         return new DeleteState(totalDelta, couldDeleteItem);
+    }
+
+    private int sumBefore(boolean[] items, int beforeIndexExcl)
+    {
+        int total = 0;
+        for (int i = 0; i < beforeIndexExcl; i++)
+        {
+            if (items[i])
+                total += 1;
+        }
+        return total;
     }
 
     private boolean allTrue(boolean[] bs)
