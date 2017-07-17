@@ -433,7 +433,7 @@ public class DataTypeUtility
         }
     }
 
-    private static @Value Object makeDefaultValue(DataType dataType) throws InternalException
+    public static @Value Object makeDefaultValue(DataType dataType) throws InternalException
     {
         return dataType.apply(new DataTypeVisitorEx<@Value Object, InternalException>()
         {

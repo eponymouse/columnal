@@ -212,7 +212,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         HBox header = new HBox(title, spacer);
         if (table.showAddColumnButton())
         {
-            Button addColumnButton = GUI.button("tableDisplay.addColumn", () -> {
+            Button addColumnButton = GUI.button("tableDisplay.addColumn", () -> Utility.alertOnErrorFX_(() -> {
                 // Show a dialog to prompt for the name and type:
                 NewColumnDialog dialog = new NewColumnDialog(parent.getManager());
                 Optional<NewColumnDialog.NewColumnDetails> choice = dialog.showAndWait();
@@ -226,7 +226,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                         });
                     });
                 }
-            }, "add-column");
+            }), "add-column");
             header.getChildren().add(addColumnButton);
         }
         header.getChildren().add(addButton);

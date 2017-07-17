@@ -262,7 +262,7 @@ public class TypeSelectionPane
     }
 
     // null means not valid
-    // Optional.empty() means that "None" was selected
+    // Optional.empty() means that "None" was selected (if permitted: see constructor)
     public ObservableObjectValue<@Nullable Optional<DataType>> selectedType()
     {
         return selectedType;

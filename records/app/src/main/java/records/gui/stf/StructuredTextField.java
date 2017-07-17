@@ -72,7 +72,7 @@ import java.util.stream.Collectors;
  * Similarly, insertion only alters the structure in a list, otherwise it only alters content.
  */
 @OnThread(Tag.FXPlatform)
-public final class StructuredTextField<T> extends StyleClassedTextArea
+public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
 {
     private final List<Item> curValue = new ArrayList<>();
     private final Component<T> contentComponent;

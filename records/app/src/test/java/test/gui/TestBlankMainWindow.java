@@ -18,7 +18,6 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.fxmisc.richtext.GenericStyledArea;
 import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Test;
@@ -140,17 +139,23 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     @Property(trials = 10)
     @OnThread(Tag.Any)
-    public void propAddColumnToEntryTable(@From(GenDataType.class) TypeAndValueGen typeAndValueGen) throws UserException, InternalException
+    public void propAddColumnToEntryTable(@From(GenDataType.class) DataType dataType) throws UserException, InternalException
+    {
+        addNewTableWithColumn(dataType, null);
+    }
+
+    @OnThread(Tag.Any)
+    private void addNewTableWithColumn(DataType dataType, @Nullable @Value Object value) throws InternalException, UserException
     {
         testNewEntryTable();
         clickOn(".add-column");
         String newColName = "Column " + new Random().nextInt();
         write(newColName);
-        clickForDataType(rootNode(window(Window::isFocused)), typeAndValueGen.getType());
+        clickForDataTypeDialog(rootNode(window(Window::isFocused)), dataType, value);
         WaitForAsyncUtils.waitForFxEvents();
         assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().size()));
         assertEquals(newColName, TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getName().getRaw()));
-        assertEquals(typeAndValueGen.getType(), TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getType()));
+        assertEquals(dataType, TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getType()));
     }
 
     private void clickOnSub(Node root, String subQuery)
@@ -163,7 +168,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     // Important to use the query here, as we may have nested dialogs with items with the same class
     @OnThread(Tag.Any)
-    private void clickForDataType(Node root, DataType dataType) throws InternalException, UserException
+    private void clickForDataTypeDialog(Node root, DataType dataType, @Nullable @Value Object initialValue) throws InternalException, UserException
     {
         dataType.apply(new DataTypeVisitor<Void>()
         {
@@ -254,7 +259,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
                         if (inner != null)
                         {
                             clickOnSub(tagDialogRoot, ".taggedtype-tag-set-subType-" + i);
-                            clickForDataType(rootNode(window(Window::isFocused)), inner);
+                            clickForDataTypeDialog(rootNode(window(Window::isFocused)), inner, null);
                         }
                     }
                     // Click OK in that dialog:
@@ -299,7 +304,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
                     assertNotNull(lookupSubOfDataTypeDialog(".type-tuple-element-" + i));
                     clickOnSubOfDataTypeDialog(".type-tuple-element-" + i);
                     WaitForAsyncUtils.waitForFxEvents();
-                    clickForDataType(rootNode(window(Window::isFocused)), inner.get(i));
+                    clickForDataTypeDialog(rootNode(window(Window::isFocused)), inner.get(i), null);
                 }
                 return null;
             }
@@ -315,11 +320,19 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
                 //targetWindow(Window::isFocused);
                 if (inner != null)
                 {
-                    clickForDataType(rootNode(window(Window::isFocused)), inner);
+                    clickForDataTypeDialog(rootNode(window(Window::isFocused)), inner, null);
                 }
                 return null;
             }
         });
+        if (initialValue != null)
+        {
+            @NonNull @Value Object val = initialValue;
+            // Triple click should select all:
+            clickOn(new NodeQueryImpl().from(root).lookup(".new-column-value").<Node>query());
+            doubleClickOn(new NodeQueryImpl().from(root).lookup(".new-column-value").<Node>query());
+            write(TestUtil.sim(() -> DataTypeUtility.valueToString(dataType, val, null)));
+        }
 
         // We press OK in this method because if we've recursed, we have one dialog per recursion to dismiss:
         Window window = window(Window::isFocused);
@@ -334,8 +347,8 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @OnThread(Tag.Any)
     public void propDefaultValue(@From(GenTypeAndValueGen.class) @When(seed=-746430439083107785L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
-        propAddColumnToEntryTable(typeAndValueGen);
         @Value Object initialVal = typeAndValueGen.makeValue();
+        addNewTableWithColumn(typeAndValueGen.getType(), initialVal);
         List<@Value Object> values = new ArrayList<>();
         for (int i = 0; i < 3; i++)
         {
@@ -357,7 +370,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @OnThread(Tag.Any)
     public void testEnterColumn(@From(GenTypeAndValueGen.class) @When(seed=-746430439083107785L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
-        propAddColumnToEntryTable(typeAndValueGen);
+        propAddColumnToEntryTable(typeAndValueGen.getType());
         // Now set the values
         List<@Value Object> values = new ArrayList<>();
         for (int i = 0; i < 10;i ++)
