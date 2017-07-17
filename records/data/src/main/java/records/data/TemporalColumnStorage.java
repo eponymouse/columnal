@@ -108,11 +108,12 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
     }
 
     @Override
-    public SimulationRunnable insertRows(int index, int count) throws InternalException
+    public SimulationRunnable insertRows(int index, List<TemporalAccessor> items) throws InternalException
     {
         if (index < 0 || index > values.size())
             throw new InternalException("Trying to insert rows at invalid index: " + index + " length is: " + values.size());
-        values.addAll(index, Utility.replicate(count, pool.pool(dateTimeInfo.getDefaultValue())));
+        values.addAll(index, Utility.mapListInt(items, pool::pool));
+        int count = items.size();
         return () -> removeRows(index, count);
     }
 

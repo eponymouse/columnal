@@ -25,9 +25,11 @@ import utility.SimulationSupplier;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Utility.ListExList;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -63,6 +65,8 @@ public class EditableRecordSet extends RecordSet
 
     private static ExFunction<RecordSet, EditableColumn> copyColumn(@NonNull Column original)
     {
+        @Nullable @Value Object defaultValue = (original instanceof EditableColumn) ? ((EditableColumn)original).getDefaultValue() : null;
+
         return rs -> original.getType().applyGet(new DataTypeVisitorGet<EditableColumn>()
         {
             private <T> List<T> getAll(GetValue<T> g) throws InternalException, UserException
@@ -78,25 +82,25 @@ public class EditableRecordSet extends RecordSet
             @Override
             public EditableColumn number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
-                return new MemoryNumericColumn(rs, original.getName(), displayInfo, getAll(g));
+                return new MemoryNumericColumn(rs, original.getName(), displayInfo, getAll(g), Utility.cast(Utility.replaceNull(defaultValue, Integer.valueOf(0)), Number.class));
             }
 
             @Override
             public EditableColumn text(GetValue<String> g) throws InternalException, UserException
             {
-                return new MemoryStringColumn(rs, original.getName(), getAll(g));
+                return new MemoryStringColumn(rs, original.getName(), getAll(g), Utility.cast(Utility.replaceNull(defaultValue, ""), String.class));
             }
 
             @Override
             public EditableColumn bool(GetValue<Boolean> g) throws InternalException, UserException
             {
-                return new MemoryBooleanColumn(rs, original.getName(), getAll(g));
+                return new MemoryBooleanColumn(rs, original.getName(), getAll(g), Utility.cast(Utility.replaceNull(defaultValue, Boolean.FALSE), Boolean.class));
             }
 
             @Override
             public EditableColumn date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
             {
-                return new MemoryTemporalColumn(rs, original.getName(), dateTimeInfo, getAll(g));
+                return new MemoryTemporalColumn(rs, original.getName(), dateTimeInfo, getAll(g), Utility.cast(Utility.replaceNull(defaultValue, dateTimeInfo.getDefaultValue()), TemporalAccessor.class));
             }
 
             @Override
@@ -125,7 +129,7 @@ public class EditableRecordSet extends RecordSet
                     }
                     r.add(array);
                 }
-                return new MemoryTupleColumn(rs, original.getName(), Utility.mapList(types, t -> t), r);
+                return new MemoryTupleColumn(rs, original.getName(), Utility.mapList(types, t -> t), r, Utility.cast(Utility.replaceNull(defaultValue, null /* TODO*/), Object[].class));
             }
 
             @Override
@@ -143,7 +147,7 @@ public class EditableRecordSet extends RecordSet
                     }
                     r.add(DataTypeUtility.value(array));
                 }
-                return new MemoryArrayColumn(rs, original.getName(), inner, r);
+                return new MemoryArrayColumn(rs, original.getName(), inner, r, Utility.cast(Utility.replaceNull(defaultValue, new ListExList(Collections.emptyList())), ListEx.class));
             }
         });
     }

@@ -85,14 +85,16 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
     }
 
     @Override
-    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable insertRows(int index, List<Object[]> items) throws InternalException, UserException
     {
         List<SimulationRunnable> reverts = new ArrayList<>();
         try
         {
-            for (ColumnStorage<?> columnStorage : storage)
+            for (int column = 0; column < storage.size(); column++)
             {
-                reverts.add(columnStorage.insertRows(index, count));
+                ColumnStorage<?> columnStorage = storage.get(column);
+                int columnFinal = column;
+                reverts.add(columnStorage.insertRows(index, (List)Utility.mapList(items, x -> x[columnFinal])));
             }
             return () ->
             {

@@ -21,6 +21,7 @@ import records.grammar.DataParser.StringContext;
 import records.grammar.DataParser.TaggedContext;
 import records.grammar.DataParser.TupleContext;
 import records.grammar.FormatLexer;
+import records.grammar.MainParser;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -995,7 +996,7 @@ public class DataType
     }
 
     @OnThread(Tag.Simulation)
-    public ExFunction<RecordSet, EditableColumn> makeImmediateColumn(ColumnId columnId, List<@Value Object> value) throws InternalException, UserException
+    public ExFunction<RecordSet, EditableColumn> makeImmediateColumn(ColumnId columnId, List<@Value Object> value, @Value Object defaultValue) throws InternalException, UserException
     {
         return apply(new DataTypeVisitor<ExFunction<RecordSet, EditableColumn>>()
         {
@@ -1003,42 +1004,42 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ExFunction<RecordSet, EditableColumn> number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return rs -> new MemoryNumericColumn(rs, columnId, displayInfo, Utility.mapListEx(value, Utility::valueNumber));
+                return rs -> new MemoryNumericColumn(rs, columnId, displayInfo, Utility.mapListEx(value, Utility::valueNumber), Utility.cast(defaultValue, Number.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ExFunction<RecordSet, EditableColumn> text() throws InternalException, UserException
             {
-                return rs -> new MemoryStringColumn(rs, columnId, Utility.mapListEx(value, Utility::valueString));
+                return rs -> new MemoryStringColumn(rs, columnId, Utility.mapListEx(value, Utility::valueString), Utility.cast(defaultValue, String.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ExFunction<RecordSet, EditableColumn> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return rs -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Utility.mapListEx(value, Utility::valueTemporal));
+                return rs -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Utility.mapListEx(value, Utility::valueTemporal), Utility.cast(defaultValue, TemporalAccessor.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ExFunction<RecordSet, EditableColumn> bool() throws InternalException, UserException
             {
-                return rs -> new MemoryBooleanColumn(rs, columnId, Utility.mapListEx(value, Utility::valueBoolean));
+                return rs -> new MemoryBooleanColumn(rs, columnId, Utility.mapListEx(value, Utility::valueBoolean), Utility.cast(defaultValue, Boolean.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ExFunction<RecordSet, EditableColumn> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return rs -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Utility.mapListEx(value, Utility::valueTagged));
+                return rs -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Utility.mapListEx(value, Utility::valueTagged), Utility.cast(defaultValue, TaggedValue.class));
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public ExFunction<RecordSet, EditableColumn> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return rs -> new MemoryTupleColumn(rs, columnId, inner, Utility.mapListEx(value, t -> Utility.valueTuple(t, inner.size())));
+                return rs -> new MemoryTupleColumn(rs, columnId, inner, Utility.mapListEx(value, t -> Utility.valueTuple(t, inner.size())), Utility.cast(defaultValue, Object[].class));
             }
 
             @Override
@@ -1048,13 +1049,13 @@ public class DataType
                 if (inner == null)
                     throw new UserException("Cannot create column with empty array type");
                 DataType innerFinal = inner;
-                return rs -> new MemoryArrayColumn(rs, columnId, innerFinal, Utility.mapListEx(value, Utility::valueList));
+                return rs -> new MemoryArrayColumn(rs, columnId, innerFinal, Utility.mapListEx(value, Utility::valueList), Utility.cast(defaultValue, ListEx.class));
             }
         });
     }
 
     @OnThread(Tag.Simulation)
-    public ColumnMaker<?> makeImmediateColumn(ColumnId columnId) throws InternalException, UserException
+    public ColumnMaker<?> makeImmediateColumn(ColumnId columnId, @Value Object defaultValue) throws InternalException, UserException
     {
         return apply(new DataTypeVisitor<ColumnMaker<?>>()
         {

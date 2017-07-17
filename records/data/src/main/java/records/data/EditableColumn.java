@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.qual.Value;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -31,4 +32,6 @@ public abstract class EditableColumn extends Column
     {
         return true;
     }
+
+    public abstract @Value Object getDefaultValue();
 }

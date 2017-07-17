@@ -98,14 +98,17 @@ public class BooleanColumnStorage implements ColumnStorage<Boolean>
     }
 
     @Override
-    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable insertRows(int index, List<Boolean> items) throws InternalException, UserException
     {
+        int count = items.size();
         // Could probably do this faster:
         // Shift up the existing bits; go downwards to avoid overlap issues:
         for (int i = length - 1; i >= index;i--)
             data.set(i + count, data.get(i));
         // Initialise bits to false:
         data.clear(index, index + count);
+        for (int i = 0; i < count; i++)
+            data.set(index + i, items.get(i));
         length += count;
         return () -> removeRows(index, count);
     }

@@ -250,7 +250,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     }
 
     @Override
-    public SimulationRunnable insertRows(int insertAtIndex, int insertCount) throws InternalException, UserException
+    public SimulationRunnable insertRows(int insertAtIndex, List insertItems) throws InternalException, UserException
     {
         int firstEmptyTag = -1; // Tag with no inner type (preferred)
         int firstNonEmptyTag = -1; // Tag with an inner type

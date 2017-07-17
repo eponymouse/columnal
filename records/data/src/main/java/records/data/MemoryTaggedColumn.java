@@ -59,9 +59,9 @@ public class MemoryTaggedColumn extends EditableColumn
 
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, List items) throws InternalException, UserException
     {
-        return storage.insertRows(index, count);
+        return storage.insertRows(index, items);
     }
 
     @Override

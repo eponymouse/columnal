@@ -119,9 +119,10 @@ public class ArrayColumnStorage implements ColumnStorage<ListEx>
     }
 
     @Override
-    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
+    public SimulationRunnable insertRows(int index, List items) throws InternalException, UserException
     {
-        storage.addAll(index, Utility.replicate(count, ListEx.empty()));
+        storage.addAll(index, items);
+        int count = items.size();
         return () -> removeRows(index, count);
     }
 

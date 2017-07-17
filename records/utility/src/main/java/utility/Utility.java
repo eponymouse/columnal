@@ -797,6 +797,20 @@ public class Utility
         return OptionalInt.empty();
     }
 
+    public static <T> @Value T cast(@Value Object x, Class<T> cls) throws InternalException
+    {
+        if (cls.isInstance(x))
+        {
+            return cls.cast(x);
+        }
+        throw new InternalException("Cannot cast " + x.getClass() + " into " + cls);
+    }
+
+    public static @Value Object replaceNull(@Nullable @Value Object x, @Value Object y)
+    {
+        return x == null ? y : x;
+    }
+
     public static class ReadState
     {
         private final File file;

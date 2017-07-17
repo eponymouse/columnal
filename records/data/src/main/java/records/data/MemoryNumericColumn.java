@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.qual.Value;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
@@ -18,22 +19,24 @@ import java.util.stream.Stream;
 public class MemoryNumericColumn extends EditableColumn
 {
     private final NumericColumnStorage storage;
+    private final Number defaultValue;
 
-    private MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo) throws InternalException
+    private MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, Number defaultValue) throws InternalException
     {
         super(rs, title);
+        this.defaultValue = defaultValue;
         storage = new NumericColumnStorage(numberInfo);
     }
 
-    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, List<Number> values) throws InternalException
+    public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, List<Number> values, Number defaultValue) throws InternalException
     {
-        this(rs, title, numberInfo);
+        this(rs, title, numberInfo, defaultValue);
         storage.addAll(values);
     }
 
     public MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, Stream<String> values) throws InternalException, UserException
     {
-        this(rs, title, numberInfo);
+        this(rs, title, numberInfo, 0);
         for (String value : Utility.iterableStream(values))
         {
             storage.addRead(value);
@@ -55,18 +58,24 @@ public class MemoryNumericColumn extends EditableColumn
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        return new MemoryNumericColumn(rs, getName(), storage.getDisplayInfo(), storage._test_getShrunk(shrunkLength));
+        return new MemoryNumericColumn(rs, getName(), storage.getDisplayInfo(), storage._test_getShrunk(shrunkLength), 0);
     }
 
     @Override
     public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
-        return storage.insertRows(index, count);
+        return storage.insertRows(index, Utility.replicate(count, defaultValue));
     }
 
     @Override
     public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
         return storage.removeRows(index, count);
+    }
+
+    @Override
+    public @Value Object getDefaultValue()
+    {
+        return defaultValue;
     }
 }

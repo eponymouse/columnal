@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
@@ -8,6 +9,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationRunnable;
+import utility.Utility;
 import utility.Utility.ListEx;
 
 import java.util.List;
@@ -18,10 +20,12 @@ import java.util.List;
 public class MemoryArrayColumn extends EditableColumn
 {
     private final ArrayColumnStorage storage;
+    private final ListEx defaultValue;
 
-    public MemoryArrayColumn(RecordSet recordSet, ColumnId title, @Nullable DataType inner, List<ListEx> values) throws InternalException
+    public MemoryArrayColumn(RecordSet recordSet, ColumnId title, @Nullable DataType inner, List<ListEx> values, ListEx defaultValue) throws InternalException
     {
         super(recordSet, title);
+        this.defaultValue = defaultValue;
         this.storage = new ArrayColumnStorage(inner, null);
         this.storage.addAll(values);
     }
@@ -36,7 +40,7 @@ public class MemoryArrayColumn extends EditableColumn
     @Override
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
-        MemoryArrayColumn shrunk = new MemoryArrayColumn(rs, getName(), storage.getType().getMemberType().get(0), storage._test_getShrunk(shrunkLength));
+        MemoryArrayColumn shrunk = new MemoryArrayColumn(rs, getName(), storage.getType().getMemberType().get(0), storage._test_getShrunk(shrunkLength), defaultValue);
         return shrunk;
     }
 
@@ -49,12 +53,18 @@ public class MemoryArrayColumn extends EditableColumn
     @Override
     public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
-        return storage.insertRows(index, count);
+        return storage.insertRows(index, Utility.replicate(count, defaultValue));
     }
 
     @Override
     public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
         return storage.removeRows(index, count);
+    }
+
+    @Override
+    public @Value Object getDefaultValue()
+    {
+        return defaultValue;
     }
 }

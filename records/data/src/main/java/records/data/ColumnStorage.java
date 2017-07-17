@@ -57,7 +57,7 @@ public interface ColumnStorage<T>
     }
 
     // Returns revert operation
-    public SimulationRunnable insertRows(int index, int count) throws InternalException, UserException;
+    public SimulationRunnable insertRows(int index, List<T> items) throws InternalException, UserException;
     // Returns revert operation
     public SimulationRunnable removeRows(int index, int count) throws InternalException, UserException;
 
