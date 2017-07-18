@@ -28,6 +28,7 @@ import utility.Utility;
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.OptionalInt;
 
@@ -172,10 +173,10 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                                     newValueIndex++;
                                 }
                             }
-                            ColumnStorage<?> newStore = valueStores.get(newTag);
+                            ColumnStorage<T> newStore = (ColumnStorage)valueStores.get(newTag);
                             if (newStore != null)
                             {
-                                newStore.insertRows(newValueIndex, 1);
+                                newStore.insertRows(newValueIndex, Collections.singletonList(value));
                                 g.set(newValueIndex, value);
                                 for (int i = index; i < tagStore.filled(); i++)
                                 {
@@ -250,58 +251,46 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     }
 
     @Override
-    public SimulationRunnable insertRows(int insertAtIndex, List insertItems) throws InternalException, UserException
+    public SimulationRunnable insertRows(int insertAtOriginalIndex, List<TaggedValue> insertItems) throws InternalException, UserException
     {
-        int firstEmptyTag = -1; // Tag with no inner type (preferred)
-        int firstNonEmptyTag = -1; // Tag with an inner type
-        for (int i = 0; i < tagTypes.size(); i++)
+        int insertAtIndex = insertAtOriginalIndex;
+        for (TaggedValue insertItem : insertItems)
         {
-            if (firstEmptyTag == -1 && tagTypes.get(i).getInner() == null)
-                firstEmptyTag = i;
-            else if (firstNonEmptyTag == -1)
-                firstNonEmptyTag = i;
+            tagStore.addAll(insertAtIndex, Collections.singletonList(insertItem.getTagIndex()));
+            if (insertItem.getInner() == null)
+            {
+                // Empty tags are easy:
+
+                innerValueIndex.addAll(insertAtIndex, Utility.<Number>replicate(1, -1));
+            }
+            else
+            {
+                // TODO could do this more efficiently by incrementing all following items once for each tag index
+                int lastInnerValueIndex = -1;
+                // Find last used index before us:
+                for (int i = 0; i < insertAtIndex; i++)
+                {
+                    if (tagStore.getInt(i) == insertItem.getTagIndex())
+                        lastInnerValueIndex = innerValueIndex.getInt(i);
+                }
+                // Add a new one:
+                innerValueIndex.addAll(insertAtIndex, Collections.singletonList(lastInnerValueIndex + 1));
+                @Nullable ColumnStorage<?> valueStore = valueStores.get(insertItem.getTagIndex());
+                if (valueStore == null)
+                    throw new InternalException("No value store for inner type tag: " + insertItem.getTagIndex());
+                valueStore.insertRows(lastInnerValueIndex + 1, (List)Collections.singletonList(insertItem.getInner()));
+                // Increment all after us accordingly:
+                for (int i = insertAtIndex + 1; i < innerValueIndex.filled(); i++)
+                {
+                    if (tagStore.getInt(i) == insertItem.getTagIndex())
+                        innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) + 1);
+                }
+            }
+            insertAtIndex += 1;
         }
 
-        if (firstEmptyTag != -1)
-        {
-            // Empty tags are easy:
-            tagStore.addAll(insertAtIndex, Utility.<Number>replicate(insertCount, firstEmptyTag));
-            innerValueIndex.addAll(insertAtIndex, Utility.<Number>replicate(insertCount, -1));
-        }
-        else if (firstNonEmptyTag != -1)
-        {
-            tagStore.addAll(insertAtIndex, Utility.<Number>replicate(insertCount, firstNonEmptyTag));
-            int lastInnerValueIndex = -1;
-            // Find last used index before us:
-            for (int i = 0; i < insertAtIndex; i++)
-            {
-                if (tagStore.getInt(i) == firstNonEmptyTag)
-                    lastInnerValueIndex = innerValueIndex.getInt(i);
-            }
-            // Add a new bunch:
-            List<Number> r = new ArrayList<>(insertCount);
-            for (int i = 0; i < insertCount; i++)
-            {
-                r.add( lastInnerValueIndex + 1 + i);
-            }
-            innerValueIndex.addAll(insertAtIndex, r);
-            @Nullable ColumnStorage<?> valueStore = valueStores.get(firstNonEmptyTag);
-            if (valueStore == null)
-                throw new InternalException("No value store for inner type tag: " + firstNonEmptyTag);
-            valueStore.insertRows(lastInnerValueIndex + 1, insertCount);
-            // Increment all after us accordingly:
-            for (int i = insertAtIndex + insertCount; i < innerValueIndex.filled(); i++)
-            {
-                if (tagStore.getInt(i) == firstNonEmptyTag)
-                    innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) + insertCount);
-            }
-        }
-        else
-        {
-            throw new InternalException("No tags found in type");
-        }
-
-        return () -> removeRows(insertAtIndex, insertCount);
+        int insertCount = insertItems.size();
+        return () -> removeRows(insertAtOriginalIndex, insertCount);
     }
 
     @Override
@@ -351,11 +340,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             }
         }
         return () -> {
-            insertRows(index, count);
-            for (int i = index; i < index + count; i++)
-            {
-                getType().setCollapsed(i, prevValues.get(i - index));
-            }
+            insertRows(index, prevValues);
         };
     }
 

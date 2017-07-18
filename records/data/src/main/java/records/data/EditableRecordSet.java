@@ -20,6 +20,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import utility.ExFunction;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.SimulationRunnable;
 import utility.SimulationSupplier;
 import utility.TaggedValue;
@@ -113,7 +114,7 @@ public class EditableRecordSet extends RecordSet
                     @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();
                     r.add(new TaggedValue(tagIndex, inner == null ? null : inner.getCollapsed(i)));
                 }
-                return new MemoryTaggedColumn(rs, original.getName(), typeName, Utility.mapList(tagTypes, t -> new TagType<>(t.getName(), t.getInner())), r);
+                return new MemoryTaggedColumn(rs, original.getName(), typeName, Utility.mapList(tagTypes, t -> new TagType<>(t.getName(), t.getInner())), r, Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.makeDefaultTaggedValue(tagTypes)), TaggedValue.class));
             }
 
             @Override
@@ -254,9 +255,10 @@ public class EditableRecordSet extends RecordSet
         };
     }
 
-    public void addColumn(ExFunction<RecordSet, ? extends EditableColumn> makeNewColumn) throws InternalException, UserException
+    public void addColumn(SimulationFunction<RecordSet, ? extends EditableColumn> makeNewColumn) throws InternalException, UserException
     {
         EditableColumn col = makeNewColumn.apply(this);
+        col.insertRows(0, getLength());
         columns.add(col);
         editableColumns.add(col);
         if (columns.stream().map(Column::getName).distinct().count() != columns.size())

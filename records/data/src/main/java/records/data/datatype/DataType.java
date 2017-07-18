@@ -28,6 +28,7 @@ import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.ExFunction;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.TaggedValue;
 import utility.UnitType;
 import utility.Utility;
@@ -967,7 +968,7 @@ public class DataType
         return cur;
     }
 
-    public static class ColumnMaker<C extends EditableColumn> implements FunctionInt<RecordSet, EditableColumn>
+    public static class ColumnMaker<C extends EditableColumn> implements SimulationFunction<RecordSet, EditableColumn>
     {
         private @Nullable C column;
         private final FunctionInt<RecordSet, C> makeColumn;
@@ -1063,7 +1064,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?> number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryNumericColumn>(rs -> new MemoryNumericColumn(rs, columnId, displayInfo, Collections.emptyList()), (column, data) -> {
+                return new ColumnMaker<MemoryNumericColumn>(rs -> new MemoryNumericColumn(rs, columnId, displayInfo, Collections.emptyList(), Utility.cast(defaultValue, Number.class)), (column, data) -> {
                     DataParser.NumberContext number = data.number();
                     if (number == null)
                         throw new UserException("Expected string value but found: \"" + data.getText() + "\"");
@@ -1075,7 +1076,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?> text() throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryStringColumn>(rs -> new MemoryStringColumn(rs, columnId, Collections.emptyList()), (column, data) -> {
+                return new ColumnMaker<MemoryStringColumn>(rs -> new MemoryStringColumn(rs, columnId, Collections.emptyList(), Utility.cast(defaultValue, String.class)), (column, data) -> {
                     StringContext string = data.string();
                     if (string == null)
                         throw new UserException("Expected string value but found: \"" + data.getText() + "\"");
@@ -1087,7 +1088,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTemporalColumn>(rs -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Collections.emptyList()), (column, data) ->
+                return new ColumnMaker<MemoryTemporalColumn>(rs -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Collections.emptyList(), Utility.cast(defaultValue, TemporalAccessor.class)), (column, data) ->
                 {
                     StringContext c = data.string();
                     if (c == null)
@@ -1108,7 +1109,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?> bool() throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryBooleanColumn>(rs -> new MemoryBooleanColumn(rs, columnId, Collections.emptyList()), (column, data) -> {
+                return new ColumnMaker<MemoryBooleanColumn>(rs -> new MemoryBooleanColumn(rs, columnId, Collections.emptyList(), Utility.cast(defaultValue, Boolean.class)), (column, data) -> {
                     BoolContext b = data.bool();
                     if (b == null)
                         throw new UserException("Expected boolean value but found: \"" + data.getText() + "\"");
@@ -1120,7 +1121,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTaggedColumn>(rs -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Collections.emptyList()), (column, data) -> {
+                return new ColumnMaker<MemoryTaggedColumn>(rs -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Collections.emptyList(), Utility.cast(defaultValue, TaggedValue.class)), (column, data) -> {
                     TaggedContext b = data.tagged();
                     if (b == null)
                         throw new UserException("Expected tagged value but found: \"" + data.getText() + "\"");
@@ -1132,7 +1133,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTupleColumn>(rs -> new MemoryTupleColumn(rs, columnId, inner), (column, data) -> {
+                return new ColumnMaker<MemoryTupleColumn>(rs -> new MemoryTupleColumn(rs, columnId, inner, Utility.cast(defaultValue, Object[].class)), (column, data) -> {
                     TupleContext c = data.tuple();
                     if (c == null)
                         throw new UserException("Expected tuple but found: \"" + data.getText() + "\"");
@@ -1155,7 +1156,7 @@ public class DataType
                     throw new UserException("Cannot have column with type of empty array");
 
                 DataType innerFinal = inner;
-                return new ColumnMaker<MemoryArrayColumn>(rs -> new MemoryArrayColumn(rs, columnId, innerFinal, Collections.emptyList()), (column, data) -> {
+                return new ColumnMaker<MemoryArrayColumn>(rs -> new MemoryArrayColumn(rs, columnId, innerFinal, Collections.emptyList(), Utility.cast(defaultValue, ListEx.class)), (column, data) -> {
                     ArrayContext c = data.array();
                     if (c == null)
                         throw new UserException("Expected array but found: \"" + data.getText() + "\"");

@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.SpecificDataTypeVisitor;
@@ -12,6 +13,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.SimulationRunnable;
 import utility.TaggedValue;
+import utility.Utility;
 
 import java.util.List;
 
@@ -22,11 +24,13 @@ public class MemoryTaggedColumn extends EditableColumn
 {
     private final TaggedColumnStorage storage;
     private final TypeId typeName;
+    private final TaggedValue defaultValue;
 
-    public MemoryTaggedColumn(RecordSet rs, ColumnId title, TypeId typeName, List<TagType<DataType>> tags, List<TaggedValue> list) throws InternalException
+    public MemoryTaggedColumn(RecordSet rs, ColumnId title, TypeId typeName, List<TagType<DataType>> tags, List<TaggedValue> list, TaggedValue defaultValue) throws InternalException
     {
         super(rs, title);
         this.typeName = typeName;
+        this.defaultValue = defaultValue;
         this.storage = new TaggedColumnStorage(typeName, tags);
         this.storage.addAll(list);
     }
@@ -49,7 +53,7 @@ public class MemoryTaggedColumn extends EditableColumn
                 return tags;
             }
         });
-        return new MemoryTaggedColumn(rs, getName(), typeName, tags, storage.getShrunk(shrunkLength));
+        return new MemoryTaggedColumn(rs, getName(), typeName, tags, storage.getShrunk(shrunkLength), defaultValue);
     }
 
     public void add(TaggedValue taggedValue) throws InternalException
@@ -59,14 +63,20 @@ public class MemoryTaggedColumn extends EditableColumn
 
 
     @Override
-    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, List items) throws InternalException, UserException
+    public @OnThread(Tag.Simulation) SimulationRunnable insertRows(int index, int count) throws InternalException, UserException
     {
-        return storage.insertRows(index, items);
+        return storage.insertRows(index, Utility.replicate(count, defaultValue));
     }
 
     @Override
     public @OnThread(Tag.Simulation) SimulationRunnable removeRows(int index, int count) throws InternalException, UserException
     {
         return storage.removeRows(index, count);
+    }
+
+    @Override
+    public @Value Object getDefaultValue()
+    {
+        return defaultValue;
     }
 }

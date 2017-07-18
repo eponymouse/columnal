@@ -417,7 +417,7 @@ public class DataTypeUtility
         };
     }
 
-    public static TaggedValue makeDefaultTaggedValue(ImmutableList<TagType<DataType>> tagTypes) throws InternalException
+    public static <DT extends DataType> TaggedValue makeDefaultTaggedValue(ImmutableList<TagType<DT>> tagTypes) throws InternalException
     {
         OptionalInt noInnerIndex = Utility.findFirstIndex(tagTypes, tt -> tt.getInner() == null);
         if (noInnerIndex.isPresent())

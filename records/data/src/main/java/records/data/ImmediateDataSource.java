@@ -99,7 +99,7 @@ public class ImmediateDataSource extends DataSource
     @Override
     public void addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException, UserException
     {
-        data.addColumn(newColumnType.makeImmediateColumn(new ColumnId(newColumnName), Utility.replicate(data.getLength(), newColumnValue)));
+        data.addColumn(newColumnType.makeImmediateColumn(new ColumnId(newColumnName), newColumnValue));
     }
 
     @Override
