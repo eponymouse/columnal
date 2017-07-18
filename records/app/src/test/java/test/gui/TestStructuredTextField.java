@@ -238,7 +238,7 @@ public class TestStructuredTextField extends ApplicationTest
         {
             try
             {
-                EditableRecordSet rs = new EditableRecordSet(Collections.singletonList(dataType.makeImmediateColumn(new ColumnId("C"), Collections.singletonList(value))), () -> 1);
+                EditableRecordSet rs = new EditableRecordSet(Collections.singletonList(dataType.makeImmediateColumn(new ColumnId("C"), Collections.singletonList(value), "")), () -> 1);
                 fut.complete(rs.getColumns().get(0).getType());
             }
             catch (InternalException | UserException e)

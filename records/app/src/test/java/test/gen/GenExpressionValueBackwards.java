@@ -625,28 +625,28 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             @OnThread(Tag.Simulation)
             public Column text() throws InternalException, UserException
             {
-                return new MemoryStringColumn(rs, name, Collections.singletonList((String)value));
+                return new MemoryStringColumn(rs, name, Collections.singletonList((String)value), "");
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public Column date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return new MemoryTemporalColumn(rs, name, new DateTimeInfo(DateTimeType.YEARMONTHDAY), Collections.singletonList((Temporal)value));
+                return new MemoryTemporalColumn(rs, name, new DateTimeInfo(DateTimeType.YEARMONTHDAY), Collections.singletonList((Temporal)value), DateTimeInfo.DEFAULT_VALUE);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public Column bool() throws InternalException, UserException
             {
-                return new MemoryBooleanColumn(rs, name, Collections.singletonList((Boolean) value));
+                return new MemoryBooleanColumn(rs, name, Collections.singletonList((Boolean) value), false);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public Column tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return new MemoryTaggedColumn(rs, name, typeName, tags, Collections.singletonList((TaggedValue) value));
+                return new MemoryTaggedColumn(rs, name, typeName, tags, Collections.singletonList((TaggedValue) value), new TaggedValue(0, null));
             }
 
             @Override

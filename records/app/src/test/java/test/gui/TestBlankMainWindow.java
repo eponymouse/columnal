@@ -23,6 +23,7 @@ import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
+import org.testfx.service.query.PointQuery;
 import org.testfx.service.query.impl.NodeQueryImpl;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.RecordSet;
@@ -329,8 +330,11 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         {
             @NonNull @Value Object val = initialValue;
             // Triple click should select all:
-            clickOn(new NodeQueryImpl().from(root).lookup(".new-column-value").<Node>query());
-            doubleClickOn(new NodeQueryImpl().from(root).lookup(".new-column-value").<Node>query());
+            Node stf = new NodeQueryImpl().from(root).lookup(".new-column-value").<Node>query();
+            // Click in top left to avoid auto complete:
+            PointQuery point = TestUtil.fx(() -> offset(stf, 4 - stf.getBoundsInLocal().getWidth() / 2.0, 4 - stf.getBoundsInLocal().getHeight() / 2.0));
+            clickOn(point);
+            doubleClickOn(point);
             write(TestUtil.sim(() -> DataTypeUtility.valueToString(dataType, val, null)));
         }
 
@@ -343,7 +347,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         assertFalse(TestUtil.fx(() -> window.isShowing()));
     }
 
-    @Property
+    @Property(trials = 10)
     @OnThread(Tag.Any)
     public void propDefaultValue(@From(GenTypeAndValueGen.class) @When(seed=-746430439083107785L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {

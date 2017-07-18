@@ -81,7 +81,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
     private final BitSet possibleCaretPositions = new BitSet();
     // All positions in the text area which are valid and are beginning or end of words:
     private final BitSet possibleCaretWordPositions = new BitSet();
-    private final FXPlatformConsumer<? super T> store;
+    private final FXPlatformConsumer<Pair<String, T>> store;
     private @Nullable State lastValidValue;
     private @Nullable PopOver fixPopup;
     private T completedValue;
@@ -91,7 +91,8 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
     private FXPlatformRunnable endEdit;
 
     @SuppressWarnings("initialization")
-    public StructuredTextField(Component<T> content, FXPlatformConsumer<? super T> store) throws InternalException
+    // store action takes the string value of the field, and the parsed value of the field, when it is valid.
+    public StructuredTextField(Component<T> content, FXPlatformConsumer<Pair<String, T>> store) throws InternalException
     {
         super(false);
         this.store = store;
@@ -109,7 +110,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
             {
                 endEdit().either_(this::showFixPopup, v -> {
                     completedValue = v;
-                    store.consume(completedValue);
+                    store.consume(new Pair<>(getText(), completedValue));
                     lastValidValue = captureState();
                 });
             }

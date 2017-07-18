@@ -19,6 +19,7 @@ TAGGED : 'TAGGED';
 TYPE : 'TYPE';
 SPACE_KWD : 'SPACE';
 ZERO_KWD : 'ZERO';
+DEFAULT : 'DEFAULT';
 
 WS : ( ' ' | '\t' )+ -> skip;
 

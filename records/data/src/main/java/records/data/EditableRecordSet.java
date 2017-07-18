@@ -130,7 +130,12 @@ public class EditableRecordSet extends RecordSet
                     }
                     r.add(array);
                 }
-                return new MemoryTupleColumn(rs, original.getName(), Utility.mapList(types, t -> t), r, Utility.cast(Utility.replaceNull(defaultValue, null /* TODO*/), Object[].class));
+                Object[] tupleOfDefaults = new Object[types.size()];
+                for (int i = 0; i < tupleOfDefaults.length; i++)
+                {
+                    tupleOfDefaults[i] = DataTypeUtility.makeDefaultValue(types.get(i));
+                }
+                return new MemoryTupleColumn(rs, original.getName(), Utility.mapList(types, t -> t), r, Utility.cast(Utility.replaceNull(defaultValue, tupleOfDefaults), Object[].class));
             }
 
             @Override

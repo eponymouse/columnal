@@ -7,6 +7,7 @@ import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
 import records.data.*;
+import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeUtility;
 import utility.ExFunction;
 import utility.TaggedValue;
@@ -90,11 +91,11 @@ public class HTMLImport
                 }
                 else if (columnType instanceof TextColumnType)
                 {
-                    columns.add(rs -> new MemoryStringColumn(rs, columnInfo.title, slice));
+                    columns.add(rs -> new MemoryStringColumn(rs, columnInfo.title, slice, ""));
                 }
                 else if (columnType instanceof CleanDateColumnType)
                 {
-                    columns.add(rs -> new MemoryTemporalColumn(rs, columnInfo.title, ((CleanDateColumnType) columnType).getDateTimeInfo(), Utility.<String, TemporalAccessor>mapList(slice, s -> ((CleanDateColumnType) columnType).parse(s))));
+                    columns.add(rs -> new MemoryTemporalColumn(rs, columnInfo.title, ((CleanDateColumnType) columnType).getDateTimeInfo(), Utility.<String, TemporalAccessor>mapListInt(slice, s -> ((CleanDateColumnType) columnType).parse(s)), DateTimeInfo.DEFAULT_VALUE));
                 }
                 else if (columnType instanceof OrBlankColumnType && ((OrBlankColumnType)columnType).getInner() instanceof NumericColumnType)
                 {
@@ -116,7 +117,7 @@ public class HTMLImport
                             return new TaggedValue(0, null);
                         else
                             return new TaggedValue(1, DataTypeUtility.value(Utility.parseNumber(inner.removePrefix(item))));
-                    })));
+                    }), new TaggedValue(0, null)));
                 }
                 else if (!(columnType instanceof BlankColumnType))
                 {

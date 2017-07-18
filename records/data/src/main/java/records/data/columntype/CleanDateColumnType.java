@@ -4,11 +4,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.error.InternalException;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoField;
 import java.time.temporal.Temporal;
+import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQuery;
 
 /**
@@ -61,9 +63,9 @@ public class CleanDateColumnType extends ColumnType
         return formatter;
     }
 
-    public Temporal parse(@NonNull String s)
+    public TemporalAccessor parse(@NonNull String s) throws InternalException
     {
-        return getDateTimeFormatter().parse(s, query);
+        return getDateTimeInfo().fromParsed(getDateTimeFormatter().parse(s, query));
     }
 
     public DateTimeInfo getDateTimeInfo()

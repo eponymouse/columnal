@@ -13,10 +13,13 @@ import records.data.datatype.DataTypeValue.GetValue;
 import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.DataLexer;
 import records.grammar.DataParser;
 import records.grammar.DataParser.ArrayContext;
 import records.grammar.DataParser.BoolContext;
+import records.grammar.DataParser.BracketedItemContext;
 import records.grammar.DataParser.ItemContext;
+import records.grammar.DataParser.NumberContext;
 import records.grammar.DataParser.StringContext;
 import records.grammar.DataParser.TaggedContext;
 import records.grammar.DataParser.TupleContext;
@@ -25,6 +28,7 @@ import records.grammar.MainParser;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.BiFunctionInt;
 import utility.ExBiConsumer;
 import utility.ExFunction;
 import utility.Pair;
@@ -968,23 +972,25 @@ public class DataType
         return cur;
     }
 
-    public static class ColumnMaker<C extends EditableColumn> implements SimulationFunction<RecordSet, EditableColumn>
+    public static class ColumnMaker<C extends EditableColumn, V> implements SimulationFunction<RecordSet, EditableColumn>
     {
+        private final ExBiConsumer<C, V> addToColumn;
+        private final ExFunction<ItemContext, V> parseValue;
+        private final BiFunctionInt<RecordSet, V, C> makeColumn;
+        private final V defaultValue;
         private @Nullable C column;
-        private final FunctionInt<RecordSet, C> makeColumn;
-        private final ExBiConsumer<C, ItemContext> loadData;
 
-        private ColumnMaker(FunctionInt<RecordSet, C> makeColumn, ExBiConsumer<C, ItemContext> loadData)
+        private ColumnMaker(String defaultValueUnparsed, BiFunctionInt<RecordSet, V, C> makeColumn, ExBiConsumer<C, V> addToColumn, ExFunction<ItemContext, V> parseValue) throws UserException, InternalException
         {
             this.makeColumn = makeColumn;
-            this.loadData = loadData;
+            this.addToColumn = addToColumn;
+            this.parseValue = parseValue;
+            this.defaultValue = parseValue.apply(Utility.parseAsOne(defaultValueUnparsed, DataLexer::new, DataParser::new, DataParser::item));
         }
 
-        @Override
         public final EditableColumn apply(RecordSet rs) throws InternalException
         {
-            column = makeColumn.apply(rs);
-            return column;
+            return makeColumn.apply(rs, defaultValue);
         }
 
         // Only valid to call after apply:
@@ -992,7 +998,7 @@ public class DataType
         {
             if (column == null)
                 throw new InternalException("Calling loadRow before column creation");
-            loadData.accept(column, ctx);
+            addToColumn.accept(column, parseValue.apply(ctx));
         }
     }
 
@@ -1056,39 +1062,39 @@ public class DataType
     }
 
     @OnThread(Tag.Simulation)
-    public ColumnMaker<?> makeImmediateColumn(ColumnId columnId, @Value Object defaultValue) throws InternalException, UserException
+    public ColumnMaker<?, ?> makeImmediateColumn(ColumnId columnId, String defaultValueUnparsed) throws InternalException, UserException
     {
-        return apply(new DataTypeVisitor<ColumnMaker<?>>()
+        return apply(new DataTypeVisitor<ColumnMaker<?, ?>>()
         {
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnMaker<?> number(NumberInfo displayInfo) throws InternalException, UserException
+            public ColumnMaker<?, ?> number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryNumericColumn>(rs -> new MemoryNumericColumn(rs, columnId, displayInfo, Collections.emptyList(), Utility.cast(defaultValue, Number.class)), (column, data) -> {
+                return new ColumnMaker<MemoryNumericColumn, Number>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryNumericColumn(rs, columnId, displayInfo, Collections.emptyList(), defaultValue), (c, n) -> c.add(n), data -> {
                     DataParser.NumberContext number = data.number();
                     if (number == null)
-                        throw new UserException("Expected string value but found: \"" + data.getText() + "\"");
-                    column.add(number.getText());
+                        throw new UserException("Expected number value but found: \"" + data.getText() + "\"");
+                    return Utility.parseNumber(number.getText());
                 });
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnMaker<?> text() throws InternalException, UserException
+            public ColumnMaker<?, ?> text() throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryStringColumn>(rs -> new MemoryStringColumn(rs, columnId, Collections.emptyList(), Utility.cast(defaultValue, String.class)), (column, data) -> {
+                return new ColumnMaker<MemoryStringColumn, String>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryStringColumn(rs, columnId, Collections.emptyList(), defaultValue), (c, s) -> c.add(s), data -> {
                     StringContext string = data.string();
                     if (string == null)
                         throw new UserException("Expected string value but found: \"" + data.getText() + "\"");
-                    column.add(string.getText());
+                    return string.getText();
                 });
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnMaker<?> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            public ColumnMaker<?, ?> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTemporalColumn>(rs -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Collections.emptyList(), Utility.cast(defaultValue, TemporalAccessor.class)), (column, data) ->
+                return new ColumnMaker<MemoryTemporalColumn, TemporalAccessor>(quoteIfNotQuoted(defaultValueUnparsed), (rs, defaultValue) -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), data ->
                 {
                     StringContext c = data.string();
                     if (c == null)
@@ -1096,7 +1102,7 @@ public class DataType
                     DateTimeFormatter formatter = dateTimeInfo.getFormatter();
                     try
                     {
-                        column.add(formatter.parse(c.getText()));
+                        return dateTimeInfo.fromParsed(formatter.parse(c.getText()));
                     }
                     catch (DateTimeParseException e)
                     {
@@ -1105,35 +1111,40 @@ public class DataType
                 });
             }
 
+            private String quoteIfNotQuoted(String s)
+            {
+                return s.startsWith("\"") ? s : ("\"" + s + "\"");
+            }
+
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnMaker<?> bool() throws InternalException, UserException
+            public ColumnMaker<?, ?> bool() throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryBooleanColumn>(rs -> new MemoryBooleanColumn(rs, columnId, Collections.emptyList(), Utility.cast(defaultValue, Boolean.class)), (column, data) -> {
+                return new ColumnMaker<MemoryBooleanColumn, Boolean>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryBooleanColumn(rs, columnId, Collections.emptyList(), defaultValue), (c, b) -> c.add(b), data -> {
                     BoolContext b = data.bool();
                     if (b == null)
                         throw new UserException("Expected boolean value but found: \"" + data.getText() + "\"");
-                    column.add(b.getText().equals("true"));
+                    return b.getText().toLowerCase().equals("true");
                 });
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnMaker<?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public ColumnMaker<?, ?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTaggedColumn>(rs -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Collections.emptyList(), Utility.cast(defaultValue, TaggedValue.class)), (column, data) -> {
+                return new ColumnMaker<MemoryTaggedColumn, TaggedValue>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), data -> {
                     TaggedContext b = data.tagged();
                     if (b == null)
                         throw new UserException("Expected tagged value but found: \"" + data.getText() + "\"");
-                    column.add(loadValue(tags, b));
+                    return loadValue(tags, b);
                 });
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnMaker<?> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            public ColumnMaker<?, ?> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTupleColumn>(rs -> new MemoryTupleColumn(rs, columnId, inner, Utility.cast(defaultValue, Object[].class)), (column, data) -> {
+                return new ColumnMaker<MemoryTupleColumn, Object[]>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryTupleColumn(rs, columnId, inner, defaultValue), (c, t) -> c.add(t), data -> {
                     TupleContext c = data.tuple();
                     if (c == null)
                         throw new UserException("Expected tuple but found: \"" + data.getText() + "\"");
@@ -1144,19 +1155,19 @@ public class DataType
                     {
                         tuple[i] = loadSingleItem(inner.get(i), c.item(i));
                     }
-                    column.add(tuple);
+                    return tuple;
                 });
             }
 
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnMaker<?> array(@Nullable DataType inner) throws InternalException, UserException
+            public ColumnMaker<?, ?> array(@Nullable DataType inner) throws InternalException, UserException
             {
                 if (inner == null)
                     throw new UserException("Cannot have column with type of empty array");
 
                 DataType innerFinal = inner;
-                return new ColumnMaker<MemoryArrayColumn>(rs -> new MemoryArrayColumn(rs, columnId, innerFinal, Collections.emptyList(), Utility.cast(defaultValue, ListEx.class)), (column, data) -> {
+                return new ColumnMaker<MemoryArrayColumn, ListEx>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryArrayColumn(rs, columnId, innerFinal, Collections.emptyList(), defaultValue), (c, v) -> c.add(v), data -> {
                     ArrayContext c = data.array();
                     if (c == null)
                         throw new UserException("Expected array but found: \"" + data.getText() + "\"");
@@ -1167,7 +1178,7 @@ public class DataType
                     }
                     //ColumnStorage storage = DataTypeUtility.makeColumnStorage(inner, null);
                     //storage.addAll(array);
-                    column.add(new ListEx()
+                    return new ListEx()
                     {
                         @Override
                         public int size() throws InternalException, UserException
@@ -1180,7 +1191,7 @@ public class DataType
                         {
                             return array.get(index);
                         }
-                    });
+                    };
                 });
             }
         });
@@ -1194,12 +1205,12 @@ public class DataType
             TagType<DataType> tag = tags.get(i);
             if (tag.getName().equals(constructor))
             {
-                ItemContext item = taggedContext.item();
+                BracketedItemContext item = taggedContext.bracketedItem();
                 if (tag.getInner() != null)
                 {
                     if (item == null)
                         throw new UserException("Expected inner type but found no inner value: \"" + taggedContext.getText() + "\"");
-                    return new TaggedValue(i, loadSingleItem(tag.getInner(), item));
+                    return new TaggedValue(i, loadSingleItem(tag.getInner(), new FakeItemContext(item)));
                 }
                 else if (item != null)
                     throw new UserException("Expected no inner type but found inner value: \"" + taggedContext.getText() + "\"");
@@ -1561,6 +1572,26 @@ public class DataType
             throw new InternalException("Unknown type: " + type);
         }
 
+        public @Value TemporalAccessor fromParsed(TemporalAccessor t) throws InternalException
+        {
+            switch (type)
+            {
+                case YEARMONTHDAY:
+                    return LocalDate.from(t);
+                case YEARMONTH:
+                    return YearMonth.from(t);
+                case TIMEOFDAY:
+                    return LocalTime.from(t);
+                case TIMEOFDAYZONED:
+                    return OffsetTime.from(t);
+                case DATETIME:
+                    return LocalDateTime.from(t);
+                case DATETIMEZONED:
+                    return ZonedDateTime.from(t);
+            }
+            throw new InternalException("Unknown type: " + type);
+        }
+
         public DateTimeType getType()
         {
             return type;
@@ -1646,5 +1677,53 @@ public class DataType
         R array(T a, T b, @Nullable DataType innerA, @Nullable DataType innerB) throws InternalException, UserException;
 
         R differentKind(T a, T b) throws InternalException, UserException;
+    }
+
+    private static class FakeItemContext extends ItemContext
+    {
+        private final BracketedItemContext item;
+
+        @SuppressWarnings("nullness")
+        public FakeItemContext(BracketedItemContext bracketedItemContext)
+        {
+            super(null, -1);
+            this.item = bracketedItemContext;
+        }
+
+        @Override
+        public NumberContext number()
+        {
+            return item.unbracketedItem().number();
+        }
+
+        @Override
+        public BoolContext bool()
+        {
+            return item.unbracketedItem().bool();
+        }
+
+        @Override
+        public StringContext string()
+        {
+            return item.unbracketedItem().string();
+        }
+
+        @Override
+        public TaggedContext tagged()
+        {
+            return item.unbracketedItem().tagged();
+        }
+
+        @Override
+        public ArrayContext array()
+        {
+            return item.unbracketedItem().array();
+        }
+
+        @Override
+        public TupleContext tuple()
+        {
+            return item.tuple();
+        }
     }
 }

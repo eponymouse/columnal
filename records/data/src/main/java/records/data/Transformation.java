@@ -117,7 +117,7 @@ public abstract class Transformation extends Table
     }
 
     @Override
-    public void addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException
+    public void addColumn(String newColumnName, DataType newColumnType, String newColumnValue) throws InternalException
     {
         throw new InternalException("Called addColumn despite showAddColumnButton returning false for type " + getClass());
     }

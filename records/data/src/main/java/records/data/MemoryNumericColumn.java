@@ -43,9 +43,9 @@ public class MemoryNumericColumn extends EditableColumn
         }
     }
 
-    public void add(String value) throws InternalException, UserException
+    public void add(Number value) throws InternalException, UserException
     {
-        storage.addRead(value);
+        storage.add(value);
     }
 
     @Override

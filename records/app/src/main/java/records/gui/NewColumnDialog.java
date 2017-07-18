@@ -51,7 +51,7 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
     private final VBox contents;
     private final TypeSelectionPane typeSelectionPane;
     private StructuredTextField<? extends @Value Object> defaultValueEditor;
-    private @Value Object defaultValue = Integer.valueOf(0);
+    private String defaultValueAsString = "";
 
     @OnThread(Tag.FXPlatform)
     public NewColumnDialog(TableManager tableManager) throws InternalException
@@ -110,7 +110,7 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
     }
     private <@NonNull T extends @NonNull Object> StructuredTextField<T> fieldFromComponent(@UnknownInitialization(Object.class) NewColumnDialog this, Component<T> component) throws InternalException
     {
-        return new StructuredTextField<>(component, v -> {defaultValue = v;});
+        return new StructuredTextField<>(component, v -> {defaultValueAsString = v.getFirst();});
     }
 
     @RequiresNonNull({"typeSelectionPane"})
@@ -135,7 +135,7 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
         }
         else
         {
-            return Either.right(new NewColumnDetails(name.getText(), selectedType, defaultValue));
+            return Either.right(new NewColumnDetails(name.getText(), selectedType, defaultValueAsString));
         }
     }
 
@@ -143,13 +143,13 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
     {
         public final String name;
         public final DataType type;
-        public final @Value Object defaultValue;
+        public final String defaultValueUnparsed;
 
-        public NewColumnDetails(String name, DataType type, @Value Object defaultValue)
+        public NewColumnDetails(String name, DataType type, String defaultValueUnparsed)
         {
             this.name = name;
             this.type = type;
-            this.defaultValue = defaultValue;
+            this.defaultValueUnparsed = defaultValueUnparsed;
         }
     }
 

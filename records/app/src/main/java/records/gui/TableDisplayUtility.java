@@ -302,7 +302,7 @@ public class TableDisplayUtility
 
         public DisplayCacheSTF<T> makeDisplayCache()
         {
-            return new DisplayCacheSTF<T>(g, (value, store) -> new StructuredTextField<T>(makeComponent.makeComponent(ImmutableList.of(), value), store));
+            return new DisplayCacheSTF<T>(g, (value, store) -> new StructuredTextField<T>(makeComponent.makeComponent(ImmutableList.of(), value), (Pair<String, T> p) -> store.consume(p.getSecond())));
         }
     }
 

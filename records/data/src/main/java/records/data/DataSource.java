@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.qual.Value;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -16,6 +17,7 @@ import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
 import records.grammar.FormatParser.ColumnContext;
 import records.grammar.FormatParser.ColumnNameContext;
+import records.grammar.FormatParser.DefaultValueContext;
 import records.grammar.FormatParser.TypeContext;
 import records.grammar.MainLexer;
 import records.grammar.MainParser;
@@ -25,7 +27,6 @@ import records.grammar.MainParser.DataSourceImmediateContext;
 import records.grammar.MainParser.DetailContext;
 import records.grammar.MainParser.TableContext;
 import utility.ExConsumer;
-import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -57,17 +58,18 @@ public abstract class DataSource extends Table
         if (dataSource.dataSourceImmediate() != null)
         {
             DataSourceImmediateContext immed = dataSource.dataSourceImmediate();
-            List<Pair<ColumnId, DataType>> format = loadFormat(manager.getTypeManager(), immed.dataFormat());
-            List<ColumnMaker<?>> columns = new ArrayList<>();
+            List<LoadedFormat> format = loadFormat(manager.getTypeManager(), immed.dataFormat());
+            List<ColumnMaker<?, ?>> columns = new ArrayList<>();
 
             //TODO check for data row even length, error if not (allow & ignore blank lines)
             for (int i = 0; i < format.size(); i++)
             {
-                DataType t = format.get(i).getSecond();
-                ColumnId columnId = format.get(i).getFirst();
-                columns.add(t.makeImmediateColumn(columnId));
+                DataType t = format.get(i).dataType;
+                ColumnId columnId = format.get(i).columnId;
+                String defaultValueUnparsed = format.get(i).defaultValueUnparsed;
+                columns.add(t.makeImmediateColumn(columnId, defaultValueUnparsed));
             }
-            LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed, format);
+            LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
             return new ImmediateDataSource(manager, new TableId(immed.tableId().getText()), recordSet);
         }
         else
@@ -101,9 +103,23 @@ public abstract class DataSource extends Table
         return count;
     }
 
-    private static List<Pair<ColumnId, DataType>> loadFormat(TypeManager typeManager, DataFormatContext dataFormatContext) throws UserException, InternalException
+    public static class LoadedFormat
     {
-        List<Pair<ColumnId, DataType>> r = new ArrayList<>();
+        public final ColumnId columnId;
+        public final DataType dataType;
+        public final String defaultValueUnparsed;
+
+        public LoadedFormat(ColumnId columnId, DataType dataType, String defaultValueUnparsed)
+        {
+            this.columnId = columnId;
+            this.dataType = dataType;
+            this.defaultValueUnparsed = defaultValueUnparsed;
+        }
+    }
+
+    private static List<LoadedFormat> loadFormat(TypeManager typeManager, DataFormatContext dataFormatContext) throws UserException, InternalException
+    {
+        List<LoadedFormat> r = new ArrayList<>();
         for (TerminalNode line : dataFormatContext.detail().DETAIL_LINE())
         {
             Utility.parseAsOne(line.getText(), FormatLexer::new, FormatParser::new, p -> {
@@ -112,13 +128,17 @@ public abstract class DataSource extends Table
                 if (column == null || (colName = column.columnName()) == null)
                     throw new UserException("Problem on line " + line.getText());
                 ColumnId name = new ColumnId(colName.getText());
-                if (r.stream().anyMatch(pr -> pr.getFirst().equals(name)))
+                if (r.stream().anyMatch(pr -> pr.columnId.equals(name)))
                     throw new UserException("Duplicate column name: \"" + name + "\"");
 
                 TypeContext type = column.type();
                 if (type == null)
                     throw new UserException("Null type on line \"" + line.getText() + "\" name: " + name + " type: " + type.getText());
-                r.add(new Pair<>(name, typeManager.loadTypeUse(type)));
+                DefaultValueContext defaultCtx = column.defaultValue();
+                if (defaultCtx == null)
+                    throw new UserException("Default value missing for potentially-editable table " + name);
+                DataType dataType = typeManager.loadTypeUse(type);
+                r.add(new LoadedFormat(name, dataType, defaultCtx.STRING().getText()));
                 return 0;
             });
         }
@@ -149,11 +169,11 @@ public abstract class DataSource extends Table
 
     private static class LoadedRecordSet extends EditableRecordSet
     {
-        public LoadedRecordSet(List<ColumnMaker<?>> columns, DataSourceImmediateContext immed, List<Pair<ColumnId, DataType>> format) throws InternalException, UserException
+        public LoadedRecordSet(List<ColumnMaker<?, ?>> columns, DataSourceImmediateContext immed) throws InternalException, UserException
         {
             super(Utility.mapList(columns, c -> c::apply), () -> loadData(immed.detail(), row ->
             {
-                for (int i = 0; i < format.size(); i++)
+                for (int i = 0; i < columns.size(); i++)
                 {
                     columns.get(i).loadRow(row.get(i));
                 }

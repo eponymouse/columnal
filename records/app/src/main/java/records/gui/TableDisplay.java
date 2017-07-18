@@ -222,7 +222,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                     {
                         Utility.alertOnError_(() ->
                         {
-                            table.addColumn(choice.get().name, choice.get().type, choice.get().defaultValue);
+                            table.addColumn(choice.get().name, choice.get().type, choice.get().defaultValueUnparsed);
                         });
                     });
                 }

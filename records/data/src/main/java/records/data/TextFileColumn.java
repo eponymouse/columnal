@@ -98,7 +98,7 @@ public final class TextFileColumn extends Column
     {
         return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns, listener,
             (BeforeGet<TemporalColumnStorage> fill) -> new TemporalColumnStorage(dateTimeInfo, fill),
-            (storage, values) -> storage.addAll(Utility.<String, TemporalAccessor>mapList(values, s -> dateTimeFormatter.parse(s, query)))
+            (storage, values) -> storage.addAll(Utility.<String, TemporalAccessor>mapListInt(values, s -> dateTimeInfo.fromParsed(dateTimeFormatter.parse(s, query))))
         );
 
     }

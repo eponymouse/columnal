@@ -14,8 +14,10 @@ tagRef : TAGGED STRING;
 constructor : UNQUOTED_CONSTRUCTOR | QUOTED_CONSTRUCTOR;
 tagItem : constructor (CONS type)?;
 
+defaultValue: DEFAULT STRING;
+
 columnName : STRING;
-column : COLUMN columnName type NEWLINE;
+column : COLUMN columnName type defaultValue? NEWLINE;
 
 typeName : STRING;
 typeDecl : TYPE typeName taggedDecl NEWLINE;

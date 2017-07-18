@@ -233,7 +233,7 @@ public abstract class Table
     /**
      * Add the given new column to the table.
      */
-    public abstract void addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException, UserException;
+    public abstract void addColumn(String newColumnName, DataType newColumnType, String defaultValueUnparsed) throws InternalException, UserException;
 
     @OnThread(Tag.Any)
     public abstract TableOperations getOperations();
