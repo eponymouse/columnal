@@ -140,7 +140,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     @Property(trials = 10)
     @OnThread(Tag.Any)
-    public void propAddColumnToEntryTable(@From(GenDataType.class) DataType dataType) throws UserException, InternalException
+    public void propAddColumnToEntryTable(@When(seed=3970411419876073267L) @From(GenDataType.class) DataType dataType) throws UserException, InternalException
     {
         addNewTableWithColumn(dataType, null);
     }
@@ -354,7 +354,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     @Property(trials = 10)
     @OnThread(Tag.Any)
-    public void propDefaultValue(@From(GenTypeAndValueGen.class) @When(seed=-746430439083107785L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    public void propDefaultValue(@When(seed=-6086863633637372203L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         @Value Object initialVal = typeAndValueGen.makeValue();
         addNewTableWithColumn(typeAndValueGen.getType(), initialVal);

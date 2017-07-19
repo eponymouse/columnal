@@ -155,6 +155,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
             throw new InternalException("Starting field off with invalid completed value: \"" + makeDoc(initialItems).getText() + "\" with items " + Utility.listToString(Utility.<Item, String>mapList(initialItems, item -> item.getScreenText())) + " err: " + endInitial.either(errs -> errs.stream().map(err -> err.label).collect(Collectors.joining()), v -> "VALUE!"));
         }
         completedValue = val;
+        store.consume(new Pair<>(getText(), completedValue));
         lastValidValue = captureState();
     }
 

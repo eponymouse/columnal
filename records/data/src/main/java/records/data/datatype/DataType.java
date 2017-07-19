@@ -1212,7 +1212,7 @@ public class DataType
             if (i < tuple.length - 1)
             {
                 if (tryParse(() -> p.comma()) == null)
-                    throw new UserException("Expected comma but found: " + p.getCurrentToken());
+                    throw new ParseException("comma", p);
             }
         }
         if (tryParse(() -> p.closeRound()) == null)
@@ -1232,7 +1232,7 @@ public class DataType
     {
         StringContext string = tryParse(() -> p.string());
         if (string == null)
-            throw new UserException("Expected string value but found: \"" + p.getCurrentToken() + "\"");
+            throw new ParseException("string", p);
         return string.getText();
     }
 
@@ -1260,8 +1260,11 @@ public class DataType
                 if (innerType != null)
                 {
                     if (tryParse(() -> p.openRound()) == null)
-                        throw new UserException("Expected inner type but found no bracket-enclosed inner value: \"" + p.getCurrentToken() + "\"");
-                    return new TaggedValue(i, loadSingleItem(innerType, p, true));
+                        throw new ParseException("Bracketed inner value", p);
+                    @Value Object innerValue = loadSingleItem(innerType, p, true);
+                    if (tryParse(() -> p.closeRound()) == null)
+                        throw new ParseException("Closing tagged value bracket", p);
+                    return new TaggedValue(i, innerValue);
                 }
 
                 return new TaggedValue(i, null);

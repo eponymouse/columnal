@@ -75,6 +75,6 @@ public class GrammarUtility
     public static String escapeChars(String s)
     {
         // Order matters; must replace ^ first:
-        return s.replace("^", "^^").replace("\"", "^\"").replace("\n", "^n");
+        return s.replace("^", "^c").replace("\"", "^q").replace("\n", "^n");
     }
 }
