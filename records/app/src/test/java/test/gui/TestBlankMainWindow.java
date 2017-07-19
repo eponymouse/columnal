@@ -140,7 +140,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     @Property(trials = 10)
     @OnThread(Tag.Any)
-    public void propAddColumnToEntryTable(@When(seed=3970411419876073267L) @From(GenDataType.class) DataType dataType) throws UserException, InternalException
+    public void propAddColumnToEntryTable(@From(GenDataType.class) DataType dataType) throws UserException, InternalException
     {
         addNewTableWithColumn(dataType, null);
     }
@@ -196,7 +196,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             public Void number(NumberInfo numberInfo) throws InternalException, UserException
             {
                 clickOnSubOfDataTypeDialog(".id-type-number");
-                ((TextField) lookupSubOfDataTypeDialog(".type-number-units")).setText(numberInfo.getUnit().toString());
+                TestUtil.fx_(() -> ((TextField) lookupSubOfDataTypeDialog(".type-number-units")).setText(numberInfo.getUnit().toString()));
                 return null;
             }
 
@@ -354,7 +354,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     @Property(trials = 10)
     @OnThread(Tag.Any)
-    public void propDefaultValue(@When(seed=-6086863633637372203L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    public void propDefaultValue(@When(seed=-7180826449384449915L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         @Value Object initialVal = typeAndValueGen.makeValue();
         addNewTableWithColumn(typeAndValueGen.getType(), initialVal);

@@ -25,8 +25,11 @@ public class PlusMinusOffsetComponent extends TerminalComponent<ZoneOffset>
         super(parents);
         String initialMinutes;
         String initialHours;
+        String plusMinus;
         if (seconds != null)
         {
+            plusMinus = seconds < 0 ? "-" : "+";
+            seconds = Math.abs(seconds);
             int hours = seconds / 3600;
             initialHours = Integer.toString(hours);
             initialMinutes = Integer.toString((seconds - (hours * 3600)) / 60);
@@ -35,9 +38,10 @@ public class PlusMinusOffsetComponent extends TerminalComponent<ZoneOffset>
         {
             initialHours = "";
             initialMinutes = "";
+            plusMinus = "";
         }
         items.addAll(Arrays.asList(
-            new Item(getItemParents(), "", ItemVariant.TIMEZONE_PLUS_MINUS, "\u00B1"),
+            new Item(getItemParents(), plusMinus, ItemVariant.TIMEZONE_PLUS_MINUS, "\u00B1"),
             new Item(getItemParents(), initialHours, ItemVariant.EDITABLE_OFFSET_HOUR, "Zone Hours"),
             new Item(getItemParents(), ":"),
             new Item(getItemParents(), initialMinutes, ItemVariant.EDITABLE_OFFSET_MINUTE, "Zone Minutes")));
@@ -53,6 +57,8 @@ public class PlusMinusOffsetComponent extends TerminalComponent<ZoneOffset>
 
         if (hour >= -18 && hour <= 18 && minute >= -59 && minute <= 59)
         {
+            items.set(1, items.get(1).replaceContent(String.format("%02d", hour)));
+            items.set(3, items.get(3).replaceContent(String.format("%02d", minute)));
             return Either.right(ZoneOffset.ofHoursMinutes(hour, minute));
         }
         return Either.left(Collections.emptyList() /*TODO*/);

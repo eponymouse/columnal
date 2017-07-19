@@ -1118,7 +1118,7 @@ public class DataType
                     }
                     catch (DateTimeParseException e)
                     {
-                        throw new UserException("Problem reading date/time of type " + dateTimeInfo.getType(), e);
+                        throw new UserException("Problem reading date/time of type " + dateTimeInfo.getType() + " from {" + c.getText() + "}", e);
                     }
                 });
             }
@@ -1509,6 +1509,7 @@ public class DataType
                     .appendValue(SECOND_OF_MINUTE, 2)
                     .optionalStart()
                     .appendFraction(NANO_OF_SECOND, 0, 9, true)
+                    .optionalEnd()
                     .optionalEnd();
             if (type.hasZoneOffset())
                 builder.appendOffsetId();
