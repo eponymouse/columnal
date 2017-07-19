@@ -4,11 +4,10 @@ import StringLexerShared;
 
 WS : ( ' ' | '\t' )+ ;
 
-CONS: ':';
-CONSTRUCTOR : '\\';
 COMMA: ',';
 
-NUMBER : [+-]? [0-9]+ ('.' [0-9]+)?;
+POSITIVE_INTEGER : [0-9]+;
+DOT: '.';
 
 NEWLINE : '\r'? '\n' ;
 
@@ -18,6 +17,10 @@ OPEN_ROUND : '(';
 CLOSE_ROUND : ')';
 OPEN_SQUARE : '[';
 CLOSE_SQUARE : ']';
+SLASH : '/';
+PLUS : '+';
+MINUS : '-';
+COLON: ':';
 
 UNQUOTED_IDENT : ~[ \t\n\r"()@+-/*&|=?:;~$!<>\\,[\]]+ {GrammarUtility.validUnquoted(getText())}?;
 

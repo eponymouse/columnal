@@ -154,6 +154,11 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         write(newColName);
         clickForDataTypeDialog(rootNode(window(Window::isFocused)), dataType, value);
         WaitForAsyncUtils.waitForFxEvents();
+        try
+        {
+            Thread.sleep(2000);
+        }
+        catch (InterruptedException e) { }
         assertEquals(1, (int) TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().size()));
         assertEquals(newColName, TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getName().getRaw()));
         assertEquals(dataType, TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getData().getColumns().get(0).getType()));

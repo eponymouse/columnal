@@ -3,28 +3,44 @@ package records.data.datatype;
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import records.data.*;
+import records.data.ArrayColumnStorage;
+import records.data.BooleanColumnStorage;
+import records.data.CachedCalculatedColumn;
+import records.data.Column;
+import records.data.ColumnId;
 import records.data.ColumnStorage.BeforeGet;
+import records.data.EditableColumn;
+import records.data.MemoryArrayColumn;
+import records.data.MemoryBooleanColumn;
+import records.data.MemoryNumericColumn;
+import records.data.MemoryStringColumn;
+import records.data.MemoryTaggedColumn;
+import records.data.MemoryTemporalColumn;
+import records.data.MemoryTupleColumn;
+import records.data.NumericColumnStorage;
+import records.data.RecordSet;
+import records.data.StringColumnStorage;
+import records.data.TaggedColumnStorage;
+import records.data.TemporalColumnStorage;
+import records.data.TupleColumnStorage;
 import records.data.datatype.DataTypeValue.GetValue;
-import records.error.FunctionInt;
 import records.error.InternalException;
+import records.error.ParseException;
 import records.error.UserException;
 import records.grammar.DataLexer;
 import records.grammar.DataParser;
-import records.grammar.DataParser.ArrayContext;
 import records.grammar.DataParser.BoolContext;
-import records.grammar.DataParser.BracketedItemContext;
-import records.grammar.DataParser.ItemContext;
+import records.grammar.DataParser.DateOrTimeContext;
 import records.grammar.DataParser.NumberContext;
 import records.grammar.DataParser.StringContext;
-import records.grammar.DataParser.TaggedContext;
-import records.grammar.DataParser.TupleContext;
+import records.grammar.DataParser.TagContext;
 import records.grammar.FormatLexer;
-import records.grammar.MainParser;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -37,6 +53,7 @@ import utility.TaggedValue;
 import utility.UnitType;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Utility.ListExList;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -60,6 +77,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoField.DAY_OF_MONTH;
@@ -975,17 +993,17 @@ public class DataType
     public static class ColumnMaker<C extends EditableColumn, V> implements SimulationFunction<RecordSet, EditableColumn>
     {
         private final ExBiConsumer<C, V> addToColumn;
-        private final ExFunction<ItemContext, V> parseValue;
+        private final ExFunction<DataParser, V> parseValue;
         private final BiFunctionInt<RecordSet, V, C> makeColumn;
         private final V defaultValue;
         private @Nullable C column;
 
-        private ColumnMaker(String defaultValueUnparsed, BiFunctionInt<RecordSet, V, C> makeColumn, ExBiConsumer<C, V> addToColumn, ExFunction<ItemContext, V> parseValue) throws UserException, InternalException
+        private ColumnMaker(String defaultValueUnparsed, BiFunctionInt<RecordSet, V, C> makeColumn, ExBiConsumer<C, V> addToColumn, ExFunction<DataParser, V> parseValue) throws UserException, InternalException
         {
             this.makeColumn = makeColumn;
             this.addToColumn = addToColumn;
             this.parseValue = parseValue;
-            this.defaultValue = parseValue.apply(Utility.parseAsOne(defaultValueUnparsed, DataLexer::new, DataParser::new, DataParser::item));
+            this.defaultValue = parseValue.apply(Utility.parseAsOne(defaultValueUnparsed, DataLexer::new, DataParser::new, p -> p));
         }
 
         public final EditableColumn apply(RecordSet rs) throws InternalException
@@ -994,11 +1012,11 @@ public class DataType
         }
 
         // Only valid to call after apply:
-        public void loadRow(ItemContext ctx) throws InternalException, UserException
+        public void loadRow(DataParser p) throws InternalException, UserException
         {
             if (column == null)
                 throw new InternalException("Calling loadRow before column creation");
-            addToColumn.accept(column, parseValue.apply(ctx));
+            addToColumn.accept(column, parseValue.apply(p));
         }
     }
 
@@ -1070,11 +1088,8 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?, ?> number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryNumericColumn, Number>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryNumericColumn(rs, columnId, displayInfo, Collections.emptyList(), defaultValue), (c, n) -> c.add(n), data -> {
-                    DataParser.NumberContext number = data.number();
-                    if (number == null)
-                        throw new UserException("Expected number value but found: \"" + data.getText() + "\"");
-                    return Utility.parseNumber(number.getText());
+                return new ColumnMaker<MemoryNumericColumn, Number>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryNumericColumn(rs, columnId, displayInfo, Collections.emptyList(), defaultValue), (c, n) -> c.add(n), p -> {
+                    return loadNumber(p);
                 });
             }
 
@@ -1082,11 +1097,8 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?, ?> text() throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryStringColumn, String>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryStringColumn(rs, columnId, Collections.emptyList(), defaultValue), (c, s) -> c.add(s), data -> {
-                    StringContext string = data.string();
-                    if (string == null)
-                        throw new UserException("Expected string value but found: \"" + data.getText() + "\"");
-                    return string.getText();
+                return new ColumnMaker<MemoryStringColumn, String>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryStringColumn(rs, columnId, Collections.emptyList(), defaultValue), (c, s) -> c.add(s), p -> {
+                    return loadString(p);
                 });
             }
 
@@ -1094,11 +1106,11 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?, ?> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTemporalColumn, TemporalAccessor>(quoteIfNotQuoted(defaultValueUnparsed), (rs, defaultValue) -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), data ->
+                return new ColumnMaker<MemoryTemporalColumn, TemporalAccessor>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), p ->
                 {
-                    StringContext c = data.string();
+                    DateOrTimeContext c = tryParse(() -> p.dateOrTime());
                     if (c == null)
-                        throw new UserException("Expected quoted date value but found: \"" + data.getText() + "\"");
+                        throw new ParseException("Date value", p);
                     DateTimeFormatter formatter = dateTimeInfo.getFormatter();
                     try
                     {
@@ -1111,20 +1123,12 @@ public class DataType
                 });
             }
 
-            private String quoteIfNotQuoted(String s)
-            {
-                return s.startsWith("\"") ? s : ("\"" + s + "\"");
-            }
-
             @Override
             @OnThread(Tag.Simulation)
             public ColumnMaker<?, ?> bool() throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryBooleanColumn, Boolean>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryBooleanColumn(rs, columnId, Collections.emptyList(), defaultValue), (c, b) -> c.add(b), data -> {
-                    BoolContext b = data.bool();
-                    if (b == null)
-                        throw new UserException("Expected boolean value but found: \"" + data.getText() + "\"");
-                    return b.getText().toLowerCase().equals("true");
+                return new ColumnMaker<MemoryBooleanColumn, Boolean>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryBooleanColumn(rs, columnId, Collections.emptyList(), defaultValue), (c, b) -> c.add(b), p -> {
+                    return loadBool(p);
                 });
             }
 
@@ -1132,11 +1136,8 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?, ?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTaggedColumn, TaggedValue>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), data -> {
-                    TaggedContext b = data.tagged();
-                    if (b == null)
-                        throw new UserException("Expected tagged value but found: \"" + data.getText() + "\"");
-                    return loadValue(tags, b);
+                return new ColumnMaker<MemoryTaggedColumn, TaggedValue>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), p -> {
+                    return loadTaggedValue(tags, p);
                 });
             }
 
@@ -1144,18 +1145,8 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?, ?> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTupleColumn, Object[]>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryTupleColumn(rs, columnId, inner, defaultValue), (c, t) -> c.add(t), data -> {
-                    TupleContext c = data.tuple();
-                    if (c == null)
-                        throw new UserException("Expected tuple but found: \"" + data.getText() + "\"");
-                    if (c.item().size() != inner.size())
-                        throw new UserException("Wrong number of tuples items; expected " + inner.size() + " but found " + c.item().size());
-                    Object[] tuple = new Object[inner.size()];
-                    for (int i = 0; i < tuple.length; i++)
-                    {
-                        tuple[i] = loadSingleItem(inner.get(i), c.item(i));
-                    }
-                    return tuple;
+                return new ColumnMaker<MemoryTupleColumn, Object[]>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryTupleColumn(rs, columnId, inner, defaultValue), (c, t) -> c.add(t), p -> {
+                    return loadTuple(inner, p, false);
                 });
             }
 
@@ -1167,130 +1158,185 @@ public class DataType
                     throw new UserException("Cannot have column with type of empty array");
 
                 DataType innerFinal = inner;
-                return new ColumnMaker<MemoryArrayColumn, ListEx>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryArrayColumn(rs, columnId, innerFinal, Collections.emptyList(), defaultValue), (c, v) -> c.add(v), data -> {
-                    ArrayContext c = data.array();
-                    if (c == null)
-                        throw new UserException("Expected array but found: \"" + data.getText() + "\"");
-                    List<@Value Object> array = new ArrayList<>();
-                    for (ItemContext itemContext : c.item())
-                    {
-                        array.add(loadSingleItem(innerFinal, itemContext));
-                    }
-                    //ColumnStorage storage = DataTypeUtility.makeColumnStorage(inner, null);
-                    //storage.addAll(array);
-                    return new ListEx()
-                    {
-                        @Override
-                        public int size() throws InternalException, UserException
-                        {
-                            return array.size();
-                        }
-
-                        @Override
-                        public @Value Object get(int index) throws InternalException, UserException
-                        {
-                            return array.get(index);
-                        }
-                    };
+                return new ColumnMaker<MemoryArrayColumn, ListEx>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryArrayColumn(rs, columnId, innerFinal, Collections.emptyList(), defaultValue), (c, v) -> c.add(v), p -> {
+                    return loadArray(innerFinal, p);
                 });
             }
         });
     }
 
-    private static TaggedValue loadValue(List<TagType<DataType>> tags, TaggedContext taggedContext) throws UserException, InternalException
+    // Tries a parse and if it fails, returns null.  Should only be used for single-token parses,
+    // or those where you stop trying after failure, because I'm not sure what happens if you're partway
+    // through a partial parse and it cancels.
+    private static <T> @Nullable T tryParse(Supplier<T> parseAction)
     {
-        String constructor = taggedContext.tag().getText();
+        try
+        {
+            return parseAction.get();
+        }
+        catch (ParseCancellationException e)
+        {
+            return null;
+        }
+    }
+
+    private static ListEx loadArray(DataType innerFinal, DataParser p) throws UserException, InternalException
+    {
+        if (tryParse(() -> p.openSquare()) == null)
+            throw new UserException("Expected array but found: \"" + p.getCurrentToken() + "\"");
+        List<@Value Object> array = new ArrayList<>();
+        boolean seenComma = true;
+        while (tryParse(() -> p.closeSquare()) == null)
+        {
+            if (!seenComma)
+            {
+                throw new UserException("Expected comma but found " + p.getCurrentToken());
+            }
+            array.add(loadSingleItem(innerFinal, p, false));
+            seenComma = tryParse(() -> p.comma()) != null;
+        }
+        return new ListExList(array);
+    }
+
+    private static Object[] loadTuple(ImmutableList<DataType> inner, DataParser p, boolean consumedInitialOpen) throws UserException, InternalException
+    {
+        if (!consumedInitialOpen)
+        {
+            if (tryParse(() -> p.openRound()) == null)
+                throw new UserException("Expected tuple but found: \"" + p.getCurrentToken() + "\"");
+        }
+        Object[] tuple = new Object[inner.size()];
+        for (int i = 0; i < tuple.length; i++)
+        {
+            tuple[i] = loadSingleItem(inner.get(i), p, false);
+            if (i < tuple.length - 1)
+            {
+                if (tryParse(() -> p.comma()) == null)
+                    throw new UserException("Expected comma but found: " + p.getCurrentToken());
+            }
+        }
+        if (tryParse(() -> p.closeRound()) == null)
+            throw new UserException("Expected tuple end but found: " + p.getCurrentToken());
+        return tuple;
+    }
+
+    private static Boolean loadBool(DataParser p) throws UserException
+    {
+        BoolContext b = tryParse(() -> p.bool());
+        if (b == null)
+            throw new UserException("Expected boolean value but found: \"" + p.getCurrentToken() + "\"");
+        return b.getText().toLowerCase().equals("true");
+    }
+
+    private static String loadString(DataParser p) throws UserException
+    {
+        StringContext string = tryParse(() -> p.string());
+        if (string == null)
+            throw new UserException("Expected string value but found: \"" + p.getCurrentToken() + "\"");
+        return string.getText();
+    }
+
+    private static Number loadNumber(DataParser p) throws UserException
+    {
+        NumberContext number = tryParse(() -> p.number());
+        if (number == null)
+            throw new UserException("Expected number value but found: \"" + p.getCurrentToken() + "\"");
+        return Utility.parseNumber(number.getText());
+    }
+
+    private static TaggedValue loadTaggedValue(List<TagType<DataType>> tags, DataParser p) throws UserException, InternalException
+    {
+        TagContext b = tryParse(() -> p.tag());
+        if (b == null)
+            throw new UserException("Expected tagged value but found: \"" + p.getCurrentToken() + "\"");
+
+        String constructor = b.UNQUOTED_IDENT().getText();
         for (int i = 0; i < tags.size(); i++)
         {
             TagType<DataType> tag = tags.get(i);
             if (tag.getName().equals(constructor))
             {
-                BracketedItemContext item = taggedContext.bracketedItem();
-                if (tag.getInner() != null)
+                @Nullable DataType innerType = tag.getInner();
+                if (innerType != null)
                 {
-                    if (item == null)
-                        throw new UserException("Expected inner type but found no inner value: \"" + taggedContext.getText() + "\"");
-                    return new TaggedValue(i, loadSingleItem(tag.getInner(), new FakeItemContext(item)));
+                    if (tryParse(() -> p.openRound()) == null)
+                        throw new UserException("Expected inner type but found no bracket-enclosed inner value: \"" + p.getCurrentToken() + "\"");
+                    return new TaggedValue(i, loadSingleItem(innerType, p, true));
                 }
-                else if (item != null)
-                    throw new UserException("Expected no inner type but found inner value: \"" + taggedContext.getText() + "\"");
 
                 return new TaggedValue(i, null);
             }
         }
-        throw new UserException("Could not find matching tag for: \"" + taggedContext.tag().getText() + "\" in: " + tags.stream().map(t -> t.getName()).collect(Collectors.joining(", ")));
-
+        throw new UserException("Could not find matching tag for: \"" + constructor + "\" in: " + tags.stream().map(t -> t.getName()).collect(Collectors.joining(", ")));
     }
 
     @OnThread(Tag.Any)
-    public static @Value Object loadSingleItem(DataType type, final ItemContext item) throws InternalException, UserException
+    public static @Value Object loadSingleItem(DataType type, final DataParser p, boolean consumedInitialOpen) throws InternalException, UserException
     {
         return type.apply(new DataTypeVisitor<@Value Object>()
         {
             @Override
             public @Value Object number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                DataParser.NumberContext number = item.number();
-                if (number == null)
-                    throw new UserException("Expected number, found: " + item.getText() + item.getStart());
-                return DataTypeUtility.value(Utility.parseNumber(number.getText()));
+                return loadNumber(p);
             }
 
             @Override
             public @Value Object text() throws InternalException, UserException
             {
-                StringContext string = item.string();
-                if (string == null)
-                    throw new UserException("Expected string, found: " + item.getText() + item.getStart());
-                return DataTypeUtility.value(string.getText());
+                return loadString(p);
             }
 
             @Override
             public @Value Object date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                StringContext string = item.string();
-                if (string == null)
-                    throw new UserException("Expected quoted date, found: " + item.getText() + item.getStart());
+                ParserRuleContext ctx = DataType.<@Nullable ParserRuleContext>tryParse(() -> {
+                    switch (dateTimeInfo.getType())
+                    {
+                        case YEARMONTHDAY:
+                            return p.ymd();
+                        case YEARMONTH:
+                            return p.ym();
+                        case TIMEOFDAY:
+                            return p.localTime();
+                        case TIMEOFDAYZONED:
+                            return p.offsetTime();
+                        case DATETIME:
+                            return p.localDateTime();
+                        case DATETIMEZONED:
+                            return p.zonedDateTime();
+                    }
+                    return null;
+                });
+                if (ctx == null)
+                    throw new ParseException(dateTimeInfo.getType().toString(), p);
                 DateTimeFormatter formatter = dateTimeInfo.getFormatter();
                 try
                 {
-                    return DataTypeUtility.value(dateTimeInfo, formatter.parse(string.getText()));
+                    return DataTypeUtility.value(dateTimeInfo, formatter.parse(ctx.getText()));
                 }
                 catch (DateTimeParseException e)
                 {
-                    throw new UserException("Error loading date time \"" + string.getText() + "\", type " + dateTimeInfo.getType(), e);
+                    throw new UserException("Error loading date time \"" + ctx.getText() + "\", type " + dateTimeInfo.getType(), e);
                 }
             }
 
             @Override
             public @Value Object bool() throws InternalException, UserException
             {
-                BoolContext bool = item.bool();
-                if (bool == null)
-                    throw new UserException("Expected bool, found: " + item.getText() + item.getStart());
-                return DataTypeUtility.value(bool.getText().equals("true"));
+                return loadBool(p);
             }
 
             @Override
             public @Value Object tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return loadValue(tags, item.tagged());
+                return loadTaggedValue(tags, p);
             }
 
             @Override
             public @Value Object tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                TupleContext tupleContext = item.tuple();
-                if (tupleContext == null)
-                    throw new UserException("Expected tuple, found: " + item.getText() + item.getStart());
-                if (tupleContext.item().size() != inner.size())
-                    throw new UserException("Expected " + inner.size() + " data values as per type, but found: " + tupleContext.item().size());
-                @Value Object[] data = new Object[inner.size()];
-                for (int i = 0; i < inner.size(); i++)
-                {
-                    data[i] = loadSingleItem(inner.get(i), tupleContext.item(i));
-                }
-                return DataTypeUtility.value(data);
+                return loadTuple(inner, p, false);
             }
 
             @Override
@@ -1298,11 +1344,8 @@ public class DataType
             {
                 if (inner == null)
                     throw new UserException("Cannot load column with value of type empty array");
-                else
-                {
-                    @NonNull DataType innerFinal = inner;
-                    return DataTypeUtility.value(Utility.<ItemContext, @Value Object>mapListEx(item.array().item(), entry -> loadSingleItem(innerFinal, entry)));
-                }
+
+                return loadArray(inner, p);
             }
         });
     }
@@ -1677,53 +1720,5 @@ public class DataType
         R array(T a, T b, @Nullable DataType innerA, @Nullable DataType innerB) throws InternalException, UserException;
 
         R differentKind(T a, T b) throws InternalException, UserException;
-    }
-
-    private static class FakeItemContext extends ItemContext
-    {
-        private final BracketedItemContext item;
-
-        @SuppressWarnings("nullness")
-        public FakeItemContext(BracketedItemContext bracketedItemContext)
-        {
-            super(null, -1);
-            this.item = bracketedItemContext;
-        }
-
-        @Override
-        public NumberContext number()
-        {
-            return item.unbracketedItem().number();
-        }
-
-        @Override
-        public BoolContext bool()
-        {
-            return item.unbracketedItem().bool();
-        }
-
-        @Override
-        public StringContext string()
-        {
-            return item.unbracketedItem().string();
-        }
-
-        @Override
-        public TaggedContext tagged()
-        {
-            return item.unbracketedItem().tagged();
-        }
-
-        @Override
-        public ArrayContext array()
-        {
-            return item.unbracketedItem().array();
-        }
-
-        @Override
-        public TupleContext tuple()
-        {
-            return item.tuple();
-        }
     }
 }

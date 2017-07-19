@@ -24,7 +24,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.DataLexer;
 import records.grammar.DataParser;
-import records.grammar.DataParser.ItemContext;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
 import records.grammar.FormatParser.TypeContext;
@@ -370,8 +369,8 @@ public class Concatenate extends TransformationEditable
                 Pair<DataType, Optional<@Value Object>> instruction = new Pair<>(dataType, Optional.<@Value Object>empty());
                 if (missing.value() != null)
                 {
-                    ItemContext value = Utility.parseAsOne(missing.value().VALUE().getText().trim(), DataLexer::new, DataParser::new, p -> p.item());
-                    instruction = new Pair<>(dataType, Optional.<@Value Object>of(DataType.loadSingleItem(dataType, value)));
+                    DataParser p = Utility.parseAsOne(missing.value().VALUE().getText().trim(), DataLexer::new, DataParser::new, parser -> parser);
+                    instruction = new Pair<>(dataType, Optional.<@Value Object>of(DataType.loadSingleItem(dataType, p, false)));
                 }
                 missingInstr.put(new ColumnId(columnName), instruction);
             }

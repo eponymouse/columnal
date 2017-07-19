@@ -45,6 +45,7 @@ import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Modality;
 import org.antlr.v4.runtime.ANTLRInputStream;
+import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.BaseErrorListener;
 import org.antlr.v4.runtime.CharStream;
 import org.antlr.v4.runtime.CommonTokenStream;
@@ -401,6 +402,7 @@ public class Utility
         lexer.addErrorListener(del);
         CommonTokenStream tokens = new CommonTokenStream(lexer);
         PARSER parser = makeParser.apply(tokens);
+        parser.setErrorHandler(new BailErrorStrategy());
         parser.removeErrorListeners();
         parser.addErrorListener(del);
         R r = withParser.apply(parser);

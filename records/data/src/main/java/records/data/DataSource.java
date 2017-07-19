@@ -11,8 +11,6 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import records.grammar.DataLexer;
 import records.grammar.DataParser;
-import records.grammar.DataParser.ItemContext;
-import records.grammar.DataParser.RowContext;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
 import records.grammar.FormatParser.ColumnContext;
@@ -76,7 +74,7 @@ public abstract class DataSource extends Table
             throw new UnimplementedException();
     }
 
-    private static int loadData(DetailContext detail, ExConsumer<List<ItemContext>> withEachRow) throws UserException, InternalException
+    private static int loadData(DetailContext detail, ExConsumer<DataParser> withEachRow) throws UserException, InternalException
     {
         int count = 0;
         for (TerminalNode line : detail.DETAIL_LINE())
@@ -87,11 +85,12 @@ public abstract class DataSource extends Table
             {
                 Utility.parseAsOne(lineText, DataLexer::new, DataParser::new, p ->
                 {
-                    RowContext row = p.row();
-                    if (row != null)
+                    p.startRow();
+                    if (!p.isMatchedEOF())
                     {
-                        withEachRow.accept(row.item());
+                        withEachRow.accept(p);
                     }
+                    p.endRow();
                     return 0;
                 });
             }
@@ -171,11 +170,11 @@ public abstract class DataSource extends Table
     {
         public LoadedRecordSet(List<ColumnMaker<?, ?>> columns, DataSourceImmediateContext immed) throws InternalException, UserException
         {
-            super(Utility.mapList(columns, c -> c::apply), () -> loadData(immed.detail(), row ->
+            super(Utility.mapList(columns, c -> c::apply), () -> loadData(immed.detail(), p ->
             {
                 for (int i = 0; i < columns.size(); i++)
                 {
-                    columns.get(i).loadRow(row.get(i));
+                    columns.get(i).loadRow(p);
                 }
             }));
         }
