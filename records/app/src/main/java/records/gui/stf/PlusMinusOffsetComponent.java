@@ -57,8 +57,8 @@ public class PlusMinusOffsetComponent extends TerminalComponent<ZoneOffset>
 
         if (hour >= -18 && hour <= 18 && minute >= -59 && minute <= 59)
         {
-            items.set(1, items.get(1).replaceContent(String.format("%02d", hour)));
-            items.set(3, items.get(3).replaceContent(String.format("%02d", minute)));
+            items.set(1, items.get(1).replaceContent(String.format("%02d", Math.abs(hour))));
+            items.set(3, items.get(3).replaceContent(String.format("%02d", Math.abs(minute))));
             return Either.right(ZoneOffset.ofHoursMinutes(hour, minute));
         }
         return Either.left(Collections.emptyList() /*TODO*/);

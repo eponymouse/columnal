@@ -553,7 +553,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             if (field.equals(ChronoField.NANO_OF_SECOND))
                 return r.nextInt(0, 999999999);
             if (field.equals(ChronoField.OFFSET_SECONDS))
-                return r.nextInt(-12*60*60, 12*60*60);
+                return r.nextInt(-12*60, 12*60) * 60;
 
             throw new RuntimeException("Unknown temporal field: " + field + " on type " + target);
         };
