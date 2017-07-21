@@ -354,7 +354,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
 
     @Property(trials = 10)
     @OnThread(Tag.Any)
-    public void propDefaultValue(@When(seed=-7180826449384449915L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
+    public void propDefaultValue(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {
         @Value Object initialVal = typeAndValueGen.makeValue();
         addNewTableWithColumn(typeAndValueGen.getType(), initialVal);
@@ -375,7 +375,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         }
     }
 
-    @Property
+    @Property(trials = 10)
     @OnThread(Tag.Any)
     public void testEnterColumn(@From(GenTypeAndValueGen.class) @When(seed=-746430439083107785L) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {

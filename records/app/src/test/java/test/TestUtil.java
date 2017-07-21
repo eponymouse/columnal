@@ -304,7 +304,7 @@ public class TestUtil
         // Makes either totally random String from generator, or "awkward" string
         // with things likely to trip up parser
         if (r.nextBoolean() && gs != null)
-            return new StringGenerator().generate(r, gs);
+            return new StringGenerator().generate(r, gs).replaceAll("[\\\\x00-\\\\x31]", "");
         else
             return generateIdent(r);
     }
@@ -467,7 +467,7 @@ public class TestUtil
 
     public static @Value ZonedDateTime generateDateTimeZoned(SourceOfRandomness r, GenerationStatus gs)
     {
-        return (ZonedDateTime) DataTypeUtility.value(new DateTimeInfo(DateTimeType.DATETIMEZONED), ZonedDateTime.of(generateDateTime(r, gs), generateZone(r, gs)));
+        return (ZonedDateTime) DataTypeUtility.value(new DateTimeInfo(DateTimeType.DATETIMEZONED), ZonedDateTime.of(generateDateTime(r, gs), r.nextBoolean() ? generateZone(r, gs) : generateZoneOffset(r, gs)));
     }
 
     public static ZoneId generateZone(SourceOfRandomness r, GenerationStatus gs)
@@ -477,6 +477,7 @@ public class TestUtil
 
     public static ZoneOffset generateZoneOffset(SourceOfRandomness r, GenerationStatus gs)
     {
+        // We don't support sub-minute offsets:
         return ZoneOffset.ofTotalSeconds(r.nextInt(-12*60, 12*60) * 60);
     }
 
