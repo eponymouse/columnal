@@ -41,6 +41,14 @@
             <version>1.0-SNAPSHOT</version>
         </dependency>
 
+        <!-- Guava must come before checker framework so
+        that it takes precedence -->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>21.0</version>
+        </dependency>
+
         <!-- annotations from the Checker Framework: nullness, interning, locking, ... -->
         <dependency>
             <groupId>org.checkerframework</groupId>
@@ -117,12 +125,6 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
             <version>3.0</version>
-        </dependency>
-
-        <dependency>
-            <groupId>com.google.guava</groupId>
-            <artifactId>guava</artifactId>
-            <version>21.0</version>
         </dependency>
 
         <dependency>
