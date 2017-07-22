@@ -302,6 +302,13 @@ public class FXUtility
         });
     }
 
+    public static double measureNotoSansHeight()
+    {
+        Text t = new Text("TyqX"); // Should be full height
+        t.setFont(new Font("Noto Sans", 13));
+        return t.getLayoutBounds().getHeight();
+    }
+
     public static interface DragHandler
     {
         @OnThread(Tag.FXPlatform)

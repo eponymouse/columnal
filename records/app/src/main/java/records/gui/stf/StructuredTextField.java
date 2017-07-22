@@ -102,6 +102,8 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
         curValue.addAll(initialItems);
         suggestions = content.getSuggestions();
 
+        setPrefHeight(FXUtility.measureNotoSansHeight());
+
 
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
             //Utility.logStackTrace("Focused now: " + focused);
