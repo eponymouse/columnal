@@ -88,7 +88,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
     private @Nullable STFAutoComplete autoComplete;
     private int completingForItem = -1;
     private boolean inSuperReplace;
-    private FXPlatformRunnable endEdit;
+    private @Nullable FXPlatformRunnable endEdit;
 
     @SuppressWarnings("initialization")
     // store action takes the string value of the field, and the parsed value of the field, when it is valid.
@@ -140,7 +140,10 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
                 }
             }),
             InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
-                endEdit.run(); // Should move focus away from us
+                if (endEdit != null)
+                {
+                    endEdit.run(); // Should move focus away from us
+                }
                 e.consume();
             })
         ));
