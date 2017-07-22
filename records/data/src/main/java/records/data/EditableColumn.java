@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -33,5 +34,5 @@ public abstract class EditableColumn extends Column
         return true;
     }
 
-    public abstract @Value Object getDefaultValue();
+    public abstract @NonNull @Value Object getDefaultValue();
 }

@@ -14,10 +14,11 @@ tagRef : TAGGED STRING;
 constructor : UNQUOTED_CONSTRUCTOR | QUOTED_CONSTRUCTOR;
 tagItem : constructor (CONS type)?;
 
-defaultValue: DEFAULT STRING;
+defaultValue: DEFAULT VALUE VALUE_END;
 
 columnName : STRING;
-column : COLUMN columnName type defaultValue? NEWLINE;
+// The defaultValue contains the NEWLINE if that option is picked:
+column : COLUMN columnName type (defaultValue | NEWLINE);
 
 typeName : STRING;
 typeDecl : TYPE typeName taggedDecl NEWLINE;

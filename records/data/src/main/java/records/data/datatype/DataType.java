@@ -1114,7 +1114,7 @@ public class DataType
                     DateTimeFormatter formatter = dateTimeInfo.getFormatter();
                     try
                     {
-                        return dateTimeInfo.fromParsed(formatter.parse(c.getText()));
+                        return dateTimeInfo.fromParsed(formatter.parse(c.getText().trim()));
                     }
                     catch (DateTimeParseException e)
                     {
@@ -1225,7 +1225,7 @@ public class DataType
         BoolContext b = tryParse(() -> p.bool());
         if (b == null)
             throw new UserException("Expected boolean value but found: \"" + p.getCurrentToken() + "\"");
-        return b.getText().toLowerCase().equals("true");
+        return b.getText().trim().toLowerCase().equals("true");
     }
 
     private static String loadString(DataParser p) throws UserException
@@ -1241,7 +1241,7 @@ public class DataType
         NumberContext number = tryParse(() -> p.number());
         if (number == null)
             throw new UserException("Expected number value but found: \"" + p.getCurrentToken() + "\"");
-        return Utility.parseNumber(number.getText());
+        return Utility.parseNumber(number.getText().trim());
     }
 
     private static TaggedValue loadTaggedValue(List<TagType<DataType>> tags, DataParser p) throws UserException, InternalException
@@ -1270,7 +1270,7 @@ public class DataType
                 return new TaggedValue(i, null);
             }
         }
-        throw new UserException("Could not find matching tag for: \"" + constructor + "\" in: " + tags.stream().map(t -> t.getName()).collect(Collectors.joining(", ")));
+        throw new UserException("Could not find matching tag for: \"" + constructor + "\" in: " + tags.stream().map(t -> "\"" + t.getName() + "\"").collect(Collectors.joining(", ")));
     }
 
     @OnThread(Tag.Any)

@@ -218,9 +218,9 @@ public class OutputBuilder
                 TagType<DataTypeValue> t = tagTypes.get(g.get(index));
                 @Nullable DataTypeValue inner = t.getInner();
                 if (inner == null)
-                    return "\\" + quotedIfNecessary(t.getName());
+                    return t.getName();
                 else
-                    return "\\" + quotedIfNecessary(t.getName()) + ":" + inner.applyGet(this);
+                    return t.getName() + "(" + inner.applyGet(this) + ")";
             }
 
             @Override
@@ -234,7 +234,7 @@ public class OutputBuilder
             @OnThread(Tag.Simulation)
             public String date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
             {
-                return quoted(dateTimeInfo.getFormatter().format(g.get(index)));
+                return dateTimeInfo.getFormatter().format(g.get(index));
             }
 
             @Override

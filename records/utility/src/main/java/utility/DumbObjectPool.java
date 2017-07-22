@@ -55,7 +55,7 @@ public class DumbObjectPool<T>
             if (pool[index] != null && pool[index].equals(s))
                 return pool[index];
             else
-                throw new InternalException("Object found in pool yet does not satisfy equals: " + pool[index] + " vs " + s + " equals gives " + pool[index].equals(s) + " but comparator " + comparator.compare(pool[index], s));
+                throw new InternalException("Object found in pool yet does not satisfy equals: " + pool[index] + " vs " + s + " equals gives " + pool[index].equals(s) + " but comparator " + comparator.compare(pool[index], s) + " class is " + pool[index].getClass() + " and " + s.getClass());
         }
         // Change to insertion point:
         index = ~index;

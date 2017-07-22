@@ -19,7 +19,7 @@ TAGGED : 'TAGGED';
 TYPE : 'TYPE';
 SPACE_KWD : 'SPACE';
 ZERO_KWD : 'ZERO';
-DEFAULT : 'DEFAULT';
+DEFAULT : 'DEFAULT' -> pushMode(VALUE_MODE);
 
 WS : ( ' ' | '\t' )+ -> skip;
 
@@ -36,4 +36,8 @@ DASH: '-';
 COLUMN : 'COLUMN';
 
 NEWLINE : '\r'? '\n' ;
+
+mode VALUE_MODE;
+VALUE_END: NEWLINE -> popMode;
+VALUE: (~[\n\r])+;
 

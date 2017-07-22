@@ -137,7 +137,7 @@ public abstract class DataSource extends Table
                 if (defaultCtx == null)
                     throw new UserException("Default value missing for potentially-editable table " + name);
                 DataType dataType = typeManager.loadTypeUse(type);
-                r.add(new LoadedFormat(name, dataType, defaultCtx.STRING().getText()));
+                r.add(new LoadedFormat(name, dataType, defaultCtx.VALUE().getText()));
                 return 0;
             });
         }

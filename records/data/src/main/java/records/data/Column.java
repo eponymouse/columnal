@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.qual.Value;
 import javafx.application.Platform;
 import javafx.beans.value.ObservableValue;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -120,6 +121,16 @@ public abstract class Column
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {
         throw new RuntimeException("Unshrinkable!");
+    }
+
+    /**
+     * Gets the default value for this column, if any.
+     * (Used for immediate columns which have a default for when
+     * you add a new row.)  Null if N/A.
+     */
+    public @Nullable @Value Object getDefaultValue()
+    {
+        return null;
     }
 
     public static interface ProgressListener

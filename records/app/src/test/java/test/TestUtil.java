@@ -365,7 +365,7 @@ public class TestUtil
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("cm"), null)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("($ m)/s^2"), null)),
                 a,
-                DummyManager.INSTANCE.getTypeManager().registerTaggedType("B", Arrays.asList(new TagType<DataType>("Single ", null))),
+                DummyManager.INSTANCE.getTypeManager().registerTaggedType("B", Arrays.asList(new TagType<DataType>("Single", null))),
                 c,
                 DummyManager.INSTANCE.getTypeManager().registerTaggedType("Nested", Arrays.asList(new TagType<DataType>("A", a), new TagType<DataType>("C", c))),
                 DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.NUMBER)),
