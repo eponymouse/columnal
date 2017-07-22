@@ -813,6 +813,16 @@ public class Utility
         return x == null ? y : x;
     }
 
+    public static <T> List<T> makeListEx(int len, ExFunction<Integer, T> makeOne) throws InternalException, UserException
+    {
+        List<T> r = new ArrayList<>();
+        for (int i = 0; i < len; i++)
+        {
+            r.add(makeOne.apply(i));
+        }
+        return r;
+    }
+
     public static class ReadState
     {
         private final File file;

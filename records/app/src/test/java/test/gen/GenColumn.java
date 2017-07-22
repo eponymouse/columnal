@@ -12,6 +12,7 @@ import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiFunction;
+import utility.Utility;
 
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
@@ -59,6 +60,6 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
                 throw new RuntimeException(e);
             }
         }
-        return (len, rs) -> type.makeCalculatedColumn(rs, nextCol.get(), i -> makeValue(type));
+        return (len, rs) -> type.makeImmediateColumn(nextCol.get(), Utility.makeListEx(len, i -> makeValue(type)), makeValue(type)).apply(rs);
     }
 }
