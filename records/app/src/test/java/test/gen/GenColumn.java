@@ -8,6 +8,7 @@ import records.data.RecordSet;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.error.InternalException;
+import records.error.UserException;
 import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -46,19 +47,13 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
         this.r = sourceOfRandomness;
         this.gs = generationStatus;
         DataType type = sourceOfRandomness.choose(TestUtil.distinctTypes);
-        for (DataType taggedType : TestUtil.distinctTypes)
+        try
         {
-            if (!taggedType.isTagged())
-                continue;
-
-            try
-            {
-                mgr.getTypeManager().registerTaggedType(taggedType.getTaggedTypeName().getRaw(), taggedType.getTagTypes());
-            }
-            catch (InternalException e)
-            {
-                throw new RuntimeException(e);
-            }
+            TestUtil.registerAllTaggedTypes(mgr.getTypeManager(), type);
+        }
+        catch (InternalException | UserException e)
+        {
+            throw new RuntimeException(e);
         }
         return (len, rs) -> type.makeImmediateColumn(nextCol.get(), Utility.makeListEx(len, i -> makeValue(type)), makeValue(type)).apply(rs);
     }

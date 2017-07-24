@@ -1,6 +1,7 @@
 package test;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
@@ -16,7 +17,9 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TypeId;
 import records.grammar.GrammarUtility;
 import records.importers.ChoicePoint.ChoiceType;
 import utility.FXPlatformRunnable;
@@ -585,6 +588,69 @@ public class TestUtil
         {
             throw new RuntimeException(e);
         }
+    }
+
+    // Registers all tagged types contained within, recursively
+    public static void registerAllTaggedTypes(TypeManager typeManager, DataType outer) throws InternalException, UserException
+    {
+        outer.apply(new DataTypeVisitor<@Nullable Void>()
+        {
+            @Override
+            public @Nullable Void number(NumberInfo numberInfo) throws InternalException, UserException
+            {
+                return null;
+            }
+
+            @Override
+            public @Nullable Void text() throws InternalException, UserException
+            {
+                return null;
+            }
+
+            @Override
+            public @Nullable Void date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+            {
+                return null;
+            }
+
+            @Override
+            public @Nullable Void bool() throws InternalException, UserException
+            {
+                return null;
+            }
+
+            @Override
+            public @Nullable Void tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            {
+                typeManager.registerTaggedType(typeName.getRaw(), tags);
+                for (TagType<DataType> tag : tags)
+                {
+                    if (tag.getInner() != null)
+                    {
+                        registerAllTaggedTypes(typeManager, tag.getInner());
+                    }
+                }
+                return null;
+            }
+
+            @Override
+            public @Nullable Void tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+            {
+                for (DataType dataType : inner)
+                {
+                    registerAllTaggedTypes(typeManager, dataType);
+                }
+                return null;
+            }
+
+            @Override
+            public @Nullable Void array(@Nullable DataType inner) throws InternalException, UserException
+            {
+                if (inner != null)
+                    registerAllTaggedTypes(typeManager, inner);
+                return null;
+            }
+        });
     }
 
     public static interface FXPlatformSupplierEx<T>

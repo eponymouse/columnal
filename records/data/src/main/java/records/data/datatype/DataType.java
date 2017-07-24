@@ -1008,7 +1008,8 @@ public class DataType
 
         public final EditableColumn apply(RecordSet rs) throws InternalException
         {
-            return makeColumn.apply(rs, defaultValue);
+            column = makeColumn.apply(rs, defaultValue);
+            return column;
         }
 
         // Only valid to call after apply:
