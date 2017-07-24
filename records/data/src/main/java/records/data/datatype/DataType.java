@@ -1686,7 +1686,18 @@ public class DataType
         }
 
 
-        public Comparator<@UnknownIfValue TemporalAccessor> getComparator() throws InternalException
+        /**
+         * Gets a comparator for this particular temporal type.
+         * @param pool    If true, give a comparator suitable for object pools.  Here, we should only
+         *                return zero iff equals(..) is true and the values are completely equal.
+         *                If false, give a comparator for user
+         *                code.  You can particularly see the difference for OffsetTime, where
+         *                11:21+00:00 and 10:21-01:00 are equals for user comparison purposes, but not
+         *                for the object pool, since they are not the same value and need to be stored
+         *                differently.
+         * @return
+         */
+        public Comparator<@UnknownIfValue TemporalAccessor> getComparator(boolean pool) throws InternalException
         {
             switch (type)
             {
@@ -1704,12 +1715,16 @@ public class DataType
                         .thenComparing((TemporalAccessor t) -> t.get(ChronoField.NANO_OF_SECOND));
                 case TIMEOFDAYZONED:
                     return Comparator.comparing((TemporalAccessor t) -> {
-                            return OffsetTime.from(t).withOffsetSameInstant(ZoneOffset.UTC);
+                            if (pool)
+                                return OffsetTime.from(t);
+                            else
+                                return OffsetTime.from(t).withOffsetSameInstant(ZoneOffset.UTC);
                         },
                         Comparator.comparing((TemporalAccessor t) -> t.get(ChronoField.HOUR_OF_DAY))
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MINUTE_OF_HOUR))
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.SECOND_OF_MINUTE))
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.NANO_OF_SECOND))
+                            .thenComparing((TemporalAccessor t) -> t.get(ChronoField.OFFSET_SECONDS))
                     );
                 case DATETIME:
                     return Comparator.comparing((TemporalAccessor t) -> t.get(ChronoField.YEAR))

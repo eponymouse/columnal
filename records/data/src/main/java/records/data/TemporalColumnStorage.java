@@ -46,7 +46,7 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
     public TemporalColumnStorage(DateTimeInfo dateTimeInfo, @Nullable BeforeGet<TemporalColumnStorage> beforeGet) throws InternalException
     {
         this.values = new ArrayList<>();
-        this.pool = new DumbObjectPool<>((Class<@Value TemporalAccessor>)TemporalAccessor.class, 1000, (Comparator<@Value TemporalAccessor>)dateTimeInfo.getComparator());
+        this.pool = new DumbObjectPool<>((Class<@Value TemporalAccessor>)TemporalAccessor.class, 1000, (Comparator<@Value TemporalAccessor>)dateTimeInfo.getComparator(true));
         this.dateTimeInfo = dateTimeInfo;
         this.beforeGet = beforeGet;
     }
