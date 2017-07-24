@@ -1222,7 +1222,7 @@ public class DataType
         StringContext string = tryParse(() -> p.string());
         if (string == null)
             throw new ParseException("string", p);
-        return string.getText();
+        return string.STRING().getText();
     }
 
     private static Number loadNumber(DataParser p) throws UserException
