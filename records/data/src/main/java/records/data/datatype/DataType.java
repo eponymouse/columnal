@@ -1237,7 +1237,7 @@ public class DataType
     {
         TagContext b = tryParse(() -> p.tag());
         if (b == null)
-            throw new UserException("Expected tagged value but found: \"" + p.getCurrentToken() + "\"");
+            throw new ParseException("tagged value", p);
 
         String constructor = b.UNQUOTED_IDENT().getText();
         for (int i = 0; i < tags.size(); i++)
