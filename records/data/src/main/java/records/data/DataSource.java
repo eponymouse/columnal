@@ -1,12 +1,14 @@
 package records.data;
 
 import annotation.qual.Value;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.ColumnMaker;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
+import records.error.ParseException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.grammar.DataLexer;
@@ -85,16 +87,23 @@ public abstract class DataSource extends Table
             {
                 Utility.parseAsOne(lineText, DataLexer::new, DataParser::new, p ->
                 {
-                    p.startRow();
-                    if (!p.isMatchedEOF())
+                    try
                     {
-                        withEachRow.accept(p);
+                        p.startRow();
+                        if (!p.isMatchedEOF())
+                        {
+                            withEachRow.accept(p);
+                        }
+                        p.endRow();
+                        return 0;
                     }
-                    p.endRow();
-                    return 0;
+                    catch (ParseCancellationException e)
+                    {
+                        throw new ParseException("token", p);
+                    }
                 });
             }
-            catch (UserException e)
+            catch (UserException  e)
             {
                 throw new UserException("Error loading data line: \"" + lineText + "\"", e);
             }

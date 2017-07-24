@@ -17,7 +17,7 @@ public class ParseException extends UserException
 
     public ParseException(String expectedItem, Parser p)
     {
-        super("Expected " + expectedItem + " found: {" + p.getCurrentToken().getText() + "} " + DataLexer.tokenNames[p.getCurrentToken().getType()]);
+        super("Expected " + expectedItem + " found: {" + p.getCurrentToken().getText() + "} " + DataLexer.tokenNames[p.getCurrentToken().getType()] + " " + p.getCurrentToken().getStartIndex());
     }
 
     private static String formatLocation(ParserRuleContext problemItem)
