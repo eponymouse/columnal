@@ -36,7 +36,6 @@ import records.error.UserException;
 import records.grammar.DataLexer;
 import records.grammar.DataParser;
 import records.grammar.DataParser.BoolContext;
-import records.grammar.DataParser.DateOrTimeContext;
 import records.grammar.DataParser.NumberContext;
 import records.grammar.DataParser.StringContext;
 import records.grammar.DataParser.TagContext;
@@ -1109,18 +1108,7 @@ public class DataType
             {
                 return new ColumnMaker<MemoryTemporalColumn, TemporalAccessor>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), p ->
                 {
-                    DateOrTimeContext c = tryParse(() -> p.dateOrTime());
-                    if (c == null)
-                        throw new ParseException("Date value", p);
-                    DateTimeFormatter formatter = dateTimeInfo.getFormatter();
-                    try
-                    {
-                        return dateTimeInfo.fromParsed(formatter.parse(c.getText().trim()));
-                    }
-                    catch (DateTimeParseException e)
-                    {
-                        throw new UserException("Problem reading date/time of type " + dateTimeInfo.getType() + " from {" + c.getText() + "}", e);
-                    }
+                    return dateTimeInfo.parse(p);
                 });
             }
 
@@ -1169,7 +1157,7 @@ public class DataType
     // Tries a parse and if it fails, returns null.  Should only be used for single-token parses,
     // or those where you stop trying after failure, because I'm not sure what happens if you're partway
     // through a partial parse and it cancels.
-    private static <T> @Nullable T tryParse(Supplier<T> parseAction)
+    private static <T> @Nullable T tryParse(Supplier<@Nullable T> parseAction)
     {
         try
         {
@@ -1520,6 +1508,48 @@ public class DataType
                     .parseCaseSensitive()
                     .appendZoneOrOffsetId();
             return builder.toFormatter();
+        }
+
+        /**
+         * This parses in two senses.  First, it parses using the provided DataParser.
+         * We don't actually use that directly to get the value info out, instead
+         * feeling it to the formatter.  This may seem odd, but we already have the formatter.
+         * However, the parser needs to know what data tokens got consumed to parse
+         * the next item, which is not easily extracted out of the data/time formatter.
+         * Hence this slightly odd double layer.
+         * @return
+         */
+        public TemporalAccessor parse(DataParser p) throws UserException, InternalException
+        {
+            ParserRuleContext c = tryParse(() -> {
+                switch (type)
+                {
+                    case YEARMONTHDAY:
+                        return p.ymd();
+                    case YEARMONTH:
+                        return p.ym();
+                    case TIMEOFDAY:
+                        return p.localTime();
+                    case TIMEOFDAYZONED:
+                        return p.offsetTime();
+                    case DATETIME:
+                        return p.localDateTime();
+                    case DATETIMEZONED:
+                        return p.zonedDateTime();
+                }
+                return null;
+            });
+            if (c == null)
+                throw new ParseException("Date value", p);
+            DateTimeFormatter formatter = getFormatter();
+            try
+            {
+                return fromParsed(formatter.parse(c.getText().trim()));
+            }
+            catch (DateTimeParseException e)
+            {
+                throw new UserException("Problem reading date/time of type " + getType() + " from {" + c.getText() + "}", e);
+            }
         }
 
         public static enum DateTimeType
