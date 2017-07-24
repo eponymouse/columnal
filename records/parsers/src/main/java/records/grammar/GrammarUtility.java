@@ -69,7 +69,8 @@ public class GrammarUtility
         int firstCodepoint = s.codePointAt(0);
         if (!Character.isAlphabetic(firstCodepoint))
             return false;
-        return s.codePoints().skip(1).allMatch(Character::isLetterOrDigit);
+        // Underscore is not letter or digit, so needs special case here:
+        return s.codePoints().skip(1).allMatch(c -> Character.isLetterOrDigit(c) || c == '_');
     }
 
     public static String escapeChars(String s)
