@@ -89,7 +89,7 @@ public abstract class GenValueBase<T> extends Generator<T>
                             r.nextBoolean() ?
                                 new GenZoneId().generate(r, gs) :
                                 ZoneId.ofOffset("", TestUtil.generateZoneOffset(r, gs))
-                        ).withFixedOffsetZone();
+                        );
                     default:
                         throw new InternalException("Unknown date type: " + dateTimeInfo.getType());
                 }
