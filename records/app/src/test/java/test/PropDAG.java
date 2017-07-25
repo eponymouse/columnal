@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.hamcrest.Matchers;
 import org.junit.Assert;
+import org.junit.Test;
 import org.junit.runner.RunWith;
 import test.gen.GenGraph;
 import test.gen.GenGraph.Graph;
@@ -22,12 +23,19 @@ import java.util.List;
 public class PropDAG
 {
     // This test ignores late and does it without them:
-    @Property
-    public void testLinearise(@From(GenGraph.class) Graph g)
+    @Property(trials = 500)
+    public void propLinearise(@From(GenGraph.class) Graph g)
     {
         List<Object> linear = GraphUtility.<Object>lineariseDAG(Collections.unmodifiableList(g.nodes), Collections.unmodifiableMap(g.incoming), new ArrayList<>());
 
         checkGraphLinear(g, linear);
+        checkSameContent(g.nodes, linear);
+    }
+
+    private void checkSameContent(List<Object> a, List<Object> b)
+    {
+        Assert.assertEquals(a.size(), b.size());
+        Assert.assertEquals(new HashSet<>(a), new HashSet<>(b));
     }
 
     @SuppressWarnings("intern")
@@ -48,12 +56,13 @@ public class PropDAG
     }
 
     // This property checks that late is obeyed:
-    @Property
-    public void testLineariseLateness(@From(GenGraph.class) Graph g)
+    @Property(trials = 500)
+    public void propLineariseLateness(@From(GenGraph.class) Graph g)
     {
         List<Object> linear = GraphUtility.<Object>lineariseDAG(Collections.unmodifiableList(g.nodes), Collections.unmodifiableMap(g.incoming), Collections.unmodifiableList(g.late));
 
         checkGraphLinear(g, linear);
+        checkSameContent(g.nodes, linear);
 
         if (!g.late.isEmpty())
         {

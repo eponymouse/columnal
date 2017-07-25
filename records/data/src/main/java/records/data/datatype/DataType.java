@@ -724,6 +724,7 @@ public class DataType
         if (numberInfo != null ? !numberInfo.sameType(dataType.numberInfo) : dataType.numberInfo != null) return false;
         if (dateTimeInfo != null ? !dateTimeInfo.sameType(dataType.dateTimeInfo) : dateTimeInfo != null) return false;
         if (memberType != null ? !memberType.equals(dataType.memberType) : dataType.memberType != null) return false;
+        if (taggedTypeName != null ? !taggedTypeName.equals(dataType.taggedTypeName) : dataType.taggedTypeName != null) return false;
         return tagTypes != null ? tagTypes.equals(dataType.tagTypes) : dataType.tagTypes == null;
     }
 
@@ -736,6 +737,7 @@ public class DataType
         result = 31 * result + (dateTimeInfo != null ? dateTimeInfo.hashCodeForType() : 0);
         result = 31 * result + (tagTypes != null ? tagTypes.hashCode() : 0);
         result = 31 * result + (memberType != null ? memberType.hashCode() : 0);
+        result = 31 * result + (taggedTypeName != null ? taggedTypeName.hashCode() : 0);
         return result;
     }
 
