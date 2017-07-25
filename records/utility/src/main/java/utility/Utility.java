@@ -54,6 +54,7 @@ import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.TokenStream;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.*;
@@ -61,6 +62,7 @@ import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
 import records.error.FunctionInt;
 import records.error.InternalException;
+import records.error.ParseException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -405,10 +407,17 @@ public class Utility
         parser.setErrorHandler(new BailErrorStrategy());
         parser.removeErrorListeners();
         parser.addErrorListener(del);
-        R r = withParser.apply(parser);
-        if (!del.errors.isEmpty())
-            throw new UserException("Parse errors while loading:\n" + del.errors.stream().collect(Collectors.joining("\n")));
-        return r;
+        try
+        {
+            R r = withParser.apply(parser);
+            if (!del.errors.isEmpty())
+                throw new UserException("Parse errors while loading:\n" + del.errors.stream().collect(Collectors.joining("\n")));
+            return r;
+        }
+        catch (ParseCancellationException e)
+        {
+            throw new ParseException(parser.getClass().toString(), parser);
+        }
     }
 
     public static <T> List<T> consList(T header, List<T> data)
