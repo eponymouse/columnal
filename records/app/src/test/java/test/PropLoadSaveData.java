@@ -30,9 +30,9 @@ public class PropLoadSaveData
     @Property(trials = 30)
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public void testImmediate(
-            @When(seed=3695790473865888876L) @From(GenTableManager.class) TableManager mgr1,
-            @When(seed=3810868794624775457L) @From(GenTableManager.class) TableManager mgr2,
-            @When(seed=5059904358085019529L) @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original)
+            @From(GenTableManager.class) TableManager mgr1,
+            @From(GenTableManager.class) TableManager mgr2,
+            @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original)
         throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         String saved = save(original.mgr);
