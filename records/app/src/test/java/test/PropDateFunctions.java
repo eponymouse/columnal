@@ -102,7 +102,7 @@ public class PropDateFunctions
         // Test with string input:
         Object o = runFunction1(v(src.toLocalDateTime().toString() + " " + zone.toString()), DataType.TEXT, new ToDateTimeZone());
         assertEquals(ZonedDateTime.class, o.getClass());
-        assertEquals(src.withFixedOffsetZone(), o);
+        assertEquals(src, o);
     }
 
     @Test
@@ -156,7 +156,7 @@ public class PropDateFunctions
                 checkDateTime(LocalDateTime.of(date.getFirst(), time.getFirst()), date.getSecond() + " " + time.getSecond());
                 for (String zone : Arrays.asList("UTC", " UTC", "+00:00", "+05:30", "-03:00", "UTC-07:00", "America/New_York", " Europe/London"))
                 {
-                    checkDateTimeZone(ZonedDateTime.of(date.getFirst(), time.getFirst(), ZoneId.of(zone.trim())).withFixedOffsetZone(), date.getSecond() + " " + time.getSecond() + zone);
+                    checkDateTimeZone(ZonedDateTime.of(date.getFirst(), time.getFirst(), ZoneId.of(zone.trim())), date.getSecond() + " " + time.getSecond() + zone);
                 }
             }
         }

@@ -82,7 +82,7 @@ public class ToDateTimeZone extends ToTemporalFunction
     @Override
     @Value Temporal fromTemporal(TemporalAccessor temporalAccessor)
     {
-        return ZonedDateTime.from(temporalAccessor).withFixedOffsetZone();
+        return ZonedDateTime.from(temporalAccessor);
     }
 
     private class D_TZ extends FunctionInstance
@@ -92,7 +92,7 @@ public class ToDateTimeZone extends ToTemporalFunction
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
             OffsetTime t = (OffsetTime)paramList[1];
-            return ZonedDateTime.of((LocalDate)paramList[0], t.toLocalTime(), t.getOffset()).withFixedOffsetZone();
+            return ZonedDateTime.of((LocalDate)paramList[0], t.toLocalTime(), t.getOffset());
         }
     }
 
@@ -102,7 +102,7 @@ public class ToDateTimeZone extends ToTemporalFunction
         public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 2);
-            return ZonedDateTime.of((LocalDateTime)paramList[0], ZoneId.of((String)paramList[1])).withFixedOffsetZone();
+            return ZonedDateTime.of((LocalDateTime)paramList[0], ZoneId.of((String)paramList[1]));
         }
     }
 
@@ -112,7 +112,7 @@ public class ToDateTimeZone extends ToTemporalFunction
         public @Value Object getValue(int rowIndex, @Value Object simpleParams) throws UserException, InternalException
         {
             @Value Object[] paramList = Utility.valueTuple(simpleParams, 3);
-            return ZonedDateTime.of(LocalDateTime.of((LocalDate) paramList[0], (LocalTime)paramList[1]), ZoneId.of((String) paramList[2])).withFixedOffsetZone();
+            return ZonedDateTime.of(LocalDateTime.of((LocalDate) paramList[0], (LocalTime)paramList[1]), ZoneId.of((String) paramList[2]));
         }
     }
 }

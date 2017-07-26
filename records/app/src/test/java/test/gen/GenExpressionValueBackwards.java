@@ -316,18 +316,22 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         //datetime+zone
                         deep.add(() -> new CallExpression("datetimez",
                             make(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), target.toLocalDateTime(), maxLevels - 1),
-                            make(DataType.TEXT, target.getOffset().toString(), maxLevels - 1)
+                            make(DataType.TEXT, target.getZone().toString(), maxLevels - 1)
                         ));
                         //date + time&zone
-                        deep.add(() -> new CallExpression("datetimez",
-                            make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), target.toLocalDate(), maxLevels - 1),
-                            make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)), target.toOffsetDateTime().toOffsetTime(), maxLevels - 1)
-                        ));
+                        // only if using offset, not a zone:
+                        if (target.getZone().equals(target.getOffset()))
+                        {
+                            deep.add(() -> new CallExpression("datetimez",
+                                make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), target.toLocalDate(), maxLevels - 1),
+                                make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)), target.toOffsetDateTime().toOffsetTime(), maxLevels - 1)
+                            ));
+                        }
                         //date+time+zone:
                         deep.add(() -> new CallExpression("datetimez",
                             make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), target.toLocalDate(), maxLevels - 1),
                             make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), target.toLocalTime(), maxLevels - 1),
-                            make(DataType.TEXT, target.getOffset().toString(), maxLevels - 1)
+                            make(DataType.TEXT, target.getZone().toString(), maxLevels - 1)
                         ));
                     }
                         break;

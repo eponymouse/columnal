@@ -358,14 +358,14 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIME)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
-                            return map(dateTimes, v -> ZonedDateTime.of((LocalDateTime)v, zone).withFixedOffsetZone(), e -> new CallExpression("datetimez", e, new StringLiteral(zone.toString())));
+                            return map(dateTimes, v -> ZonedDateTime.of((LocalDateTime)v, zone), e -> new CallExpression("datetimez", e, new StringLiteral(zone.toString())));
                         });
                         // date+time+zone:
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
                             Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
-                            return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone).withFixedOffsetZone(), (dateE, timeE) -> new CallExpression("datetimez", dateE, timeE, new StringLiteral(zone.toString())));
+                            return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone), (dateE, timeE) -> new CallExpression("datetimez", dateE, timeE, new StringLiteral(zone.toString())));
                         });
                         break;
                 }
@@ -391,7 +391,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                             return literal(dateTime, new CallExpression("datetime", new StringLiteral(dateTime.toString())));
                         case DATETIMEZONED:
                             @Value ZonedDateTime zonedDateTime = TestUtil.generateDateTimeZoned(r, gs);
-                            return literal(zonedDateTime.withFixedOffsetZone(), new CallExpression("datetimez", new StringLiteral(zonedDateTime.toString())));
+                            return literal(zonedDateTime, new CallExpression("datetimez", new StringLiteral(zonedDateTime.toString())));
 
                     }
                     throw new RuntimeException("No date generator for " + dateTimeInfo.getType());
