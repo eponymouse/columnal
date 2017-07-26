@@ -155,6 +155,7 @@ public class TestUtil
     {
         List<String> keywords = new ArrayList<>();
 
+        keywords.add("Z"); // Likely to cause issues for date/time parsing.
         keywords.add("@BEGIN");
         keywords.add("@END");
 
