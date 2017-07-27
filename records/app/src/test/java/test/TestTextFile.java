@@ -23,7 +23,12 @@ public class TestTextFile
 
     public TestTextFile(SourceOfRandomness rnd) throws IOException
     {
-        charset = rnd.<@NonNull Charset>choose(Charset.availableCharsets().values().stream().filter(c -> !c.displayName().contains("JIS") && !c.displayName().contains("2022") && !c.displayName().contains("IBM")).collect(Collectors.<Charset>toList()));
+        charset = rnd.<@NonNull Charset>choose(Charset.availableCharsets().values().stream().filter(c ->
+                !c.displayName().contains("JIS") &&
+                !c.displayName().contains("2022") &&
+                !c.displayName().contains("IBM") &&
+                !c.displayName().contains("COMPOUND_TEXT")
+        ).collect(Collectors.<Charset>toList()));
         file = File.createTempFile("aaa", "bbb");
         file.deleteOnExit();
 
