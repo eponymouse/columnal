@@ -12,6 +12,7 @@ import records.data.ImmediateDataSource;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.TableManager;
+import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import test.gen.GenImmediateData.ImmediateData_Mgr;
@@ -33,34 +34,8 @@ import static java.lang.annotation.RetentionPolicy.RUNTIME;
  */
 public class GenImmediateData extends Generator<ImmediateData_Mgr>
 {
-    public static class ImmediateData_Mgr
-    {
-        public final TableManager mgr;
-        // Amount is set by Precision annotation (for laziness), default is 1
-        public final List<ImmediateDataSource> data;
-
-        public ImmediateData_Mgr(TableManager mgr, List<ImmediateDataSource> data)
-        {
-            this.mgr = mgr;
-            this.data = new ArrayList<>(data);
-        }
-
-        // Shortcut for first item:
-        public Table data()
-        {
-            return data.get(0);
-        }
-    }
-
-    @Target({PARAMETER, FIELD, ANNOTATION_TYPE, TYPE_USE})
-    @Retention(RUNTIME)
-    @GeneratorConfiguration
-    public @interface NumTables {
-        int minTables() default 1;
-        int maxTables() default 1;
-    }
-
     private @Nullable NumTables numTables;
+    private boolean mustIncludeNumber = false;
 
     public GenImmediateData()
     {
@@ -70,6 +45,11 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
     public void configure(NumTables numTables)
     {
         this.numTables = numTables;
+    }
+
+    public void configure(MustIncludeNumber mustIncludeNumber)
+    {
+        this.mustIncludeNumber = true;
     }
 
     @Override
@@ -97,6 +77,13 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                     ExBiFunction<Integer, RecordSet, Column> col = genColumn.generate(r, generationStatus);
                     columns.add(rs -> (EditableColumn/*TODO*/)col.apply(length, rs));
                 }
+                if (mustIncludeNumber)
+                {
+                    // Can't tell what types have been added, so just add another number one in case:
+                    ExBiFunction<Integer, RecordSet, Column> col = genColumn.columnForType(DataType.NUMBER);
+                    columns.add(rs -> (EditableColumn)col.apply(length, rs));
+                }
+
                 tables.add(new ImmediateDataSource(mgr, new EditableRecordSet(columns, () -> length)));
             }
             return new ImmediateData_Mgr(mgr, tables);
@@ -106,6 +93,39 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+    }
+
+    public static class ImmediateData_Mgr
+    {
+        public final TableManager mgr;
+        // Amount is set by Precision annotation (for laziness), default is 1
+        public final List<ImmediateDataSource> data;
+
+        public ImmediateData_Mgr(TableManager mgr, List<ImmediateDataSource> data)
+        {
+            this.mgr = mgr;
+            this.data = new ArrayList<>(data);
+        }
+
+        // Shortcut for first item:
+        public Table data()
+        {
+            return data.get(0);
+        }
+    }
+
+    @Target({PARAMETER, FIELD, ANNOTATION_TYPE, TYPE_USE})
+    @Retention(RUNTIME)
+    @GeneratorConfiguration
+    public @interface NumTables {
+        int minTables() default 1;
+        int maxTables() default 1;
+    }
+
+    @Target({PARAMETER, FIELD, ANNOTATION_TYPE, TYPE_USE})
+    @Retention(RUNTIME)
+    @GeneratorConfiguration
+    public @interface MustIncludeNumber {
     }
 
 /*

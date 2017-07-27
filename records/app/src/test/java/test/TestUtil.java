@@ -15,6 +15,7 @@ import org.testfx.util.WaitForAsyncUtils;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.Table.FullSaver;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataType.DataTypeVisitor;
@@ -22,6 +23,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeId;
 import records.grammar.GrammarUtility;
 import records.importers.ChoicePoint.ChoiceType;
+import utility.ExRunnable;
 import utility.FXPlatformRunnable;
 import utility.SimulationSupplier;
 import utility.TaggedValue;
@@ -52,6 +54,7 @@ import utility.Utility.ListEx;
 import utility.Workers;
 import utility.Workers.Priority;
 
+import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -67,6 +70,7 @@ import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -652,6 +656,63 @@ public class TestUtil
                 return null;
             }
         });
+    }
+
+    @OnThread(Tag.Simulation)
+    public static String save(TableManager tableManager) throws ExecutionException, InterruptedException, InvocationTargetException
+    {
+        // This thread is only pretend running on FXPlatform, but sets off some
+        // code which actually runs on the fx platform thread:
+        CompletableFuture<String> f = new CompletableFuture<>();
+
+        try
+        {
+            FullSaver saver = new FullSaver();
+            tableManager.save(null, saver);
+            f.complete(saver.getCompleteFile());
+        }
+        catch (Throwable t)
+        {
+            t.printStackTrace();
+            f.complete("");
+        }
+        return f.get();
+    }
+
+    public static <T> T checkedToRuntime(ExSupplier<T> supplier)
+    {
+        try
+        {
+            return supplier.get();
+        }
+        catch (InternalException | UserException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void checkedToRuntime_(ExRunnable runnable)
+    {
+        try
+        {
+            runnable.run();
+        }
+        catch (InternalException | UserException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public static void sleep(int millis)
+    {
+        try
+        {
+            Thread.sleep(millis);
+        }
+        catch (InterruptedException e)
+        {
+
+        }
     }
 
     public static interface FXPlatformSupplierEx<T>

@@ -202,8 +202,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         Pane spacer = new Pane();
         spacer.setVisible(false);
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        Button addButton = new Button("+");
-        addButton.setOnAction(e -> {
+        Button addButton = GUI.button("tableDisplay.addTransformation", () -> {
             parent.edit(getTable());
         });
 

@@ -2,6 +2,7 @@ package test.gen;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.jetbrains.annotations.NotNull;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -55,6 +56,14 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
         {
             throw new RuntimeException(e);
         }
+        return columnForType(type);
+    }
+
+    // Only valid to call after generate has been called at least once
+    @NotNull
+    @OnThread(value = Tag.Simulation, ignoreParent = true)
+    public ExBiFunction<Integer, RecordSet, Column> columnForType(DataType type)
+    {
         return (len, rs) -> type.makeImmediateColumn(nextCol.get(), Utility.makeListEx(len, i -> makeValue(type)), makeValue(type)).apply(rs);
     }
 }

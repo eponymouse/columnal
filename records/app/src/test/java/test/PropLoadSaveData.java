@@ -2,11 +2,9 @@ package test;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.data.Table;
-import records.data.Table.FullSaver;
 import records.data.TableId;
 import records.data.TableManager;
 import records.error.InternalException;
@@ -20,7 +18,6 @@ import threadchecker.Tag;
 import java.lang.reflect.InvocationTargetException;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -41,13 +38,13 @@ public class PropLoadSaveData
             @From(GenImmediateData.class) @NumTables(maxTables = 4) GenImmediateData.ImmediateData_Mgr original)
         throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
-        String saved = save(original.mgr);
+        String saved = TestUtil.save(original.mgr);
         try
         {
             //Assume users destroy leading whitespace:
             String savedMangled = saved.replaceAll("\n +", "\n");
             Map<TableId, Table> loaded = toMap(mgr1.loadAll(savedMangled));
-            String savedAgain = save(mgr1);
+            String savedAgain = TestUtil.save(mgr1);
             Map<TableId, Table> loadedAgain = toMap(mgr2.loadAll(savedAgain));
 
 
@@ -68,24 +65,4 @@ public class PropLoadSaveData
         return tables.stream().collect(Collectors.<Table, TableId, Table>toMap(Table::getId, Function.identity()));
     }
 
-    @OnThread(Tag.Simulation)
-    private static String save(TableManager tableManager) throws ExecutionException, InterruptedException, InvocationTargetException
-    {
-        // This thread is only pretend running on FXPlatform, but sets off some
-        // code which actually runs on the fx platform thread:
-        CompletableFuture<String> f = new CompletableFuture<>();
-
-        try
-        {
-            FullSaver saver = new FullSaver();
-            tableManager.save(null, saver);
-            f.complete(saver.getCompleteFile());
-        }
-        catch (Throwable t)
-        {
-            t.printStackTrace();
-            f.complete("");
-        }
-        return f.get();
-    }
 }
