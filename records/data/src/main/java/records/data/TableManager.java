@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -37,8 +38,9 @@ import java.util.stream.Stream;
 @OnThread(Tag.Any)
 public class TableManager
 {
+    // We use a TreeMap here to have reliable ordering for tables, especially when saving:
     @OnThread(value = Tag.Any,requireSynchronized = true)
-    private final Map<TableId, List<Table>> usedIds = new HashMap<>();
+    private final Map<TableId, List<Table>> usedIds = new TreeMap<>();
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private final List<DataSource> sources = new ArrayList<>();
     @OnThread(value = Tag.Any,requireSynchronized = true)
@@ -365,7 +367,7 @@ public class TableManager
         {
             for (TableId t : usedIds.keySet())
             {
-                if (t.tableId.toLowerCase().equals(tableId.tableId.toLowerCase()))
+                if (t.getRaw().toLowerCase().equals(tableId.getRaw().toLowerCase()))
                     similarIds.add(t);
             }
         }

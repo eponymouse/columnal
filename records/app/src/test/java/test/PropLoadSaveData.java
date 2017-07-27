@@ -7,17 +7,23 @@ import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.data.Table;
 import records.data.Table.FullSaver;
+import records.data.TableId;
 import records.data.TableManager;
 import records.error.InternalException;
 import records.error.UserException;
 import test.gen.GenImmediateData;
+import test.gen.GenImmediateData.NumTables;
 import test.gen.GenTableManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
 import java.lang.reflect.InvocationTargetException;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
@@ -32,7 +38,7 @@ public class PropLoadSaveData
     public void testImmediate(
             @From(GenTableManager.class) TableManager mgr1,
             @From(GenTableManager.class) TableManager mgr2,
-            @From(GenImmediateData.class) GenImmediateData.ImmediateData_Mgr original)
+            @From(GenImmediateData.class) @NumTables(maxTables = 4) GenImmediateData.ImmediateData_Mgr original)
         throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         String saved = save(original.mgr);
@@ -40,13 +46,13 @@ public class PropLoadSaveData
         {
             //Assume users destroy leading whitespace:
             String savedMangled = saved.replaceAll("\n +", "\n");
-            Table loaded = mgr1.loadAll(savedMangled).get(0);
+            Map<TableId, Table> loaded = toMap(mgr1.loadAll(savedMangled));
             String savedAgain = save(mgr1);
-            Table loadedAgain = mgr2.loadAll(savedAgain).get(0);
+            Map<TableId, Table> loadedAgain = toMap(mgr2.loadAll(savedAgain));
 
 
             assertEquals(saved, savedAgain);
-            assertEquals(original.data(), loaded);
+            assertEquals(toMap(original.data), loaded);
             assertEquals(loaded, loadedAgain);
         }
         catch (Throwable t)
@@ -55,6 +61,11 @@ public class PropLoadSaveData
             System.err.flush();
             throw t;
         }
+    }
+
+    private static Map<TableId, Table> toMap(List<? extends Table> tables)
+    {
+        return tables.stream().collect(Collectors.<Table, TableId, Table>toMap(Table::getId, Function.identity()));
     }
 
     @OnThread(Tag.Simulation)
@@ -66,14 +77,9 @@ public class PropLoadSaveData
 
         try
         {
-            tableManager.save(null, new FullSaver() {
-                @Override
-                public @OnThread(Tag.Simulation) void saveTable(String tableSrc)
-                {
-                    super.saveTable(tableSrc);
-                    f.complete(getCompleteFile());
-                }
-            });
+            FullSaver saver = new FullSaver();
+            tableManager.save(null, saver);
+            f.complete(saver.getCompleteFile());
         }
         catch (Throwable t)
         {

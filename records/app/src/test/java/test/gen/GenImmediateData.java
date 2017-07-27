@@ -2,17 +2,16 @@ package test.gen;
 
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
-import com.pholser.junit.quickcheck.generator.Precision;
+import com.pholser.junit.quickcheck.generator.GeneratorConfiguration;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
-import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.TableManager;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import test.gen.GenImmediateData.ImmediateData_Mgr;
@@ -21,8 +20,13 @@ import threadchecker.Tag;
 import utility.ExBiFunction;
 import utility.ExFunction;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.List;
+
+import static java.lang.annotation.ElementType.*;
+import static java.lang.annotation.RetentionPolicy.RUNTIME;
 
 /**
  * Created by neil on 07/12/2016.
@@ -48,11 +52,24 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
         }
     }
 
-    private int numTables = 1;
+    @Target({PARAMETER, FIELD, ANNOTATION_TYPE, TYPE_USE})
+    @Retention(RUNTIME)
+    @GeneratorConfiguration
+    public @interface NumTables {
+        int minTables() default 1;
+        int maxTables() default 1;
+    }
+
+    private @Nullable NumTables numTables;
 
     public GenImmediateData()
     {
         super(ImmediateData_Mgr.class);
+    }
+
+    public void configure(NumTables numTables)
+    {
+        this.numTables = numTables;
     }
 
     @Override
@@ -64,6 +81,8 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
             TableManager mgr = new GenTableManager().generate(r, generationStatus);
 
             List<ImmediateDataSource> tables = new ArrayList<>();
+
+            int numTables = this.numTables == null ? 1 : r.nextInt(this.numTables.minTables(), this.numTables.maxTables());
 
             for (int t = 0; t < numTables; t++)
             {
@@ -87,11 +106,6 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
             e.printStackTrace();
             throw new RuntimeException(e);
         }
-    }
-
-    public void configure(Precision p)
-    {
-        numTables = p.scale();
     }
 
 /*
