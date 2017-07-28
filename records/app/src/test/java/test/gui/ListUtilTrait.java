@@ -12,6 +12,7 @@ import utility.Utility;
 import java.util.OptionalInt;
 import java.util.function.Predicate;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -25,15 +26,25 @@ public interface ListUtilTrait extends FxRobotInterface
         OptionalInt firstIndex = TestUtil.fx(() -> Utility.findFirstIndex(list.getItems(), findItem));
         assertTrue("Not found item satisfying predicate", firstIndex.isPresent());
         final int index = firstIndex.getAsInt();
-        final int indexSel = TestUtil.fx(() -> list.getSelectionModel().getSelectedIndex());
+        int existingIndex = TestUtil.fx(() -> list.getSelectionModel().getSelectedIndex());
+
+        // If nothing selected, selection will begin when you hit a key:
+        if (existingIndex < 0)
+            existingIndex = 0;
 
         clickOn(list);
 
-        if(index > indexSel)
-            for(int i = indexSel; i < index; i++)
+        if(index > existingIndex)
+        {
+            for (int i = existingIndex; i < index; i++)
                 type(KeyCode.DOWN);
-        else if(index < indexSel)
-            for(int i = indexSel; i > index; i--)
+        }
+        else if (index < existingIndex)
+        {
+            for (int i = existingIndex; i > index; i--)
                 type(KeyCode.UP);
+        }
+
+        assertEquals(index, (int)TestUtil.fx(() -> list.getSelectionModel().getSelectedIndex()));
     }
 }

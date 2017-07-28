@@ -62,7 +62,7 @@ public class TestFilter extends ApplicationTest implements ListUtilTrait
         Platform.runLater(() -> TestUtil.checkedToRuntime_(() -> MainWindow.show(windowToUse, temp, saved)));
         TestUtil.sleep(2000);
         clickOn(".id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-addTransformation");
-        selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getName().equals("keep_rows"));
+        selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getName().toLowerCase().matches("keep.?rows"));
         // Then enter filter condition.
         // Find numeric column:
         Column srcColumn = original.data().getData().getColumns().stream().filter(c -> TestUtil.checkedToRuntime(() -> c.getType().isNumber())).findFirst().orElseGet((Supplier<Column>)(() -> {throw new AssertionError("No numeric column");}));

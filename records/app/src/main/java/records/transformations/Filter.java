@@ -244,17 +244,6 @@ public class Filter extends TransformationEditable
             //this.srcHeaderAndData = FXCollections.observableArrayList();
             //this.destHeaderAndData = FXCollections.observableArrayList();
             this.expression = expression;
-            // For testing:
-            try
-            {
-                expression = Expression.parse(null, "abs(true + false - 632 + @column \"Date\" + (@match 63 @case 5 @then true)) - 62 + \"hi\"", mgr.getTypeManager());
-                if (src != null)
-                    expression.check(src.getData(), new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), (e, s, q) -> {});
-            }
-            catch (InternalException | UserException e)
-            {
-                Utility.log(e);
-            }
             this.expressionEditor = new ExpressionEditor(expression, srcControl.getTableOrNull(), new ReadOnlyObjectWrapper<>(DataType.BOOLEAN), mgr, e -> {
                 try
                 {
@@ -482,7 +471,7 @@ public class Filter extends TransformationEditable
     {
         public Info()
         {
-            super("filter", Arrays.asList("remove", "delete"));
+            super("Keep rows", Arrays.asList("remove", "delete"));
         }
 
         @Override
