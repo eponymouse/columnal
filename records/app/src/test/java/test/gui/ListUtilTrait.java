@@ -4,6 +4,9 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
 import org.testfx.api.FxRobotInterface;
+import test.TestUtil;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Utility;
 
 import java.util.OptionalInt;
@@ -17,11 +20,12 @@ import static org.junit.Assert.fail;
  */
 public interface ListUtilTrait extends FxRobotInterface
 {
+    @OnThread(Tag.Any)
     default <T> void selectGivenListViewItem(final ListView<T> list, final Predicate<T> findItem) {
-        OptionalInt firstIndex = Utility.findFirstIndex(list.getItems(), findItem);
+        OptionalInt firstIndex = TestUtil.fx(() -> Utility.findFirstIndex(list.getItems(), findItem));
         assertTrue("Not found item satisfying predicate", firstIndex.isPresent());
         final int index = firstIndex.getAsInt();
-        final int indexSel = list.getSelectionModel().getSelectedIndex();
+        final int indexSel = TestUtil.fx(() -> list.getSelectionModel().getSelectedIndex());
 
         clickOn(list);
 

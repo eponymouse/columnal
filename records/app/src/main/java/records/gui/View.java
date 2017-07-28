@@ -346,7 +346,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
             }
             overlays.put(transformation, new Overlays(sourceDisplays, transformation.getTransformationLabel(), tableDisplay, () ->
             {
-                View.this.edit(transformation.getId(), ((TransformationEditable)transformation).edit(View.this));
+                View.this.editTransform(transformation.getId(), ((TransformationEditable)transformation).edit(View.this));
             }));
 
             save();
@@ -372,7 +372,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
             return (TableDisplay)table.getDisplay();
     }
 
-    public void edit(TableId existingTableId, TransformationEditor selectedEditor)
+    public void editTransform(TableId existingTableId, TransformationEditor selectedEditor)
     {
         EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, selectedEditor);
         showEditDialog(dialog, existingTableId);
@@ -384,7 +384,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
         return getScene().getWindow();
     }
 
-    public void edit(Table src)
+    public void newTransformFromSrc(Table src)
     {
         EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, src.getId());
         showEditDialog(dialog, null);

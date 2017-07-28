@@ -3,8 +3,10 @@ package records.gui;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.control.Button;
+import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
@@ -202,13 +204,19 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         Pane spacer = new Pane();
         spacer.setVisible(false);
         HBox.setHgrow(spacer, Priority.ALWAYS);
+        Button actionsButton = GUI.button("tableDisplay.menu.button", () -> {});
+        // Have to set event handler afterwards, as we need reference to the button:
+        actionsButton.setOnAction(e -> {
+            makeTableContextMenu(parent).show(actionsButton, Side.BOTTOM, 0, 0);
+        });
+
         Button addButton = GUI.button("tableDisplay.addTransformation", () -> {
-            parent.edit(getTable());
+            parent.newTransformFromSrc(getTable());
         });
 
         Label title = new Label(table.getId().getOutput());
         Utility.addStyleClass(title, "table-title");
-        HBox header = new HBox(title, spacer);
+        HBox header = new HBox(actionsButton, title, spacer);
         if (table.showAddColumnButton())
         {
             Button addColumnButton = GUI.button("tableDisplay.addColumn", () -> Utility.alertOnErrorFX_(() -> {
@@ -294,6 +302,13 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
         // Must be last line:
         this.table.setDisplay(this);
+    }
+
+    private ContextMenu makeTableContextMenu(View parent)
+    {
+        return new ContextMenu(
+            GUI.menuItem("tableDisplay.menu.addTransformation", () -> parent.newTransformFromSrc(getTable()))
+        );
     }
 
     private boolean dragResize(double sceneX, double sceneY)
