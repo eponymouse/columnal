@@ -67,6 +67,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.concurrent.CompletableFuture;
@@ -713,6 +714,16 @@ public class TestUtil
         {
 
         }
+    }
+
+    /**
+     * Removes a random item from the given list and returns it.
+     * Note that the list is modified!
+     */
+    public static <T> T removeRandom(Random r, List<T> list)
+    {
+        int index = r.nextInt(list.size());
+        return list.remove(index);
     }
 
     public static interface FXPlatformSupplierEx<T>
