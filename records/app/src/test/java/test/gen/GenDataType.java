@@ -68,7 +68,7 @@ public class GenDataType extends Generator<DataType>
             options.addAll(Arrays.asList(
                 () -> DataType.tuple(TestUtil.makeList(r, 2, 12, () -> genDepth(r, maxDepth - 1, gs))),
                 () -> DataType.array(genDepth(r, maxDepth - 1, gs)),
-                () -> genTagged(r, maxDepth - 1, gs)
+                () -> genTagged(r, maxDepth, gs)
             ));
         }
         return r.<ExSupplier<DataType>>choose(options).get();
