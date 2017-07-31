@@ -37,7 +37,7 @@ import java.util.OptionalInt;
  */
 public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
 {
-    // This stores the tag index
+    // This stores the tag index of each item.
     private final NumericColumnStorage tagStore;
     // This stores the index at which each inner value resides.
     // For example, let's stay you have the type:
@@ -85,7 +85,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             if (inner != null)
             {
                 ColumnStorage<?> result = DataTypeUtility.makeColumnStorage(inner, null);
-                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), reMap(result.getType(), OptionalInt.of(i))));
+                tagTypes.add(new TagType<DataTypeValue>(tagType.getName(), reMap(result.getType())));
                 valueStores.add(result);
             }
             else
@@ -108,13 +108,17 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             public void set(int index, Integer newTag) throws InternalException, UserException
             {
                 int oldTag = tagStore.getInt(index);
+                if (newTag.intValue() == oldTag)
+                    return; // No need to change anything here.
+
                 tagStore.set(OptionalInt.of(index), newTag);
 
-                // Must remove old value here, because there may not a new inner value (and if there is, we don't know it here):
+                // Must remove old value:
                 @Nullable ColumnStorage<?> oldInner = valueStores.get(oldTag);
                 if (oldInner != null)
                 {
                     oldInner.removeRows(innerValueIndex.getInt(index), 1);
+                    // No need to change index itself, as it's about to be replaced
                     for (int i = index + 1; i < tagStore.filled(); i++)
                     {
                         if (tagStore.getInt(i) == oldTag)
@@ -123,13 +127,44 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                         }
                     }
                 }
+                @Nullable ColumnStorage<?> newInner = valueStores.get(newTag);
+                if (newInner != null)
+                {
+                    // Work out destination position by seeing how many are before us:
+                    int newValueIndex = 0;
+                    for (int i = 0; i < index; i++)
+                    {
+                        if (tagStore.getInt(i) == newTag)
+                        {
+                            newValueIndex++;
+                        }
+                    }
+                    innerValueIndex.set(OptionalInt.of(index), newValueIndex);
+                    newInner.insertRows(newValueIndex, (List)Collections.singletonList(DataTypeUtility.makeDefaultValue(newInner.getType())));
+                    for (int i = index + 1; i < tagStore.filled(); i++)
+                    {
+                        if (tagStore.getInt(i) == newTag)
+                        {
+                            innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) + 1);
+                        }
+                    }
+                }
+                else
+                {
+                    // If no new inner store, blank the inner value index:
+                    innerValueIndex.set(OptionalInt.of(index), -1);
+                }
             }
         });
     }
 
     /**
      * Given the inner storage used to store those items, returns a DataTypeValue
-     * for the wrapped type, which has to map the indexes
+     * for the wrapped type, which has to map the indexes.  Recall that if you have
+     * tags A:Bool, B, C:Integer, the index of the value for C in the store for C
+     * is totally independent of the index in the store of A for values of A.  We must
+     * re map.  Remapping while getting is quite straightforward: just use the innerValueIndex
+     * mapping.  The tricky part is updating the mapping when storing.
      *
      * @param innerStore The storage to store in
      * @param innerStoreTagIndex If present, it means we are responsible for updating the indexes,
@@ -137,13 +172,13 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
      *                           it's not up to us (e.g. we're second in a tuple, and first is responsible)
      *                           so leave them alone, and assume they've already been done.
      */
-    private DataTypeValue reMap(DataTypeValue innerStore, OptionalInt innerStoreTagIndex) throws InternalException
+    private DataTypeValue reMap(DataTypeValue dataTypeValue) throws InternalException
     {
-        return innerStore.applyGet(new DataTypeVisitorGetEx<DataTypeValue, InternalException>()
+        return dataTypeValue.applyGet(new DataTypeVisitorGetEx<DataTypeValue, InternalException>()
         {
             // We are given the GetValue for the inner storage
             // We must map through innerValueIndex
-            private <T> GetValue<T> reMap(GetValue<T> g)
+            private <T> GetValue<T> reMapGV(GetValue<T> g)
             {
                 return new GetValue<T>()
                 {
@@ -156,38 +191,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                     @Override
                     public void set(int index, T value) throws InternalException, UserException
                     {
-                        // If we're not responsible for updating store, no extra work to be done:
-                        if (!innerStoreTagIndex.isPresent())
-                        {
-                            g.set(innerValueIndex.getInt(index), value);
-                        }
-                        else
-                        {
-                            int newTag = innerStoreTagIndex.getAsInt();
-                            // Add new:
-                            int newValueIndex = 0;
-                            for (int i = 0; i < index; i++)
-                            {
-                                if (tagStore.getInt(i) == newTag)
-                                {
-                                    newValueIndex++;
-                                }
-                            }
-                            ColumnStorage<T> newStore = (ColumnStorage)valueStores.get(newTag);
-                            if (newStore != null)
-                            {
-                                newStore.insertRows(newValueIndex, Collections.singletonList(value));
-                                g.set(newValueIndex, value);
-                                for (int i = index; i < tagStore.filled(); i++)
-                                {
-                                    if (tagStore.getInt(i) == newTag)
-                                    {
-                                        innerValueIndex.set(OptionalInt.of(i), innerValueIndex.getInt(i) + 1);
-                                    }
-                                }
-                            }
-                            innerValueIndex.set(OptionalInt.of(index), newValueIndex);
-                        }
+                        g.set(innerValueIndex.getInt(index), value);
                     }
                 };
             }
@@ -195,31 +199,31 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             @Override
             public DataTypeValue number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException
             {
-                return DataTypeValue.number(displayInfo, reMap(g));
+                return DataTypeValue.number(displayInfo, reMapGV(g));
             }
 
             @Override
             public DataTypeValue text(GetValue<String> g) throws InternalException
             {
-                return DataTypeValue.text(reMap(g));
+                return DataTypeValue.text(reMapGV(g));
             }
 
             @Override
             public DataTypeValue bool(GetValue<Boolean> g) throws InternalException
             {
-                return DataTypeValue.bool(reMap(g));
+                return DataTypeValue.bool(reMapGV(g));
             }
 
             @Override
             public DataTypeValue date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException
             {
-                return DataTypeValue.date(dateTimeInfo, reMap(g));
+                return DataTypeValue.date(dateTimeInfo, reMapGV(g));
             }
 
             @Override
             public DataTypeValue tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
-                return DataTypeValue.tagged(typeName, Utility.mapListInt(tagTypes, (TagType<DataTypeValue> tt) -> new TagType<DataTypeValue>(tt.getName(), tt.getInner() == null ? null : TaggedColumnStorage.this.reMap(tt.getInner(), OptionalInt.empty()))), reMap(g));
+                return DataTypeValue.tagged(typeName, Utility.mapListInt(tagTypes, (TagType<DataTypeValue> tt) -> new TagType<DataTypeValue>(tt.getName(), tt.getInner() == null ? null : reMap(tt.getInner()))), reMapGV(g));
             }
 
             @Override
@@ -228,8 +232,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                 List<DataTypeValue> reMapped = new ArrayList<>();
                 for (int i = 0; i < types.size(); i++)
                 {
-                    // First one is reponsible if any of us must be:
-                    reMapped.add(TaggedColumnStorage.this.reMap(types.get(i), i == 0 ? innerStoreTagIndex : OptionalInt.empty()));
+                    reMapped.add(reMap(types.get(i)));
                 }
                 return DataTypeValue.tupleV(reMapped);
             }
@@ -239,7 +242,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             {
                 if (inner == null)
                     throw new InternalException("Tagged type cannot contain empty array");
-                return DataTypeValue.arrayV(inner, reMap(g));
+                return DataTypeValue.arrayV(inner, reMapGV(g));
             }
         });
     }
