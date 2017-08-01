@@ -15,6 +15,7 @@ import records.grammar.MainParser.TableContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.GraphUtility;
+import utility.SimulationSupplier;
 import utility.Utility;
 
 import java.io.File;
@@ -229,11 +230,13 @@ public class TableManager
      * @throws UserException
      */
     @OnThread(Tag.Simulation)
-    public void edit(@Nullable TableId replaceTableId, Table replacement) throws InternalException, UserException
+    public void edit(@Nullable TableId replaceTableId, SimulationSupplier<? extends Table> makeReplacement) throws InternalException, UserException
     {
         Map<TableId, List<TableId>> edges = new HashMap<>();
         HashSet<TableId> affected = new HashSet<>();
-        affected.add(replacement.getId());
+        // If it is null, new table, so nothing should be affected:
+        if (replaceTableId != null)
+            affected.add(replaceTableId);
         if (replaceTableId != null)
             affected.add(replaceTableId);
         HashSet<TableId> allIds = new HashSet<>();
@@ -288,7 +291,8 @@ public class TableManager
             if (replaceTableId != null)
                 removeAndSerialise(replaceTableId, new Table.BlankSaver());
         }
-        registerId(replacement.getId(), replacement);
+        // Don't need result, it will register itself:
+        makeReplacement.get();
 
         savedToReRun.thenAccept(ss -> {
             Utility.alertOnError_(() -> reAddAll(ss));

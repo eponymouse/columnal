@@ -177,20 +177,9 @@ public class EditTransformationDialog
         e.printStackTrace();
     }
 
-    public void show(FXPlatformConsumer<Optional<Transformation>> withResult)
+    public Optional<SimulationSupplier<Transformation>> show()
     {
-        Optional<SimulationSupplier<Transformation>> supplier = dialog.showAndWait();
-        if (supplier.isPresent())
-        {
-            Workers.onWorkerThread("Creating transformation", Workers.Priority.SAVE_ENTRY, () -> {
-                Optional<Transformation> trans = Utility.alertOnError(() -> supplier.get().get());
-                Platform.runLater(() -> withResult.consume(trans));
-            });
-        }
-        else
-        {
-            withResult.consume(Optional.empty());
-        }
+        return dialog.showAndWait();
     }
 
     private static class SelectedTransformationStringBinding extends StringBinding

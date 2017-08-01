@@ -393,7 +393,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     private void showEditDialog(EditTransformationDialog dialog, @Nullable TableId replaceOnOK)
     {
         // add will re-run any dependencies:
-        dialog.show(optNewTable -> optNewTable.ifPresent(t -> Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> tableManager.edit(replaceOnOK, t)))));
+        dialog.show().ifPresent(t -> Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> tableManager.edit(replaceOnOK, t))));
     }
 
     @Override
