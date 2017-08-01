@@ -91,8 +91,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     }
 
     @OnThread(Tag.Any)
-    @RequiresNonNull("table")
-    public Table getTable(@UnknownInitialization(Object.class) TableDisplay this)
+    public Table getTable()
     {
         return table;
     }
@@ -205,11 +204,11 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         Button actionsButton = GUI.button("tableDisplay.menu.button", () -> {});
         // Have to set event handler afterwards, as we need reference to the button:
         actionsButton.setOnAction(e -> {
-            makeTableContextMenu(parent).show(actionsButton, Side.BOTTOM, 0, 0);
+            makeTableContextMenu(parent, table).show(actionsButton, Side.BOTTOM, 0, 0);
         });
 
         Button addButton = GUI.button("tableDisplay.addTransformation", () -> {
-            parent.newTransformFromSrc(getTable());
+            parent.newTransformFromSrc(table);
         });
 
         Label title = new Label(table.getId().getOutput());
@@ -308,10 +307,10 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     }
 
     @RequiresNonNull("table")
-    private ContextMenu makeTableContextMenu(@UnknownInitialization(Object.class) TableDisplay this, View parent)
+    private ContextMenu makeTableContextMenu(@UnknownInitialization(Object.class) TableDisplay this, View parent, Table table)
     {
         return new ContextMenu(
-            GUI.menuItem("tableDisplay.menu.addTransformation", () -> parent.newTransformFromSrc(getTable()))
+            GUI.menuItem("tableDisplay.menu.addTransformation", () -> parent.newTransformFromSrc(table))
         );
     }
 
