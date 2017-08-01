@@ -128,7 +128,7 @@ public class TableDisplayUtility
 
     private static Pair<String, ColumnHandler> getDisplay(@NonNull Column column) throws UserException, InternalException
     {
-        return new Pair<>(column.getName().getRaw(), makeField(column.getType()));
+        return new Pair<>(column.getName().getRaw(), makeField(column.getType(), column.isEditable()));
         /*column.getType().<ColumnHandler, UserException>applyGet(new DataTypeVisitorGetEx<ColumnHandler, UserException>()
         {
             @Override
@@ -300,17 +300,17 @@ public class TableDisplayUtility
             this.makeComponent = makeComponent;
         }
 
-        public DisplayCacheSTF<T> makeDisplayCache()
+        public DisplayCacheSTF<T> makeDisplayCache(boolean isEditable)
         {
-            return new DisplayCacheSTF<T>(g, (value, store) -> new StructuredTextField<T>(makeComponent.makeComponent(ImmutableList.of(), value), (Pair<String, T> p) -> store.consume(p.getSecond())));
+            return new DisplayCacheSTF<T>(g, (value, store) -> new StructuredTextField<T>(makeComponent.makeComponent(ImmutableList.of(), value), isEditable ? (Pair<String, T> p) -> store.consume(p.getSecond()) : null));
         }
     }
 
     // public for testing:
     @OnThread(Tag.FXPlatform)
-    public static DisplayCacheSTF<?> makeField(DataTypeValue dataTypeValue) throws InternalException
+    public static DisplayCacheSTF<?> makeField(DataTypeValue dataTypeValue, boolean isEditable) throws InternalException
     {
-        return valueAndComponent(dataTypeValue).makeDisplayCache();
+        return valueAndComponent(dataTypeValue).makeDisplayCache(isEditable);
     }
 
     @OnThread(Tag.FXPlatform)

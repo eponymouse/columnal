@@ -324,6 +324,22 @@ public class FXUtility
         return item;
     }
 
+    // As mouse method above, but for when we are doing a key listener
+    @SuppressWarnings("initialization")
+    @Pure
+    public static <T> T keyboard(@UnknownInitialization T item)
+    {
+        return item;
+    }
+
+    // As mouse method above, but for when we are doing a focus listener
+    @SuppressWarnings("initialization")
+    @Pure
+    public static <T> T focused(@UnknownInitialization T item)
+    {
+        return item;
+    }
+
     public static interface DragHandler
     {
         @OnThread(Tag.FXPlatform)

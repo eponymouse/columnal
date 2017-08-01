@@ -81,7 +81,6 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
     private final BitSet possibleCaretPositions = new BitSet();
     // All positions in the text area which are valid and are beginning or end of words:
     private final BitSet possibleCaretWordPositions = new BitSet();
-    private final FXPlatformConsumer<Pair<String, T>> store;
     private @Nullable State lastValidValue;
     private @Nullable PopOver fixPopup;
     private T completedValue;
@@ -90,12 +89,10 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
     private boolean inSuperReplace;
     private @Nullable FXPlatformRunnable endEdit;
 
-    @SuppressWarnings("initialization")
     // store action takes the string value of the field, and the parsed value of the field, when it is valid.
-    public StructuredTextField(Component<T> content, FXPlatformConsumer<Pair<String, T>> store) throws InternalException
+    public StructuredTextField(Component<T> content, @Nullable FXPlatformConsumer<Pair<String, T>> store) throws InternalException
     {
         super(false);
-        this.store = store;
         getStyleClass().add("structured-text-field");
         this.contentComponent = content;
         List<Item> initialItems = content.getItems();
@@ -106,13 +103,17 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
 
 
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
-            //Utility.logStackTrace("Focused now: " + focused);
-            updateAutoComplete(getSelection());
+            if (store == null)
+                return;
+            final @NonNull FXPlatformConsumer<Pair<String, T>> storeNonNull = store;
+
+            StructuredTextField<T> usFocused = FXUtility.focused(this);
+            usFocused.updateAutoComplete(getSelection());
             if (!focused)
             {
-                endEdit().either_(this::showFixPopup, v -> {
+                usFocused.endEdit().either_(this::showFixPopup, v -> {
                     completedValue = v;
-                    store.consume(new Pair<>(getText(), completedValue));
+                    storeNonNull.consume(new Pair<>(getText(), completedValue));
                     lastValidValue = captureState();
                 });
             }
@@ -120,6 +121,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
 
         FXUtility.addChangeListenerPlatformNN(selectionProperty(), sel -> {
             //Utility.logStackTrace("Selection now: " + sel);
+            StructuredTextField<T> us = FXUtility.mouse(this);
             if (!inSuperReplace)
             {
                 if (contentComponent.selectionChanged(sel.getStart(), sel.getEnd()))
@@ -129,11 +131,11 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
                     selectRange(sel.getStart(), sel.getEnd());
                     inSuperReplace = false;
                 }
-                updateAutoComplete(sel);
+                us.updateAutoComplete(sel);
             }
         });
 
-        Nodes.addInputMap(this, InputMap.sequence(
+        Nodes.addInputMap(FXUtility.keyboard(this), InputMap.sequence(
             InputMap.consume(EventPattern.keyPressed(KeyCode.TAB), e -> {
                 if (autoComplete != null)
                 {
@@ -153,6 +155,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
         // Call super to avoid our own validation:
         super.replace(0, 0, makeDoc(initialItems));
         updatePossibleCaretPositions();
+        @SuppressWarnings("initialization")
         Either<List<ErrorFix>, T> endInitial = endEdit();
         @Nullable T val = endInitial.<@Nullable T>either(err -> null, v -> v);
         if (val == null)
@@ -160,7 +163,10 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
             throw new InternalException("Starting field off with invalid completed value: \"" + makeDoc(initialItems).getText() + "\" with items " + Utility.listToString(Utility.<Item, String>mapList(initialItems, item -> item.getScreenText())) + " err: " + endInitial.either(errs -> errs.stream().map(err -> err.label).collect(Collectors.joining()), v -> "VALUE!"));
         }
         completedValue = val;
-        store.consume(new Pair<>(getText(), completedValue));
+        if (store != null)
+        {
+            store.consume(new Pair<>(getText(), completedValue));
+        }
         lastValidValue = captureState();
     }
 
@@ -369,7 +375,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
         updatePossibleCaretPositions();
     }
 
-    private void updatePossibleCaretPositions()
+    private void updatePossibleCaretPositions(@UnknownInitialization(Object.class) StructuredTextField<T> this)
     {
         possibleCaretPositions.clear();
         possibleCaretWordPositions.clear();

@@ -235,6 +235,9 @@ class StyleClassedTextArea
     int getLength() @UnknownInitialization;
     StyledDocument getDocument() @UnknownInitialization;
     void replaceText(String s) @UnknownInitialization;
+    ObjectProperty selectionProperty() @UnknownInitialization;
+    void selectRange(int a, int b) @UnknownInitialization;
+    IndexRange getSelection() @UnknownInitialization;
 }
 class GenericStyledArea
 {
