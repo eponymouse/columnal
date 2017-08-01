@@ -15,6 +15,13 @@ class Styleable
     ObservableList<String> getStyleClass() @UnknownInitialization;
 }
 
+package javafx.geometry;
+class Point2D
+{
+    @Pure double getX();
+    @Pure double getY();
+}
+
 package javafx.scene;
 class Parent
 {

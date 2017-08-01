@@ -252,8 +252,10 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             if (offsetDrag != null && !FXUtility.mouse(this).dragResize(sceneX, sceneY))
             {
                 Point2D pos = localToParent(sceneToLocal(sceneX, sceneY));
-                setLayoutX(Math.max(0, pos.getX() - offsetDrag.getX()));
-                setLayoutY(Math.max(0, pos.getY() - offsetDrag.getY()));
+                double newX = Math.max(0, pos.getX() - offsetDrag.getX());
+                double newY = Math.max(0, pos.getY() - offsetDrag.getY());
+                setLayoutX(newX);
+                setLayoutY(newY);
             }
         });
 
@@ -319,23 +321,31 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         if (resizing && originalSize != null && offsetDrag != null)
         {
             Point2D p = sceneToLocal(sceneX, sceneY);
+            final double offsetDragX = offsetDrag.getX();
+            final double offsetDragY = offsetDrag.getY();
+            final double originalSizeWidth = originalSize.getWidth();
+            final double originalSizeHeight = originalSize.getHeight();
+            final double originalSizeMaxX = originalSize.getMaxX();
+            final double originalSizeMaxY = originalSize.getMaxY();
+
+
             if (resizeBottom)
             {
-                setMinHeight(p.getY() + (originalSize.getHeight() - offsetDrag.getY()));
+                setMinHeight(p.getY() + (originalSizeHeight - offsetDragY));
             }
             if (resizeRight)
             {
-                setMinWidth(p.getX() + (originalSize.getWidth() - offsetDrag.getX()));
+                setMinWidth(p.getX() + (originalSizeWidth - offsetDragX));
             }
             if (resizeLeft)
             {
-                setLayoutX(localToParent(p.getX() - offsetDrag.getX(), getLayoutY()).getX());
-                setMinWidth(originalSize.getMaxX() - getLayoutX());
+                setLayoutX(localToParent(p.getX() - offsetDragX, getLayoutY()).getX());
+                setMinWidth(originalSizeMaxX - getLayoutX());
             }
             if (resizeTop)
             {
-                setLayoutY(localToParent(getLayoutX(), p.getY() - offsetDrag.getY()).getY());
-                setMinHeight(originalSize.getMaxY() - getLayoutY());
+                setLayoutY(localToParent(getLayoutX(), p.getY() - offsetDragY).getY());
+                setMinHeight(originalSizeMaxY - getLayoutY());
             }
             return true;
         }
