@@ -495,8 +495,14 @@ public class DataType
     }
 
     @OnThread(Tag.Any)
-    @SuppressWarnings("i18n")
     public @Localized String getHeaderDisplay() throws UserException, InternalException
+    {
+        return toDisplay(false);
+    }
+
+    @OnThread(Tag.Any)
+    @SuppressWarnings("i18n")
+    public @Localized String toDisplay(boolean drillIntoTagged) throws UserException, InternalException
     {
         return apply(new DataTypeVisitor<String>()
         {
@@ -516,7 +522,25 @@ public class DataType
             @Override
             public String tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return typeName.getRaw();
+                @Localized String typeStr = typeName.getRaw();
+                if (drillIntoTagged)
+                {
+                    typeStr += " <";
+                    boolean any = false;
+                    for (int i = 0; i < tags.size(); i++)
+                    {
+                        if (i > 0)
+                            typeStr += " | ";
+                        TagType<DataType> tag = tags.get(i);
+                        typeStr += tag.name;
+                        if (tag.inner != null)
+                        {
+                            typeStr += ":" + tag.inner.toDisplay(true);
+                        }
+                    }
+                    typeStr += ">";
+                }
+                return typeStr;
             }
 
             @Override
@@ -578,7 +602,7 @@ public class DataType
     {
         try
         {
-            return getHeaderDisplay();
+            return toDisplay(true);
         }
         catch (UserException | InternalException e)
         {
