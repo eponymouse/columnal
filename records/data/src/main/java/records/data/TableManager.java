@@ -259,26 +259,29 @@ public class TableManager
         List<String> reRun = new ArrayList<>();
         AtomicInteger toSave = new AtomicInteger(1); // Keep one extra until we've lined up all jobs
         CompletableFuture<List<String>> savedToReRun = new CompletableFuture<>();
-        for (int i = processFrom; i < linearised.size(); i++)
+        if (processFrom != -1)
         {
-            if (!affected.contains(linearised.get(i)))
+            for (int i = processFrom; i < linearised.size(); i++)
             {
-                // Add job:
-                toSave.incrementAndGet();
-                removeAndSerialise(linearised.get(i), new Table.BlankSaver()
+                if (!affected.contains(linearised.get(i)))
                 {
-                    // Ignore types and units because they are all already loaded
-                    @Override
-                    public @OnThread(Tag.Simulation) void saveTable(String script)
+                    // Add job:
+                    toSave.incrementAndGet();
+                    removeAndSerialise(linearised.get(i), new Table.BlankSaver()
                     {
-                        reRun.add(script);
-                        if (toSave.decrementAndGet() == 0)
+                        // Ignore types and units because they are all already loaded
+                        @Override
+                        public @OnThread(Tag.Simulation) void saveTable(String script)
                         {
-                            // Saved all of them
-                            savedToReRun.complete(reRun);
+                            reRun.add(script);
+                            if (toSave.decrementAndGet() == 0)
+                            {
+                                // Saved all of them
+                                savedToReRun.complete(reRun);
+                            }
                         }
-                    }
-                });
+                    });
+                }
             }
         }
         if (toSave.decrementAndGet() == 0) // Remove extra; can complete now when hits zero
