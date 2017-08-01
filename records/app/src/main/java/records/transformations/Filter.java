@@ -287,6 +287,9 @@ public class Filter extends TransformationEditable
                 }
             }
 */
+            // Skip the solver:
+            if (true) return;
+
             Configuration config = Configuration.defaultConfiguration();
             try
             {
