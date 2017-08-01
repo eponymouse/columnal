@@ -180,7 +180,7 @@ public class Utility
     }
 
     @OnThread(Tag.FX)
-    public static void addStyleClass(Styleable styleable, String... classes)
+    public static void addStyleClass(@UnknownInitialization Styleable styleable, String... classes)
     {
         styleable.getStyleClass().addAll(classes);
     }
@@ -1056,14 +1056,27 @@ public class Utility
         }
     }
 
+    private static List<Exception> queuedErrors = new ArrayList<>();
+    private static boolean showingError = false;
+
     @OnThread(Tag.FXPlatform)
     public static void showError(Exception e)
     {
-        log(e);
-        String localizedMessage = e.getLocalizedMessage();
-        Alert alert = new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK);
-        alert.initModality(Modality.APPLICATION_MODAL);
-        alert.showAndWait();
+        if (showingError)
+        {
+            // TODO do something with the queued errors; add to shown dialog?
+            queuedErrors.add(e);
+        }
+        else
+        {
+            log(e);
+            String localizedMessage = e.getLocalizedMessage();
+            Alert alert = new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK);
+            alert.initModality(Modality.APPLICATION_MODAL);
+            showingError = true;
+            alert.showAndWait();
+            showingError = false;
+        }
     }
 
     @OnThread(Tag.Simulation)

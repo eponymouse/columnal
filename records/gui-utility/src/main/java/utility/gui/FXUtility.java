@@ -35,8 +35,10 @@ import javafx.util.Duration;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import org.controlsfx.validation.ValidationResult;
 import org.jetbrains.annotations.NotNull;
 import records.error.InternalException;
@@ -307,6 +309,19 @@ public class FXUtility
         Text t = new Text("TyqX"); // Should be full height
         t.setFont(new Font("Noto Sans", 13));
         return t.getLayoutBounds().getHeight();
+    }
+
+    /**
+     * Used to "wash" an in-construction item when setting a mouse handler,
+     * to avoid invalid initialization warnings -- the handler won't be executed
+     * until after the constructor because it requires user mouse action,
+     * so it's safe to assume the item is initialized.
+     */
+    @SuppressWarnings("initialization")
+    @Pure
+    public static <T> T mouse(@UnknownInitialization T item)
+    {
+        return item;
     }
 
     public static interface DragHandler

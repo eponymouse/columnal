@@ -5,6 +5,7 @@ import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.geometry.Side;
 import javafx.scene.Cursor;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -15,6 +16,11 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
+import org.checkerframework.checker.initialization.qual.Initialized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
 import records.data.RecordSet;
 import records.data.Table;
@@ -24,6 +30,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.FXPlatformRunnable;
 import utility.Utility;
 import utility.Workers;
@@ -48,26 +55,19 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 {
     private static final int INITIAL_LOAD = 100;
     private static final int LOAD_CHUNK = 100;
-    private final RecordSet recordSet;
+    private final Either<String, RecordSet> recordSetOrError;
     private final Table table;
-    private final String error;
     private boolean resizing;
     // In parent coordinates:
-    private Bounds originalSize;
+    private @Nullable Bounds originalSize;
     // In local coordinates:
-    private Point2D offsetDrag;
+    private @Nullable Point2D offsetDrag;
     private boolean resizeLeft;
     private boolean resizeRight;
     private boolean resizeTop;
     private boolean resizeBottom;
     @OnThread(Tag.Any)
     private final AtomicReference<Bounds> mostRecentBounds;
-
-    @OnThread(Tag.Any)
-    public RecordSet getRecordSet()
-    {
-        return recordSet;
-    }
 
     @OnThread(Tag.FX)
     public Point2D closestPointTo(double parentX, double parentY)
@@ -91,7 +91,8 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     }
 
     @OnThread(Tag.Any)
-    public Table getTable()
+    @RequiresNonNull("table")
+    public Table getTable(@UnknownInitialization(Object.class) TableDisplay this)
     {
         return table;
     }
@@ -177,26 +178,23 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         }
     }
 
-    @SuppressWarnings("initialization")
+    //@SuppressWarnings("initialization")
     @OnThread(Tag.FXPlatform)
     public TableDisplay(View parent, Table table)
     {
         this.table = table;
-        String error;
-        RecordSet recordSet;
+        Either<String, RecordSet> recordSetOrError;
         try
         {
-            recordSet = table.getData();
-            error = null;
+            recordSetOrError = Either.right(table.getData());
         }
         catch (UserException | InternalException e)
         {
-            error = e.getLocalizedMessage();
-            recordSet = null;
+            recordSetOrError = Either.left(e.getLocalizedMessage());
         }
-        this.error = error;
-        this.recordSet = recordSet;
-        StackPane body = new StackPane(new TableDataDisplay(recordSet, table.getOperations(), parent::modified).getNode());
+        this.recordSetOrError = recordSetOrError;
+        StackPane body = new StackPane(this.recordSetOrError.<Node>either(err -> new Label(err),
+            recordSet -> new TableDataDisplay(recordSet, table.getOperations(), parent::modified).getNode()));
         Utility.addStyleClass(body, "table-body");
         setCenter(body);
         Utility.addStyleClass(this, "table-wrapper");
@@ -249,9 +247,11 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         };
         header.setOnMousePressed(onPressed);
         header.setOnMouseDragged(e -> {
-            if (!dragResize(e.getSceneX(), e.getSceneY()))
+            double sceneX = e.getSceneX();
+            double sceneY = e.getSceneY();
+            if (offsetDrag != null && !FXUtility.mouse(this).dragResize(sceneX, sceneY))
             {
-                Point2D pos = localToParent(sceneToLocal(e.getSceneX(), e.getSceneY()));
+                Point2D pos = localToParent(sceneToLocal(sceneX, sceneY));
                 setLayoutX(Math.max(0, pos.getX() - offsetDrag.getX()));
                 setLayoutY(Math.max(0, pos.getY() - offsetDrag.getY()));
             }
@@ -294,26 +294,29 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             }
         });
         setOnMousePressed(onPressed);
-        setOnMouseDragged(e -> dragResize(e.getSceneX(), e.getSceneY()));
+        setOnMouseDragged(e -> FXUtility.mouse(this).dragResize(e.getSceneX(), e.getSceneY()));
         setOnMouseReleased(e -> { resizing = false; });
 
         mostRecentBounds = new AtomicReference<>(getBoundsInParent());
         FXUtility.addChangeListenerPlatformNN(boundsInParentProperty(), mostRecentBounds::set);
 
-        // Must be last line:
-        this.table.setDisplay(this);
+        // Must be done as last item:
+        @SuppressWarnings("initialization") @Initialized TableDisplay usInit = this;
+        this.table.setDisplay(usInit);
     }
 
-    private ContextMenu makeTableContextMenu(View parent)
+    @RequiresNonNull("table")
+    private ContextMenu makeTableContextMenu(@UnknownInitialization(Object.class) TableDisplay this, View parent)
     {
         return new ContextMenu(
             GUI.menuItem("tableDisplay.menu.addTransformation", () -> parent.newTransformFromSrc(getTable()))
         );
     }
 
+    @Pure // It does changes position, but doesn't alter fields which is what matters
     private boolean dragResize(double sceneX, double sceneY)
     {
-        if (resizing)
+        if (resizing && originalSize != null && offsetDrag != null)
         {
             Point2D p = sceneToLocal(sceneX, sceneY);
             if (resizeBottom)

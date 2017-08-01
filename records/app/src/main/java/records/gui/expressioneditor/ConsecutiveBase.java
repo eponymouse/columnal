@@ -254,7 +254,7 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         int index = getOperandIndex(rightOf);
         if (index != -1)
         {
-            if (!operators.get(index).fromBlankTo(operator))
+            if (index >= operators.size() || !operators.get(index).fromBlankTo(operator))
             {
                 // Add new operator and new operand:
                 atomicEdit.set(true);
