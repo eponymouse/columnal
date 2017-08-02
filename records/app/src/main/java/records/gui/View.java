@@ -16,6 +16,7 @@ import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -24,6 +25,7 @@ import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.stage.Window;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
@@ -68,6 +70,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     private final Pane pickPaneMouse;
     private final Pane pickPaneDisplay;
     private final ObjectProperty<@Nullable Table> currentPick;
+    private final FXPlatformRunnable adjustParent;
     private @Nullable FXPlatformConsumer<@Nullable Table> onPick;
     @OnThread(Tag.FXPlatform)
     private final ObjectProperty<File> diskFile;
@@ -173,6 +176,11 @@ public class View extends StackPane implements TableManager.TableManagerListener
         save();
     }
 
+    public void tableMovedOrResized(@UnknownInitialization TableDisplay tableDisplay)
+    {
+        adjustParent.run();
+    }
+
     @OnThread(Tag.FXPlatform)
     private static class Overlays
     {
@@ -244,8 +252,9 @@ public class View extends StackPane implements TableManager.TableManagerListener
 
     // The type of the listener really throws off the checkers so suppress them all:
     @SuppressWarnings({"initialization", "keyfor", "interning", "userindex", "valuetype", "helpfile"})
-    public View(File location) throws InternalException, UserException
+    public View(FXPlatformRunnable adjustParent, File location) throws InternalException, UserException
     {
+        this.adjustParent = adjustParent;
         diskFile = new SimpleObjectProperty<>(location);
         tableManager = new TableManager(TransformationManager.getInstance(), this);
         mainPane = new Pane();
@@ -361,6 +370,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
             tableDisplay.setLayoutX(alignToRightOf.getLayoutX() + alignToRightOf.getWidth() + DEFAULT_SPACE);
             tableDisplay.setLayoutY(alignToRightOf.getLayoutY());
         }
+        FXUtility.runAfter(adjustParent);
     }
 
     private @Nullable TableDisplay getTableDisplayOrNull(TableId tableId)

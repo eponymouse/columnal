@@ -26,13 +26,12 @@ public interface ListUtilTrait extends FxRobotInterface
         OptionalInt firstIndex = TestUtil.fx(() -> Utility.findFirstIndex(list.getItems(), findItem));
         assertTrue("Not found item satisfying predicate", firstIndex.isPresent());
         final int index = firstIndex.getAsInt();
-        int existingIndex = TestUtil.fx(() -> list.getSelectionModel().getSelectedIndex());
-
-        // If nothing selected, selection will begin when you hit a key:
-        if (existingIndex < 0)
-            existingIndex = 0;
 
         clickOn(list);
+        // If nothing selected, selection will begin when you hit a key:
+        int existingIndex = TestUtil.fx(() -> list.getSelectionModel().getSelectedIndex());
+        if (existingIndex < 0)
+            existingIndex = 0;
 
         if(index > existingIndex)
         {

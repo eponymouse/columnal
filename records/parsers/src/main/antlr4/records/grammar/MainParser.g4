@@ -8,13 +8,17 @@ tableId : item;
 importType : item;
 filePath : item;
 dataSourceLinkHeader : DATA tableId LINKED importType filePath dataFormat;
-dataSourceImmediate : DATA tableId dataFormat VALUES detail VALUES NEWLINE;
+dataSourceImmediate : DATA tableId dataFormat values NEWLINE;
+values : VALUES detail VALUES;
 
 dataSource : dataSourceLinkHeader | dataSourceImmediate;
 
 transformationName : item;
 sourceName : item;
 transformation : TRANSFORMATION tableId transformationName NEWLINE SOURCE sourceName+ NEWLINE detail NEWLINE;
+
+// For copy and paste:
+isolatedValues : units types dataFormat values;
 
 detail: BEGIN DETAIL_LINE* DETAIL_END;
 
@@ -31,7 +35,7 @@ position : POSITION item item item item NEWLINE;
 
 table : (dataSource | transformation) position END tableId NEWLINE;
 
-units : UNITS detail UNITS;
-types : TYPES detail TYPES;
+units : UNITS detail UNITS NEWLINE;
+types : TYPES detail TYPES NEWLINE;
 
 file : VERSION item NEWLINE blank* units blank* types blank* (table blank*)+;

@@ -88,7 +88,7 @@ public class TypeManager
 
     public void loadTypeDecls(TypesContext types) throws UserException, InternalException
     {
-        TypeDeclsContext typeDecls = Utility.parseAsOne(types.detail().DETAIL_LINE().stream().<String>map(l -> l.getText()).collect(Collectors.joining("\n")), FormatLexer::new, FormatParser::new, p -> p.typeDecls());
+        TypeDeclsContext typeDecls = Utility.parseAsOne(types.detail().DETAIL_LINE().stream().<String>map(l -> l.getText()).filter(s -> !s.trim().isEmpty()).collect(Collectors.joining("\n")), FormatLexer::new, FormatParser::new, p -> p.typeDecls());
         for (TypeDeclContext typeDeclContext : typeDecls.typeDecl())
         {
             loadTypeDecl(typeDeclContext);
@@ -205,7 +205,7 @@ public class TypeManager
     }
 
     @OnThread(Tag.Simulation)
-    public void save(Saver saver) throws InternalException, UserException
+    public String save() throws InternalException, UserException
     {
         Map<@NonNull DataType, Collection<DataType>> incomingRefs = new HashMap<>();
         for (DataType dataType : knownTypes.values())
@@ -281,15 +281,16 @@ public class TypeManager
         // lineariseDAG makes all edges point forwards, but we want them pointing backwards
         // so reverse:
         Collections.reverse(orderedDataTypes);
+        OutputBuilder b = new OutputBuilder();
         for (DataType dataType : orderedDataTypes)
         {
-            OutputBuilder b = new OutputBuilder();
+
             b.t(FormatLexer.TYPE, FormatLexer.VOCABULARY);
             b.quote(dataType.getTaggedTypeName());
             dataType.save(b, true);
             b.nl();
-            saver.saveType(b.toString());
         }
+        return b.toString();
     }
 
     public UnitManager getUnitManager()

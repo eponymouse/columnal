@@ -2,6 +2,7 @@ package records.error;
 
 import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.ParserRuleContext;
+import org.antlr.v4.runtime.misc.ParseCancellationException;
 import records.grammar.DataLexer;
 import records.grammar.DataParser;
 
@@ -18,6 +19,11 @@ public class ParseException extends UserException
     public ParseException(String expectedItem, Parser p)
     {
         super("Expected " + expectedItem + " found: {" + p.getCurrentToken().getText() + "} " + p.getTokenNames()[p.getCurrentToken().getType()] + " " + p.getCurrentToken().getStartIndex());
+    }
+
+    public ParseException(Parser p, ParseCancellationException e)
+    {
+        super("Found: {" + p.getCurrentToken().getText() + "} " + p.getTokenNames()[p.getCurrentToken().getType()] + " " + p.getCurrentToken().getStartIndex(), e);
     }
 
     private static String formatLocation(ParserRuleContext problemItem)

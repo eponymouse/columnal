@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
+import javafx.scene.control.ScrollPane;
 import org.junit.runner.RunWith;
 import records.data.Table;
 import records.data.Table.FullSaver;
@@ -100,7 +101,7 @@ public class PropLoadSaveTransformation
             {
                 File tempFile = File.createTempFile("rec", "tmp");
                 tempFile.deleteOnExit();
-                view = new View(tempFile);
+                view = new View(() -> {}, tempFile);
             }
             catch (InternalException | UserException | IOException e)
             {

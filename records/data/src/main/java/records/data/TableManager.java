@@ -193,7 +193,7 @@ public class TableManager
     public void save(@Nullable File destination, Saver saver) throws InternalException, UserException
     {
         // TODO save units
-        typeManager.save(saver);
+        saver.saveType(typeManager.save());
         List<List<Table>> values = new ArrayList<>();
         // Deep copy:
         synchronized (this)

@@ -1331,7 +1331,7 @@ public class DataType
                 DateTimeFormatter formatter = dateTimeInfo.getFormatter();
                 try
                 {
-                    return DataTypeUtility.value(dateTimeInfo, formatter.parse(ctx.getText()));
+                    return DataTypeUtility.value(dateTimeInfo, formatter.parse(ctx.getText().trim()));
                 }
                 catch (DateTimeParseException e)
                 {

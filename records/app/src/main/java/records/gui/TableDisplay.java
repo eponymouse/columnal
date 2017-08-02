@@ -26,8 +26,10 @@ import records.data.RecordSet;
 import records.data.Table;
 import records.data.Table.TableDisplayBase;
 import records.data.TableOperations;
+import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
+import records.importers.ClipboardUtils;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -196,7 +198,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             recordSet -> new TableDataDisplay(recordSet, table.getOperations(), parent::modified).getNode()));
         Utility.addStyleClass(body, "table-body");
         setCenter(body);
-        Utility.addStyleClass(this, "table-wrapper");
+        Utility.addStyleClass(this, "table-wrapper", table instanceof Transformation ? "tableDisplay-transformation" : "tableDisplay-source");
         setPickOnBounds(true);
         Pane spacer = new Pane();
         spacer.setVisible(false);
@@ -248,13 +250,14 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         header.setOnMouseDragged(e -> {
             double sceneX = e.getSceneX();
             double sceneY = e.getSceneY();
-            if (offsetDrag != null && !FXUtility.mouse(this).dragResize(sceneX, sceneY))
+            if (offsetDrag != null && !FXUtility.mouse(this).dragResize(parent, sceneX, sceneY))
             {
                 Point2D pos = localToParent(sceneToLocal(sceneX, sceneY));
                 double newX = Math.max(0, pos.getX() - offsetDrag.getX());
                 double newY = Math.max(0, pos.getY() - offsetDrag.getY());
                 setLayoutX(newX);
                 setLayoutY(newY);
+                parent.tableMovedOrResized(this);
             }
         });
 
@@ -295,7 +298,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             }
         });
         setOnMousePressed(onPressed);
-        setOnMouseDragged(e -> FXUtility.mouse(this).dragResize(e.getSceneX(), e.getSceneY()));
+        setOnMouseDragged(e -> FXUtility.mouse(this).dragResize(parent, e.getSceneX(), e.getSceneY()));
         setOnMouseReleased(e -> { resizing = false; });
 
         mostRecentBounds = new AtomicReference<>(getBoundsInParent());
@@ -310,12 +313,13 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     private ContextMenu makeTableContextMenu(@UnknownInitialization(Object.class) TableDisplay this, View parent, Table table)
     {
         return new ContextMenu(
-            GUI.menuItem("tableDisplay.menu.addTransformation", () -> parent.newTransformFromSrc(table))
+            GUI.menuItem("tableDisplay.menu.addTransformation", () -> parent.newTransformFromSrc(table)),
+            GUI.menuItem("tableDisplay.menu.copyValues", () -> Utility.alertOnErrorFX_(() -> ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), table.getData().getColumns())))
         );
     }
 
     @Pure // It does changes position, but doesn't alter fields which is what matters
-    private boolean dragResize(double sceneX, double sceneY)
+    private boolean dragResize(View parent, double sceneX, double sceneY)
     {
         if (resizing && originalSize != null && offsetDrag != null)
         {
@@ -327,25 +331,34 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             final double originalSizeMaxX = originalSize.getMaxX();
             final double originalSizeMaxY = originalSize.getMaxY();
 
-
+            boolean changed = false;
             if (resizeBottom)
             {
                 setMinHeight(p.getY() + (originalSizeHeight - offsetDragY));
+                changed = true;
             }
             if (resizeRight)
             {
                 setMinWidth(p.getX() + (originalSizeWidth - offsetDragX));
+                changed = true;
             }
             if (resizeLeft)
             {
                 setLayoutX(localToParent(p.getX() - offsetDragX, getLayoutY()).getX());
                 setMinWidth(originalSizeMaxX - getLayoutX());
+                changed = true;
             }
             if (resizeTop)
             {
                 setLayoutY(localToParent(getLayoutX(), p.getY() - offsetDragY).getY());
                 setMinHeight(originalSizeMaxY - getLayoutY());
+                changed = true;
             }
+            if (changed)
+            {
+                parent.tableMovedOrResized(this);
+            }
+
             return true;
         }
         return false;

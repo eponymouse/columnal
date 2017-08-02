@@ -55,6 +55,7 @@ import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.TokenStream;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
+import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.*;
@@ -64,6 +65,9 @@ import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.ParseException;
 import records.error.UserException;
+import records.grammar.DataLexer;
+import records.grammar.DataParser;
+import records.grammar.MainParser.DetailContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -416,7 +420,7 @@ public class Utility
         }
         catch (ParseCancellationException e)
         {
-            throw new ParseException(parser.getClass().toString(), parser);
+            throw new ParseException(parser, e);
         }
     }
 
@@ -830,6 +834,41 @@ public class Utility
             r.add(makeOne.apply(i));
         }
         return r;
+    }
+
+    public static int loadData(DetailContext detail, ExConsumer<DataParser> withEachRow) throws UserException, InternalException
+    {
+        int count = 0;
+        for (TerminalNode line : detail.DETAIL_LINE())
+        {
+            count += 1;
+            String lineText = line.getText();
+            try
+            {
+                parseAsOne(lineText, DataLexer::new, DataParser::new, p ->
+                {
+                    try
+                    {
+                        p.startRow();
+                        if (!p.isMatchedEOF())
+                        {
+                            withEachRow.accept(p);
+                        }
+                        p.endRow();
+                        return 0;
+                    }
+                    catch (ParseCancellationException e)
+                    {
+                        throw new ParseException("token", p);
+                    }
+                });
+            }
+            catch (UserException  e)
+            {
+                throw new UserException("Error loading data line: \"" + lineText + "\"", e);
+            }
+        }
+        return count;
     }
 
     public static class ReadState

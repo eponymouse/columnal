@@ -1,18 +1,13 @@
 package records.data;
 
-import annotation.qual.Value;
-import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.ColumnMaker;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
-import records.error.ParseException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.grammar.DataLexer;
-import records.grammar.DataParser;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
 import records.grammar.FormatParser.ColumnContext;
@@ -24,9 +19,9 @@ import records.grammar.MainParser;
 import records.grammar.MainParser.DataFormatContext;
 import records.grammar.MainParser.DataSourceContext;
 import records.grammar.MainParser.DataSourceImmediateContext;
-import records.grammar.MainParser.DetailContext;
 import records.grammar.MainParser.TableContext;
-import utility.ExConsumer;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -58,7 +53,7 @@ public abstract class DataSource extends Table
         if (dataSource.dataSourceImmediate() != null)
         {
             DataSourceImmediateContext immed = dataSource.dataSourceImmediate();
-            List<LoadedFormat> format = loadFormat(manager.getTypeManager(), immed.dataFormat());
+            List<LoadedFormat> format = loadFormat(manager.getTypeManager(), immed.dataFormat(), true);
             List<ColumnMaker<?, ?>> columns = new ArrayList<>();
 
             //TODO check for data row even length, error if not (allow & ignore blank lines)
@@ -67,6 +62,10 @@ public abstract class DataSource extends Table
                 DataType t = format.get(i).dataType;
                 ColumnId columnId = format.get(i).columnId;
                 String defaultValueUnparsed = format.get(i).defaultValueUnparsed;
+                if (defaultValueUnparsed == null)
+                {
+                    throw new InternalException("Null default value even though we are editable; should have thrown earlier.");
+                }
                 columns.add(t.makeImmediateColumn(columnId, defaultValueUnparsed));
             }
             LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
@@ -76,48 +75,14 @@ public abstract class DataSource extends Table
             throw new UnimplementedException();
     }
 
-    private static int loadData(DetailContext detail, ExConsumer<DataParser> withEachRow) throws UserException, InternalException
-    {
-        int count = 0;
-        for (TerminalNode line : detail.DETAIL_LINE())
-        {
-            count += 1;
-            String lineText = line.getText();
-            try
-            {
-                Utility.parseAsOne(lineText, DataLexer::new, DataParser::new, p ->
-                {
-                    try
-                    {
-                        p.startRow();
-                        if (!p.isMatchedEOF())
-                        {
-                            withEachRow.accept(p);
-                        }
-                        p.endRow();
-                        return 0;
-                    }
-                    catch (ParseCancellationException e)
-                    {
-                        throw new ParseException("token", p);
-                    }
-                });
-            }
-            catch (UserException  e)
-            {
-                throw new UserException("Error loading data line: \"" + lineText + "\"", e);
-            }
-        }
-        return count;
-    }
-
+    @OnThread(Tag.Any)
     public static class LoadedFormat
     {
         public final ColumnId columnId;
         public final DataType dataType;
-        public final String defaultValueUnparsed;
+        public final @Nullable String defaultValueUnparsed;
 
-        public LoadedFormat(ColumnId columnId, DataType dataType, String defaultValueUnparsed)
+        public LoadedFormat(ColumnId columnId, DataType dataType, @Nullable String defaultValueUnparsed)
         {
             this.columnId = columnId;
             this.dataType = dataType;
@@ -125,7 +90,8 @@ public abstract class DataSource extends Table
         }
     }
 
-    private static List<LoadedFormat> loadFormat(TypeManager typeManager, DataFormatContext dataFormatContext) throws UserException, InternalException
+    @OnThread(Tag.Any)
+    public static List<LoadedFormat> loadFormat(TypeManager typeManager, DataFormatContext dataFormatContext, boolean editable) throws UserException, InternalException
     {
         List<LoadedFormat> r = new ArrayList<>();
         for (TerminalNode line : dataFormatContext.detail().DETAIL_LINE())
@@ -143,10 +109,10 @@ public abstract class DataSource extends Table
                 if (type == null)
                     throw new UserException("Null type on line \"" + line.getText() + "\" name: " + name + " type: " + type.getText());
                 DefaultValueContext defaultCtx = column.defaultValue();
-                if (defaultCtx == null)
+                if (defaultCtx == null && editable)
                     throw new UserException("Default value missing for potentially-editable table " + name);
                 DataType dataType = typeManager.loadTypeUse(type);
-                r.add(new LoadedFormat(name, dataType, defaultCtx.VALUE().getText()));
+                r.add(new LoadedFormat(name, dataType, defaultCtx == null ? null : defaultCtx.VALUE().getText()));
                 return 0;
             });
         }
@@ -179,7 +145,7 @@ public abstract class DataSource extends Table
     {
         public LoadedRecordSet(List<ColumnMaker<?, ?>> columns, DataSourceImmediateContext immed) throws InternalException, UserException
         {
-            super(Utility.mapList(columns, c -> c::apply), () -> loadData(immed.detail(), p ->
+            super(Utility.mapList(columns, c -> c::apply), () -> Utility.loadData(immed.values().detail(), p ->
             {
                 for (int i = 0; i < columns.size(); i++)
                 {

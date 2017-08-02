@@ -1,5 +1,6 @@
 package test.gui;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -20,6 +21,7 @@ import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow;
+import records.importers.ClipboardUtils;
 import records.transformations.TransformationInfo;
 import test.TestUtil;
 import test.gen.GenImmediateData;
@@ -28,20 +30,26 @@ import test.gen.GenImmediateData.NumTables;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
 
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
+import java.util.List;
+import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ExecutionException;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
+import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestFilter extends ApplicationTest implements ListUtilTrait
+public class TestFilter extends ApplicationTest implements ListUtilTrait, ScrollToTrait
 {
     @OnThread(Tag.Any)
     private Stage windowToUse;
@@ -78,8 +86,16 @@ public class TestFilter extends ApplicationTest implements ListUtilTrait
         write(DataTypeUtility._test_valueToString(cutOff));
         clickOn(".ok-button");
 
-        // TODO now check output values.  Either by examining GUI, or export to CSV file?
-        fail("TODO");
+        TestUtil.sleep(1000);
+        scrollTo(".tableDisplay-transformation .id-tableDisplay-menu-button");
+        // Now check output values by getting them from clipboard:
+        clickOn(".tableDisplay-transformation .id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-copyValues");
+        TestUtil.sleep(1000);
+        Optional<List<List<@Value Object>>> clip = TestUtil.fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
+        assertTrue(clip.isPresent());
+        // Need to fish out first column from clip, then compare item:
+        List<@Value Object> expected = IntStream.range(0, srcColumn.getLength()).mapToObj(i -> TestUtil.checkedToRuntime(() -> srcColumn.getType().getCollapsed(i))).filter(x -> Utility.compareNumbers(x, cutOff) > 0).collect(Collectors.toList());
+        TestUtil.assertValueListEqual("Filtered", expected, clip.get().get(0));
     }
 
     @Override
