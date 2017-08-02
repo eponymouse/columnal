@@ -262,6 +262,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
         pickPaneDisplay = new Pane();
         pickPaneDisplay.getStyleClass().add("view-pick-pane");
         getChildren().add(mainPane);
+        getStyleClass().add("view");
         currentPick = new SimpleObjectProperty<>(null);
         // Needs to pick up mouse events on mouse pane, not display pane:
         pickPaneMouse.setMouseTransparent(false);

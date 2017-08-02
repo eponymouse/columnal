@@ -223,6 +223,11 @@ public class Filter extends TransformationEditable
         return recordSet;
     }
 
+    public Expression getFilterExpression()
+    {
+        return filterExpression;
+    }
+
     private static class Editor extends TransformationEditor
     {
         private final @Nullable TableId thisTableId;
