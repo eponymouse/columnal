@@ -5,22 +5,14 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import javafx.application.Platform;
-import javafx.scene.control.ListView;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
-import org.apache.commons.io.FileUtils;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
-import org.testfx.util.WaitForAsyncUtils;
 import records.data.Column;
 import records.data.datatype.DataTypeUtility;
-import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.MainWindow;
 import records.importers.ClipboardUtils;
 import records.transformations.TransformationInfo;
 import test.TestUtil;
@@ -32,11 +24,8 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.nio.charset.Charset;
-import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
 import java.util.Random;
@@ -64,11 +53,7 @@ public class TestFilter extends ApplicationTest implements ListUtilTrait, Scroll
             @When(seed=9064559552451687290L) @From(GenRandom.class) Random r) throws IOException, InterruptedException, ExecutionException, InvocationTargetException, InternalException, UserException
     {
         // Save the table, then open GUI and load it, then add a filter transformation (rename to keeprows)
-        File temp = File.createTempFile("srcdata", "tables");
-        temp.deleteOnExit();
-        String saved = TestUtil.save(original.mgr);
-        Platform.runLater(() -> TestUtil.checkedToRuntime_(() -> MainWindow.show(windowToUse, temp, saved)));
-        TestUtil.sleep(2000);
+        TestUtil.openDataAsTable(windowToUse, original.mgr);
         clickOn(".id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-addTransformation");
         selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getName().toLowerCase().matches("keep.?rows"));
         // Then enter filter condition.

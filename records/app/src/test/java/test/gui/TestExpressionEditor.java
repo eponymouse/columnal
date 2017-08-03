@@ -12,6 +12,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.Transformation;
+import records.error.InternalException;
+import records.error.UserException;
 import records.gui.MainWindow;
 import records.gui.View;
 import records.transformations.Filter;
@@ -33,7 +35,10 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 
 import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.Random;
+import java.util.concurrent.ExecutionException;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.fail;
@@ -42,23 +47,20 @@ import static org.junit.Assert.fail;
 @OnThread(Tag.Simulation)
 public class TestExpressionEditor extends ApplicationTest implements ListUtilTrait
 {
+    @SuppressWarnings("nullness")
+    private Stage windowToUse;
+
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void start(Stage stage) throws Exception
     {
-        File dest = File.createTempFile("blank", "rec");
-        dest.deleteOnExit();
-        MainWindow.show(stage, dest, null);
+        this.windowToUse = stage;
     }
 
     @Property(trials = 10)
-    public void testEntry(@When(seed=-9954007651823638L) @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @When(seed=1L) @From(GenRandom.class) Random r)
+    public void testEntry(@When(seed=-9954007651823638L) @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @When(seed=1L) @From(GenRandom.class) Random r) throws InterruptedException, ExecutionException, InternalException, IOException, UserException, InvocationTargetException
     {
-        // Make new data table.
-        clickOn("#id-menu-data").clickOn(".id-menu-data-new");
-        // TODO add the columns and values that the expression uses, so that its column references become valid
-
-        TestUtil.sleep(500);
+        TestUtil.openDataAsTable(windowToUse, expressionValue.recordSet);
         clickOn(".id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-addTransformation");
         // TODO switch from filter to calculate, so that we can actually check result
         selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getName().toLowerCase().matches("keep.?rows"));

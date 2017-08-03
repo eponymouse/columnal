@@ -2,11 +2,15 @@ package test;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.pholser.junit.quickcheck.From;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
 import com.pholser.junit.quickcheck.generator.java.time.LocalTimeGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import javafx.application.Platform;
+import javafx.stage.Stage;
 import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -14,15 +18,25 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.Column;
 import records.data.ColumnId;
+import records.data.EditableRecordSet;
+import records.data.ImmediateDataSource;
+import records.data.LinkedDataSource;
 import records.data.RecordSet;
+import records.data.Table;
 import records.data.Table.FullSaver;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.TableManager.TransformationLoader;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeId;
 import records.grammar.GrammarUtility;
+import records.gui.MainWindow;
 import records.importers.ChoicePoint.ChoiceType;
+import records.transformations.TransformationManager;
+import test.gen.GenImmediateData;
+import test.gen.GenImmediateData.MustIncludeNumber;
+import test.gen.GenImmediateData.NumTables;
 import utility.ExRunnable;
 import utility.FXPlatformRunnable;
 import utility.SimulationSupplier;
@@ -54,6 +68,8 @@ import utility.Utility.ListEx;
 import utility.Workers;
 import utility.Workers.Priority;
 
+import java.io.File;
+import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -734,6 +750,24 @@ public class TestUtil
     {
         int index = r.nextInt(list.size());
         return list.remove(index);
+    }
+
+    @OnThread(Tag.Simulation)
+    public static void openDataAsTable(Stage windowToUse, TableManager mgr) throws IOException, InterruptedException, ExecutionException, InvocationTargetException
+    {
+        File temp = File.createTempFile("srcdata", "tables");
+        temp.deleteOnExit();
+        String saved = save(mgr);
+        Platform.runLater(() -> checkedToRuntime_(() -> MainWindow.show(windowToUse, temp, saved)));
+        sleep(2000);
+    }
+
+    @OnThread(Tag.Simulation)
+    public static void openDataAsTable(Stage windowToUse, RecordSet data) throws IOException, InterruptedException, ExecutionException, InvocationTargetException, UserException, InternalException
+    {
+        TableManager manager = new DummyManager();
+        Table t = new ImmediateDataSource(manager, new EditableRecordSet(data));
+        openDataAsTable(windowToUse, manager);
     }
 
     public static interface FXPlatformSupplierEx<T>
