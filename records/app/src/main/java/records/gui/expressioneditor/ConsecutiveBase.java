@@ -834,8 +834,11 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
                 // Both are blank, so remove:
                 // Important to remove later one first so as to not mess with the indexing:
                 all.remove(index);
-                all.remove(index - 1);
-                // In this case we don't want to change index, as we want to assess the next
+                if (index - 1 > 0 || all.size() > 1)
+                {
+                    all.remove(index - 1);
+                }
+                // Else we don't want to change index, as we want to assess the next
                 // pair
             }
             else
@@ -846,7 +849,7 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         if (!all.isEmpty())
         {
             ConsecutiveChild last = all.get(all.size() - 1);
-            if (last.isBlank() && (!accountForFocus || !last.isFocused()))
+            if (last.isBlank() && (!accountForFocus || !last.isFocused()) && all.size() > 1)
             {
                 if (atomicEdit != null)
                     atomicEdit.set(true);

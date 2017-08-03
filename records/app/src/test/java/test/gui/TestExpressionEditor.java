@@ -16,6 +16,9 @@ import records.transformations.Filter;
 import records.transformations.TransformationInfo;
 import records.transformations.expression.Expression;
 import test.TestUtil;
+import test.gen.ExpressionValue;
+import test.gen.GenExpressionValueBackwards;
+import test.gen.GenExpressionValueForwards;
 import test.gen.GenNonsenseExpression;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
@@ -41,23 +44,26 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     }
 
     @Property(trials = 10)
-    public void testNonsenseEntry(@When(seed=7079855168420389553L) @From(GenNonsenseExpression.class) Expression expression, @From(GenRandom.class) Random r)
+    public void testEntry(@When(seed=-9954007651823638L) @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @When(seed=1L) @From(GenRandom.class) Random r)
     {
-        // Make new data table.  Don't need to add anything to it, as our expression is nonsense anyway:
+        // Make new data table.
         clickOn("#id-menu-data").clickOn(".id-menu-data-new");
+        // TODO add the columns and values that the expression uses, so that its column references become valid
+
         TestUtil.sleep(500);
         clickOn(".id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-addTransformation");
+        // TODO switch from filter to calculate, so that we can actually check result
         selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getName().toLowerCase().matches("keep.?rows"));
         // Focus expression editor:
         push(KeyCode.TAB);
-        enterExpression(expression, r);
+        enterExpression(expressionValue.expression, r);
         clickOn(".ok-button");
         // Now close dialog, and check for equality;
         View view = lookup(".view").query();
         Filter filter = (Filter)view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
-        assertEquals(expression, filter.getFilterExpression());
+        assertEquals(expressionValue.expression, filter.getFilterExpression());
         // Just in case equals is wrong, check String comparison:
-        assertEquals(expression.toString(), filter.getFilterExpression().toString());
+        assertEquals(expressionValue.expression.toString(), filter.getFilterExpression().toString());
     }
 
     private void enterExpression(Expression expression, Random r)
@@ -68,4 +74,6 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         }
         // TODO allow different entry
     }
+
+    // TODO test that nonsense is preserved after load (which will change it all to invalid) -> save -> load (which should load invalid version)
 }

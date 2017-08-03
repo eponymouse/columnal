@@ -751,7 +751,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
             {
                 @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
                 if (ksc == bracketCompletion)
-                    parent.replace(GeneralEntry.this, new Bracketed(parent, new Label("("), new Label(")"), null));
+                    parent.replace(GeneralEntry.this, new Bracketed(parent, new Label("("), new Label(")"), null).focusWhenShown());
                 else if (ksc == stringCompletion)
                     parent.replace(GeneralEntry.this, new StringLiteralNode("", parent).focusWhenShown());
                 //else if (ksc == patternMatchCompletion)
