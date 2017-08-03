@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ImmutableList;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
@@ -491,6 +492,10 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         {
             if (operandExps.size() == 2)
                 return errorDisplayers.record(this, new EqualExpression(operandExps.get(0), operandExps.get(1)));
+        }
+        else if (ops.stream().allMatch(op -> op.equals(",")))
+        {
+            return errorDisplayers.record(this, new TupleExpression(ImmutableList.copyOf(operandExps)));
         }
 
         return errorDisplayers.record(this, new InvalidOperatorExpression(operandExps, ops));

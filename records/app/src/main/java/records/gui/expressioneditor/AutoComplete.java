@@ -142,8 +142,8 @@ public class AutoComplete extends PopupControl
                     if (withoutLast != null && !available.stream().anyMatch(c -> c.features(textFinal, last)))
                     {
                         // No completions feature the character and it is in the following alphabet, so
-                        // complete the top one and move character to next slot
-                        change.setText(onSelect.nonAlphabetCharacter(withoutLast, completionsWithoutLast.get(0), "" + last));
+                        // complete the top one (if any are available) and move character to next slot
+                        change.setText(onSelect.nonAlphabetCharacter(withoutLast, completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.get(0), "" + last));
                         change.setRange(0, textField.getLength());
                         return change;
                     }
@@ -365,7 +365,7 @@ public class AutoComplete extends PopupControl
 
         // Moving on because non alphabet character entered
         // Returns the new text for the textfield
-        String nonAlphabetCharacter(String textBefore, Completion selectedItem, String textAfter);
+        String nonAlphabetCharacter(String textBefore, @Nullable Completion selectedItem, String textAfter);
 
         // Enter or Tab used to select
         // Returns the new text for the textfield
@@ -385,7 +385,7 @@ public class AutoComplete extends PopupControl
         }
 
         @Override
-        public String nonAlphabetCharacter(String textBefore, Completion selectedItem, String textAfter)
+        public String nonAlphabetCharacter(String textBefore, @Nullable Completion selectedItem, String textAfter)
         {
             return selected(textBefore, selectedItem, textAfter);
         }
@@ -402,7 +402,7 @@ public class AutoComplete extends PopupControl
             return selected(currentText, selectedItem, "");
         }
 
-        protected abstract String selected(String currentText, Completion c, String rest);
+        protected abstract String selected(String currentText, @Nullable Completion c, String rest);
     }
 
     private class AutoCompleteSkin implements Skin<AutoComplete>

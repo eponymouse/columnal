@@ -243,7 +243,7 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
         }
 
         @Override
-        protected String selected(String currentText, Completion c, String rest)
+        protected String selected(String currentText, @Nullable Completion c, String rest)
         {
             if (c instanceof SimpleCompletion)
             {

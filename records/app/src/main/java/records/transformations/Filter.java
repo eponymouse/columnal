@@ -236,7 +236,7 @@ public class Filter extends TransformationEditable
         //private final ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData;
         //private final ObservableList<Pair<String, List<DisplayValue>>> destHeaderAndData;
         private final TableManager mgr;
-        private final Expression expression;
+        private Expression expression;
         private final ExpressionEditor expressionEditor;
 
         @SuppressWarnings("initialization")
@@ -253,6 +253,7 @@ public class Filter extends TransformationEditable
                 try
                 {
                     updateExample(e);
+                    this.expression = e;
                 }
                 catch (InternalException | UserException ex)
                 {

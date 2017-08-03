@@ -745,7 +745,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
         }
 
         @Override
-        protected String selected(String currentText, @Interned Completion c, String rest)
+        protected String selected(String currentText, @Interned @Nullable Completion c, String rest)
         {
             if (c instanceof KeyShortcutCompletion)
             {
@@ -757,11 +757,11 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
                 //else if (ksc == patternMatchCompletion)
                     //parent.replace(GeneralEntry.this, new PatternMatchNode(parent).focusWhenShown());
             }
-            else if (c.equals(ifCompletion))
+            else if (c != null && c.equals(ifCompletion))
             {
                 parent.replace(GeneralEntry.this, new IfThenElseNode(parent));
             }
-            else if (c.equals(matchCompletion))
+            else if (c != null && c.equals(matchCompletion))
             {
                 parent.replace(GeneralEntry.this, new PatternMatchNode(parent, null));
             }
@@ -776,18 +776,19 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
                 TagCompletion tc = (TagCompletion)c;
                 parent.replace(GeneralEntry.this, new TagExpressionNode(parent, tc.typeName, tc.tagType).focusWhenShown());
             }
-            else if (c instanceof GeneralCompletion)
+            else if (c == null || c instanceof GeneralCompletion)
             {
-                GeneralCompletion gc = (GeneralCompletion) c;
+                @Nullable GeneralCompletion gc = (GeneralCompletion) c;
                 completing = true;
                 parent.setOperatorToRight(GeneralEntry.this, rest);
-                status.setValue(gc.getType());
+                status.setValue(gc == null ? Status.UNFINISHED : gc.getType());
+                parent.focusRightOf(GeneralEntry.this);
                 if (gc instanceof SimpleCompletion)
                 {
                     prefix.setText(((SimpleCompletion)gc).prefix);
                     return ((SimpleCompletion) gc).getCompletedText();
                 }
-                else // Numeric literal:
+                else // Numeric literal or unfinished:
                 {
                     prefix.setText("");
                     return currentText;

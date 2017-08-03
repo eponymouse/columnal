@@ -44,7 +44,7 @@ public class StringLiteralNode extends LeafNode implements OperandNode
         }, new SimpleCompletionListener()
         {
             @Override
-            protected String selected(String currentText, Completion c, String rest)
+            protected String selected(String currentText, @Nullable Completion c, String rest)
             {
                 parent.focusRightOf(StringLiteralNode.this);
                 return currentText;
