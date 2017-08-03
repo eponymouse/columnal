@@ -1,11 +1,13 @@
 package test.gui;
 
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
+import jdk.nashorn.internal.codegen.CompilerConstants.Call;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
@@ -14,7 +16,13 @@ import records.gui.MainWindow;
 import records.gui.View;
 import records.transformations.Filter;
 import records.transformations.TransformationInfo;
+import records.transformations.expression.BooleanLiteral;
+import records.transformations.expression.CallExpression;
+import records.transformations.expression.ColumnReference;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Literal;
+import records.transformations.expression.TagExpression;
+import records.transformations.expression.TupleExpression;
 import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
@@ -68,11 +76,55 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
 
     private void enterExpression(Expression expression, Random r)
     {
-        if (true)
+        Class<?> c = expression.getClass();
+        if (c == TupleExpression.class)
+        {
+            TupleExpression t = (TupleExpression)expression;
+            write("(");
+            ImmutableList<Expression> members = t._test_getMembers();
+            for (int i = 0; i < members.size(); i++)
+            {
+                if (i > 0)
+                    write(",");
+                enterExpression(members.get(i), r);
+
+            }
+            write(")");
+        }
+        else if (Literal.class.isAssignableFrom(c))
         {
             write(expression.toString());
         }
-        // TODO allow different entry
+        else if (c == ColumnReference.class)
+        {
+            write(((ColumnReference)expression).allColumnNames().findFirst().get().getRaw());
+            // Will be option of one or all, one should be top so press TAB:
+            push(KeyCode.TAB);
+        }
+        else if (c == CallExpression.class)
+        {
+            CallExpression call = (CallExpression) expression;
+            write(call._test_getFunctionName());
+            write("(");
+            enterExpression(call._test_getParam(), r);
+        }
+        else if (c == TagExpression.class)
+        {
+            TagExpression tag = (TagExpression)expression;
+            // TODO need to pick from list based on tag:
+            write(tag._test_getTagName().getSecond());
+            push(KeyCode.TAB);
+            if (tag.getInner() != null)
+            {
+                enterExpression(tag.getInner(), r);
+            }
+        }
+        else
+        {
+            fail("Not yet supported: " + c);
+        }
+        // TODO add randomness to entry methods (e.g. selection from auto-complete
+        // TODO check position of auto-complete
     }
 
     // TODO test that nonsense is preserved after load (which will change it all to invalid) -> save -> load (which should load invalid version)

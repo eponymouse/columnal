@@ -153,4 +153,14 @@ public class CallExpression extends NonOperatorExpression
         result = 31 * result + param.hashCode();
         return result;
     }
+
+    public String _test_getFunctionName()
+    {
+        return functionName;
+    }
+
+    public Expression _test_getParam()
+    {
+        return param;
+    }
 }

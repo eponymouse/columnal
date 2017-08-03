@@ -352,7 +352,8 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         if (child instanceof OperandNode && Utility.containsRef(operands, (OperandNode)child))
         {
             int index = getOperandIndex((OperandNode)child);
-            operators.get(index).focus(Focus.LEFT);
+            if (index < operators.size())
+                operators.get(index).focus(Focus.LEFT);
         }
         else
         {

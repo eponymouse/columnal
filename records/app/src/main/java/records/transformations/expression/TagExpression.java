@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
@@ -220,6 +221,12 @@ public class TagExpression extends NonOperatorExpression
         return result;
     }
 
+    public Pair<String, String> _test_getTagName()
+    {
+        return tagName;
+    }
+
+    @Pure
     public @Nullable Expression getInner()
     {
         return inner;
