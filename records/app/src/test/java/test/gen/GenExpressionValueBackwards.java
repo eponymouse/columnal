@@ -122,7 +122,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
         {
             DataType type = makeType(r);
             Pair<@Value Object, Expression> p = makeOfType(type);
-            return new ExpressionValue(type, Collections.singletonList(p.getFirst()), getRecordSet(), p.getSecond());
+            return new ExpressionValue(type, Collections.singletonList(p.getFirst()), DummyManager.INSTANCE.getTypeManager(), getRecordSet(), p.getSecond());
         }
         catch (InternalException | UserException e)
         {

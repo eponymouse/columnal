@@ -107,7 +107,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
         {
             DataType type = makeType(r);
             Pair<List<@Value Object>, Expression> p = makeOfType(type);
-            return new ExpressionValue(type, p.getFirst(), getRecordSet(), p.getSecond());
+            return new ExpressionValue(type, p.getFirst(), DummyManager.INSTANCE.getTypeManager(), getRecordSet(), p.getSecond());
         }
         catch (InternalException | UserException e)
         {

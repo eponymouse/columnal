@@ -297,4 +297,9 @@ public class TypeManager
     {
         return unitManager;
     }
+
+    public void _test_copyTaggedTypesFrom(TypeManager typeManager)
+    {
+        knownTypes.putAll(typeManager.knownTypes);
+    }
 }

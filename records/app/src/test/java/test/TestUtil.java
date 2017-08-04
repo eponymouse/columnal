@@ -763,10 +763,14 @@ public class TestUtil
     }
 
     @OnThread(Tag.Simulation)
-    public static void openDataAsTable(Stage windowToUse, RecordSet data) throws IOException, InterruptedException, ExecutionException, InvocationTargetException, UserException, InternalException
+    public static void openDataAsTable(Stage windowToUse, @Nullable TypeManager typeManager, RecordSet data) throws IOException, InterruptedException, ExecutionException, InvocationTargetException, UserException, InternalException
     {
         TableManager manager = new DummyManager();
         Table t = new ImmediateDataSource(manager, new EditableRecordSet(data));
+        if (typeManager != null)
+        {
+            manager.getTypeManager()._test_copyTaggedTypesFrom(typeManager);
+        }
         openDataAsTable(windowToUse, manager);
     }
 
