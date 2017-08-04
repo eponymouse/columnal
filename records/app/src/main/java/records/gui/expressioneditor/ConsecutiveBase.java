@@ -250,7 +250,7 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
     }
 
 
-    public void setOperatorToRight(OperandNode rightOf, String operator)
+    public void setOperatorToRight(@UnknownInitialization OperandNode rightOf, String operator)
     {
         int index = getOperandIndex(rightOf);
         if (index != -1)

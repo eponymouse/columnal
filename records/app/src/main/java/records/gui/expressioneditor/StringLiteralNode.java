@@ -44,8 +44,19 @@ public class StringLiteralNode extends LeafNode implements OperandNode
         }, new SimpleCompletionListener()
         {
             @Override
+            public String exactCompletion(String currentText, Completion selectedItem)
+            {
+                super.exactCompletion(currentText, selectedItem);
+                if (currentText.endsWith("\""))
+                    return currentText.substring(0, currentText.length() - 1);
+                else
+                    return currentText;
+            }
+
+            @Override
             protected String selected(String currentText, @Nullable Completion c, String rest)
             {
+                parent.setOperatorToRight(StringLiteralNode.this, "");
                 parent.focusRightOf(StringLiteralNode.this);
                 return currentText;
             }
@@ -160,6 +171,9 @@ public class StringLiteralNode extends LeafNode implements OperandNode
         @Override
         public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
         {
+            if (input.endsWith("\""))
+                return CompletionAction.COMPLETE_IMMEDIATELY;
+
             return CompletionAction.SELECT;
         }
 

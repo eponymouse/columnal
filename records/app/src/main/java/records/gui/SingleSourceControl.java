@@ -109,7 +109,7 @@ public class SingleSourceControl extends HBox implements CompletionListener
     }
 
     @Override
-    public String nonAlphabetCharacter(String textBefore, Completion selectedItem, String textAfter)
+    public String nonAlphabetCharacter(String textBefore, @Nullable Completion selectedItem, String textAfter)
     {
         return textBefore + textAfter; // Shouldn't happen as not using alphabets
     }
