@@ -153,6 +153,9 @@ public class AutoComplete extends PopupControl
                     Utility.log(e);
                 }
             }
+            // We want to select top one, not last one, so keep track of
+            // whether we've already selected top one:
+            boolean haveSelected = false;
             for (Completion completion : available)
             {
                 CompletionAction completionAction = completion.completesOnExactly(text, available.size() == 1);
@@ -166,7 +169,11 @@ public class AutoComplete extends PopupControl
                 else if (completionAction == CompletionAction.SELECT)
                 {
                     // Select it, at least:
-                    completions.getSelectionModel().select(completion);
+                    if (!haveSelected)
+                    {
+                        completions.getSelectionModel().select(completion);
+                        haveSelected = true;
+                    }
                 }
             }
 
