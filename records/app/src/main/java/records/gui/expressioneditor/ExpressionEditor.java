@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ImmutableSet;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -194,12 +195,6 @@ public class ExpressionEditor extends ConsecutiveBase
     }
 
     @Override
-    public boolean isTopLevel(@UnknownInitialization(ConsecutiveBase.class) ExpressionEditor this)
-    {
-        return true;
-    }
-
-    @Override
     protected void parentFocusRightOfThis()
     {
 
@@ -215,6 +210,13 @@ public class ExpressionEditor extends ConsecutiveBase
     protected boolean isMatchNode()
     {
         return false;
+    }
+
+    @Override
+    public ImmutableSet<Character> terminatedByChars()
+    {
+        // Nothing terminates the overall editor:
+        return ImmutableSet.of();
     }
 
     @Override

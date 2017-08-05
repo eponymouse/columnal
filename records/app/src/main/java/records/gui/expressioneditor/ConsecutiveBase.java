@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
@@ -334,12 +335,6 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
     protected abstract List<Pair<DataType,List<String>>> getSuggestedParentContext() throws UserException, InternalException;
 
     @Override
-    public boolean isTopLevel(@UnknownInitialization(ConsecutiveBase.class)ConsecutiveBase this)
-    {
-        return false;
-    }
-
-    @Override
     public void changed(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
         if (!atomicEdit.get())
@@ -352,8 +347,11 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         if (child instanceof OperandNode && Utility.containsRef(operands, (OperandNode)child))
         {
             int index = getOperandIndex((OperandNode)child);
-            if (index < operators.size())
-                operators.get(index).focus(Focus.LEFT);
+            if (index >= operators.size())
+            {
+                operators.add(new OperatorEntry(this));
+            }
+            operators.get(index).focus(Focus.LEFT);
         }
         else
         {
@@ -773,6 +771,8 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
         else
             addBlankAtLeft();
     }
+
+    public abstract ImmutableSet<Character> terminatedByChars();
 
     // Done as an inner class to satisfy initialization checker
     private static class UpdateNodesAndListeners<T> implements FXPlatformConsumer<Change<? extends T>>

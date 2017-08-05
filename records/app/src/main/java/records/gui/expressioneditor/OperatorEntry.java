@@ -89,7 +89,7 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
         container.getStyleClass().add("entry");
         this.nodes = FXCollections.observableArrayList(this.container);
 
-        this.autoComplete = new AutoComplete(textField, this::getCompletions, new CompletionListener(), c -> !isOperatorAlphabet(c));
+        this.autoComplete = new AutoComplete(textField, this::getCompletions, new CompletionListener(), c -> !isOperatorAlphabet(c) && !parent.terminatedByChars().contains(c));
 
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text ->{
             parent.changed(OperatorEntry.this);
@@ -107,8 +107,10 @@ public class OperatorEntry extends LeafNode implements ConsecutiveChild
     private List<Completion> getCompletions(@UnknownInitialization(OperatorEntry.class) OperatorEntry this, String s)
     {
         ArrayList<Completion> r = new ArrayList<>();
-        if (!parent.isTopLevel())
-            r.add(new KeyShortcutCompletion("End bracketed expressions", ')'));
+        for (Character c : parent.terminatedByChars())
+        {
+            r.add(new KeyShortcutCompletion("End bracketed expressions", c));
+        }
         for (Pair<String, @LocalizableKey String> operator : OPERATORS)
         {
             r.add(new SimpleCompletion(operator.getFirst(), operator.getSecond()));

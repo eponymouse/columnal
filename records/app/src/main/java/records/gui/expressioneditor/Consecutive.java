@@ -1,5 +1,7 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.primitives.Chars;
 import javafx.scene.Node;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -10,7 +12,10 @@ import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Stream;
 
 /**
@@ -19,12 +24,14 @@ import java.util.stream.Stream;
 public class Consecutive extends ConsecutiveBase
 {
     protected final ExpressionParent parent;
+    private final ImmutableSet<Character> endCharacters;
 
     @SuppressWarnings("initialization") // Because of loading
-    public Consecutive(ExpressionParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase, OperandNode>>, List<FXPlatformFunction<ConsecutiveBase, OperatorEntry>>> content)
+    public Consecutive(ExpressionParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase, OperandNode>>, List<FXPlatformFunction<ConsecutiveBase, OperatorEntry>>> content, char... endCharacters)
     {
         super(prefixNode, suffixNode, style);
         this.parent = parent;
+        this.endCharacters = ImmutableSet.copyOf(Chars.asList(endCharacters));
         if (content != null)
         {
             atomicEdit.set(true);
@@ -84,5 +91,11 @@ public class Consecutive extends ConsecutiveBase
     public List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child)
     {
         return parent.getAvailableVariables(this);
+    }
+
+    @Override
+    public ImmutableSet<Character> terminatedByChars()
+    {
+        return endCharacters;
     }
 }

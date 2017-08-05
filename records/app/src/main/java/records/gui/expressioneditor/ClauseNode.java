@@ -263,12 +263,6 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
     }
 
     @Override
-    public boolean isTopLevel()
-    {
-        return false;
-    }
-
-    @Override
     public void changed(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
         parent.changed(this);

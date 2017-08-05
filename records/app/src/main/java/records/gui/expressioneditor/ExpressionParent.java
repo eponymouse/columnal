@@ -40,11 +40,6 @@ public interface ExpressionParent
     List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child);
 
     /**
-     * Is this expression at the topmost level?
-     */
-    boolean isTopLevel();
-
-    /**
      * Called to notify parent that the given child has changed its content.
      */
     void changed(@UnknownInitialization(ExpressionNode.class) ExpressionNode child);

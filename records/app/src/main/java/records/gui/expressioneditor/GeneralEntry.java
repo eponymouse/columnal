@@ -176,7 +176,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
         this.errorUpdater = ExpressionEditorUtil.installErrorShower(container, textField);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
         this.nodes = FXCollections.observableArrayList(container);
-        this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), OperatorEntry::isOperatorAlphabet);
+        this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), c -> OperatorEntry.isOperatorAlphabet(c) || parent.terminatedByChars().contains(c));
 
         FXUtility.addChangeListenerPlatformNN(status, s -> {
             // Need to beware that some status values may map to same pseudoclass:

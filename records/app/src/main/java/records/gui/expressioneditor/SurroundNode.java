@@ -151,12 +151,6 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode, Err
     }
 
     @Override
-    public boolean isTopLevel()
-    {
-        return false;
-    }
-
-    @Override
     public void changed(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
     {
         parent.changed(this);
@@ -305,7 +299,7 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode, Err
 
         private ContentConsecutive(VBox vBox, OpenBracketShape openBracket, OpenBracketShape closeBracket, @Nullable Expression args)
         {
-            super(SurroundNode.this, new HBox(vBox, openBracket), closeBracket, cssClass, args == null ? null : args.loadAsConsecutive());
+            super(SurroundNode.this, new HBox(vBox, openBracket), closeBracket, cssClass, args == null ? null : args.loadAsConsecutive(), ')');
             this.openBracket = openBracket;
             this.closeBracket = closeBracket;
             closeBracket.prefHeightProperty().bind(openBracket.heightProperty());

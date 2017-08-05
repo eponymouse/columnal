@@ -21,7 +21,7 @@ public class Bracketed extends Consecutive implements OperandNode
 {
     public Bracketed(ConsecutiveBase parent, @Nullable Node prefixNode, @Nullable Node suffixNode, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase, OperandNode>>, List<FXPlatformFunction<ConsecutiveBase, OperatorEntry>>> content)
     {
-        super(parent, prefixNode, suffixNode, "bracket", content);
+        super(parent, prefixNode, suffixNode, "bracket", content, ')');
     }
 
     @Override

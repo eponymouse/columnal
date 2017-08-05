@@ -107,8 +107,11 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         {
             CallExpression call = (CallExpression) expression;
             write(call._test_getFunctionName());
-            write("(");
+            //TODO bracket should work same as tab here, but doesn't yet:
+            push(KeyCode.TAB);
+            //write("(");
             enterExpression(call._test_getParam(), r);
+            write(")");
         }
         else if (c == TagExpression.class)
         {
