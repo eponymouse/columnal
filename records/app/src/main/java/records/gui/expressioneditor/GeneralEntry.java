@@ -763,7 +763,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
             }
             else if (c != null && c.equals(matchCompletion))
             {
-                parent.replace(GeneralEntry.this, new PatternMatchNode(parent, null));
+                parent.replace(GeneralEntry.this, new PatternMatchNode(parent, null).focusWhenShown());
             }
             else if (c instanceof FunctionCompletion)
             {

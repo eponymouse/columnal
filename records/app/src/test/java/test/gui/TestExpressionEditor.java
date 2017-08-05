@@ -27,6 +27,8 @@ import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Literal;
+import records.transformations.expression.MatchExpression;
+import records.transformations.expression.NaryOpExpression;
 import records.transformations.expression.TagExpression;
 import records.transformations.expression.TupleExpression;
 import test.TestUtil;
@@ -148,6 +150,26 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             if (tag.getInner() != null)
             {
                 enterExpression(tag.getInner(), r);
+            }
+        }
+        else if (c == MatchExpression.class)
+        {
+            MatchExpression match = (MatchExpression)expression;
+            write("match");
+            push(KeyCode.TAB);
+            enterExpression(match.getExpression(), r);
+            // TODO
+        }
+        else if (NaryOpExpression.class.isAssignableFrom(c))
+        {
+            NaryOpExpression n = (NaryOpExpression)expression;
+            for (int i = 0; i < n.getChildren().size(); i++)
+            {
+                enterExpression(n.getChildren().get(i), r);
+                if (i < n.getChildren().size() - 1)
+                {
+                    write(n._test_getOperatorEntry(i));
+                }
             }
         }
         else

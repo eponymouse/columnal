@@ -149,4 +149,10 @@ public abstract class NaryOpExpression extends Expression
     {
         return c -> new Bracketed(c, null, null, loadAsConsecutive());
     }
+
+    // Can be overriden by subclasses if needed:
+    public String _test_getOperatorEntry(int index)
+    {
+        return saveOp(index);
+    }
 }
