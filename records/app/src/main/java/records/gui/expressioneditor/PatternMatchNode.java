@@ -9,6 +9,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -52,7 +53,7 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
     {
         this.parent = parent;
         this.matchLabel = ExpressionEditorUtil.keyword("match", "match", this, getParentStyles());
-        this.source = new Consecutive(this, matchLabel, null, "match", sourceAndClauses == null ? null : sourceAndClauses.getFirst().loadAsConsecutive()).prompt("expression");
+        this.source = new Consecutive(this, matchLabel, null, "match", sourceAndClauses == null ? null : sourceAndClauses.getFirst().loadAsConsecutive(), ')').prompt("expression");
         this.clauses = FXCollections.observableArrayList();
         this.nodes = FXCollections.observableArrayList();
         this.childrenNodeListener = c -> {
@@ -78,7 +79,7 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
         // Make them all as old (false)
         listeningTo.replaceAll((e, b) -> false);
         // Merge new ones:
-        for (ClauseNode child : clauses)
+        for (ExpressionNode child : Utility.<@NonNull ExpressionNode>iterableStream(Stream.<@NonNull ExpressionNode>concat(Stream.of(source), clauses.stream())))
         {
             // No need to listen again if already present as we're already listening
             if (listeningTo.get(child) == null)
