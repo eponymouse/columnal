@@ -10,6 +10,7 @@ import javafx.stage.Stage;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.Column;
+import records.data.ColumnId;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
@@ -22,6 +23,7 @@ import test.gen.GenImmediateData.NumTables;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.Utility;
 
 import java.io.IOException;
@@ -76,11 +78,11 @@ public class TestFilter extends ApplicationTest implements ListUtilTrait, Scroll
         // Now check output values by getting them from clipboard:
         clickOn(".tableDisplay-transformation .id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-copyValues");
         TestUtil.sleep(1000);
-        Optional<List<List<@Value Object>>> clip = TestUtil.fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
+        Optional<List<Pair<ColumnId, List<@Value Object>>>> clip = TestUtil.fx(() -> ClipboardUtils.loadValuesFromClipboard(original.mgr.getTypeManager()));
         assertTrue(clip.isPresent());
         // Need to fish out first column from clip, then compare item:
         List<@Value Object> expected = IntStream.range(0, srcColumn.getLength()).mapToObj(i -> TestUtil.checkedToRuntime(() -> srcColumn.getType().getCollapsed(i))).filter(x -> Utility.compareNumbers(x, cutOff) > 0).collect(Collectors.toList());
-        TestUtil.assertValueListEqual("Filtered", expected, clip.get().get(0));
+        TestUtil.assertValueListEqual("Filtered", expected, clip.get().get(0).getSecond());
     }
 
     @Override

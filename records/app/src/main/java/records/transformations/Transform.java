@@ -2,12 +2,16 @@ package records.transformations;
 
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -39,6 +43,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -237,22 +242,32 @@ public class Transform extends TransformationEditable
     {
         private final @Nullable TableId ourId;
         private final SingleSourceControl srcControl;
-        private final TableManager mgr;
-        private final List<Pair<ColumnId, SimpleObjectProperty<Expression>>> newColumns = new ArrayList<>();
+        private final List<Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>>> newColumns = new ArrayList<>();
         private final List<Pair<ColumnNameTextField, ExpressionEditor>> newColumnEdit = new ArrayList<>();
+        private SimpleBooleanProperty allColNamesValid = new SimpleBooleanProperty(false);
 
         @OnThread(Tag.FXPlatform)
         public Editor(View view, TableManager mgr, @Nullable TableId id, @Nullable TableId srcId, List<Pair<ColumnId, Expression>> newColumns)
         {
             ourId = id;
-            this.mgr = mgr;
             this.srcControl = new SingleSourceControl(view, mgr, srcId);
             for (Pair<ColumnId, Expression> newColumn : newColumns)
             {
                 SimpleObjectProperty<Expression> wrapper = new SimpleObjectProperty<>(newColumn.getSecond());
-                this.newColumns.add(new Pair<>(newColumn.getFirst(), wrapper));
-                newColumnEdit.add(new Pair<>(new ColumnNameTextField(newColumn.getFirst()), makeExpressionEditor(mgr, srcControl, wrapper)));
+                ColumnNameTextField columnNameTextField = new ColumnNameTextField(newColumn.getFirst());
+                FXUtility.addChangeListenerPlatform(columnNameTextField.valueProperty(), v -> {
+                    validateColumnNames();
+                });
+                this.newColumns.add(new Pair<>(columnNameTextField.valueProperty(), wrapper));
+                newColumnEdit.add(new Pair<>(columnNameTextField, makeExpressionEditor(mgr, srcControl, wrapper)));
             }
+            validateColumnNames();
+        }
+
+        @RequiresNonNull({"allColNamesValid", "newColumns"})
+        private void validateColumnNames(@UnknownInitialization Editor this)
+        {
+            allColNamesValid.set(newColumns.stream().allMatch((Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>> p) -> p.getFirst().get() != null));
         }
 
         private static ExpressionEditor makeExpressionEditor(TableManager mgr, SingleSourceControl srcControl, SimpleObjectProperty<Expression> container)
@@ -284,15 +299,17 @@ public class Transform extends TransformationEditable
         @Override
         public BooleanExpression canPressOk()
         {
-            return new ReadOnlyBooleanWrapper(true);
+            return allColNamesValid;
         }
 
         @Override
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
+            // They were only allowed to press OK if all columns were non-null:
+            @SuppressWarnings("nullness")
             ImmutableList<Pair<ColumnId, Expression>> cols = newColumns.stream().
-                    map(p -> p.mapSecond(SimpleObjectProperty::get)).collect(ImmutableList.toImmutableList());
+                    map((Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>> p) -> p.map(ObjectExpression::get, ObjectExpression::get)).collect(ImmutableList.toImmutableList());
             return () -> new Transform(mgr, ourId, srcId.get(), cols);
         }
 

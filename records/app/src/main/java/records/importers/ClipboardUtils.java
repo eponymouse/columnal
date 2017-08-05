@@ -7,6 +7,7 @@ import javafx.scene.input.DataFormat;
 import org.antlr.v4.runtime.Parser;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
+import records.data.ColumnId;
 import records.data.DataSource;
 import records.data.DataSource.LoadedFormat;
 import records.data.RecordSet;
@@ -23,6 +24,7 @@ import records.grammar.MainParser.IsolatedValuesContext;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -42,7 +44,7 @@ public class ClipboardUtils
 
     // Returns column-major, i.e. a list of columns
     @OnThread(Tag.FXPlatform)
-    public static Optional<List<List<@Value Object>>> loadValuesFromClipboard(TypeManager typeManager)
+    public static Optional<List<Pair<ColumnId, List<@Value Object>>>> loadValuesFromClipboard(TypeManager typeManager)
     {
         @Nullable Object content = Clipboard.getSystemClipboard().getContent(DATA_FORMAT);
 
@@ -52,7 +54,7 @@ public class ClipboardUtils
         {
             try
             {
-                return Optional.of(Utility.<List<List<@Value Object>>, MainParser>parseAsOne(content.toString(), MainLexer::new, MainParser::new, p -> loadIsolatedValues(p, typeManager)));
+                return Optional.of(Utility.<List<Pair<ColumnId,List<@Value Object>>>, MainParser>parseAsOne(content.toString(), MainLexer::new, MainParser::new, p -> loadIsolatedValues(p, typeManager)));
             }
             catch (UserException e)
             {
@@ -66,21 +68,21 @@ public class ClipboardUtils
         }
     }
 
-    private static List<List<@Value Object>> loadIsolatedValues(MainParser main, TypeManager typeManager) throws InternalException, UserException
+    private static List<Pair<ColumnId, List<@Value Object>>> loadIsolatedValues(MainParser main, TypeManager typeManager) throws InternalException, UserException
     {
         IsolatedValuesContext ctx = main.isolatedValues();
         // TODO check that units, types match
         List<LoadedFormat> format = DataSource.loadFormat(typeManager, ctx.dataFormat(), false);
-        List<List<@Value Object>> cols = new ArrayList<>();
+        List<Pair<ColumnId, List<@Value Object>>> cols = new ArrayList<>();
         for (int i = 0; i < format.size(); i++)
         {
-            cols.add(new ArrayList<>());
+            cols.add(new Pair<>(format.get(i).columnId, new ArrayList<>()));
         }
         Utility.loadData(ctx.values().detail(), p -> {
             for (int i = 0; i < format.size(); i++)
             {
                 LoadedFormat colFormat = format.get(i);
-                cols.get(i).add(DataType.loadSingleItem(colFormat.dataType, p, false));
+                cols.get(i).getSecond().add(DataType.loadSingleItem(colFormat.dataType, p, false));
             }
         });
         return cols;

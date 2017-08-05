@@ -36,6 +36,11 @@ public final class Pair<A, B>
         return second;
     }
 
+    public <C, D> Pair<C, D> map(Function<A, C> mapFirst, Function<B, D> mapSecond)
+    {
+        return new Pair<>(mapFirst.apply(first), mapSecond.apply(second));
+    }
+
     public <C> Pair<C, B> mapFirst(Function<A, C> map)
     {
         return new Pair<>(map.apply(first), second);
