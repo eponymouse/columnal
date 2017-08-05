@@ -17,6 +17,7 @@ import records.error.UserException;
 import records.gui.MainWindow;
 import records.gui.View;
 import records.transformations.Filter;
+import records.transformations.Transform;
 import records.transformations.TransformationInfo;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.CallExpression;
@@ -62,18 +63,20 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     {
         TestUtil.openDataAsTable(windowToUse, expressionValue.typeManager, expressionValue.recordSet);
         clickOn(".id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-addTransformation");
-        // TODO switch from filter to calculate, so that we can actually check result
-        selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getName().toLowerCase().matches("keep.?rows"));
+        selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getName().toLowerCase().matches("calculate.?columns"));
+        push(KeyCode.TAB);
+        write("DestCol");
         // Focus expression editor:
         push(KeyCode.TAB);
         enterExpression(expressionValue.expression, r);
         clickOn(".ok-button");
         // Now close dialog, and check for equality;
         View view = lookup(".view").query();
-        Filter filter = (Filter)view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
-        assertEquals(expressionValue.expression, filter.getFilterExpression());
+        Transform transform = (Transform)view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
+        Expression expression = transform.getCalculatedColumns().get(0).getSecond();
+        assertEquals(expressionValue.expression, expression);
         // Just in case equals is wrong, check String comparison:
-        assertEquals(expressionValue.expression.toString(), filter.getFilterExpression().toString());
+        assertEquals(expressionValue.expression.toString(), expression.toString());
     }
 
     private void enterExpression(Expression expression, Random r)

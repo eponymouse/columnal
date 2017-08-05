@@ -352,7 +352,7 @@ public class PropRunTransformation
     {
         // Pick a few new destination columns:
         int numNew = r.nextInt(5);
-        Map<ColumnId, Expression> newCols = new HashMap<>();
+        ImmutableList.Builder<Pair<ColumnId, Expression>> newCols = ImmutableList.builder();
         List<Column> oldColumns = original.data().getData().getColumns();
         Map<ColumnId, ColumnId> columnMapping = new HashMap<>();
 
@@ -364,12 +364,12 @@ public class PropRunTransformation
         {
             ColumnId old = oldColumns.get(r.nextInt(oldColumns.size())).getName();
             ColumnId newId = new ColumnId("Trans" + i);
-            newCols.put(newId, new ColumnReference(old, ColumnReferenceType.CORRESPONDING_ROW));
+            newCols.add(new Pair<>(newId, new ColumnReference(old, ColumnReferenceType.CORRESPONDING_ROW)));
             columnMapping.put(newId, old);
         }
 
 
-        Transform transform = new Transform(original.mgr, null, original.data().getId(), newCols);
+        Transform transform = new Transform(original.mgr, null, original.data().getId(), newCols.build());
 
         assertDataSame(transform.getData(), original.data().getData(), columnMapping::get);
     }

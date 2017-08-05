@@ -1,7 +1,11 @@
 package records.transformations;
 
+import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
@@ -13,23 +17,26 @@ import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.TransformContext;
 import records.grammar.TransformationParser.TransformItemContext;
+import records.gui.ColumnNameTextField;
 import records.gui.SingleSourceControl;
 import records.gui.View;
+import records.gui.expressioneditor.ExpressionEditor;
 import records.loadsave.OutputBuilder;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
+import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 
@@ -37,10 +44,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 /**
@@ -52,20 +56,20 @@ import java.util.stream.Collectors;
 public class Transform extends TransformationEditable
 {
     @OnThread(Tag.Any)
-    private final Map<ColumnId, Expression> newColumns;
+    private final ImmutableList<Pair<ColumnId, Expression>> newColumns;
     private final TableId srcTableId;
     private final @Nullable Table src;
     private final @Nullable RecordSet recordSet;
     @OnThread(Tag.Any)
     private String error = "";
 
-    public Transform(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, Map<ColumnId, Expression> toCalculate) throws InternalException
+    public Transform(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, ImmutableList<Pair<ColumnId, Expression>> toCalculate) throws InternalException
     {
         super(mgr, thisTableId);
         this.srcTableId = srcTableId;
         this.src = mgr.getSingleTableOrNull(srcTableId);
         this.error = "Unknown error with table \"" + thisTableId + "\"";
-        this.newColumns = new HashMap<>(toCalculate);
+        this.newColumns = toCalculate;
         if (this.src == null)
         {
             this.recordSet = null;
@@ -81,7 +85,8 @@ public class Transform extends TransformationEditable
             List<ExFunction<RecordSet, Column>> columns = new ArrayList<>();
             for (Column c : srcRecordSet.getColumns())
             {
-                if (!newColumns.containsKey(c.getName()))
+                // If the old column is not overwritten by one of the same name, include it:
+                if (!newColumns.stream().anyMatch(n -> n.getFirst().equals(c.getName())))
                 {
                     columns.add(rs -> new Column(rs, c.getName())
                     {
@@ -94,16 +99,16 @@ public class Transform extends TransformationEditable
                 }
             }
 
-            for (Entry<ColumnId, Expression> newCol : toCalculate.entrySet())
+            for (Pair<ColumnId, Expression> newCol : toCalculate)
             {
-                @Nullable DataType type = newCol.getValue().check(srcRecordSet, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), (e, s, q) ->
+                @Nullable DataType type = newCol.getSecond().check(srcRecordSet, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), (e, s, q) ->
                 {
                     error = s;
                 });
                 if (type == null)
                     throw new UserException(error); // A bit redundant, but control flow will pan out right
                 DataType typeFinal = type;
-                columns.add(rs -> typeFinal.makeCalculatedColumn(rs, newCol.getKey(), index -> newCol.getValue().getValue(index, new EvaluateState())));
+                columns.add(rs -> typeFinal.makeCalculatedColumn(rs, newCol.getFirst(), index -> newCol.getSecond().getValue(index, new EvaluateState())));
             }
 
             theResult = new RecordSet(columns)
@@ -154,17 +159,17 @@ public class Transform extends TransformationEditable
     @Override
     protected @OnThread(Tag.Any) String getTransformationName()
     {
-        return "transform";
+        return "calculate";
     }
 
     @Override
     protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination)
     {
-        return newColumns.entrySet().stream().map(entry -> {
+        return newColumns.stream().map(entry -> {
             OutputBuilder b = new OutputBuilder();
-            b.kw("CALCULATE").id(entry.getKey());
+            b.kw("CALCULATE").id(entry.getFirst());
             b.kw("@EXPRESSION");
-            b.raw(entry.getValue().save(true));
+            b.raw(entry.getSecond().save(true));
             return b.toString();
         }).collect(Collectors.<String>toList());
     }
@@ -194,57 +199,86 @@ public class Transform extends TransformationEditable
         return result;
     }
 
+    public List<Pair<ColumnId, Expression>> getCalculatedColumns()
+    {
+        return newColumns;
+    }
+
     public static class Info extends TransformationInfo
     {
         public Info()
         {
-            super("transform", Arrays.asList("calculate"));
+            super("Calculate columns", Arrays.asList("transform"));
         }
 
         @Override
         public @OnThread(Tag.Simulation) Transformation load(TableManager mgr, TableId tableId, List<TableId> source, String detail) throws InternalException, UserException
         {
-            Map<ColumnId, Expression> columns = new HashMap<>();
+            ImmutableList.Builder<Pair<ColumnId, Expression>> columns = ImmutableList.builder();
 
             TransformContext transform = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, p -> p.transform());
             for (TransformItemContext transformItemContext : transform.transformItem())
             {
-                columns.put(new ColumnId(transformItemContext.column.getText()), Expression.parse(null, transformItemContext.expression().EXPRESSION().getText(), mgr.getTypeManager()));
+                columns.add(new Pair<>(new ColumnId(transformItemContext.column.getText()), Expression.parse(null, transformItemContext.expression().EXPRESSION().getText(), mgr.getTypeManager())));
             }
 
-            return new Transform(mgr, tableId, source.get(0), columns);
+            return new Transform(mgr, tableId, source.get(0), columns.build());
         }
 
         @Override
         public @OnThread(Tag.FXPlatform) TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(view, mgr, null, srcTableId, Collections.emptyMap());
+            return new Editor(view, mgr, null, srcTableId, Collections.singletonList(new Pair<>(new ColumnId(""), new NumericLiteral(0, null))));
         }
     }
+
+    @OnThread(Tag.FXPlatform)
     private static class Editor extends TransformationEditor
     {
         private final @Nullable TableId ourId;
         private final SingleSourceControl srcControl;
-        private final Map<ColumnId, Expression> newColumns = new HashMap<>();
+        private final TableManager mgr;
+        private final List<Pair<ColumnId, SimpleObjectProperty<Expression>>> newColumns = new ArrayList<>();
+        private final List<Pair<ColumnNameTextField, ExpressionEditor>> newColumnEdit = new ArrayList<>();
 
         @OnThread(Tag.FXPlatform)
-        public Editor(View view, TableManager mgr, @Nullable TableId id, @Nullable TableId srcId, Map<ColumnId, Expression> newColumns)
+        public Editor(View view, TableManager mgr, @Nullable TableId id, @Nullable TableId srcId, List<Pair<ColumnId, Expression>> newColumns)
         {
             ourId = id;
+            this.mgr = mgr;
             this.srcControl = new SingleSourceControl(view, mgr, srcId);
-            this.newColumns.putAll(newColumns);
+            for (Pair<ColumnId, Expression> newColumn : newColumns)
+            {
+                SimpleObjectProperty<Expression> wrapper = new SimpleObjectProperty<>(newColumn.getSecond());
+                this.newColumns.add(new Pair<>(newColumn.getFirst(), wrapper));
+                newColumnEdit.add(new Pair<>(new ColumnNameTextField(newColumn.getFirst()), makeExpressionEditor(mgr, srcControl, wrapper)));
+            }
+        }
+
+        private static ExpressionEditor makeExpressionEditor(TableManager mgr, SingleSourceControl srcControl, SimpleObjectProperty<Expression> container)
+        {
+            return new ExpressionEditor(container.getValue(), srcControl.getTableOrNull(), new ReadOnlyObjectWrapper<@Nullable DataType>(null), mgr, e -> {
+                container.set(e);
+            });
         }
 
         @Override
         public String getDisplayTitle()
         {
-            return "Transform";
+            return "Calculate columns";
         }
 
         @Override
         public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
-            return new Pane(); // TODO
+            // TODO allow adding/removing columns
+            GridPane gridPane = new GridPane();
+            for (int i = 0; i < newColumnEdit.size(); i++)
+            {
+                gridPane.add(newColumnEdit.get(i).getFirst().getNode(), 0, i);
+                gridPane.add(newColumnEdit.get(i).getSecond().getContainer(), 1, i);
+            }
+            return gridPane;
         }
 
         @Override
@@ -257,7 +291,9 @@ public class Transform extends TransformationEditable
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
-            return () -> new Transform(mgr, ourId, srcId.get(), newColumns);
+            ImmutableList<Pair<ColumnId, Expression>> cols = newColumns.stream().
+                    map(p -> p.mapSecond(SimpleObjectProperty::get)).collect(ImmutableList.toImmutableList());
+            return () -> new Transform(mgr, ourId, srcId.get(), cols);
         }
 
         @Override
