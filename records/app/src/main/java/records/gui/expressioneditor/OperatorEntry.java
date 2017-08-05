@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 /**
  * Created by neil on 17/12/2016.
  */
-public class OperatorEntry extends LeafNode implements ConsecutiveChild
+public class OperatorEntry extends ChildNode implements ConsecutiveChild
 {
     /**
      * The outermost container for the whole thing:

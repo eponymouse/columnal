@@ -62,7 +62,7 @@ import java.util.List;
  *   - Partial function name (until later transformed to function call)
  *   - Variable reference.
  */
-public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplayer
+public class GeneralEntry extends ChildNode implements OperandNode, ErrorDisplayer
 {
     private static final String ARROW_SAME_ROW = "\u2192";
     private static final String ARROW_WHOLE = "\u2195";
@@ -255,7 +255,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
     }
 
     @RequiresNonNull({"bracketCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "parent"})
-    private List<Completion> getSuggestions(@UnknownInitialization(LeafNode.class) GeneralEntry this, String text) throws UserException, InternalException
+    private List<Completion> getSuggestions(@UnknownInitialization(ChildNode.class) GeneralEntry this, String text) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
         r.add(bracketCompletion);
@@ -328,7 +328,7 @@ public class GeneralEntry extends LeafNode implements OperandNode, ErrorDisplaye
     }
 
     @RequiresNonNull("parent")
-    private void addAllFunctions(@UnknownInitialization(LeafNode.class) GeneralEntry this, ArrayList<Completion> r)
+    private void addAllFunctions(@UnknownInitialization(ChildNode.class) GeneralEntry this, ArrayList<Completion> r)
     {
         for (FunctionDefinition function : FunctionList.FUNCTIONS)
         {

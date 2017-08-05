@@ -6,17 +6,17 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 /**
  * Created by neil on 19/12/2016.
  */
-public abstract class LeafNode implements ExpressionNode
+public abstract class ChildNode implements ExpressionNode
 {
     protected final ConsecutiveBase parent;
 
-    public LeafNode(ConsecutiveBase parent)
+    public ChildNode(ConsecutiveBase parent)
     {
         this.parent = parent;
     }
 
     @SuppressWarnings("initialization")
-    protected LeaveableTextField createLeaveableTextField(@UnknownInitialization(LeafNode.class) LeafNode this)
+    protected LeaveableTextField createLeaveableTextField(@UnknownInitialization(ChildNode.class)ChildNode this)
     {
         return (@Initialized LeaveableTextField)new LeaveableTextField(this, parent);
     }

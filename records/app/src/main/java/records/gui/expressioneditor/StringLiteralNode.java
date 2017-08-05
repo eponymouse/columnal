@@ -24,7 +24,7 @@ import java.util.List;
 /**
  * Created by neil on 20/12/2016.
  */
-public class StringLiteralNode extends LeafNode implements OperandNode
+public class StringLiteralNode extends ChildNode implements OperandNode
 {
     private final TextField textField;
     private final AutoComplete autoComplete;
