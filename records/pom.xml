@@ -77,6 +77,7 @@
                                     <arg>-AskipDefs=records.grammar.|one.util.</arg>
                                     <arg>-Astubs=${project.basedir}/../stubs</arg>
                                     <arg>-Xplugin:threadchecker.TCPlugin</arg>
+                                    <arg>-Werror</arg>
                                 </compilerArgs>
                             </configuration>
                         </plugin>
@@ -127,6 +128,7 @@
                                     <arg>-Apropfiles=${project.basedir}/../app/src/main/resources/transformations_en.properties:${project.basedir}/../app/src/main/resources/expression_en.properties:${project.basedir}/../app/src/main/resources/function_en.properties:${project.basedir}/../app/src/main/resources/newcolumn_en.properties:${project.basedir}/../app/src/main/resources/dataentry_en.properties:${project.basedir}/../app/src/main/resources/main_en.properties</arg>
                                     <arg>-Ahelpfiles=${project.basedir}/../app/src/main/help/guess-format.xml</arg>
                                     <arg>-Xplugin:threadchecker.TCPlugin</arg>
+                                    <arg>-Werror</arg>
                                 </compilerArgs>
                             </configuration>
                         </plugin>

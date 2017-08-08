@@ -156,6 +156,7 @@ public class PropTypecheck
     }
 
     // Need at least two types for tuple, so they are explicit, plus list of more (which may be empty):
+    @SuppressWarnings("unchecked")
     @Property
     public void checkTuple(@From(GenDataType.class) DataType typeA, @From(GenDataType.class) DataType typeB, @From(DataTypeListGenerator.class)  List typeRest) throws InternalException, UserException
     {

@@ -48,6 +48,12 @@
             <artifactId>guava</artifactId>
             <version>21.0</version>
         </dependency>
+        <!-- For Guava, seems we need this package too: -->
+        <dependency>
+            <groupId>com.google.code.findbugs</groupId>
+            <artifactId>jsr305</artifactId>
+            <version>3.0.2</version>
+        </dependency>
 
         <!-- annotations from the Checker Framework: nullness, interning, locking, ... -->
         <dependency>

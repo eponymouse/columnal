@@ -25,6 +25,7 @@ import java.util.List;
 public class StringColumnStorage implements ColumnStorage<String>
 {
     private final ArrayList<@Value String> values;
+    @SuppressWarnings("unchecked")
     private final DumbObjectPool<@Value String> pool = new DumbObjectPool<>((Class<@Value String>)(Class)String.class, 1000, null);
     private final @Nullable BeforeGet<StringColumnStorage> beforeGet;
     @MonotonicNonNull
@@ -111,7 +112,7 @@ public class StringColumnStorage implements ColumnStorage<String>
     {
         if (index < 0 || index > values.size())
             throw new InternalException("Trying to insert rows at invalid index: " + index + " length is: " + values.size());
-        values.addAll(index, Utility.mapListInt(items, pool::pool));
+        values.addAll(index, Utility.mapListInt(items, s -> pool.pool(s)));
         int count = items.size();
         return () -> removeRows(index, count);
     }

@@ -244,6 +244,6 @@ public class TranslationUtility
             }
             return sub;
         };
-        return Bindings.createStringBinding(update::get, values.<javafx.beans.Observable>toArray(new javafx.beans.Observable[0]));
+        return Bindings.createStringBinding(() -> update.get(), values.<javafx.beans.Observable>toArray(new javafx.beans.Observable[0]));
     }
 }

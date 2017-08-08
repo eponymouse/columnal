@@ -89,7 +89,7 @@ public final class Pair<A, B>
 
     public static <A extends Comparable<A>, B extends Comparable<B>> Comparator<Pair<A, B>> comparator()
     {
-        return Comparator.<Pair<A, B>, A>comparing(Pair::getFirst).thenComparing(Pair::getSecond);
+        return Comparator.<Pair<A, B>, A>comparing(p -> p.getFirst()).thenComparing(p -> p.getSecond());
     }
 
 }

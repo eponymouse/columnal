@@ -35,6 +35,7 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
         }
     };
 
+    @SuppressWarnings("unchecked")
     public GenColumn(TableManager mgr)
     {
         super((Class<ExBiFunction<Integer, RecordSet, Column>>)(Class<?>)BiFunction.class);

@@ -302,15 +302,14 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         setOnMouseReleased(e -> { resizing = false; });
 
         mostRecentBounds = new AtomicReference<>(getBoundsInParent());
-        FXUtility.addChangeListenerPlatformNN(boundsInParentProperty(), mostRecentBounds::set);
+        FXUtility.addChangeListenerPlatformNN(boundsInParentProperty(), b -> mostRecentBounds.set(b));
 
         // Must be done as last item:
         @SuppressWarnings("initialization") @Initialized TableDisplay usInit = this;
         this.table.setDisplay(usInit);
     }
 
-    @RequiresNonNull("table")
-    private ContextMenu makeTableContextMenu(@UnknownInitialization(Object.class) TableDisplay this, View parent, Table table)
+    private static ContextMenu makeTableContextMenu(View parent, Table table)
     {
         return new ContextMenu(
             GUI.menuItem("tableDisplay.menu.addTransformation", () -> parent.newTransformFromSrc(table)),

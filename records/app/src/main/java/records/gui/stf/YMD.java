@@ -86,7 +86,7 @@ public class YMD extends TerminalComponent<TemporalAccessor/*LocalDate*/>
     public Either<List<ErrorFix>, TemporalAccessor> endEdit(StructuredTextField<?> field)
     {
         List<ErrorFix> fixes = new ArrayList<>();
-        field.revertEditFix().ifPresent(fixes::add);
+        field.revertEditFix().ifPresent(f -> fixes.add(f));
         int standardFixes = fixes.size();
 
         try

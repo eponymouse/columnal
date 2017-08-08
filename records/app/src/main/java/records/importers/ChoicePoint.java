@@ -136,6 +136,7 @@ public class ChoicePoint<C extends Choice, R>
             });
     }
 
+    @SafeVarargs
     public static <C extends Choice, R> ChoicePoint<C, R> choose(Quality quality, double score, ChoiceType<C> choiceType, ExFunction<C, ChoicePoint<?, R>> hereOnwards, C... choices)
     {
         List<C> allOptions = new ArrayList<>();

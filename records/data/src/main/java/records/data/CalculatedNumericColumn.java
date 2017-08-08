@@ -10,7 +10,7 @@ import threadchecker.Tag;
 /**
  * Created by neil on 05/11/2016.
  */
-public abstract class CalculatedNumericColumn extends CalculatedColumn
+public abstract class CalculatedNumericColumn extends CalculatedColumn<NumericColumnStorage>
 {
     protected final NumericColumnStorage cache;
 

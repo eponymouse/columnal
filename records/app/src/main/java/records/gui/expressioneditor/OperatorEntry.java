@@ -70,7 +70,7 @@ public class OperatorEntry extends ChildNode implements ConsecutiveChild
         return new Pair<>(op, key);
     }
 
-    private final static Set<Integer> ALPHABET = OPERATORS.stream().map(Pair::getFirst).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
+    private final static Set<Integer> ALPHABET = OPERATORS.stream().map(p -> p.getFirst()).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
     public OperatorEntry(ConsecutiveBase parent)
     {

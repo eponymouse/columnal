@@ -210,7 +210,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public List<TypecheckInfo> doShrink(SourceOfRandomness random, TypecheckInfo larger)
     {
-        return larger.original._test_childMutationPoints().map(Pair::getFirst)
+        return larger.original._test_childMutationPoints().map(p -> p.getFirst())
             .map(e -> getTypecheckInfo(random, larger.gen, e)).collect(Collectors.<TypecheckInfo>toList());
     }
 

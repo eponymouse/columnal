@@ -47,7 +47,7 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
     @Override
     public int filled()
     {
-        return storage.stream().mapToInt(ColumnStorage::filled).min().orElse(0);
+        return storage.stream().mapToInt(s -> s.filled()).min().orElse(0);
     }
 
     /*
@@ -61,6 +61,7 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
         return r;
     }*/
 
+    @SuppressWarnings("unchecked")
     @Override
     public void addAll(List<Object[]> items) throws InternalException
     {
@@ -94,7 +95,9 @@ public class TupleColumnStorage implements ColumnStorage<Object[]>
             {
                 ColumnStorage<?> columnStorage = storage.get(column);
                 int columnFinal = column;
-                reverts.add(columnStorage.insertRows(index, (List)Utility.mapList(items, x -> x[columnFinal])));
+                // Declaration to use suppression:
+                @SuppressWarnings("unchecked")
+                boolean b = reverts.add(columnStorage.insertRows(index, (List)Utility.mapList(items, x -> x[columnFinal])));
             }
             return () ->
             {

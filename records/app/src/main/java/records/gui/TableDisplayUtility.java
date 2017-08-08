@@ -273,6 +273,7 @@ public class TableDisplayUtility
     }
 
     // package-visible
+    @SafeVarargs
     static StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> docFromSegments(StyledText<Collection<String>>... segments)
     {
         ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = ReadOnlyStyledDocument.<Collection<String>, StyledText<Collection<String>>, Collection<String>>fromSegment((StyledText<Collection<String>>)segments[0], Collections.emptyList(), Collections.emptyList(), StyledText.<Collection<String>>textOps());
@@ -393,6 +394,7 @@ public class TableDisplayUtility
                     }
 
                     @Override
+                    @SuppressWarnings("unchecked")
                     public @OnThread(Tag.Simulation) void set(int index, Object[] value) throws InternalException, UserException
                     {
                         for (int i = 0; i < value.length; i++)
@@ -410,11 +412,12 @@ public class TableDisplayUtility
                     {
                         GetValueAndComponent<?> gvac = gvacs.get(i);
                         // Have to use some casts because we can't express the type safety:
+                        @SuppressWarnings("unchecked")
                         ComponentMaker<Object> makeComponent = (ComponentMaker)gvac.makeComponent;
                         int iFinal = i;
                         components.add(subParents -> makeComponent.makeComponent(subParents, value[iFinal]));
                     }
-                    return new FixedLengthComponentList<Object[], Object>(parents, "(", components, ",", ")", List::toArray);
+                    return new FixedLengthComponentList<Object[], Object>(parents, "(", components, ",", ")", l -> l.toArray());
                 });
             }
 
@@ -432,6 +435,7 @@ public class TableDisplayUtility
                     List<@Value Object> fxList = DataTypeUtility.fetchList(value);
 
                     // Have to use some casts because we can't express the type safety:
+                    @SuppressWarnings("unchecked")
                     ComponentMaker<Object> makeComponent = (ComponentMaker)valueAndComponent(innerType.fromCollapsed((index, prog) -> 0)).makeComponent;
                     List<FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends @NonNull Object>>> components = new ArrayList<>(fxList.size());
                     for (int i = 0; i < fxList.size(); i++)
@@ -523,7 +527,7 @@ public class TableDisplayUtility
                     int iFinal = i;
                     comps.add(subParents -> component(subParents, type, value == null ? null : ((Object[]) value)[iFinal]));
                 }
-                return new FixedLengthComponentList<Object[], Object>(parents, "(", ",", comps, ")", List::toArray);
+                return new FixedLengthComponentList<Object[], Object>(parents, "(", ",", comps, ")", l -> l.toArray());
             }
 
             @Override
@@ -552,6 +556,7 @@ public class TableDisplayUtility
                         List<@Value Object> fxList = DataTypeUtility.fetchList((ListEx)value);
 
                         // Have to use some casts because we can't express the type safety:
+                        @SuppressWarnings("unchecked")
                         ComponentMaker<Object> makeComponent = (ComponentMaker) valueAndComponent(innerType.fromCollapsed((index, prog) -> 0)).makeComponent;
                         List<FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends @NonNull Object>>> components = new ArrayList<>(fxList.size());
                         for (int i = 0; i < fxList.size(); i++)

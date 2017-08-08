@@ -66,7 +66,7 @@ public class GenFormat extends Generator<TextFormat>
         int columnCount = sourceOfRandomness.nextInt(2, 40);
         for (int i = 0; i < columnCount; i++)
         {
-            List<DateTimeFormatter> dateFormats = ToDate.FORMATS.stream().flatMap(List::stream).collect(Collectors.toList());
+            List<DateTimeFormatter> dateFormats = ToDate.FORMATS.stream().flatMap(l -> l.stream()).collect(Collectors.toList());
             ColumnType type = sourceOfRandomness.choose(Arrays.asList(
                 ColumnType.BLANK,
                 new TextColumnType(),

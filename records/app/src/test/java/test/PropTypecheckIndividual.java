@@ -151,7 +151,7 @@ public class PropTypecheckIndividual
     }
 
     @Property
-    @SuppressWarnings("i18n") // Because of assumeThat, bizarrely
+    @SuppressWarnings({"i18n", "deprecation"}) // Because of assumeThat, bizarrely
     public void testEquals(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException, UserException
     {
         boolean same = DataType.checkSame(a, b, s -> {}) != null;
@@ -184,7 +184,7 @@ public class PropTypecheckIndividual
     }
 
     @Property
-    @SuppressWarnings("i18n") // Because of assumeThat, bizarrely
+    @SuppressWarnings({"i18n", "deprecation"}) // Because of assumeThat, bizarrely
     public void testArray(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException, UserException
     {
         boolean same = DataType.checkSame(a, b, s -> {}) != null;

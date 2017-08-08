@@ -110,6 +110,7 @@ public class DataTypeUtility
     }
 
     @OnThread(Tag.Simulation)
+    @SuppressWarnings("unchecked")
     public static ColumnStorage<?> makeColumnStorage(final DataType inner, ColumnStorage.@Nullable BeforeGet<?> beforeGet) throws InternalException
     {
         return inner.apply(new DataTypeVisitorEx<ColumnStorage<?>, InternalException>()

@@ -57,7 +57,7 @@ public class TimeComponent extends TerminalComponent<TemporalAccessor/*LocalTime
     public Either<List<ErrorFix>, TemporalAccessor> endEdit(StructuredTextField<?> field)
     {
         List<ErrorFix> fixes = new ArrayList<>();
-        field.revertEditFix().ifPresent(fixes::add);
+        field.revertEditFix().ifPresent(f -> fixes.add(f));
         try
         {
             int hour = Integer.parseInt(getItem(ItemVariant.EDITABLE_HOUR));

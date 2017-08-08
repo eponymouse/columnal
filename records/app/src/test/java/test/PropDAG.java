@@ -38,7 +38,7 @@ public class PropDAG
         Assert.assertEquals(new HashSet<>(a), new HashSet<>(b));
     }
 
-    @SuppressWarnings("intern")
+    @SuppressWarnings({"intern", "deprecation"})
     private void checkGraphLinear(@From(GenGraph.class) GenGraph.Graph g, List<Object> linear)
     {
         Assert.assertEquals(linear.size(), g.nodes.size());
@@ -69,7 +69,7 @@ public class PropDAG
             // Also check late nodes.
             // They should be as late as possible, which means all nodes which follow
             // a late node should have a transitive incoming edge from a late node.
-            int firstLate = g.late.stream().mapToInt(linear::indexOf).min().orElse(-1);
+            int firstLate = g.late.stream().mapToInt(i -> linear.indexOf(i)).min().orElse(-1);
             Assert.assertNotEquals(-1, firstLate);
             // Everything after first late must be late, have a link from late, or some linked node.
             // So we go through in order, checking each one and adding to validSources:
@@ -85,7 +85,7 @@ public class PropDAG
                 {
                     // Must have as a source one of validSources:
                     List<Object> in = g.incoming.get(n);
-                    Assert.assertTrue(in != null && in.stream().anyMatch(validSources::contains));
+                    Assert.assertTrue(in != null && in.stream().anyMatch(x -> validSources.contains(x)));
                 }
                 validSources.add(n);
             }

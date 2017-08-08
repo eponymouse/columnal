@@ -38,7 +38,9 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
     public <DT extends DataType> TaggedComponent(ImmutableList<Component<?>> parents, ImmutableList<TagType<DT>> tagTypes, @Nullable TaggedValue initialValue)
     {
         super(parents);
-        this.tagTypes = (ImmutableList)tagTypes;
+        @SuppressWarnings("unchecked")
+        ImmutableList<TagType<DataType>> tagTypesRaw = (ImmutableList)tagTypes;
+        this.tagTypes = tagTypesRaw;
         openBracket = new DividerComponent(getItemParents(), "(");
         closeBracket = new DividerComponent(getItemParents(), ")");
         // Important to do TagComponent last as it uses the other fields:
@@ -112,7 +114,7 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
             if (currentChild != null)
             {
                 Either<List<ErrorFix>, ? extends @Value Object> inner = currentChild.endEdit(field);
-                return inner.either(Either::left, v -> Either.right(new TaggedValue(tagIndex.getAsInt(), v)));
+                return inner.either(x -> Either.left(x), v -> Either.right(new TaggedValue(tagIndex.getAsInt(), v)));
             }
             else
             {

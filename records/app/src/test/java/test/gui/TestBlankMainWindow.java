@@ -211,6 +211,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             public Void date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 clickOnSubOfDataTypeDialog(".id-type-datetime");
+                @SuppressWarnings("unchecked")
                 @Nullable ComboBox<DataType> combo = (ComboBox<DataType>) lookupSubOfDataTypeDialog(".type-datetime-combo");
                 if (combo != null)
                     selectGivenComboBoxItem(combo, dataType);
@@ -228,6 +229,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             public Void tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 clickOnSubOfDataTypeDialog(".id-type-tagged");
+                @SuppressWarnings("unchecked")
                 ComboBox<DataType> combo = (ComboBox<DataType>) lookupSubOfDataTypeDialog(".type-tagged-combo");
                 if (combo == null)
                     return null; // Should then fail test

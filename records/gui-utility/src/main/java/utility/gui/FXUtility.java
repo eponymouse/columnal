@@ -276,7 +276,7 @@ public class FXUtility
     @OnThread(Tag.FXPlatform)
     public static <T> void listen(ObservableList<T> list, FXPlatformConsumer<ListChangeListener.Change<? extends T>> listener)
     {
-        list.addListener(listener::consume);
+        list.addListener((ListChangeListener<T>)(ListChangeListener.Change<? extends T> c) -> listener.consume(c));
     }
 
     public static void forcePrefSize(Region region)

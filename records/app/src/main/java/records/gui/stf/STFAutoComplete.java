@@ -67,6 +67,7 @@ public class STFAutoComplete extends PopupControl
         }
     }
 
+    @SuppressWarnings("unchecked")
     @OnThread(Tag.FXPlatform)
     private void disableListViewKeybindings(StructuredTextField<?> parent, ListView<Suggestion> listView)
     {

@@ -15,6 +15,7 @@
     <orderEntry type="module" module-name="parsers" />
     <orderEntry type="module" module-name="anns" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:21.0" level="project" />
+    <orderEntry type="library" name="Maven: com.google.code.findbugs:jsr305:3.0.2" level="project" />
     <orderEntry type="library" name="Maven: org.antlr:antlr4:4.5.3" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:java-smt:1.0.1" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:common:0.3000-38-gcdb252b" level="project" />

@@ -111,7 +111,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
             usFocused.updateAutoComplete(getSelection());
             if (!focused)
             {
-                usFocused.endEdit().either_(this::showFixPopup, v -> {
+                usFocused.endEdit().either_(x -> showFixPopup(x), v -> {
                     completedValue = v;
                     storeNonNull.consume(new Pair<>(getText(), completedValue));
                     lastValidValue = captureState();
@@ -215,7 +215,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
             return null;
     }
 
-    private void showFixPopup(List<ErrorFix> errorFixes)
+    private void showFixPopup(@UnknownInitialization StructuredTextField<T> this, List<ErrorFix> errorFixes)
     {
         hidePopup();
         PopOver popup = new PopOver();

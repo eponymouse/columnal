@@ -452,7 +452,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                             operands.set(falsifyOp + 1, temp);
                             ops.set(falsifyOp, ascending ? ComparisonOperator.LESS_THAN : ComparisonOperator.GREATER_THAN);
                         }
-                        return new ComparisonExpression(Utility.mapList(operands, Pair::getSecond), ImmutableList.copyOf(ops));
+                        return new ComparisonExpression(Utility.mapList(operands, p -> p.getSecond()), ImmutableList.copyOf(ops));
                     }
                 ));
             }

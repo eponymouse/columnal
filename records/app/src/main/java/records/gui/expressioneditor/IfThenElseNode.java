@@ -91,7 +91,7 @@ public class IfThenElseNode implements OperandNode, ExpressionParent, ErrorDispl
         Pair<ConsecutiveChild, Double> startDist = new Pair<>(this, FXUtility.distanceToLeft(ifLabel, loc));
 
         return Stream.of(startDist, condition.findClosestDrop(loc), thenPart.findClosestDrop(loc), elsePart.findClosestDrop(loc))
-            .min(Comparator.comparing(Pair::getSecond)).get();
+            .min(Comparator.comparing(p -> p.getSecond())).get();
     }
 
     @Override

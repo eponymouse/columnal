@@ -187,7 +187,7 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode, Err
     {
         Pair<ConsecutiveChild, Double> headDist = new Pair<>(this, FXUtility.distanceToLeft(head, loc));
         if (contents != null)
-            return Stream.of(headDist, contents.findClosestDrop(loc)).min(Comparator.comparing(Pair::getSecond)).get();
+            return Stream.of(headDist, contents.findClosestDrop(loc)).min(Comparator.comparing(p -> p.getSecond())).get();
         else
             return headDist;
     }

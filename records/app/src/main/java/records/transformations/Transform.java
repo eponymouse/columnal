@@ -309,7 +309,7 @@ public class Transform extends TransformationEditable
             // They were only allowed to press OK if all columns were non-null:
             @SuppressWarnings("nullness")
             ImmutableList<Pair<ColumnId, Expression>> cols = newColumns.stream().
-                    map((Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>> p) -> p.map(ObjectExpression::get, ObjectExpression::get)).collect(ImmutableList.toImmutableList());
+                    map((Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>> p) -> p.map((ObjectExpression<@Nullable ColumnId> e) -> e.get(), e -> e.get())).collect(ImmutableList.toImmutableList());
             return () -> new Transform(mgr, ourId, srcId.get(), cols);
         }
 

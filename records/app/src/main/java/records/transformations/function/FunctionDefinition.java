@@ -45,7 +45,7 @@ public abstract class FunctionDefinition
         List<String> errors = new ArrayList<>();
         for (FunctionType functionType : types)
         {
-            DataType t = functionType.checkType(param, errors::add);
+            DataType t = functionType.checkType(param, e -> errors.add(e));
             if (t != null)
             {
                 possibilities.add(new Pair<>(t, functionType));

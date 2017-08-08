@@ -63,6 +63,7 @@ import static org.junit.Assume.assumeTrue;
 /**
  * Created by neil on 01/12/2016.
  */
+@SuppressWarnings("deprecation")
 @RunWith(JUnitQuickcheck.class)
 public class PropRunTransformation
 {
@@ -371,7 +372,7 @@ public class PropRunTransformation
 
         Transform transform = new Transform(original.mgr, null, original.data().getId(), newCols.build());
 
-        assertDataSame(transform.getData(), original.data().getData(), columnMapping::get);
+        assertDataSame(transform.getData(), original.data().getData(), c -> columnMapping.getOrDefault(c, new ColumnId("__TEST_UNKNOWN__")));
     }
 
     // Checks that all columns from first parameter have same data as

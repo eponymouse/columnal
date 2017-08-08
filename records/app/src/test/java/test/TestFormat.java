@@ -79,6 +79,7 @@ public class TestFormat
         }
     }
 
+    @SuppressWarnings("unchecked")
     private static void assertFormat(TextFormat fmt, String... lines) throws UserException, InternalException
     {
         ChoicePick[] picks = new ChoicePick[] {

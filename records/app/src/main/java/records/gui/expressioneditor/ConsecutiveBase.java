@@ -592,7 +592,7 @@ public @Interned abstract class ConsecutiveBase implements ExpressionParent, Exp
      */
     protected Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
     {
-        return Stream.concat(operands.stream(), operators.stream()).map(n -> n.findClosestDrop(loc)).min(Comparator.comparing(Pair::getSecond)).get();
+        return Stream.concat(operands.stream(), operators.stream()).map(n -> n.findClosestDrop(loc)).min(Comparator.comparing(p -> p.getSecond())).get();
     }
 
     public @Nullable CopiedItems copyItems(ConsecutiveChild start, ConsecutiveChild end)

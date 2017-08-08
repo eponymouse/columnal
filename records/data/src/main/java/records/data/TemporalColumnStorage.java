@@ -112,7 +112,7 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
     {
         if (index < 0 || index > values.size())
             throw new InternalException("Trying to insert rows at invalid index: " + index + " length is: " + values.size());
-        values.addAll(index, Utility.mapListInt(items, pool::pool));
+        values.addAll(index, Utility.mapListInt(items, t -> pool.pool(t)));
         int count = items.size();
         return () -> removeRows(index, count);
     }

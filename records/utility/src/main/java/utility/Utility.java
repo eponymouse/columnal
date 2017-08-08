@@ -278,7 +278,12 @@ public class Utility
         else if (ax instanceof ListEx)
             cmp = compareLists((ListEx)ax, (ListEx)bx, epsilon);
         else if (ax instanceof Comparable)
-            cmp = ((Comparable<Object>)ax).compareTo(bx);
+        {
+            // Need to be declaration to use annotation:
+            @SuppressWarnings("unchecked")
+            int cmpTmp = ((Comparable<Object>) ax).compareTo(bx);
+            cmp = cmpTmp;
+        }
         else if (ax instanceof TaggedValue)
         {
             TaggedValue at = (TaggedValue) ax;
@@ -616,7 +621,7 @@ public class Utility
 
     public static <T> Iterable<T> iterableStream(Stream<T> values)
     {
-        return values::iterator;
+        return () -> values.iterator();
     }
 
     public static <T> String listToString(List<@NonNull T> options)

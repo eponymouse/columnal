@@ -140,7 +140,10 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                         }
                     }
                     innerValueIndex.set(OptionalInt.of(index), newValueIndex);
-                    newInner.insertRows(newValueIndex, (List)Collections.singletonList(DataTypeUtility.makeDefaultValue(newInner.getType())));
+                    @SuppressWarnings("unchecked")
+                    List single = Collections.singletonList(DataTypeUtility.makeDefaultValue(newInner.getType()));
+                    @SuppressWarnings("unchecked")
+                    SimulationRunnable _r = newInner.insertRows(newValueIndex, single);
                     for (int i = index + 1; i < tagStore.filled(); i++)
                     {
                         if (tagStore.getInt(i) == newTag)
@@ -281,7 +284,10 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                 @Nullable ColumnStorage<?> valueStore = valueStores.get(insertItem.getTagIndex());
                 if (valueStore == null)
                     throw new InternalException("No value store for inner type tag: " + insertItem.getTagIndex());
-                valueStore.insertRows(lastInnerValueIndex + 1, (List)Collections.singletonList(insertItem.getInner()));
+                @SuppressWarnings("unchecked")
+                List single = Collections.singletonList(insertItem.getInner());
+                @SuppressWarnings("unchecked")
+                SimulationRunnable _r = valueStore.insertRows(lastInnerValueIndex + 1, single);
                 // Increment all after us accordingly:
                 for (int i = insertAtIndex + 1; i < innerValueIndex.filled(); i++)
                 {
@@ -388,6 +394,12 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
         @Nullable Object innerValue = value.getInner();
         if (innerValue == null)
             throw new InternalException("Inner value despite no inner type");
+        addNoWarning(storage, innerValue);
+    }
+
+    @SuppressWarnings("unchecked")
+    private static void addNoWarning(ColumnStorage storage, Object innerValue) throws InternalException
+    {
         storage.add(innerValue);
     }
 

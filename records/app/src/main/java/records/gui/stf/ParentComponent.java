@@ -46,7 +46,7 @@ public abstract class ParentComponent<T> extends Component<T>
     @Override
     public boolean hasNoData()
     {
-        return getChildComponents().stream().allMatch(Component::hasNoData);
+        return getChildComponents().stream().allMatch(c -> c.hasNoData());
     }
 
     @Override

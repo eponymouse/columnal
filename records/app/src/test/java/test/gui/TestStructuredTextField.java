@@ -114,7 +114,7 @@ import static test.TestUtil.sim;
 /**
  * Created by neil on 19/06/2017.
  */
-@SuppressWarnings("initialization")
+@SuppressWarnings({"initialization", "deprecation"})
 @RunWith(JUnitQuickcheck.class)
 public class TestStructuredTextField extends ApplicationTest
 {

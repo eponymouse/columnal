@@ -513,7 +513,7 @@ public class GuessFormat
             // Only false if we find content which is not parseable as a number:
             boolean allNumericOrBlank = true;
             boolean allBlank = true;
-            List<DateFormat> possibleDateFormats = new ArrayList<>(ToDate.FORMATS.stream().<DateTimeFormatter>flatMap(List::stream).map(formatter -> new DateFormat(formatter, LocalDate::from)).collect(Collectors.<DateFormat>toList()));
+            List<DateFormat> possibleDateFormats = new ArrayList<>(ToDate.FORMATS.stream().<DateTimeFormatter>flatMap(l -> l.stream()).map(formatter -> new DateFormat(formatter, LocalDate::from)).collect(Collectors.<DateFormat>toList()));
             @Nullable String commonPrefix = null;
             List<Integer> decimalPlaces = new ArrayList<>();
             for (int rowIndex = headerRows; rowIndex < initialVals.size(); rowIndex++)
@@ -693,6 +693,7 @@ public class GuessFormat
             choices.getStyleClass().add("choice-grid");
             TableNameTextField nameField = new TableNameTextField(mgr);
             nameField.setText(suggestedName);
+            @SuppressWarnings("unchecked")
             SegmentedButtonValue<Boolean> linkCopyButtons = new SegmentedButtonValue<>(new Pair<@LocalizableKey String, Boolean>("table.copy", false), new Pair<@LocalizableKey String, Boolean>("table.link", true));
             choices.addRow(GUI.labelledGridRow("table.name", "guess-format/tableName", nameField.getNode()));
             choices.addRow(GUI.labelledGridRow("table.linkCopy", "guess-format/linkCopy", linkCopyButtons));
@@ -849,7 +850,7 @@ public class GuessFormat
         {
             if (targetClass.isInstance(c))
             {
-                return (C) c;
+                return targetClass.cast(c);
             }
         }
         return null;
@@ -902,13 +903,13 @@ public class GuessFormat
             {
                 int usedIndex = (oldFocus.getSecond()*tableView.getColumnCount() + oldFocus.getFirst()) * 2;
                 if (usedRanges[usedIndex] != -1)
-                    overlayStyle(textArea, numHeaderRows, oldFocus.getSecond(), new IndexRange(usedRanges[usedIndex], usedRanges[usedIndex+1]), "selected-cell", Sets::difference);
+                    overlayStyle(textArea, numHeaderRows, oldFocus.getSecond(), new IndexRange(usedRanges[usedIndex], usedRanges[usedIndex+1]), "selected-cell", (a, b) -> Sets.difference(a, b));
             }
             if (newFocus != null)
             {
                 int usedIndex = (newFocus.getSecond()*tableView.getColumnCount() + newFocus.getFirst()) * 2;
                 if (usedRanges[usedIndex] != -1)
-                    overlayStyle(textArea, numHeaderRows, newFocus.getSecond(), new IndexRange(usedRanges[usedIndex], usedRanges[usedIndex+1]), "selected-cell", Sets::union);
+                    overlayStyle(textArea, numHeaderRows, newFocus.getSecond(), new IndexRange(usedRanges[usedIndex], usedRanges[usedIndex+1]), "selected-cell", (a, b) -> Sets.union(a, b));
             }
         }
     }
@@ -991,7 +992,7 @@ public class GuessFormat
                     int pos = gui.textArea.getDocument().getAbsolutePosition(rowIndex + gui.numHeaderRows, 0);
                     gui.textArea.replaceText(pos, pos, replaceTab(line));
                 }
-                overlayStyle(gui.textArea, gui.numHeaderRows, rowIndex, usedPortion, "used", Sets::union);
+                overlayStyle(gui.textArea, gui.numHeaderRows, rowIndex, usedPortion, "used", (a, b) -> Sets.union(a, b));
                 gui.setUsedRange(columnIndex, rowIndex, usedPortion.start, usedPortion.end);
             });
         }

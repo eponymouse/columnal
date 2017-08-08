@@ -254,7 +254,7 @@ public class TableManager
         List<TableId> linearised = GraphUtility.lineariseDAG(allIds, edges, affected);
 
         // Find first affected:
-        int processFrom = affected.stream().mapToInt(linearised::indexOf).min().orElse(-1);
+        int processFrom = affected.stream().mapToInt(o -> linearised.indexOf(o)).min().orElse(-1);
         // If it's not in affected itself, serialise it:
         List<String> reRun = new ArrayList<>();
         AtomicInteger toSave = new AtomicInteger(1); // Keep one extra until we've lined up all jobs

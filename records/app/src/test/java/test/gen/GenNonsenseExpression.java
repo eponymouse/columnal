@@ -82,13 +82,16 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> {
                     List<Expression> expressions = TestUtil.<Expression>makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
                     List<ComparisonOperator> operators = r.nextBoolean() ? Arrays.asList(ComparisonOperator.GREATER_THAN, ComparisonOperator.GREATER_THAN_OR_EQUAL_TO) : Arrays.asList(ComparisonOperator.LESS_THAN, ComparisonOperator.LESS_THAN_OR_EQUAL_TO);
-                    return new ComparisonExpression(expressions, ImmutableList.<ComparisonOperator>copyOf(TestUtil.<ComparisonOperator>makeList(expressions.size() - 1, (Generator<ComparisonOperator>)(Generator)new EnumGenerator(ComparisonOperator.class) {
+                    @SuppressWarnings("unchecked")
+                    Generator<ComparisonOperator> comparisonOperatorGenerator = (Generator) new EnumGenerator(ComparisonOperator.class)
+                    {
                         @Override
                         public Enum<ComparisonOperator> generate(SourceOfRandomness random, GenerationStatus status)
                         {
                             return random.choose(operators);
                         }
-                    }, r, gs)));
+                    };
+                    return new ComparisonExpression(expressions, ImmutableList.<ComparisonOperator>copyOf(TestUtil.<ComparisonOperator>makeList(expressions.size() - 1, comparisonOperatorGenerator, r, gs)));
                 },
                 () -> new AndExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new OrExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
@@ -97,7 +100,9 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () ->
                 {
                     List<Expression> expressions = TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
-                    return new AddSubtractExpression(expressions, TestUtil.makeList(expressions.size() - 1, (Generator<Op>)(Generator<?>)new EnumGenerator(Op.class), r, gs));
+                    @SuppressWarnings("unchecked")
+                    Generator<Op> opGenerator = (Generator<Op>) (Generator<?>) new EnumGenerator(Op.class);
+                    return new AddSubtractExpression(expressions, TestUtil.makeList(expressions.size() - 1, opGenerator, r, gs));
                 },
                 () -> new DivideExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new RaiseExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
@@ -161,7 +166,7 @@ public class GenNonsenseExpression extends Generator<Expression>
     @Override
     public List<Expression> doShrink(SourceOfRandomness random, Expression larger)
     {
-        return larger._test_childMutationPoints().map(Pair::getFirst).collect(Collectors.<Expression>toList());
+        return larger._test_childMutationPoints().map(p -> p.getFirst()).collect(Collectors.<Expression>toList());
     }
 
     private class GenRandomOp extends Generator<String>

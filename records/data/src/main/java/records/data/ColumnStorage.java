@@ -45,7 +45,9 @@ public interface ColumnStorage<T>
         List<T> r = new ArrayList<>(toExcl - fromIncl);
         for (int i = fromIncl; i < toExcl; i++)
         {
-            r.add((T)getType().getCollapsed(i));
+            @SuppressWarnings("unchecked")
+            T collapsed = (T) getType().getCollapsed(i);
+            r.add(collapsed);
         }
         return ImmutableList.copyOf(r);
     }

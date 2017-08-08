@@ -25,6 +25,7 @@ public class SegmentedButtonValue<T> extends SegmentedButton
     private final ObjectExpression<T> valueProperty;
 
     @SuppressWarnings("nullness") // We know each button will have a mapped value in the binding
+    @SafeVarargs
     public SegmentedButtonValue(Pair<@LocalizableKey String, T>... choices)
     {
         for (Pair<@LocalizableKey String, T> choice : choices)

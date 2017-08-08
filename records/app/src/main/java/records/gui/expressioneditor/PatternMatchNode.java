@@ -268,7 +268,7 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
         Pair<ConsecutiveChild, Double> startDist = new Pair<>(this, FXUtility.distanceToLeft(matchLabel, loc));
 
         return Stream.<Pair<ConsecutiveChild, Double>>concat(Stream.of(startDist), clauses.stream().map(c -> c.findClosestDrop(loc)))
-            .min(Comparator.comparing(Pair::getSecond)).get();
+            .min(Comparator.comparing(p -> p.getSecond())).get();
     }
 
     @Override

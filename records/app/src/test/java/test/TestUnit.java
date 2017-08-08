@@ -170,7 +170,7 @@ public class TestUnit
         test_(src, srcUnit, expected, destUnit);
     }
 
-    @SuppressWarnings("nullness")
+    @SuppressWarnings({"nullness", "deprecation"})
     @OnThread(Tag.Simulation)
     private void test_(String expected, String destUnit, String src, String srcUnit) throws InternalException, UserException, Throwable
     {

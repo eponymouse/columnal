@@ -42,6 +42,7 @@ import static org.junit.Assert.fail;
 /**
  * Created by neil on 13/12/2016.
  */
+@SuppressWarnings("deprecation")
 @RunWith(JUnitQuickcheck.class)
 public class PropNumericFunctions
 {

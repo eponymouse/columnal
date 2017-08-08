@@ -252,6 +252,7 @@ public class HideColumns extends TransformationEditable
                 }
 
                 @Override
+                @SuppressWarnings("unchecked")
                 public @OnThread(Tag.FXPlatform) boolean dragEnded(Dragboard db, Point2D pointInScene)
                 {
                     @Nullable Object content = db.getContent(FXUtility.getTextDataFormat("ColumnId"));

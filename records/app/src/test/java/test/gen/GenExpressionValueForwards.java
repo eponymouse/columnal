@@ -489,7 +489,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                                     break;
                             }
                         }
-                        return new Pair<>(Utility.<Boolean, @Value Object>mapList(result, b -> DataTypeUtility.value(b)), new ComparisonExpression(Utility.mapList(args, Pair::getSecond), ImmutableList.copyOf(ops)));
+                        return new Pair<>(Utility.<Boolean, @Value Object>mapList(result, b -> DataTypeUtility.value(b)), new ComparisonExpression(Utility.mapList(args, p -> p.getSecond()), ImmutableList.copyOf(ops)));
                     },
                     () -> {
                         int size = r.nextInt(2, 5);
@@ -591,7 +591,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
 
     private Pair<List<@Value Object>, Expression> num(List<Number> values, Expression expression)
     {
-        return new Pair<>(Utility.<Number, @Value Object>mapList(values, DataTypeUtility::value), expression);
+        return new Pair<>(Utility.<Number, @Value Object>mapList(values, n -> DataTypeUtility.value(n)), expression);
     }
 
     private Number safeAbs(Long l)
@@ -640,7 +640,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
         return () ->
         {
             List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(type));
-            columns.add(rs -> type.makeCalculatedColumn(rs, name, value::get));
+            columns.add(rs -> type.makeCalculatedColumn(rs, name, i -> value.get(i)));
             return new Pair<List<@Value Object>, Expression>(value, new ColumnReference(name, ColumnReferenceType.CORRESPONDING_ROW));
         };
     }

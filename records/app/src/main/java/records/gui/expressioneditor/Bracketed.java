@@ -72,6 +72,6 @@ public class Bracketed extends Consecutive implements OperandNode
     @Override
     public Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
     {
-        return Stream.of(new Pair<ConsecutiveChild, Double>(this, FXUtility.distanceToLeft(nodes().get(0), loc)), super.findClosestDrop(loc)).min(Comparator.comparing(Pair::getSecond)).get();
+        return Stream.of(new Pair<ConsecutiveChild, Double>(this, FXUtility.distanceToLeft(nodes().get(0), loc)), super.findClosestDrop(loc)).min(Comparator.comparing(p -> p.getSecond())).get();
     }
 }

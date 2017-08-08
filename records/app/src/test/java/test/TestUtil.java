@@ -86,6 +86,7 @@ import java.util.Map;
 import java.util.Random;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
@@ -105,11 +106,19 @@ public class TestUtil
     @OnThread(Tag.Any)
     public static void assertValueEqual(String prefix, @Value Object a, @Value Object b) throws UserException, InternalException
     {
-        SimulationSupplier<Integer> simulationSupplier = () -> Utility.compareValues(a, b);
-        int compare = ((ExSupplier<Integer>)simulationSupplier::get).get();
-        if (compare != 0)
+        try
         {
-            fail(prefix + " comparing " + DataTypeUtility._test_valueToString(a) + " against " + DataTypeUtility._test_valueToString(b) + " result: " + compare);
+            CompletableFuture<Integer> f = new CompletableFuture<>();
+            Workers.onWorkerThread("Comparison", Priority.FETCH, () -> checkedToRuntime(() -> f.complete(Utility.compareValues(a, b))));
+            int compare = f.get();
+            if (compare != 0)
+            {
+                fail(prefix + " comparing " + DataTypeUtility._test_valueToString(a) + " against " + DataTypeUtility._test_valueToString(b) + " result: " + compare);
+            }
+        }
+        catch (ExecutionException | InterruptedException e)
+        {
+            throw new RuntimeException(e);
         }
     }
 
@@ -577,7 +586,7 @@ public class TestUtil
     {
         try
         {
-            return WaitForAsyncUtils.asyncFx(action::get).get();
+            return WaitForAsyncUtils.asyncFx(action).get();
         }
         catch (Exception e)
         {
@@ -774,10 +783,10 @@ public class TestUtil
         openDataAsTable(windowToUse, manager);
     }
 
-    public static interface FXPlatformSupplierEx<T>
+    public static interface FXPlatformSupplierEx<T> extends Callable<T>
     {
-        @OnThread(Tag.FXPlatform)
-        public T get() throws InternalException, UserException;
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        public T call() throws InternalException, UserException;
     }
 
     public static class ChoicePick<C extends Choice>
@@ -793,6 +802,7 @@ public class TestUtil
     }
 
     @SuppressWarnings("all") // I18n triggers here, and i18n alone won't shut it off. No idea what the issue is.
+    @SafeVarargs
     public static <C extends Choice, R> @NonNull R pick(ChoicePoint<C, R> choicePoint, ChoicePick<C>... picks) throws InternalException, UserException
     {
         ChoiceType<C> choicePointType = choicePoint.getChoiceType();
@@ -806,8 +816,11 @@ public class TestUtil
             {
                 if (pick.theClass.equals(choicePointType.getChoiceClass()))
                 {
+                    @SuppressWarnings("unchecked")
                     ChoicePoint<Choice, R> selected = (ChoicePoint<Choice, R>) choicePoint.select(pick.choice);
-                    @NonNull R picked = pick(selected, (ChoicePick<Choice>[]) picks);
+                    @SuppressWarnings("unchecked")
+                    ChoicePick<Choice>[] picksCast = (ChoicePick<Choice>[]) picks;
+                    @NonNull R picked = pick(selected, picksCast);
                     return picked;
                 }
             }

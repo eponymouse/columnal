@@ -41,6 +41,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class PropFormat
 {
+    @SuppressWarnings("unchecked")
     @Property
     @OnThread(Tag.Simulation)
     public void testGuessFormat(@From(GenFormattedData.class) GenFormattedData.FormatAndData formatAndData, boolean link) throws IOException, UserException, InternalException

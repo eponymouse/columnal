@@ -356,7 +356,7 @@ public class StableView
         // which will have the updated number of columns
         items.clear();
         this.columns.clear();
-        this.columns.addAll(Utility.mapList(columns, Pair::getSecond));
+        this.columns.addAll(Utility.mapList(columns, p -> p.getSecond()));
         this.columnSizes.clear();
         for (int i = 0; i < columns.size(); i++)
         {

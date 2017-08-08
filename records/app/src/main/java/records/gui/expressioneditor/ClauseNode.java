@@ -372,7 +372,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
                 return p.getSecond() == null ? Stream.of(firstDrop) : Stream.of(firstDrop, p.getSecond().findClosestDrop(loc));
             })
             //)
-            .min(Comparator.comparing(Pair::getSecond)).get();
+            .min(Comparator.comparing(p -> p.getSecond())).get();
     }
 
     public ExpressionNode focusWhenShown()

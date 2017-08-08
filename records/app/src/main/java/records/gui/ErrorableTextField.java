@@ -53,7 +53,7 @@ public class ErrorableTextField<T>
         popOver.getStyleClass().add("errorable-text-field-popup");
         this.converted = new SimpleObjectProperty<>(converter.apply(""));
         FXUtility.addChangeListenerPlatformNN(field.textProperty(), s -> converted.setValue(converter.apply(s)));
-        for (ObservableValue dependency : conversionDependencies)
+        for (ObservableValue<?> dependency : conversionDependencies)
         {
             FXUtility.addChangeListenerPlatform(dependency, o -> converted.setValue(converter.apply(field.getText())));
         }
