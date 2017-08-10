@@ -14,10 +14,13 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.ErrorRecorder.QuickFix;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -36,9 +39,16 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public DataType check(RecordSet data, TypeState state, ErrorRecorder onError)
+    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError)
     {
-        return unit == null ? DataType.NUMBER : DataType.number(new NumberInfo(unit.asUnit(), null));
+        if (unit == null)
+            return DataType.NUMBER;
+
+        Either<Pair<String, List<UnitExpression>>, Unit> errOrUnit = unit.asUnit(state.getUnitManager());
+        return errOrUnit.<@Nullable DataType>either(err -> {
+            onError.recordError(this, err.getFirst(), Utility.mapList(err.getSecond(), u -> new QuickFix("Fix unit", () -> new NumericLiteral(value, u))));
+            return null;
+        }, u -> DataType.number(new NumberInfo(u, null)));
     }
 
     @Override

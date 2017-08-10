@@ -11,6 +11,7 @@ import records.grammar.UnitParser.AliasDeclarationContext;
 import records.grammar.UnitParser.DeclarationContext;
 import records.grammar.UnitParser.DisplayContext;
 import records.grammar.UnitParser.SingleContext;
+import records.grammar.UnitParser.TimesByContext;
 import records.grammar.UnitParser.UnbracketedUnitContext;
 import records.grammar.UnitParser.UnitContext;
 import records.grammar.UnitParser.UnitDeclarationContext;
@@ -129,18 +130,18 @@ public class UnitManager
 
     private Unit loadUnbracketedUnit(UnbracketedUnitContext ctx) throws UserException
     {
-        Iterator<UnitContext> units = ctx.unit().iterator();
-        Unit lhs = loadUnit(units.next());
-        while (units.hasNext())
+        Unit u = loadUnit(ctx.unit());
+        if (ctx.divideBy() != null)
+            u = u.divide(loadUnit(ctx.divideBy().unit()));
+        else
         {
-            Unit rhs = loadUnit(units.next());
-            if (ctx.DIVIDE() != null)
-                lhs = lhs.divide(rhs);
-            else
-                lhs =  lhs.times(rhs);
+            for (TimesByContext rhs : ctx.timesBy())
+            {
+                u = u.times(loadUnit(rhs.unit()));
+            }
         }
 
-        return lhs;
+        return u;
     }
 
     private Unit loadUnit(UnitContext unit) throws UserException

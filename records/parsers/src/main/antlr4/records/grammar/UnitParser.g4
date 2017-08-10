@@ -5,7 +5,9 @@ options { tokenVocab = UnitLexer; }
 singleUnit : IDENT;
 scale : NUMBER (POWER NUMBER)?;
 single : singleUnit (POWER NUMBER)?;
-unbracketedUnit : unit ((WS? DIVIDE WS? unit) | (WS? unit | WS? TIMES WS? unit)+)?;
+divideBy : (WS? DIVIDE WS? unit);
+timesBy : (WS? unit | WS? TIMES WS? unit);
+unbracketedUnit : unit (divideBy | timesBy+)?;
 unit : single | OPEN_BRACKET unbracketedUnit CLOSE_BRACKET;
 
 unitUse : unbracketedUnit EOF;

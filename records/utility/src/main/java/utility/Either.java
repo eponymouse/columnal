@@ -72,6 +72,16 @@ public class Either<A, B>
             return Either.right(applyRight.apply(b));
     }
 
+    // Equivalent to either(Either::left, applyRight)
+    @SuppressWarnings("nullness")
+    public <R> Either<A, R> flatMap(Function<? super B, Either<A, R>> bind)
+    {
+        if (isA)
+            return Either.left(a);
+        else
+            return bind.apply(b);
+    }
+
     //Use either/either_ instead if at all possible
     public A getLeft() throws InternalException
     {
