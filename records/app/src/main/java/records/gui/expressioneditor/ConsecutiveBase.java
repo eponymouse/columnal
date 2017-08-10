@@ -43,6 +43,8 @@ import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -50,7 +52,7 @@ import java.util.stream.Stream;
  * does not extend it because Consecutive by itself is not a valid
  * operand.  For that, use Bracketed.
  */
-public @Interned abstract class ConsecutiveBase<EXPRESSION> implements ExpressionParent, ExpressionNode, ErrorDisplayer
+public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Object> implements ExpressionParent, ExpressionNode, ErrorDisplayer
 {
     protected final OperandOps<EXPRESSION> operations;
     private final ObservableList<Node> nodes;
@@ -84,7 +86,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION> implements Expressio
      *    X* ? X
      */
     protected final ObservableList<OperandNode<@NonNull EXPRESSION>> operands;
-    protected final ObservableList<OperatorEntry<EXPRESSION>> operators;
+    protected final ObservableList<OperatorEntry<@NonNull EXPRESSION>> operators;
     private final @Nullable Node prefixNode;
     private final @Nullable Node suffixNode;
     private @Nullable String prompt = null;
@@ -233,7 +235,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION> implements Expressio
             operands.get(operands.size() - 1).focus(side);
     }
 
-    public void replace(OperandNode<EXPRESSION> oldNode, @Nullable OperandNode<@NonNull EXPRESSION> newNode)
+    public void replace(OperandNode<@NonNull EXPRESSION> oldNode, @Nullable OperandNode<@NonNull EXPRESSION> newNode)
     {
         int index = getOperandIndex(oldNode);
         //System.err.println("Replacing " + oldNode + " with " + newNode + " index " + index);
@@ -261,7 +263,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION> implements Expressio
     }
 
 
-    public void setOperatorToRight(@UnknownInitialization OperandNode<EXPRESSION> rightOf, String operator)
+    public void setOperatorToRight(@UnknownInitialization OperandNode<@NonNull EXPRESSION> rightOf, String operator)
     {
         int index = getOperandIndex(rightOf);
         if (index != -1)
@@ -359,7 +361,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION> implements Expressio
         // all our children have EXPRESSION as inner type:
         if (child instanceof OperandNode && Utility.containsRef(operands, (OperandNode<@NonNull EXPRESSION>)child))
         {
-            int index = getOperandIndex((OperandNode<EXPRESSION>)child);
+            int index = getOperandIndex((OperandNode<@NonNull EXPRESSION>)child);
             if (index >= operators.size())
             {
                 operators.add(makeBlankOperator());
@@ -384,7 +386,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION> implements Expressio
     {
         if (child instanceof OperandNode && Utility.containsRef(operands, (OperandNode<@NonNull EXPRESSION>)child))
         {
-            int index = getOperandIndex((OperandNode<EXPRESSION>) child);
+            int index = getOperandIndex((OperandNode<@NonNull EXPRESSION>) child);
             if (index > 0)
                 operators.get(index - 1).focus(Focus.RIGHT);
             else
@@ -471,7 +473,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION> implements Expressio
             firstIndex = 0;
             lastIndex = operands.size() - 1;
         }
-        List<@NonNull EXPRESSION> expressionExps = Utility.mapList(operands.subList(firstIndex, lastIndex + 1), n -> n.save(errorDisplayers, onError));
+        List<@NonNull EXPRESSION> expressionExps = Utility.<OperandNode<@NonNull EXPRESSION>, @NonNull EXPRESSION>mapList(operands.subList(firstIndex, lastIndex + 1), (OperandNode<@NonNull EXPRESSION> n) -> n.save(errorDisplayers, onError));
         Pair<Boolean, List<String>> opsValid = getOperators(firstIndex, lastIndex);
 
         if (!opsValid.getFirst())
@@ -503,7 +505,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION> implements Expressio
     @Pure
     public List<ConsecutiveChild<EXPRESSION>> getChildrenFromTo(ConsecutiveChild<EXPRESSION> start, ConsecutiveChild<EXPRESSION> end)
     {
-        List<ConsecutiveChild<EXPRESSION>> allChildren = getAllChildren();
+        List<ConsecutiveChild<@NonNull EXPRESSION>> allChildren = getAllChildren();
         int a = allChildren.indexOf(start);
         int b = allChildren.indexOf(end);
         if (a == -1 || b == -1 || a > b)
@@ -511,7 +513,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION> implements Expressio
         return allChildren.subList(a, b + 1);
     }
 
-    private List<ConsecutiveChild<EXPRESSION>> getAllChildren()
+    private List<ConsecutiveChild<@NonNull EXPRESSION>> getAllChildren()
     {
         return interleaveOperandsAndOperators(operands, operators);
     }
@@ -583,12 +585,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION> implements Expressio
      */
     protected <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
-        return Stream.<ConsecutiveChild<EXPRESSION>>concat(operands.stream(), operators.stream()).map(n -> n.findClosestDrop(loc, forType)).min(Comparator.comparing(p -> p.getSecond())).get();
+        return Utility.filterOutNulls(Stream.<ConsecutiveChild<EXPRESSION>>concat(operands.stream(), operators.stream()).<@Nullable Pair<ConsecutiveChild<? extends C>, Double>>map(n -> n.findClosestDrop(loc, forType))).min(Comparator.comparing(p -> p.getSecond())).get();
     }
 
     public @Nullable CopiedItems copyItems(ConsecutiveChild<EXPRESSION> start, ConsecutiveChild<EXPRESSION> end)
     {
-        List<ConsecutiveChild<EXPRESSION>> all = getAllChildren();
+        List<ConsecutiveChild<@NonNull EXPRESSION>> all = getAllChildren();
         boolean startIsOperator = start instanceof OperatorEntry;
         int startIndex = all.indexOf(start);
         int endIndex = all.indexOf(end);
@@ -712,7 +714,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION> implements Expressio
         atomicEdit.set(true);
         int startIndex;
         int endIndex;
-        List<ConsecutiveChild<EXPRESSION>> all = interleaveOperandsAndOperators(operands, operators);
+        List<ConsecutiveChild<@NonNull EXPRESSION>> all = interleaveOperandsAndOperators(operands, operators);
         startIndex = all.indexOf(start);
         endIndex = all.indexOf(end);
         if (startIndex != -1 && endIndex != -1)
@@ -855,15 +857,17 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION> implements Expressio
         operands.get(0).showError(error, quickFixes);
     }
 
-    public static interface OperandOps<EXPRESSION>
+    public static interface OperandOps<EXPRESSION extends @NonNull Object>
     {
         public OperandNode<EXPRESSION> makeBlank(ConsecutiveBase<EXPRESSION> parent);
 
         public ImmutableList<Pair<String, @Localized String>> getValidOperators();
 
+        public boolean isOperatorAlphabet(char character);
+
         public Class<EXPRESSION> getOperandClass();
 
-        EXPRESSION makeUnfinished(String s);
+        @NonNull EXPRESSION makeUnfinished(String s);
 
         EXPRESSION makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord<EXPRESSION> errorDisplayers, List<EXPRESSION> expressionExps, List<String> ops);
 
@@ -874,7 +878,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION> implements Expressio
 
     private static class ExpressionOps implements OperandOps<Expression>
     {
-        private final static ImmutableList<Pair<String, @LocalizableKey String>> OPERATORS = ImmutableList.copyOf(Arrays.asList(
+        private final static ImmutableList<Pair<String, @LocalizableKey String>> OPERATORS = ImmutableList.<Pair<String, @LocalizableKey String>>copyOf(Arrays.<Pair<String, @LocalizableKey String>>asList(
             opD("=", "op.equal"),
             opD("<>", "op.notEqual"),
             opD("+", "op.plus"),
@@ -892,6 +896,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION> implements Expressio
             opD("~", "op.matches"),
             opD("\u00B1", "op.plusminus")
         ));
+        private final Set<Integer> ALPHABET = OPERATORS.stream().map(p -> p.getFirst()).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
         private static Pair<String, @LocalizableKey String> opD(String op, @LocalizableKey String key)
         {
@@ -902,6 +907,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION> implements Expressio
         public ImmutableList<Pair<String, @Localized String>> getValidOperators()
         {
             return OPERATORS;
+        }
+
+        public boolean isOperatorAlphabet(char character)
+        {
+            return ALPHABET.contains((Integer)(int)character);
         }
 
         public OperandNode<Expression> makeBlank(ConsecutiveBase<Expression> parent)

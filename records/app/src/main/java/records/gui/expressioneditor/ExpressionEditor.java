@@ -63,7 +63,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression>
         */
     }
 
-    private static class SelectionInfo<E>
+    private static class SelectionInfo<E extends @NonNull Object>
     {
         private final ConsecutiveBase<E> parent;
         private final ConsecutiveChild<E> start;
@@ -81,7 +81,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression>
             return parent.getChildrenFromTo(start, end).contains(item);
         }
 
-        public CopiedItems copyItems()
+        public @Nullable CopiedItems copyItems()
         {
             return parent.copyItems(start, end);
         }
@@ -90,8 +90,14 @@ public class ExpressionEditor extends ConsecutiveBase<Expression>
         {
             parent.removeItems(start, end);
         }
+
+        public void markSelection(boolean selected)
+        {
+            parent.markSelection(start, end, selected);
+        }
     }
 
+    @SuppressWarnings("initialization")
     public ExpressionEditor(Expression startingValue, @Nullable Table srcTable, ObservableObjectValue<@Nullable DataType> type, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
         super(EXPRESSION_OPS,  null, null, "");
@@ -229,7 +235,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression>
     }
 
     @Override
-    protected void selfChanged(@UnknownInitialization(ConsecutiveBase.class) ExpressionEditor this)
+    protected void selfChanged()
     {
         clearSelection();
         // Can be null during initialisation
@@ -309,7 +315,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression>
         }
 
         selection = new SelectionInfo<>(src.getParent(), src, src);
-        selection.parent.markSelection(src, src, true);
+        selection.markSelection(true);
     }
 
     private void clearSelection(@UnknownInitialization(ConsecutiveBase.class) ExpressionEditor this)
@@ -318,7 +324,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression>
             return;
 
         if (selection != null)
-            selection.parent.markSelection(selection.start, selection.end, false);
+            selection.markSelection(false);
         selection = null;
     }
 
@@ -331,31 +337,35 @@ public class ExpressionEditor extends ConsecutiveBase<Expression>
         ensureSelectionIncludes(src);
     }
 
-    public <E> void extendSelectionTo(ConsecutiveChild<E> node)
+    public <E extends @NonNull Object> void extendSelectionTo(ConsecutiveChild<E> node)
     {
         if (selectionLocked)
             return;
 
         if (selection != null && node.getParent() == selection.parent)
         {
+            // Given they have same parent, selection must be of type E:
+            @SuppressWarnings("unchecked")
+            SelectionInfo<E> oldSel = (SelectionInfo<E>)selection;
+
             // The target might be ahead or behind or within the current selection.
             // We try with asking for ahead or behind.  If one is empty, choose the other
             // If both are non-empty, go from start to target:
-            ConsecutiveChild<Expression> oldSelStart = selection.start;
-            List<ConsecutiveChild<Expression>> startToTarget = selection.parent.getChildrenFromTo(oldSelStart, node);
-            ConsecutiveChild<Expression> oldSelEnd = selection.end;
+            ConsecutiveChild<E> oldSelStart = oldSel.start;
+            List<ConsecutiveChild<E>> startToTarget = oldSel.parent.getChildrenFromTo(oldSelStart, node);
+            ConsecutiveChild<E> oldSelEnd = oldSel.end;
             // Thus the rule is use startToTarget unless it's empty:
             if (!startToTarget.isEmpty())
             {
                 clearSelection();
-                selection = new SelectionInfo(node.getParent(), oldSelStart, node);
-                selection.parent.markSelection(oldSelStart, node, true);
+                selection = new SelectionInfo<E>(node.getParent(), oldSelStart, node);
+                selection.markSelection(true);
             }
             else
             {
                 clearSelection();
-                selection = new SelectionInfo(node.getParent(), node, oldSelEnd);
-                selection.parent.markSelection(node, oldSelEnd, true);
+                selection = new SelectionInfo<E>(node.getParent(), node, oldSelEnd);
+                selection.markSelection(true);
             }
         }
     }

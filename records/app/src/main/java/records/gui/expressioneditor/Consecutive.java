@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Chars;
 import javafx.scene.Node;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -18,7 +19,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 19/02/2017.
  */
-public class Consecutive<EXPRESSION> extends ConsecutiveBase<EXPRESSION>
+public class Consecutive<EXPRESSION extends @NonNull Object> extends ConsecutiveBase<EXPRESSION>
 {
     protected final ExpressionParent parent;
     private final ImmutableSet<Character> endCharacters;

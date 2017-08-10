@@ -815,6 +815,12 @@ public class Utility
         });
     }
 
+    @SuppressWarnings("nullness")
+    public static <T> Stream<@NonNull T> filterOutNulls(Stream<@Nullable T> stream)
+    {
+        return stream.filter(x -> x != null);
+    }
+
     // Having different arity versions of this prevents the varargs/generics warning
     public static <T> List<T> concat(List<T> a, List<T> b)
     {

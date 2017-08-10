@@ -9,6 +9,7 @@ import javafx.scene.control.TextField;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorUpdater;
 import records.transformations.expression.ErrorRecorder.QuickFix;
@@ -22,7 +23,7 @@ import java.util.List;
  * have a single text field as a ConsecutiveChild
  *
  */
-abstract class TextFieldEntry<EXPRESSION> extends ChildNode<EXPRESSION> implements ConsecutiveChild<EXPRESSION>, ErrorDisplayer
+abstract class TextFieldEntry<EXPRESSION extends @NonNull Object> extends ChildNode<EXPRESSION> implements ConsecutiveChild<EXPRESSION>, ErrorDisplayer
 {
     protected final Class<EXPRESSION> operandClass;
     /**

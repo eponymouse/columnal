@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.ErrorRecorder;
 import records.transformations.expression.Expression;
@@ -16,7 +17,7 @@ public class ErrorDisplayerRecord<EXPRESSION>
     private final IdentityHashMap<EXPRESSION, ErrorDisplayer> displayers = new IdentityHashMap<>();
 
     @SuppressWarnings("initialization")
-    public EXPRESSION record(@UnknownInitialization(Object.class) ErrorDisplayer displayer, EXPRESSION e)
+    public @NonNull EXPRESSION record(@UnknownInitialization(Object.class) ErrorDisplayer displayer, @NonNull EXPRESSION e)
     {
         displayers.put(e, displayer);
         return e;

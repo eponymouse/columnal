@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import utility.FXPlatformFunction;
 import utility.Pair;
@@ -16,7 +17,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 20/12/2016.
  */
-public class Bracketed<EXPRESSION> extends Consecutive<EXPRESSION> implements OperandNode<EXPRESSION>
+public class Bracketed<EXPRESSION extends @NonNull Object> extends Consecutive<EXPRESSION> implements OperandNode<EXPRESSION>
 {
     private final ConsecutiveBase<EXPRESSION> consecParent;
 

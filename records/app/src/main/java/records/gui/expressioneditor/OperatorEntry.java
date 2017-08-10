@@ -49,7 +49,6 @@ public class OperatorEntry<EXPRESSION> extends ChildNode<EXPRESSION> implements 
     private final Class<EXPRESSION> operandClass;
 
     private final List<Pair<String, @LocalizableKey String>> validOperators;
-    private final Set<Integer> alphabet;
 
     public OperatorEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION> parent)
     {
@@ -69,9 +68,8 @@ public class OperatorEntry<EXPRESSION> extends ChildNode<EXPRESSION> implements 
         container.getStyleClass().add("entry");
         this.nodes = FXCollections.observableArrayList(this.container);
         this.validOperators = parent.operations.getValidOperators();
-        this.alphabet = validOperators.stream().map(p -> p.getFirst()).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
-        this.autoComplete = new AutoComplete(textField, this::getCompletions, new CompletionListener(), c -> !isOperatorAlphabet(c) && !parent.terminatedByChars().contains(c));
+        this.autoComplete = new AutoComplete(textField, this::getCompletions, new CompletionListener(), c -> !parent.operations.isOperatorAlphabet(c) && !parent.terminatedByChars().contains(c));
 
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text ->{
             parent.changed(OperatorEntry.this);
@@ -111,11 +109,6 @@ public class OperatorEntry<EXPRESSION> extends ChildNode<EXPRESSION> implements 
     {
         FXUtility.onceNotNull(textField.sceneProperty(), scene -> focus(Focus.RIGHT));
         return this;
-    }
-
-    public boolean isOperatorAlphabet(Character character)
-    {
-        return alphabet.contains((Integer)(int)(char)character);
     }
 
     // Returns false if it wasn't blank
