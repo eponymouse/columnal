@@ -6,7 +6,6 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
-import javafx.collections.ListChangeListener.Change;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -27,8 +26,6 @@ import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.gui.expressioneditor.GeneralEntry.Status;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.Op;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -144,7 +141,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     @NotNull
     protected OperandNode<@NonNull EXPRESSION> makeBlankOperand()
     {
-        return operations.makeBlank(this);
+        return operations.makeGeneral(this, null);
     }
 
     private void updateListeners()
@@ -249,7 +246,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
     }
 
-    public void addOperandToRight(@UnknownInitialization OperatorEntry<EXPRESSION> rightOf, OperandNode<@NonNull EXPRESSION> operandNode)
+    public void addOperandToRight(@UnknownInitialization OperatorEntry<EXPRESSION> rightOf, String initialContent, boolean focus)
     {
         // Must add operand and operator
         int index = Utility.indexOfRef(operators, rightOf);
@@ -257,6 +254,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         {
             atomicEdit.set(true);
             operators.add(index+1, makeBlankOperator());
+            OperandNode<EXPRESSION> operandNode = operations.makeGeneral(this, initialContent);
+            if (focus)
+                operandNode.focusWhenShown();
             operands.add(index+1, operandNode);
             atomicEdit.set(false);
         }
@@ -531,7 +531,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
      * @return
      */
 
-    private static <EXPRESSION> List<ConsecutiveChild<EXPRESSION>> interleaveOperandsAndOperators(List<OperandNode<EXPRESSION>> operands, List<OperatorEntry<EXPRESSION>> operators)
+    private static <EXPRESSION extends @NonNull Object> List<ConsecutiveChild<EXPRESSION>> interleaveOperandsAndOperators(List<OperandNode<EXPRESSION>> operands, List<OperatorEntry<EXPRESSION>> operators)
     {
         return new AbstractList<ConsecutiveChild<EXPRESSION>>()
         {
@@ -796,7 +796,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
      * @param operators
      * @param accountForFocus If they are focused, should they be kept in (true: yes, keep; false: no, remove)
      */
-    private static <EXPRESSION> void removeBlanks(List<OperandNode<EXPRESSION>> operands, List<OperatorEntry<EXPRESSION>> operators, boolean accountForFocus, @Nullable BooleanProperty atomicEdit)
+    private static <EXPRESSION extends @NonNull Object> void removeBlanks(List<OperandNode<EXPRESSION>> operands, List<OperatorEntry<EXPRESSION>> operators, boolean accountForFocus, @Nullable BooleanProperty atomicEdit)
     {
         // Note on atomicEdit: we set to true if we modify, and set to false once at the end,
         // which will do nothing if we never edited
@@ -859,7 +859,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
     public static interface OperandOps<EXPRESSION extends @NonNull Object>
     {
-        public OperandNode<EXPRESSION> makeBlank(ConsecutiveBase<EXPRESSION> parent);
+        public OperandNode<EXPRESSION> makeGeneral(ConsecutiveBase<EXPRESSION> parent, @Nullable String initialContent);
 
         public ImmutableList<Pair<String, @Localized String>> getValidOperators();
 
@@ -914,9 +914,10 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             return ALPHABET.contains((Integer)(int)character);
         }
 
-        public OperandNode<Expression> makeBlank(ConsecutiveBase<Expression> parent)
+        @Override
+        public OperandNode<Expression> makeGeneral(ConsecutiveBase<Expression> parent, @Nullable String initialContent)
         {
-            return new GeneralEntry("", Status.UNFINISHED, parent);
+            return new GeneralEntry(initialContent == null ? "" : initialContent, Status.UNFINISHED, parent);
         }
 
         @Override

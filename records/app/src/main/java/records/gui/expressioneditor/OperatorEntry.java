@@ -13,28 +13,23 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
-import records.gui.expressioneditor.GeneralEntry.Status;
 import utility.Pair;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 /**
  * Created by neil on 17/12/2016.
  */
-public class OperatorEntry<EXPRESSION> extends ChildNode<EXPRESSION> implements ConsecutiveChild<EXPRESSION>
+public class OperatorEntry<EXPRESSION extends @NonNull Object> extends ChildNode<EXPRESSION> implements ConsecutiveChild<EXPRESSION>
 {
     /**
      * The outermost container for the whole thing:
@@ -47,8 +42,6 @@ public class OperatorEntry<EXPRESSION> extends ChildNode<EXPRESSION> implements 
     private final ObservableList<Node> nodes;
     private final @MonotonicNonNull AutoComplete autoComplete;
     private final Class<EXPRESSION> operandClass;
-
-    private final List<Pair<String, @LocalizableKey String>> validOperators;
 
     public OperatorEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION> parent)
     {
@@ -67,9 +60,8 @@ public class OperatorEntry<EXPRESSION> extends ChildNode<EXPRESSION> implements 
         container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, parent.getParentStyles()).getFirst();
         container.getStyleClass().add("entry");
         this.nodes = FXCollections.observableArrayList(this.container);
-        this.validOperators = parent.operations.getValidOperators();
 
-        this.autoComplete = new AutoComplete(textField, this::getCompletions, new CompletionListener(), c -> !parent.operations.isOperatorAlphabet(c) && !parent.terminatedByChars().contains(c));
+        this.autoComplete = new AutoComplete(textField, s -> getCompletions(parent, parent.operations.getValidOperators(), s), new CompletionListener(), c -> !parent.operations.isOperatorAlphabet(c) && !parent.terminatedByChars().contains(c));
 
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text ->{
             parent.changed(OperatorEntry.this);
@@ -84,7 +76,7 @@ public class OperatorEntry<EXPRESSION> extends ChildNode<EXPRESSION> implements 
         }
     }
 
-    private List<Completion> getCompletions(@UnknownInitialization(OperatorEntry.class) OperatorEntry<EXPRESSION> this, String s)
+    private static <EXPRESSION extends @NonNull Object> List<Completion> getCompletions(ConsecutiveBase<EXPRESSION> parent, List<Pair<String, @LocalizableKey String>> validOperators, String s)
     {
         ArrayList<Completion> r = new ArrayList<>();
         for (Character c : parent.terminatedByChars())
@@ -224,7 +216,7 @@ public class OperatorEntry<EXPRESSION> extends ChildNode<EXPRESSION> implements 
         {
             if (c instanceof SimpleCompletion)
             {
-                parent.addOperandToRight(OperatorEntry.this, new GeneralEntry(rest, Status.UNFINISHED, parent).focusWhenShown());
+                parent.addOperandToRight(OperatorEntry.this, rest, true);
                 return ((SimpleCompletion) c).operator;
             }
             else if (c instanceof KeyShortcutCompletion)
@@ -237,7 +229,7 @@ public class OperatorEntry<EXPRESSION> extends ChildNode<EXPRESSION> implements 
     }
 
     @Override
-    public <C> Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
         return ConsecutiveChild.closestDropSingle(this, operandClass, container, loc, forType);
     }

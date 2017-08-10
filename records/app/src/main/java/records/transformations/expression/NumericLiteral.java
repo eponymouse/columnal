@@ -97,7 +97,7 @@ public class NumericLiteral extends Literal
 
         NumericLiteral that = (NumericLiteral) o;
 
-        if (unit == null ? that.unit != null : !that.unit.equals(unit)) return false;
+        if (unit == null ? that.unit != null : !unit.equals(that.unit)) return false;
         return Utility.compareNumbers(value, that.value) == 0;
     }
 
