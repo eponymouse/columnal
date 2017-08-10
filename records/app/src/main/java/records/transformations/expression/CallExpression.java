@@ -107,7 +107,7 @@ public class CallExpression extends NonOperatorExpression
     }
 
     @Override
-    public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
+    public FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle()
     {
         // If successfully type-checked:
         if (definition != null)

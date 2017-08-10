@@ -141,13 +141,13 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public Pair<List<FXPlatformFunction<ConsecutiveBase, OperandNode>>, List<FXPlatformFunction<ConsecutiveBase, OperatorEntry>>> loadAsConsecutive()
+    public Pair<List<FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression>, OperatorEntry<Expression>>>> loadAsConsecutive()
     {
         throw new RuntimeException("TODO");
     }
 
     @Override
-    public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
+    public FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle()
     {
         throw new RuntimeException("TODO");
     }

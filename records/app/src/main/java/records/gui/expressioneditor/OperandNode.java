@@ -2,9 +2,9 @@ package records.gui.expressioneditor;
 
 import javafx.beans.value.ObservableObjectValue;
 import org.checkerframework.checker.interning.qual.Interned;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
-import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 
@@ -16,7 +16,7 @@ import java.util.List;
  * next to operators.  (Depends on type: some operands, like tagged operands,
  * may not have a useful type available.)
  */
-public @Interned interface OperandNode extends ExpressionNode, ConsecutiveChild, ErrorDisplayer
+public @Interned interface OperandNode<@NonNull EXPRESSION> extends ExpressionNode, ConsecutiveChild<EXPRESSION>, ErrorDisplayer
 {
     /**
      * Gets the variables declared in this node.
@@ -45,13 +45,13 @@ public @Interned interface OperandNode extends ExpressionNode, ConsecutiveChild,
      * should call onError (1+ times) with problem, and return InvalidExpression if needed.
      *
      */
-    public abstract Expression toExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError);
+    public abstract @NonNull EXPRESSION save(ErrorDisplayerRecord<EXPRESSION> errorDisplayer, FXPlatformConsumer<Object> onError);
 
     /**
      * Focus appropriate item once this has been shown and return self-reference
      * (for chaining initialisation methods)
      */
-    public OperandNode focusWhenShown();
+    public OperandNode<EXPRESSION> focusWhenShown();
 
     public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner();
 

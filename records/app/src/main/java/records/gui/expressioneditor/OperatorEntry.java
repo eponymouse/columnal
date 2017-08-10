@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 /**
  * Created by neil on 17/12/2016.
  */
-public class OperatorEntry extends ChildNode implements ConsecutiveChild
+public class OperatorEntry<EXPRESSION> extends ChildNode<EXPRESSION> implements ConsecutiveChild<EXPRESSION>
 {
     /**
      * The outermost container for the whole thing:
@@ -46,40 +46,20 @@ public class OperatorEntry extends ChildNode implements ConsecutiveChild
     private final TextField textField;
     private final ObservableList<Node> nodes;
     private final @MonotonicNonNull AutoComplete autoComplete;
-    private final static List<Pair<String, @LocalizableKey String>> OPERATORS = Arrays.asList(
-        opD("=", "op.equal"),
-        opD("<>", "op.notEqual"),
-        opD("+", "op.plus"),
-        opD("-", "op.minus"),
-        opD("*", "op.times"),
-        opD("/", "op.divide"),
-        opD("&", "op.and"),
-        opD("|", "op.or"),
-        opD("<", "op.lessThan"),
-        opD("<=", "op.lessThanOrEqual"),
-        opD(">", "op.greaterThan"),
-        opD(">=", "op.greaterThanOrEqual"),
-        opD("^", "op.raise"),
-        opD(",", "op.separator"),
-        opD("~", "op.matches"),
-        opD("\u00B1", "op.plusminus")
-    );
+    private final Class<EXPRESSION> operandClass;
 
-    private static Pair<String, @LocalizableKey String> opD(String op, @LocalizableKey String key)
+    private final List<Pair<String, @LocalizableKey String>> validOperators;
+    private final Set<Integer> alphabet;
+
+    public OperatorEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION> parent)
     {
-        return new Pair<>(op, key);
+        this(operandClass, "", false, parent);
     }
 
-    private final static Set<Integer> ALPHABET = OPERATORS.stream().map(p -> p.getFirst()).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
-
-    public OperatorEntry(ConsecutiveBase parent)
-    {
-        this("", false, parent);
-    }
-
-    public OperatorEntry(String content, boolean userEntered, ConsecutiveBase parent)
+    public OperatorEntry(Class<EXPRESSION> operandClass, String content, boolean userEntered, ConsecutiveBase<EXPRESSION> parent)
     {
         super(parent);
+        this.operandClass = operandClass;
         this.textField = createLeaveableTextField();
         FXUtility.setPseudoclass(textField, "op-empty", content.isEmpty());
         if (!userEntered)
@@ -88,6 +68,8 @@ public class OperatorEntry extends ChildNode implements ConsecutiveChild
         container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, parent.getParentStyles()).getFirst();
         container.getStyleClass().add("entry");
         this.nodes = FXCollections.observableArrayList(this.container);
+        this.validOperators = parent.operations.getValidOperators();
+        this.alphabet = validOperators.stream().map(p -> p.getFirst()).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
         this.autoComplete = new AutoComplete(textField, this::getCompletions, new CompletionListener(), c -> !isOperatorAlphabet(c) && !parent.terminatedByChars().contains(c));
 
@@ -104,14 +86,14 @@ public class OperatorEntry extends ChildNode implements ConsecutiveChild
         }
     }
 
-    private List<Completion> getCompletions(@UnknownInitialization(OperatorEntry.class) OperatorEntry this, String s)
+    private List<Completion> getCompletions(@UnknownInitialization(OperatorEntry.class) OperatorEntry<EXPRESSION> this, String s)
     {
         ArrayList<Completion> r = new ArrayList<>();
         for (Character c : parent.terminatedByChars())
         {
             r.add(new KeyShortcutCompletion("End bracketed expressions", c));
         }
-        for (Pair<String, @LocalizableKey String> operator : OPERATORS)
+        for (Pair<String, @LocalizableKey String> operator : validOperators)
         {
             r.add(new SimpleCompletion(operator.getFirst(), operator.getSecond()));
         }
@@ -131,9 +113,9 @@ public class OperatorEntry extends ChildNode implements ConsecutiveChild
         return this;
     }
 
-    public static boolean isOperatorAlphabet(Character character)
+    public boolean isOperatorAlphabet(Character character)
     {
-        return ALPHABET.contains((Integer)(int)(char)character);
+        return alphabet.contains((Integer)(int)(char)character);
     }
 
     // Returns false if it wasn't blank
@@ -182,7 +164,7 @@ public class OperatorEntry extends ChildNode implements ConsecutiveChild
         return textField.isFocused();
     }
 
-    private class SimpleCompletion extends Completion
+    private static class SimpleCompletion extends Completion
     {
         private final String operator;
         private final @Localized String description;
@@ -262,8 +244,8 @@ public class OperatorEntry extends ChildNode implements ConsecutiveChild
     }
 
     @Override
-    public Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
+    public <C> Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
-        return new Pair<>(this, FXUtility.distanceToLeft(container, loc));
+        return ConsecutiveChild.closestDropSingle(this, operandClass, container, loc, forType);
     }
 }

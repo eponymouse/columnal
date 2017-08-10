@@ -286,7 +286,7 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
+    public FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle()
     {
         return c -> new PatternMatchNode(c, new Pair<>(expression, clauses));
     }

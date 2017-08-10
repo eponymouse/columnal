@@ -46,9 +46,9 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
     private final PatternMatchNode parent;
     private final VBox caseLabel;
     // Each item here is a pattern + guard pair.  You can have one or more in a clause:
-    private final ObservableList<Pair<ConsecutiveBase, @Nullable ConsecutiveBase>> matches;
+    private final ObservableList<Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>>> matches;
     // This is the body of the clause:
-    private final ConsecutiveBase outcome;
+    private final ConsecutiveBase<Expression> outcome;
     private final ObservableList<Node> nodes;
     // The boolean value is only used during updateListeners, will be true other times
     private final IdentityHashMap<ExpressionNode, Boolean> listeningTo = new IdentityHashMap<>();
@@ -80,7 +80,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
     }
 
     @NotNull
-    private Pair<ConsecutiveBase, @Nullable ConsecutiveBase> makeNewCase(@Nullable Expression caseExpression, @Nullable Expression guardExpression)
+    private Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>> makeNewCase(@Nullable Expression caseExpression, @Nullable Expression guardExpression)
     {
         return new Pair<>(makeConsecutive("case", caseExpression).prompt("pattern"), guardExpression == null ? null : makeConsecutive("where", guardExpression).prompt("condition"));
     }
@@ -97,7 +97,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
         // Make them all as old (false)
         listeningTo.replaceAll((e, b) -> false);
         // Merge new ones:
-        for (Pair<ConsecutiveBase, @Nullable ConsecutiveBase> match : matches)
+        for (Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>> match : matches)
         {
             // No need to listen again if already present as we're already listening
             if (listeningTo.get(match.getFirst()) == null)
@@ -125,15 +125,15 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
     private void updateNodes(@UnknownInitialization(ClauseNode.class) ClauseNode this)
     {
         List<Node> childrenNodes = new ArrayList<Node>(Stream.<Node>concat(
-            matches.stream().flatMap((Pair<ConsecutiveBase, @Nullable ConsecutiveBase> p) -> Stream.concat(p.getFirst().nodes().stream(), p.getSecond() == null ? Stream.<@NonNull Node>empty() : p.getSecond().nodes().stream())),
+            matches.stream().flatMap((Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>> p) -> Stream.concat(p.getFirst().nodes().stream(), p.getSecond() == null ? Stream.<@NonNull Node>empty() : p.getSecond().nodes().stream())),
             outcome.nodes().stream()).collect(Collectors.<Node>toList()));
         nodes.setAll(childrenNodes);
     }
 
     @SuppressWarnings("initialization") // Because of Consecutive
-    private Consecutive makeConsecutive(@UnknownInitialization(Object.class)ClauseNode this, @Nullable String prefix, @Nullable Expression startingContent)
+    private Consecutive<Expression> makeConsecutive(@UnknownInitialization(Object.class)ClauseNode this, @Nullable String prefix, @Nullable Expression startingContent)
     {
-        return new Consecutive(this, prefix == null ? null : ExpressionEditorUtil.keyword(prefix, "match", parent, getParentStyles()), null, "match", startingContent == null ? null : startingContent.loadAsConsecutive());
+        return new Consecutive<>(ConsecutiveBase.EXPRESSION_OPS, this, prefix == null ? null : ExpressionEditorUtil.keyword(prefix, "match", parent, getParentStyles()), null, "match", startingContent == null ? null : startingContent.loadAsConsecutive());
     }
 
     @Override
@@ -149,7 +149,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
             matches.get(0).getFirst().focus(side);
         else
         {
-            Pair<ConsecutiveBase, @Nullable ConsecutiveBase> last = matches.get(matches.size() - 1);
+            Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>> last = matches.get(matches.size() - 1);
             if (last.getSecond() != null)
                 last.getSecond().focus(side);
             else
@@ -191,7 +191,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
         ArrayList<Pair<String, @Nullable DataType>> vars = new ArrayList<>(parent.getAvailableVariables(this));
 
         Multimap<@NonNull String, @Nullable DataType> allClauseVars = null;
-        for (Pair<ConsecutiveBase, @Nullable ConsecutiveBase> match : matches)
+        for (Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>> match : matches)
         {
             if (match.getFirst() == child)
                 return vars; // Matching side only has access to parent vars
@@ -278,7 +278,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
         else
         {
             boolean focusNext = false;
-            for (Pair<ConsecutiveBase, @Nullable ConsecutiveBase> match : matches)
+            for (Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>> match : matches)
             {
                 if (focusNext)
                 {
@@ -310,7 +310,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
     {
         if (child == outcome)
         {
-            Pair<ConsecutiveBase, @Nullable ConsecutiveBase> last = matches.get(matches.size() - 1);
+            Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>> last = matches.get(matches.size() - 1);
             if (last.getSecond() != null)
                 last.getSecond().focus(Focus.RIGHT);
             else
@@ -319,9 +319,9 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
         else
         {
             boolean focusEarlier = false;
-            for (ListIterator<Pair<ConsecutiveBase, @Nullable ConsecutiveBase>> iterator = matches.listIterator(); iterator.hasPrevious(); )
+            for (ListIterator<Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>>> iterator = matches.listIterator(); iterator.hasPrevious(); )
             {
-                Pair<ConsecutiveBase, @Nullable ConsecutiveBase> match = iterator.previous();
+                Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>> match = iterator.previous();
                 if (focusEarlier)
                 {
                     if (match.getSecond() != null)
@@ -358,7 +358,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
         return parent.getEditor();
     }
 
-    public Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
+    public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
         // We don't actually want to allow general dropping to the left of us, because the
         // only thing that fits there is a case.  If we want to enable case dropping
@@ -366,10 +366,10 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
         // (b) have a way to determine if the thing being dropped actually fits here.
         return //Stream.<Pair<ConsecutiveChild, Double>>concat(
             //Stream.of(new Pair<>(this, FXUtility.distanceToLeft(caseLabel, loc))),
-            matches.stream().flatMap((Pair<ConsecutiveBase, @Nullable ConsecutiveBase> p) ->
+            matches.stream().flatMap((Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>> p) ->
             {
-                Pair<ConsecutiveChild, Double> firstDrop = p.getFirst().findClosestDrop(loc);
-                return p.getSecond() == null ? Stream.of(firstDrop) : Stream.of(firstDrop, p.getSecond().findClosestDrop(loc));
+                @Nullable Pair<ConsecutiveChild<? extends C>, Double> firstDrop = p.getFirst().findClosestDrop(loc, forType);
+                return p.getSecond() == null ? Utility.streamNullable(firstDrop) : Utility.streamNullable(firstDrop, p.getSecond().findClosestDrop(loc, forType));
             })
             //)
             .min(Comparator.comparing(p -> p.getSecond())).get();
@@ -383,7 +383,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
 
     public boolean isMatchNode(ConsecutiveBase consecutive)
     {
-        for (Pair<ConsecutiveBase, @Nullable ConsecutiveBase> match : matches)
+        for (Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>> match : matches)
         {
             if (match.getFirst() == consecutive)
                 return true;
@@ -391,22 +391,22 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
         return false;
     }
 
-    public Function<MatchExpression, MatchClause> toClauseExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
+    public Function<MatchExpression, MatchClause> toClauseExpression(ErrorDisplayerRecord<Expression> errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         List<Function<MatchExpression, Pattern>> patterns = new ArrayList<>();
-        for (Pair<ConsecutiveBase, @Nullable ConsecutiveBase> match : matches)
+        for (Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>> match : matches)
         {
-            Expression patExp = match.getFirst().toExpression(errorDisplayer, onError);
-            @Nullable Expression matchExp = match.getSecond() == null ? null : match.getSecond().toExpression(errorDisplayer, onError);
+            Expression patExp = match.getFirst().save(errorDisplayer, onError);
+            @Nullable Expression matchExp = match.getSecond() == null ? null : match.getSecond().save(errorDisplayer, onError);
             patterns.add(me -> new Pattern(patExp, matchExp));
         }
-        Expression outcomeExp = this.outcome.toExpression(errorDisplayer, onError);
+        Expression outcomeExp = this.outcome.save(errorDisplayer, onError);
         return me -> me.new MatchClause(Utility.<Function<MatchExpression, Pattern>, Pattern>mapList(patterns, f -> f.apply(me)), outcomeExp);
     }
 
     public void setSelected(boolean selected)
     {
-        for (Pair<ConsecutiveBase, @Nullable ConsecutiveBase> match : matches)
+        for (Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>> match : matches)
         {
             match.getFirst().setSelected(selected);
             if (match.getSecond() != null)
@@ -417,7 +417,7 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
 
     public void focusChanged()
     {
-        for (Pair<ConsecutiveBase, @Nullable ConsecutiveBase> match : matches)
+        for (Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>> match : matches)
         {
             match.getFirst().focusChanged();
             if (match.getSecond() != null)
@@ -428,6 +428,6 @@ public class ClauseNode implements ExpressionParent, ExpressionNode
 
     public boolean isFocused()
     {
-        return outcome.childIsFocused() || matches.stream().anyMatch((Pair<ConsecutiveBase, @Nullable ConsecutiveBase> m) -> m.getFirst().childIsFocused() || (m.getSecond() != null && m.getSecond().childIsFocused()));
+        return outcome.childIsFocused() || matches.stream().anyMatch((Pair<ConsecutiveBase<Expression>, @Nullable ConsecutiveBase<Expression>> m) -> m.getFirst().childIsFocused() || (m.getSecond() != null && m.getSecond().childIsFocused()));
     }
 }

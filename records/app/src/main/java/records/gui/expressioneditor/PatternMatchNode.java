@@ -37,23 +37,23 @@ import java.util.stream.Stream;
 /**
  * The node representing the top-level of a pattern match expression.
  */
-public class PatternMatchNode implements ExpressionParent, OperandNode
+public class PatternMatchNode implements ExpressionParent, OperandNode<Expression>
 {
     private final VBox matchLabel;
-    private final ConsecutiveBase source;
+    private final ConsecutiveBase<Expression> source;
     private final ObservableList<ClauseNode> clauses;
-    private ConsecutiveBase parent;
+    private ConsecutiveBase<Expression> parent;
     private ObservableList<Node> nodes;
     // The boolean value is only used during updateListeners, will be true other times
     private final IdentityHashMap<ExpressionNode, Boolean> listeningTo = new IdentityHashMap<>();
     private final ListChangeListener<Node> childrenNodeListener;
 
     @SuppressWarnings("initialization") // Because we pass this as the parent
-    public PatternMatchNode(ConsecutiveBase parent, @Nullable Pair<Expression, List<MatchClause>> sourceAndClauses)
+    public PatternMatchNode(ConsecutiveBase<Expression> parent, @Nullable Pair<Expression, List<MatchClause>> sourceAndClauses)
     {
         this.parent = parent;
         this.matchLabel = ExpressionEditorUtil.keyword("match", "match", this, getParentStyles());
-        this.source = new Consecutive(this, matchLabel, null, "match", sourceAndClauses == null ? null : sourceAndClauses.getFirst().loadAsConsecutive(), ')').prompt("expression");
+        this.source = new Consecutive<>(ConsecutiveBase.EXPRESSION_OPS, this, matchLabel, null, "match", sourceAndClauses == null ? null : sourceAndClauses.getFirst().loadAsConsecutive(), ')').prompt("expression");
         this.clauses = FXCollections.observableArrayList();
         this.nodes = FXCollections.observableArrayList();
         this.childrenNodeListener = c -> {
@@ -210,9 +210,9 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
         return this;
     }
 
-    public Expression toExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
+    public Expression save(ErrorDisplayerRecord<Expression> errorDisplayer, FXPlatformConsumer<Object> onError)
     {
-        Expression sourceExp = source.toExpression(errorDisplayer, onError);
+        Expression sourceExp = source.save(errorDisplayer, onError);
         List<Function<MatchExpression, MatchClause>> clauseExps = new ArrayList<>();
         for (ClauseNode clause : clauses)
         {
@@ -247,7 +247,7 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
     }
 
     @Override
-    public ConsecutiveBase getParent()
+    public ConsecutiveBase<Expression> getParent()
     {
         return parent;
     }
@@ -263,11 +263,11 @@ public class PatternMatchNode implements ExpressionParent, OperandNode
     }
 
     @Override
-    public Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
+    public <C> Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
-        Pair<ConsecutiveChild, Double> startDist = new Pair<>(this, FXUtility.distanceToLeft(matchLabel, loc));
+        @Nullable Pair<ConsecutiveChild<? extends C>, Double> startDist = ConsecutiveChild.closestDropSingle(this, Expression.class, matchLabel, loc, forType);
 
-        return Stream.<Pair<ConsecutiveChild, Double>>concat(Stream.of(startDist), clauses.stream().map(c -> c.findClosestDrop(loc)))
+        return Stream.<Pair<ConsecutiveChild<? extends C>, Double>>concat(Utility.streamNullable(startDist), clauses.stream().flatMap(c -> Utility.streamNullable(c.findClosestDrop(loc, forType))))
             .min(Comparator.comparing(p -> p.getSecond())).get();
     }
 

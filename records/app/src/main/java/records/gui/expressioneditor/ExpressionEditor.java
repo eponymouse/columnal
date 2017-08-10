@@ -36,7 +36,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 17/12/2016.
  */
-public class ExpressionEditor extends ConsecutiveBase
+public class ExpressionEditor extends ConsecutiveBase<Expression>
 {
     private final FlowPane container;
     private final ObservableObjectValue<@Nullable DataType> type;
@@ -46,8 +46,8 @@ public class ExpressionEditor extends ConsecutiveBase
 
     // Selections take place within one consecutive and go from one operand to another (inclusive):
 
-    private @Nullable SelectionInfo selection;
-    private @Nullable ConsecutiveChild curHoverDropTarget;
+    private @Nullable SelectionInfo<?> selection;
+    private @Nullable ConsecutiveChild<?> curHoverDropTarget;
     private boolean selectionLocked;
 
     public void registerFocusable(TextField textField)
@@ -63,23 +63,38 @@ public class ExpressionEditor extends ConsecutiveBase
         */
     }
 
-    private static class SelectionInfo
+    private static class SelectionInfo<E>
     {
-        private final ConsecutiveBase parent;
-        private final ConsecutiveChild start;
-        private final ConsecutiveChild end;
+        private final ConsecutiveBase<E> parent;
+        private final ConsecutiveChild<E> start;
+        private final ConsecutiveChild<E> end;
 
-        private SelectionInfo(ConsecutiveBase parent, ConsecutiveChild start, ConsecutiveChild end)
+        private SelectionInfo(ConsecutiveBase<E> parent, ConsecutiveChild<E> start, ConsecutiveChild<E> end)
         {
             this.parent = parent;
             this.start = start;
             this.end = end;
         }
+
+        public boolean contains(ConsecutiveChild<?> item)
+        {
+            return parent.getChildrenFromTo(start, end).contains(item);
+        }
+
+        public CopiedItems copyItems()
+        {
+            return parent.copyItems(start, end);
+        }
+
+        public void removeItems()
+        {
+            parent.removeItems(start, end);
+        }
     }
 
     public ExpressionEditor(Expression startingValue, @Nullable Table srcTable, ObservableObjectValue<@Nullable DataType> type, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
-        super( null, null, "");
+        super(EXPRESSION_OPS,  null, null, "");
         this.container = new FlowPane();
         this.tableManager = tableManager;
         container.getStyleClass().add("expression-editor");
@@ -107,7 +122,7 @@ public class ExpressionEditor extends ConsecutiveBase
             @SuppressWarnings("initialization")
             public @OnThread(Tag.FXPlatform) void dragMoved(Point2D pointInScene)
             {
-                Pair<ConsecutiveChild, Double> nearest = findClosestDrop(pointInScene);
+                Pair<ConsecutiveChild<? extends Expression>, Double> nearest = findClosestDrop(pointInScene, Expression.class);
                 if (curHoverDropTarget != null)
                     curHoverDropTarget.setHoverDropLeft(false);
                 curHoverDropTarget = nearest.getFirst();
@@ -122,7 +137,7 @@ public class ExpressionEditor extends ConsecutiveBase
                 if (o != null && o instanceof CopiedItems)
                 {
                     // We need to find the closest drop point
-                    Pair<ConsecutiveChild, Double> nearest = findClosestDrop(pointInScene);
+                    Pair<ConsecutiveChild<? extends Expression>, Double> nearest = findClosestDrop(pointInScene, Expression.class);
                     // Now we need to add the content:
                     //TODO work out if this is a null drag because everything would go to hell
                     // (Look if drag destination is inside selection?)
@@ -143,17 +158,11 @@ public class ExpressionEditor extends ConsecutiveBase
     @SuppressWarnings("initialization") // Because we pass ourselves as this
     private void loadContent(@UnknownInitialization(ExpressionEditor.class) ExpressionEditor this, Expression startingValue)
     {
-        Pair<List<FXPlatformFunction<ConsecutiveBase, OperandNode>>, List<FXPlatformFunction<ConsecutiveBase, OperatorEntry>>> items = startingValue.loadAsConsecutive();
+        Pair<List<FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression>, OperatorEntry<Expression>>>> items = startingValue.loadAsConsecutive();
         atomicEdit.set(true);
         operators.addAll(Utility.mapList(items.getSecond(), f -> f.apply(this)));
         operands.addAll(Utility.mapList(items.getFirst(), f -> f.apply(this)));
         atomicEdit.set(false);
-    }
-
-    @Override
-    protected void initializeContent(@UnknownInitialization(ConsecutiveBase.class) ExpressionEditor this)
-    {
-        // Don't do default initialization
     }
 
     public Node getContainer()
@@ -226,8 +235,8 @@ public class ExpressionEditor extends ConsecutiveBase
         // Can be null during initialisation
         if (!atomicEdit.get())
         {
-            ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord();
-            Expression expression = toExpression(errorDisplayers, err -> {});
+            ErrorDisplayerRecord<Expression> errorDisplayers = new ErrorDisplayerRecord<>();
+            Expression expression = save(errorDisplayers, err -> {});
             if (onChange != null)
             {
                 onChange.consume(expression);
@@ -285,7 +294,7 @@ public class ExpressionEditor extends ConsecutiveBase
     }
 
     @SuppressWarnings("initialization")
-    public void ensureSelectionIncludes(@UnknownInitialization ConsecutiveChild src)
+    public <E> void ensureSelectionIncludes(@UnknownInitialization ConsecutiveChild<E> src)
     {
         if (selectionLocked)
             return;
@@ -293,13 +302,13 @@ public class ExpressionEditor extends ConsecutiveBase
         if (selection != null)
         {
             // Check that span includes src:
-            if (selection.parent.getChildrenFromTo(selection.start, selection.end).contains(src))
+            if (selection.contains(src))
                 return; // Fine, no need to reassign
             // else clear and drop through to reassignment:
             clearSelection();
         }
 
-        selection = new SelectionInfo(src.getParent(), src, src);
+        selection = new SelectionInfo<>(src.getParent(), src, src);
         selection.parent.markSelection(src, src, true);
     }
 
@@ -313,7 +322,7 @@ public class ExpressionEditor extends ConsecutiveBase
         selection = null;
     }
 
-    public void selectOnly(ConsecutiveChild src)
+    public <E> void selectOnly(ConsecutiveChild<E> src)
     {
         if (selectionLocked)
             return;
@@ -322,7 +331,7 @@ public class ExpressionEditor extends ConsecutiveBase
         ensureSelectionIncludes(src);
     }
 
-    public void extendSelectionTo(ConsecutiveChild node)
+    public <E> void extendSelectionTo(ConsecutiveChild<E> node)
     {
         if (selectionLocked)
             return;
@@ -332,9 +341,9 @@ public class ExpressionEditor extends ConsecutiveBase
             // The target might be ahead or behind or within the current selection.
             // We try with asking for ahead or behind.  If one is empty, choose the other
             // If both are non-empty, go from start to target:
-            ConsecutiveChild oldSelStart = selection.start;
-            List<ConsecutiveChild> startToTarget = selection.parent.getChildrenFromTo(oldSelStart, node);
-            ConsecutiveChild oldSelEnd = selection.end;
+            ConsecutiveChild<Expression> oldSelStart = selection.start;
+            List<ConsecutiveChild<Expression>> startToTarget = selection.parent.getChildrenFromTo(oldSelStart, node);
+            ConsecutiveChild<Expression> oldSelEnd = selection.end;
             // Thus the rule is use startToTarget unless it's empty:
             if (!startToTarget.isEmpty())
             {
@@ -355,7 +364,7 @@ public class ExpressionEditor extends ConsecutiveBase
     {
         if (selection != null)
         {
-            return selection.parent.copyItems(selection.start, selection.end);
+            return selection.copyItems();
         }
         return null;
     }
@@ -367,7 +376,7 @@ public class ExpressionEditor extends ConsecutiveBase
 
         if (selection != null)
         {
-            selection.parent.removeItems(selection.start, selection.end);
+            selection.removeItems();
         }
     }
 }

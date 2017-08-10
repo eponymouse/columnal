@@ -753,6 +753,45 @@ public class Utility
         return item == null ? Stream.empty() : Stream.of(item);
     }
 
+    // Returns stream of all non-null values
+    public static <T> Stream<@NonNull T> streamNullable(@Nullable T a, @Nullable T b)
+    {
+        List<@NonNull T> r = new ArrayList<>();
+        if (a != null)
+            r.add(a);
+        if (b != null)
+            r.add(b);
+        return r.stream();
+    }
+
+    // Returns stream of all non-null values
+    public static <T> Stream<@NonNull T> streamNullable(@Nullable T a, @Nullable T b, @Nullable T c)
+    {
+        List<@NonNull T> r = new ArrayList<>();
+        if (a != null)
+            r.add(a);
+        if (b != null)
+            r.add(b);
+        if (c != null)
+            r.add(c);
+        return r.stream();
+    }
+
+    // Returns stream of all non-null values
+    public static <T> Stream<@NonNull T> streamNullable(@Nullable T a, @Nullable T b, @Nullable T c, @Nullable T d)
+    {
+        List<@NonNull T> r = new ArrayList<>();
+        if (a != null)
+            r.add(a);
+        if (b != null)
+            r.add(b);
+        if (c != null)
+            r.add(c);
+        if (d != null)
+            r.add(d);
+        return r.stream();
+    }
+
     /**
      * Gets rid of beginning and trailing spaces, and collapses all other
      * consecutive whitespace into a single space.

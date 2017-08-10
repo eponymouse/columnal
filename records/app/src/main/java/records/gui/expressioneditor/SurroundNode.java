@@ -27,6 +27,7 @@ import records.transformations.expression.Expression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.Comparator;
@@ -39,13 +40,13 @@ import java.util.stream.Stream;
  * (head is function name), tag expressions (head is tag name).
  *
  */
-public abstract class SurroundNode implements ExpressionParent, OperandNode, ErrorDisplayer
+public abstract class SurroundNode implements ExpressionParent, OperandNode<Expression>, ErrorDisplayer
 {
     public static final double BRACKET_WIDTH = 2.0;
     private static final double aspectRatio = 0.2;
     protected final TextField head;
-    protected final @Nullable ConsecutiveBase contents;
-    protected final ConsecutiveBase parent;
+    protected final @Nullable ConsecutiveBase<Expression> contents;
+    protected final ConsecutiveBase<Expression> parent;
     private final String cssClass;
     // Only used if contents is null.  We don't make this nullable if contents is present,
     // mainly because it makes all the nullness checks a pain.
@@ -53,7 +54,7 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode, Err
     private final ErrorDisplayer showError;
 
     @SuppressWarnings("initialization")
-    public SurroundNode(ConsecutiveBase parent, String cssClass, @Localized String headLabel, String startingHead, boolean hasInner, @Nullable Expression startingContent)
+    public SurroundNode(ConsecutiveBase<Expression> parent, String cssClass, @Localized String headLabel, String startingHead, boolean hasInner, @Nullable Expression startingContent)
     {
         this.parent = parent;
         this.head = new LeaveableTextField(this, parent) {
@@ -132,7 +133,7 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode, Err
     }
 
     @Override
-    public ConsecutiveBase getParent()
+    public ConsecutiveBase<Expression> getParent()
     {
         return parent;
     }
@@ -183,13 +184,13 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode, Err
     }
 
     @Override
-    public Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
+    public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
-        Pair<ConsecutiveChild, Double> headDist = new Pair<>(this, FXUtility.distanceToLeft(head, loc));
+        Stream<Pair<ConsecutiveChild<? extends C>, Double>> stream = Utility.streamNullable(ConsecutiveChild.closestDropSingle(this, Expression.class, head, loc, forType));
         if (contents != null)
-            return Stream.of(headDist, contents.findClosestDrop(loc)).min(Comparator.comparing(p -> p.getSecond())).get();
+            return Stream.<Pair<ConsecutiveChild<? extends C>, Double>>concat(stream, Utility.<Pair<ConsecutiveChild<? extends C>, Double>>streamNullable(contents.findClosestDrop(loc, forType))).min(Comparator.comparing(p -> p.getSecond())).orElse(null);
         else
-            return headDist;
+            return stream.findFirst().orElse(null);
     }
 
     @Override
@@ -290,7 +291,7 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode, Err
         }
     }
 
-    protected class ContentConsecutive extends Consecutive implements ChangeListener<@Nullable String>
+    protected class ContentConsecutive extends Consecutive<Expression> implements ChangeListener<@Nullable String>
     {
         private final OpenBracketShape openBracket;
         private final OpenBracketShape closeBracket;
@@ -299,7 +300,7 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode, Err
 
         private ContentConsecutive(VBox vBox, OpenBracketShape openBracket, OpenBracketShape closeBracket, @Nullable Expression args)
         {
-            super(SurroundNode.this, new HBox(vBox, openBracket), closeBracket, cssClass, args == null ? null : args.loadAsConsecutive(), ')');
+            super(ConsecutiveBase.EXPRESSION_OPS, SurroundNode.this, new HBox(vBox, openBracket), closeBracket, cssClass, args == null ? null : args.loadAsConsecutive(), ')');
             this.openBracket = openBracket;
             this.closeBracket = closeBracket;
             closeBracket.prefHeightProperty().bind(openBracket.heightProperty());

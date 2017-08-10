@@ -46,7 +46,7 @@ public class ExpressionEditorUtil
      * @return A pair of the VBox to display, and an action which can be used to show/clear an error on it (clear by passing null)
      */
     @NotNull
-    protected static Pair<VBox, ErrorDisplayer> withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild surrounding, Stream<String> parentStyles)
+    protected static <E> Pair<VBox, ErrorDisplayer> withLabelAbove(TextField textField, String cssClass, String label, @Nullable @UnknownInitialization ConsecutiveChild<E> surrounding, Stream<String> parentStyles)
     {
         FXUtility.sizeToFit(textField, 10.0, 10.0);
         textField.getStyleClass().addAll(cssClass + "-name", "labelled-name");
@@ -242,7 +242,7 @@ public class ExpressionEditorUtil
     }
 
     @NotNull
-    protected static VBox keyword(String keyword, String cssClass, @Nullable @UnknownInitialization OperandNode surrounding, Stream<String> parentStyles)
+    protected static <E> VBox keyword(String keyword, String cssClass, @Nullable @UnknownInitialization OperandNode<E> surrounding, Stream<String> parentStyles)
     {
         TextField t = new TextField(keyword);
         t.setEditable(false);
@@ -274,7 +274,7 @@ public class ExpressionEditorUtil
     }
 
     @SuppressWarnings("initialization")
-    public static void enableDragFrom(Label dragSource, @UnknownInitialization ConsecutiveChild src)
+    public static <E> void enableDragFrom(Label dragSource, @UnknownInitialization ConsecutiveChild<E> src)
     {
         ExpressionEditor editor = src.getParent().getEditor();
         dragSource.setOnDragDetected(e -> {
@@ -299,7 +299,7 @@ public class ExpressionEditorUtil
     }
 
     @SuppressWarnings("initialization")
-    public static void enableSelection(Label typeLabel, @UnknownInitialization ConsecutiveChild node)
+    public static <E> void enableSelection(Label typeLabel, @UnknownInitialization ConsecutiveChild<E> node)
     {
         typeLabel.setOnMouseClicked(e -> {
             if (!e.isStillSincePress())

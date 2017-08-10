@@ -24,13 +24,13 @@ import java.util.List;
 /**
  * Created by neil on 20/12/2016.
  */
-public class StringLiteralNode extends ChildNode implements OperandNode
+public class StringLiteralNode extends ChildNode<Expression> implements OperandNode<Expression>
 {
     private final TextField textField;
     private final AutoComplete autoComplete;
     private ObservableList<Node> nodes;
 
-    public StringLiteralNode(String initialValue, ConsecutiveBase parent)
+    public StringLiteralNode(String initialValue, ConsecutiveBase<Expression> parent)
     {
         super(parent);
         textField = createLeaveableTextField();
@@ -80,13 +80,13 @@ public class StringLiteralNode extends ChildNode implements OperandNode
     }
 
     @Override
-    public Expression toExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
+    public Expression save(ErrorDisplayerRecord<Expression> errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         return errorDisplayer.record(this, new records.transformations.expression.StringLiteral(textField.getText()));
     }
 
     @Override
-    public OperandNode focusWhenShown()
+    public OperandNode<Expression> focusWhenShown()
     {
         FXUtility.onceNotNull(textField.sceneProperty(), s -> focus(Focus.RIGHT));
         return this;
@@ -123,9 +123,9 @@ public class StringLiteralNode extends ChildNode implements OperandNode
     }
 
     @Override
-    public Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
+    public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
-        return new Pair<>(this, FXUtility.distanceToLeft(nodes.get(0), loc));
+        return ConsecutiveChild.closestDropSingle(this, Expression.class, nodes.get(0), loc, forType);
     }
 
     @Override

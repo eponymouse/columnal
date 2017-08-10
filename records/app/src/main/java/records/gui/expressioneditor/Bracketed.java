@@ -3,11 +3,10 @@ package records.gui.expressioneditor;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.transformations.expression.Expression;
 import utility.FXPlatformFunction;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.Comparator;
@@ -17,15 +16,18 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 20/12/2016.
  */
-public class Bracketed extends Consecutive implements OperandNode
+public class Bracketed<EXPRESSION> extends Consecutive<EXPRESSION> implements OperandNode<EXPRESSION>
 {
-    public Bracketed(ConsecutiveBase parent, @Nullable Node prefixNode, @Nullable Node suffixNode, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase, OperandNode>>, List<FXPlatformFunction<ConsecutiveBase, OperatorEntry>>> content)
+    private final ConsecutiveBase<EXPRESSION> consecParent;
+
+    public Bracketed(OperandOps<EXPRESSION> operations, ConsecutiveBase<EXPRESSION> consecParent, ExpressionParent expParent, @Nullable Node prefixNode, @Nullable Node suffixNode, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase<EXPRESSION>, OperandNode<EXPRESSION>>>, List<FXPlatformFunction<ConsecutiveBase<EXPRESSION>, OperatorEntry<EXPRESSION>>>> content)
     {
-        super(parent, prefixNode, suffixNode, "bracket", content, ')');
+        super(operations, expParent, prefixNode, suffixNode, "bracket", content, ')');
+        this.consecParent = consecParent;
     }
 
     @Override
-    public Bracketed focusWhenShown()
+    public Bracketed<EXPRESSION> focusWhenShown()
     {
         super.focusWhenShown();
         return this;
@@ -44,10 +46,9 @@ public class Bracketed extends Consecutive implements OperandNode
     }
 
     @Override
-    public ConsecutiveBase getParent()
+    public ConsecutiveBase<EXPRESSION> getParent()
     {
-        // Safe cast, given that our constructor requires ConsecutiveBase:
-        return (ConsecutiveBase)parent;
+        return consecParent;
     }
 
     @Override
@@ -63,15 +64,15 @@ public class Bracketed extends Consecutive implements OperandNode
     }
 
     @Override
-    public Bracketed prompt(String prompt)
+    public Bracketed<EXPRESSION> prompt(String prompt)
     {
         super.prompt(prompt);
         return this;
     }
 
     @Override
-    public Pair<ConsecutiveChild, Double> findClosestDrop(Point2D loc)
+    public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
-        return Stream.of(new Pair<ConsecutiveChild, Double>(this, FXUtility.distanceToLeft(nodes().get(0), loc)), super.findClosestDrop(loc)).min(Comparator.comparing(p -> p.getSecond())).get();
+        return Utility.streamNullable(ConsecutiveChild.closestDropSingle(this, operations.getOperandClass(), nodes().get(0), loc, forType), super.findClosestDrop(loc, forType)).min(Comparator.comparing(p -> p.getSecond())).orElse(null);
     }
 }

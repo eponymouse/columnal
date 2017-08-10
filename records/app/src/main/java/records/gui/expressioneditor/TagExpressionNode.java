@@ -25,7 +25,7 @@ public class TagExpressionNode extends SurroundNode
     private final TagType<DataType> tagType;
 
     @SuppressWarnings({"initialization", "i18n"}) // Because LeaveableTextField gets marked uninitialized, and because of header
-    public TagExpressionNode(ConsecutiveBase parent, TypeId typeName, TagType<DataType> tagType)
+    public TagExpressionNode(ConsecutiveBase<Expression> parent, TypeId typeName, TagType<DataType> tagType)
     {
         super(parent, "tag", TranslationUtility.getString("tag") + " " + typeName.getRaw(), tagType.getName(), tagType.getInner() != null, null);
         this.typeName = typeName;
@@ -76,14 +76,14 @@ public class TagExpressionNode extends SurroundNode
     }
 
     @Override
-    public Expression toExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
+    public Expression save(ErrorDisplayerRecord<Expression> errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         Expression innerExp;
         if (contents == null)
             innerExp = null;
         else
         {
-            innerExp = contents.toExpression(errorDisplayer, onError);
+            innerExp = contents.save(errorDisplayer, onError);
         }
         return errorDisplayer.record(this, new TagExpression(new Pair<>(typeName.getRaw(), tagType.getName()), innerExp));
     }

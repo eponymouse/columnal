@@ -40,7 +40,7 @@ public abstract class Literal extends NonOperatorExpression
     }
 
     @Override
-    public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
+    public FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle()
     {
         return c -> new GeneralEntry(editString(), Status.LITERAL, c);
     }

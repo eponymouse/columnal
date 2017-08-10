@@ -148,9 +148,9 @@ public abstract class Expression
         return Optional.empty();
     }
 
-    public abstract Pair<List<FXPlatformFunction<ConsecutiveBase,OperandNode>>, List<FXPlatformFunction<ConsecutiveBase,OperatorEntry>>> loadAsConsecutive();
+    public abstract Pair<List<FXPlatformFunction<ConsecutiveBase<Expression>,OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression>,OperatorEntry<Expression>>>> loadAsConsecutive();
 
-    public abstract FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle();
+    public abstract FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle();
 
     // Vaguely similar to getValue, but instead checks if the expression matches the given value
     // For many expressions, matching means equality, but if a new-variable item is involved
@@ -188,7 +188,7 @@ public abstract class Expression
         {
             try
             {
-                return new NumericLiteral(Utility.parseNumber(ctx.NUMBER().getText()), ctx.UNIT() == null ? null : typeManager.getUnitManager().loadUse(ctx.UNIT().getText()));
+                return new NumericLiteral(Utility.parseNumber(ctx.NUMBER().getText()), ctx.UNIT() == null ? null : UnitExpression.load(typeManager.getUnitManager(), ctx.UNIT().getText()));
             }
             catch (InternalException | UserException e)
             {

@@ -149,14 +149,14 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @Override
-    public Pair<List<FXPlatformFunction<ConsecutiveBase, OperandNode>>, List<FXPlatformFunction<ConsecutiveBase, OperatorEntry>>> loadAsConsecutive()
+    public Pair<List<FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression>, OperatorEntry<Expression>>>> loadAsConsecutive()
     {
-        return new Pair<>(Arrays.asList(lhs.loadAsSingle(), rhs.loadAsSingle()), Collections.singletonList(c -> new OperatorEntry(saveOp(), false, c)));
+        return new Pair<>(Arrays.asList(lhs.loadAsSingle(), rhs.loadAsSingle()), Collections.singletonList(c -> new OperatorEntry<Expression>(Expression.class, saveOp(), false, c)));
     }
 
     @Override
-    public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
+    public FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle()
     {
-        return c -> new Bracketed(c, null, null, loadAsConsecutive());
+        return c -> new Bracketed<Expression>(ConsecutiveBase.EXPRESSION_OPS, c, c,null, null, loadAsConsecutive());
     }
 }

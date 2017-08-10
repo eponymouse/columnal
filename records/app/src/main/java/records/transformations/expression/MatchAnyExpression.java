@@ -65,7 +65,7 @@ public class MatchAnyExpression extends NonOperatorExpression
     }
 
     @Override
-    public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
+    public FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle()
     {
         return c -> new GeneralEntry("any", Status.ANY, c);
     }

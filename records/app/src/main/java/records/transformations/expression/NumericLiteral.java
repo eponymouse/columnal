@@ -27,20 +27,18 @@ import java.util.Optional;
 public class NumericLiteral extends Literal
 {
     private final @Value Number value;
-    private final @Nullable Unit unit;
-    private final DataType type;
+    private final @Nullable UnitExpression unit;
 
-    public NumericLiteral(Number value, @Nullable Unit unit)
+    public NumericLiteral(Number value, @Nullable UnitExpression unit)
     {
         this.value = DataTypeUtility.value(value);
         this.unit = unit;
-        this.type = unit == null ? DataType.NUMBER : DataType.number(new NumberInfo(unit, null));
     }
 
     @Override
     public DataType check(RecordSet data, TypeState state, ErrorRecorder onError)
     {
-        return type;
+        return unit == null ? DataType.NUMBER : DataType.number(new NumberInfo(unit.asUnit(), null));
     }
 
     @Override
@@ -99,14 +97,16 @@ public class NumericLiteral extends Literal
 
         NumericLiteral that = (NumericLiteral) o;
 
-        if (!that.type.equals(type)) return false;
+        if (unit == null ? that.unit != null : !that.unit.equals(unit)) return false;
         return Utility.compareNumbers(value, that.value) == 0;
     }
 
     @Override
     public int hashCode()
     {
-        return value.hashCode() + 31 * type.hashCode();
+        int result = value.hashCode();
+        result = 31 * result + (unit != null ? unit.hashCode() : 0);
+        return result;
     }
 
     @Override

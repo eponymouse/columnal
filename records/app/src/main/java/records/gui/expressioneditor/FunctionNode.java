@@ -23,7 +23,7 @@ public class FunctionNode extends SurroundNode
     private final FunctionDefinition function;
 
     @SuppressWarnings("initialization") // Because LeaveableTextField gets marked uninitialized
-    public FunctionNode(FunctionDefinition function, @Nullable Expression argumentsExpression, ConsecutiveBase parent)
+    public FunctionNode(FunctionDefinition function, @Nullable Expression argumentsExpression, ConsecutiveBase<Expression> parent)
     {
         super(parent, "function", TranslationUtility.getString("function"), function.getName(), true, argumentsExpression);
         this.function = function;
@@ -36,7 +36,7 @@ public class FunctionNode extends SurroundNode
     }
 
     @Override
-    public OperandNode prompt(String prompt)
+    public OperandNode<Expression> prompt(String prompt)
     {
         // Ignore
         return this;
@@ -44,11 +44,11 @@ public class FunctionNode extends SurroundNode
 
     @SuppressWarnings("nullness") // contents is known to be non-null.
     @Override
-    public Expression toExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
+    public Expression save(ErrorDisplayerRecord<Expression> errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         // TODO keep track of whether function is known
         // TODO allow units (second optional consecutive)
-        Expression argExp = contents.toExpression(errorDisplayer, onError);
+        Expression argExp = contents.save(errorDisplayer, onError);
         return errorDisplayer.record(this, new CallExpression(head.getText(), Collections.emptyList(), argExp));
     }
 

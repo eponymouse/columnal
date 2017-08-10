@@ -12,24 +12,21 @@ import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Stream;
 
 /**
  * Created by neil on 19/02/2017.
  */
-public class Consecutive extends ConsecutiveBase
+public class Consecutive<EXPRESSION> extends ConsecutiveBase<EXPRESSION>
 {
     protected final ExpressionParent parent;
     private final ImmutableSet<Character> endCharacters;
 
     @SuppressWarnings("initialization") // Because of loading
-    public Consecutive(ExpressionParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase, OperandNode>>, List<FXPlatformFunction<ConsecutiveBase, OperatorEntry>>> content, char... endCharacters)
+    public Consecutive(OperandOps<EXPRESSION> operations, ExpressionParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase<EXPRESSION>, OperandNode<EXPRESSION>>>, List<FXPlatformFunction<ConsecutiveBase<EXPRESSION>, OperatorEntry<EXPRESSION>>>> content, char... endCharacters)
     {
-        super(prefixNode, suffixNode, style);
+        super(operations, prefixNode, suffixNode, style);
         this.parent = parent;
         this.endCharacters = ImmutableSet.copyOf(Chars.asList(endCharacters));
         if (content != null)
@@ -42,10 +39,15 @@ public class Consecutive extends ConsecutiveBase
             focusChanged();
         }
         else
-            initializeContent();
+        {
+            atomicEdit.set(true);
+            operators.add(makeBlankOperator());
+            operands.add(makeBlankOperand());
+            atomicEdit.set(false);
+        }
     }
 
-    protected void selfChanged(@UnknownInitialization(ConsecutiveBase.class) Consecutive this)
+    protected void selfChanged(@UnknownInitialization(ConsecutiveBase.class) Consecutive<EXPRESSION> this)
     {
         if (parent != null)
             parent.changed(this);

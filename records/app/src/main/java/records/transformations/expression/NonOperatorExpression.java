@@ -16,7 +16,7 @@ import java.util.List;
 public abstract class NonOperatorExpression extends Expression
 {
     @Override
-    public final Pair<List<FXPlatformFunction<ConsecutiveBase, OperandNode>>, List<FXPlatformFunction<ConsecutiveBase, OperatorEntry>>> loadAsConsecutive()
+    public final Pair<List<FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression>, OperatorEntry<Expression>>>> loadAsConsecutive()
     {
         return new Pair<>(Collections.singletonList(loadAsSingle()), Collections.emptyList());
     }

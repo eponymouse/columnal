@@ -192,7 +192,7 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
+    public FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle()
     {
         return c -> new GeneralEntry(columnName.getRaw(), referenceType.getEntryStatus(), c);
     }
