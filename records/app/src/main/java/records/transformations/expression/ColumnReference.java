@@ -21,18 +21,15 @@ import records.data.datatype.TypeId;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ConsecutiveBase;
-import records.gui.expressioneditor.GeneralEntry;
-import records.gui.expressioneditor.GeneralEntry.Status;
+import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility.ListEx;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
@@ -53,14 +50,14 @@ public class ColumnReference extends NonOperatorExpression
         // e.g. if normalising, cost = cost {CORRESPONDING_ROW}/sum(cost{WHOLE_COLUMN})
         WHOLE_COLUMN(Status.COLUMN_REFERENCE_WHOLE);
 
-        private final GeneralEntry.Status status;
+        private final GeneralExpressionEntry.Status status;
 
-        private ColumnReferenceType(GeneralEntry.Status status)
+        private ColumnReferenceType(GeneralExpressionEntry.Status status)
         {
             this.status = status;
         }
 
-        public GeneralEntry.Status getEntryStatus()
+        public GeneralExpressionEntry.Status getEntryStatus()
         {
             return status;
         }
@@ -192,9 +189,9 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle()
+    public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        return c -> new GeneralEntry(columnName.getRaw(), referenceType.getEntryStatus(), c);
+        return (p, s) -> new GeneralExpressionEntry(columnName.getRaw(), referenceType.getEntryStatus(), p, s);
     }
 
     @Override

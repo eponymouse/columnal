@@ -24,17 +24,14 @@ import java.util.List;
 /**
  * Created by neil on 20/12/2016.
  */
-public class StringLiteralNode extends ChildNode<Expression> implements OperandNode<Expression>
+public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParent> implements OperandNode<Expression>
 {
-    private final TextField textField;
     private final AutoComplete autoComplete;
-    private ObservableList<Node> nodes;
 
-    public StringLiteralNode(String initialValue, ConsecutiveBase<Expression> parent)
+    public StringLiteralNode(String initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent)
     {
-        super(parent);
-        textField = createLeaveableTextField();
-        nodes = FXCollections.observableArrayList(new Label("\u201C"), textField, new Label("\u201D"));
+        super(parent, Expression.class);
+        nodes.setAll(new Label("\u201C"), textField, new Label("\u201D"));
         // We need a completion so you can leave the field using tab/enter
         // Otherwise only right-arrow will get you out
         Completion currentCompletion = new EndStringCompletion();
@@ -73,79 +70,15 @@ public class StringLiteralNode extends ChildNode<Expression> implements OperandN
     }
 
     @Override
-    public OperandNode prompt(String prompt)
-    {
-        textField.setPromptText(prompt);
-        return this;
-    }
-
-    @Override
     public Expression save(ErrorDisplayerRecord<Expression> errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         return errorDisplayer.record(this, new records.transformations.expression.StringLiteral(textField.getText()));
     }
 
     @Override
-    public OperandNode<Expression> focusWhenShown()
-    {
-        FXUtility.onceNotNull(textField.sceneProperty(), s -> focus(Focus.RIGHT));
-        return this;
-    }
-
-    @Override
     public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
     {
         return null;
-    }
-
-    @Override
-    public boolean isFocused()
-    {
-        return textField.isFocused();
-    }
-
-    @Override
-    public void setSelected(boolean selected)
-    {
-        // TODO
-    }
-
-    @Override
-    public void setHoverDropLeft(boolean on)
-    {
-        FXUtility.setPseudoclass(nodes().get(0), "exp-hover-drop-left", on);
-    }
-
-    @Override
-    public void focusChanged()
-    {
-        // Nothing to do
-    }
-
-    @Override
-    public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
-    {
-        return ConsecutiveChild.closestDropSingle(this, Expression.class, nodes.get(0), loc, forType);
-    }
-
-    @Override
-    public ObservableList<Node> nodes()
-    {
-        return nodes;
-    }
-
-    @Override
-    public void focus(Focus side)
-    {
-        textField.requestFocus();
-        if (side == Focus.LEFT)
-        {
-            textField.positionCaret(0);
-        }
-        else
-        {
-            textField.positionCaret(textField.getLength());
-        }
     }
 
     @Override

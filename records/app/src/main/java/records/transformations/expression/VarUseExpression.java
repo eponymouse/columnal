@@ -12,13 +12,11 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.expressioneditor.ConsecutiveBase;
-import records.gui.expressioneditor.GeneralEntry;
-import records.gui.expressioneditor.GeneralEntry.Status;
+import records.gui.expressioneditor.GeneralExpressionEntry;
+import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.gui.expressioneditor.OperandNode;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformFunction;
 import utility.Pair;
 
 import java.util.Map;
@@ -82,9 +80,9 @@ public class VarUseExpression extends NonOperatorExpression
     }
 
     @Override
-    public FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle()
+    public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        return c -> new GeneralEntry(varName, Status.VARIABLE_USE, c);
+        return (p, s) -> new GeneralExpressionEntry(varName, Status.VARIABLE_USE, p, s);
     }
 
     @Override

@@ -12,11 +12,9 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformFunction;
 import utility.Pair;
 
 import java.util.Map;
@@ -89,7 +87,7 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle()
+    public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
         throw new RuntimeException("TODO");
     }

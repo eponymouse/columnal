@@ -48,7 +48,7 @@ public class Unit
     }
 
 
-    public Unit raisedTo(int power) throws UserException
+    public Unit raisedTo(int power)
     {
         if (power == 0)
             return SCALAR;

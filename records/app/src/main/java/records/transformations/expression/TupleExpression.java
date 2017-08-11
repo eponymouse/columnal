@@ -15,12 +15,11 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -141,13 +140,13 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public Pair<List<FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression>, OperatorEntry<Expression>>>> loadAsConsecutive()
+    public Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive()
     {
         throw new RuntimeException("TODO");
     }
 
     @Override
-    public FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle()
+    public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
         throw new RuntimeException("TODO");
     }

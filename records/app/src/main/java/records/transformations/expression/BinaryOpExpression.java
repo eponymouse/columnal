@@ -8,11 +8,11 @@ import records.data.datatype.DataType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.Bracketed;
+import records.gui.expressioneditor.BracketedExpression;
 import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
-import utility.FXPlatformFunction;
 import utility.Pair;
 
 import java.util.Arrays;
@@ -149,14 +149,14 @@ public abstract class BinaryOpExpression extends Expression
     }
 
     @Override
-    public Pair<List<FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression>, OperatorEntry<Expression>>>> loadAsConsecutive()
+    public Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive()
     {
-        return new Pair<>(Arrays.asList(lhs.loadAsSingle(), rhs.loadAsSingle()), Collections.singletonList(c -> new OperatorEntry<Expression>(Expression.class, saveOp(), false, c)));
+        return new Pair<>(Arrays.asList(lhs.loadAsSingle(), rhs.loadAsSingle()), Collections.singletonList((p, s) -> new OperatorEntry<Expression, ExpressionNodeParent>(Expression.class, saveOp(), false, p)));
     }
 
     @Override
-    public FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle()
+    public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        return c -> new Bracketed<Expression>(ConsecutiveBase.EXPRESSION_OPS, c, c,null, null, loadAsConsecutive());
+        return (p, s) -> new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, s, p, null, null, SingleLoader.withSemanticParent(loadAsConsecutive(), s));
     }
 }

@@ -16,14 +16,12 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
-import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.FunctionNode;
 import records.gui.expressioneditor.OperandNode;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionInstance;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformFunction;
 import utility.Pair;
 
 import java.util.ArrayList;
@@ -107,13 +105,13 @@ public class CallExpression extends NonOperatorExpression
     }
 
     @Override
-    public FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle()
+    public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
         // If successfully type-checked:
         if (definition != null)
         {
             @NonNull FunctionDefinition definitionFinal = definition;
-            return c -> new FunctionNode(definitionFinal, param, c);
+            return (p, s) -> new FunctionNode(definitionFinal, s, param, p);
         }
         else
             throw new RuntimeException("TODO bad function (" + functionName + ")");

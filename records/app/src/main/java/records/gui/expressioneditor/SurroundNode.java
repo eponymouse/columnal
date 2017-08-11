@@ -24,6 +24,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.ErrorRecorder;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.SingleLoader;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -40,13 +41,17 @@ import java.util.stream.Stream;
  * (head is function name), tag expressions (head is tag name).
  *
  */
-public abstract class SurroundNode implements ExpressionParent, OperandNode<Expression>, ErrorDisplayer
+public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<Expression>, ErrorDisplayer, ExpressionNodeParent
 {
     public static final double BRACKET_WIDTH = 2.0;
     private static final double aspectRatio = 0.2;
     protected final TextField head;
-    protected final @Nullable ConsecutiveBase<Expression> contents;
-    protected final ConsecutiveBase<Expression> parent;
+    protected final @Nullable ConsecutiveBase<Expression, ExpressionNodeParent> contents;
+    protected final ConsecutiveBase<Expression, ExpressionNodeParent> parent;
+    /**
+     * The semantic parent which can be asked about available variables, etc
+     */
+    protected final ExpressionNodeParent semanticParent;
     private final String cssClass;
     // Only used if contents is null.  We don't make this nullable if contents is present,
     // mainly because it makes all the nullness checks a pain.
@@ -54,9 +59,10 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode<Expr
     private final ErrorDisplayer showError;
 
     @SuppressWarnings("initialization")
-    public SurroundNode(ConsecutiveBase<Expression> parent, String cssClass, @Localized String headLabel, String startingHead, boolean hasInner, @Nullable Expression startingContent)
+    public SurroundNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, String cssClass, @Localized String headLabel, String startingHead, boolean hasInner, @Nullable Expression startingContent)
     {
         this.parent = parent;
+        this.semanticParent = semanticParent;
         this.head = new LeaveableTextField(this, parent) {
             @Override
             @OnThread(value = Tag.FXPlatform, ignoreParent = true)
@@ -119,7 +125,8 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode<Expr
     }
 
     // Focuses the arguments because we are only shown after they've chosen the function
-    public SurroundNode focusWhenShown()
+    @Override
+    public void focusWhenShown()
     {
         if (contents != null)
         {
@@ -129,11 +136,10 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode<Expr
         {
             head.requestFocus();
         }
-        return this;
     }
 
     @Override
-    public ConsecutiveBase<Expression> getParent()
+    public ConsecutiveBase<Expression, ExpressionNodeParent> getParent()
     {
         return parent;
     }
@@ -152,20 +158,20 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode<Expr
     }
 
     @Override
-    public void changed(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
+    public void changed(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
     {
         parent.changed(this);
     }
 
     @Override
-    public void focusRightOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
+    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
     {
         // It's bound to be arguments asking us, nothing beyond that:
         parent.focusRightOf(this);
     }
 
     @Override
-    public void focusLeftOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
+    public void focusLeftOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
     {
         head.requestFocus();
         head.positionCaret(head.getLength());
@@ -291,7 +297,7 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode<Expr
         }
     }
 
-    protected class ContentConsecutive extends Consecutive<Expression> implements ChangeListener<@Nullable String>
+    protected class ContentConsecutive extends Consecutive<Expression, ExpressionNodeParent> implements ChangeListener<@Nullable String>
     {
         private final OpenBracketShape openBracket;
         private final OpenBracketShape closeBracket;
@@ -300,7 +306,7 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode<Expr
 
         private ContentConsecutive(VBox vBox, OpenBracketShape openBracket, OpenBracketShape closeBracket, @Nullable Expression args)
         {
-            super(ConsecutiveBase.EXPRESSION_OPS, SurroundNode.this, new HBox(vBox, openBracket), closeBracket, cssClass, args == null ? null : args.loadAsConsecutive(), ')');
+            super(ConsecutiveBase.EXPRESSION_OPS, SurroundNode.this, new HBox(vBox, openBracket), closeBracket, cssClass, args == null ? null : SingleLoader.withSemanticParent(args.loadAsConsecutive(), SurroundNode.this), ')');
             this.openBracket = openBracket;
             this.closeBracket = closeBracket;
             closeBracket.prefHeightProperty().bind(openBracket.heightProperty());
@@ -310,6 +316,12 @@ public abstract class SurroundNode implements ExpressionParent, OperandNode<Expr
         public ContentConsecutive(VBox vBox, @Nullable Expression args)
         {
             this(vBox, new OpenBracketShape(), new OpenBracketShape() {{setScaleX(-1);}}, args);
+        }
+
+        @Override
+        protected ExpressionNodeParent getThisAsSemanticParent()
+        {
+            return SurroundNode.this;
         }
 
         @SuppressWarnings("initialization") // Because we use this as a listener

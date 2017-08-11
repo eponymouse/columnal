@@ -1,9 +1,8 @@
 package records.transformations.expression;
 
-import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
-import utility.FXPlatformFunction;
 import utility.Pair;
 
 import java.util.Collections;
@@ -16,7 +15,7 @@ import java.util.List;
 public abstract class NonOperatorExpression extends Expression
 {
     @Override
-    public final Pair<List<FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression>, OperatorEntry<Expression>>>> loadAsConsecutive()
+    public final Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive()
     {
         return new Pair<>(Collections.singletonList(loadAsSingle()), Collections.emptyList());
     }

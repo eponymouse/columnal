@@ -23,9 +23,8 @@ import java.util.List;
  * have a single text field as a ConsecutiveChild
  *
  */
-abstract class TextFieldEntry<EXPRESSION extends @NonNull Object> extends ChildNode<EXPRESSION> implements ConsecutiveChild<EXPRESSION>, ErrorDisplayer
+abstract class GeneralOperandEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION>, ErrorDisplayer
 {
-    protected final Class<EXPRESSION> operandClass;
     /**
      * A label to the left of the text-field, used for displaying things like the
      * arrows on column reference
@@ -38,27 +37,15 @@ abstract class TextFieldEntry<EXPRESSION extends @NonNull Object> extends ChildN
     protected final Label typeLabel;
 
     /**
-     * The text field for user entry
-     */
-    protected final TextField textField;
-
-    /**
-     * Permanent reference to list of contained nodes (for ExpressionNode.nodes)
-     */
-    protected final ObservableList<Node> nodes = FXCollections.observableArrayList();
-
-    /**
      * The outermost container for the whole thing:
      */
     protected final VBox container;
 
     private final ErrorUpdater errorUpdater;
 
-    protected TextFieldEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION> parent)
+    protected GeneralOperandEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent)
     {
-        super(parent);
-        this.operandClass = operandClass;
-        this.textField = createLeaveableTextField();
+        super(parent, operandClass);
         textField.getStyleClass().add("entry-field");
         parent.getEditor().registerFocusable(textField);
 
@@ -76,29 +63,10 @@ abstract class TextFieldEntry<EXPRESSION extends @NonNull Object> extends ChildN
 
     }
 
-
-    @Override
-    public ObservableList<Node> nodes()
-    {
-        return nodes;
-    }
-
-    @Override
-    public boolean isFocused()
-    {
-        return textField.isFocused();
-    }
-
     @Override
     public boolean isBlank()
     {
         return textField.getText().trim().isEmpty();
-    }
-
-    @Override
-    public void focusChanged()
-    {
-        // Nothing to do
     }
 
     @Override
@@ -107,26 +75,7 @@ abstract class TextFieldEntry<EXPRESSION extends @NonNull Object> extends ChildN
         FXUtility.setPseudoclass(container, "exp-selected", selected);
     }
 
-    @Override
-    public void setHoverDropLeft(boolean selected)
-    {
-        FXUtility.setPseudoclass(container, "exp-hover-drop-left", selected);
-    }
-
-    @Override
-    public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
-    {
-        return ConsecutiveChild.closestDropSingle(this, operandClass, container, loc, forType);
-    }
-
-    @Override
-    public void focus(Focus side)
-    {
-        textField.requestFocus();
-        textField.positionCaret(side == Focus.LEFT ? 0 : textField.getLength());
-    }
-
-    public void changed(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
+    public void changed(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
     {
         parent.changed(this);
     }

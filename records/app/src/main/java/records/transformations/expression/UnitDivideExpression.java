@@ -2,8 +2,12 @@ package records.transformations.expression;
 
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
-import records.error.InternalException;
-import records.error.UserException;
+import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.UnitCompound;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
 
@@ -27,5 +31,18 @@ public class UnitDivideExpression extends UnitExpression
         Either<Pair<String, List<UnitExpression>>, Unit> den = denominator.asUnit(unitManager);
 
         return num.flatMap(n -> den.map(d -> n.divide(d)));
+    }
+
+    @Override
+    public String save(boolean topLevel)
+    {
+        return numerator.save(false) + "/" + denominator.save(false);
+    }
+
+    @Override
+    @OnThread(Tag.FXPlatform)
+    public OperandNode<UnitExpression> edit(ConsecutiveBase<UnitExpression, ExpressionNodeParent> parent, boolean topLevel)
+    {
+        return new UnitCompound(parent, topLevel);
     }
 }

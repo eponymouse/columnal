@@ -1,23 +1,21 @@
 package records.gui.expressioneditor;
 
 import javafx.scene.control.TextField;
-import org.checkerframework.checker.initialization.qual.NotOnlyInitialized;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
 /**
- * A TextField which is a child of an ExpressionParent.
+ * A TextField which is a child of an EEDisplayNodeParent.
  * When the user tries to move left or right at the
  * beginning/end of the field respectively, it asks
  * the parent to move focus to the appropriate adjacent item.
  */
 public class LeaveableTextField extends TextField
 {
-    private final ExpressionNode us;
-    private final ExpressionParent parent;
+    private final EEDisplayNode us;
+    private final EEDisplayNodeParent parent;
 
-    public LeaveableTextField(ExpressionNode us, ExpressionParent parent)
+    public LeaveableTextField(EEDisplayNode us, EEDisplayNodeParent parent)
     {
         this.us = us;
         this.parent = parent;

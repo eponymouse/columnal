@@ -3,8 +3,11 @@ package records.gui.expressioneditor;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
+import records.error.InternalException;
+import records.error.UserException;
+import records.transformations.expression.Expression;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
@@ -12,25 +15,23 @@ import utility.gui.FXUtility;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.stream.Stream;
 
 /**
  * Created by neil on 20/12/2016.
  */
-public class Bracketed<EXPRESSION extends @NonNull Object> extends Consecutive<EXPRESSION> implements OperandNode<EXPRESSION>
+public class BracketedExpression extends Consecutive<Expression, ExpressionNodeParent> implements OperandNode<Expression>, ExpressionNodeParent
 {
-    private final ConsecutiveBase<EXPRESSION> consecParent;
+    private final ExpressionNodeParent semanticParent;
 
-    public Bracketed(OperandOps<EXPRESSION> operations, ConsecutiveBase<EXPRESSION> consecParent, ExpressionParent expParent, @Nullable Node prefixNode, @Nullable Node suffixNode, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase<EXPRESSION>, OperandNode<EXPRESSION>>>, List<FXPlatformFunction<ConsecutiveBase<EXPRESSION>, OperatorEntry<EXPRESSION>>>> content)
+    public BracketedExpression(OperandOps<Expression, ExpressionNodeParent> operations, ExpressionNodeParent semanticParent, EEDisplayNodeParent expParent, @Nullable Node prefixNode, @Nullable Node suffixNode, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, OperatorEntry<Expression, ExpressionNodeParent>>>> content)
     {
         super(operations, expParent, prefixNode, suffixNode, "bracket", content, ')');
-        this.consecParent = consecParent;
+        this.semanticParent = semanticParent;
     }
 
     @Override
-    public Bracketed<EXPRESSION> focusWhenShown()
+    protected ExpressionNodeParent getThisAsSemanticParent()
     {
-        super.focusWhenShown();
         return this;
     }
 
@@ -47,7 +48,7 @@ public class Bracketed<EXPRESSION extends @NonNull Object> extends Consecutive<E
     }
 
     @Override
-    public ConsecutiveBase<EXPRESSION> getParent()
+    public ConsecutiveBase<Expression, ExpressionNodeParent> getParent()
     {
         return consecParent;
     }
@@ -65,10 +66,9 @@ public class Bracketed<EXPRESSION extends @NonNull Object> extends Consecutive<E
     }
 
     @Override
-    public Bracketed<EXPRESSION> prompt(String prompt)
+    protected List<Pair<DataType, List<String>>> getSuggestedParentContext() throws UserException, InternalException
     {
-        super.prompt(prompt);
-        return this;
+        return semanticParent.getSuggestedContext(this);
     }
 
     @Override

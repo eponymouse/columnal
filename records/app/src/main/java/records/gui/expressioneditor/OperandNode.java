@@ -16,7 +16,7 @@ import java.util.List;
  * next to operators.  (Depends on type: some operands, like tagged operands,
  * may not have a useful type available.)
  */
-public @Interned interface OperandNode<@NonNull EXPRESSION> extends ExpressionNode, ConsecutiveChild<EXPRESSION>, ErrorDisplayer
+public @Interned interface OperandNode<@NonNull EXPRESSION> extends EEDisplayNode, ConsecutiveChild<EXPRESSION>, ErrorDisplayer
 {
     /**
      * Gets the variables declared in this node.
@@ -32,10 +32,9 @@ public @Interned interface OperandNode<@NonNull EXPRESSION> extends ExpressionNo
     public abstract @Nullable DataType inferType();
 
     /**
-     * Sets the prompt text for this node, and returns self-reference
-     * (for chaining initialisation methods)
+     * Sets the prompt text for this node
      */
-    public abstract OperandNode prompt(String prompt);
+    public abstract void prompt(String prompt);
 
     /**
      * Saves this item to an Expression (AST-like item).  Should also record who is responsible
@@ -47,16 +46,5 @@ public @Interned interface OperandNode<@NonNull EXPRESSION> extends ExpressionNo
      */
     public abstract @NonNull EXPRESSION save(ErrorDisplayerRecord<EXPRESSION> errorDisplayer, FXPlatformConsumer<Object> onError);
 
-    /**
-     * Focus appropriate item once this has been shown and return self-reference
-     * (for chaining initialisation methods)
-     */
-    public OperandNode<EXPRESSION> focusWhenShown();
-
     public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner();
-
-    /**
-     * Is focus in this operand (or one of its children)?
-     */
-    public boolean isFocused();
 }

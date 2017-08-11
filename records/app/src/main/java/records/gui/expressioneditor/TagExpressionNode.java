@@ -19,21 +19,21 @@ import java.util.List;
 /**
  * Created by neil on 21/01/2017.
  */
-public class TagExpressionNode extends SurroundNode
+public class TagExpressionNode extends SurroundNode implements ExpressionNodeParent
 {
     private final TypeId typeName;
     private final TagType<DataType> tagType;
 
     @SuppressWarnings({"initialization", "i18n"}) // Because LeaveableTextField gets marked uninitialized, and because of header
-    public TagExpressionNode(ConsecutiveBase<Expression> parent, TypeId typeName, TagType<DataType> tagType)
+    public TagExpressionNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, TypeId typeName, TagType<DataType> tagType)
     {
-        super(parent, "tag", TranslationUtility.getString("tag") + " " + typeName.getRaw(), tagType.getName(), tagType.getInner() != null, null);
+        super(parent, semanticParent, "tag", TranslationUtility.getString("tag") + " " + typeName.getRaw(), tagType.getName(), tagType.getInner() != null, null);
         this.typeName = typeName;
         this.tagType = tagType;
     }
 
     @Override
-    public List<Pair<DataType, List<String>>> getSuggestedContext(ExpressionNode child) throws InternalException, UserException
+    public List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException
     {
         List<Pair<DataType, List<String>>> context = parent.getSuggestedContext(this);
         for (Pair<DataType, List<String>> option : context)
@@ -58,9 +58,9 @@ public class TagExpressionNode extends SurroundNode
     }
 
     @Override
-    public List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child)
+    public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
     {
-        return parent.getAvailableVariables(this);
+        return semanticParent.getAvailableVariables(this);
     }
 
     @Override
@@ -70,9 +70,8 @@ public class TagExpressionNode extends SurroundNode
     }
 
     @Override
-    public OperandNode prompt(String prompt)
+    public void prompt(String prompt)
     {
-        return this;
     }
 
     @Override

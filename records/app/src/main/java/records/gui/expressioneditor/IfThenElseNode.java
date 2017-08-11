@@ -32,21 +32,23 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 21/02/2017.
  */
-public class IfThenElseNode implements OperandNode<Expression>, ExpressionParent, ErrorDisplayer
+public class IfThenElseNode implements OperandNode<Expression>, EEDisplayNodeParent, ErrorDisplayer, ExpressionNodeParent
 {
-    private final ConsecutiveBase<Expression> parent;
+    private final ConsecutiveBase<Expression, ExpressionNodeParent> parent;
+    private final ExpressionNodeParent semanticParent;
     private final ObservableList<Node> nodes;
-    private final @Interned Consecutive<Expression> condition;
-    private final @Interned Consecutive<Expression> thenPart;
-    private final @Interned Consecutive<Expression> elsePart;
+    private final @Interned Consecutive<Expression, ExpressionNodeParent> condition;
+    private final @Interned Consecutive<Expression, ExpressionNodeParent> thenPart;
+    private final @Interned Consecutive<Expression, ExpressionNodeParent> elsePart;
     private final VBox ifLabel;
     private final VBox thenLabel;
     private final VBox elseLabel;
 
     @SuppressWarnings("initialization") // because of Consecutive
-    public IfThenElseNode(ConsecutiveBase<Expression> parent)
+    public IfThenElseNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
     {
         this.parent = parent;
+        this.semanticParent = semanticParent;
         nodes = FXCollections.observableArrayList();
 
         ifLabel = ExpressionEditorUtil.keyword("if", "if-keyword", this, getParentStyles());
@@ -75,7 +77,7 @@ public class IfThenElseNode implements OperandNode<Expression>, ExpressionParent
     }
 
     @Override
-    public ConsecutiveBase<Expression> getParent()
+    public ConsecutiveBase<Expression, ExpressionNodeParent> getParent()
     {
         return parent;
     }
@@ -132,10 +134,9 @@ public class IfThenElseNode implements OperandNode<Expression>, ExpressionParent
     }
 
     @Override
-    public OperandNode prompt(String prompt)
+    public void prompt(String prompt)
     {
         // Not applicable
-        return this;
     }
 
     @Override
@@ -145,10 +146,9 @@ public class IfThenElseNode implements OperandNode<Expression>, ExpressionParent
     }
 
     @Override
-    public OperandNode<Expression> focusWhenShown()
+    public void focusWhenShown()
     {
         condition.focusWhenShown();
-        return this;
     }
 
     @Override
@@ -165,7 +165,7 @@ public class IfThenElseNode implements OperandNode<Expression>, ExpressionParent
     }
 
     @Override
-    public List<Pair<DataType, List<String>>> getSuggestedContext(ExpressionNode child) throws InternalException, UserException
+    public List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException
     {
         if (child == condition)
             return Collections.singletonList(new Pair<>(DataType.BOOLEAN, Collections.emptyList()));
@@ -174,19 +174,19 @@ public class IfThenElseNode implements OperandNode<Expression>, ExpressionParent
     }
 
     @Override
-    public List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child)
+    public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
     {
-        return parent.getAvailableVariables(this);
+        return semanticParent.getAvailableVariables(this);
     }
 
     @Override
-    public void changed(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
+    public void changed(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
     {
         parent.changed(this);
     }
 
     @Override
-    public void focusRightOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
+    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
     {
         if (child == condition)
             thenPart.focus(Focus.LEFT);
@@ -197,7 +197,7 @@ public class IfThenElseNode implements OperandNode<Expression>, ExpressionParent
     }
 
     @Override
-    public void focusLeftOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
+    public void focusLeftOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
     {
         if (child == condition)
             parent.focusLeftOf(this);

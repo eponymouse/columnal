@@ -23,7 +23,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
-import records.gui.expressioneditor.GeneralEntry.Status;
+import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.Op;
 import utility.FXPlatformConsumer;
@@ -47,14 +47,14 @@ import java.util.stream.Stream;
 /**
  * Consecutive implements all the methods of OperandNode but deliberately
  * does not extend it because Consecutive by itself is not a valid
- * operand.  For that, use Bracketed.
+ * operand.  For that, use BracketedExpression.
  */
-public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Object> implements ExpressionParent, ExpressionNode, ErrorDisplayer
+public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> implements EEDisplayNodeParent, EEDisplayNode, ErrorDisplayer
 {
-    protected final OperandOps<EXPRESSION> operations;
+    protected final OperandOps<EXPRESSION, SEMANTIC_PARENT> operations;
     private final ObservableList<Node> nodes;
     // The boolean value is only used during updateListeners, will be true other times
-    private final IdentityHashMap<ExpressionNode, Boolean> listeningTo = new IdentityHashMap<>();
+    private final IdentityHashMap<EEDisplayNode, Boolean> listeningTo = new IdentityHashMap<>();
     protected final String style;
     private @MonotonicNonNull ListChangeListener<Node> childrenNodeListener;
     /**
@@ -83,14 +83,14 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
      *    X* ? X
      */
     protected final ObservableList<OperandNode<@NonNull EXPRESSION>> operands;
-    protected final ObservableList<OperatorEntry<@NonNull EXPRESSION>> operators;
+    protected final ObservableList<OperatorEntry<@NonNull EXPRESSION, SEMANTIC_PARENT>> operators;
     private final @Nullable Node prefixNode;
     private final @Nullable Node suffixNode;
     private @Nullable String prompt = null;
     protected final BooleanProperty atomicEdit;
 
     @SuppressWarnings("initialization")
-    public ConsecutiveBase(OperandOps<EXPRESSION> operations, @Nullable Node prefixNode, @Nullable Node suffixNode, String style)
+    public ConsecutiveBase(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @Nullable Node prefixNode, @Nullable Node suffixNode, String style)
     {
         this.operations = operations;
         this.style = style;
@@ -133,7 +133,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     }
 
     @NotNull
-    protected OperatorEntry<EXPRESSION> makeBlankOperator()
+    protected OperatorEntry<EXPRESSION, SEMANTIC_PARENT> makeBlankOperator()
     {
         return new OperatorEntry<>(operations.getOperandClass(), this);
     }
@@ -141,8 +141,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     @NotNull
     protected OperandNode<@NonNull EXPRESSION> makeBlankOperand()
     {
-        return operations.makeGeneral(this, null);
+        return operations.makeGeneral(this, getThisAsSemanticParent(), null);
     }
+
+    // Get us as a semantic parent.  Do not get OUR parent.
+    protected abstract SEMANTIC_PARENT getThisAsSemanticParent();
 
     private void updateListeners()
     {
@@ -153,16 +156,16 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         listeningTo.replaceAll((e, b) -> false);
         // Merge new ones:
 
-        Stream.<ExpressionNode>concat(operands.stream(), operators.stream()).forEach(child -> {
+        Stream.<EEDisplayNode>concat(operands.stream(), operators.stream()).forEach(child -> {
             // No need to listen again if already present as we're already listening
             if (listeningTo.get(child) == null)
                 child.nodes().addListener(getChildrenNodeListener());
             listeningTo.put(child, true);
         });
         // Stop listening to old:
-        for (Iterator<Entry<ExpressionNode, Boolean>> iterator = listeningTo.entrySet().iterator(); iterator.hasNext(); )
+        for (Iterator<Entry<EEDisplayNode, Boolean>> iterator = listeningTo.entrySet().iterator(); iterator.hasNext(); )
         {
-            Entry<ExpressionNode, Boolean> e = iterator.next();
+            Entry<EEDisplayNode, Boolean> e = iterator.next();
             if (e.getValue() == false)
             {
                 e.getKey().nodes().removeListener(getChildrenNodeListener());
@@ -246,7 +249,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
     }
 
-    public void addOperandToRight(@UnknownInitialization OperatorEntry<EXPRESSION> rightOf, String initialContent, boolean focus)
+    public void addOperandToRight(@UnknownInitialization OperatorEntry<EXPRESSION, SEMANTIC_PARENT> rightOf, String initialContent, boolean focus)
     {
         // Must add operand and operator
         int index = Utility.indexOfRef(operators, rightOf);
@@ -254,7 +257,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         {
             atomicEdit.set(true);
             operators.add(index+1, makeBlankOperator());
-            OperandNode<EXPRESSION> operandNode = operations.makeGeneral(this, initialContent);
+            OperandNode<EXPRESSION> operandNode = operations.makeGeneral(this, getThisAsSemanticParent(), initialContent);
             if (focus)
                 operandNode.focusWhenShown();
             operands.add(index+1, operandNode);
@@ -273,7 +276,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
                 // Add new operator and new operand:
                 atomicEdit.set(true);
                 operators.add(index, new OperatorEntry<>(operations.getOperandClass(), operator, true, this));
-                operands.add(index+1, makeBlankOperand().focusWhenShown());
+                OperandNode<@NonNull EXPRESSION> blankOperand = makeBlankOperand();
+                blankOperand.focusWhenShown();
+                operands.add(index+1, blankOperand);
                 atomicEdit.set(false);
             }
         }
@@ -288,7 +293,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     }
 
     @Override
-    public List<Pair<DataType, List<String>>> getSuggestedContext(ExpressionNode child) throws InternalException, UserException
+    public List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException
     {
         List<Pair<DataType, List<String>>> r = new ArrayList<>();
 
@@ -331,9 +336,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         {
             // If childIndex is 1, we want to look at 0 and vice versa:
             OperandNode comparator = operands.get(1 - childIndex);
-            if (comparator instanceof GeneralEntry)
+            if (comparator instanceof GeneralExpressionEntry)
             {
-                @Nullable Column column = ((GeneralEntry)comparator).getColumn();
+                @Nullable Column column = ((GeneralExpressionEntry)comparator).getColumn();
                 if (column != null)
                 {
                     // TODO get most frequent values (may need a callback!)
@@ -344,10 +349,10 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         return r;
     }
 
-    protected abstract List<Pair<DataType,List<String>>> getSuggestedParentContext() throws UserException, InternalException;
+    //protected abstract List<Pair<DataType,List<String>>> getSuggestedParentContext() throws UserException, InternalException;
 
     @Override
-    public void changed(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
+    public void changed(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
     {
         if (!atomicEdit.get())
             selfChanged();
@@ -355,7 +360,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
     @SuppressWarnings("unchecked")
     @Override
-    public void focusRightOf(@UnknownInitialization ExpressionNode child)
+    public void focusRightOf(@UnknownInitialization EEDisplayNode child)
     {
         // Cast is safe because of instanceof, and the knowledge that
         // all our children have EXPRESSION as inner type:
@@ -370,7 +375,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
         else
         {
-            int index = Utility.indexOfRef(operators, (OperatorEntry<EXPRESSION>)child);
+            int index = Utility.indexOfRef(operators, (OperatorEntry<EXPRESSION, SEMANTIC_PARENT>)child);
             if (index < operators.size() - 1)
                 operands.get(index + 1).focus(Focus.LEFT);
             else
@@ -382,7 +387,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
     @SuppressWarnings("unchecked")
     @Override
-    public void focusLeftOf(@UnknownInitialization ExpressionNode child)
+    public void focusLeftOf(@UnknownInitialization EEDisplayNode child)
     {
         if (child instanceof OperandNode && Utility.containsRef(operands, (OperandNode<@NonNull EXPRESSION>)child))
         {
@@ -401,9 +406,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
                 }
             }
         }
-        else if (child instanceof OperatorEntry && Utility.containsRef(operators, (OperatorEntry<EXPRESSION>)child))
+        else if (child instanceof OperatorEntry && Utility.containsRef(operators, (OperatorEntry<EXPRESSION, SEMANTIC_PARENT>)child))
         {
-            int index = Utility.indexOfRef(operators, (OperatorEntry<EXPRESSION>)child);
+            int index = Utility.indexOfRef(operators, (OperatorEntry<EXPRESSION, SEMANTIC_PARENT>)child);
             if (index != -1)
                 operands.get(index).focus(Focus.RIGHT);
         }
@@ -412,8 +417,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     private void addBlankAtLeft()
     {
         atomicEdit.set(true);
-        operands.add(0, makeBlankOperand()
-            .focusWhenShown());
+        OperandNode<@NonNull EXPRESSION> blankOperand = makeBlankOperand();
+        blankOperand.focusWhenShown();
+        operands.add(0, blankOperand);
         operators.add(0, makeBlankOperator());
         atomicEdit.set(false);
     }
@@ -436,13 +442,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
     protected abstract boolean isMatchNode();
 
-    public ConsecutiveBase<EXPRESSION> focusWhenShown()
+    public void focusWhenShown()
     {
         operands.get(0).focusWhenShown();
-        return this;
     }
 
-    public ConsecutiveBase<EXPRESSION> prompt(String value)
+    public ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> prompt(String value)
     {
         prompt = value;
         updatePrompt();
@@ -456,7 +461,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     private Pair<Boolean, List<String>> getOperators(int firstIndex, int lastIndex)
     {
         boolean lastOp = operators.size() == operands.size();
-        return new Pair<>(!lastOp, Utility.<OperatorEntry<EXPRESSION>, String>mapList(operators, op -> op.get()));
+        return new Pair<>(!lastOp, Utility.<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>, String>mapList(operators, op -> op.get()));
     }
 
     public EXPRESSION save(ErrorDisplayerRecord<EXPRESSION> errorDisplayers, FXPlatformConsumer<Object> onError)
@@ -531,7 +536,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
      * @return
      */
 
-    private static <EXPRESSION extends @NonNull Object> List<ConsecutiveChild<EXPRESSION>> interleaveOperandsAndOperators(List<OperandNode<EXPRESSION>> operands, List<OperatorEntry<EXPRESSION>> operators)
+    private static <EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> List<ConsecutiveChild<EXPRESSION>> interleaveOperandsAndOperators(List<OperandNode<EXPRESSION>> operands, List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>> operators)
     {
         return new AbstractList<ConsecutiveChild<EXPRESSION>>()
         {
@@ -564,7 +569,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
                 if ((index & 1) == 0)
                     operands.add(index >> 1, (OperandNode<EXPRESSION>) element);
                 else
-                    operators.add(index >> 1, (OperatorEntry<EXPRESSION>) element);
+                    operators.add(index >> 1, (OperatorEntry<EXPRESSION, SEMANTIC_PARENT>) element);
             }
         };
     }
@@ -602,7 +607,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         return new CopiedItems(
             Utility.<ConsecutiveChild<EXPRESSION>, String>mapList(all.subList(startIndex, endIndex + 1), child -> {
                 if (child instanceof OperatorEntry)
-                    return ((OperatorEntry<EXPRESSION>)child).get();
+                    return ((OperatorEntry<EXPRESSION, SEMANTIC_PARENT>)child).get();
                 else
                     return operations.save(((OperandNode<EXPRESSION>)child).save(new ErrorDisplayerRecord<>(), o -> {}));
             }), startIsOperator);
@@ -615,11 +620,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         // In the case of a mismatch, we must insert a blank of the other type to get it right.
         atomicEdit.set(true);
 
-        @Nullable Pair<List<OperandNode<EXPRESSION>>, List<OperatorEntry<EXPRESSION>>> loaded = loadItems(itemsToInsert);
+        @Nullable Pair<List<OperandNode<EXPRESSION>>, List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>> loaded = loadItems(itemsToInsert);
         if (loaded == null)
             return false;
         List<OperandNode<EXPRESSION>> newOperands = loaded.getFirst();
-        List<OperatorEntry<EXPRESSION>> newOperators = loaded.getSecond();
+        List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>> newOperators = loaded.getSecond();
 
         boolean endsWithOperator;
         if (itemsToInsert.startsOnOperator)
@@ -681,10 +686,10 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         return true;
     }
 
-    private @Nullable Pair<List<OperandNode<EXPRESSION>>, List<OperatorEntry<EXPRESSION>>> loadItems(CopiedItems copiedItems)
+    private @Nullable Pair<List<OperandNode<EXPRESSION>>, List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>> loadItems(CopiedItems copiedItems)
     {
         List<OperandNode<EXPRESSION>> operands = new ArrayList<>();
-        List<OperatorEntry<EXPRESSION>> operators = new ArrayList<>();
+        List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>> operators = new ArrayList<>();
         try
         {
             for (int i = 0; i < copiedItems.items.size(); i++)
@@ -796,7 +801,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
      * @param operators
      * @param accountForFocus If they are focused, should they be kept in (true: yes, keep; false: no, remove)
      */
-    private static <EXPRESSION extends @NonNull Object> void removeBlanks(List<OperandNode<EXPRESSION>> operands, List<OperatorEntry<EXPRESSION>> operators, boolean accountForFocus, @Nullable BooleanProperty atomicEdit)
+    private static <EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> void removeBlanks(List<OperandNode<EXPRESSION>> operands, List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>> operators, boolean accountForFocus, @Nullable BooleanProperty atomicEdit)
     {
         // Note on atomicEdit: we set to true if we modify, and set to false once at the end,
         // which will do nothing if we never edited
@@ -857,9 +862,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         operands.get(0).showError(error, quickFixes);
     }
 
-    public static interface OperandOps<EXPRESSION extends @NonNull Object>
+    public static interface OperandOps<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT>
     {
-        public OperandNode<EXPRESSION> makeGeneral(ConsecutiveBase<EXPRESSION> parent, @Nullable String initialContent);
+        public OperandNode<EXPRESSION> makeGeneral(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, SEMANTIC_PARENT semanticParent, @Nullable String initialContent);
 
         public ImmutableList<Pair<String, @Localized String>> getValidOperators();
 
@@ -873,10 +878,15 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
         String save(EXPRESSION expression);
 
-        OperandNode<EXPRESSION> loadOperand(String src, ConsecutiveBase<EXPRESSION> parent) throws UserException, InternalException;
+        OperandNode<EXPRESSION> loadOperand(String src, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent) throws UserException, InternalException;
     }
 
-    private static class ExpressionOps implements OperandOps<Expression>
+    private static Pair<String, @LocalizableKey String> opD(String op, @LocalizableKey String key)
+    {
+        return new Pair<>(op, key);
+    }
+
+    private static class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     {
         private final static ImmutableList<Pair<String, @LocalizableKey String>> OPERATORS = ImmutableList.<Pair<String, @LocalizableKey String>>copyOf(Arrays.<Pair<String, @LocalizableKey String>>asList(
             opD("=", "op.equal"),
@@ -898,11 +908,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         ));
         private final Set<Integer> ALPHABET = OPERATORS.stream().map(p -> p.getFirst()).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
-        private static Pair<String, @LocalizableKey String> opD(String op, @LocalizableKey String key)
-        {
-            return new Pair<>(op, key);
-        }
-
         @Override
         public ImmutableList<Pair<String, @Localized String>> getValidOperators()
         {
@@ -915,9 +920,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
 
         @Override
-        public OperandNode<Expression> makeGeneral(ConsecutiveBase<Expression> parent, @Nullable String initialContent)
+        public OperandNode<Expression> makeGeneral(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, @Nullable String initialContent)
         {
-            return new GeneralEntry(initialContent == null ? "" : initialContent, Status.UNFINISHED, parent);
+            return new GeneralExpressionEntry(initialContent == null ? "" : initialContent, Status.UNFINISHED, parent, semanticParent);
         }
 
         @Override
@@ -967,11 +972,79 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
 
         @Override
-        public OperandNode<Expression> loadOperand(String curItem, ConsecutiveBase<Expression> consecutiveBase) throws UserException, InternalException
+        public OperandNode<Expression> loadOperand(String curItem, ConsecutiveBase<Expression, ExpressionNodeParent> consecutiveBase) throws UserException, InternalException
         {
-            return Expression.parse(null, curItem, consecutiveBase.getEditor().getTypeManager()).loadAsSingle().apply(consecutiveBase);
+            return Expression.parse(null, curItem, consecutiveBase.getEditor().getTypeManager()).loadAsSingle().load(consecutiveBase, consecutiveBase.getThisAsSemanticParent());
         }
     }
 
-    public static final OperandOps<Expression> EXPRESSION_OPS = new ExpressionOps();
+    private static class UnitExpressionOps implements OperandOps<UnitExpression, Void>
+    {
+        private final static ImmutableList<Pair<String, @LocalizableKey String>> OPERATORS = ImmutableList.<Pair<String, @LocalizableKey String>>copyOf(Arrays.<Pair<String, @LocalizableKey String>>asList(
+            opD("*", "op.times"),
+            opD("/", "op.divide"),
+            opD("^", "op.raise")
+        ));
+        private final Set<Integer> ALPHABET = OPERATORS.stream().map(p -> p.getFirst()).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
+
+        @Override
+        public OperandNode<UnitExpression> makeGeneral(ConsecutiveBase<UnitExpression, ExpressionNodeParent> parent, @Nullable String initialContent)
+        {
+            return new UnitEntry(parent, initialContent == null ? "" : initialContent);
+        }
+
+        @Override
+        public ImmutableList<Pair<String, String>> getValidOperators()
+        {
+            return OPERATORS;
+        }
+
+        @Override
+        public boolean isOperatorAlphabet(char character)
+        {
+            return ALPHABET.contains((int)character);
+        }
+
+        @Override
+        public Class<UnitExpression> getOperandClass()
+        {
+            return UnitExpression.class;
+        }
+
+        @Override
+        public UnitExpression makeUnfinished(String s)
+        {
+            return new SingleUnitExpression(s);
+        }
+
+        @Override
+        public UnitExpression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord<UnitExpression> errorDisplayers, List<UnitExpression> operands, List<String> ops)
+        {
+            if (operands.size() == 2 && ops.size() == 1 && ops.get(0).equals("/"))
+            {
+                return errorDisplayers.record(displayer, new UnitDivideExpression(operands.get(0), operands.get(1)));
+            }
+            else if (ops.stream().allMatch(o -> o.equals(" ") || o.equals("*")))
+            {
+                return errorDisplayers.record(displayer, new UnitTimesExpression(ImmutableList.copyOf(operands), ops.stream().map(o -> o.equals("*") ? UnitTimesExpression.Op.STAR : UnitTimesExpression.Op.SPACE).collect(ImmutableList.toImmutableList())));
+            }
+
+            return null;
+        }
+
+        @Override
+        public String save(UnitExpression unitExpression)
+        {
+            return unitExpression.save(true);
+        }
+
+        @Override
+        public OperandNode<UnitExpression> loadOperand(String src, ConsecutiveBase<UnitExpression, ExpressionNodeParent> parent) throws UserException, InternalException
+        {
+            return UnitExpression.load(src).edit(parent, false);
+        }
+    }
+
+    public static final OperandOps<Expression, ExpressionNodeParent> EXPRESSION_OPS = new ExpressionOps();
+    public static final OperandOps<UnitExpression, Void> UNIT_OPS = new UnitExpressionOps();
 }

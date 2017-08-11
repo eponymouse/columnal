@@ -5,15 +5,9 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
-import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.layout.HBox;
-import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -36,7 +30,6 @@ import records.grammar.ExpressionParser.NumericLiteralContext;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
-import records.gui.expressioneditor.ExpressionEditorUtil.ErrorUpdater;
 import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.*;
@@ -64,7 +57,7 @@ import java.util.stream.Stream;
  *   - Partial function name (until later transformed to function call)
  *   - Variable reference.
  */
-public class GeneralEntry extends TextFieldEntry<Expression> implements OperandNode<Expression>, ErrorDisplayer, ExpressionParent
+public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionNodeParent> implements OperandNode<Expression>, ErrorDisplayer, EEDisplayNodeParent, ExpressionNodeParent
 {
     private static final String ARROW_SAME_ROW = "\u2192";
     private static final String ARROW_WHOLE = "\u2195";
@@ -139,11 +132,17 @@ public class GeneralEntry extends TextFieldEntry<Expression> implements OperandN
      * An optional component appearing after the text field, for specifying units.
      * Surrounded by curly brackets.
      */
-    private @Nullable Bracketed<UnitExpression> unitSpecifier;
+    private @Nullable BracketedExpression unitSpecifier;
 
-    public GeneralEntry(String content, Status initialStatus, ConsecutiveBase<Expression> parent)
+    /**
+     * The semantic parent which can be asked about available variables, etc
+     */
+    private final ExpressionNodeParent semanticParent;
+
+    public GeneralExpressionEntry(String content, Status initialStatus, ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
     {
         super(Expression.class, parent);
+        this.semanticParent = semanticParent;
         bracketCompletion = new KeyShortcutCompletion("Bracketed expressions", '(');
         stringCompletion = new KeyShortcutCompletion("Text", '\"');
         unitCompletion = new KeyShortcutCompletion("Units", '{');
@@ -172,7 +171,7 @@ public class GeneralEntry extends TextFieldEntry<Expression> implements OperandN
             else
                 completing = false;
             textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), t.isEmpty());
-            parent.changed(GeneralEntry.this);
+            parent.changed(GeneralExpressionEntry.this);
         });
         textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), textField.getText().isEmpty());
         status.setValue(initialStatus);
@@ -224,7 +223,7 @@ public class GeneralEntry extends TextFieldEntry<Expression> implements OperandN
     }
 
     @RequiresNonNull({"bracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "parent"})
-    private List<Completion> getSuggestions(@UnknownInitialization(ChildNode.class) GeneralEntry this, String text) throws UserException, InternalException
+    private List<Completion> getSuggestions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, String text) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
         r.add(bracketCompletion);
@@ -298,18 +297,12 @@ public class GeneralEntry extends TextFieldEntry<Expression> implements OperandN
     }
 
     @RequiresNonNull("parent")
-    private void addAllFunctions(@UnknownInitialization(ChildNode.class) GeneralEntry this, ArrayList<Completion> r)
+    private void addAllFunctions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, ArrayList<Completion> r)
     {
         for (FunctionDefinition function : FunctionList.FUNCTIONS)
         {
             r.add(new FunctionCompletion(function, parent.getEditor().getTypeManager().getUnitManager()));
         }
-    }
-
-    public GeneralEntry focusWhenShown()
-    {
-        FXUtility.onceNotNull(textField.sceneProperty(), scene -> focus(Focus.RIGHT));
-        return this;
     }
 
     @Override
@@ -511,13 +504,6 @@ public class GeneralEntry extends TextFieldEntry<Expression> implements OperandN
     }
 
     @Override
-    public OperandNode prompt(String prompt)
-    {
-        textField.setPromptText(prompt);
-        return this;
-    }
-
-    @Override
     public Expression save(ErrorDisplayerRecord<Expression> errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         if (status.get() == Status.COLUMN_REFERENCE_SAME_ROW || status.get() == Status.COLUMN_REFERENCE_WHOLE)
@@ -678,9 +664,9 @@ public class GeneralEntry extends TextFieldEntry<Expression> implements OperandN
             {
                 @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
                 if (ksc == bracketCompletion)
-                    parent.replace(GeneralEntry.this, new Bracketed<Expression>(ConsecutiveBase.EXPRESSION_OPS, parent, parent, new Label("("), new Label(")"), null).focusWhenShown());
+                    parent.replace(GeneralExpressionEntry.this, new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, parent, parent, new Label("("), new Label(")"), null).focusWhenShown());
                 else if (ksc == stringCompletion)
-                    parent.replace(GeneralEntry.this, new StringLiteralNode("", parent).focusWhenShown());
+                    parent.replace(GeneralExpressionEntry.this, focusWhenShown(new StringLiteralNode("", parent)));
                 else if (ksc == unitCompletion)
                 {
                     if (unitSpecifier == null)
@@ -695,30 +681,30 @@ public class GeneralEntry extends TextFieldEntry<Expression> implements OperandN
             }
             else if (c != null && c.equals(ifCompletion))
             {
-                parent.replace(GeneralEntry.this, new IfThenElseNode(parent));
+                parent.replace(GeneralExpressionEntry.this, new IfThenElseNode(parent, semanticParent));
             }
             else if (c != null && c.equals(matchCompletion))
             {
-                parent.replace(GeneralEntry.this, new PatternMatchNode(parent, null).focusWhenShown());
+                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new PatternMatchNode(parent, null)));
             }
             else if (c instanceof FunctionCompletion)
             {
                 // What to do with rest != "" here? Don't allow? Skip to after args?
                 FunctionCompletion fc = (FunctionCompletion)c;
-                parent.replace(GeneralEntry.this, new FunctionNode(fc.function, null, parent).focusWhenShown());
+                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new FunctionNode(fc.function, semanticParent,null, parent)));
             }
             else if (c instanceof TagCompletion)
             {
                 TagCompletion tc = (TagCompletion)c;
-                parent.replace(GeneralEntry.this, new TagExpressionNode(parent, tc.typeName, tc.tagType).focusWhenShown());
+                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new TagExpressionNode(parent, semanticParent, tc.typeName, tc.tagType)));
             }
             else if (c == null || c instanceof GeneralCompletion)
             {
                 @Nullable GeneralCompletion gc = (GeneralCompletion) c;
                 completing = true;
-                parent.setOperatorToRight(GeneralEntry.this, rest);
+                parent.setOperatorToRight(GeneralExpressionEntry.this, rest);
                 status.setValue(gc == null ? Status.UNFINISHED : gc.getType());
-                parent.focusRightOf(GeneralEntry.this);
+                parent.focusRightOf(GeneralExpressionEntry.this);
                 if (gc instanceof SimpleCompletion)
                 {
                     prefix.setText(((SimpleCompletion)gc).prefix);
@@ -736,25 +722,31 @@ public class GeneralEntry extends TextFieldEntry<Expression> implements OperandN
         }
     }
 
+    private static <T extends EEDisplayNode> T focusWhenShown(T node)
+    {
+        node.focusWhenShown();
+        return node;
+    }
+
     private void addUnitSpecifier()
     {
         nodes.setAll(container);
         if (unitSpecifier == null)
         {
-            unitSpecifier = new UnitSpecifier(this, true);
+            unitSpecifier = new UnitCompound(this, true);
         }
         nodes.addAll(unitSpecifier.nodes());
         // TODO need a listener on the sub-nodes
     }
 
     @Override
-    public List<Pair<DataType, List<String>>> getSuggestedContext(ExpressionNode child) throws InternalException, UserException
+    public List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException
     {
         return Collections.emptyList();
     }
 
     @Override
-    public List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child)
+    public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
     {
         return Collections.emptyList();
     }
@@ -769,14 +761,14 @@ public class GeneralEntry extends TextFieldEntry<Expression> implements OperandN
     }
 
     @Override
-    public void focusRightOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
+    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
     {
         // Child is bound to be units:
         parent.focusRightOf(this);
     }
 
     @Override
-    public void focusLeftOf(@UnknownInitialization(ExpressionNode.class) ExpressionNode child)
+    public void focusLeftOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
     {
         textField.requestFocus();
         textField.positionCaret(textField.getLength());

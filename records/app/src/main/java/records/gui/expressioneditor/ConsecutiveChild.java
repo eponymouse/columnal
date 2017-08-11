@@ -8,12 +8,12 @@ import utility.Pair;
 import utility.gui.FXUtility;
 
 /**
- * Created by neil on 19/02/2017.
+ * A child of a ConsecutiveBase item.  Has methods for selection, dragging and focusing.
  */
-public interface ConsecutiveChild<EXPRESSION>
+public interface ConsecutiveChild<EXPRESSION> extends EEDisplayNode
 {
     @Pure
-    public ConsecutiveBase<EXPRESSION> getParent();
+    public ConsecutiveBase<EXPRESSION, ?> getParent();
 
     void setSelected(boolean selected);
 
@@ -34,6 +34,4 @@ public interface ConsecutiveChild<EXPRESSION>
     default boolean isBlank() { return false; }
 
     void focusChanged();
-
-    boolean isFocused();
 }

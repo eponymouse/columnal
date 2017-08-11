@@ -7,8 +7,6 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
-import records.error.InternalException;
-import records.error.UserException;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
@@ -19,13 +17,13 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 19/02/2017.
  */
-public class Consecutive<EXPRESSION extends @NonNull Object> extends ConsecutiveBase<EXPRESSION>
+public abstract class Consecutive<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> extends ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>
 {
-    protected final ExpressionParent parent;
+    protected final EEDisplayNodeParent parent;
     private final ImmutableSet<Character> endCharacters;
 
     @SuppressWarnings("initialization") // Because of loading
-    public Consecutive(OperandOps<EXPRESSION> operations, ExpressionParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase<EXPRESSION>, OperandNode<EXPRESSION>>>, List<FXPlatformFunction<ConsecutiveBase<EXPRESSION>, OperatorEntry<EXPRESSION>>>> content, char... endCharacters)
+    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, EEDisplayNodeParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>, OperandNode<EXPRESSION>>>, List<FXPlatformFunction<ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>, OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>>> content, char... endCharacters)
     {
         super(operations, prefixNode, suffixNode, style);
         this.parent = parent;
@@ -48,16 +46,10 @@ public class Consecutive<EXPRESSION extends @NonNull Object> extends Consecutive
         }
     }
 
-    protected void selfChanged(@UnknownInitialization(ConsecutiveBase.class) Consecutive<EXPRESSION> this)
+    protected void selfChanged(@UnknownInitialization(ConsecutiveBase.class) Consecutive<EXPRESSION, SEMANTIC_PARENT> this)
     {
         if (parent != null)
             parent.changed(this);
-    }
-
-    @Override
-    protected List<Pair<DataType, List<String>>> getSuggestedParentContext() throws UserException, InternalException
-    {
-        return parent.getSuggestedContext(this);
     }
 
     @Override
@@ -91,7 +83,7 @@ public class Consecutive<EXPRESSION extends @NonNull Object> extends Consecutive
     }
 
     @Override
-    public List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child)
+    public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
     {
         return parent.getAvailableVariables(this);
     }

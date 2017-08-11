@@ -51,6 +51,7 @@ import records.grammar.ExpressionParser.TupleExpressionContext;
 import records.grammar.ExpressionParser.VarRefContext;
 import records.grammar.ExpressionParserBaseVisitor;
 import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.AddSubtractExpression.Op;
@@ -148,9 +149,22 @@ public abstract class Expression
         return Optional.empty();
     }
 
-    public abstract Pair<List<FXPlatformFunction<ConsecutiveBase<Expression>,OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression>,OperatorEntry<Expression>>>> loadAsConsecutive();
+    public abstract Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive();
 
-    public abstract FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle();
+    public static interface SingleLoader<R>
+    {
+        @OnThread(Tag.FXPlatform)
+        public R load(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent);
+
+        @OnThread(Tag.FXPlatform)
+        public static <A, B> Pair<List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, A>>, List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, B>>>
+            withSemanticParent(Pair<List<SingleLoader<A>>, List<SingleLoader<B>>> operandsAndOps, ExpressionNodeParent semanticParent)
+        {
+            return operandsAndOps.map(l -> Utility.mapList(l, x -> c -> x.load(c, semanticParent)), l -> Utility.mapList(l, x -> c -> x.load(c, semanticParent)));
+        }
+    }
+
+    public abstract SingleLoader<OperandNode<Expression>> loadAsSingle();
 
     // Vaguely similar to getValue, but instead checks if the expression matches the given value
     // For many expressions, matching means equality, but if a new-variable item is involved

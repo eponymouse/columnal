@@ -13,12 +13,10 @@ import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.ClauseNode;
-import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.PatternMatchNode;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -286,9 +284,9 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle()
+    public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        return c -> new PatternMatchNode(c, new Pair<>(expression, clauses));
+        return (p, s) -> new PatternMatchNode(p, new Pair<>(expression, clauses));
     }
 
     @Override

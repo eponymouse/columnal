@@ -6,11 +6,11 @@ import records.data.RecordSet;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.Bracketed;
+import records.gui.expressioneditor.BracketedExpression;
 import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
-import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -133,21 +133,21 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public Pair<List<FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression>, OperatorEntry<Expression>>>> loadAsConsecutive()
+    public Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive()
     {
-        List<FXPlatformFunction<ConsecutiveBase<Expression>, OperatorEntry<Expression>>> ops = new ArrayList<>();
+        List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>> ops = new ArrayList<>();
         for (int i = 0; i < expressions.size() - 1; i++) // TODO length is wrong for unfinished
         {
             int iFinal = i;
-            ops.add(c -> new OperatorEntry<>(Expression.class, saveOp(iFinal), false, c));
+            ops.add((p, s) -> new OperatorEntry<>(Expression.class, saveOp(iFinal), false, p));
         }
         return new Pair<>(Utility.mapList(expressions, e -> e.loadAsSingle()), ops);
     }
 
     @Override
-    public FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>> loadAsSingle()
+    public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        return c -> new Bracketed<Expression>(ConsecutiveBase.EXPRESSION_OPS, c, c, null, null, loadAsConsecutive());
+        return (p, s) -> new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, s, p, null, null, SingleLoader.withSemanticParent(loadAsConsecutive(), s));
     }
 
     // Can be overriden by subclasses if needed:

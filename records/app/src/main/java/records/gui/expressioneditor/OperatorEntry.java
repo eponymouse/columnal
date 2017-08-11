@@ -29,37 +29,30 @@ import java.util.List;
 /**
  * Created by neil on 17/12/2016.
  */
-public class OperatorEntry<EXPRESSION extends @NonNull Object> extends ChildNode<EXPRESSION> implements ConsecutiveChild<EXPRESSION>
+public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> extends EntryNode<EXPRESSION, SEMANTIC_PARENT> implements ConsecutiveChild<EXPRESSION>
 {
     /**
      * The outermost container for the whole thing:
      */
     private final VBox container;
-    /**
-     * The text field for actually entering the operator.
-     */
-    private final TextField textField;
-    private final ObservableList<Node> nodes;
     private final @MonotonicNonNull AutoComplete autoComplete;
-    private final Class<EXPRESSION> operandClass;
 
-    public OperatorEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION> parent)
+
+    public OperatorEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent)
     {
         this(operandClass, "", false, parent);
     }
 
-    public OperatorEntry(Class<EXPRESSION> operandClass, String content, boolean userEntered, ConsecutiveBase<EXPRESSION> parent)
+    public OperatorEntry(Class<EXPRESSION> operandClass, String content, boolean userEntered, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent)
     {
-        super(parent);
-        this.operandClass = operandClass;
-        this.textField = createLeaveableTextField();
+        super(parent, operandClass);
         FXUtility.setPseudoclass(textField, "op-empty", content.isEmpty());
         if (!userEntered)
             textField.setText(content); // Do before auto complete is on the field
         FXUtility.sizeToFit(textField, 5.0, 5.0);
         container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, parent.getParentStyles()).getFirst();
         container.getStyleClass().add("entry");
-        this.nodes = FXCollections.observableArrayList(this.container);
+        this.nodes.setAll(this.container);
 
         this.autoComplete = new AutoComplete(textField, s -> getCompletions(parent, parent.operations.getValidOperators(), s), new CompletionListener(), c -> !parent.operations.isOperatorAlphabet(c) && !parent.terminatedByChars().contains(c));
 
@@ -76,7 +69,7 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object> extends ChildNode
         }
     }
 
-    private static <EXPRESSION extends @NonNull Object> List<Completion> getCompletions(ConsecutiveBase<EXPRESSION> parent, List<Pair<String, @LocalizableKey String>> validOperators, String s)
+    private static <EXPRESSION extends @NonNull Object> List<Completion> getCompletions(ConsecutiveBase<EXPRESSION, ExpressionNodeParent> parent, List<Pair<String, @LocalizableKey String>> validOperators, String s)
     {
         ArrayList<Completion> r = new ArrayList<>();
         for (Character c : parent.terminatedByChars())
@@ -89,18 +82,6 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object> extends ChildNode
         }
         r.removeIf(c -> !c.shouldShow(s));
         return r;
-    }
-
-    @Override
-    public ObservableList<Node> nodes()
-    {
-        return nodes;
-    }
-
-    public ExpressionNode focusWhenShown()
-    {
-        FXUtility.onceNotNull(textField.sceneProperty(), scene -> focus(Focus.RIGHT));
-        return this;
     }
 
     // Returns false if it wasn't blank
@@ -127,26 +108,9 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object> extends ChildNode
     }
 
     @Override
-    public void setHoverDropLeft(boolean selected)
-    {
-        FXUtility.setPseudoclass(container, "exp-hover-drop-left", selected);
-    }
-
-    @Override
     public boolean isBlank()
     {
         return textField.getText().isEmpty();
-    }
-
-    @Override
-    public void focusChanged()
-    {
-        // Nothing to be done
-    }
-
-    public boolean isFocused()
-    {
-        return textField.isFocused();
     }
 
     private static class SimpleCompletion extends Completion
@@ -198,13 +162,6 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object> extends ChildNode
         return textField.getText();
     }
 
-    @Override
-    public void focus(Focus side)
-    {
-        textField.requestFocus();
-        textField.positionCaret(side == Focus.LEFT ? 0 : textField.getLength());
-    }
-
     private class CompletionListener extends SimpleCompletionListener
     {
         public CompletionListener()
@@ -226,11 +183,5 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object> extends ChildNode
             }
             return textField.getText();
         }
-    }
-
-    @Override
-    public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
-    {
-        return ConsecutiveChild.closestDropSingle(this, operandClass, container, loc, forType);
     }
 }

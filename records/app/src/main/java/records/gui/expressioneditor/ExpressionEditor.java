@@ -19,11 +19,11 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.SingleLoader;
 import records.transformations.expression.TypeState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -36,7 +36,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 17/12/2016.
  */
-public class ExpressionEditor extends ConsecutiveBase<Expression>
+public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNodeParent> implements ExpressionNodeParent
 {
     private final FlowPane container;
     private final ObservableObjectValue<@Nullable DataType> type;
@@ -65,11 +65,11 @@ public class ExpressionEditor extends ConsecutiveBase<Expression>
 
     private static class SelectionInfo<E extends @NonNull Object>
     {
-        private final ConsecutiveBase<E> parent;
+        private final ConsecutiveBase<E, ExpressionNodeParent> parent;
         private final ConsecutiveChild<E> start;
         private final ConsecutiveChild<E> end;
 
-        private SelectionInfo(ConsecutiveBase<E> parent, ConsecutiveChild<E> start, ConsecutiveChild<E> end)
+        private SelectionInfo(ConsecutiveBase<E, ExpressionNodeParent> parent, ConsecutiveChild<E> start, ConsecutiveChild<E> end)
         {
             this.parent = parent;
             this.start = start;
@@ -164,10 +164,10 @@ public class ExpressionEditor extends ConsecutiveBase<Expression>
     @SuppressWarnings("initialization") // Because we pass ourselves as this
     private void loadContent(@UnknownInitialization(ExpressionEditor.class) ExpressionEditor this, Expression startingValue)
     {
-        Pair<List<FXPlatformFunction<ConsecutiveBase<Expression>, OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression>, OperatorEntry<Expression>>>> items = startingValue.loadAsConsecutive();
+        Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression>>>> items = startingValue.loadAsConsecutive();
         atomicEdit.set(true);
-        operators.addAll(Utility.mapList(items.getSecond(), f -> f.apply(this)));
-        operands.addAll(Utility.mapList(items.getFirst(), f -> f.apply(this)));
+        operators.addAll(Utility.mapList(items.getSecond(), f -> f.load(this, this)));
+        operands.addAll(Utility.mapList(items.getFirst(), f -> f.load(this, this)));
         atomicEdit.set(false);
     }
 
@@ -177,7 +177,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression>
     }
 
 //    @Override
-//    public @Nullable DataType getType(ExpressionNode child)
+//    public @Nullable DataType getType(EEDisplayNode child)
 //    {
 //        return type;
 //    }
@@ -203,7 +203,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression>
     }
 
     @Override
-    public List<Pair<String, @Nullable DataType>> getAvailableVariables(ExpressionNode child)
+    public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
     {
         // No variables from outside the expression:
         return Collections.emptyList();
