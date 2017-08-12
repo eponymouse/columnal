@@ -132,7 +132,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
      * An optional component appearing after the text field, for specifying units.
      * Surrounded by curly brackets.
      */
-    private @Nullable UnitCompound unitSpecifier;
+    private @Nullable UnitCompoundBase unitSpecifier;
 
     /**
      * The semantic parent which can be asked about available variables, etc
@@ -498,12 +498,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @Override
-    public @Nullable DataType inferType()
-    {
-        return null;
-    }
-
-    @Override
     public Expression save(ErrorDisplayerRecord<Expression> errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         if (status.get() == Status.COLUMN_REFERENCE_SAME_ROW || status.get() == Status.COLUMN_REFERENCE_WHOLE)
@@ -664,7 +658,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             {
                 @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
                 if (ksc == bracketCompletion)
-                    parent.replace(GeneralExpressionEntry.this, new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, parent, parent, new Label("("), new Label(")"), null).focusWhenShown());
+                {
+                    BracketedExpression bracketedExpression = new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, parent, new Label("("), new Label(")"), null);
+                    bracketedExpression.focusWhenShown();
+                    parent.replace(GeneralExpressionEntry.this, bracketedExpression);
+                }
                 else if (ksc == stringCompletion)
                     parent.replace(GeneralExpressionEntry.this, focusWhenShown(new StringLiteralNode("", parent)));
                 else if (ksc == unitCompletion)
@@ -733,7 +731,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         nodes.setAll(container);
         if (unitSpecifier == null)
         {
-            unitSpecifier = new UnitCompound(this, true);
+            unitSpecifier = new UnitCompoundBase(this, true);
         }
         nodes.addAll(unitSpecifier.nodes());
         // TODO need a listener on the sub-nodes

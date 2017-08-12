@@ -1,17 +1,46 @@
 package records.gui.expressioneditor;
 
-import javafx.scene.control.Label;
+import javafx.beans.value.ObservableObjectValue;
+import javafx.geometry.Point2D;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.transformations.expression.UnitExpression;
-import utility.FXPlatformFunction;
 import utility.Pair;
+import utility.Utility;
+import utility.gui.FXUtility;
 
-import java.util.Collections;
-import java.util.List;
+import java.util.Comparator;
 
-public class UnitCompound extends Consecutive<UnitExpression, UnitNodeParent> implements OperandNode<UnitExpression>
+public class UnitCompound extends UnitCompoundBase implements OperandNode<UnitExpression>
 {
-    public UnitCompound(EEDisplayNodeParent parent, boolean topLevel)
+    private final ConsecutiveBase<UnitExpression, UnitNodeParent> unitParent;
+
+    public UnitCompound(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel)
     {
-        super(UNIT_OPS, parent, new Label(topLevel ? "{" : "("), new Label(topLevel ? "}" : ")"), "unit-compound", new Pair<List<FXPlatformFunction<ConsecutiveBase<UnitExpression, Void>, OperandNode<UnitExpression>>>, List<FXPlatformFunction<ConsecutiveBase<UnitExpression, Void>, OperatorEntry<UnitExpression, Void>>>>(Collections.singletonList((ConsecutiveBase<UnitExpression, Void> p) -> new UnitEntry(p, "")), Collections.emptyList()), topLevel ? "}" : ")");
+        super(parent, topLevel);
+        this.unitParent = parent;
+    }
+
+    @Override
+    public ConsecutiveBase<UnitExpression, ?> getParent()
+    {
+        return unitParent;
+    }
+
+    @Override
+    public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
+    {
+        return Utility.streamNullable(ConsecutiveChild.closestDropSingle(this, operations.getOperandClass(), nodes().get(0), loc, forType), super.findClosestDrop(loc, forType)).min(Comparator.comparing(p -> p.getSecond())).orElse(null);
+    }
+
+    @Override
+    public void setHoverDropLeft(boolean on)
+    {
+        FXUtility.setPseudoclass(nodes().get(0), "exp-hover-drop-left", on);
+    }
+
+    @Override
+    public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
+    {
+        return null;
     }
 }
