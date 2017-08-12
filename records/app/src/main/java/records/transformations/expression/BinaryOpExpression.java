@@ -159,4 +159,9 @@ public abstract class BinaryOpExpression extends Expression
     {
         return (p, s) -> new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, p, null, null, SingleLoader.withSemanticParent(loadAsConsecutive(), s));
     }
+
+    public String _test_getOperatorEntry()
+    {
+        return saveOp();
+    }
 }

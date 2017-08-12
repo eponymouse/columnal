@@ -22,15 +22,7 @@ import records.importers.ClipboardUtils;
 import records.transformations.Filter;
 import records.transformations.Transform;
 import records.transformations.TransformationInfo;
-import records.transformations.expression.BooleanLiteral;
-import records.transformations.expression.CallExpression;
-import records.transformations.expression.ColumnReference;
-import records.transformations.expression.Expression;
-import records.transformations.expression.Literal;
-import records.transformations.expression.MatchExpression;
-import records.transformations.expression.NaryOpExpression;
-import records.transformations.expression.TagExpression;
-import records.transformations.expression.TupleExpression;
+import records.transformations.expression.*;
 import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
@@ -171,6 +163,13 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
                     write(n._test_getOperatorEntry(i));
                 }
             }
+        }
+        else if (BinaryOpExpression.class.isAssignableFrom(c))
+        {
+            BinaryOpExpression b = (BinaryOpExpression)expression;
+            enterExpression(b.getLHS(), r);
+            write(b._test_getOperatorEntry());
+            enterExpression(b.getRHS(), r);
         }
         else
         {

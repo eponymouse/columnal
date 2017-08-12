@@ -74,7 +74,7 @@ public class NumericLiteral extends Literal
         if (unit == null || unit.equals(Unit.SCALAR))
             return num;
         else
-            return num + "{" + unit.toString() + "}";
+            return num + "{" + unit.save(true) + "}";
     }
 
     private String numberAsString()
