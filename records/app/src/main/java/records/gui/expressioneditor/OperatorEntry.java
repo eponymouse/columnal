@@ -69,7 +69,7 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
         }
     }
 
-    private static <EXPRESSION extends @NonNull Object> List<Completion> getCompletions(ConsecutiveBase<EXPRESSION, ExpressionNodeParent> parent, List<Pair<String, @LocalizableKey String>> validOperators, String s)
+    private static <EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> List<Completion> getCompletions(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, List<Pair<String, @LocalizableKey String>> validOperators, String s)
     {
         ArrayList<Completion> r = new ArrayList<>();
         for (Character c : parent.terminatedByChars())

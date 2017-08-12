@@ -6,6 +6,7 @@ import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitCompound;
+import records.gui.expressioneditor.UnitNodeParent;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -41,7 +42,7 @@ public class UnitDivideExpression extends UnitExpression
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public OperandNode<UnitExpression> edit(ConsecutiveBase<UnitExpression, ExpressionNodeParent> parent, boolean topLevel)
+    public OperandNode<UnitExpression> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel)
     {
         return new UnitCompound(parent, topLevel);
     }

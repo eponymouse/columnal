@@ -54,7 +54,21 @@ public class PatternMatchNode implements EEDisplayNodeParent, OperandNode<Expres
     {
         this.parent = parent;
         this.matchLabel = ExpressionEditorUtil.keyword("match", "match", this, getParentStyles());
-        this.source = new Consecutive<>(ConsecutiveBase.EXPRESSION_OPS, this, matchLabel, null, "match", sourceAndClauses == null ? null : SingleLoader.withSemanticParent(sourceAndClauses.getFirst().loadAsConsecutive(), this), ')').prompt("expression");
+        this.source = new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, matchLabel, null, "match", sourceAndClauses == null ? null : SingleLoader.withSemanticParent(sourceAndClauses.getFirst().loadAsConsecutive(), this), ')') {
+            @Override
+            public boolean isFocused()
+            {
+                return childIsFocused();
+            }
+
+            @Override
+            protected ExpressionNodeParent getThisAsSemanticParent()
+            {
+                return PatternMatchNode.this;
+            }
+
+            { prompt("expression"); }
+        };
         this.clauses = FXCollections.observableArrayList();
         this.nodes = FXCollections.observableArrayList();
         this.childrenNodeListener = c -> {
@@ -121,7 +135,7 @@ public class PatternMatchNode implements EEDisplayNodeParent, OperandNode<Expres
     {
         // They are only asking for parent vars, and we don't affect those
         // ClauseNode takes care of the variables it introduces
-        return parent.getAvailableVariables(this);
+        return parent.getThisAsSemanticParent().getAvailableVariables(this);
     }
 
     @Override
@@ -196,12 +210,6 @@ public class PatternMatchNode implements EEDisplayNodeParent, OperandNode<Expres
             source.focus(side);
         else
             clauses.get(clauses.size() - 1).focus(side);
-    }
-
-    @Override
-    public @Nullable DataType inferType()
-    {
-        return null;
     }
 
     @Override

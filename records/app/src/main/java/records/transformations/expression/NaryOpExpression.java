@@ -147,7 +147,7 @@ public abstract class NaryOpExpression extends Expression
     @Override
     public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        return (p, s) -> new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, s, p, null, null, SingleLoader.withSemanticParent(loadAsConsecutive(), s));
+        return (p, s) -> new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, p, null, null, SingleLoader.withSemanticParent(loadAsConsecutive(), s));
     }
 
     // Can be overriden by subclasses if needed:

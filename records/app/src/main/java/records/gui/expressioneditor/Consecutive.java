@@ -83,12 +83,6 @@ public abstract class Consecutive<EXPRESSION extends @NonNull Object, SEMANTIC_P
     }
 
     @Override
-    public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
-    {
-        return parent.getAvailableVariables(this);
-    }
-
-    @Override
     public ImmutableSet<Character> terminatedByChars()
     {
         return endCharacters;

@@ -64,12 +64,6 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     }
 
     @Override
-    public @Nullable DataType inferType()
-    {
-        return DataType.TEXT;
-    }
-
-    @Override
     public Expression save(ErrorDisplayerRecord<Expression> errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         return errorDisplayer.record(this, new records.transformations.expression.StringLiteral(textField.getText()));

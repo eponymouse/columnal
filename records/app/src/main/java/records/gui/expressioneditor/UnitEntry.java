@@ -8,9 +8,9 @@ import records.transformations.expression.UnitExpression;
 import utility.FXPlatformConsumer;
 
 // Like GeneralExpressionEntry but for units only
-public class UnitEntry extends GeneralOperandEntry<UnitExpression, Void> implements OperandNode<UnitExpression>, ErrorDisplayer
+public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParent> implements OperandNode<UnitExpression>, ErrorDisplayer
 {
-    public UnitEntry(ConsecutiveBase<UnitExpression, ExpressionNodeParent> parent, String initialContent)
+    public UnitEntry(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, String initialContent)
     {
         super(UnitExpression.class, parent);
         this.nodes.setAll(FXCollections.observableArrayList(textField));

@@ -26,11 +26,6 @@ public @Interned interface OperandNode<@NonNull EXPRESSION> extends EEDisplayNod
         return Collections.emptyList();
     }
 
-    // TODO document this once it's used
-    // TODO: but what the hell was it for?  I think the idea was if you infer type
-    // of part of expression, you can work out expected type for another part.
-    public abstract @Nullable DataType inferType();
-
     /**
      * Sets the prompt text for this node
      */

@@ -318,6 +318,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
             this(vBox, new OpenBracketShape(), new OpenBracketShape() {{setScaleX(-1);}}, args);
         }
 
+        @OnThread(Tag.FXPlatform)
         @Override
         protected ExpressionNodeParent getThisAsSemanticParent()
         {
@@ -357,6 +358,13 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
                 openBracket.setInnerStyleBegin(newValue);
             if (observable == innerCloseStyle && closeBracket != null)
                 closeBracket.setInnerStyleBegin(newValue);
+        }
+
+        @OnThread(Tag.FXPlatform)
+        @Override
+        public boolean isFocused()
+        {
+            return childIsFocused();
         }
     }
 

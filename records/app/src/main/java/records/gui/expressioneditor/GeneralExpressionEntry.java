@@ -132,7 +132,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
      * An optional component appearing after the text field, for specifying units.
      * Surrounded by curly brackets.
      */
-    private @Nullable BracketedExpression unitSpecifier;
+    private @Nullable UnitCompound unitSpecifier;
 
     /**
      * The semantic parent which can be asked about available variables, etc

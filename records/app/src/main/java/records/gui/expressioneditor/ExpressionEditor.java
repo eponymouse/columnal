@@ -39,7 +39,7 @@ import java.util.stream.Stream;
 public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNodeParent> implements ExpressionNodeParent
 {
     private final FlowPane container;
-    private final ObservableObjectValue<@Nullable DataType> type;
+    private final ObservableObjectValue<@Nullable DataType> expectedType;
     private final @Nullable Table srcTable;
     private final FXPlatformConsumer<@NonNull Expression> onChange;
     private final TableManager tableManager;
@@ -63,13 +63,19 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         */
     }
 
+    @Override
+    public boolean isFocused()
+    {
+        return childIsFocused();
+    }
+
     private static class SelectionInfo<E extends @NonNull Object>
     {
-        private final ConsecutiveBase<E, ExpressionNodeParent> parent;
+        private final ConsecutiveBase<E, ?> parent;
         private final ConsecutiveChild<E> start;
         private final ConsecutiveChild<E> end;
 
-        private SelectionInfo(ConsecutiveBase<E, ExpressionNodeParent> parent, ConsecutiveChild<E> start, ConsecutiveChild<E> end)
+        private SelectionInfo(ConsecutiveBase<E, ?> parent, ConsecutiveChild<E> start, ConsecutiveChild<E> end)
         {
             this.parent = parent;
             this.start = start;
@@ -98,7 +104,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     }
 
     @SuppressWarnings("initialization")
-    public ExpressionEditor(Expression startingValue, @Nullable Table srcTable, ObservableObjectValue<@Nullable DataType> type, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
+    public ExpressionEditor(Expression startingValue, @Nullable Table srcTable, ObservableObjectValue<@Nullable DataType> expectedType, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
         super(EXPRESSION_OPS,  null, null, "");
         this.container = new FlowPane();
@@ -106,7 +112,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         container.getStyleClass().add("expression-editor");
         container.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
         this.srcTable = srcTable;
-        this.type = type;
+        this.expectedType = expectedType;
         container.getChildren().setAll(nodes());
         FXUtility.listen(nodes(), c -> {
             container.getChildren().setAll(nodes());
@@ -164,7 +170,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     @SuppressWarnings("initialization") // Because we pass ourselves as this
     private void loadContent(@UnknownInitialization(ExpressionEditor.class) ExpressionEditor this, Expression startingValue)
     {
-        Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression>>>> items = startingValue.loadAsConsecutive();
+        Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> items = startingValue.loadAsConsecutive();
         atomicEdit.set(true);
         operators.addAll(Utility.mapList(items.getSecond(), f -> f.load(this, this)));
         operands.addAll(Utility.mapList(items.getFirst(), f -> f.load(this, this)));
@@ -235,6 +241,12 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     }
 
     @Override
+    protected ExpressionNodeParent getThisAsSemanticParent()
+    {
+        return this;
+    }
+
+    @Override
     protected void selfChanged()
     {
         clearSelection();
@@ -269,12 +281,6 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
                     showError(msg, Collections.emptyList());
             }
         }
-    }
-
-    @Override
-    protected List<Pair<DataType, List<String>>> getSuggestedParentContext() throws UserException, InternalException
-    {
-        return Collections.emptyList();
     }
 
     public TypeManager getTypeManager()
@@ -314,7 +320,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
             clearSelection();
         }
 
-        selection = new SelectionInfo<>(src.getParent(), src, src);
+        selection = new SelectionInfo<E>(src.getParent(), src, src);
         selection.markSelection(true);
     }
 
@@ -388,5 +394,15 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         {
             selection.removeItems();
         }
+    }
+
+    @Override
+    public List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException
+    {
+        @Nullable DataType t = expectedType.get();
+        if (t == null)
+            return Collections.emptyList();
+        else
+            return Collections.singletonList(new Pair<>(t, Collections.emptyList()));
     }
 }

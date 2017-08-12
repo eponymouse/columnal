@@ -63,7 +63,8 @@ public class ClauseNode implements EEDisplayNodeParent, EEDisplayNode, Expressio
         this.matches = FXCollections.observableArrayList();
         this.nodes = FXCollections.observableArrayList();
         // Must initialize outcome first because updateNodes will use it:
-        this.outcome = makeConsecutive("\u2794", patternsAndGuardsToOutcome == null ? null : patternsAndGuardsToOutcome.getSecond()).prompt("value");
+        this.outcome = makeConsecutive("\u2794", patternsAndGuardsToOutcome == null ? null : patternsAndGuardsToOutcome.getSecond());
+        outcome.prompt("value");
         FXUtility.listen(matches, c -> {
             updateNodes();
             updateListeners();
@@ -83,7 +84,12 @@ public class ClauseNode implements EEDisplayNodeParent, EEDisplayNode, Expressio
     @NotNull
     private Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> makeNewCase(@Nullable Expression caseExpression, @Nullable Expression guardExpression)
     {
-        return new Pair<>(makeConsecutive("case", caseExpression).prompt("pattern"), guardExpression == null ? null : makeConsecutive("where", guardExpression).prompt("condition"));
+        Consecutive<Expression, ExpressionNodeParent> pattern = makeConsecutive("case", caseExpression);
+        pattern.prompt("pattern");
+        Consecutive<Expression, ExpressionNodeParent> guard = guardExpression == null ? null : makeConsecutive("where", guardExpression);
+        if (guard != null)
+            guard.prompt("condition");
+        return new Pair<>(pattern, guard);
     }
 
     private void updateListeners(@UnknownInitialization(ClauseNode.class) ClauseNode this)
@@ -134,7 +140,20 @@ public class ClauseNode implements EEDisplayNodeParent, EEDisplayNode, Expressio
     @SuppressWarnings("initialization") // Because of Consecutive
     private Consecutive<Expression, ExpressionNodeParent> makeConsecutive(@UnknownInitialization(Object.class)ClauseNode this, @Nullable String prefix, @Nullable Expression startingContent)
     {
-        return new Consecutive<>(ConsecutiveBase.EXPRESSION_OPS, this, prefix == null ? null : ExpressionEditorUtil.keyword(prefix, "match", parent, getParentStyles()), null, "match", startingContent == null ? null : SingleLoader.withSemanticParent(startingContent.loadAsConsecutive(), this));
+        return new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, prefix == null ? null : ExpressionEditorUtil.keyword(prefix, "match", parent, getParentStyles()), null, "match", startingContent == null ? null : SingleLoader.withSemanticParent(startingContent.loadAsConsecutive(), this)) {
+
+            @Override
+            public boolean isFocused()
+            {
+                return childIsFocused();
+            }
+
+            @Override
+            protected ExpressionNodeParent getThisAsSemanticParent()
+            {
+                return ClauseNode.this;
+            }
+        };
     }
 
     @Override

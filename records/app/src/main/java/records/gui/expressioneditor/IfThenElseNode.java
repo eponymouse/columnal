@@ -55,9 +55,9 @@ public class IfThenElseNode implements OperandNode<Expression>, EEDisplayNodePar
         thenLabel = ExpressionEditorUtil.keyword("then", "if-keyword", this, getParentStyles());
         elseLabel = ExpressionEditorUtil.keyword("else", "if-keyword", this, getParentStyles());
 
-        condition = new @Interned Consecutive<>(ConsecutiveBase.EXPRESSION_OPS, this, ifLabel, null, "if-condition", null);
-        thenPart = new @Interned Consecutive<>(ConsecutiveBase.EXPRESSION_OPS, this, thenLabel, null, "if-then", null);
-        elsePart = new @Interned Consecutive<>(ConsecutiveBase.EXPRESSION_OPS, this, elseLabel, null, "if-else", null);
+        condition = new SubConsecutive(ifLabel, "if-condition");
+        thenPart = new SubConsecutive(thenLabel, "if-then");
+        elsePart = new SubConsecutive(elseLabel, "if-else");
 
         FXUtility.listen(condition.nodes(), c -> updateNodes());
         FXUtility.listen(thenPart.nodes(), c -> updateNodes());
@@ -124,13 +124,6 @@ public class IfThenElseNode implements OperandNode<Expression>, EEDisplayNodePar
             condition.focus(Focus.LEFT);
         else
             elsePart.focus(Focus.RIGHT);
-    }
-
-    @Override
-    public @Nullable DataType inferType()
-    {
-        // TODO
-        return null;
     }
 
     @Override
@@ -223,5 +216,25 @@ public class IfThenElseNode implements OperandNode<Expression>, EEDisplayNodePar
     public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
     {
         condition.showError(error, quickFixes);
+    }
+
+    private class SubConsecutive extends Consecutive<Expression, ExpressionNodeParent>
+    {
+        public SubConsecutive(Node label, String style)
+        {
+            super(ConsecutiveBase.EXPRESSION_OPS, IfThenElseNode.this, label, null, style, null);
+        }
+
+        @Override
+        protected ExpressionNodeParent getThisAsSemanticParent()
+        {
+            return IfThenElseNode.this;
+        }
+
+        @Override
+        public boolean isFocused()
+        {
+            return childIsFocused();
+        }
     }
 }

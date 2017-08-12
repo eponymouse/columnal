@@ -12,6 +12,7 @@ import records.grammar.UnitParser.UnitContext;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.UnitNodeParent;
 import records.transformations.expression.UnitTimesExpression.Op;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -76,5 +77,5 @@ public abstract class UnitExpression
     public abstract String save(boolean topLevel);
 
     @OnThread(Tag.FXPlatform)
-    public abstract OperandNode<UnitExpression> edit(ConsecutiveBase<UnitExpression, ExpressionNodeParent> parent, boolean topLevel);
+    public abstract OperandNode<UnitExpression> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel);
 }

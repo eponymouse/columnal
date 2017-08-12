@@ -35,7 +35,7 @@ public class TagExpressionNode extends SurroundNode implements ExpressionNodePar
     @Override
     public List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException
     {
-        List<Pair<DataType, List<String>>> context = parent.getSuggestedContext(this);
+        List<Pair<DataType, List<String>>> context = parent.getThisAsSemanticParent().getSuggestedContext(this);
         for (Pair<DataType, List<String>> option : context)
         {
             try
@@ -61,12 +61,6 @@ public class TagExpressionNode extends SurroundNode implements ExpressionNodePar
     public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
     {
         return semanticParent.getAvailableVariables(this);
-    }
-
-    @Override
-    public @Nullable DataType inferType()
-    {
-        return null;
     }
 
     @Override

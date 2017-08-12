@@ -21,12 +21,12 @@ import java.util.List;
  */
 public class BracketedExpression extends Consecutive<Expression, ExpressionNodeParent> implements OperandNode<Expression>, ExpressionNodeParent
 {
-    private final ExpressionNodeParent semanticParent;
+    private final ConsecutiveBase<Expression, ExpressionNodeParent> consecParent;
 
-    public BracketedExpression(OperandOps<Expression, ExpressionNodeParent> operations, ExpressionNodeParent semanticParent, EEDisplayNodeParent expParent, @Nullable Node prefixNode, @Nullable Node suffixNode, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, OperatorEntry<Expression, ExpressionNodeParent>>>> content)
+    public BracketedExpression(OperandOps<Expression, ExpressionNodeParent> operations, ConsecutiveBase<Expression, ExpressionNodeParent> parent, @Nullable Node prefixNode, @Nullable Node suffixNode, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, OperatorEntry<Expression, ExpressionNodeParent>>>> content)
     {
-        super(operations, expParent, prefixNode, suffixNode, "bracket", content, ')');
-        this.semanticParent = semanticParent;
+        super(operations, parent, prefixNode, suffixNode, "bracket", content, ')');
+        this.consecParent = parent;
     }
 
     @Override
@@ -66,14 +66,21 @@ public class BracketedExpression extends Consecutive<Expression, ExpressionNodeP
     }
 
     @Override
-    protected List<Pair<DataType, List<String>>> getSuggestedParentContext() throws UserException, InternalException
-    {
-        return semanticParent.getSuggestedContext(this);
-    }
-
-    @Override
     public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
         return Utility.streamNullable(ConsecutiveChild.closestDropSingle(this, operations.getOperandClass(), nodes().get(0), loc, forType), super.findClosestDrop(loc, forType)).min(Comparator.comparing(p -> p.getSecond())).orElse(null);
+    }
+
+    @Override
+    public List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException
+    {
+        // Bracketed context identical to parent context:
+        return consecParent.getThisAsSemanticParent().getSuggestedContext(this);
+    }
+
+    @Override
+    public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
+    {
+        return consecParent.getThisAsSemanticParent().getAvailableVariables(this);
     }
 }

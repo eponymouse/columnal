@@ -292,62 +292,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         return index;
     }
 
-    @Override
-    public List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException
-    {
-        List<Pair<DataType, List<String>>> r = new ArrayList<>();
-
-        int childIndex = operands.indexOf(child);
-        if (childIndex == -1)
-            throw new InternalException("Asking for suggestions from non-child");
-
-
-        // We can ask parent for our context, then it's a matter of translating
-        // it to our children.  If we have multiple children with operators
-        // (except ","), we say there's no context.  If we have multiple children
-        // and all-comma operators, we can decompose a tuple suggestion.
-        List<Pair<DataType, List<String>>> contextFromParent = getSuggestedParentContext();
-
-        if (operators.isEmpty())
-        {
-            r.addAll(contextFromParent);
-        }
-            /* We can't decompose the string so this won't work...
-            else if (operators.stream().allMatch(op -> op.get().equals(",")))
-            {
-
-                r.addAll(contextFromParent.stream().filter(p ->
-                {
-                    try
-                    {
-                        return p.getFirst().isTuple() && p.getFirst().getMemberType().size() == operands.size();
-                    }
-                    catch (InternalException e)
-                    {
-                        Utility.log(e);
-                        return false;
-                    }
-                }).map().collect(Collectors.toList()));
-            }
-            */
-
-        // We can look for comparison expressions with columns and make suggestions:
-        if (operators.size() == 1 && (operators.get(0).equals("=") || operators.get(0).equals("<>")))
-        {
-            // If childIndex is 1, we want to look at 0 and vice versa:
-            OperandNode comparator = operands.get(1 - childIndex);
-            if (comparator instanceof GeneralExpressionEntry)
-            {
-                @Nullable Column column = ((GeneralExpressionEntry)comparator).getColumn();
-                if (column != null)
-                {
-                    // TODO get most frequent values (may need a callback!)
-                }
-            }
-        }
-        // TODO also <, >=, etc
-        return r;
-    }
 
     //protected abstract List<Pair<DataType,List<String>>> getSuggestedParentContext() throws UserException, InternalException;
 
@@ -447,11 +391,10 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         operands.get(0).focusWhenShown();
     }
 
-    public ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> prompt(String value)
+    public void prompt(String value)
     {
         prompt = value;
         updatePrompt();
-        return this;
     }
 
     // If an expression is valid, it will not have an operator last, e.g.
@@ -563,6 +506,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
             // We presume that they intend to add operatorentry at odd indexes
             // and operator at even indexes
+            @SuppressWarnings("unchecked")
             @Override
             public void add(int index, ConsecutiveChild<EXPRESSION> element)
             {
@@ -593,6 +537,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         return Utility.filterOutNulls(Stream.<ConsecutiveChild<EXPRESSION>>concat(operands.stream(), operators.stream()).<@Nullable Pair<ConsecutiveChild<? extends C>, Double>>map(n -> n.findClosestDrop(loc, forType))).min(Comparator.comparing(p -> p.getSecond())).get();
     }
 
+    @SuppressWarnings("unchecked")
     public @Nullable CopiedItems copyItems(ConsecutiveChild<EXPRESSION> start, ConsecutiveChild<EXPRESSION> end)
     {
         List<ConsecutiveChild<@NonNull EXPRESSION>> all = getAllChildren();
@@ -978,7 +923,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
     }
 
-    private static class UnitExpressionOps implements OperandOps<UnitExpression, Void>
+    private static class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     {
         private final static ImmutableList<Pair<String, @LocalizableKey String>> OPERATORS = ImmutableList.<Pair<String, @LocalizableKey String>>copyOf(Arrays.<Pair<String, @LocalizableKey String>>asList(
             opD("*", "op.times"),
@@ -988,7 +933,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         private final Set<Integer> ALPHABET = OPERATORS.stream().map(p -> p.getFirst()).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
         @Override
-        public OperandNode<UnitExpression> makeGeneral(ConsecutiveBase<UnitExpression, ExpressionNodeParent> parent, @Nullable String initialContent)
+        public OperandNode<UnitExpression> makeGeneral(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, UnitNodeParent semanticParent, @Nullable String initialContent)
         {
             return new UnitEntry(parent, initialContent == null ? "" : initialContent);
         }
@@ -1029,7 +974,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
                 return errorDisplayers.record(displayer, new UnitTimesExpression(ImmutableList.copyOf(operands), ops.stream().map(o -> o.equals("*") ? UnitTimesExpression.Op.STAR : UnitTimesExpression.Op.SPACE).collect(ImmutableList.toImmutableList())));
             }
 
-            return null;
+            return new InvalidOperatorUnitExpression();
         }
 
         @Override
@@ -1039,12 +984,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
 
         @Override
-        public OperandNode<UnitExpression> loadOperand(String src, ConsecutiveBase<UnitExpression, ExpressionNodeParent> parent) throws UserException, InternalException
+        public OperandNode<UnitExpression> loadOperand(String src, ConsecutiveBase<UnitExpression, UnitNodeParent> parent) throws UserException, InternalException
         {
             return UnitExpression.load(src).edit(parent, false);
         }
     }
 
     public static final OperandOps<Expression, ExpressionNodeParent> EXPRESSION_OPS = new ExpressionOps();
-    public static final OperandOps<UnitExpression, Void> UNIT_OPS = new UnitExpressionOps();
+    public static final OperandOps<UnitExpression, UnitNodeParent> UNIT_OPS = new UnitExpressionOps();
 }

@@ -30,12 +30,6 @@ public class FunctionNode extends SurroundNode implements ExpressionNodeParent
     }
 
     @Override
-    public @Nullable DataType inferType()
-    {
-        return null;
-    }
-
-    @Override
     public void prompt(String prompt)
     {
         // Ignore
