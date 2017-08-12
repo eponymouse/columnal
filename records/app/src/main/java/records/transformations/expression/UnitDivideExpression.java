@@ -46,4 +46,14 @@ public class UnitDivideExpression extends UnitExpression
     {
         return new UnitCompound(parent, topLevel);
     }
+
+    public UnitExpression getNumerator()
+    {
+        return numerator;
+    }
+
+    public UnitExpression getDenominator()
+    {
+        return denominator;
+    }
 }

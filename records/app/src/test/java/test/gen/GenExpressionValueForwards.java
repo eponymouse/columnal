@@ -148,7 +148,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                     () ->
                     {
                         @Value Number number = TestUtil.generateNumberV(r, gs);
-                        return literal(number, new NumericLiteral(number, displayInfo.getUnit()));
+                        return literal(number, new NumericLiteral(number, makeUnitExpression(displayInfo.getUnit())));
                     }
                 ), l(() -> {
                     int numArgs = r.nextInt(2, 6);
@@ -173,7 +173,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                     Pair<List<@Value Object>, Expression> numerator = make(DataType.number(new NumberInfo(numUnit, null)), maxLevels - 1);
                     Pair<List<@Value Object>, Expression> denominator = make(DataType.number(new NumberInfo(denomUnit, null)), maxLevels - 1);
                     // We avoid divide by zeros and return -7 in that case (arbitrary pick unlikely to come up by accident/bug):
-                    return map2(numerator, denominator, (top, bottom) -> Utility.compareValues(bottom, DataTypeUtility.value(0)) == 0 ? DataTypeUtility.value(-7) : DataTypeUtility.value(Utility.divideNumbers((Number) top, (Number) bottom)), (topE, bottomE) -> new IfThenElseExpression(new EqualExpression(bottomE, new NumericLiteral(0, denomUnit)), new NumericLiteral(-7, displayInfo.getUnit()), new DivideExpression(topE, bottomE)));
+                    return map2(numerator, denominator, (top, bottom) -> Utility.compareValues(bottom, DataTypeUtility.value(0)) == 0 ? DataTypeUtility.value(-7) : DataTypeUtility.value(Utility.divideNumbers((Number) top, (Number) bottom)), (topE, bottomE) -> new IfThenElseExpression(new EqualExpression(bottomE, new NumericLiteral(0, makeUnitExpression(denomUnit))), new NumericLiteral(-7, makeUnitExpression(displayInfo.getUnit())), new DivideExpression(topE, bottomE)));
                 }, /* TODO put RaiseExpression back again
                 () ->
                 {
@@ -314,7 +314,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                             {
                                 YearMonth yearMonth = YearMonth.from((TemporalAccessor) v);
                                 return LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), day);
-                            }, e -> new CallExpression("date", e, new NumericLiteral(day, getUnit("day"))));
+                            }, e -> new CallExpression("date", e, new NumericLiteral(day, makeUnitExpression(getUnit("day")))));
                         });
                         break;
                     case YEARMONTH:
@@ -405,9 +405,9 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                             int month = r.nextInt(1, 12);
                             int day = r.nextInt(1, 28);
                             return literal(LocalDate.of(year, month, day), new CallExpression("date",
-                                new NumericLiteral(year, getUnit("year")),
-                                new NumericLiteral(month, getUnit("month")),
-                                new NumericLiteral(day, getUnit("day"))
+                                new NumericLiteral(year, makeUnitExpression(getUnit("year"))),
+                                new NumericLiteral(month, makeUnitExpression(getUnit("month"))),
+                                new NumericLiteral(day, makeUnitExpression(getUnit("day")))
                             ));
                         });
                         break;
@@ -416,8 +416,8 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                             int year = r.nextInt(1, 9999);
                             int month = r.nextInt(1, 12);
                             return literal(YearMonth.of(year, month), new CallExpression("dateym",
-                                new NumericLiteral(year, getUnit("year")),
-                                new NumericLiteral(month, getUnit("month"))
+                                new NumericLiteral(year, makeUnitExpression(getUnit("year"))),
+                                new NumericLiteral(month, makeUnitExpression(getUnit("month")))
                             ));
                         });
                         break;
@@ -428,9 +428,9 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                             int second = r.nextInt(0, 59);
                             int nano = r.nextInt(0, 999999999);
                             return literal(LocalTime.of(hour, minute, second, nano), new CallExpression("time",
-                                new NumericLiteral(hour, getUnit("hour")),
-                                new NumericLiteral(minute, getUnit("min")),
-                                new NumericLiteral(BigDecimal.valueOf(nano).divide(BigDecimal.valueOf(1_000_000_000)).add(BigDecimal.valueOf(second)), getUnit("s"))
+                                new NumericLiteral(hour, makeUnitExpression(getUnit("hour"))),
+                                new NumericLiteral(minute, makeUnitExpression(getUnit("min"))),
+                                new NumericLiteral(BigDecimal.valueOf(nano).divide(BigDecimal.valueOf(1_000_000_000)).add(BigDecimal.valueOf(second)), makeUnitExpression(getUnit("s")))
                             ));
                         });
                 }

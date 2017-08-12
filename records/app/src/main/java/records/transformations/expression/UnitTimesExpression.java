@@ -63,4 +63,9 @@ public class UnitTimesExpression extends UnitExpression
     {
         return new UnitCompound(parent, topLevel);
     }
+
+    public ImmutableList<UnitExpression> getOperands()
+    {
+        return operands;
+    }
 }

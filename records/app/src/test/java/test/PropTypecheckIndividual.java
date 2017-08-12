@@ -22,7 +22,7 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.*;
@@ -32,7 +32,6 @@ import test.gen.GenDataType;
 import test.gen.GenUnit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -96,13 +95,13 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public Pair<List<FXPlatformFunction<ConsecutiveBase, OperandNode>>, List<FXPlatformFunction<ConsecutiveBase, OperatorEntry>>> loadAsConsecutive()
+        public Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive()
         {
             throw new RuntimeException("Testing");
         }
 
         @Override
-        public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
+        public SingleLoader<OperandNode<Expression>> loadAsSingle()
         {
             throw new RuntimeException("Testing");
         }
@@ -389,7 +388,7 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public FXPlatformFunction<ConsecutiveBase, OperandNode> loadAsSingle()
+        public SingleLoader<OperandNode<Expression>> loadAsSingle()
         {
             throw new RuntimeException("N/A");
         }

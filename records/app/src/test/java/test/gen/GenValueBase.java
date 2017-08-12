@@ -2,6 +2,7 @@ package test.gen;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableList.Builder;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.time.ZoneOffsetGenerator;
@@ -9,6 +10,15 @@ import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
+import records.data.unit.SingleUnit;
+import records.data.unit.Unit;
+import records.transformations.expression.SingleUnitExpression;
+import records.transformations.expression.UnitDivideExpression;
+import records.transformations.expression.UnitExpression;
+import records.transformations.expression.UnitRaiseExpression;
+import records.transformations.expression.UnitTimesExpression;
+import records.transformations.expression.UnitTimesExpression.Op;
+import utility.Pair;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
@@ -27,8 +37,12 @@ import java.time.YearMonth;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Random;
+import java.util.stream.Collectors;
 
 import static test.TestUtil.distinctTypes;
 import static test.TestUtil.generateNumberV;
@@ -146,5 +160,88 @@ public abstract class GenValueBase<T> extends Generator<T>
     public static DataType makeType(SourceOfRandomness r)
     {
         return r.choose(distinctTypes);
+    }
+
+    public UnitExpression makeUnitExpression(Unit unit)
+    {
+        // TODO make more varied unit expressions which cancel out
+
+        if (unit.getDetails().isEmpty())
+            return new SingleUnitExpression("1");
+
+        // TODO add UnitRaiseExpression more (don't always split units into single powers)
+
+        // Flatten into a list of units, true for numerator, false for denom:
+        List<Pair<SingleUnit, Boolean>> singleUnits = unit.getDetails().entrySet().stream().flatMap(e -> Utility.replicate(Math.abs(e.getValue()), new Pair<>(e.getKey(), e.getValue() > 0)).stream()).collect(Collectors.toList());
+
+        // Now shuffle them and form a compound expression:
+        Collections.shuffle(singleUnits, new Random(r.nextLong()));
+
+        // If just one, return it:
+
+        UnitExpression u;
+
+        if (singleUnits.get(0).getSecond())
+            u = new SingleUnitExpression(singleUnits.get(0).getFirst().getName());
+        else
+        {
+            if (r.nextBoolean())
+                u = new UnitRaiseExpression(new SingleUnitExpression(singleUnits.get(0).getFirst().getName()), -1);
+            else
+                u = new UnitDivideExpression(new SingleUnitExpression("1"), new SingleUnitExpression(singleUnits.get(0).getFirst().getName()));
+        }
+
+        for (int i = 1; i < singleUnits.size(); i++)
+        {
+            Pair<SingleUnit, Boolean> s = singleUnits.get(i);
+            SingleUnitExpression sExp = new SingleUnitExpression(s.getFirst().getName());
+            if (s.getSecond())
+            {
+                // Times.  Could join it to existing one:
+                if (u instanceof UnitTimesExpression && r.nextBoolean())
+                {
+                    List<UnitExpression> prevOperands = new ArrayList<>(((UnitTimesExpression)u).getOperands());
+
+                    prevOperands.add(sExp);
+                    u = new UnitTimesExpression(ImmutableList.copyOf(prevOperands), makeUnitTimesOperators(prevOperands));
+                }
+                else
+                {
+                    // Make a new one:
+                    ImmutableList<UnitExpression> operands;
+                    if (r.nextBoolean())
+                        operands = ImmutableList.of(u, sExp);
+                    else
+                        operands = ImmutableList.of(sExp, u);
+                    u = new UnitTimesExpression(operands, makeUnitTimesOperators(operands));
+                }
+            }
+            else
+            {
+                // Divide.  Could join it to existing:
+                if (u instanceof UnitDivideExpression && r.nextBoolean())
+                {
+                    UnitDivideExpression div = (UnitDivideExpression) u;
+                    ImmutableList<UnitExpression> newDenom = ImmutableList.of(div.getDenominator(), sExp);
+                    u = new UnitDivideExpression(div.getNumerator(), new UnitTimesExpression(newDenom, makeUnitTimesOperators(newDenom)));
+                }
+                else
+                {
+                    u = new UnitDivideExpression(u, sExp);
+                }
+            }
+        }
+
+        return u;
+    }
+
+    private ImmutableList<Op> makeUnitTimesOperators(List<UnitExpression> operands)
+    {
+        Builder<Op> b = ImmutableList.builder();
+        for (int i = 0; i < operands.size() - 1; i++)
+        {
+            b.add(r.nextBoolean() ? Op.STAR : Op.SPACE);
+        }
+        return b.build();
     }
 }

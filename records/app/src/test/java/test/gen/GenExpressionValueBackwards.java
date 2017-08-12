@@ -160,7 +160,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 // could cause failures in things like equal expressions.
                 return termDeep(maxLevels, type, l(
                     () -> columnRef(type, targetValue),
-                    () -> new NumericLiteral((Number)targetValue, displayInfo.getUnit())
+                    () -> new NumericLiteral((Number)targetValue, makeUnitExpression(displayInfo.getUnit()))
                 ), l(() -> {
                     // We just make up a bunch of numbers, and at the very end we add one more to correct the difference
                     int numMiddle = r.nextInt(0, 6);
@@ -201,7 +201,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                     // A few options; keep units and value in numerator and divide by 1
                     // Or make random denom, times that by target to get num, and make up crazy units which work
                     if (r.nextInt(0, 4) == 0)
-                        return new DivideExpression(make(type, targetValue, maxLevels - 1), new NumericLiteral(1, Unit.SCALAR));
+                        return new DivideExpression(make(type, targetValue, maxLevels - 1), new NumericLiteral(1, makeUnitExpression(Unit.SCALAR)));
                     else
                     {
                         long denominator;
@@ -214,7 +214,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         if (Utility.compareNumbers(Utility.divideNumbers(numerator, denominator), targetValue) != 0)
                         {
                             // Divide won't come out right: just divide by 1:
-                            return new DivideExpression(make(type, targetValue, maxLevels - 1), new NumericLiteral(1, Unit.SCALAR));
+                            return new DivideExpression(make(type, targetValue, maxLevels - 1), new NumericLiteral(1, makeUnitExpression(Unit.SCALAR)));
                         }
 
                         // Either just use numerator, or make up crazy one
