@@ -10,6 +10,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import jdk.nashorn.internal.codegen.CompilerConstants.Call;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.ColumnId;
@@ -23,6 +24,8 @@ import records.transformations.Filter;
 import records.transformations.Transform;
 import records.transformations.TransformationInfo;
 import records.transformations.expression.*;
+import records.transformations.expression.MatchExpression.MatchClause;
+import records.transformations.expression.MatchExpression.Pattern;
 import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
@@ -150,7 +153,25 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             write("match");
             push(KeyCode.TAB);
             enterExpression(match.getExpression(), r);
-            // TODO
+            for (MatchClause matchClause : match.getClauses())
+            {
+                push(KeyCode.DOWN);
+                for (int i = 0; i < matchClause.getPatterns().size(); i++)
+                {
+                    if (i > 0)
+                        push(KeyCode.RIGHT);
+                    Pattern pattern = matchClause.getPatterns().get(i);
+                    enterExpression(pattern.getPattern(), r);
+                    @Nullable Expression guard = pattern.getGuard();
+                    if (guard != null)
+                    {
+                        push(KeyCode.RIGHT);
+                        enterExpression(guard, r);
+                    }
+                }
+                push(KeyCode.RIGHT);
+                enterExpression(matchClause.getOutcome(), r);
+            }
         }
         else if (NaryOpExpression.class.isAssignableFrom(c))
         {
@@ -170,6 +191,16 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             enterExpression(b.getLHS(), r);
             write(b._test_getOperatorEntry());
             enterExpression(b.getRHS(), r);
+        }
+        else if (c == VarDeclExpression.class)
+        {
+            write(((VarDeclExpression)expression).getName());
+            push(KeyCode.TAB); // TODO make sure we've scrolled to new-var in cases of overlap
+        }
+        else if (c == VarUseExpression.class)
+        {
+            write(((VarUseExpression)expression).getName());
+            push(KeyCode.TAB); // TODO make sure we've scrolled to new-var in cases of overlap
         }
         else
         {

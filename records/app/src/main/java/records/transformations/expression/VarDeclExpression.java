@@ -120,4 +120,9 @@ public class VarDeclExpression extends NonOperatorExpression
     {
         return varName.hashCode();
     }
+
+    public String getName()
+    {
+        return varName;
+    }
 }

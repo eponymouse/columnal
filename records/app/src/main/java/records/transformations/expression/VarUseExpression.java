@@ -113,4 +113,9 @@ public class VarUseExpression extends NonOperatorExpression
     {
         return varName.hashCode();
     }
+
+    public String getName()
+    {
+        return varName;
+    }
 }

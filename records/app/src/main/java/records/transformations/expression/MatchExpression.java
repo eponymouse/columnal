@@ -202,6 +202,11 @@ public class MatchExpression extends NonOperatorExpression
         {
             return new Pair<>(pattern, guard);
         }
+
+        public @Nullable Expression getGuard()
+        {
+            return guard;
+        }
     }
 
     private final Expression expression;
