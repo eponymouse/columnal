@@ -540,7 +540,7 @@ public class DataTypeUtility
                 f.complete(Either.left(e));
             }
         });
-        Either<Exception, List<Object>> either;
+        Either<Exception, List<@Value Object>> either;
         try
         {
             either = f.get();

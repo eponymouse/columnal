@@ -3,6 +3,7 @@ package records.data;
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -25,7 +26,7 @@ public class MemoryArrayColumn extends EditableColumn
     public MemoryArrayColumn(RecordSet recordSet, ColumnId title, @Nullable DataType inner, List<ListEx> values, ListEx defaultValue) throws InternalException
     {
         super(recordSet, title);
-        this.defaultValue = defaultValue;
+        this.defaultValue = DataTypeUtility.value(defaultValue);
         this.storage = new ArrayColumnStorage(inner, null);
         this.storage.addAll(values);
     }

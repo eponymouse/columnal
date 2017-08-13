@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
@@ -70,12 +71,12 @@ public class EditableRecordSet extends RecordSet
 
         return rs -> original.getType().applyGet(new DataTypeVisitorGet<EditableColumn>()
         {
-            private <T> List<T> getAll(GetValue<@Value T> g) throws InternalException, UserException
+            private <T> List<@UnknownIfValue T> getAll(GetValue<@Value T> g) throws InternalException, UserException
             {
                 List<T> r = new ArrayList<>();
                 for (int i = 0; original.indexValid(i); i++)
                 {
-                    r.add(g.get(i));
+                    r.add((T)g.get(i));
                 }
                 return r;
             }
