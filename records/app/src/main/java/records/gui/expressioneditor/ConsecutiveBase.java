@@ -351,12 +351,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         return new Pair<>(!lastOp, Utility.<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>, String>mapList(operators, op -> op.get()));
     }
 
-    public EXPRESSION save(ErrorDisplayerRecord<EXPRESSION> errorDisplayers, FXPlatformConsumer<Object> onError)
+    public EXPRESSION save(ErrorDisplayerRecord errorDisplayers, FXPlatformConsumer<Object> onError)
     {
         return save(errorDisplayers, onError, operands.get(0), operands.get(operands.size() - 1));
     }
 
-    public EXPRESSION save(ErrorDisplayerRecord<EXPRESSION> errorDisplayers, FXPlatformConsumer<Object> onError, OperandNode<@NonNull EXPRESSION> first, OperandNode<@NonNull EXPRESSION> last)
+    public EXPRESSION save(ErrorDisplayerRecord errorDisplayers, FXPlatformConsumer<Object> onError, OperandNode<@NonNull EXPRESSION> first, OperandNode<@NonNull EXPRESSION> last)
     {
         int firstIndex = operands.indexOf(first);
         int lastIndex = operands.indexOf(last);
@@ -506,7 +506,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
                 if (child instanceof OperatorEntry)
                     return ((OperatorEntry<EXPRESSION, SEMANTIC_PARENT>)child).get();
                 else
-                    return operations.save(((OperandNode<EXPRESSION>)child).save(new ErrorDisplayerRecord<>(), o -> {}));
+                    return operations.save(((OperandNode<EXPRESSION>)child).save(new ErrorDisplayerRecord(), o -> {}));
             }), startIsOperator);
     }
 
@@ -771,7 +771,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
         @NonNull EXPRESSION makeUnfinished(String s);
 
-        EXPRESSION makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord<EXPRESSION> errorDisplayers, List<EXPRESSION> expressionExps, List<String> ops, boolean directlyRoundBracketed);
+        EXPRESSION makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<EXPRESSION> expressionExps, List<String> ops, boolean directlyRoundBracketed);
 
         String save(EXPRESSION expression);
 
@@ -834,9 +834,25 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             return new UnfinishedExpression(s);
         }
 
-        public Expression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord<Expression> errorDisplayers, List<Expression> expressionExps, List<String> ops, boolean directlyRoundBracketed)
+        public Expression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<Expression> expressionExps, List<String> ops, boolean directlyRoundBracketed)
         {
-            if (ops.stream().allMatch(op -> op.equals("+") || op.equals("-")))
+
+
+            if (expressionExps.get(expressionExps.size() - 1) instanceof UnfinishedExpression && ((UnfinishedExpression)expressionExps.get(expressionExps.size() - 1)).getText().trim().isEmpty()
+                && ops.get(ops.size() - 1).trim().isEmpty())
+            {
+                // Make copy for editing:
+                expressionExps = new ArrayList<>(expressionExps);
+                ops = new ArrayList<>(ops);
+                expressionExps.remove(expressionExps.size() - 1);
+                ops.remove(ops.size() - 1);
+            }
+
+            if (ops.isEmpty())
+            {
+                return expressionExps.get(0);
+            }
+            else if (ops.stream().allMatch(op -> op.equals("+") || op.equals("-")))
             {
                 return errorDisplayers.record(displayer, new AddSubtractExpression(expressionExps, Utility.<String, Op>mapList(ops, op -> op.equals("+") ? Op.ADD : Op.SUBTRACT)));
             }
@@ -917,7 +933,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
 
         @Override
-        public UnitExpression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord<UnitExpression> errorDisplayers, List<UnitExpression> operands, List<String> ops, boolean directlyRoundBracketed)
+        public UnitExpression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<UnitExpression> operands, List<String> ops, boolean directlyRoundBracketed)
         {
             if (operands.size() == 2 && ops.size() == 1 && ops.get(0).equals("/"))
             {

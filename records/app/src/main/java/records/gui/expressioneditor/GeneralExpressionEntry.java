@@ -515,7 +515,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @Override
-    public Expression save(ErrorDisplayerRecord<Expression> errorDisplayer, FXPlatformConsumer<Object> onError)
+    public Expression save(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         if (status.get() == Status.COLUMN_REFERENCE_SAME_ROW || status.get() == Status.COLUMN_REFERENCE_WHOLE)
         {
@@ -526,10 +526,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             NumericLiteralContext number = parseOrNull(ExpressionParser::numericLiteral);
             if (number != null)
             {
-                //TODO support units
                 try
                 {
-                    return errorDisplayer.record(this, new NumericLiteral(Utility.parseNumber(number.getText()), null));
+                    return errorDisplayer.record(this, new NumericLiteral(Utility.parseNumber(number.getText()), unitSpecifier == null ? null : unitSpecifier.save(errorDisplayer, onError)));
                 }
                 catch (UserException e)
                 {
@@ -688,6 +687,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 if (unitSpecifier == null)
                 {
                     addUnitSpecifier(); // Should we put rest in the curly brackets?
+                    status.set(Status.LITERAL);
                 }
                 else
                 {
@@ -713,7 +713,16 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             else if (c instanceof TagCompletion)
             {
                 TagCompletion tc = (TagCompletion)c;
-                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new TagExpressionNode(parent, semanticParent, tc.typeName, tc.tagType)));
+                TagExpressionNode tagExpressionNode = new TagExpressionNode(parent, semanticParent, tc.typeName, tc.tagType);
+                if (tc.tagType.getInner() != null)
+                {
+                    tagExpressionNode.focusWhenShown();
+                }
+                else
+                {
+                    parent.focusRightOf(GeneralExpressionEntry.this);
+                }
+                parent.replace(GeneralExpressionEntry.this, tagExpressionNode);
             }
             else if (c == null || c instanceof GeneralCompletion)
             {

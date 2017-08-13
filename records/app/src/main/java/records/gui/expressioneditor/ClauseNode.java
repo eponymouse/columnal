@@ -374,7 +374,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
         return false;
     }
 
-    public Function<MatchExpression, MatchClause> toClauseExpression(ErrorDisplayerRecord<Expression> errorDisplayer, FXPlatformConsumer<Object> onError)
+    public Function<MatchExpression, MatchClause> toClauseExpression(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         List<Function<MatchExpression, Pattern>> patterns = new ArrayList<>();
         for (Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> match : matches)

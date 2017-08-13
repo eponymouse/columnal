@@ -39,7 +39,7 @@ public @Interned interface OperandNode<@NonNull EXPRESSION> extends EEDisplayNod
      * should call onError (1+ times) with problem, and return InvalidExpression if needed.
      *
      */
-    public abstract @NonNull EXPRESSION save(ErrorDisplayerRecord<EXPRESSION> errorDisplayer, FXPlatformConsumer<Object> onError);
+    public abstract @NonNull EXPRESSION save(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError);
 
     public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner();
 }

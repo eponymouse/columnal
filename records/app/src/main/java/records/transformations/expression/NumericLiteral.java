@@ -124,4 +124,9 @@ public class NumericLiteral extends Literal
     {
         return numberAsString();
     }
+
+    public @Nullable UnitExpression getUnitExpression()
+    {
+        return unit;
+    }
 }

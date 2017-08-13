@@ -37,7 +37,7 @@ public class FunctionNode extends SurroundNode implements ExpressionNodeParent
 
     @SuppressWarnings("nullness") // contents is known to be non-null.
     @Override
-    public Expression save(ErrorDisplayerRecord<Expression> errorDisplayer, FXPlatformConsumer<Object> onError)
+    public Expression save(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         // TODO keep track of whether function is known
         // TODO allow units (second optional consecutive)

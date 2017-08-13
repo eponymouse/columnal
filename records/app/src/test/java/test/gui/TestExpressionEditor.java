@@ -78,6 +78,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         enterExpression(expressionValue.expression, r);
         // Hide any code completion (also: check it doesn't dismiss dialog)
         push(KeyCode.ESCAPE);
+        push(KeyCode.ESCAPE);
         clickOn(".ok-button");
         // Now close dialog, and check for equality;
         View view = lookup(".view").query();
@@ -121,7 +122,8 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         else if (Literal.class.isAssignableFrom(c))
         {
             write(expression.toString());
-            if (c == NumericLiteral.class)
+            // Numbers don't move on automatically if there's no unit:
+            if (c == NumericLiteral.class && ((NumericLiteral)expression).getUnitExpression() == null)
                 push(KeyCode.RIGHT);
         }
         else if (c == ColumnReference.class)

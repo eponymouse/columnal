@@ -253,7 +253,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         // Can be null during initialisation
         if (!atomicEdit.get())
         {
-            ErrorDisplayerRecord<Expression> errorDisplayers = new ErrorDisplayerRecord<>();
+            ErrorDisplayerRecord errorDisplayers = new ErrorDisplayerRecord();
             Expression expression = save(errorDisplayers, err -> {});
             if (onChange != null)
             {

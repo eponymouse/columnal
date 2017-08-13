@@ -97,4 +97,9 @@ public class UnfinishedExpression extends NonOperatorExpression
     {
         return text.hashCode();
     }
+
+    public String getText()
+    {
+        return text;
+    }
 }

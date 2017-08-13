@@ -12,18 +12,18 @@ import java.util.List;
 /**
  * Created by neil on 24/02/2017.
  */
-public class ErrorDisplayerRecord<EXPRESSION>
+public class ErrorDisplayerRecord
 {
-    private final IdentityHashMap<EXPRESSION, ErrorDisplayer> displayers = new IdentityHashMap<>();
+    private final IdentityHashMap<Object, ErrorDisplayer> displayers = new IdentityHashMap<>();
 
     @SuppressWarnings("initialization")
-    public @NonNull EXPRESSION record(@UnknownInitialization(Object.class) ErrorDisplayer displayer, @NonNull EXPRESSION e)
+    public <EXPRESSION> @NonNull EXPRESSION record(@UnknownInitialization(Object.class) ErrorDisplayer displayer, @NonNull EXPRESSION e)
     {
         displayers.put(e, displayer);
         return e;
     }
 
-    public boolean showError(EXPRESSION e, String s, List<ErrorRecorder.QuickFix> quickFixes)
+    public boolean showError(Object e, String s, List<ErrorRecorder.QuickFix> quickFixes)
     {
         @Nullable ErrorDisplayer d = displayers.get(e);
         if (d != null)
