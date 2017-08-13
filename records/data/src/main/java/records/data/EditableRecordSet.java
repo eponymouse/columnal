@@ -139,7 +139,7 @@ public class EditableRecordSet extends RecordSet
                 {
                     tupleOfDefaults[i] = DataTypeUtility.makeDefaultValue(types.get(i));
                 }
-                return new MemoryTupleColumn(rs, original.getName(), Utility.mapList(types, t -> t), r, Utility.cast(Utility.replaceNull(defaultValue, tupleOfDefaults), Object[].class));
+                return new MemoryTupleColumn(rs, original.getName(), Utility.mapList(types, t -> t), r, Utility.cast(Utility.replaceNull(defaultValue, tupleOfDefaults), (Class<@Value Object[]>) Object[].class));
             }
 
             @Override

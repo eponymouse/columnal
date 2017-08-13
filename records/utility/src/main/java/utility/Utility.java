@@ -646,7 +646,7 @@ public class Utility
     }
 
     @SuppressWarnings("valuetype")
-    public static @Value Object[] valueTuple(@Value Object value, int size) throws InternalException
+    public static @Value Object @Value[] valueTuple(@Value Object value, int size) throws InternalException
     {
         if (!(value instanceof Object[]))
             throw new InternalException("Unexpected type problem: expected tuple but found " + value.getClass());
