@@ -2,6 +2,7 @@ package records.data;
 
 import annotation.qual.Value;
 import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -24,7 +25,7 @@ public class MemoryTemporalColumn extends EditableColumn
     public MemoryTemporalColumn(RecordSet rs, ColumnId title, DateTimeInfo dateTimeInfo, List<TemporalAccessor> list, TemporalAccessor defaultValue) throws InternalException
     {
         super(rs, title);
-        this.defaultValue = defaultValue;
+        this.defaultValue = DataTypeUtility.value(dateTimeInfo, defaultValue);
         this.storage = new TemporalColumnStorage(dateTimeInfo);
         this.storage.addAll(list);
     }

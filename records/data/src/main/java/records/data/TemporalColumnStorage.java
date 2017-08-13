@@ -89,10 +89,10 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
         */
         if (dataType == null)
         {
-            dataType = DataTypeValue.date(dateTimeInfo, new GetValue<TemporalAccessor>()
+            dataType = DataTypeValue.date(dateTimeInfo, new GetValue<@Value TemporalAccessor>()
             {
                 @Override
-                public TemporalAccessor getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
+                public @Value TemporalAccessor getWithProgress(int i, @Nullable ProgressListener prog) throws UserException, InternalException
                 {
                     return TemporalColumnStorage.this.get(i, prog);
                 }
@@ -112,7 +112,7 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
     {
         if (index < 0 || index > values.size())
             throw new InternalException("Trying to insert rows at invalid index: " + index + " length is: " + values.size());
-        values.addAll(index, Utility.<TemporalAccessor, @Value TemporalAccessor>mapListInt(items, t -> pool.pool(t)));
+        values.addAll(index, Utility.<TemporalAccessor, @Value TemporalAccessor>mapListInt(items, t -> DataTypeUtility.value(dateTimeInfo, pool.pool(t))));
         int count = items.size();
         return () -> removeRows(index, count);
     }

@@ -1305,7 +1305,7 @@ public class Utility
         }
     }
 
-    public static class ListExList extends ListEx
+    public static @Value class ListExList extends ListEx
     {
         private final List<@Value Object> items;
 

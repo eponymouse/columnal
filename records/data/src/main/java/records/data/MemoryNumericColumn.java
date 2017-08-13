@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
@@ -24,7 +25,7 @@ public class MemoryNumericColumn extends EditableColumn
     private MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, Number defaultValue) throws InternalException
     {
         super(rs, title);
-        this.defaultValue = defaultValue;
+        this.defaultValue = DataTypeUtility.value(defaultValue);
         storage = new NumericColumnStorage(numberInfo);
     }
 

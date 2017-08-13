@@ -70,9 +70,9 @@ public class EditableRecordSet extends RecordSet
 
         return rs -> original.getType().applyGet(new DataTypeVisitorGet<EditableColumn>()
         {
-            private <T> List<T> getAll(GetValue<T> g) throws InternalException, UserException
+            private <T> List<@Value T> getAll(GetValue<@Value T> g) throws InternalException, UserException
             {
-                List<T> r = new ArrayList<>();
+                List<@Value T> r = new ArrayList<>();
                 for (int i = 0; original.indexValid(i); i++)
                 {
                     r.add(g.get(i));

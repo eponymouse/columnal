@@ -200,25 +200,25 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             }
 
             @Override
-            public DataTypeValue number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException
+            public DataTypeValue number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException
             {
                 return DataTypeValue.number(displayInfo, reMapGV(g));
             }
 
             @Override
-            public DataTypeValue text(GetValue<String> g) throws InternalException
+            public DataTypeValue text(GetValue<@Value String> g) throws InternalException
             {
                 return DataTypeValue.text(reMapGV(g));
             }
 
             @Override
-            public DataTypeValue bool(GetValue<Boolean> g) throws InternalException
+            public DataTypeValue bool(GetValue<@Value Boolean> g) throws InternalException
             {
                 return DataTypeValue.bool(reMapGV(g));
             }
 
             @Override
-            public DataTypeValue date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException
+            public DataTypeValue date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException
             {
                 return DataTypeValue.date(dateTimeInfo, reMapGV(g));
             }

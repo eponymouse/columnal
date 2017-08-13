@@ -442,13 +442,13 @@ public class DataTypeUtility
             @Override
             public @Value Object number(NumberInfo numberInfo) throws InternalException, InternalException
             {
-                return 0;
+                return DataTypeUtility.value(0);
             }
 
             @Override
             public @Value Object text() throws InternalException, InternalException
             {
-                return "";
+                return DataTypeUtility.value("");
             }
 
             @Override
@@ -460,7 +460,7 @@ public class DataTypeUtility
             @Override
             public @Value Object bool() throws InternalException, InternalException
             {
-                return false;
+                return DataTypeUtility.value(false);
             }
 
             @Override
@@ -472,7 +472,7 @@ public class DataTypeUtility
             @Override
             public @Value Object tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
             {
-                Object[] tuple = new Object[inner.size()];
+                @Value Object @Value[] tuple = DataTypeUtility.value(new Object[inner.size()]);
                 for (int i = 0; i < inner.size(); i++)
                 {
                     tuple[i] = makeDefaultValue(inner.get(i));

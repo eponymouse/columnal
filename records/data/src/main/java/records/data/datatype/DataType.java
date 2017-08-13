@@ -1160,7 +1160,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?, ?> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTupleColumn, Object[]>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryTupleColumn(rs, columnId, inner, defaultValue), (c, t) -> c.add(t), p -> {
+                return new ColumnMaker<MemoryTupleColumn, @Value Object @Value[]>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryTupleColumn(rs, columnId, inner, defaultValue), (c, t) -> c.add(t), p -> {
                     return loadTuple(inner, p, false);
                 });
             }
@@ -1220,7 +1220,7 @@ public class DataType
             if (tryParse(() -> p.openRound()) == null)
                 throw new UserException("Expected tuple but found: \"" + p.getCurrentToken() + "\"");
         }
-        @Value Object @Value[] tuple = new Object[inner.size()];
+        @Value Object @Value[] tuple = DataTypeUtility.value(new Object[inner.size()]);
         for (int i = 0; i < tuple.length; i++)
         {
             tuple[i] = loadSingleItem(inner.get(i), p, false);
@@ -1240,7 +1240,7 @@ public class DataType
         BoolContext b = tryParse(() -> p.bool());
         if (b == null)
             throw new UserException("Expected boolean value but found: \"" + p.getCurrentToken() + "\"");
-        return b.getText().trim().toLowerCase().equals("true");
+        return DataTypeUtility.value(b.getText().trim().toLowerCase().equals("true"));
     }
 
     private static @Value String loadString(DataParser p) throws UserException
@@ -1248,7 +1248,7 @@ public class DataType
         StringContext string = tryParse(() -> p.string());
         if (string == null)
             throw new ParseException("string", p);
-        return string.STRING().getText();
+        return DataTypeUtility.value(string.STRING().getText());
     }
 
     private static @Value Number loadNumber(DataParser p) throws UserException
@@ -1256,7 +1256,7 @@ public class DataType
         NumberContext number = tryParse(() -> p.number());
         if (number == null)
             throw new UserException("Expected number value but found: \"" + p.getCurrentToken() + "\"");
-        return Utility.parseNumber(number.getText().trim());
+        return DataTypeUtility.value(Utility.parseNumber(number.getText().trim()));
     }
 
     private static TaggedValue loadTaggedValue(List<TagType<DataType>> tags, DataParser p) throws UserException, InternalException
@@ -1656,22 +1656,22 @@ public class DataType
 
         public static final TemporalAccessor DEFAULT_VALUE = ZonedDateTime.of(1900, 1, 1, 0, 0, 0, 0, ZoneId.of("UTC"));
 
-        public TemporalAccessor getDefaultValue() throws InternalException
+        public @Value TemporalAccessor getDefaultValue() throws InternalException
         {
             switch (type)
             {
                 case YEARMONTHDAY:
-                    return LocalDate.from(DEFAULT_VALUE);
+                    return DataTypeUtility.value(this, LocalDate.from(DEFAULT_VALUE));
                 case YEARMONTH:
-                    return YearMonth.from(DEFAULT_VALUE);
+                    return DataTypeUtility.value(this, YearMonth.from(DEFAULT_VALUE));
                 case TIMEOFDAY:
-                    return LocalTime.from(DEFAULT_VALUE);
+                    return DataTypeUtility.value(this, LocalTime.from(DEFAULT_VALUE));
                 case TIMEOFDAYZONED:
-                    return OffsetTime.from(DEFAULT_VALUE);
+                    return DataTypeUtility.value(this, OffsetTime.from(DEFAULT_VALUE));
                 case DATETIME:
-                    return LocalDateTime.from(DEFAULT_VALUE);
+                    return DataTypeUtility.value(this, LocalDateTime.from(DEFAULT_VALUE));
                 case DATETIMEZONED:
-                    return ZonedDateTime.from(DEFAULT_VALUE);
+                    return DataTypeUtility.value(this, ZonedDateTime.from(DEFAULT_VALUE));
             }
             throw new InternalException("Unknown type: " + type);
         }
@@ -1681,17 +1681,17 @@ public class DataType
             switch (type)
             {
                 case YEARMONTHDAY:
-                    return LocalDate.from(t);
+                    return DataTypeUtility.value(this, LocalDate.from(t));
                 case YEARMONTH:
-                    return YearMonth.from(t);
+                    return DataTypeUtility.value(this, YearMonth.from(t));
                 case TIMEOFDAY:
-                    return LocalTime.from(t);
+                    return DataTypeUtility.value(this, LocalTime.from(t));
                 case TIMEOFDAYZONED:
-                    return OffsetTime.from(t);
+                    return DataTypeUtility.value(this, OffsetTime.from(t));
                 case DATETIME:
-                    return LocalDateTime.from(t);
+                    return DataTypeUtility.value(this, LocalDateTime.from(t));
                 case DATETIMEZONED:
-                    return ZonedDateTime.from(t);
+                    return DataTypeUtility.value(this, ZonedDateTime.from(t));
             }
             throw new InternalException("Unknown type: " + type);
         }

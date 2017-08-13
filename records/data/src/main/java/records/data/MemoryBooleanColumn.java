@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -22,7 +23,7 @@ public class MemoryBooleanColumn extends EditableColumn
     public MemoryBooleanColumn(RecordSet rs, ColumnId title, List<Boolean> list, Boolean defaultValue) throws InternalException
     {
         super(rs, title);
-        this.defaultValue = defaultValue;
+        this.defaultValue = DataTypeUtility.value(defaultValue);
         this.storage = new BooleanColumnStorage();
         this.storage.addAll(list);
     }

@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -22,7 +23,7 @@ public class MemoryStringColumn extends EditableColumn
     public MemoryStringColumn(RecordSet recordSet, ColumnId title, List<String> values, String defaultValue) throws InternalException
     {
         super(recordSet, title);
-        this.defaultValue = defaultValue;
+        this.defaultValue = DataTypeUtility.value(defaultValue);
         this.storage = new StringColumnStorage();
         this.storage.addAll(values);
     }
