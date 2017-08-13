@@ -70,9 +70,9 @@ public class EditableRecordSet extends RecordSet
 
         return rs -> original.getType().applyGet(new DataTypeVisitorGet<EditableColumn>()
         {
-            private <T> List<@Value T> getAll(GetValue<@Value T> g) throws InternalException, UserException
+            private <T> List<T> getAll(GetValue<@Value T> g) throws InternalException, UserException
             {
-                List<@Value T> r = new ArrayList<>();
+                List<T> r = new ArrayList<>();
                 for (int i = 0; original.indexValid(i); i++)
                 {
                     r.add(g.get(i));
@@ -83,19 +83,19 @@ public class EditableRecordSet extends RecordSet
             @Override
             public EditableColumn number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
-                return new MemoryNumericColumn(rs, original.getName(), displayInfo, getAll(g), Utility.cast(Utility.replaceNull(defaultValue, Integer.valueOf(0)), Number.class));
+                return new MemoryNumericColumn(rs, original.getName(), displayInfo, getAll(g), Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.value(Integer.valueOf(0))), Number.class));
             }
 
             @Override
             public EditableColumn text(GetValue<@Value String> g) throws InternalException, UserException
             {
-                return new MemoryStringColumn(rs, original.getName(), getAll(g), Utility.cast(Utility.replaceNull(defaultValue, ""), String.class));
+                return new MemoryStringColumn(rs, original.getName(), getAll(g), Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.value("")), String.class));
             }
 
             @Override
             public EditableColumn bool(GetValue<@Value Boolean> g) throws InternalException, UserException
             {
-                return new MemoryBooleanColumn(rs, original.getName(), getAll(g), Utility.cast(Utility.replaceNull(defaultValue, Boolean.FALSE), Boolean.class));
+                return new MemoryBooleanColumn(rs, original.getName(), getAll(g), Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.value(Boolean.FALSE)), Boolean.class));
             }
 
             @Override

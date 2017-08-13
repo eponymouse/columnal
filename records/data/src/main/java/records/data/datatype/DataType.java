@@ -1160,7 +1160,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?, ?> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTupleColumn, @Value Object @Value[]>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryTupleColumn(rs, columnId, inner, defaultValue), (c, t) -> c.add(t), p -> {
+                return new ColumnMaker<MemoryTupleColumn, @Value Object @Value[]>(defaultValueUnparsed, (RecordSet rs, @Value Object @Value[] defaultValue) -> new MemoryTupleColumn(rs, columnId, inner, defaultValue), (c, t) -> c.add(t), p -> {
                     return loadTuple(inner, p, false);
                 });
             }

@@ -483,20 +483,7 @@ public class DataTypeUtility
             @Override
             public @Value Object array(@Nullable DataType inner) throws InternalException, InternalException
             {
-                return new ListEx()
-                {
-                    @Override
-                    public int size() throws InternalException, UserException
-                    {
-                        return 0;
-                    }
-
-                    @Override
-                    public @Value Object get(int index) throws InternalException, UserException
-                    {
-                        return 0; // Won't get called.
-                    }
-                };
+                return DataTypeUtility.value(Collections.emptyList());
             }
         });
     }

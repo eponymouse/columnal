@@ -18,7 +18,7 @@ import java.util.List;
 public class MemoryStringColumn extends EditableColumn
 {
     private final StringColumnStorage storage;
-    private final String defaultValue;
+    private final @Value String defaultValue;
 
     public MemoryStringColumn(RecordSet recordSet, ColumnId title, List<String> values, String defaultValue) throws InternalException
     {
