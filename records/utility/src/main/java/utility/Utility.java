@@ -1309,7 +1309,7 @@ public class Utility
     {
         private final List<@Value Object> items;
 
-        public ListExList(List<@Value Object> items)
+        public @Value ListExList(List<@Value Object> items)
         {
             this.items = items;
         }
