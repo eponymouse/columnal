@@ -17,6 +17,7 @@ import utility.Pair;
 import utility.gui.FXUtility;
 
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * A helper class that implements various methods when you
@@ -59,8 +60,6 @@ abstract class GeneralOperandEntry<EXPRESSION extends @NonNull Object, SEMANTIC_
         container.getStyleClass().add("entry");
         this.errorUpdater = ExpressionEditorUtil.installErrorShower(container, textField);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
-        this.nodes.setAll(container);
-
     }
 
     @Override

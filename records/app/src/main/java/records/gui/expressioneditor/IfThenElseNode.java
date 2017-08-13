@@ -32,11 +32,10 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 21/02/2017.
  */
-public class IfThenElseNode implements OperandNode<Expression>, EEDisplayNodeParent, ErrorDisplayer, ExpressionNodeParent
+public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expression>, EEDisplayNodeParent, ErrorDisplayer, ExpressionNodeParent
 {
     private final ConsecutiveBase<Expression, ExpressionNodeParent> parent;
     private final ExpressionNodeParent semanticParent;
-    private final ObservableList<Node> nodes;
     private final @Interned Consecutive<Expression, ExpressionNodeParent> condition;
     private final @Interned Consecutive<Expression, ExpressionNodeParent> thenPart;
     private final @Interned Consecutive<Expression, ExpressionNodeParent> elsePart;
@@ -49,7 +48,6 @@ public class IfThenElseNode implements OperandNode<Expression>, EEDisplayNodePar
     {
         this.parent = parent;
         this.semanticParent = semanticParent;
-        nodes = FXCollections.observableArrayList();
 
         ifLabel = ExpressionEditorUtil.keyword("if", "if-keyword", this, getParentStyles());
         thenLabel = ExpressionEditorUtil.keyword("then", "if-keyword", this, getParentStyles());
@@ -59,21 +57,25 @@ public class IfThenElseNode implements OperandNode<Expression>, EEDisplayNodePar
         thenPart = new SubConsecutive(thenLabel, "if-then");
         elsePart = new SubConsecutive(elseLabel, "if-else");
 
-        FXUtility.listen(condition.nodes(), c -> updateNodes());
-        FXUtility.listen(thenPart.nodes(), c -> updateNodes());
-        FXUtility.listen(elsePart.nodes(), c -> updateNodes());
-
         updateNodes();
     }
 
-    @OnThread(Tag.FXPlatform)
-    private void updateNodes()
+    @Override
+    protected Stream<EEDisplayNode> calculateChildren()
     {
-        List<Node> r = new ArrayList<>();
-        r.addAll(condition.nodes());
-        r.addAll(thenPart.nodes());
-        r.addAll(elsePart.nodes());
-        nodes.setAll(r);
+        return Stream.of(condition, thenPart, elsePart);
+    }
+
+    @Override
+    protected Stream<Node> calculateNodes()
+    {
+        return Stream.of(condition, thenPart, elsePart).flatMap(n -> n.nodes().stream());
+    }
+
+    @Override
+    protected void updateDisplay()
+    {
+
     }
 
     @Override
@@ -109,12 +111,6 @@ public class IfThenElseNode implements OperandNode<Expression>, EEDisplayNodePar
         condition.focusChanged();
         thenPart.focusChanged();
         elsePart.focusChanged();
-    }
-
-    @Override
-    public ObservableList<Node> nodes()
-    {
-        return nodes;
     }
 
     @Override

@@ -76,6 +76,8 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         // Focus expression editor:
         push(KeyCode.TAB);
         enterExpression(expressionValue.expression, r);
+        // Hide any code completion (also: check it doesn't dismiss dialog)
+        push(KeyCode.ESCAPE);
         clickOn(".ok-button");
         // Now close dialog, and check for equality;
         View view = lookup(".view").query();

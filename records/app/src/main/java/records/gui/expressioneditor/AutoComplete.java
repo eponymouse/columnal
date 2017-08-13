@@ -25,7 +25,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.AutoComplete.Completion.CompletionAction;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExFunction;
+import utility.ExBiFunction;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -41,14 +41,21 @@ import java.util.function.Predicate;
 public class AutoComplete extends PopupControl
 {
     private final TextField textField;
-    private final ExFunction<String, List<Completion>> calculateCompletions;
     private final ListView<Completion> completions;
     private BorderPane container;
+
+    public static enum CompletionQuery
+    {
+        // They've entered another char which doesn't fit, we're planning to leave the slot now:
+        LEAVING_SLOT,
+        // They've entered a char which does fit, so we're currently planning to stay in the slot:
+        CONTINUED_ENTRY;
+    }
 
     /**
      *
      * @param textField
-     * @param calculateCompletions
+     * @param calculateCompletions Gets completes given the input string and current state
      * @param onSelect The action to take when a completion is selected.
      *                 Should not set the text
      *                 for the text field, but instead return the new text to be set.
@@ -60,12 +67,11 @@ public class AutoComplete extends PopupControl
      *                       no available completions with this character then we pick
      *                       the top one and move to next slot.
      */
-    public AutoComplete(TextField textField, ExFunction<String, List<Completion>> calculateCompletions, CompletionListener onSelect, Predicate<Character> inNextAlphabet)
+    public AutoComplete(TextField textField, ExBiFunction<String, CompletionQuery, List<Completion>> calculateCompletions, CompletionListener onSelect, Predicate<Character> inNextAlphabet)
     {
         this.textField = textField;
         this.completions = new ListView<>();
         container = new BorderPane(null, null, null, null, completions);
-        this.calculateCompletions = calculateCompletions;
 
         completions.getStylesheets().add(FXUtility.getStylesheet("autocomplete.css"));
 
@@ -133,16 +139,14 @@ public class AutoComplete extends PopupControl
             {
                 char last = text.charAt(text.length() - 1);
                 String withoutLast = text.substring(0, text.length() - 1);
-                List<Completion> completionsWithoutLast = null;
                 try
                 {
-                    completionsWithoutLast = calculateCompletions.apply(withoutLast);
-
                     String textFinal = text;
                     if (withoutLast != null && !available.stream().anyMatch(c -> c.features(textFinal, last)))
                     {
                         // No completions feature the character and it is in the following alphabet, so
                         // complete the top one (if any are available) and move character to next slot
+                        List<Completion> completionsWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.LEAVING_SLOT);
                         change.setText(onSelect.nonAlphabetCharacter(withoutLast, completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.get(0), "" + last));
                         change.setRange(0, textField.getLength());
                         return change;
@@ -209,11 +213,11 @@ public class AutoComplete extends PopupControl
     }
 
     @RequiresNonNull({"completions"})
-    private List<Completion> updateCompletions(@UnknownInitialization(Object.class) AutoComplete this, ExFunction<String, List<Completion>> calculateCompletions, String text)
+    private List<Completion> updateCompletions(@UnknownInitialization(Object.class) AutoComplete this, ExBiFunction<String, CompletionQuery, List<Completion>> calculateCompletions, String text)
     {
         try
         {
-            this.completions.getItems().setAll(calculateCompletions.apply(text));
+            this.completions.getItems().setAll(calculateCompletions.apply(text, CompletionQuery.CONTINUED_ENTRY));
         }
         catch (InternalException | UserException e)
         {

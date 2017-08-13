@@ -38,16 +38,12 @@ import java.util.stream.Stream;
 /**
  * The node representing the top-level of a pattern match expression.
  */
-public class PatternMatchNode implements EEDisplayNodeParent, OperandNode<Expression>, ExpressionNodeParent
+public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParent, OperandNode<Expression>, ExpressionNodeParent
 {
     private final VBox matchLabel;
     private final ConsecutiveBase<Expression, ExpressionNodeParent> source;
     private final ObservableList<ClauseNode> clauses;
     private ConsecutiveBase<Expression, ExpressionNodeParent> parent;
-    private ObservableList<Node> nodes;
-    // The boolean value is only used during updateListeners, will be true other times
-    private final IdentityHashMap<EEDisplayNode, Boolean> listeningTo = new IdentityHashMap<>();
-    private final ListChangeListener<Node> childrenNodeListener;
 
     @SuppressWarnings("initialization") // Because we pass this as the parent
     public PatternMatchNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, @Nullable Pair<Expression, List<MatchClause>> sourceAndClauses)
@@ -70,49 +66,29 @@ public class PatternMatchNode implements EEDisplayNodeParent, OperandNode<Expres
             { prompt("expression"); }
         };
         this.clauses = FXCollections.observableArrayList();
-        this.nodes = FXCollections.observableArrayList();
-        this.childrenNodeListener = c -> {
-            updateNodes();
-        };
-        FXUtility.listen(clauses, c -> {
-            updateNodes();
-            updateListeners();
-        });
+        listenToNodeRelevantList(clauses);
         if (sourceAndClauses == null)
             clauses.add(new ClauseNode(this, null));
         else
             clauses.addAll(Utility.<MatchClause, ClauseNode>mapList(sourceAndClauses.getSecond(), c -> c.load(this)));
     }
 
-    private void updateNodes()
+    @Override
+    protected Stream<Node> calculateNodes()
     {
-        nodes.setAll(Stream.<Node>concat(source.nodes().stream(), clauses.stream().flatMap(c -> c.nodes().stream())).collect(Collectors.<Node>toList()));
+        return Stream.<Node>concat(source.nodes().stream(), clauses.stream().flatMap(c -> c.nodes().stream()));
     }
 
-    private void updateListeners()
+    @Override
+    protected void updateDisplay()
     {
-        // Make them all as old (false)
-        listeningTo.replaceAll((e, b) -> false);
-        // Merge new ones:
-        for (EEDisplayNode child : Utility.<@NonNull EEDisplayNode>iterableStream(Stream.<@NonNull EEDisplayNode>concat(Stream.of(source), clauses.stream())))
-        {
-            // No need to listen again if already present as we're already listening
-            if (listeningTo.get(child) == null)
-                child.nodes().addListener(childrenNodeListener);
-            listeningTo.put(child, true);
-        }
-        // Stop listening to old:
-        for (Iterator<Entry<EEDisplayNode, Boolean>> iterator = listeningTo.entrySet().iterator(); iterator.hasNext(); )
-        {
-            Entry<EEDisplayNode, Boolean> e = iterator.next();
-            if (e.getValue() == false)
-            {
-                e.getKey().nodes().removeListener(childrenNodeListener);
-                iterator.remove();
-            }
-        }
-
         parent.changed(this);
+    }
+
+    @Override
+    protected Stream<@NonNull EEDisplayNode> calculateChildren()
+    {
+        return Stream.<@NonNull EEDisplayNode>concat(Stream.of(source), clauses.stream());
     }
 
 
@@ -195,12 +171,6 @@ public class PatternMatchNode implements EEDisplayNodeParent, OperandNode<Expres
     public ExpressionEditor getEditor()
     {
         return parent.getEditor();
-    }
-
-    @Override
-    public ObservableList<Node> nodes()
-    {
-        return nodes;
     }
 
     @Override

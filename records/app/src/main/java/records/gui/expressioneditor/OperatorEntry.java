@@ -25,6 +25,7 @@ import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 17/12/2016.
@@ -52,9 +53,9 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
         FXUtility.sizeToFit(textField, 5.0, 5.0);
         container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, parent.getParentStyles()).getFirst();
         container.getStyleClass().add("entry");
-        this.nodes.setAll(this.container);
+        updateNodes();
 
-        this.autoComplete = new AutoComplete(textField, s -> getCompletions(parent, parent.operations.getValidOperators(parent.getThisAsSemanticParent()), s), new CompletionListener(), c -> !parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) && !parent.terminatedByChars().contains(c));
+        this.autoComplete = new AutoComplete(textField, (s, q) -> getCompletions(parent, parent.operations.getValidOperators(parent.getThisAsSemanticParent()), s), new CompletionListener(), c -> !parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) && !parent.terminatedByChars().contains(c));
 
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text ->{
             parent.changed(OperatorEntry.this);
@@ -67,6 +68,12 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
             // in case it finishes a completion:
             FXUtility.runAfter(() -> textField.setText(content));
         }
+    }
+
+    @Override
+    protected Stream<Node> calculateNodes()
+    {
+        return Stream.of(container);
     }
 
     private static <EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> List<Completion> getCompletions(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, List<Pair<String, @LocalizableKey String>> validOperators, String s)

@@ -20,6 +20,7 @@ import utility.gui.FXUtility;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 20/12/2016.
@@ -31,11 +32,10 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     public StringLiteralNode(String initialValue, ConsecutiveBase<Expression, ExpressionNodeParent> parent)
     {
         super(parent, Expression.class);
-        nodes.setAll(new Label("\u201C"), textField, new Label("\u201D"));
         // We need a completion so you can leave the field using tab/enter
         // Otherwise only right-arrow will get you out
         Completion currentCompletion = new EndStringCompletion();
-        this.autoComplete = new AutoComplete(textField, s ->
+        this.autoComplete = new AutoComplete(textField, (s, q) ->
         {
             return Collections.singletonList(currentCompletion);
         }, new SimpleCompletionListener()
@@ -61,6 +61,13 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
 
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> parent.changed(this));
         textField.setText(initialValue);
+        updateNodes();
+    }
+
+    @Override
+    protected Stream<Node> calculateNodes()
+    {
+        return Stream.of(new Label("\u201C"), textField, new Label("\u201D"));
     }
 
     @Override

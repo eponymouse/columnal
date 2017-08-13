@@ -48,14 +48,11 @@ import java.util.stream.Stream;
  * does not extend it because Consecutive by itself is not a valid
  * operand.  For that, use BracketedExpression.
  */
-public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> implements EEDisplayNodeParent, EEDisplayNode, ErrorDisplayer
+public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, ErrorDisplayer
 {
     protected final OperandOps<EXPRESSION, SEMANTIC_PARENT> operations;
-    private final ObservableList<Node> nodes;
-    // The boolean value is only used during updateListeners, will be true other times
-    private final IdentityHashMap<EEDisplayNode, Boolean> listeningTo = new IdentityHashMap<>();
+
     protected final String style;
-    private @MonotonicNonNull ListChangeListener<Node> childrenNodeListener;
     /**
      * The operands and operators are always exactly interleaved.
      * The first item is operands.get(0), followed by operators.get(0),
@@ -86,49 +83,55 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     private final @Nullable Node prefixNode;
     private final @Nullable Node suffixNode;
     private @Nullable String prompt = null;
-    protected final BooleanProperty atomicEdit;
 
     @SuppressWarnings("initialization")
     public ConsecutiveBase(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, @Nullable Node prefixNode, @Nullable Node suffixNode, String style)
     {
         this.operations = operations;
         this.style = style;
-        atomicEdit = new SimpleBooleanProperty(false);
-        nodes = FXCollections.observableArrayList();
         operands = FXCollections.observableArrayList();
         operators = FXCollections.observableArrayList();
 
         this.prefixNode = prefixNode;
         this.suffixNode = suffixNode;
+        listenToNodeRelevantList(operands);
+        listenToNodeRelevantList(operators);
         FXUtility.listen(operands, c -> {
-            updateNodes();
-            updateListeners();
+            if (!atomicEdit.get())
+                selfChanged();
         });
         FXUtility.listen(operators, c -> {
-            updateNodes();
-            updateListeners();
-        });
-        FXUtility.addChangeListenerPlatformNN(atomicEdit, inProgress -> {
-            if (!inProgress)
-            {
-                // At end of edit:
-                updateNodes();
-                updateListeners();
+            if (!atomicEdit.get())
                 selfChanged();
-            }
+        });
+        FXUtility.addChangeListenerPlatformNN(atomicEdit, changing -> {
+            if (!changing)
+                selfChanged();
         });
     }
 
-    private ListChangeListener<Node> getChildrenNodeListener()
+    @Override
+    protected Stream<Node> calculateNodes()
     {
-        if (childrenNodeListener == null)
+        List<Node> childrenNodes = new ArrayList<Node>();
+        for (int i = 0; i < Math.max(operands.size(), operators.size()); i++)
         {
-            this.childrenNodeListener = c ->
-            {
-                updateNodes();
-            };
+            if (i < operands.size())
+                childrenNodes.addAll(operands.get(i).nodes());
+            if (i < operators.size())
+                childrenNodes.addAll(operators.get(i).nodes());
         }
-        return childrenNodeListener;
+        if (this.prefixNode != null)
+            childrenNodes.add(0, this.prefixNode);
+        if (this.suffixNode != null)
+            childrenNodes.add(this.suffixNode);
+        return childrenNodes.stream();
+    }
+
+    @Override
+    protected Stream<EEDisplayNode> calculateChildren()
+    {
+        return Stream.concat(operators.stream(), operands.stream());
     }
 
     @NotNull
@@ -146,64 +149,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     // Get us as a semantic parent.  Do not get OUR parent.
     protected abstract SEMANTIC_PARENT getThisAsSemanticParent();
 
-    private void updateListeners()
-    {
-        if (atomicEdit.get())
-            return;
-
-        // Make them all as old (false)
-        listeningTo.replaceAll((e, b) -> false);
-        // Merge new ones:
-
-        Stream.<EEDisplayNode>concat(operands.stream(), operators.stream()).forEach(child -> {
-            // No need to listen again if already present as we're already listening
-            if (listeningTo.get(child) == null)
-                child.nodes().addListener(getChildrenNodeListener());
-            listeningTo.put(child, true);
-        });
-        // Stop listening to old:
-        for (Iterator<Entry<EEDisplayNode, Boolean>> iterator = listeningTo.entrySet().iterator(); iterator.hasNext(); )
-        {
-            Entry<EEDisplayNode, Boolean> e = iterator.next();
-            if (e.getValue() == false)
-            {
-                e.getKey().nodes().removeListener(getChildrenNodeListener());
-                iterator.remove();
-            }
-        }
-
-        selfChanged();
-    }
-
     protected abstract void selfChanged();
-
-    private void updateNodes()
-    {
-        if (atomicEdit.get())
-            return;
-
-        updatePrompt();
-
-        List<Node> childrenNodes = new ArrayList<Node>();
-        for (int i = 0; i < Math.max(operands.size(), operators.size()); i++)
-        {
-            if (i < operands.size())
-                childrenNodes.addAll(operands.get(i).nodes());
-            if (i < operators.size())
-                childrenNodes.addAll(operators.get(i).nodes());
-        }
-        if (this.prefixNode != null)
-            childrenNodes.add(0, this.prefixNode);
-        if (this.suffixNode != null)
-            childrenNodes.add(this.suffixNode);
-        nodes.setAll(childrenNodes);
-
-        updateDisplay();
-    }
 
     // Call after children have changed
     protected void updateDisplay()
     {
+        updatePrompt();
     }
 
     private void updatePrompt()
@@ -217,12 +168,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
                 child.prompt("");
             }
         }
-    }
-
-    @Override
-    public final ObservableList<Node> nodes()
-    {
-        return nodes;
     }
 
     @Override

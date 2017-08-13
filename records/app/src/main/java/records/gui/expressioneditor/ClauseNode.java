@@ -44,7 +44,7 @@ import java.util.stream.Stream;
 /**
  * One case in a match expression
  */
-public class ClauseNode implements EEDisplayNodeParent, EEDisplayNode, ExpressionNodeParent
+public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, ExpressionNodeParent
 {
     private final PatternMatchNode parent;
     private final VBox caseLabel;
@@ -52,10 +52,6 @@ public class ClauseNode implements EEDisplayNodeParent, EEDisplayNode, Expressio
     private final ObservableList<Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>>> matches;
     // This is the body of the clause:
     private final ConsecutiveBase<Expression, ExpressionNodeParent> outcome;
-    private final ObservableList<Node> nodes;
-    // The boolean value is only used during updateListeners, will be true other times
-    private final IdentityHashMap<EEDisplayNode, Boolean> listeningTo = new IdentityHashMap<>();
-    private @MonotonicNonNull ListChangeListener<Node> childrenNodeListener;
 
     @SuppressWarnings("initialization") //Calling getParentStyles
     public ClauseNode(PatternMatchNode parent, @Nullable Pair<List<Pair<Expression, @Nullable Expression>>, Expression> patternsAndGuardsToOutcome)
@@ -63,14 +59,10 @@ public class ClauseNode implements EEDisplayNodeParent, EEDisplayNode, Expressio
         this.parent = parent;
         this.caseLabel = ExpressionEditorUtil.keyword("case", "case", parent, getParentStyles());
         this.matches = FXCollections.observableArrayList();
-        this.nodes = FXCollections.observableArrayList();
         // Must initialize outcome first because updateNodes will use it:
         this.outcome = makeConsecutive("\u2794", patternsAndGuardsToOutcome == null ? null : patternsAndGuardsToOutcome.getSecond());
         outcome.prompt("value");
-        FXUtility.listen(matches, c -> {
-            updateNodes();
-            updateListeners();
-        });
+        listenToNodeRelevantList(matches);
         if (patternsAndGuardsToOutcome == null)
             this.matches.add(makeNewCase(null, null));
         else
@@ -94,49 +86,24 @@ public class ClauseNode implements EEDisplayNodeParent, EEDisplayNode, Expressio
         return new Pair<>(pattern, guard);
     }
 
-    private void updateListeners(@UnknownInitialization(ClauseNode.class) ClauseNode this)
+    @Override
+    protected Stream<EEDisplayNode> calculateChildren()
     {
-        if (childrenNodeListener == null)
-        {
-            this.childrenNodeListener = c -> {
-                updateNodes();
-            };
-        }
-
-        // Make them all as old (false)
-        listeningTo.replaceAll((e, b) -> false);
-        // Merge new ones:
-        for (Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> match : matches)
-        {
-            // No need to listen again if already present as we're already listening
-            if (listeningTo.get(match.getFirst()) == null)
-                match.getFirst().nodes().addListener(childrenNodeListener);
-            if (match.getSecond() != null && listeningTo.get(match.getSecond()) == null)
-                match.getSecond().nodes().addListener(childrenNodeListener);
-            listeningTo.put(match.getFirst(), true);
-            if (match.getSecond() != null)
-                listeningTo.put(match.getSecond(), true);
-        }
-        // Stop listening to old:
-        for (Iterator<Entry<EEDisplayNode, Boolean>> iterator = listeningTo.entrySet().iterator(); iterator.hasNext(); )
-        {
-            Entry<EEDisplayNode, Boolean> e = iterator.next();
-            if (e.getValue() == false)
-            {
-                e.getKey().nodes().removeListener(childrenNodeListener);
-                iterator.remove();
-            }
-        }
-
-        parent.changed(this);
+        return matches.stream().flatMap((Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> m) -> Utility.streamNullable(m.getFirst(), m.getSecond()));
     }
 
-    private void updateNodes(@UnknownInitialization(ClauseNode.class) ClauseNode this)
+    @Override
+    protected Stream<Node> calculateNodes()
     {
-        List<Node> childrenNodes = new ArrayList<Node>(Stream.<Node>concat(
+        return Stream.<Node>concat(
             matches.stream().flatMap((Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> p) -> Stream.concat(p.getFirst().nodes().stream(), p.getSecond() == null ? Stream.<@NonNull Node>empty() : p.getSecond().nodes().stream())),
-            outcome.nodes().stream()).collect(Collectors.<Node>toList()));
-        nodes.setAll(childrenNodes);
+            outcome.nodes().stream());
+    }
+
+    @Override
+    protected void updateDisplay()
+    {
+
     }
 
     @SuppressWarnings("initialization") // Because of Consecutive
@@ -156,12 +123,6 @@ public class ClauseNode implements EEDisplayNodeParent, EEDisplayNode, Expressio
                 return ClauseNode.this;
             }
         };
-    }
-
-    @Override
-    public ObservableList<Node> nodes()
-    {
-        return nodes;
     }
 
     @Override

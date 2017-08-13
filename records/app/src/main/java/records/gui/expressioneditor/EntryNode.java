@@ -13,17 +13,15 @@ import records.transformations.expression.Expression;
 import utility.Pair;
 import utility.gui.FXUtility;
 
+import java.util.stream.Stream;
+
 /**
  * A helper class that shares code between various text-field based nodes.
  */
-public abstract class EntryNode<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> implements EEDisplayNode, ConsecutiveChild<EXPRESSION>
+public abstract class EntryNode<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> extends DeepNodeTree implements EEDisplayNode, ConsecutiveChild<EXPRESSION>
 {
     protected final ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent;
     private final Class<EXPRESSION> expressionClass;
-    /**
-     * Permanent reference to list of contained nodes (for EEDisplayNode.nodes)
-     */
-    protected final ObservableList<Node> nodes = FXCollections.observableArrayList();
 
     protected final TextField textField;
 
@@ -45,12 +43,6 @@ public abstract class EntryNode<EXPRESSION extends @NonNull Object, SEMANTIC_PAR
     public void prompt(String prompt)
     {
         textField.setPromptText(prompt);
-    }
-
-    @Override
-    public final ObservableList<Node> nodes()
-    {
-        return nodes;
     }
 
     @Override
@@ -102,6 +94,18 @@ public abstract class EntryNode<EXPRESSION extends @NonNull Object, SEMANTIC_PAR
     @Override
     public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
-        return ConsecutiveChild.closestDropSingle(this, expressionClass, nodes.get(0), loc, forType);
+        return ConsecutiveChild.closestDropSingle(this, expressionClass, calculateNodes().findFirst().get(), loc, forType);
+    }
+
+    @Override
+    protected void updateDisplay()
+    {
+
+    }
+
+    @Override
+    protected Stream<EEDisplayNode> calculateChildren()
+    {
+        return Stream.empty();
     }
 }

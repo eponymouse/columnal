@@ -28,6 +28,7 @@ import records.grammar.ExpressionParser;
 import records.grammar.ExpressionParser.BooleanLiteralContext;
 import records.grammar.ExpressionParser.NumericLiteralContext;
 import records.gui.expressioneditor.AutoComplete.Completion;
+import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.transformations.expression.BooleanLiteral;
@@ -95,7 +96,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
      * Shortcut for opening a unit section.  This is passed back to us by reference
      * from AutoCompletion.
      */
-    private final KeyShortcutCompletion unitCompletion;
+    private final Completion unitCompletion;
     /**
      * Shortcut for opening a string literal.  This is passed back to us by reference
      * from AutoCompletion, hence we mark it @Interned to allow reference comparison.
@@ -145,12 +146,13 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         this.semanticParent = semanticParent;
         bracketCompletion = new KeyShortcutCompletion("Bracketed expressions", '(');
         stringCompletion = new KeyShortcutCompletion("Text", '\"');
-        unitCompletion = new KeyShortcutCompletion("Units", '{');
+        unitCompletion = new AddUnitCompletion();
         ifCompletion = new KeywordCompletion("if");
         matchCompletion = new KeywordCompletion("match");
         textField.setText(content);
+        updateNodes();
 
-        this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), c -> parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c));
+        this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), c -> !Character.isAlphabetic(c) && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
 
         FXUtility.addChangeListenerPlatformNN(status, s -> {
             // Need to beware that some status values may map to same pseudoclass:
@@ -175,6 +177,18 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         });
         textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), textField.getText().isEmpty());
         status.setValue(initialStatus);
+    }
+
+    @Override
+    protected Stream<Node> calculateNodes()
+    {
+        return Stream.concat(Stream.of(container), unitSpecifier == null ? Stream.empty() : unitSpecifier.nodes().stream());
+    }
+
+    @Override
+    protected Stream<EEDisplayNode> calculateChildren()
+    {
+        return Utility.streamNullable(unitSpecifier);
     }
 
     private static String getTypeLabel(Status s)
@@ -223,11 +237,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @RequiresNonNull({"bracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "parent"})
-    private List<Completion> getSuggestions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, String text) throws UserException, InternalException
+    private List<Completion> getSuggestions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
         r.add(bracketCompletion);
-        r.add(unitCompletion);
         r.add(stringCompletion);
         r.add(ifCompletion);
         r.add(matchCompletion);
@@ -248,6 +261,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 r.add(new TagCompletion(dataType.getTaggedTypeName(), tagType));
             }
         }
+
+        // Must be last as it should be lowest priority:
+        if (completionQuery != CompletionQuery.LEAVING_SLOT)
+            r.add(unitCompletion);
 
         // TODO: use type to prioritise and to filter
         /*
@@ -665,16 +682,18 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 }
                 else if (ksc == stringCompletion)
                     parent.replace(GeneralExpressionEntry.this, focusWhenShown(new StringLiteralNode("", parent)));
-                else if (ksc == unitCompletion)
+            }
+            else if (c == unitCompletion)
+            {
+                if (unitSpecifier == null)
                 {
-                    if (unitSpecifier == null)
-                        addUnitSpecifier(); // Should we put rest in the curly brackets?
-                    else
-                    {
-                        // If it's null and we're at the end, move into it:
-                        if (rest.isEmpty())
-                            unitSpecifier.focus(Focus.LEFT);
-                    }
+                    addUnitSpecifier(); // Should we put rest in the curly brackets?
+                }
+                else
+                {
+                    // If it's null and we're at the end, move into it:
+                    if (rest.isEmpty())
+                        unitSpecifier.focus(Focus.LEFT);
                 }
             }
             else if (c != null && c.equals(ifCompletion))
@@ -728,13 +747,12 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
     private void addUnitSpecifier()
     {
-        nodes.setAll(container);
         if (unitSpecifier == null)
         {
-            unitSpecifier = new UnitCompoundBase(this, true);
+            unitSpecifier = focusWhenShown(new UnitCompoundBase(this, true));
         }
-        nodes.addAll(unitSpecifier.nodes());
-        // TODO need a listener on the sub-nodes
+        updateNodes();
+        updateListeners();
     }
 
     @Override
@@ -782,5 +800,44 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     public ExpressionEditor getEditor()
     {
         return parent.getEditor();
+    }
+
+    private class AddUnitCompletion extends Completion
+    {
+        @Override
+        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        {
+            return new Pair<>(new Label(" { "), new ReadOnlyStringWrapper("Units"));
+        }
+
+        @Override
+        public boolean shouldShow(String input)
+        {
+            return isNumeric(input) && unitSpecifier == null;
+        }
+
+        private boolean isNumeric(String input)
+        {
+            return input.codePoints().allMatch(c -> (c >= '0' && c <= '9') || c == '+' || c == '-' || c == '.' || c == '{');
+        }
+
+        @Override
+        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        {
+            if (input.contains("{"))
+            {
+                return CompletionAction.COMPLETE_IMMEDIATELY;
+            }
+            else
+            {
+                return CompletionAction.NONE;
+            }
+        }
+
+        @Override
+        public boolean features(String curInput, char character)
+        {
+            return character == '{';
+        }
     }
 }

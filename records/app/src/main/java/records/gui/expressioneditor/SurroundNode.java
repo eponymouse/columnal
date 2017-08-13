@@ -88,7 +88,10 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
         if (hasInner)
             contents = new ContentConsecutive(vBox, startingContent);
         else
+        {
             contents = null;
+            noInnerNodes.setAll(vBox);
+        }
 
         FXUtility.addChangeListenerPlatformNN(head.textProperty(), text -> {
             parent.changed(this);

@@ -30,7 +30,7 @@ import utility.SimulationSupplier;
 import java.util.stream.Collectors;
 
 /**
- * Created by neil on 12/02/2017.
+ * A control for entering the name of a table which is the source of a transformation.
  */
 @OnThread(Tag.FXPlatform)
 public class SingleSourceControl extends HBox implements CompletionListener
@@ -47,7 +47,7 @@ public class SingleSourceControl extends HBox implements CompletionListener
         getStyleClass().add("single-source-control");
         Label label = new Label("Source:");
         TextField selected = new TextField(srcTableId == null ? "" : srcTableId.getOutput());
-        autoComplete = new AutoComplete(selected, s -> mgr.getAllTables().stream().filter(t -> t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.<Completion>toList()), this, c -> false);
+        autoComplete = new AutoComplete(selected, (s, q) -> mgr.getAllTables().stream().filter(t -> t.getId().getOutput().contains(s)).map(TableCompletion::new).collect(Collectors.<Completion>toList()), this, c -> false);
         Button select = new Button("Choose...");
         select.setOnAction(e -> {
             if (getScene() != null && getScene().getWindow() != null)
