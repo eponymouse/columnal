@@ -98,7 +98,7 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
                 }
 
                 @Override
-                public void set(int index, TemporalAccessor value) throws InternalException, UserException
+                public void set(int index, @Value TemporalAccessor value) throws InternalException, UserException
                 {
                     values.set(index, value);
                 }
@@ -112,7 +112,7 @@ public class TemporalColumnStorage implements ColumnStorage<TemporalAccessor>
     {
         if (index < 0 || index > values.size())
             throw new InternalException("Trying to insert rows at invalid index: " + index + " length is: " + values.size());
-        values.addAll(index, Utility.mapListInt(items, t -> pool.pool(t)));
+        values.addAll(index, Utility.<TemporalAccessor, @Value TemporalAccessor>mapListInt(items, t -> pool.pool(t)));
         int count = items.size();
         return () -> removeRows(index, count);
     }

@@ -17,7 +17,7 @@ import java.util.List;
 public class MemoryBooleanColumn extends EditableColumn
 {
     private final BooleanColumnStorage storage;
-    private final Boolean defaultValue;
+    private final @Value Boolean defaultValue;
 
     public MemoryBooleanColumn(RecordSet rs, ColumnId title, List<Boolean> list, Boolean defaultValue) throws InternalException
     {

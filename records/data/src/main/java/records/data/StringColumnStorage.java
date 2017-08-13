@@ -112,7 +112,7 @@ public class StringColumnStorage implements ColumnStorage<String>
     {
         if (index < 0 || index > values.size())
             throw new InternalException("Trying to insert rows at invalid index: " + index + " length is: " + values.size());
-        values.addAll(index, Utility.mapListInt(items, s -> pool.pool(s)));
+        values.addAll(index, Utility.<String, @Value String>mapListInt(items, s -> pool.pool(s)));
         int count = items.size();
         return () -> removeRows(index, count);
     }

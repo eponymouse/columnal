@@ -19,7 +19,7 @@ import java.util.stream.Stream;
 public class MemoryNumericColumn extends EditableColumn
 {
     private final NumericColumnStorage storage;
-    private final Number defaultValue;
+    private final @Value Number defaultValue;
 
     private MemoryNumericColumn(RecordSet rs, ColumnId title, NumberInfo numberInfo, Number defaultValue) throws InternalException
     {

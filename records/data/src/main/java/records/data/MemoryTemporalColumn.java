@@ -19,7 +19,7 @@ import java.util.List;
 public class MemoryTemporalColumn extends EditableColumn
 {
     private final TemporalColumnStorage storage;
-    private final TemporalAccessor defaultValue;
+    private final @Value TemporalAccessor defaultValue;
 
     public MemoryTemporalColumn(RecordSet rs, ColumnId title, DateTimeInfo dateTimeInfo, List<TemporalAccessor> list, TemporalAccessor defaultValue) throws InternalException
     {

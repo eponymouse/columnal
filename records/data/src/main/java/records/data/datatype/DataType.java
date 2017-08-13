@@ -1090,7 +1090,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ExFunction<RecordSet, EditableColumn> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return rs -> new MemoryTupleColumn(rs, columnId, inner, Utility.mapListEx(value, t -> Utility.valueTuple(t, inner.size())), Utility.cast(defaultValue, Object[].class));
+                return rs -> new MemoryTupleColumn(rs, columnId, inner, Utility.mapListEx(value, t -> Utility.valueTuple(t, inner.size())), Utility.cast(defaultValue, (Class<@Value Object[]>)Object[].class));
             }
 
             @Override
@@ -1195,7 +1195,7 @@ public class DataType
         }
     }
 
-    private static ListEx loadArray(DataType innerFinal, DataParser p) throws UserException, InternalException
+    private static @Value ListEx loadArray(DataType innerFinal, DataParser p) throws UserException, InternalException
     {
         if (tryParse(() -> p.openSquare()) == null)
             throw new UserException("Expected array but found: \"" + p.getCurrentToken() + "\"");
@@ -1213,14 +1213,14 @@ public class DataType
         return new ListExList(array);
     }
 
-    private static Object[] loadTuple(ImmutableList<DataType> inner, DataParser p, boolean consumedInitialOpen) throws UserException, InternalException
+    private static @Value Object @Value[] loadTuple(ImmutableList<DataType> inner, DataParser p, boolean consumedInitialOpen) throws UserException, InternalException
     {
         if (!consumedInitialOpen)
         {
             if (tryParse(() -> p.openRound()) == null)
                 throw new UserException("Expected tuple but found: \"" + p.getCurrentToken() + "\"");
         }
-        Object[] tuple = new Object[inner.size()];
+        @Value Object @Value[] tuple = new Object[inner.size()];
         for (int i = 0; i < tuple.length; i++)
         {
             tuple[i] = loadSingleItem(inner.get(i), p, false);
@@ -1235,7 +1235,7 @@ public class DataType
         return tuple;
     }
 
-    private static Boolean loadBool(DataParser p) throws UserException
+    private static @Value Boolean loadBool(DataParser p) throws UserException
     {
         BoolContext b = tryParse(() -> p.bool());
         if (b == null)
@@ -1243,7 +1243,7 @@ public class DataType
         return b.getText().trim().toLowerCase().equals("true");
     }
 
-    private static String loadString(DataParser p) throws UserException
+    private static @Value String loadString(DataParser p) throws UserException
     {
         StringContext string = tryParse(() -> p.string());
         if (string == null)
@@ -1251,7 +1251,7 @@ public class DataType
         return string.STRING().getText();
     }
 
-    private static Number loadNumber(DataParser p) throws UserException
+    private static @Value Number loadNumber(DataParser p) throws UserException
     {
         NumberContext number = tryParse(() -> p.number());
         if (number == null)

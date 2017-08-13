@@ -20,7 +20,7 @@ import java.util.List;
 public class MemoryArrayColumn extends EditableColumn
 {
     private final ArrayColumnStorage storage;
-    private final ListEx defaultValue;
+    private final @Value ListEx defaultValue;
 
     public MemoryArrayColumn(RecordSet recordSet, ColumnId title, @Nullable DataType inner, List<ListEx> values, ListEx defaultValue) throws InternalException
     {

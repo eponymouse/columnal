@@ -93,7 +93,7 @@ public class DataTypeValue extends DataType
         {
             @Override
             @OnThread(Tag.Simulation)
-            public Void number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
+            public Void number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
                 g.set(rowIndex, (Number)value);
                 return null;
@@ -101,7 +101,7 @@ public class DataTypeValue extends DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public Void text(GetValue<String> g) throws InternalException, UserException
+            public Void text(GetValue<@Value String> g) throws InternalException, UserException
             {
                 g.set(rowIndex, (String)value);
                 return null;
@@ -109,7 +109,7 @@ public class DataTypeValue extends DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public Void bool(GetValue<Boolean> g) throws InternalException, UserException
+            public Void bool(GetValue<@Value Boolean> g) throws InternalException, UserException
             {
                 g.set(rowIndex, (Boolean) value);
                 return null;
@@ -117,7 +117,7 @@ public class DataTypeValue extends DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public Void date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+            public Void date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
             {
                 g.set(rowIndex, (TemporalAccessor) value);
                 return null;
@@ -143,7 +143,7 @@ public class DataTypeValue extends DataType
             @Override
             public Void tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
             {
-                Object[] tuple = (Object[])value;
+                @Value Object[] tuple = (@Value Object[])value;
                 for (int i = 0; i < types.size(); i++)
                 {
                     types.get(i).setCollapsed(rowIndex, tuple[i]);

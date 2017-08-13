@@ -81,25 +81,25 @@ public class EditableRecordSet extends RecordSet
             }
 
             @Override
-            public EditableColumn number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException, UserException
+            public EditableColumn number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException, UserException
             {
                 return new MemoryNumericColumn(rs, original.getName(), displayInfo, getAll(g), Utility.cast(Utility.replaceNull(defaultValue, Integer.valueOf(0)), Number.class));
             }
 
             @Override
-            public EditableColumn text(GetValue<String> g) throws InternalException, UserException
+            public EditableColumn text(GetValue<@Value String> g) throws InternalException, UserException
             {
                 return new MemoryStringColumn(rs, original.getName(), getAll(g), Utility.cast(Utility.replaceNull(defaultValue, ""), String.class));
             }
 
             @Override
-            public EditableColumn bool(GetValue<Boolean> g) throws InternalException, UserException
+            public EditableColumn bool(GetValue<@Value Boolean> g) throws InternalException, UserException
             {
                 return new MemoryBooleanColumn(rs, original.getName(), getAll(g), Utility.cast(Utility.replaceNull(defaultValue, Boolean.FALSE), Boolean.class));
             }
 
             @Override
-            public EditableColumn date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException, UserException
+            public EditableColumn date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, UserException
             {
                 return new MemoryTemporalColumn(rs, original.getName(), dateTimeInfo, getAll(g), Utility.cast(Utility.replaceNull(defaultValue, dateTimeInfo.getDefaultValue()), TemporalAccessor.class));
             }
@@ -120,17 +120,17 @@ public class EditableRecordSet extends RecordSet
             @Override
             public EditableColumn tuple(ImmutableList<DataTypeValue> types) throws InternalException, UserException
             {
-                List<Object[]> r = new ArrayList<>();
+                List<@Value Object @Value []> r = new ArrayList<>();
                 for (int index = 0; original.indexValid(index); index++)
                 {
-                    @Value Object[] array = new Object[types.size()];
+                    @Value Object @Value [] array = new Object[types.size()];
                     for (int tupleIndex = 0; tupleIndex < types.size(); tupleIndex++)
                     {
                         array[tupleIndex] = types.get(tupleIndex).applyGet(this);
                     }
                     r.add(array);
                 }
-                Object[] tupleOfDefaults = new Object[types.size()];
+                @Value Object @Value [] tupleOfDefaults = new Object[types.size()];
                 for (int i = 0; i < tupleOfDefaults.length; i++)
                 {
                     tupleOfDefaults[i] = DataTypeUtility.makeDefaultValue(types.get(i));
