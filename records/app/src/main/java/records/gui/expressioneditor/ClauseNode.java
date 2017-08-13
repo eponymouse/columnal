@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import com.google.common.collect.ArrayListMultimap;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
@@ -8,6 +9,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -449,5 +451,11 @@ public class ClauseNode implements EEDisplayNodeParent, EEDisplayNode, Expressio
     public boolean isFocused()
     {
         return outcome.childIsFocused() || matches.stream().anyMatch((Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> m) -> m.getFirst().childIsFocused() || (m.getSecond() != null && m.getSecond().childIsFocused()));
+    }
+
+    @Override
+    public ImmutableList<Pair<String, @Localized String>> operatorKeywords()
+    {
+        return ImmutableList.of(new Pair<>("or", "op.caseor"), new Pair<>("given", "op.casegiven"));
     }
 }

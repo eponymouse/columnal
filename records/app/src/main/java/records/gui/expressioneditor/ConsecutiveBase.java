@@ -18,7 +18,6 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import org.jetbrains.annotations.NotNull;
-import records.data.Column;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
@@ -416,11 +415,19 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     {
         int firstIndex = operands.indexOf(first);
         int lastIndex = operands.indexOf(last);
+        boolean roundBracketed = false;
         if (firstIndex == -1 || lastIndex == -1 || lastIndex < firstIndex)
         {
             firstIndex = 0;
             lastIndex = operands.size() - 1;
         }
+        // May be because it was -1, or just those values were passed directly:
+        if (firstIndex == 0 && lastIndex == operands.size() - 1)
+        {
+            // Bit of a hack:
+            roundBracketed = this instanceof BracketedExpression;
+        }
+
         List<@NonNull EXPRESSION> expressionExps = Utility.<OperandNode<@NonNull EXPRESSION>, @NonNull EXPRESSION>mapList(operands.subList(firstIndex, lastIndex + 1), (OperandNode<@NonNull EXPRESSION> n) -> n.save(errorDisplayers, onError));
         Pair<Boolean, List<String>> opsValid = getOperators(firstIndex, lastIndex);
 
@@ -438,7 +445,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             return expressionExps.get(0);
         }
 
-        return operations.makeExpression(this, errorDisplayers, expressionExps, ops);
+        return operations.makeExpression(this, errorDisplayers, expressionExps, ops, roundBracketed);
     }
 
     public @Nullable DataType inferType()
@@ -811,15 +818,15 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     {
         public OperandNode<EXPRESSION> makeGeneral(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, SEMANTIC_PARENT semanticParent, @Nullable String initialContent);
 
-        public ImmutableList<Pair<String, @Localized String>> getValidOperators();
+        public ImmutableList<Pair<String, @Localized String>> getValidOperators(SEMANTIC_PARENT semanticParent);
 
-        public boolean isOperatorAlphabet(char character);
+        public boolean isOperatorAlphabet(char character, SEMANTIC_PARENT semanticParent);
 
         public Class<EXPRESSION> getOperandClass();
 
         @NonNull EXPRESSION makeUnfinished(String s);
 
-        EXPRESSION makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord<EXPRESSION> errorDisplayers, List<EXPRESSION> expressionExps, List<String> ops);
+        EXPRESSION makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord<EXPRESSION> errorDisplayers, List<EXPRESSION> expressionExps, List<String> ops, boolean directlyRoundBracketed);
 
         String save(EXPRESSION expression);
 
@@ -854,14 +861,14 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         private final Set<Integer> ALPHABET = OPERATORS.stream().map(p -> p.getFirst()).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
 
         @Override
-        public ImmutableList<Pair<String, @Localized String>> getValidOperators()
+        public ImmutableList<Pair<String, @Localized String>> getValidOperators(ExpressionNodeParent parent)
         {
-            return OPERATORS;
+            return Utility.concatI(OPERATORS, parent.operatorKeywords());
         }
 
-        public boolean isOperatorAlphabet(char character)
+        public boolean isOperatorAlphabet(char character, ExpressionNodeParent expressionNodeParent)
         {
-            return ALPHABET.contains((Integer)(int)character);
+            return ALPHABET.contains((Integer)(int)character) || expressionNodeParent.operatorKeywords().stream().flatMapToInt(k -> k.getFirst().codePoints()).anyMatch(c -> c == (int)character);
         }
 
         @Override
@@ -882,7 +889,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             return new UnfinishedExpression(s);
         }
 
-        public Expression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord<Expression> errorDisplayers, List<Expression> expressionExps, List<String> ops)
+        public Expression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord<Expression> errorDisplayers, List<Expression> expressionExps, List<String> ops, boolean directlyRoundBracketed)
         {
             if (ops.stream().allMatch(op -> op.equals("+") || op.equals("-")))
             {
@@ -904,7 +911,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             }
             else if (ops.stream().allMatch(op -> op.equals(",")))
             {
-                return errorDisplayers.record(displayer, new TupleExpression(ImmutableList.copyOf(expressionExps)));
+                if (directlyRoundBracketed)
+                    return errorDisplayers.record(displayer, new TupleExpression(ImmutableList.copyOf(expressionExps)));
+                // TODO offer fix to bracket this?
             }
 
             return errorDisplayers.record(displayer, new InvalidOperatorExpression(expressionExps, ops));
@@ -939,13 +948,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
 
         @Override
-        public ImmutableList<Pair<String, String>> getValidOperators()
+        public ImmutableList<Pair<String, @Localized String>> getValidOperators(UnitNodeParent parent)
         {
             return OPERATORS;
         }
 
         @Override
-        public boolean isOperatorAlphabet(char character)
+        public boolean isOperatorAlphabet(char character, UnitNodeParent parent)
         {
             return ALPHABET.contains((int)character);
         }
@@ -963,7 +972,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
 
         @Override
-        public UnitExpression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord<UnitExpression> errorDisplayers, List<UnitExpression> operands, List<String> ops)
+        public UnitExpression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord<UnitExpression> errorDisplayers, List<UnitExpression> operands, List<String> ops, boolean directlyRoundBracketed)
         {
             if (operands.size() == 2 && ops.size() == 1 && ops.get(0).equals("/"))
             {

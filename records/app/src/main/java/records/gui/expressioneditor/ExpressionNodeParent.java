@@ -1,5 +1,7 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -29,4 +31,13 @@ public interface ExpressionNodeParent
      * (from parent/grandparent/aunt nodes, not from the node itself).
      */
     List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child);
+
+    /**
+     * Gets all special keywords available in child operators,
+     * e.g. "then", paired with their description.
+     */
+    default ImmutableList<Pair<String, @Localized String>> operatorKeywords()
+    {
+        return ImmutableList.of();
+    }
 }

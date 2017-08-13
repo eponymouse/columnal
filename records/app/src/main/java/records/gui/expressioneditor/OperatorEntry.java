@@ -54,7 +54,7 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
         container.getStyleClass().add("entry");
         this.nodes.setAll(this.container);
 
-        this.autoComplete = new AutoComplete(textField, s -> getCompletions(parent, parent.operations.getValidOperators(), s), new CompletionListener(), c -> !parent.operations.isOperatorAlphabet(c) && !parent.terminatedByChars().contains(c));
+        this.autoComplete = new AutoComplete(textField, s -> getCompletions(parent, parent.operations.getValidOperators(parent.getThisAsSemanticParent()), s), new CompletionListener(), c -> !parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) && !parent.terminatedByChars().contains(c));
 
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text ->{
             parent.changed(OperatorEntry.this);

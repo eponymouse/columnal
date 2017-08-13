@@ -150,7 +150,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         matchCompletion = new KeywordCompletion("match");
         textField.setText(content);
 
-        this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), c -> parent.operations.isOperatorAlphabet(c) || parent.terminatedByChars().contains(c));
+        this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), c -> parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c));
 
         FXUtility.addChangeListenerPlatformNN(status, s -> {
             // Need to beware that some status values may map to same pseudoclass:

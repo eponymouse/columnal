@@ -119,6 +119,8 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         else if (Literal.class.isAssignableFrom(c))
         {
             write(expression.toString());
+            if (c == NumericLiteral.class)
+                push(KeyCode.RIGHT);
         }
         else if (c == ColumnReference.class)
         {
@@ -155,21 +157,24 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             enterExpression(match.getExpression(), r);
             for (MatchClause matchClause : match.getClauses())
             {
-                push(KeyCode.DOWN);
+                push(KeyCode.RIGHT);
                 for (int i = 0; i < matchClause.getPatterns().size(); i++)
                 {
                     if (i > 0)
-                        push(KeyCode.RIGHT);
+                        write("or");
                     Pattern pattern = matchClause.getPatterns().get(i);
                     enterExpression(pattern.getPattern(), r);
                     @Nullable Expression guard = pattern.getGuard();
                     if (guard != null)
                     {
-                        push(KeyCode.RIGHT);
+                        write("given");
                         enterExpression(guard, r);
                     }
                 }
-                push(KeyCode.RIGHT);
+                if (r.nextBoolean())
+                    write("then");
+                else
+                    push(KeyCode.RIGHT);
                 enterExpression(matchClause.getOutcome(), r);
             }
         }
