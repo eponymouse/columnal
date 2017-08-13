@@ -73,10 +73,12 @@ public class EditableRecordSet extends RecordSet
         {
             private <T> List<@UnknownIfValue T> getAll(GetValue<@Value T> g) throws InternalException, UserException
             {
-                List<T> r = new ArrayList<>();
+                List<@UnknownIfValue T> r = new ArrayList<>();
                 for (int i = 0; original.indexValid(i); i++)
                 {
-                    r.add((T)g.get(i));
+                    @SuppressWarnings("value")
+                    T t = g.get(i);
+                    r.add(t);
                 }
                 return r;
             }
@@ -124,14 +126,15 @@ public class EditableRecordSet extends RecordSet
                 List<@Value Object @Value []> r = new ArrayList<>();
                 for (int index = 0; original.indexValid(index); index++)
                 {
-                    @Value Object @Value [] array = new Object[types.size()];
+                    @Value Object @Value [] array = DataTypeUtility.value(new Object[types.size()]);
                     for (int tupleIndex = 0; tupleIndex < types.size(); tupleIndex++)
                     {
+                        // TODO this is a bug.  Why isn't it failing a test?
                         array[tupleIndex] = types.get(tupleIndex).applyGet(this);
                     }
                     r.add(array);
                 }
-                @Value Object @Value [] tupleOfDefaults = new Object[types.size()];
+                @Value Object @Value [] tupleOfDefaults = DataTypeUtility.value(new Object[types.size()]);
                 for (int i = 0; i < tupleOfDefaults.length; i++)
                 {
                     tupleOfDefaults[i] = DataTypeUtility.makeDefaultValue(types.get(i));

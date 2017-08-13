@@ -27,7 +27,7 @@ public class MemoryTupleColumn extends EditableColumn
         this.storage = new TupleColumnStorage(dataTypes);
     }
 
-    public MemoryTupleColumn(RecordSet recordSet, ColumnId title, List<DataType> dataTypes, List<Object[]> values, @Value Object @Value[] defaultValue) throws InternalException
+    public MemoryTupleColumn(RecordSet recordSet, ColumnId title, List<DataType> dataTypes, List<@Value Object @Value[]> values, @Value Object @Value[] defaultValue) throws InternalException
     {
         this(recordSet, title, dataTypes, defaultValue);
         storage.addAll(values);
