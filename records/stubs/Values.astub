@@ -20,6 +20,7 @@ class ZonedDateTime
 {
     public static @Value ZonedDateTime of(LocalDate date, LocalTime time, ZoneId zone);
     public @Value ZonedDateTime withFixedOffsetZone();
+    public static @Value ZonedDateTime from(TemporalAccessor temporal);
 }
 class LocalDate
 {

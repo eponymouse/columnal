@@ -1661,17 +1661,17 @@ public class DataType
             switch (type)
             {
                 case YEARMONTHDAY:
-                    return DataTypeUtility.value(this, LocalDate.from(DEFAULT_VALUE));
+                    return LocalDate.from(DEFAULT_VALUE);
                 case YEARMONTH:
-                    return DataTypeUtility.value(this, YearMonth.from(DEFAULT_VALUE));
+                    return YearMonth.from(DEFAULT_VALUE);
                 case TIMEOFDAY:
-                    return DataTypeUtility.value(this, LocalTime.from(DEFAULT_VALUE));
+                    return LocalTime.from(DEFAULT_VALUE);
                 case TIMEOFDAYZONED:
-                    return DataTypeUtility.value(this, OffsetTime.from(DEFAULT_VALUE));
+                    return OffsetTime.from(DEFAULT_VALUE);
                 case DATETIME:
-                    return DataTypeUtility.value(this, LocalDateTime.from(DEFAULT_VALUE));
+                    return LocalDateTime.from(DEFAULT_VALUE);
                 case DATETIMEZONED:
-                    return DataTypeUtility.value(this, ZonedDateTime.from(DEFAULT_VALUE));
+                    return  ZonedDateTime.from(DEFAULT_VALUE);
             }
             throw new InternalException("Unknown type: " + type);
         }
