@@ -866,6 +866,7 @@ public class Utility
         return OptionalInt.empty();
     }
 
+    @SuppressWarnings("value") // Input is value, so output can be too
     public static <T> @Value T cast(@Value Object x, Class<T> cls) throws InternalException
     {
         if (cls.isInstance(x))
