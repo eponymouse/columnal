@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
@@ -61,6 +62,13 @@ public class TagExpressionNode extends SurroundNode implements ExpressionNodePar
     public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
     {
         return semanticParent.getAvailableVariables(this);
+    }
+
+    @Override
+    public boolean canDeclareVariable(@UnknownInitialization EEDisplayNode chid)
+    {
+        // Sub item can declare variables as pattern match if we could:
+        return semanticParent.canDeclareVariable(this);
     }
 
     @Override

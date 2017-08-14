@@ -169,6 +169,12 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
+    public boolean canDeclareVariable(@UnknownInitialization EEDisplayNode chid)
+    {
+        return false;
+    }
+
+    @Override
     public void changed(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
     {
         parent.changed(this);

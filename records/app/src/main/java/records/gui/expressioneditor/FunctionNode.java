@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -62,5 +63,11 @@ public class FunctionNode extends SurroundNode implements ExpressionNodeParent
     public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
     {
         return semanticParent.getAvailableVariables(this);
+    }
+
+    @Override
+    public boolean canDeclareVariable(@UnknownInitialization EEDisplayNode chid)
+    {
+        return false;
     }
 }

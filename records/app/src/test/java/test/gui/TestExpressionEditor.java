@@ -204,6 +204,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         else if (c == VarDeclExpression.class)
         {
             write(((VarDeclExpression)expression).getName());
+            // Have to manually move on because it won't auto-complete:
             push(KeyCode.TAB); // TODO make sure we've scrolled to new-var in cases of overlap
         }
         else if (c == VarUseExpression.class)

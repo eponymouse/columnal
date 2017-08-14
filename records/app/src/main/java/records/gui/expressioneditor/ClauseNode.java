@@ -499,4 +499,11 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     {
         return ImmutableList.of(new Pair<>("or", "op.caseor"), new Pair<>("given", "op.casegiven"));
     }
+
+    @Override
+    public boolean canDeclareVariable(@UnknownInitialization EEDisplayNode child)
+    {
+        // Only declare variables in a pattern, not guard or outcome:
+        return matches.stream().anyMatch((Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> p) -> p.getFirst() == child);
+    }
 }

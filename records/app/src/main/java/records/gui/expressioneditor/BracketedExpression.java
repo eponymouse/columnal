@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -82,5 +83,14 @@ public class BracketedExpression extends Consecutive<Expression, ExpressionNodeP
     public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
     {
         return consecParent.getThisAsSemanticParent().getAvailableVariables(this);
+    }
+
+    @Override
+    public boolean canDeclareVariable(@UnknownInitialization EEDisplayNode child)
+    {
+        // So technically you can only declare a var if this is a tuple or array.  But
+        // we don't know that until they've finished, so we just allow it if the parent allows it,
+        // and generate an error later if it's not allowed:
+        return consecParent.getThisAsSemanticParent().canDeclareVariable(this);
     }
 }

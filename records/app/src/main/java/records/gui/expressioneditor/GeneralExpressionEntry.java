@@ -58,7 +58,7 @@ import java.util.stream.Stream;
  *   - Partial function name (until later transformed to function call)
  *   - Variable reference.
  */
-public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionNodeParent> implements OperandNode<Expression>, ErrorDisplayer, EEDisplayNodeParent, ExpressionNodeParent
+public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, ExpressionNodeParent> implements OperandNode<Expression>, ErrorDisplayer, EEDisplayNodeParent
 {
     private static final String ARROW_SAME_ROW = "\u2192";
     private static final String ARROW_WHOLE = "\u2195";
@@ -102,6 +102,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
      * from AutoCompletion, hence we mark it @Interned to allow reference comparison.
      */
     private final KeyShortcutCompletion stringCompletion;
+
+    /**
+     * Completion for declaring a new variable
+     */
+    private final Completion varDeclCompletion;
 
     /**
      * Completion for if-then-else
@@ -149,6 +154,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         unitCompletion = new AddUnitCompletion();
         ifCompletion = new KeywordCompletion("if");
         matchCompletion = new KeywordCompletion("match");
+        varDeclCompletion = new VarDeclCompletion();
         textField.setText(content);
         updateNodes();
 
@@ -236,7 +242,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return PseudoClass.getPseudoClass(pseudoClass);
     }
 
-    @RequiresNonNull({"bracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "parent"})
+    @RequiresNonNull({"bracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "varDeclCompletion", "parent", "semanticParent"})
     private List<Completion> getSuggestions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
@@ -265,6 +271,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         // Must be last as it should be lowest priority:
         if (completionQuery != CompletionQuery.LEAVING_SLOT)
             r.add(unitCompletion);
+
+        if (semanticParent.canDeclareVariable(this))
+        {
+            r.add(varDeclCompletion);
+        }
 
         // TODO: use type to prioritise and to filter
         /*
@@ -765,18 +776,6 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @Override
-    public List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException
-    {
-        return Collections.emptyList();
-    }
-
-    @Override
-    public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
-    {
-        return Collections.emptyList();
-    }
-
-    @Override
     public void focus(Focus side)
     {
         if (side == Focus.RIGHT && unitSpecifier != null)
@@ -847,6 +846,34 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         public boolean features(String curInput, char character)
         {
             return character == '{';
+        }
+    }
+
+    private class VarDeclCompletion extends Completion
+    {
+
+        @Override
+        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        {
+            return new Pair<>(new Label("Named match"), currentText);
+        }
+
+        @Override
+        public boolean shouldShow(String input)
+        {
+            return input.length() >= 1 && Character.isLetter(input.codePointAt(0));
+        }
+
+        @Override
+        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        {
+            return onlyAvailableCompletion ? CompletionAction.SELECT : CompletionAction.NONE;
+        }
+
+        @Override
+        public boolean features(String curInput, char character)
+        {
+            return true;
         }
     }
 }

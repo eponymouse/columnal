@@ -111,6 +111,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         super(EXPRESSION_OPS,  null, null, "");
         this.container = new FlowPane();
         this.scrollPane = new ScrollPane(container);
+        scrollPane.setPrefHeight(200.0);
         this.tableManager = tableManager;
         container.getStyleClass().add("expression-editor");
         container.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
@@ -216,6 +217,12 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     {
         // No variables from outside the expression:
         return Collections.emptyList();
+    }
+
+    @Override
+    public boolean canDeclareVariable(@UnknownInitialization EEDisplayNode chid)
+    {
+        return false;
     }
 
     @Override

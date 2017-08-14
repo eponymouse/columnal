@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -40,4 +41,9 @@ public interface ExpressionNodeParent
     {
         return ImmutableList.of();
     }
+
+    /**
+     * Can this direct child node declare a variable?  i.e. is it part of a pattern?
+     */
+    boolean canDeclareVariable(@UnknownInitialization EEDisplayNode chid);
 }

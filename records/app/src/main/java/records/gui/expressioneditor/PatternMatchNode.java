@@ -115,6 +115,13 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     }
 
     @Override
+    public boolean canDeclareVariable(@UnknownInitialization EEDisplayNode chid)
+    {
+        // Not in our direct children, which is the condition.  Only in clauses, which take care of it:
+        return false;
+    }
+
+    @Override
     public void changed(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
     {
         parent.changed(this);
