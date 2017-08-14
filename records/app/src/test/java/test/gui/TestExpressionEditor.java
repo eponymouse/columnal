@@ -171,7 +171,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
                     @Nullable Expression guard = pattern.getGuard();
                     if (guard != null)
                     {
-                        write("given");
+                        write("where");
                         enterExpression(guard, r);
                     }
                 }

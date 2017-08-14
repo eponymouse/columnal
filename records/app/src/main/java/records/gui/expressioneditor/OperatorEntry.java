@@ -180,7 +180,7 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
         {
             if (c instanceof SimpleCompletion)
             {
-                parent.addOperandToRight(OperatorEntry.this, rest, true);
+                parent.addOperandToRight(OperatorEntry.this, currentText, rest, true);
                 return ((SimpleCompletion) c).operator;
             }
             else if (c instanceof KeyShortcutCompletion)

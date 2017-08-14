@@ -37,12 +37,14 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map.Entry;
+import java.util.OptionalInt;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
- * One case in a match expression
+ * One case in a match expression.  May have several "or"-ed patterns, each of which may
+ * have a "where" guard.  Will always have one outcome.
  */
 public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EEDisplayNode, ExpressionNodeParent
 {
@@ -53,6 +55,25 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     // This is the body of the clause:
     private final ConsecutiveBase<Expression, ExpressionNodeParent> outcome;
 
+    private static enum SubType
+    {
+        PATTERN, GUARD, OUTCOME;
+
+        public String getPrefixKeyword()
+        {
+            switch (this)
+            {
+                case PATTERN:
+                    return "case";
+                case GUARD:
+                    return "where";
+                case OUTCOME:
+                    return "then";
+            }
+            return "";
+        }
+    }
+
     @SuppressWarnings("initialization") //Calling getParentStyles
     public ClauseNode(PatternMatchNode parent, @Nullable Pair<List<Pair<Expression, @Nullable Expression>>, Expression> patternsAndGuardsToOutcome)
     {
@@ -60,7 +81,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
         this.caseLabel = ExpressionEditorUtil.keyword("case", "case", parent, getParentStyles());
         this.matches = FXCollections.observableArrayList();
         // Must initialize outcome first because updateNodes will use it:
-        this.outcome = makeConsecutive("\u2794", patternsAndGuardsToOutcome == null ? null : patternsAndGuardsToOutcome.getSecond());
+        this.outcome = makeConsecutive(SubType.OUTCOME/*"\u2794"*/, patternsAndGuardsToOutcome == null ? null : patternsAndGuardsToOutcome.getSecond());
         outcome.prompt("value");
         listenToNodeRelevantList(matches);
         if (patternsAndGuardsToOutcome == null)
@@ -78,9 +99,9 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     @NotNull
     private Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> makeNewCase(@Nullable Expression caseExpression, @Nullable Expression guardExpression)
     {
-        Consecutive<Expression, ExpressionNodeParent> pattern = makeConsecutive("case", caseExpression);
+        Consecutive<Expression, ExpressionNodeParent> pattern = makeConsecutive(SubType.PATTERN, caseExpression);
         pattern.prompt("pattern");
-        Consecutive<Expression, ExpressionNodeParent> guard = guardExpression == null ? null : makeConsecutive("where", guardExpression);
+        Consecutive<Expression, ExpressionNodeParent> guard = guardExpression == null ? null : makeConsecutive(SubType.GUARD, guardExpression);
         if (guard != null)
             guard.prompt("condition");
         return new Pair<>(pattern, guard);
@@ -107,9 +128,36 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     }
 
     @SuppressWarnings("initialization") // Because of Consecutive
-    private Consecutive<Expression, ExpressionNodeParent> makeConsecutive(@UnknownInitialization(Object.class)ClauseNode this, @Nullable String prefix, @Nullable Expression startingContent)
+    private Consecutive<Expression, ExpressionNodeParent> makeConsecutive(@UnknownInitialization(Object.class)ClauseNode this, SubType subType, @Nullable Expression startingContent)
     {
-        return new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, prefix == null ? null : ExpressionEditorUtil.keyword(prefix, "match", parent, getParentStyles()), null, "match", startingContent == null ? null : SingleLoader.withSemanticParent(startingContent.loadAsConsecutive(), this)) {
+        return new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, ExpressionEditorUtil.keyword(subType.getPrefixKeyword(), "match", parent, getParentStyles()), null, "match", startingContent == null ? null : SingleLoader.withSemanticParent(startingContent.loadAsConsecutive(), this)) {
+
+            @Override
+            public void addOperandToRight(OperatorEntry<Expression, ExpressionNodeParent> rightOf, String operatorEntered, String initialContent, boolean focus)
+            {
+                boolean lastItem = Utility.indexOfRef(operators, rightOf) == operators.size() - 1;
+
+                if (lastItem && operatorEntered.equals("or") && subType == SubType.GUARD || (subType == SubType.PATTERN && !patternHasGuard(this)))
+                {
+                    addNewClauseToRightOf(this).focusWhenShown();
+                }
+                else if (lastItem && operatorEntered.equals("where") && subType == SubType.PATTERN && !patternHasGuard(this))
+                {
+                    addGuardFor(this);
+                }
+                else if (lastItem && operatorEntered.equals("then") && isLastItemBeforeOutcome(this))
+                {
+                    outcome.focus(Focus.LEFT);
+                }
+                else if (lastItem && operatorEntered.equals("case") && subType == SubType.OUTCOME)
+                {
+                    ClauseNode.this.parent.addNewCaseToRightOf(ClauseNode.this).focusWhenShown();
+                }
+                else
+                {
+                    super.addOperandToRight(rightOf, operatorEntered, initialContent, focus);
+                }
+            }
 
             @Override
             public boolean isFocused()
@@ -123,6 +171,38 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
                 return ClauseNode.this;
             }
         };
+    }
+
+    private boolean isLastItemBeforeOutcome(Consecutive<Expression, ExpressionNodeParent> patternOrGuard)
+    {
+        // Shouldn't happen, but just in case:
+        if (matches.isEmpty()) return false;
+
+        Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> last = matches.get(matches.size() - 1);
+
+        return last.getSecond() == patternOrGuard || (last.getSecond() == null && last.getFirst() == patternOrGuard);
+    }
+
+    private void addGuardFor(Consecutive<Expression, ExpressionNodeParent> pattern)
+    {
+        OptionalInt index = Utility.findFirstIndex(matches, (Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> p) -> p.getFirst() == pattern);
+        index.ifPresent(i -> matches.set(i, new Pair<>(pattern, makeConsecutive(SubType.GUARD, null))));
+    }
+
+    private EEDisplayNode addNewClauseToRightOf(Consecutive<Expression, ExpressionNodeParent> patternOrGuard)
+    {
+        int index = Utility.findFirstIndex(matches, (Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> p) -> p.getFirst() == patternOrGuard || p.getSecond() == patternOrGuard).orElse(matches.size() - 1);
+        // Shouldn't be missing but we just use a sensible default as backup measure
+
+        Consecutive<Expression, ExpressionNodeParent> c = makeConsecutive(SubType.PATTERN, null);
+        matches.add(index + 1, new Pair<>(c, null));
+        return c;
+    }
+
+    // Returns true if there's a guard, false if not
+    private boolean patternHasGuard(Consecutive<Expression, ExpressionNodeParent> pattern)
+    {
+        return matches.stream().filter((Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> p) -> p.getFirst() == pattern).map((Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> p) -> p.getSecond() != null).findFirst().orElse(false);
     }
 
     @Override

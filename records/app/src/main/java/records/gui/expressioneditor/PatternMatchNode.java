@@ -270,4 +270,16 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     {
         source.showError(error, quickFixes);
     }
+
+    public ClauseNode addNewCaseToRightOf(ClauseNode clause)
+    {
+        int index = Utility.indexOfRef(clauses, clause);
+        if (index == -1)
+            index = clauses.size();
+        else
+            index += 1;
+        ClauseNode newClause = new ClauseNode(this, null);
+        clauses.add(newClause);
+        return newClause;
+    }
 }
