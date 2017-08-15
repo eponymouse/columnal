@@ -4,14 +4,12 @@ import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multimap;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
@@ -26,20 +24,16 @@ import records.transformations.expression.MatchExpression.Pattern;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map.Entry;
 import java.util.OptionalInt;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -133,7 +127,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
         return new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, ExpressionEditorUtil.keyword(subType.getPrefixKeyword(), "match", parent, getParentStyles()), null, "match", startingContent == null ? null : SingleLoader.withSemanticParent(startingContent.loadAsConsecutive(), this)) {
 
             @Override
-            public void addOperandToRight(OperatorEntry<Expression, ExpressionNodeParent> rightOf, String operatorEntered, String initialContent, boolean focus)
+            public OperatorOutcome addOperandToRight(OperatorEntry<Expression, ExpressionNodeParent> rightOf, String operatorEntered, String initialContent, boolean focus)
             {
                 boolean lastItem = Utility.indexOfRef(operators, rightOf) == operators.size() - 1;
 
@@ -155,8 +149,10 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
                 }
                 else
                 {
-                    super.addOperandToRight(rightOf, operatorEntered, initialContent, focus);
+                    return super.addOperandToRight(rightOf, operatorEntered, initialContent, focus);
                 }
+                // If we recognised any special ones, blank the operator:
+                return OperatorOutcome.BLANK;
             }
 
             @Override

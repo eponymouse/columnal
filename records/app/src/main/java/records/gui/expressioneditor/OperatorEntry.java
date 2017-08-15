@@ -19,6 +19,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
+import records.gui.expressioneditor.ConsecutiveBase.OperatorOutcome;
 import utility.Pair;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
@@ -180,8 +181,15 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
         {
             if (c instanceof SimpleCompletion)
             {
-                parent.addOperandToRight(OperatorEntry.this, currentText, rest, true);
-                return ((SimpleCompletion) c).operator;
+                OperatorOutcome outcome = parent.addOperandToRight(OperatorEntry.this, currentText, rest, true);
+                switch (outcome)
+                {
+                    case KEEP:
+                        return ((SimpleCompletion) c).operator;
+                    default:
+                        return "";
+                }
+
             }
             else if (c instanceof KeyShortcutCompletion)
             {

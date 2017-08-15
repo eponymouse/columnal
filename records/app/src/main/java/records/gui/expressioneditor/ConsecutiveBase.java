@@ -193,7 +193,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
     }
 
-    public void addOperandToRight(@UnknownInitialization OperatorEntry<EXPRESSION, SEMANTIC_PARENT> rightOf, String operatorEntered, String initialContent, boolean focus)
+    public static enum OperatorOutcome { KEEP, BLANK }
+
+    public OperatorOutcome addOperandToRight(@UnknownInitialization OperatorEntry<EXPRESSION, SEMANTIC_PARENT> rightOf, String operatorEntered, String initialContent, boolean focus)
     {
         // Must add operand and operator
         int index = Utility.indexOfRef(operators, rightOf);
@@ -206,7 +208,10 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
                 operandNode.focusWhenShown();
             operands.add(index+1, operandNode);
             atomicEdit.set(false);
+            return OperatorOutcome.KEEP;
         }
+        // If we can't find it, I guess blank:
+        return OperatorOutcome.BLANK;
     }
 
 
