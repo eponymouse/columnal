@@ -272,7 +272,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         if (completionQuery != CompletionQuery.LEAVING_SLOT)
             r.add(unitCompletion);
 
-        if (semanticParent.canDeclareVariable(this))
+        if (canDeclareVariable())
         {
             r.add(varDeclCompletion);
         }
@@ -322,6 +322,12 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         */
         r.removeIf(c -> !c.shouldShow(text));
         return r;
+    }
+
+    @SuppressWarnings("initialization")
+    private boolean canDeclareVariable(@UnknownInitialization GeneralExpressionEntry this)
+    {
+        return semanticParent.canDeclareVariable(this);
     }
 
     @RequiresNonNull("parent")
@@ -552,6 +558,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 return errorDisplayer.record(this, new BooleanLiteral(bool.getText().equals("true")));
             }
         }
+        else if (status.get() == Status.VARIABLE_DECL)
+        {
+            return new VarDeclExpression(textField.getText().trim());
+        }
         // Unfinished:
         return errorDisplayer.record(this, new UnfinishedExpression(textField.getText().trim()));
     }
@@ -731,9 +741,17 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 }
                 else
                 {
-                    parent.focusRightOf(GeneralExpressionEntry.this);
+                    parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
                 }
                 parent.replace(GeneralExpressionEntry.this, tagExpressionNode);
+            }
+            else if (c == varDeclCompletion)
+            {
+                completing = true;
+                status.setValue(Status.VARIABLE_DECL);
+                parent.setOperatorToRight(GeneralExpressionEntry.this, rest);
+                parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
+                return currentText;
             }
             else if (c == null || c instanceof GeneralCompletion)
             {
@@ -741,7 +759,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 completing = true;
                 parent.setOperatorToRight(GeneralExpressionEntry.this, rest);
                 status.setValue(gc == null ? Status.UNFINISHED : gc.getType());
-                parent.focusRightOf(GeneralExpressionEntry.this);
+                // End of following operator, since we pushed rest into there:
+                parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
                 if (gc instanceof SimpleCompletion)
                 {
                     prefix.setText(((SimpleCompletion)gc).prefix);
@@ -785,10 +804,16 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @Override
-    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
+    public boolean isOrContains(EEDisplayNode child)
+    {
+        return this == child;
+    }
+
+    @Override
+    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Focus side)
     {
         // Child is bound to be units:
-        parent.focusRightOf(this);
+        parent.focusRightOf(this, side);
     }
 
     @Override
@@ -873,7 +898,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public boolean features(String curInput, char character)
         {
-            return true;
+            return (curInput.length() >= 1 && (Character.isDigit(character) || character == ' ')) || Character.isLetter(character);
         }
     }
 }

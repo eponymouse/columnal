@@ -121,6 +121,12 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
         return textField.getText().isEmpty();
     }
 
+    @Override
+    public boolean isOrContains(EEDisplayNode child)
+    {
+        return this == child;
+    }
+
     private static class SimpleCompletion extends Completion
     {
         private final String operator;
@@ -193,7 +199,7 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
             }
             else if (c instanceof KeyShortcutCompletion)
             {
-                parent.focusRightOf(OperatorEntry.this);
+                parent.focusRightOf(OperatorEntry.this, Focus.LEFT);
                 return "";
             }
             return textField.getText();

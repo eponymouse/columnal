@@ -131,13 +131,13 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
             {
                 boolean lastItem = Utility.indexOfRef(operators, rightOf) == operators.size() - 1;
 
-                if (lastItem && operatorEntered.equals("or") && subType == SubType.GUARD || (subType == SubType.PATTERN && !patternHasGuard(this)))
+                if (lastItem && operatorEntered.equals("or") && (subType == SubType.GUARD || (subType == SubType.PATTERN && !patternHasGuard(this))))
                 {
                     addNewClauseToRightOf(this).focusWhenShown();
                 }
                 else if (lastItem && operatorEntered.equals("where") && subType == SubType.PATTERN && !patternHasGuard(this))
                 {
-                    addGuardFor(this);
+                    addGuardFor(this).focusWhenShown();
                 }
                 else if (lastItem && operatorEntered.equals("then") && isLastItemBeforeOutcome(this))
                 {
@@ -179,10 +179,12 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
         return last.getSecond() == patternOrGuard || (last.getSecond() == null && last.getFirst() == patternOrGuard);
     }
 
-    private void addGuardFor(Consecutive<Expression, ExpressionNodeParent> pattern)
+    private Consecutive<Expression, ExpressionNodeParent> addGuardFor(Consecutive<Expression, ExpressionNodeParent> pattern)
     {
         OptionalInt index = Utility.findFirstIndex(matches, (Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> p) -> p.getFirst() == pattern);
-        index.ifPresent(i -> matches.set(i, new Pair<>(pattern, makeConsecutive(SubType.GUARD, null))));
+        Consecutive<Expression, ExpressionNodeParent> guard = makeConsecutive(SubType.GUARD, null);
+        index.ifPresent(i -> matches.set(i, new Pair<>(pattern, guard)));
+        return guard;
     }
 
     private EEDisplayNode addNewClauseToRightOf(Consecutive<Expression, ExpressionNodeParent> patternOrGuard)
@@ -328,11 +330,11 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     }
 
     @Override
-    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
+    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Focus side)
     {
         if (child == outcome)
         {
-            parent.focusRightOf(this);
+            parent.focusRightOf(this, side);
         }
         else
         {
@@ -341,14 +343,14 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
             {
                 if (focusNext)
                 {
-                    match.getFirst().focus(Focus.LEFT);
+                    match.getFirst().focus(side);
                     return;
                 }
                 if (match.getFirst() == child)
                 {
                     if (match.getSecond() != null)
                     {
-                        match.getSecond().focus(Focus.LEFT);
+                        match.getSecond().focus(side);
                         return;
                     }
                     else
@@ -360,7 +362,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
                 }
             }
             if (focusNext)
-                parent.focusRightOf(this);
+                parent.focusRightOf(this, side);
         }
     }
 
@@ -440,6 +442,12 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
         matches.get(0).getFirst().focus(Focus.LEFT);
     }
 
+    @Override
+    public boolean isOrContains(EEDisplayNode child)
+    {
+        return this == child || outcome.isOrContains(child) || matches.stream().anyMatch((Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> p) -> p.getFirst().isOrContains(child) || (p.getSecond() != null && p.getSecond().isOrContains(child)));
+    }
+
     public boolean isMatchNode(ConsecutiveBase consecutive)
     {
         for (Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> match : matches)
@@ -493,13 +501,13 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     @Override
     public ImmutableList<Pair<String, @Localized String>> operatorKeywords()
     {
-        return ImmutableList.of(new Pair<>("or", "op.caseor"), new Pair<>("given", "op.casegiven"));
+        return ImmutableList.of(new Pair<>("or", "op.caseor"), new Pair<>("where", "op.casegiven"), new Pair<>("then", "op.casethen"));
     }
 
     @Override
-    public boolean canDeclareVariable(@UnknownInitialization EEDisplayNode child)
+    public boolean canDeclareVariable(EEDisplayNode child)
     {
         // Only declare variables in a pattern, not guard or outcome:
-        return matches.stream().anyMatch((Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> p) -> p.getFirst() == child);
+        return matches.stream().anyMatch((Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> p) -> p.getFirst().isOrContains(child));
     }
 }

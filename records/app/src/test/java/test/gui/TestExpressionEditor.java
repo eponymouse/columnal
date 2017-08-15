@@ -75,7 +75,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         write("DestCol");
         // Focus expression editor:
         push(KeyCode.TAB);
-        enterExpression(expressionValue.expression, r);
+        enterExpression(expressionValue.expression, false, r);
         // Hide any code completion (also: check it doesn't dismiss dialog)
         push(KeyCode.ESCAPE);
         push(KeyCode.ESCAPE);
@@ -102,7 +102,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         TestUtil.assertValueListEqual("Transformed", expressionValue.value, actual);
     }
 
-    private void enterExpression(Expression expression, Random r)
+    private void enterExpression(Expression expression, boolean needsBrackets, Random r)
     {
         Class<?> c = expression.getClass();
         if (c == TupleExpression.class)
@@ -114,7 +114,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             {
                 if (i > 0)
                     write(",");
-                enterExpression(members.get(i), r);
+                enterExpression(members.get(i), true, r);
 
             }
             write(")");
@@ -139,7 +139,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             //TODO bracket should work same as tab here, but doesn't yet:
             push(KeyCode.TAB);
             //write("(");
-            enterExpression(call._test_getParam(), r);
+            enterExpression(call._test_getParam(), false, r);
             write(")");
         }
         else if (c == TagExpression.class)
@@ -150,7 +150,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             push(KeyCode.TAB);
             if (tag.getInner() != null)
             {
-                enterExpression(tag.getInner(), r);
+                enterExpression(tag.getInner(), false, r);
             }
         }
         else if (c == MatchExpression.class)
@@ -158,7 +158,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             MatchExpression match = (MatchExpression)expression;
             write("match");
             push(KeyCode.TAB);
-            enterExpression(match.getExpression(), r);
+            enterExpression(match.getExpression(), false, r);
             for (MatchClause matchClause : match.getClauses())
             {
                 push(KeyCode.RIGHT);
@@ -167,39 +167,47 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
                     if (i > 0)
                         write("or");
                     Pattern pattern = matchClause.getPatterns().get(i);
-                    enterExpression(pattern.getPattern(), r);
+                    enterExpression(pattern.getPattern(), false, r);
                     @Nullable Expression guard = pattern.getGuard();
                     if (guard != null)
                     {
                         write("where");
-                        enterExpression(guard, r);
+                        enterExpression(guard, false, r);
                     }
                 }
                 if (r.nextBoolean())
                     write("then");
                 else
                     push(KeyCode.RIGHT);
-                enterExpression(matchClause.getOutcome(), r);
+                enterExpression(matchClause.getOutcome(), false, r);
             }
         }
         else if (NaryOpExpression.class.isAssignableFrom(c))
         {
             NaryOpExpression n = (NaryOpExpression)expression;
+            if (needsBrackets)
+                write("(");
             for (int i = 0; i < n.getChildren().size(); i++)
             {
-                enterExpression(n.getChildren().get(i), r);
+                enterExpression(n.getChildren().get(i), true, r);
                 if (i < n.getChildren().size() - 1)
                 {
                     write(n._test_getOperatorEntry(i));
                 }
             }
+            if (needsBrackets)
+                write(")");
         }
         else if (BinaryOpExpression.class.isAssignableFrom(c))
         {
             BinaryOpExpression b = (BinaryOpExpression)expression;
-            enterExpression(b.getLHS(), r);
+            if (needsBrackets)
+                write("(");
+            enterExpression(b.getLHS(), true, r);
             write(b._test_getOperatorEntry());
-            enterExpression(b.getRHS(), r);
+            enterExpression(b.getRHS(), true, r);
+            if (needsBrackets)
+                write(")");
         }
         else if (c == VarDeclExpression.class)
         {

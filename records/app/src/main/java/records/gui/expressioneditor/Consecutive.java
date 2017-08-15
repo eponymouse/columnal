@@ -6,7 +6,6 @@ import javafx.scene.Node;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.Utility;
@@ -53,9 +52,9 @@ public abstract class Consecutive<EXPRESSION extends @NonNull Object, SEMANTIC_P
     }
 
     @Override
-    protected void parentFocusRightOfThis()
+    protected void parentFocusRightOfThis(Focus side)
     {
-        parent.focusRightOf(this);
+        parent.focusRightOf(this, side);
     }
 
     @Override

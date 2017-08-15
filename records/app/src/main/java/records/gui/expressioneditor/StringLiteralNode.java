@@ -54,7 +54,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
             protected String selected(String currentText, @Nullable Completion c, String rest)
             {
                 parent.setOperatorToRight(StringLiteralNode.this, "");
-                parent.focusRightOf(StringLiteralNode.this);
+                parent.focusRightOf(StringLiteralNode.this, Focus.LEFT);
                 return currentText;
             }
         }, c -> false);
@@ -86,6 +86,12 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
     {
         // TODO
+    }
+
+    @Override
+    public boolean isOrContains(EEDisplayNode child)
+    {
+        return this == child;
     }
 
     private static class EndStringCompletion extends Completion

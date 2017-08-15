@@ -73,7 +73,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
                     if (contents != null)
                         contents.focus(Focus.LEFT);
                     else
-                        parent.focusRightOf(SurroundNode.this);
+                        parent.focusRightOf(SurroundNode.this, Focus.LEFT);
                 }
                 else
                     super.forward();
@@ -167,10 +167,10 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
     }
 
     @Override
-    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
+    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Focus side)
     {
         // It's bound to be arguments asking us, nothing beyond that:
-        parent.focusRightOf(this);
+        parent.focusRightOf(this, side);
     }
 
     @Override
@@ -388,5 +388,11 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
     public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
     {
         showError.showError(error, quickFixes);
+    }
+
+    @Override
+    public boolean isOrContains(EEDisplayNode child)
+    {
+        return this == child || (contents != null && contents.isOrContains(child));
     }
 }

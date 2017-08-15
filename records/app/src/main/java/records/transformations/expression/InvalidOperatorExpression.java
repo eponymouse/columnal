@@ -12,6 +12,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -62,7 +63,7 @@ public class InvalidOperatorExpression extends NaryOpExpression
     @Override
     protected String saveOp(int index)
     {
-        return operators.get(index);
+        return "\"" + GrammarUtility.escapeChars(operators.get(index)) + "\"";
     }
 
     @Override

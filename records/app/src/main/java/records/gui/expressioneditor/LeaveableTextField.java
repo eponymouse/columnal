@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import javafx.scene.control.TextField;
+import records.gui.expressioneditor.EEDisplayNode.Focus;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
@@ -26,7 +27,7 @@ public class LeaveableTextField extends TextField
     public void forward()
     {
         if (getCaretPosition() == getLength())
-            parent.focusRightOf(us);
+            parent.focusRightOf(us, Focus.LEFT);
         else
             super.forward();
     }

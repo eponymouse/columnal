@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.expressioneditor.EEDisplayNode.Focus;
 import utility.Pair;
 
 import java.util.List;
@@ -24,7 +25,7 @@ public interface EEDisplayNodeParent
     /**
      * Focus the child to the right of the given child.
      */
-    void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child);
+    void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Focus side);
 
     /**
      * Focus the child to the left of the given child.

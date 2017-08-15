@@ -226,7 +226,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     }
 
     @Override
-    protected void parentFocusRightOfThis()
+    protected void parentFocusRightOfThis(Focus side)
     {
 
     }

@@ -24,4 +24,6 @@ public @Interned interface EEDisplayNode
     public boolean isFocused();
 
     public void focusWhenShown();
+
+    public boolean isOrContains(EEDisplayNode child);
 }

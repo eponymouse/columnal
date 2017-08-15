@@ -141,6 +141,12 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
+    public boolean isOrContains(EEDisplayNode child)
+    {
+        return this == child || condition.isOrContains(child) || thenPart.isOrContains(child) || elsePart.isOrContains(child);
+    }
+
+    @Override
     @SuppressWarnings("nullness") // Because we return non-null item
     public @Nullable ObservableObjectValue<@Nullable String> getStyleWhenInner()
     {
@@ -181,14 +187,14 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
-    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
+    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Focus side)
     {
         if (child == condition)
-            thenPart.focus(Focus.LEFT);
+            thenPart.focus(side);
         else if (child == thenPart)
-            elsePart.focus(Focus.LEFT);
+            elsePart.focus(side);
         else
-            parent.focusRightOf(this);
+            parent.focusRightOf(this, side);
     }
 
     @Override

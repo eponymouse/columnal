@@ -128,11 +128,11 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     }
 
     @Override
-    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child)
+    public void focusRightOf(@UnknownInitialization(EEDisplayNode.class) EEDisplayNode child, Focus side)
     {
         if (child == source)
         {
-            clauses.get(0).focus(Focus.LEFT);
+            clauses.get(0).focus(side);
         }
         else
         {
@@ -140,9 +140,9 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
             if (index != -1)
             {
                 if (index < clauses.size() - 1)
-                    clauses.get(index + 1).focus(Focus.LEFT);
+                    clauses.get(index + 1).focus(side);
                 else
-                    parent.focusRightOf(this);
+                    parent.focusRightOf(this, side);
             }
         }
     }
@@ -216,6 +216,12 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     public void focusWhenShown()
     {
         source.focusWhenShown();
+    }
+
+    @Override
+    public boolean isOrContains(EEDisplayNode child)
+    {
+        return this == child || source.isOrContains(child) || clauses.stream().anyMatch(n -> n.isOrContains(child));
     }
 
     @SuppressWarnings("nullness") // Because we return wrapper which can't be null

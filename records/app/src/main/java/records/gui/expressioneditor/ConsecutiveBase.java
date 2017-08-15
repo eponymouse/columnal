@@ -3,9 +3,7 @@ package records.gui.expressioneditor;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import javafx.beans.property.BooleanProperty;
-import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -13,7 +11,6 @@ import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -35,10 +32,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -193,6 +187,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
     }
 
+    // Is this node equal to then given one, or does it contain the given one?
+    @Override
+    public boolean isOrContains(EEDisplayNode child)
+    {
+        return this == child || getAllChildren().stream().anyMatch(n -> n.isOrContains(child));
+    }
+
     public static enum OperatorOutcome { KEEP, BLANK }
 
     public OperatorOutcome addOperandToRight(@UnknownInitialization OperatorEntry<EXPRESSION, SEMANTIC_PARENT> rightOf, String operatorEntered, String initialContent, boolean focus)
@@ -253,7 +254,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
     @SuppressWarnings("unchecked")
     @Override
-    public void focusRightOf(@UnknownInitialization EEDisplayNode child)
+    public void focusRightOf(@UnknownInitialization EEDisplayNode child, Focus side)
     {
         // Cast is safe because of instanceof, and the knowledge that
         // all our children have EXPRESSION as inner type:
@@ -264,19 +265,19 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             {
                 operators.add(makeBlankOperator());
             }
-            operators.get(index).focus(Focus.LEFT);
+            operators.get(index).focus(side);
         }
         else
         {
             int index = Utility.indexOfRef(operators, (OperatorEntry<EXPRESSION, SEMANTIC_PARENT>)child);
             if (index < operators.size() - 1)
-                operands.get(index + 1).focus(Focus.LEFT);
+                operands.get(index + 1).focus(side);
             else
-                parentFocusRightOfThis();
+                parentFocusRightOfThis(side);
         }
     }
 
-    protected abstract void parentFocusRightOfThis();
+    protected abstract void parentFocusRightOfThis(Focus side);
 
     @SuppressWarnings("unchecked")
     @Override

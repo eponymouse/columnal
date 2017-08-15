@@ -1,12 +1,9 @@
 package records.gui.expressioneditor;
 
 import javafx.beans.value.ObservableObjectValue;
-import javafx.collections.FXCollections;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.unit.Unit;
 import records.gui.expressioneditor.AutoComplete.Completion;
-import records.gui.expressioneditor.AutoComplete.CompletionListener;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.transformations.expression.SingleUnitExpression;
@@ -54,6 +51,12 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         return singleUnitExpression;
     }
 
+    @Override
+    public boolean isOrContains(EEDisplayNode child)
+    {
+        return this == child;
+    }
+
     private class CompletionListener extends SimpleCompletionListener
     {
         @Override
@@ -61,12 +64,12 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         {
             if (rest.equals("}") || rest.equals(")"))
             {
-                parent.parentFocusRightOfThis();
+                parent.parentFocusRightOfThis(Focus.LEFT);
             }
             else
             {
                 parent.setOperatorToRight(UnitEntry.this, rest);
-                parent.focusRightOf(UnitEntry.this);
+                parent.focusRightOf(UnitEntry.this, Focus.RIGHT);
             }
             return currentText;
         }

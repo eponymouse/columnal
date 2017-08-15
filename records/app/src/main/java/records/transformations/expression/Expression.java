@@ -400,7 +400,7 @@ public abstract class Expression
         @Override
         public Expression visitInvalidOpExpression(InvalidOpExpressionContext ctx)
         {
-            return new InvalidOperatorExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), c -> visitExpression(c)), Utility.mapList(ctx.anyOperator(), op -> op.getText()));
+            return new InvalidOperatorExpression(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), c -> visitExpression(c)), Utility.mapList(ctx.STRING(), op -> op.getText()));
         }
 
         public Expression visitChildren(RuleNode node) {

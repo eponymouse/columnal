@@ -38,7 +38,7 @@ matchesExpression : expression MATCHES expression;
 ifThenElseExpression : IF expression THEN expression ELSE expression;
 plusMinusPattern : expression PLUS_MINUS expression;
 anyOperator : ADD_OR_SUBTRACT | TIMES | DIVIDE | RAISEDTO | EQUALITY | NON_EQUALITY | LESS_THAN | GREATER_THAN | AND | OR | MATCHES | PLUS_MINUS | COMMA;
-invalidOpExpression : INVALIDOPS expression (anyOperator expression)+;
+invalidOpExpression : INVALIDOPS expression (STRING expression)+;
 compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | matchesExpression | plusMinusPattern | ifThenElseExpression | invalidOpExpression;
 
 constructor : CONSTRUCTOR typeName BACKSLASH constructorName;

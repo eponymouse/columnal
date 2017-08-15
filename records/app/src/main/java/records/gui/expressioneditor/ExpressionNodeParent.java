@@ -45,5 +45,5 @@ public interface ExpressionNodeParent
     /**
      * Can this direct child node declare a variable?  i.e. is it part of a pattern?
      */
-    boolean canDeclareVariable(@UnknownInitialization EEDisplayNode chid);
+    boolean canDeclareVariable(EEDisplayNode chid);
 }
