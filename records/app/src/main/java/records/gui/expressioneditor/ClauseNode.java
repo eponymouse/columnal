@@ -104,7 +104,10 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     @Override
     protected Stream<EEDisplayNode> calculateChildren()
     {
-        return matches.stream().flatMap((Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> m) -> Utility.streamNullable(m.getFirst(), m.getSecond()));
+        return Stream.concat(
+            matches.stream().flatMap((Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> m) -> Utility.streamNullable(m.getFirst(), m.getSecond())),
+            Stream.of(outcome)
+        );
     }
 
     @Override

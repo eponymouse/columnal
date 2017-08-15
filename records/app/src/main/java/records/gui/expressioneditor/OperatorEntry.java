@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableStringValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -21,6 +22,7 @@ import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.gui.expressioneditor.ConsecutiveBase.OperatorOutcome;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
@@ -38,6 +40,7 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
      */
     private final VBox container;
     private final @MonotonicNonNull AutoComplete autoComplete;
+    private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
 
 
     public OperatorEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent)
@@ -50,7 +53,10 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
         super(parent, operandClass);
         FXUtility.setPseudoclass(textField, "op-empty", content.isEmpty());
         if (!userEntered)
+        {
             textField.setText(content); // Do before auto complete is on the field
+            initialContentEntered.set(true);
+        }
         FXUtility.sizeToFit(textField, 5.0, 5.0);
         container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, parent.getParentStyles()).getFirst();
         container.getStyleClass().add("entry");
@@ -67,7 +73,10 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
         {
             // Do this after auto-complete is set up and we are set as part of parent,
             // in case it finishes a completion:
-            FXUtility.runAfter(() -> textField.setText(content));
+            FXUtility.runAfter(() -> {
+                textField.setText(content);
+                initialContentEntered.set(true);
+            });
         }
     }
 
@@ -125,6 +134,12 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
     public boolean isOrContains(EEDisplayNode child)
     {
         return this == child;
+    }
+
+    @Override
+    public void focus(Focus side)
+    {
+        FXUtility.onceTrue(initialContentEntered, () -> super.focus(side));
     }
 
     private static class SimpleCompletion extends Completion

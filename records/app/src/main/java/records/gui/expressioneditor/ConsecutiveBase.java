@@ -227,7 +227,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
                 atomicEdit.set(true);
                 operators.add(index, new OperatorEntry<>(operations.getOperandClass(), operator, true, this));
                 OperandNode<@NonNull EXPRESSION> blankOperand = makeBlankOperand();
-                blankOperand.focusWhenShown();
                 operands.add(index+1, blankOperand);
                 atomicEdit.set(false);
             }

@@ -11,6 +11,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableBooleanValue;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.ListChangeListener;
@@ -449,6 +450,33 @@ public class FXUtility
                     if (newVal != null)
                     {
                         action.consume(newVal);
+                        obsValue.removeListener(this);
+                    }
+                }
+            });
+        }
+    }
+
+    /**
+     * Runs the given action once, either now or in the future, at the earliest
+     * point that the item becomes non-null
+     */
+    public static void onceTrue(ObservableBooleanValue obsValue, FXPlatformRunnable action)
+    {
+        boolean initial = obsValue.get();
+        if (initial)
+            action.run();
+        else
+        {
+            obsValue.addListener(new ChangeListener<Boolean>()
+            {
+                @Override
+                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+                public void changed(ObservableValue<? extends Boolean> a, Boolean b, Boolean newVal)
+                {
+                    if (newVal != null)
+                    {
+                        action.run();
                         obsValue.removeListener(this);
                     }
                 }
