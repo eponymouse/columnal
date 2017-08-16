@@ -818,7 +818,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
         public boolean isOperatorAlphabet(char character, ExpressionNodeParent expressionNodeParent)
         {
-            return ALPHABET.contains((Integer)(int)character) || expressionNodeParent.operatorKeywords().stream().flatMapToInt(k -> k.getFirst().codePoints()).anyMatch(c -> c == (int)character);
+            return ALPHABET.contains((Integer)(int)character) || (Character.isLetter(character) && expressionNodeParent.operatorKeywords().stream().flatMapToInt(k -> k.getFirst().codePoints()).anyMatch(Character::isLetter));
         }
 
         @Override

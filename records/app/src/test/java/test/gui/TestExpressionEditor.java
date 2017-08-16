@@ -161,7 +161,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             enterExpression(match.getExpression(), false, r);
             for (MatchClause matchClause : match.getClauses())
             {
-                push(KeyCode.RIGHT);
+                write("case");
                 for (int i = 0; i < matchClause.getPatterns().size(); i++)
                 {
                     if (i > 0)

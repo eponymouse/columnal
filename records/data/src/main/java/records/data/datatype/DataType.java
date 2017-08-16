@@ -1090,7 +1090,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ExFunction<RecordSet, EditableColumn> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return rs -> new MemoryTupleColumn(rs, columnId, inner, Utility.mapListEx(value, t -> Utility.valueTuple(t, inner.size())), Utility.cast(defaultValue, (Class<@Value Object[]>)Object[].class));
+                return rs -> new MemoryTupleColumn(rs, columnId, inner, Utility.<@Value Object, @Value Object @Value[]>mapListEx(value, t -> Utility.valueTuple(t, inner.size())), Utility.cast(defaultValue, (Class<@Value Object[]>)Object[].class));
             }
 
             @Override

@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ImmutableList;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
@@ -8,6 +9,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -61,6 +63,23 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
             protected ExpressionNodeParent getThisAsSemanticParent()
             {
                 return PatternMatchNode.this;
+            }
+
+            @Override
+            public OperatorOutcome addOperandToRight(OperatorEntry<Expression, ExpressionNodeParent> rightOf, String operatorEntered, String initialContent, boolean focus)
+            {
+                boolean lastItem = Utility.indexOfRef(operators, rightOf) == operators.size() - 1;
+
+                if (lastItem && operatorEntered.equals("case"))
+                {
+                    PatternMatchNode.this.clauses.get(0).focus(Focus.LEFT);
+                }
+                else
+                {
+                    return super.addOperandToRight(rightOf, operatorEntered, initialContent, focus);
+                }
+                // If we recognised any special ones, blank the operator:
+                return OperatorOutcome.BLANK;
             }
 
             { prompt("expression"); }
@@ -294,5 +313,11 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
         ClauseNode newClause = new ClauseNode(this, null);
         clauses.add(newClause);
         return newClause;
+    }
+
+    @Override
+    public ImmutableList<Pair<String, @Localized String>> operatorKeywords()
+    {
+        return ImmutableList.of(new Pair<>("case", "op.case"));
     }
 }

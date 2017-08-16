@@ -504,7 +504,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     @Override
     public ImmutableList<Pair<String, @Localized String>> operatorKeywords()
     {
-        return ImmutableList.of(new Pair<>("or", "op.caseor"), new Pair<>("where", "op.casegiven"), new Pair<>("then", "op.casethen"));
+        return ImmutableList.of(new Pair<>("or", "op.caseor"), new Pair<>("where", "op.casegiven"), new Pair<>("then", "op.casethen"), new Pair<>("case", "op.case"));
     }
 
     @Override

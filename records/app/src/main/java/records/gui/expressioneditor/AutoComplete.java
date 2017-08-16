@@ -135,14 +135,14 @@ public class AutoComplete extends PopupControl
             // involving "&", take it as an operator and move to next slot (which
             // may also complete if that's the only operator featuring that char)
             // while selecting the best (top) selection for current, or leave as error if none
-            if (text.length() >= 2 && inNextAlphabet.test(text.charAt(text.length() - 1)))
+            if (text.length() >= 1 && inNextAlphabet.test(text.charAt(text.length() - 1)))
             {
                 char last = text.charAt(text.length() - 1);
                 String withoutLast = text.substring(0, text.length() - 1);
                 try
                 {
                     String textFinal = text;
-                    if (withoutLast != null && !available.stream().anyMatch(c -> c.features(textFinal, last)))
+                    if (withoutLast != null && !available.stream().anyMatch(c -> c.features(withoutLast, last)))
                     {
                         // No completions feature the character and it is in the following alphabet, so
                         // complete the top one (if any are available) and move character to next slot
