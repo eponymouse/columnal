@@ -8,6 +8,7 @@ import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.UnitExpressionIntLiteral;
 import utility.FXPlatformConsumer;
 
 import java.util.Collections;
@@ -27,7 +28,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
 
     private static List<Completion> getSuggestions(String current, CompletionQuery completionQuery)
     {
-        // TODO suggest units, and bracket
+        // TODO suggest units, and bracket, and numbers
         return Collections.emptyList();
     }
 
@@ -46,9 +47,20 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
     @Override
     public UnitExpression save(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
     {
-        SingleUnitExpression singleUnitExpression = new SingleUnitExpression(textField.getText().trim());
-        errorDisplayer.record(this, singleUnitExpression);
-        return singleUnitExpression;
+        String text = textField.getText().trim();
+        try
+        {
+            int num = Integer.parseInt(text);
+            UnitExpressionIntLiteral unitExpressionIntLiteral = new UnitExpressionIntLiteral(num);
+            errorDisplayer.record(this, unitExpressionIntLiteral);
+            return unitExpressionIntLiteral;
+        }
+        catch (NumberFormatException e)
+        {
+            SingleUnitExpression singleUnitExpression = new SingleUnitExpression(text);
+            errorDisplayer.record(this, singleUnitExpression);
+            return singleUnitExpression;
+        }
     }
 
     @Override

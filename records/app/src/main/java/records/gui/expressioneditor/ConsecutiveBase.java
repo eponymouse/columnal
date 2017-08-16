@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -380,14 +381,18 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
         List<@NonNull EXPRESSION> expressionExps = Utility.<OperandNode<@NonNull EXPRESSION>, @NonNull EXPRESSION>mapList(operands.subList(firstIndex, lastIndex + 1), (OperandNode<@NonNull EXPRESSION> n) -> n.save(errorDisplayers, onError));
         Pair<Boolean, List<String>> opsValid = getOperators(firstIndex, lastIndex);
+        List<String> ops = opsValid.getSecond();
 
-        if (!opsValid.getFirst())
+        Optional<String> lastOp = Utility.getLast(ops);
+        if (!opsValid.getFirst() && lastOp.isPresent() && !lastOp.get().isEmpty())
         {
             // Add a dummy unfinished expression beyond last operator:
             expressionExps.add(errorDisplayers.record(this, operations.makeUnfinished("")));
         }
-
-        List<String> ops = opsValid.getSecond();
+        else if (lastOp.isPresent() && lastOp.get().isEmpty())
+        {
+            ops.remove(ops.size() - 1);
+        }
 
         if (ops.isEmpty()) // Must be valid in this case
         {
@@ -865,6 +870,14 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             {
                 return errorDisplayers.record(displayer, new TimesExpression(expressionExps));
             }
+            else if (ops.stream().allMatch(op -> op.equals("&")))
+            {
+                return errorDisplayers.record(displayer, new AndExpression(expressionExps));
+            }
+            else if (ops.stream().allMatch(op -> op.equals("|")))
+            {
+                return errorDisplayers.record(displayer, new OrExpression(expressionExps));
+            }
             else if (ops.stream().allMatch(op -> op.equals("/")))
             {
                 if (expressionExps.size() == 2)
@@ -944,12 +957,16 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             {
                 return errorDisplayers.record(displayer, new UnitDivideExpression(operands.get(0), operands.get(1)));
             }
+            else if (operands.size() == 2 && ops.size() == 1 && ops.get(0).equals("^") && operands.get(1) instanceof UnitExpressionIntLiteral)
+            {
+                return errorDisplayers.record(displayer, new UnitRaiseExpression(operands.get(0), ((UnitExpressionIntLiteral)operands.get(1)).getNumber()));
+            }
             else if (ops.stream().allMatch(o -> o.equals(" ") || o.equals("*")))
             {
                 return errorDisplayers.record(displayer, new UnitTimesExpression(ImmutableList.copyOf(operands), ops.stream().map(o -> o.equals("*") ? UnitTimesExpression.Op.STAR : UnitTimesExpression.Op.SPACE).collect(ImmutableList.toImmutableList())));
             }
 
-            return new InvalidOperatorUnitExpression();
+            return new InvalidOperatorUnitExpression(ImmutableList.copyOf(operands), ImmutableList.copyOf(ops));
         }
 
         @Override

@@ -461,6 +461,19 @@ public class Utility
         }
     }
 
+    public static Optional<Integer> parseIntegerOpt(String number)
+    {
+        // First try as an integer:
+        try
+        {
+            return Optional.of(Integer.valueOf(number));
+        }
+        catch (NumberFormatException ex)
+        {
+            return Optional.empty();
+        }
+    }
+
     public static Rational rationalToPower(Rational original, int power)
     {
         if (power < 0)
@@ -924,6 +937,11 @@ public class Utility
             }
         }
         return count;
+    }
+
+    public static <T> Optional<T> getLast(List<T> list)
+    {
+        return list.isEmpty() ? Optional.empty() : Optional.of(list.get(list.size() - 1));
     }
 
     public static class ReadState

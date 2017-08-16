@@ -44,7 +44,7 @@ public class UnitTimesExpression extends UnitExpression
         StringBuilder b = new StringBuilder();
         if (!topLevel)
             b.append("(");
-        for (int i = 0; i < operators.size(); i++)
+        for (int i = 0; i < operands.size(); i++)
         {
             b.append(operands.get(i).save(false));
             if (i < operators.size() - 1)
