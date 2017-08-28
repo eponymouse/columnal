@@ -10,10 +10,8 @@ import records.grammar.UnitParser;
 import records.grammar.UnitParser.UnbracketedUnitContext;
 import records.grammar.UnitParser.UnitContext;
 import records.gui.expressioneditor.ConsecutiveBase;
-import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitNodeParent;
-import records.transformations.expression.UnitTimesExpression.Op;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -66,8 +64,7 @@ public abstract class UnitExpression
         }
         else
         {
-            return new UnitTimesExpression(Stream.concat(Stream.of(ctx.unit()), ctx.timesBy().stream().map(t -> t.unit())).map(c -> loadUnit(c)).collect(ImmutableList.toImmutableList()),
-                ctx.timesBy().stream().map(t -> t.TIMES() != null ? Op.STAR : Op.SPACE).collect(ImmutableList.toImmutableList()));
+            return new UnitTimesExpression(Stream.concat(Stream.of(ctx.unit()), ctx.timesBy().stream().map(t -> t.unit())).map(c -> loadUnit(c)).collect(ImmutableList.toImmutableList()));
         }
     }
 

@@ -6,7 +6,7 @@ singleUnit : IDENT;
 scale : NUMBER (POWER NUMBER)?;
 single : singleUnit (POWER NUMBER)?;
 divideBy : (WS? DIVIDE WS? unit);
-timesBy : (WS? unit | WS? TIMES WS? unit);
+timesBy : WS? TIMES WS? unit;
 unbracketedUnit : unit (divideBy | timesBy+)?;
 unit : single | OPEN_BRACKET unbracketedUnit CLOSE_BRACKET;
 

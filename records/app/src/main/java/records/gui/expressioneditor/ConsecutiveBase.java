@@ -961,9 +961,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             {
                 return errorDisplayers.record(displayer, new UnitRaiseExpression(operands.get(0), ((UnitExpressionIntLiteral)operands.get(1)).getNumber()));
             }
-            else if (ops.stream().allMatch(o -> o.equals(" ") || o.equals("*")))
+            else if (ops.stream().allMatch(o -> o.equals("*")))
             {
-                return errorDisplayers.record(displayer, new UnitTimesExpression(ImmutableList.copyOf(operands), ops.stream().map(o -> o.equals("*") ? UnitTimesExpression.Op.STAR : UnitTimesExpression.Op.SPACE).collect(ImmutableList.toImmutableList())));
+                return errorDisplayers.record(displayer, new UnitTimesExpression(ImmutableList.copyOf(operands)));
             }
 
             return new InvalidOperatorUnitExpression(ImmutableList.copyOf(operands), ImmutableList.copyOf(ops));

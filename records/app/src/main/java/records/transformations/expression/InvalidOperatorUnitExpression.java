@@ -8,7 +8,6 @@ import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitCompound;
 import records.gui.expressioneditor.UnitNodeParent;
-import records.transformations.expression.UnitTimesExpression.Op;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;

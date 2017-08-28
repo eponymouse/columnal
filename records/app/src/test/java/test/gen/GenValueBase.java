@@ -17,7 +17,6 @@ import records.transformations.expression.UnitDivideExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitRaiseExpression;
 import records.transformations.expression.UnitTimesExpression;
-import records.transformations.expression.UnitTimesExpression.Op;
 import utility.Pair;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
@@ -203,7 +202,7 @@ public abstract class GenValueBase<T> extends Generator<T>
                     List<UnitExpression> prevOperands = new ArrayList<>(((UnitTimesExpression)u).getOperands());
 
                     prevOperands.add(sExp);
-                    u = new UnitTimesExpression(ImmutableList.copyOf(prevOperands), makeUnitTimesOperators(prevOperands));
+                    u = new UnitTimesExpression(ImmutableList.copyOf(prevOperands));
                 }
                 else
                 {
@@ -213,7 +212,7 @@ public abstract class GenValueBase<T> extends Generator<T>
                         operands = ImmutableList.of(u, sExp);
                     else
                         operands = ImmutableList.of(sExp, u);
-                    u = new UnitTimesExpression(operands, makeUnitTimesOperators(operands));
+                    u = new UnitTimesExpression(operands);
                 }
             }
             else
@@ -223,7 +222,7 @@ public abstract class GenValueBase<T> extends Generator<T>
                 {
                     UnitDivideExpression div = (UnitDivideExpression) u;
                     ImmutableList<UnitExpression> newDenom = ImmutableList.of(div.getDenominator(), sExp);
-                    u = new UnitDivideExpression(div.getNumerator(), new UnitTimesExpression(newDenom, makeUnitTimesOperators(newDenom)));
+                    u = new UnitDivideExpression(div.getNumerator(), new UnitTimesExpression(newDenom));
                 }
                 else
                 {
@@ -233,15 +232,5 @@ public abstract class GenValueBase<T> extends Generator<T>
         }
 
         return u;
-    }
-
-    private ImmutableList<Op> makeUnitTimesOperators(List<UnitExpression> operands)
-    {
-        Builder<Op> b = ImmutableList.builder();
-        for (int i = 0; i < operands.size() - 1; i++)
-        {
-            b.add(r.nextBoolean() ? Op.STAR : Op.SPACE);
-        }
-        return b.build();
     }
 }

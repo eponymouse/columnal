@@ -17,14 +17,11 @@ import java.util.List;
 
 public class UnitTimesExpression extends UnitExpression
 {
-    public static enum Op { STAR, SPACE }
     private final ImmutableList<UnitExpression> operands;
-    private final ImmutableList<Op> operators;
 
-    public UnitTimesExpression(ImmutableList<UnitExpression> operands, ImmutableList<Op> operators)
+    public UnitTimesExpression(ImmutableList<UnitExpression> operands)
     {
         this.operands = operands;
-        this.operators = operators;
     }
 
     @Override
@@ -47,9 +44,9 @@ public class UnitTimesExpression extends UnitExpression
         for (int i = 0; i < operands.size(); i++)
         {
             b.append(operands.get(i).save(false));
-            if (i < operators.size() - 1)
+            if (i < operands.size() - 1)
             {
-                b.append(operators.get(i) == Op.STAR ? "*" : " ");
+                b.append("*");
             }
         }
         if (!topLevel)
