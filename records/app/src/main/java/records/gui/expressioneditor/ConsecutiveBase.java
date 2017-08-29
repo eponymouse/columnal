@@ -35,6 +35,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -384,17 +385,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         Pair<Boolean, List<String>> opsValid = getOperators(firstIndex, lastIndex);
         List<String> ops = opsValid.getSecond();
 
-        Optional<String> lastOp = Utility.getLast(ops);
-        if (!opsValid.getFirst() && lastOp.isPresent() && !lastOp.get().isEmpty())
-        {
-            // Add a dummy unfinished expression beyond last operator:
-            expressionExps.add(errorDisplayers.record(this, operations.makeUnfinished("")));
-        }
-        else if (lastOp.isPresent() && lastOp.get().isEmpty())
-        {
-            ops.remove(ops.size() - 1);
-        }
-
         if (ops.isEmpty()) // Must be valid in this case
         {
             // Only one operand:
@@ -442,12 +432,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
      * @return
      */
 
-    private static <EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> List<ConsecutiveChild<EXPRESSION>> interleaveOperandsAndOperators(List<OperandNode<EXPRESSION>> operands, List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>> operators)
+    private static <COMMON, OPERAND extends COMMON, OPERATOR extends COMMON> List<COMMON> interleaveOperandsAndOperators(List<OPERAND> operands, List<OPERATOR> operators)
     {
-        return new AbstractList<ConsecutiveChild<EXPRESSION>>()
+        return new AbstractList<COMMON>()
         {
             @Override
-            public ConsecutiveChild<EXPRESSION> get(int index)
+            public COMMON get(int index)
             {
                 return ((index & 1) == 0) ? operands.get(index >> 1) : operators.get(index >> 1);
             }
@@ -459,7 +449,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             }
 
             @Override
-            public ConsecutiveChild<EXPRESSION> remove(int index)
+            public COMMON remove(int index)
             {
                 if ((index & 1) == 0)
                     return operands.remove(index >> 1);
@@ -471,12 +461,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             // and operator at even indexes
             @SuppressWarnings("unchecked")
             @Override
-            public void add(int index, ConsecutiveChild<EXPRESSION> element)
+            public void add(int index, COMMON element)
             {
                 if ((index & 1) == 0)
-                    operands.add(index >> 1, (OperandNode<EXPRESSION>) element);
+                    operands.add(index >> 1, (OPERAND) element);
                 else
-                    operators.add(index >> 1, (OperatorEntry<EXPRESSION, SEMANTIC_PARENT>) element);
+                    operators.add(index >> 1, (OPERATOR) element);
             }
         };
     }
@@ -588,7 +578,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             operands.addAll(index + 1, newOperands);
         }
 
-        removeBlanks(operands, operators, false, null);
+        removeBlanks(operands, operators, c -> c.isBlank(), c -> c.isFocused(), false, null);
 
         atomicEdit.set(false);
         return true;
@@ -651,7 +641,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         {
             all.add(startIndex, makeBlankOperand());
         }
-        removeBlanks(operands, operators, true, null);
+        removeBlanks(operands, operators, c -> c.isBlank(), c -> c.isFocused(), true, null);
         atomicEdit.set(false);
     }
 
@@ -683,7 +673,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
     public void focusChanged()
     {
-        removeBlanks(operands, operators, true, atomicEdit);
+        removeBlanks(operands, operators, c -> c.isBlank(), c -> c.isFocused(), true, atomicEdit);
 
         // Must also tell remaining children to update (shouldn't interact with above calculation
         // because updating should not make a field return isBlank==true, that should only be returned
@@ -709,26 +699,26 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
      * @param operators
      * @param accountForFocus If they are focused, should they be kept in (true: yes, keep; false: no, remove)
      */
-    private static <EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> void removeBlanks(List<OperandNode<EXPRESSION>> operands, List<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>> operators, boolean accountForFocus, @Nullable BooleanProperty atomicEdit)
+    private static <COMMON, OPERAND extends COMMON, OPERATOR extends COMMON> void removeBlanks(List<OPERAND> operands, List<OPERATOR> operators, Predicate<COMMON> isBlank, Predicate<COMMON> isFocused, boolean accountForFocus, @Nullable BooleanProperty atomicEdit)
     {
         // Note on atomicEdit: we set to true if we modify, and set to false once at the end,
         // which will do nothing if we never edited
 
-        List<ConsecutiveChild<EXPRESSION>> all = interleaveOperandsAndOperators(operands, operators);
+        List<COMMON> all = ConsecutiveBase.<COMMON, OPERAND, OPERATOR>interleaveOperandsAndOperators(operands, operators);
 
         // We check for blanks on the second of the pair, as it makes the index checks easier
         // Hence we only need start at 1:
         int index = 1;
         while (index < all.size())
         {
-            if (all.get(index - 1).isBlank() && (!accountForFocus || !all.get(index - 1).isFocused()) &&
-                all.get(index).isBlank() && (!accountForFocus || !all.get(index).isFocused()))
+            if (isBlank.test(all.get(index - 1)) && (!accountForFocus || !isFocused.test(all.get(index - 1))) &&
+                isBlank.test(all.get(index)) && (!accountForFocus || !isFocused.test(all.get(index))))
             {
                 if (atomicEdit != null)
                     atomicEdit.set(true);
                 // Both are blank, so remove:
                 // Important to remove later one first so as to not mess with the indexing:
-                all.remove(index);
+                    all.remove(index);
                 if (index - 1 > 0 || all.size() > 1)
                 {
                     all.remove(index - 1);
@@ -743,8 +733,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         // Remove final operand or operator if blank&unfocused:
         if (!all.isEmpty())
         {
-            ConsecutiveChild last = all.get(all.size() - 1);
-            if (last.isBlank() && (!accountForFocus || !last.isFocused()) && all.size() > 1)
+            COMMON last = all.get(all.size() - 1);
+            if (isBlank.test(last) && (!accountForFocus || !isFocused.test(last)) && all.size() > 1)
             {
                 if (atomicEdit != null)
                     atomicEdit.set(true);
@@ -847,16 +837,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
         public Expression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<Expression> expressionExps, List<String> ops, boolean directlyRoundBracketed)
         {
-            // Trim blanks from beginning:
-            while (expressionExps.size() > 1 && expressionExps.get(expressionExps.size() - 1) instanceof UnfinishedExpression && ((UnfinishedExpression)expressionExps.get(expressionExps.size() - 1)).getText().trim().isEmpty()
-                && ops.size() > 0 && ops.get(ops.size() - 1).trim().isEmpty())
-            {
-                // Make copy for editing:
-                expressionExps = new ArrayList<>(expressionExps);
-                ops = new ArrayList<>(ops);
-                expressionExps.remove(expressionExps.size() - 1);
-                ops.remove(ops.size() - 1);
-            }
+            // Make copy for editing:
+            expressionExps = new ArrayList<>(expressionExps);
+            ops = new ArrayList<>(ops);
+
+            // Trim blanks from end:
+            removeBlanks(expressionExps, ops, (Object o) -> o instanceof String ? ((String)o).trim().isEmpty() : o instanceof UnfinishedExpression && ((UnfinishedExpression)o).getText().trim().isEmpty(), o -> false, false, null);
 
             if (ops.isEmpty())
             {
@@ -953,19 +939,29 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         @Override
         public UnitExpression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<UnitExpression> operands, List<String> ops, boolean directlyRoundBracketed)
         {
+            // Make copy for editing:
+            operands = new ArrayList<>(operands);
+            ops = new ArrayList<>(ops);
+
             // Trim blanks from end:
-            while (operands.size() >= 1 && operands.get(operands.size() - 1) instanceof UnfinishedUnitExpression && ((UnfinishedUnitExpression)operands.get(operands.size() - 1)).getText().trim().isEmpty()
-                && ops.size() > 0 && ops.get(ops.size() - 1).trim().isEmpty())
+            removeBlanks(operands, ops, (Object o) -> o instanceof String ? ((String)o).trim().isEmpty() : o instanceof UnfinishedUnitExpression && ((UnfinishedUnitExpression)o).getText().trim().isEmpty(), o -> false, false, null);
+
+            // Go through and sort out any raise expressions:
+            int i = 0;
+            while (i < ops.size())
             {
-                // Make copy for editing:
-                operands = new ArrayList<>(operands);
-                ops = new ArrayList<>(ops);
-                operands.remove(operands.size() - 1);
-                ops.remove(ops.size() - 1);
-            }
-            if (ops.size() > 0 && ops.size() == operands.size() && ops.get(ops.size() - 1).isEmpty())
-            {
-                ops.remove(ops.size() - 1);
+                // Raise binds tightest, so just take the adjacent operands:
+                // It will bind left, but that doesn't matter as chained raise is an error anyway:
+                if (ops.get(i).trim().equals("^") && i + 1 < operands.size() && operands.get(i + 1) instanceof UnitExpressionIntLiteral)
+                {
+                    operands.set(i, new UnitRaiseExpression(operands.get(i), ((UnitExpressionIntLiteral)operands.get(i + 1)).getNumber()));
+                    operands.remove(i + 1);
+                    ops.remove(i);
+                }
+                else
+                {
+                    i += 1;
+                }
             }
 
             if (operands.size() == 2 && ops.size() == 1 && ops.get(0).equals("/"))
