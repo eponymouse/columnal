@@ -80,7 +80,7 @@ public class BracketedExpression extends Consecutive<Expression, ExpressionNodeP
     }
 
     @Override
-    public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
+    public List<Pair<String, @Nullable DataType>> getAvailableVariables(@UnknownInitialization EEDisplayNode child)
     {
         return consecParent.getThisAsSemanticParent().getAvailableVariables(this);
     }

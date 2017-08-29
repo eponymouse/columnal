@@ -248,7 +248,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     }
 
     @Override
-    public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
+    public List<Pair<String, @Nullable DataType>> getAvailableVariables(@UnknownInitialization EEDisplayNode child)
     {
         //TODO union of clause variables or just the clause variable for guard
         // (and always mix in parent variables)
@@ -257,10 +257,10 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
         Multimap<@NonNull String, @Nullable DataType> allClauseVars = null;
         for (Pair<ConsecutiveBase<Expression, ExpressionNodeParent>, @Nullable ConsecutiveBase<Expression, ExpressionNodeParent>> match : matches)
         {
-            if (match.getFirst() == child)
+            if (match.getFirst() == child || Utility.containsRef(match.getFirst().operands, child))
                 return vars; // Matching side only has access to parent vars
             List<Pair<String, @Nullable DataType>> newMatchVars = match.getFirst().getDeclaredVariables();
-            if (match.getSecond() == child)
+            if (match.getSecond() == child || (match.getSecond() != null && Utility.containsRef(match.getSecond().operands, child)))
             {
                 vars.addAll(newMatchVars);
                 return vars;
@@ -289,7 +289,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
                 allClauseVars = newAllClauseVars;
             }
         }
-        if (outcome == child)
+        if (outcome == child || Utility.containsRef(outcome.operands, child))
         {
             if (allClauseVars != null)
             {

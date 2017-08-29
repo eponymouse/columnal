@@ -222,7 +222,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     }
 
     @Override
-    public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
+    public List<Pair<String, @Nullable DataType>> getAvailableVariables(@UnknownInitialization EEDisplayNode child)
     {
         // No variables from outside the expression:
         return Collections.emptyList();

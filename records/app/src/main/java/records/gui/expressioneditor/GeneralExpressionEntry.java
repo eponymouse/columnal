@@ -268,6 +268,11 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             }
         }
 
+        for (Pair<String, @Nullable DataType> variable : parent.getThisAsSemanticParent().getAvailableVariables(this))
+        {
+            r.add(new VarUseCompletion(variable.getFirst()));
+        }
+
         // Must be last as it should be lowest priority:
         if (completionQuery != CompletionQuery.LEAVING_SLOT)
             r.add(unitCompletion);
@@ -562,6 +567,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             return new VarDeclExpression(textField.getText().trim());
         }
+        else if (status.get() == Status.VARIABLE_USE)
+        {
+            return new VarUseExpression(textField.getText().trim());
+        }
         // Unfinished:
         return errorDisplayer.record(this, new UnfinishedExpression(textField.getText().trim()));
     }
@@ -753,6 +762,14 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
                 return currentText;
             }
+            else if (c instanceof VarUseCompletion)
+            {
+                completing = true;
+                status.setValue(Status.VARIABLE_USE);
+                parent.setOperatorToRight(GeneralExpressionEntry.this, rest);
+                parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
+                return currentText;
+            }
             else if (c == null || c instanceof GeneralCompletion)
             {
                 @Nullable GeneralCompletion gc = (GeneralCompletion) c;
@@ -830,6 +847,15 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @Override
+    public List<Pair<String, @Nullable DataType>> getDeclaredVariables()
+    {
+        if (status.get() == Status.VARIABLE_DECL)
+            return Collections.singletonList(new Pair<String, @Nullable DataType>(textField.getText().trim(), null));
+        else
+            return Collections.emptyList();
+    }
+
+    @Override
     public ExpressionEditor getEditor()
     {
         return parent.getEditor();
@@ -874,9 +900,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
 
-    private class VarDeclCompletion extends Completion
+    private static class VarDeclCompletion extends Completion
     {
-
         @Override
         public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
         {
@@ -899,6 +924,40 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         public boolean features(String curInput, char character)
         {
             return (curInput.length() >= 1 && (Character.isDigit(character) || character == ' ')) || Character.isLetter(character);
+        }
+    }
+
+    private class VarUseCompletion extends Completion
+    {
+        private final String name;
+
+        private VarUseCompletion(String name)
+        {
+            this.name = name;
+        }
+
+        @Override
+        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        {
+            return new Pair<>(new Label("Variable"), new ReadOnlyStringWrapper(name));
+        }
+
+        @Override
+        public boolean shouldShow(String input)
+        {
+            return name.startsWith(input);
+        }
+
+        @Override
+        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        {
+            return name.toLowerCase().startsWith(input.toLowerCase()) ? CompletionAction.SELECT : CompletionAction.NONE;
+        }
+
+        @Override
+        public boolean features(String curInput, char character)
+        {
+            return name.contains("" + character);
         }
     }
 }

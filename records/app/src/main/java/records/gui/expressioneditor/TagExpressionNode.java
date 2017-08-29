@@ -59,7 +59,7 @@ public class TagExpressionNode extends SurroundNode implements ExpressionNodePar
     }
 
     @Override
-    public List<Pair<String, @Nullable DataType>> getAvailableVariables(EEDisplayNode child)
+    public List<Pair<String, @Nullable DataType>> getAvailableVariables(@UnknownInitialization EEDisplayNode child)
     {
         return semanticParent.getAvailableVariables(this);
     }
