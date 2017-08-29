@@ -139,7 +139,12 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
     @Override
     public void focus(Focus side)
     {
-        FXUtility.onceTrue(initialContentEntered, () -> super.focus(side));
+        super.focus(side);
+        FXUtility.onceTrue(initialContentEntered, () -> {
+            // Only if we haven't lost focus in the mean time, adjust ours:
+            if (isFocused())
+                super.focus(side);
+        });
     }
 
     private static class SimpleCompletion extends Completion

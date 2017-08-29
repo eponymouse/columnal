@@ -1,35 +1,52 @@
 package records.gui.expressioneditor;
 
+import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableObjectValue;
+import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.unit.SingleUnit;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
+import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
 import records.transformations.expression.SingleUnitExpression;
+import records.transformations.expression.UnfinishedUnitExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
 import utility.FXPlatformConsumer;
+import utility.Pair;
+import utility.Utility;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
 // Like GeneralExpressionEntry but for units only
 public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParent> implements OperandNode<UnitExpression>, ErrorDisplayer
 {
+    private static final KeyShortcutCompletion bracketedCompletion = new KeyShortcutCompletion("Bracketed", '(');
+
     public UnitEntry(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, String initialContent)
     {
         super(UnitExpression.class, parent);
         textField.setText(initialContent);
-        new AutoComplete(textField, UnitEntry::getSuggestions, new CompletionListener(), c -> !Character.isAlphabetic(c) && Character.getType(c) != Character.CURRENCY_SYMBOL  && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
+        @SuppressWarnings("initialization") // Dummy variable to allow suppressing warning about the self method reference:
+        AutoComplete dummy = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), c -> !Character.isAlphabetic(c) && Character.getType(c) != Character.CURRENCY_SYMBOL  && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
         updateNodes();
     }
 
-    private static List<Completion> getSuggestions(String current, CompletionQuery completionQuery)
+    private List<Completion> getSuggestions(String current, CompletionQuery completionQuery)
     {
-        // TODO suggest units, and bracket, and numbers
-        return Collections.emptyList();
+        List<Completion> r = new ArrayList<>();
+        r.add(bracketedCompletion);
+        r.add(new NumericLiteralCompletion());
+        for (SingleUnit unit : parent.getThisAsSemanticParent().getUnitManager().getAllDeclared())
+        {
+            r.add(new KnownUnitCompletion(unit.getName()));
+        }
+        r.removeIf(c -> !c.shouldShow(current));
+        return r;
     }
 
     @Override
@@ -48,6 +65,12 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
     public UnitExpression save(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
     {
         String text = textField.getText().trim();
+
+        if (text.isEmpty())
+        {
+            return new UnfinishedUnitExpression("");
+        }
+
         try
         {
             int num = Integer.parseInt(text);
@@ -69,12 +92,54 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         return this == child;
     }
 
+    private static class NumericLiteralCompletion extends Completion
+    {
+        @Override
+        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        {
+            return new Pair<>(null, currentText);
+        }
+
+        @Override
+        public boolean shouldShow(String input)
+        {
+            // To allow "+" or "-", we add zero at the end before parsing:
+            return Utility.parseIntegerOpt(input + "0").isPresent();
+        }
+
+        @Override
+        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        {
+            return onlyAvailableCompletion ? CompletionAction.SELECT : CompletionAction.NONE;
+        }
+
+        @Override
+        public boolean features(String curInput, char character)
+        {
+            if (curInput.isEmpty())
+                return "0123456789+-_".contains("" + character);
+            else
+            {
+                if (curInput.contains("."))
+                    return "0123456789_".contains("" + character);
+                else
+                    return "0123456789._".contains("" + character);
+            }
+        }
+    }
+
     private class CompletionListener extends SimpleCompletionListener
     {
         @Override
         protected String selected(String currentText, AutoComplete.@Nullable Completion c, String rest)
         {
-            if (rest.equals("}") || rest.equals(")"))
+            if (c == bracketedCompletion)
+            {
+                UnitCompound bracketedExpression = new UnitCompound(parent, false);
+                bracketedExpression.focusWhenShown();
+                parent.replace(UnitEntry.this, bracketedExpression);
+            }
+            else if (rest.equals("}") || rest.equals(")"))
             {
                 parent.parentFocusRightOfThis(Focus.LEFT);
             }
@@ -84,6 +149,40 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
                 parent.focusRightOf(UnitEntry.this, Focus.RIGHT);
             }
             return currentText;
+        }
+    }
+
+    private static class KnownUnitCompletion extends Completion
+    {
+        private final String name;
+
+        public KnownUnitCompletion(String name)
+        {
+            this.name = name;
+        }
+
+        @Override
+        public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
+        {
+            return new Pair<>(null, new ReadOnlyStringWrapper(name));
+        }
+
+        @Override
+        public boolean shouldShow(String input)
+        {
+            return name.toLowerCase().startsWith(input.toLowerCase());
+        }
+
+        @Override
+        public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
+        {
+            return name.equals(input) ? (onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT) : CompletionAction.NONE;
+        }
+
+        @Override
+        public boolean features(String curInput, char character)
+        {
+            return name.contains("" + character);
         }
     }
 }

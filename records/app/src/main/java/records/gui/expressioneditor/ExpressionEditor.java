@@ -126,7 +126,16 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
             // We should only ever be added to one scene, but we will also get removed from it
             if (scene != null)
             {
-                FXUtility.addChangeListenerPlatform(scene.focusOwnerProperty(), owner -> FXUtility.runAfter(() -> focusChanged()));
+                FXUtility.addChangeListenerPlatform(scene.focusOwnerProperty(), owner -> {
+                    //Utility.logStackTrace("Focus now with: " + owner);
+                    FXUtility.runAfter(() -> {
+                        //System.err.println("Focus now with [2]: " + owner);
+                        if (scene.getFocusOwner() == owner)
+                        {
+                            focusChanged();
+                        }
+                    });
+                });
             }
         });
 

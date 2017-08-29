@@ -92,6 +92,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         listenToNodeRelevantList(operands);
         listenToNodeRelevantList(operators);
         FXUtility.listen(operands, c -> {
+            //Utility.logStackTrace("Operands size: " + operands.size());
             if (!atomicEdit.get())
                 selfChanged();
         });
@@ -846,10 +847,9 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
         public Expression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<Expression> expressionExps, List<String> ops, boolean directlyRoundBracketed)
         {
-
-
-            if (expressionExps.get(expressionExps.size() - 1) instanceof UnfinishedExpression && ((UnfinishedExpression)expressionExps.get(expressionExps.size() - 1)).getText().trim().isEmpty()
-                && ops.get(ops.size() - 1).trim().isEmpty())
+            // Trim blanks from beginning:
+            while (expressionExps.size() > 1 && expressionExps.get(expressionExps.size() - 1) instanceof UnfinishedExpression && ((UnfinishedExpression)expressionExps.get(expressionExps.size() - 1)).getText().trim().isEmpty()
+                && ops.size() > 0 && ops.get(ops.size() - 1).trim().isEmpty())
             {
                 // Make copy for editing:
                 expressionExps = new ArrayList<>(expressionExps);
@@ -947,12 +947,27 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         @Override
         public UnitExpression makeUnfinished(String s)
         {
-            return new SingleUnitExpression(s);
+            return new UnfinishedUnitExpression(s);
         }
 
         @Override
         public UnitExpression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<UnitExpression> operands, List<String> ops, boolean directlyRoundBracketed)
         {
+            // Trim blanks from end:
+            while (operands.size() >= 1 && operands.get(operands.size() - 1) instanceof UnfinishedUnitExpression && ((UnfinishedUnitExpression)operands.get(operands.size() - 1)).getText().trim().isEmpty()
+                && ops.size() > 0 && ops.get(ops.size() - 1).trim().isEmpty())
+            {
+                // Make copy for editing:
+                operands = new ArrayList<>(operands);
+                ops = new ArrayList<>(ops);
+                operands.remove(operands.size() - 1);
+                ops.remove(ops.size() - 1);
+            }
+            if (ops.size() > 0 && ops.size() == operands.size() && ops.get(ops.size() - 1).isEmpty())
+            {
+                ops.remove(ops.size() - 1);
+            }
+
             if (operands.size() == 2 && ops.size() == 1 && ops.get(0).equals("/"))
             {
                 return errorDisplayers.record(displayer, new UnitDivideExpression(operands.get(0), operands.get(1)));

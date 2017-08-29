@@ -3,6 +3,7 @@ package records.gui.expressioneditor;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.unit.UnitManager;
 import records.transformations.expression.UnitExpression;
 import utility.FXPlatformFunction;
 import utility.Pair;
@@ -27,5 +28,11 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitNodeParent
     public boolean isFocused()
     {
         return childIsFocused();
+    }
+
+    @Override
+    public UnitManager getUnitManager()
+    {
+        return parent.getEditor().getTypeManager().getUnitManager();
     }
 }

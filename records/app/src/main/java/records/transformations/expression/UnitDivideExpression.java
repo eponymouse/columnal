@@ -37,7 +37,11 @@ public class UnitDivideExpression extends UnitExpression
     @Override
     public String save(boolean topLevel)
     {
-        return numerator.save(false) + "/" + denominator.save(false);
+        String core = numerator.save(false) + "/" + denominator.save(false);
+        if (topLevel)
+            return core;
+        else
+            return "(" + core + ")";
     }
 
     @Override
