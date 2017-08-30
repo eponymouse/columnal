@@ -97,7 +97,7 @@ public class Unit
     @Override
     public String toString()
     {
-        StringJoiner top = new StringJoiner(" ");
+        StringJoiner top = new StringJoiner("*");
         // First add positives:
         int[] pos = new int[] {0};
         units.forEach((u, p) -> {
@@ -114,7 +114,7 @@ public class Unit
         String allUnits = pos[0] > 1 ? "(" + top.toString() + ")" : top.toString();
         if (neg > 0)
         {
-            StringJoiner bottom = new StringJoiner(" ");
+            StringJoiner bottom = new StringJoiner("*");
 
             boolean showAsNegative = allUnits.isEmpty();
 

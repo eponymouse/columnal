@@ -407,7 +407,7 @@ public class TestUtil
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m^2"), null)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m^3/s^3"), null)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("cm"), null)),
-                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("($ m)/s^2"), null)),
+                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("($*m)/s^2"), null)),
                 a,
                 DummyManager.INSTANCE.getTypeManager().registerTaggedType("B", Arrays.asList(new TagType<DataType>("Single", null))),
                 c,
