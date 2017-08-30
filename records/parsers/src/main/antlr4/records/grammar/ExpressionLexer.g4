@@ -28,7 +28,7 @@ WHOLECOLUMN: '@wholecolumn';
 MATCH : '@match';
 CASE : '@case';
 COLON: ':';
-ORCASE : '@orcase';
+ORCASE : '@or';
 IF : '@if';
 THEN : '@then';
 ELSE : '@else';

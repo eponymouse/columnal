@@ -54,6 +54,7 @@ import org.antlr.v4.runtime.Parser;
 import org.antlr.v4.runtime.RecognitionException;
 import org.antlr.v4.runtime.Recognizer;
 import org.antlr.v4.runtime.TokenStream;
+import org.antlr.v4.runtime.Vocabulary;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.io.FileUtils;
@@ -939,9 +940,18 @@ public class Utility
         return count;
     }
 
-    public static <T> Optional<T> getLast(List<T> list)
+    public static <T> Optional<T> getLast(List<@NonNull T> list)
     {
         return list.isEmpty() ? Optional.empty() : Optional.of(list.get(list.size() - 1));
+    }
+
+    public static String literal(Vocabulary vocabulary, int index)
+    {
+        String s = vocabulary.getLiteralName(index);
+        if (s.startsWith("'") && s.endsWith("'"))
+            return s.substring(1, s.length() - 1);
+        else
+            return s;
     }
 
     public static class ReadState

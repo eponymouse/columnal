@@ -269,7 +269,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             }
             operators.get(index).focus(side);
         }
-        else
+        else if (child instanceof OperatorEntry)
         {
             int index = Utility.indexOfRef(operators, (OperatorEntry<EXPRESSION, SEMANTIC_PARENT>)child);
             if (index < operators.size() - 1)
@@ -669,6 +669,14 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             addBlankAtLeft();
     }
 
+    /**
+     * A collection of characters which terminate this item, i.e. which you could press in the child
+     * at the last position, and it should complete this ConsecutiveBase and move on.
+     *
+     * Note that while the returned collection is immutable, this method may return different values at
+     * different times, e.g. because we are using the parent's set, which in turn has changed (like when
+     * a clause node becomes/unbecomes the last item in a pattern match).
+     */
     public abstract ImmutableSet<Character> terminatedByChars();
 
     public void focusChanged()
@@ -814,7 +822,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
         public boolean isOperatorAlphabet(char character, ExpressionNodeParent expressionNodeParent)
         {
-            return ALPHABET.contains((Integer)(int)character) || (Character.isLetter(character) && expressionNodeParent.operatorKeywords().stream().flatMapToInt(k -> k.getFirst().codePoints()).anyMatch(Character::isLetter));
+            return ALPHABET.contains((Integer)(int)character) || expressionNodeParent.operatorKeywords().stream().anyMatch(k -> k.getFirst().codePointAt(0) == character);
         }
 
         @Override

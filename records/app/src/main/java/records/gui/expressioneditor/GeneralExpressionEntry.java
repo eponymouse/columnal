@@ -152,8 +152,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         bracketCompletion = new KeyShortcutCompletion("Bracketed expressions", '(');
         stringCompletion = new KeyShortcutCompletion("Text", '\"');
         unitCompletion = new AddUnitCompletion();
-        ifCompletion = new KeywordCompletion("if");
-        matchCompletion = new KeywordCompletion("match");
+        ifCompletion = new KeywordCompletion(ExpressionLexer.IF);
+        matchCompletion = new KeywordCompletion(ExpressionLexer.MATCH);
         varDeclCompletion = new VarDeclCompletion();
         textField.setText(content);
         updateNodes();
@@ -563,7 +563,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 return errorDisplayer.record(this, new BooleanLiteral(bool.getText().equals("true")));
             }
         }
-        else if (status.get() == Status.VARIABLE_DECL)
+        else if (status.get() == Status.VARIABLE_DECL && textField.getText().trim().length() > 0)
         {
             return new VarDeclExpression(textField.getText().trim());
         }
@@ -591,9 +591,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     {
         private final String keyword;
 
-        private KeywordCompletion(String keyword)
+        private KeywordCompletion(int expressionLexerKeywordIndex)
         {
-            this.keyword = keyword;
+            this.keyword = Utility.literal(ExpressionLexer.VOCABULARY, expressionLexerKeywordIndex);
         }
 
         @Override

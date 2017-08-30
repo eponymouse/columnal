@@ -17,6 +17,7 @@ import records.data.ColumnId;
 import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.ExpressionLexer;
 import records.gui.MainWindow;
 import records.gui.View;
 import records.importers.ClipboardUtils;
@@ -76,6 +77,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         // Focus expression editor:
         push(KeyCode.TAB);
         enterExpression(expressionValue.expression, false, r);
+        push(KeyCode.RIGHT);
         // Hide any code completion (also: check it doesn't dismiss dialog)
         push(KeyCode.ESCAPE);
         push(KeyCode.ESCAPE);
@@ -122,15 +124,10 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         else if (Literal.class.isAssignableFrom(c))
         {
             write(expression.toString());
-            // Numbers don't move on automatically if there's no unit:
-            if (c == NumericLiteral.class && ((NumericLiteral)expression).getUnitExpression() == null)
-                push(KeyCode.RIGHT);
         }
         else if (c == ColumnReference.class)
         {
             write(((ColumnReference)expression).allColumnNames().findFirst().get().getRaw());
-            // Will be option of one or all, one should be top so press TAB:
-            push(KeyCode.TAB);
         }
         else if (c == CallExpression.class)
         {
@@ -156,31 +153,29 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         else if (c == MatchExpression.class)
         {
             MatchExpression match = (MatchExpression)expression;
-            write("match");
-            push(KeyCode.TAB);
+            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.MATCH));
             enterExpression(match.getExpression(), false, r);
             for (MatchClause matchClause : match.getClauses())
             {
-                write("case");
+                write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASE));
                 for (int i = 0; i < matchClause.getPatterns().size(); i++)
                 {
                     if (i > 0)
-                        write("or");
+                        write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ORCASE));
                     Pattern pattern = matchClause.getPatterns().get(i);
                     enterExpression(pattern.getPattern(), false, r);
                     @Nullable Expression guard = pattern.getGuard();
                     if (guard != null)
                     {
-                        write("where");
+                        write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASEGUARD));
                         enterExpression(guard, false, r);
                     }
                 }
-                if (r.nextBoolean())
-                    write("then");
-                else
-                    push(KeyCode.RIGHT);
+                write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN));
                 enterExpression(matchClause.getOutcome(), false, r);
             }
+            // To finish whole match expression:
+            write(")");
         }
         else if (NaryOpExpression.class.isAssignableFrom(c))
         {

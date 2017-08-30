@@ -16,6 +16,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.ExpressionLexer;
 import records.transformations.expression.ErrorRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.SingleLoader;
@@ -70,7 +71,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
             {
                 boolean lastItem = Utility.indexOfRef(operators, rightOf) == operators.size() - 1;
 
-                if (lastItem && operatorEntered.equals("case"))
+                if (lastItem && operatorEntered.equals(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASE)))
                 {
                     PatternMatchNode.this.clauses.get(0).focus(Focus.LEFT);
                 }
@@ -318,6 +319,11 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     @Override
     public ImmutableList<Pair<String, @Localized String>> operatorKeywords()
     {
-        return ImmutableList.of(new Pair<>("case", "op.case"));
+        return ImmutableList.of(new Pair<>(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASE), "op.case"));
+    }
+
+    public boolean isLastClause(ClauseNode clauseNode)
+    {
+        return Utility.getLast(clauses).orElse(null) == clauseNode;
     }
 }

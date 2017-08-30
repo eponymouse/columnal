@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Multimap;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -16,6 +17,7 @@ import org.jetbrains.annotations.NotNull;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.ExpressionLexer;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.SingleLoader;
 import records.transformations.expression.MatchExpression;
@@ -58,11 +60,11 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
             switch (this)
             {
                 case PATTERN:
-                    return "case";
+                    return Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASE);
                 case GUARD:
-                    return "where";
+                    return Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASEGUARD);
                 case OUTCOME:
-                    return "then";
+                    return Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN);
             }
             return "";
         }
@@ -134,19 +136,19 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
             {
                 boolean lastItem = Utility.indexOfRef(operators, rightOf) == operators.size() - 1;
 
-                if (lastItem && operatorEntered.equals("or") && (subType == SubType.GUARD || (subType == SubType.PATTERN && !patternHasGuard(this))))
+                if (lastItem && operatorEntered.equals(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ORCASE)) && (subType == SubType.GUARD || (subType == SubType.PATTERN && !patternHasGuard(this))))
                 {
                     addNewClauseToRightOf(this).focusWhenShown();
                 }
-                else if (lastItem && operatorEntered.equals("where") && subType == SubType.PATTERN && !patternHasGuard(this))
+                else if (lastItem && operatorEntered.equals(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASEGUARD)) && subType == SubType.PATTERN && !patternHasGuard(this))
                 {
                     addGuardFor(this).focusWhenShown();
                 }
-                else if (lastItem && operatorEntered.equals("then") && isLastItemBeforeOutcome(this))
+                else if (lastItem && operatorEntered.equals(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN)) && isLastItemBeforeOutcome(this))
                 {
                     outcome.focus(Focus.LEFT);
                 }
-                else if (lastItem && operatorEntered.equals("case") && subType == SubType.OUTCOME)
+                else if (lastItem && operatorEntered.equals(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASE)) && subType == SubType.OUTCOME)
                 {
                     ClauseNode.this.parent.addNewCaseToRightOf(ClauseNode.this).focusWhenShown();
                 }
@@ -168,6 +170,15 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
             protected ExpressionNodeParent getThisAsSemanticParent()
             {
                 return ClauseNode.this;
+            }
+
+            @Override
+            public ImmutableSet<Character> terminatedByChars()
+            {
+                if (subType == SubType.OUTCOME && ClauseNode.this.parent.isLastClause(ClauseNode.this))
+                    return ImmutableSet.of(')');
+                else
+                    return super.terminatedByChars();
             }
         };
     }
@@ -504,7 +515,11 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     @Override
     public ImmutableList<Pair<String, @Localized String>> operatorKeywords()
     {
-        return ImmutableList.of(new Pair<>("or", "op.caseor"), new Pair<>("where", "op.casegiven"), new Pair<>("then", "op.casethen"), new Pair<>("case", "op.case"));
+        return ImmutableList.of(
+            new Pair<>(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ORCASE), "op.caseor"),
+            new Pair<>(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASEGUARD), "op.casegiven"),
+            new Pair<>(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN), "op.casethen"),
+            new Pair<>(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASE), "op.case"));
     }
 
     @Override

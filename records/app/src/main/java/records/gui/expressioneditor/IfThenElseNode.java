@@ -1,5 +1,7 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ImmutableSet;
+import com.google.common.primitives.Chars;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
@@ -27,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -55,7 +58,13 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
 
         condition = new SubConsecutive(ifLabel, "if-condition");
         thenPart = new SubConsecutive(thenLabel, "if-then");
-        elsePart = new SubConsecutive(elseLabel, "if-else");
+        elsePart = new SubConsecutive(elseLabel, "if-else") {
+            @Override
+            public ImmutableSet<Character> terminatedByChars()
+            {
+                return ImmutableSet.of(')');
+            }
+        };
 
         updateNodes();
     }
