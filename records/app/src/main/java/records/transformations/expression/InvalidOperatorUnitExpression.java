@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.grammar.GrammarUtility;
@@ -57,5 +58,25 @@ public class InvalidOperatorUnitExpression extends UnitExpression
     public @OnThread(Tag.FXPlatform) OperandNode<UnitExpression> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel)
     {
         return new UnitCompound(parent, topLevel);
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        InvalidOperatorUnitExpression that = (InvalidOperatorUnitExpression) o;
+
+        if (!operands.equals(that.operands)) return false;
+        return operators.equals(that.operators);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = operands.hashCode();
+        result = 31 * result + operators.hashCode();
+        return result;
     }
 }

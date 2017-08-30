@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -51,5 +52,22 @@ public class SingleUnitExpression extends UnitExpression
     public OperandNode<UnitExpression> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel)
     {
         return new UnitEntry(parent, name);
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        SingleUnitExpression that = (SingleUnitExpression) o;
+
+        return name.equals(that.name);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return name.hashCode();
     }
 }

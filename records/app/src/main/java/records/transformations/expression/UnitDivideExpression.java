@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.ConsecutiveBase;
@@ -59,5 +60,25 @@ public class UnitDivideExpression extends UnitExpression
     public UnitExpression getDenominator()
     {
         return denominator;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        UnitDivideExpression that = (UnitDivideExpression) o;
+
+        if (!numerator.equals(that.numerator)) return false;
+        return denominator.equals(that.denominator);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = numerator.hashCode();
+        result = 31 * result + denominator.hashCode();
+        return result;
     }
 }

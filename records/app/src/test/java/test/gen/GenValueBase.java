@@ -15,6 +15,7 @@ import records.data.unit.Unit;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitDivideExpression;
 import records.transformations.expression.UnitExpression;
+import records.transformations.expression.UnitExpressionIntLiteral;
 import records.transformations.expression.UnitRaiseExpression;
 import records.transformations.expression.UnitTimesExpression;
 import utility.Pair;
@@ -166,7 +167,7 @@ public abstract class GenValueBase<T> extends Generator<T>
         // TODO make more varied unit expressions which cancel out
 
         if (unit.getDetails().isEmpty())
-            return new SingleUnitExpression("1");
+            return new UnitExpressionIntLiteral(1);
 
         // TODO add UnitRaiseExpression more (don't always split units into single powers)
 
@@ -187,7 +188,7 @@ public abstract class GenValueBase<T> extends Generator<T>
             if (r.nextBoolean())
                 u = new UnitRaiseExpression(new SingleUnitExpression(singleUnits.get(0).getFirst().getName()), -1);
             else
-                u = new UnitDivideExpression(new SingleUnitExpression("1"), new SingleUnitExpression(singleUnits.get(0).getFirst().getName()));
+                u = new UnitDivideExpression(new UnitExpressionIntLiteral(1), new SingleUnitExpression(singleUnits.get(0).getFirst().getName()));
         }
 
         for (int i = 1; i < singleUnits.size(); i++)

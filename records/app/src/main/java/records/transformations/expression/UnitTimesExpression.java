@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.ConsecutiveBase;
@@ -64,5 +65,22 @@ public class UnitTimesExpression extends UnitExpression
     public ImmutableList<UnitExpression> getOperands()
     {
         return operands;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        UnitTimesExpression that = (UnitTimesExpression) o;
+
+        return operands.equals(that.operands);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return operands.hashCode();
     }
 }

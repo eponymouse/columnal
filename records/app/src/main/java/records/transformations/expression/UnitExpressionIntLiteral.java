@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.ConsecutiveBase;
@@ -45,6 +46,23 @@ public class UnitExpressionIntLiteral extends UnitExpression
     }
 
     public int getNumber()
+    {
+        return number;
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        UnitExpressionIntLiteral that = (UnitExpressionIntLiteral) o;
+
+        return number == that.number;
+    }
+
+    @Override
+    public int hashCode()
     {
         return number;
     }

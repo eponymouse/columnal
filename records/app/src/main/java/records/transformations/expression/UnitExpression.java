@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import com.google.common.collect.ImmutableList;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -75,4 +76,10 @@ public abstract class UnitExpression
 
     @OnThread(Tag.FXPlatform)
     public abstract OperandNode<UnitExpression> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel);
+
+    @Override
+    public abstract int hashCode();
+
+    @Override
+    public abstract boolean equals(@Nullable Object obj);
 }
