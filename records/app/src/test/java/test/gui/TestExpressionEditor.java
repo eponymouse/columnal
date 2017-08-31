@@ -121,6 +121,44 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             }
             write(")");
         }
+        else if (c == ArrayExpression.class)
+        {
+            ArrayExpression t = (ArrayExpression)expression;
+            write("[");
+            ImmutableList<Expression> members = t._test_getElements();
+            for (int i = 0; i < members.size(); i++)
+            {
+                if (i > 0)
+                    write(",");
+                enterExpression(members.get(i), true, r);
+
+            }
+            write("]");
+        }
+        else if (c == StringLiteral.class)
+        {
+            write('"');
+            int extraChars = 0;
+            for (char singleChar : ((StringLiteral) expression).getRawString().toCharArray())
+            {
+                if (singleChar != '"')
+                {
+                    write(singleChar);
+                }
+                else
+                {
+                    write('a');
+                    push(KeyCode.LEFT);
+                    write('"');
+                    extraChars += 1;
+                }
+            }
+            for (int i = 0; i < extraChars; i++)
+            {
+                push(KeyCode.DELETE);
+            }
+            write('"');
+        }
         else if (Literal.class.isAssignableFrom(c))
         {
             write(expression.toString());

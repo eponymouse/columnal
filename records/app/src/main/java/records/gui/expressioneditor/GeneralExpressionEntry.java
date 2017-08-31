@@ -145,7 +145,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
      */
     private final ExpressionNodeParent semanticParent;
 
-    public GeneralExpressionEntry(String content, Status initialStatus, ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
+    public GeneralExpressionEntry(String content, boolean userEntered, Status initialStatus, ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
     {
         super(Expression.class, parent);
         this.semanticParent = semanticParent;
@@ -155,7 +155,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         ifCompletion = new KeywordCompletion(ExpressionLexer.IF);
         matchCompletion = new KeywordCompletion(ExpressionLexer.MATCH);
         varDeclCompletion = new VarDeclCompletion();
-        textField.setText(content);
+        if (!userEntered)
+        {
+            textField.setText(content); // Do before auto complete is on the field
+        }
         updateNodes();
 
         this.autoComplete = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), c -> !Character.isAlphabetic(c) && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
@@ -183,6 +186,14 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         });
         textField.pseudoClassStateChanged(PseudoClass.getPseudoClass("ps-empty"), textField.getText().isEmpty());
         status.setValue(initialStatus);
+        if (userEntered)
+        {
+            // Do this after auto-complete is set up and we are set as part of parent,
+            // in case it finishes a completion:
+            FXUtility.runAfter(() -> {
+                textField.setText(content);
+            });
+        }
     }
 
     @Override

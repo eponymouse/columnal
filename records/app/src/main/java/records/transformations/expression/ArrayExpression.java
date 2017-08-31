@@ -216,4 +216,9 @@ public class ArrayExpression extends Expression
     {
         return items.hashCode();
     }
+
+    public ImmutableList<Expression> _test_getElements()
+    {
+        return items;
+    }
 }

@@ -82,7 +82,7 @@ public class VarUseExpression extends NonOperatorExpression
     @Override
     public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        return (p, s) -> new GeneralExpressionEntry(varName, Status.VARIABLE_USE, p, s);
+        return (p, s) -> new GeneralExpressionEntry(varName, false, Status.VARIABLE_USE, p, s);
     }
 
     @Override

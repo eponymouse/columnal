@@ -828,7 +828,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         @Override
         public OperandNode<Expression> makeGeneral(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, @Nullable String initialContent)
         {
-            return new GeneralExpressionEntry(initialContent == null ? "" : initialContent, Status.UNFINISHED, parent, semanticParent);
+            return new GeneralExpressionEntry(initialContent == null ? "" : initialContent, true, Status.UNFINISHED, parent, semanticParent);
         }
 
         @Override
@@ -881,6 +881,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             {
                 if (expressionExps.size() == 2)
                     return errorDisplayers.record(displayer, new EqualExpression(expressionExps.get(0), expressionExps.get(1)));
+            }
+            else if (ops.stream().allMatch(op -> op.equals("<>")))
+            {
+                if (expressionExps.size() == 2)
+                    return errorDisplayers.record(displayer, new NotEqualExpression(expressionExps.get(0), expressionExps.get(1)));
             }
             else if (ops.stream().allMatch(op -> op.equals(",")))
             {

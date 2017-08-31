@@ -88,4 +88,9 @@ public class StringLiteral extends Literal
     {
         return value;
     }
+
+    public String getRawString()
+    {
+        return value;
+    }
 }

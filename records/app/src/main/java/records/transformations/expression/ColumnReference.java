@@ -191,7 +191,7 @@ public class ColumnReference extends NonOperatorExpression
     @Override
     public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        return (p, s) -> new GeneralExpressionEntry(columnName.getRaw(), referenceType.getEntryStatus(), p, s);
+        return (p, s) -> new GeneralExpressionEntry(columnName.getRaw(), false, referenceType.getEntryStatus(), p, s);
     }
 
     @Override

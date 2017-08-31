@@ -40,7 +40,7 @@ public abstract class Literal extends NonOperatorExpression
     @Override
     public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        return (p, s) -> new GeneralExpressionEntry(editString(), Status.LITERAL, p, s);
+        return (p, s) -> new GeneralExpressionEntry(editString(), false, Status.LITERAL, p, s);
     }
 
     protected abstract String editString();

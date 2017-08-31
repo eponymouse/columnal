@@ -141,7 +141,6 @@ public class AutoComplete extends PopupControl
                 String withoutLast = text.substring(0, text.length() - 1);
                 try
                 {
-                    String textFinal = text;
                     if (withoutLast != null && !available.stream().anyMatch(c -> c.features(withoutLast, last)))
                     {
                         // No completions feature the character and it is in the following alphabet, so

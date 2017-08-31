@@ -71,7 +71,7 @@ public class UnfinishedExpression extends NonOperatorExpression
     @Override
     public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        return (p, s) -> new GeneralExpressionEntry(text, Status.UNFINISHED, p, s);
+        return (p, s) -> new GeneralExpressionEntry(text, false, Status.UNFINISHED, p, s);
     }
 
     @Override

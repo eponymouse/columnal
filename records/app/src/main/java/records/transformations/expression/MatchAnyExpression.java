@@ -65,7 +65,7 @@ public class MatchAnyExpression extends NonOperatorExpression
     @Override
     public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        return (p, s) -> new GeneralExpressionEntry("any", Status.ANY, p, s);
+        return (p, s) -> new GeneralExpressionEntry("any", false, Status.ANY, p, s);
     }
 
     @Override
