@@ -24,9 +24,9 @@ public class BracketedExpression extends Consecutive<Expression, ExpressionNodeP
 {
     private final ConsecutiveBase<Expression, ExpressionNodeParent> consecParent;
 
-    public BracketedExpression(OperandOps<Expression, ExpressionNodeParent> operations, ConsecutiveBase<Expression, ExpressionNodeParent> parent, @Nullable Node prefixNode, @Nullable Node suffixNode, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, OperatorEntry<Expression, ExpressionNodeParent>>>> content)
+    public BracketedExpression(OperandOps<Expression, ExpressionNodeParent> operations, ConsecutiveBase<Expression, ExpressionNodeParent> parent, @Nullable Node prefixNode, @Nullable Node suffixNode, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, OperatorEntry<Expression, ExpressionNodeParent>>>> content, char endCharacter)
     {
-        super(operations, parent, prefixNode, suffixNode, "bracket", content, ')');
+        super(operations, parent, prefixNode, suffixNode, "bracket", content, endCharacter);
         this.consecParent = parent;
     }
 

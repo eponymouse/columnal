@@ -157,7 +157,7 @@ public abstract class BinaryOpExpression extends Expression
     @Override
     public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        return (p, s) -> new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, p, null, null, SingleLoader.withSemanticParent(loadAsConsecutive(), s));
+        return (p, s) -> new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, p, null, null, SingleLoader.withSemanticParent(loadAsConsecutive(), s), ')');
     }
 
     public String _test_getOperatorEntry()

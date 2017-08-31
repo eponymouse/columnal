@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
@@ -91,7 +92,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
      * Shortcut for opening a bracketed section.  This is passed back to us by reference
      * from AutoCompletion, hence we mark it @Interned to allow reference comparison.
      */
-    private final KeyShortcutCompletion bracketCompletion;
+    private final KeyShortcutCompletion roundBracketCompletion;
+
+    private final KeyShortcutCompletion squareBracketCompletion;
     /**
      * Shortcut for opening a unit section.  This is passed back to us by reference
      * from AutoCompletion.
@@ -145,11 +148,15 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
      */
     private final ExpressionNodeParent semanticParent;
 
+    /** Flag used to monitor when the initial content is set */
+    private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
+
     public GeneralExpressionEntry(String content, boolean userEntered, Status initialStatus, ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
     {
         super(Expression.class, parent);
         this.semanticParent = semanticParent;
-        bracketCompletion = new KeyShortcutCompletion("Bracketed expressions", '(');
+        roundBracketCompletion = new KeyShortcutCompletion("Bracketed expressions", '(');
+        squareBracketCompletion = new KeyShortcutCompletion("List", '[');
         stringCompletion = new KeyShortcutCompletion("Text", '\"');
         unitCompletion = new AddUnitCompletion();
         ifCompletion = new KeywordCompletion(ExpressionLexer.IF);
@@ -158,6 +165,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         if (!userEntered)
         {
             textField.setText(content); // Do before auto complete is on the field
+            initialContentEntered.set(true);
         }
         updateNodes();
 
@@ -192,6 +200,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             // in case it finishes a completion:
             FXUtility.runAfter(() -> {
                 textField.setText(content);
+                initialContentEntered.set(true);
             });
         }
     }
@@ -253,11 +262,12 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         return PseudoClass.getPseudoClass(pseudoClass);
     }
 
-    @RequiresNonNull({"bracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "varDeclCompletion", "parent", "semanticParent"})
+    @RequiresNonNull({"roundBracketCompletion", "squareBracketCompletion", "unitCompletion", "stringCompletion", "ifCompletion", "matchCompletion", "varDeclCompletion", "parent", "semanticParent"})
     private List<Completion> getSuggestions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, String text, CompletionQuery completionQuery) throws UserException, InternalException
     {
         ArrayList<Completion> r = new ArrayList<>();
-        r.add(bracketCompletion);
+        r.add(roundBracketCompletion);
+        r.add(squareBracketCompletion);
         r.add(stringCompletion);
         r.add(ifCompletion);
         r.add(matchCompletion);
@@ -714,14 +724,22 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             if (c instanceof KeyShortcutCompletion)
             {
                 @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
-                if (ksc == bracketCompletion)
+                if (ksc == roundBracketCompletion)
                 {
-                    BracketedExpression bracketedExpression = new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, parent, new Label("("), new Label(")"), null);
+                    BracketedExpression bracketedExpression = new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, parent, new Label("("), new Label(")"), null, ')');
+                    bracketedExpression.focusWhenShown();
+                    parent.replace(GeneralExpressionEntry.this, bracketedExpression);
+                }
+                else if (ksc == squareBracketCompletion)
+                {
+                    BracketedExpression bracketedExpression = new SquareBracketedExpression(ConsecutiveBase.EXPRESSION_OPS, parent, null);
                     bracketedExpression.focusWhenShown();
                     parent.replace(GeneralExpressionEntry.this, bracketedExpression);
                 }
                 else if (ksc == stringCompletion)
+                {
                     parent.replace(GeneralExpressionEntry.this, focusWhenShown(new StringLiteralNode("", parent)));
+                }
             }
             else if (c == unitCompletion)
             {
@@ -828,7 +846,14 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         if (side == Focus.RIGHT && unitSpecifier != null)
             unitSpecifier.focus(Focus.RIGHT);
         else
+        {
             super.focus(side);
+            FXUtility.onceTrue(initialContentEntered, () -> {
+                // Only if we haven't lost focus in the mean time, adjust ours:
+                if (isFocused())
+                    super.focus(side);
+            });
+        }
     }
 
     @Override

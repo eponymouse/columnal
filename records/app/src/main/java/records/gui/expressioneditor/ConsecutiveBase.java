@@ -353,7 +353,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     // 1 + 2 + 3 +
     // If has an operator last, there's a missing operand
     // This method returns true, operators if last is not an operator (i.e. if expression is valid), or false, operators if last is an operator
-    private Pair<Boolean, List<String>> getOperators(int firstIndex, int lastIndex)
+    protected Pair<Boolean, List<String>> getOperators(int firstIndex, int lastIndex)
     {
         boolean lastOp = operators.size() == operands.size();
         return new Pair<>(!lastOp, Utility.<OperatorEntry<EXPRESSION, SEMANTIC_PARENT>, String>mapList(operators, op -> op.get()));
