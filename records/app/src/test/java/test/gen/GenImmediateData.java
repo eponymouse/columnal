@@ -84,7 +84,9 @@ public class GenImmediateData extends Generator<ImmediateData_Mgr>
                     columns.add(rs -> (EditableColumn)col.apply(length, rs));
                 }
 
-                tables.add(new ImmediateDataSource(mgr, new EditableRecordSet(columns, () -> length)));
+                ImmediateDataSource dataSource = new ImmediateDataSource(mgr, new EditableRecordSet(columns, () -> length));
+                mgr.record(dataSource);
+                tables.add(dataSource);
             }
             return new ImmediateData_Mgr(mgr, tables);
         }

@@ -66,6 +66,7 @@ public class TransformationManager implements TransformationLoader
             String detail = table.transformation().detail().DETAIL_LINE().stream().<String>map(TerminalNode::getText).collect(Collectors.joining(""));
             List<TableId> source = Utility.<SourceNameContext, TableId>mapList(table.transformation().sourceName(), s -> new TableId(s.item().getText()));
             Transformation transformation = t.load(mgr, new TableId(table.transformation().tableId().getText()), source, detail);
+            mgr.record(transformation);
             transformation.loadPosition(table.position());
             return transformation;
         }

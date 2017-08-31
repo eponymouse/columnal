@@ -69,7 +69,9 @@ public abstract class DataSource extends Table
                 columns.add(t.makeImmediateColumn(columnId, defaultValueUnparsed));
             }
             LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
-            return new ImmediateDataSource(manager, new TableId(immed.tableId().getText()), recordSet);
+            ImmediateDataSource immediateDataSource = new ImmediateDataSource(manager, new TableId(immed.tableId().getText()), recordSet);
+            manager.record(immediateDataSource);
+            return immediateDataSource;
         }
         else
             throw new UnimplementedException();

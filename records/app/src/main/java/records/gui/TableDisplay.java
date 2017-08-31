@@ -179,7 +179,6 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         }
     }
 
-    //@SuppressWarnings("initialization")
     @OnThread(Tag.FXPlatform)
     public TableDisplay(View parent, Table table)
     {

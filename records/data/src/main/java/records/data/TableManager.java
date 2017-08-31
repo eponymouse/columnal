@@ -1,5 +1,6 @@
 package records.data;
 
+import com.google.common.collect.Sets;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -25,6 +26,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.TreeMap;
 import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
@@ -41,11 +43,11 @@ public class TableManager
 {
     // We use a TreeMap here to have reliable ordering for tables, especially when saving:
     @OnThread(value = Tag.Any,requireSynchronized = true)
-    private final Map<TableId, List<Table>> usedIds = new TreeMap<>();
+    private final Map<TableId, Set<Table>> usedIds = new TreeMap<>();
     @OnThread(value = Tag.Any,requireSynchronized = true)
-    private final List<DataSource> sources = new ArrayList<>();
+    private final Set<DataSource> sources = Sets.newIdentityHashSet();
     @OnThread(value = Tag.Any,requireSynchronized = true)
-    private final List<Transformation> transformations = new ArrayList<>();
+    private final Set<Transformation> transformations = Sets.newIdentityHashSet();
     private final UnitManager unitManager;
     private final TypeManager typeManager;
     private final TableManagerListener listener;
@@ -62,9 +64,9 @@ public class TableManager
     @Pure
     public synchronized @Nullable Table getSingleTableOrNull(TableId tableId)
     {
-        List<Table> tables = usedIds.get(tableId);
+        Set<Table> tables = usedIds.get(tableId);
         if (tables != null && tables.size() == 1)
-            return tables.get(0);
+            return tables.iterator().next();
         else
             return null;
     }
@@ -80,7 +82,7 @@ public class TableManager
 
     // Generates a new unused ID and registers it.
     @OnThread(Tag.Simulation)
-    public synchronized TableId registerNextFreeId(@UnknownInitialization(Object.class) Table table)
+    public synchronized TableId registerNextFreeId()
     {
         TableId id;
         // So GUID is very unlikely to be in use already, but no harm in checking:
@@ -89,33 +91,25 @@ public class TableManager
             id = new TableId("Auto-" + UUID.randomUUID().toString());
         }
         while (usedIds.containsKey(id));
-        record(table, id);
+        // Reserve the spot for now:
+        usedIds.put(id, Sets.newIdentityHashSet());
         return id;
     }
 
-    // We are given initialising table, but we store as if it is initialised:
-    @SuppressWarnings("initialization")
     @OnThread(Tag.Simulation)
-    private synchronized void record(@UnknownInitialization(Object.class) Table table, TableId id)
+    public synchronized void record(Table table)
     {
-        usedIds.computeIfAbsent(id, x -> new ArrayList<>()).add(table);
+        usedIds.computeIfAbsent(table.getId(), x -> Sets.newIdentityHashSet()).add(table);
         if (table instanceof DataSource)
         {
-            sources.add((DataSource)table);
-            listener.addSource((DataSource) table);
+            if (sources.add((DataSource)table))
+                listener.addSource((DataSource) table);
         }
         else if (table instanceof Transformation)
         {
-            transformations.add((Transformation)table);
-            listener.addTransformation((Transformation)table);
+            if (transformations.add((Transformation)table))
+                listener.addTransformation((Transformation)table);
         }
-    }
-
-    // Throws a UserException if already in use, otherwise registers it as used.
-    @OnThread(Tag.Simulation)
-    public synchronized void registerId(TableId tableId, @UnknownInitialization(Object.class) Table table)
-    {
-        record(table, tableId);
     }
 
     public UnitManager getUnitManager()
@@ -198,7 +192,7 @@ public class TableManager
         // Deep copy:
         synchronized (this)
         {
-            for (List<Table> tables : usedIds.values())
+            for (Set<Table> tables : usedIds.values())
             {
                 values.add(new ArrayList<>(tables));
             }
@@ -294,8 +288,7 @@ public class TableManager
             if (replaceTableId != null)
                 removeAndSerialise(replaceTableId, new Table.BlankSaver());
         }
-        // Don't need result, it will register itself:
-        makeReplacement.get();
+        record(makeReplacement.get());
 
         savedToReRun.thenAccept(ss -> {
             Utility.alertOnError_(() -> reAddAll(ss));

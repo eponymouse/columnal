@@ -776,6 +776,7 @@ public class TestUtil
     {
         TableManager manager = new DummyManager();
         Table t = new ImmediateDataSource(manager, new EditableRecordSet(data));
+        manager.record(t);
         if (typeManager != null)
         {
             manager.getTypeManager()._test_copyTaggedTypesFrom(typeManager);

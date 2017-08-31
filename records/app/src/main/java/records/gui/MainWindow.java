@@ -248,6 +248,7 @@ public class MainWindow
             {
                 EditableRecordSet rs = new EditableRecordSet(Collections.emptyList(), () -> 0);
                 ImmediateDataSource ds = new ImmediateDataSource(v.getManager(), rs);
+                v.getManager().record(ds);
             }
             catch (InternalException | UserException ex)
             {

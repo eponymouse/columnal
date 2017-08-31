@@ -36,22 +36,19 @@ public abstract class Table
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private Bounds prevPosition = new BoundingBox(0, 0, 100, 400);
 
-    // Assigns a new arbitrary ID which is not in use
-    protected Table(TableManager mgr)
-    {
-        this.mgr = mgr;
-        this.id = mgr.registerNextFreeId(this);
-    }
-
+    /**
+     * If id is null, an arbitrary free id is taken
+     * @param mgr
+     * @param id
+     */
     protected Table(TableManager mgr, @Nullable TableId id)
     {
         this.mgr = mgr;
         if (id == null)
-            this.id = mgr.registerNextFreeId(this);
+            this.id = mgr.registerNextFreeId();
         else
         {
             this.id = id;
-            mgr.registerId(id, this);
         }
     }
 
