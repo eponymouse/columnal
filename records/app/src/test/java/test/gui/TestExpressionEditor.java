@@ -180,8 +180,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         else if (c == TagExpression.class)
         {
             TagExpression tag = (TagExpression)expression;
-            // TODO need to pick from list based on tag:
-            write(tag._test_getTagName().getSecond());
+            write(tag._test_getTagName().getFirst() + ":" + tag._test_getTagName().getSecond());
             push(KeyCode.TAB);
             if (tag.getInner() != null)
             {
