@@ -203,6 +203,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             if (tag.getInner() != null)
             {
                 enterExpression(tag.getInner(), false, r);
+                write(")");
             }
         }
         else if (c == MatchExpression.class)
