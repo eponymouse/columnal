@@ -10,11 +10,13 @@ import org.jetbrains.annotations.NotNull;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
+import records.data.MemoryArrayColumn;
 import records.data.MemoryBooleanColumn;
 import records.data.MemoryNumericColumn;
 import records.data.MemoryStringColumn;
 import records.data.MemoryTaggedColumn;
 import records.data.MemoryTemporalColumn;
+import records.data.MemoryTupleColumn;
 import records.data.RecordSet;
 import records.data.datatype.DataTypeUtility;
 import utility.TaggedValue;
@@ -65,6 +67,7 @@ import utility.ExSupplier;
 import utility.Pair;
 import utility.Utility;
 import utility.Utility.ListEx;
+import utility.Utility.ListExList;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -339,7 +342,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
 
                 return termDeep(maxLevels, type, l((ExpressionMaker)() -> {
                     return new CallExpression(getCreator(dateTimeInfo.getType()), new StringLiteral(targetValue.toString()));
-                }), deep);
+                }, () -> columnRef(type, targetValue)), deep);
             }
 
             @Override
@@ -481,6 +484,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         return new TagExpression(name, make(nonNullInner, innerValue, maxLevels - 1));
                     });
                 }
+                terminals.add(() -> columnRef(type, targetValue));
                 return termDeep(maxLevels, type, terminals, nonTerm);
             }
 
@@ -493,6 +497,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 terminals.add(() -> new TupleExpression(Utility.mapListExI_Index(inner, (i, t) -> make(t, target[i], 1))));
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
                 terminals.add(() -> new TupleExpression(Utility.mapListExI_Index(inner, (i, t) -> make(t, target[i], maxLevels - 1))));
+                terminals.add(() -> columnRef(type, targetValue));
                 return termDeep(maxLevels, type, terminals, nonTerm);
             }
 
@@ -508,6 +513,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 terminals.add(() -> new ArrayExpression(Utility.mapListExI(target, t -> make(innerFinal, t, 1))));
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
                 terminals.add(() -> new ArrayExpression(Utility.mapListExI(target, t -> make(innerFinal, t, maxLevels - 1))));
+                terminals.add(() -> columnRef(type, targetValue));
                 return termDeep(maxLevels, type, terminals, nonTerm);
             }
         });
@@ -636,7 +642,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             @OnThread(Tag.Simulation)
             public Column date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return new MemoryTemporalColumn(rs, name, new DateTimeInfo(DateTimeType.YEARMONTHDAY), Collections.singletonList((Temporal)value), DateTimeInfo.DEFAULT_VALUE);
+                return new MemoryTemporalColumn(rs, name, dateTimeInfo, Collections.singletonList((Temporal)value), DateTimeInfo.DEFAULT_VALUE);
             }
 
             @Override
@@ -657,14 +663,14 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             @OnThread(Tag.Simulation)
             public Column tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                throw new UnimplementedException();
+                return new MemoryTupleColumn(rs, name, inner, Collections.singletonList((Object[])value), new Object[0]);
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public Column array(@Nullable DataType inner) throws InternalException, UserException
             {
-                throw new UnimplementedException();
+                return new MemoryArrayColumn(rs, name, inner, Collections.singletonList((ListEx)value), new ListExList(Collections.emptyList()));
             }
         }));
         return new ColumnReference(name, ColumnReferenceType.CORRESPONDING_ROW);
