@@ -656,14 +656,14 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             @OnThread(Tag.Simulation)
             public Column tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return new MemoryTaggedColumn(rs, name, typeName, tags, Collections.singletonList((TaggedValue) value), new TaggedValue(0, null));
+                return new MemoryTaggedColumn(rs, name, typeName, tags, Collections.singletonList((TaggedValue) value), (TaggedValue)makeValue(type));
             }
 
             @Override
             @OnThread(Tag.Simulation)
             public Column tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return new MemoryTupleColumn(rs, name, inner, Collections.singletonList((Object[])value), new Object[0]);
+                return new MemoryTupleColumn(rs, name, inner, Collections.singletonList((Object[])value), (Object[])makeValue(type));
             }
 
             @Override

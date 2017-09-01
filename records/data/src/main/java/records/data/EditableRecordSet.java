@@ -129,8 +129,7 @@ public class EditableRecordSet extends RecordSet
                     @Value Object @Value [] array = DataTypeUtility.value(new Object[types.size()]);
                     for (int tupleIndex = 0; tupleIndex < types.size(); tupleIndex++)
                     {
-                        // TODO this is a bug.  Why isn't it failing a test?
-                        array[tupleIndex] = types.get(tupleIndex).applyGet(this);
+                        array[tupleIndex] = types.get(tupleIndex).getCollapsed(index);
                     }
                     r.add(array);
                 }
