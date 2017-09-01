@@ -767,8 +767,13 @@ public class TestUtil
         File temp = File.createTempFile("srcdata", "tables");
         temp.deleteOnExit();
         String saved = save(mgr);
+        System.out.println("Saving: {{{" + saved + "}}}");
         Platform.runLater(() -> checkedToRuntime_(() -> MainWindow.show(windowToUse, temp, saved)));
-        sleep(2000);
+        do
+        {
+            sleep(1000);
+        }
+        while (fx(() -> windowToUse.getScene().lookup(".id-tableDisplay-menu-button")) == null);
     }
 
     @OnThread(Tag.Simulation)

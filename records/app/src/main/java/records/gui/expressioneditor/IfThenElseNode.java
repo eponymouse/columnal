@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.primitives.Chars;
 import javafx.beans.property.ReadOnlyStringWrapper;
@@ -9,12 +10,14 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
+import records.grammar.ExpressionLexer;
 import records.transformations.expression.ErrorRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.IfThenElseExpression;
@@ -56,8 +59,44 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
         thenLabel = ExpressionEditorUtil.keyword("then", "if-keyword", this, getParentStyles());
         elseLabel = ExpressionEditorUtil.keyword("else", "if-keyword", this, getParentStyles());
 
-        condition = new SubConsecutive(ifLabel, "if-condition");
-        thenPart = new SubConsecutive(thenLabel, "if-then");
+        condition = new SubConsecutive(ifLabel, "if-condition") {
+            @Override
+            public OperatorOutcome addOperandToRight(OperatorEntry<Expression, ExpressionNodeParent> rightOf, String operatorEntered, String initialContent, boolean focus)
+            {
+                boolean lastItem = Utility.indexOfRef(operators, rightOf) == operators.size() - 1;
+
+                if (lastItem && operatorEntered.equals(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN)))
+                {
+                    thenPart.focus(Focus.LEFT);
+                    // If we recognised any special ones, blank the operator:
+                    return OperatorOutcome.BLANK;
+                }
+                else
+                {
+                    return super.addOperandToRight(rightOf, operatorEntered, initialContent, focus);
+                }
+
+            }
+        };
+        thenPart = new SubConsecutive(thenLabel, "if-then") {
+            @Override
+            public OperatorOutcome addOperandToRight(OperatorEntry<Expression, ExpressionNodeParent> rightOf, String operatorEntered, String initialContent, boolean focus)
+            {
+                boolean lastItem = Utility.indexOfRef(operators, rightOf) == operators.size() - 1;
+
+                if (lastItem && operatorEntered.equals(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ELSE)))
+                {
+                    elsePart.focus(Focus.LEFT);
+                    // If we recognised any special ones, blank the operator:
+                    return OperatorOutcome.BLANK;
+                }
+                else
+                {
+                    return super.addOperandToRight(rightOf, operatorEntered, initialContent, focus);
+                }
+
+            }
+        };
         elsePart = new SubConsecutive(elseLabel, "if-else") {
             @Override
             public ImmutableSet<Character> terminatedByChars()
@@ -67,6 +106,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
         };
 
         updateNodes();
+        updateListeners();
     }
 
     @Override
@@ -233,6 +273,14 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
     {
         condition.showError(error, quickFixes);
+    }
+
+    @Override
+    public ImmutableList<Pair<String, @Localized String>> operatorKeywords()
+    {
+        return ImmutableList.of(
+            new Pair<>(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN), "op.then"),
+            new Pair<>(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ELSE), "op.else"));
     }
 
     private class SubConsecutive extends Consecutive<Expression, ExpressionNodeParent>

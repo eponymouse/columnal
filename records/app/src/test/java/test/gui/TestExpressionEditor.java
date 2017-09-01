@@ -6,6 +6,7 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.application.Platform;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import jdk.nashorn.internal.codegen.CompilerConstants.Call;
@@ -49,6 +50,7 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 import static org.junit.Assert.fail;
 
@@ -67,42 +69,57 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
     }
 
     @Property(trials = 10)
-    public void testEntry(@When(seed=2L) @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @When(seed=1L) @From(GenRandom.class) Random r) throws InterruptedException, ExecutionException, InternalException, IOException, UserException, InvocationTargetException
+    public void testEntry(@When(seed=3L) @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @When(seed=1L) @From(GenRandom.class) Random r) throws InterruptedException, ExecutionException, InternalException, IOException, UserException, InvocationTargetException
     {
         TestUtil.openDataAsTable(windowToUse, expressionValue.typeManager, expressionValue.recordSet);
-        clickOn(".id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-addTransformation");
-        selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getName().toLowerCase().matches("calculate.?columns"));
-        push(KeyCode.TAB);
-        write("DestCol");
-        // Focus expression editor:
-        push(KeyCode.TAB);
-        enterExpression(expressionValue.expression, false, r);
-        // Finish any final column completion:
-        push(KeyCode.TAB);
-        // Hide any code completion (also: check it doesn't dismiss dialog)
-        push(KeyCode.ESCAPE);
-        push(KeyCode.ESCAPE);
-        clickOn(".ok-button");
-        // Now close dialog, and check for equality;
-        View view = lookup(".view").query();
-        Transform transform = (Transform)view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
+        try
+        {
+            scrollTo(".id-tableDisplay-menu-button");
+            clickOn(".id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-addTransformation");
+            selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getName().toLowerCase().matches("calculate.?columns"));
+            push(KeyCode.TAB);
+            write("DestCol");
+            // Focus expression editor:
+            push(KeyCode.TAB);
+            enterExpression(expressionValue.expression, false, r);
+            // Finish any final column completion:
+            push(KeyCode.TAB);
+            // Hide any code completion (also: check it doesn't dismiss dialog)
+            push(KeyCode.ESCAPE);
+            push(KeyCode.ESCAPE);
+            clickOn(".ok-button");
+            // Now close dialog, and check for equality;
+            View view = lookup(".view").query();
+            if (view == null)
+            {
+                assertNotNull(view);
+                return;
+            }
+            TestUtil.sleep(200);
+            Transform transform = (Transform) view.getManager().getAllTables().stream().filter(t -> t instanceof Transformation).findFirst().orElseThrow(() -> new RuntimeException("No transformation found"));
 
-        // Check expressions match:
-        Expression expression = transform.getCalculatedColumns().get(0).getSecond();
-        assertEquals(expressionValue.expression, expression);
-        // Just in case equals is wrong, check String comparison:
-        assertEquals(expressionValue.expression.toString(), expression.toString());
+            // Check expressions match:
+            Expression expression = transform.getCalculatedColumns().get(0).getSecond();
+            assertEquals(expressionValue.expression, expression);
+            // Just in case equals is wrong, check String comparison:
+            assertEquals(expressionValue.expression.toString(), expression.toString());
 
-        // Now check values match:
-        scrollTo(".tableDisplay-transformation .id-tableDisplay-menu-button");
-        clickOn(".tableDisplay-transformation .id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-copyValues");
-        TestUtil.sleep(1000);
-        Optional<List<Pair<ColumnId, List<@Value Object>>>> clip = TestUtil.fx(() -> ClipboardUtils.loadValuesFromClipboard(expressionValue.typeManager));
-        assertTrue(clip.isPresent());
-        // Need to fish out first column from clip, then compare item:
-        //TestUtil.checkType(expressionValue.type, clip.get().get(0));
-        List<@Value Object> actual = clip.get().stream().filter(p -> p.getFirst().equals(new ColumnId("DestCol"))).findFirst().orElseThrow(RuntimeException::new).getSecond();
-        TestUtil.assertValueListEqual("Transformed", expressionValue.value, actual);
+            // Now check values match:
+            scrollTo(".tableDisplay-transformation .id-tableDisplay-menu-button");
+            clickOn(".tableDisplay-transformation .id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-copyValues");
+            TestUtil.sleep(1000);
+            Optional<List<Pair<ColumnId, List<@Value Object>>>> clip = TestUtil.fx(() -> ClipboardUtils.loadValuesFromClipboard(expressionValue.typeManager));
+            assertTrue(clip.isPresent());
+            // Need to fish out first column from clip, then compare item:
+            //TestUtil.checkType(expressionValue.type, clip.get().get(0));
+            List<@Value Object> actual = clip.get().stream().filter(p -> p.getFirst().equals(new ColumnId("DestCol"))).findFirst().orElseThrow(RuntimeException::new).getSecond();
+            TestUtil.assertValueListEqual("Transformed", expressionValue.value, actual);
+        }
+        finally
+        {
+            Stage s = windowToUse;
+            Platform.runLater(() -> s.hide());
+        }
     }
 
     private void enterExpression(Expression expression, boolean needsBrackets, Random r)
@@ -213,6 +230,17 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
                 enterExpression(matchClause.getOutcome(), false, r);
             }
             // To finish whole match expression:
+            write(")");
+        }
+        else if (c == IfThenElseExpression.class)
+        {
+            IfThenElseExpression ite = (IfThenElseExpression) expression;
+            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.IF));
+            enterExpression(ite._test_getCondition(), false, r);
+            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN));
+            enterExpression(ite._test_getThen(), false, r);
+            write(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ELSE));
+            enterExpression(ite._test_getElse(), false, r);
             write(")");
         }
         else if (NaryOpExpression.class.isAssignableFrom(c))

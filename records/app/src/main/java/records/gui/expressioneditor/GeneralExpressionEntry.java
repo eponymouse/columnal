@@ -757,7 +757,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             }
             else if (c != null && c.equals(ifCompletion))
             {
-                parent.replace(GeneralExpressionEntry.this, new IfThenElseNode(parent, semanticParent));
+                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new IfThenElseNode(parent, semanticParent)));
             }
             else if (c != null && c.equals(matchCompletion))
             {

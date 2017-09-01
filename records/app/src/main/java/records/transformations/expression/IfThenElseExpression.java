@@ -138,4 +138,19 @@ public class IfThenElseExpression extends NonOperatorExpression
         result = 31 * result + elseExpression.hashCode();
         return result;
     }
+
+    public Expression _test_getCondition()
+    {
+        return condition;
+    }
+
+    public Expression _test_getThen()
+    {
+        return thenExpression;
+    }
+
+    public Expression _test_getElse()
+    {
+        return elseExpression;
+    }
 }

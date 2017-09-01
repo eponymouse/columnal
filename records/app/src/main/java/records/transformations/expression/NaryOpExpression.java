@@ -104,13 +104,14 @@ public abstract class NaryOpExpression extends Expression
 
         NaryOpExpression that = (NaryOpExpression) o;
 
+        if (!getOpList().equals(that.getOpList())) return false;
         return expressions.equals(that.expressions);
     }
 
     @Override
     public int hashCode()
     {
-        return expressions.hashCode();
+        return expressions.hashCode() + 31 * getOpList().hashCode();
     }
 
     public List<Expression> getChildren()
@@ -154,5 +155,15 @@ public abstract class NaryOpExpression extends Expression
     public String _test_getOperatorEntry(int index)
     {
         return saveOp(index);
+    }
+
+    private List<String> getOpList()
+    {
+        List<String> r = new ArrayList<>();
+        for (int i = 0; i < expressions.size() - 1; i++)
+        {
+            r.add(saveOp(i));
+        }
+        return r;
     }
 }

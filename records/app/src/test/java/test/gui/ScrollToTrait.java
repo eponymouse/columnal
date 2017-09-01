@@ -6,6 +6,8 @@ import javafx.geometry.VerticalDirection;
 import javafx.scene.Node;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.control.ScrollPane;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
 import test.TestUtil;
 import threadchecker.OnThread;
@@ -20,7 +22,14 @@ public interface ScrollToTrait extends FxRobotInterface
     @OnThread(Tag.Any)
     default public void scrollTo(String nodeLocator)
     {
-        Node target = lookup(nodeLocator).query();
+        @Nullable Node targetQ = lookup(nodeLocator).query();
+        if (targetQ == null)
+        {
+            System.err.println("No such node to scroll to: " + nodeLocator);
+            return;
+        }
+        @NonNull Node target = targetQ;
+
         // Find enclosing scroll:
         ScrollPane enclosingScroll = TestUtil.fx(() -> {
             Node n = target.getParent();

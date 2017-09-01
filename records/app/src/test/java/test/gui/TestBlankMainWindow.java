@@ -169,7 +169,8 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         assertTrue(subQuery.startsWith("."));
         @Nullable Node sub = new NodeQueryImpl().from(root).lookup(subQuery).<Node>query();
         assertNotNull(subQuery, sub);
-        clickOn(sub);
+        if (sub != null)
+            clickOn(sub);
     }
 
     // Important to use the query here, as we may have nested dialogs with items with the same class
@@ -337,7 +338,13 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         {
             @NonNull @Value Object val = initialValue;
             // Triple click should select all:
-            Node stf = new NodeQueryImpl().from(root).lookup(".new-column-value").<Node>query();
+            @Nullable Node stf_ = new NodeQueryImpl().from(root).lookup(".new-column-value").<Node>query();
+            if (stf_ == null)
+            {
+                assertNotNull(stf_);
+                return;
+            }
+            @NonNull Node stf = stf_;
             // Click in top left to avoid auto complete:
             PointQuery point = TestUtil.fx(() -> offset(stf, 4 - stf.getBoundsInLocal().getWidth() / 2.0, 4 - stf.getBoundsInLocal().getHeight() / 2.0));
             clickOn(point);
@@ -348,9 +355,14 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         // We press OK in this method because if we've recursed, we have one dialog per recursion to dismiss:
         Window window = window(Window::isFocused);
         Text errorLabel = new NodeQueryImpl().from(rootNode(window)).lookup(".error-label").<Text>query();
-        clickOn(new NodeQueryImpl().from(rootNode(window)).lookup(".ok-button").<Node>query());
+        Node okButton = new NodeQueryImpl().from(rootNode(window)).lookup(".ok-button").<Node>query();
+        if (okButton != null)
+            clickOn(okButton);
         if (errorLabel != null)
-            assertEquals("", TestUtil.fx(() -> errorLabel.getText()));
+        {
+            @NonNull Text errorLabelF = errorLabel;
+            assertEquals("", TestUtil.fx(() -> errorLabelF.getText()));
+        }
         assertFalse(TestUtil.fx(() -> window.isShowing()));
     }
 
@@ -434,15 +446,20 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
     @OnThread(Tag.Any)
     private void setValue(DataType dataType, @Value Object value) throws UserException, InternalException
     {
-        targetWindow(lookup(new Predicate<Node>() {
+        Node row = lookup(new Predicate<Node>()
+        {
             @Override
             @OnThread(value = Tag.FXPlatform, ignoreParent = true)
             public boolean test(Node node)
             {
                 // Don't click on the last row which has the append button:
                 return node.getStyleClass().contains("stable-view-row-cell") && node.lookup(".stable-view-row-append-button") == null;
-            };
-        }).<Node>query());
+            }
+
+            ;
+        }).<Node>query();
+        if (row != null)
+            targetWindow(row);
         //TODO check colour of focused cell (either check background, or take snapshot)
         Node prevFocused = TestUtil.fx(() -> targetWindow().getScene().getFocusOwner());
         // Enter to start editing:
@@ -473,7 +490,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         }
         WaitForAsyncUtils.waitForFxEvents();
     }
-
+/*
     @OnThread(Tag.Any)
     private boolean actuallyVisible(String query)
     {
@@ -500,7 +517,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         }
         // If we get to the top and all is well, it is visible
         return true;
-    }
+    }*/
 
     private static Point2D getCentre(Bounds b)
     {

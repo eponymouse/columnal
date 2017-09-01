@@ -63,9 +63,13 @@ public abstract class UnitExpression
         {
             return new UnitDivideExpression(loadUnit(ctx.unit()), loadUnit(ctx.divideBy().unit()));
         }
-        else
+        else if (ctx.timesBy() != null)
         {
             return new UnitTimesExpression(Stream.concat(Stream.of(ctx.unit()), ctx.timesBy().stream().map(t -> t.unit())).map(c -> loadUnit(c)).collect(ImmutableList.toImmutableList()));
+        }
+        else
+        {
+            return loadUnit(ctx.unit());
         }
     }
 
