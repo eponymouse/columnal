@@ -234,4 +234,9 @@ public class UnitManager
     {
         return knownUnits.values().stream().map(d -> d.getDefined()).collect(Collectors.<@NonNull SingleUnit>toList());
     }
+
+    public boolean isUnit(String unitName)
+    {
+        return knownUnits.containsKey(unitName);
+    }
 }

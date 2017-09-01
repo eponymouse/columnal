@@ -1,6 +1,7 @@
 package records.gui.expressioneditor;
 
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
 import javafx.scene.Node;
@@ -17,6 +18,7 @@ import records.transformations.expression.UnitExpressionIntLiteral;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,13 +29,31 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
 {
     private static final KeyShortcutCompletion bracketedCompletion = new KeyShortcutCompletion("Bracketed", '(');
 
-    public UnitEntry(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, String initialContent)
+    /** Flag used to monitor when the initial content is set */
+    private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
+
+
+    public UnitEntry(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, String initialContent, boolean userEntered)
     {
         super(UnitExpression.class, parent);
-        textField.setText(initialContent);
+        if (!userEntered)
+        {
+            textField.setText(initialContent); // Do before auto complete is on the field
+            initialContentEntered.set(true);
+        }
         @SuppressWarnings("initialization") // Dummy variable to allow suppressing warning about the self method reference:
         AutoComplete dummy = new AutoComplete(textField, this::getSuggestions, new CompletionListener(), c -> !Character.isAlphabetic(c) && Character.getType(c) != Character.CURRENCY_SYMBOL  && (parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) || parent.terminatedByChars().contains(c)));
         updateNodes();
+
+        if (userEntered)
+        {
+            // Do this after auto-complete is set up and we are set as part of parent,
+            // in case it finishes a completion:
+            FXUtility.runAfter(() -> {
+                textField.setText(initialContent);
+                initialContentEntered.set(true);
+            });
+        }
     }
 
     private List<Completion> getSuggestions(String current, CompletionQuery completionQuery)
@@ -47,6 +67,17 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         }
         r.removeIf(c -> !c.shouldShow(current));
         return r;
+    }
+
+    @Override
+    public void focus(Focus side)
+    {
+        super.focus(side);
+        FXUtility.onceTrue(initialContentEntered, () -> {
+            // Only if we haven't lost focus in the mean time, adjust ours:
+            if (isFocused())
+                super.focus(side);
+        });
     }
 
     @Override
@@ -80,9 +111,16 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         }
         catch (NumberFormatException e)
         {
-            SingleUnitExpression singleUnitExpression = new SingleUnitExpression(text);
-            errorDisplayer.record(this, singleUnitExpression);
-            return singleUnitExpression;
+            if (parent.getThisAsSemanticParent().getUnitManager().isUnit(text))
+            {
+                SingleUnitExpression singleUnitExpression = new SingleUnitExpression(text);
+                errorDisplayer.record(this, singleUnitExpression);
+                return singleUnitExpression;
+            }
+            else
+            {
+                return new UnfinishedUnitExpression(text);
+            }
         }
     }
 

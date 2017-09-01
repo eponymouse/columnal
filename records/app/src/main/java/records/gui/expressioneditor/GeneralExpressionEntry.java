@@ -841,6 +841,13 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @Override
+    public void focusChanged()
+    {
+        if (unitSpecifier != null)
+            unitSpecifier.focusChanged();
+    }
+
+    @Override
     public void focus(Focus side)
     {
         if (side == Focus.RIGHT && unitSpecifier != null)

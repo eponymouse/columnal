@@ -42,7 +42,7 @@ public class UnitExpressionIntLiteral extends UnitExpression
     @Override
     public @OnThread(Tag.FXPlatform) OperandNode<UnitExpression> edit(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, boolean topLevel)
     {
-        return new UnitEntry(parent, Integer.toString(number));
+        return new UnitEntry(parent, Integer.toString(number), false);
     }
 
     public int getNumber()

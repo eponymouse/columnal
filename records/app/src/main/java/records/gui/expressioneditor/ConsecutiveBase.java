@@ -922,7 +922,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         @Override
         public OperandNode<UnitExpression> makeGeneral(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, UnitNodeParent semanticParent, @Nullable String initialContent)
         {
-            return new UnitEntry(parent, initialContent == null ? "" : initialContent);
+            return new UnitEntry(parent, initialContent == null ? "" : initialContent, true);
         }
 
         @Override
@@ -956,8 +956,13 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             operands = new ArrayList<>(operands);
             ops = new ArrayList<>(ops);
 
+            System.err.println("Original ops: " + Utility.listToString(ops) + " " + ops.size());
+            System.err.println("  Operands: " + Utility.listToString(Utility.mapList(operands, o -> o.getClass().getName() + ":" + o.save(false))));
+
             // Trim blanks from end:
             removeBlanks(operands, ops, (Object o) -> o instanceof String ? ((String)o).trim().isEmpty() : o instanceof UnfinishedUnitExpression && ((UnfinishedUnitExpression)o).getText().trim().isEmpty(), o -> false, false, null);
+
+            System.err.println("  Trimmed: " + Utility.listToString(ops) + " " + ops.size());
 
             // Go through and sort out any raise expressions:
             int i = 0;
@@ -976,6 +981,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
                     i += 1;
                 }
             }
+
+            System.err.println("  Raised: " + Utility.listToString(ops) + " " + ops.size());
 
             if (operands.size() == 2 && ops.size() == 1 && ops.get(0).equals("/"))
             {
