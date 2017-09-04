@@ -15,9 +15,9 @@ import java.util.List;
  */
 public abstract class SingleSourceTransformationInfo extends TransformationInfo
 {
-    public SingleSourceTransformationInfo(String name, List<String> keywords)
+    public SingleSourceTransformationInfo(String canonicalName, String displayName, List<String> keywords)
     {
-        super(name, keywords);
+        super(canonicalName, displayName, keywords);
     }
 
     @Override
@@ -25,7 +25,7 @@ public abstract class SingleSourceTransformationInfo extends TransformationInfo
     public final Transformation load(TableManager mgr, TableId tableId, List<TableId> source, String detail) throws InternalException, UserException
     {
         if (source.size() > 1)
-            throw new UserException("Transformation " + getName() + " cannot have multiple sources. (If source name has a space, make sure to quote it.)");
+            throw new UserException("Transformation " + getCanonicalName() + " cannot have multiple sources. (If source name has a space, make sure to quote it.)");
         return loadSingle(mgr, tableId, source.get(0), detail);
     }
 

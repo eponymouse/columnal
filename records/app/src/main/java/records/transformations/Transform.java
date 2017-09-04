@@ -145,7 +145,7 @@ public class Transform extends TransformationEditable
     @Override
     public @OnThread(Tag.FXPlatform) String getTransformationLabel()
     {
-        return "transform";
+        return "calculate";
     }
 
     @Override
@@ -213,7 +213,7 @@ public class Transform extends TransformationEditable
     {
         public Info()
         {
-            super("Calculate columns", Arrays.asList("transform"));
+            super("calculate", "Calculate Columns", Arrays.asList("transform"));
         }
 
         @Override

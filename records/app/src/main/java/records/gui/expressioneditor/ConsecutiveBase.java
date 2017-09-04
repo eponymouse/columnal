@@ -26,6 +26,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -787,14 +788,14 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         OperandNode<EXPRESSION> loadOperand(String src, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent) throws UserException, InternalException;
     }
 
-    private static Pair<String, @LocalizableKey String> opD(String op, @LocalizableKey String key)
+    private static Pair<String, @Localized String> opD(String op, @LocalizableKey String key)
     {
-        return new Pair<>(op, key);
+        return new Pair<>(op, TranslationUtility.getString(key));
     }
 
     private static class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     {
-        private final static ImmutableList<Pair<String, @LocalizableKey String>> OPERATORS = ImmutableList.<Pair<String, @LocalizableKey String>>copyOf(Arrays.<Pair<String, @LocalizableKey String>>asList(
+        private final static ImmutableList<Pair<String, @Localized String>> OPERATORS = ImmutableList.<Pair<String, @Localized String>>copyOf(Arrays.<Pair<String, @Localized String>>asList(
             opD("=", "op.equal"),
             opD("<>", "op.notEqual"),
             opD("+", "op.plus"),
@@ -817,12 +818,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         @Override
         public ImmutableList<Pair<String, @Localized String>> getValidOperators(ExpressionNodeParent parent)
         {
-            return Utility.concatI(OPERATORS, parent.operatorKeywords());
+            return Utility.<Pair<String, @Localized String>>concatI(OPERATORS, parent.operatorKeywords());
         }
 
         public boolean isOperatorAlphabet(char character, ExpressionNodeParent expressionNodeParent)
         {
-            return ALPHABET.contains((Integer)(int)character) || expressionNodeParent.operatorKeywords().stream().anyMatch(k -> k.getFirst().codePointAt(0) == character);
+            return ALPHABET.contains((Integer)(int)character) || expressionNodeParent.operatorKeywords().stream().anyMatch((Pair<String, @Localized String> k) -> k.getFirst().codePointAt(0) == character);
         }
 
         @Override
@@ -912,7 +913,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
     private static class UnitExpressionOps implements OperandOps<UnitExpression, UnitNodeParent>
     {
-        private final static ImmutableList<Pair<String, @LocalizableKey String>> OPERATORS = ImmutableList.<Pair<String, @LocalizableKey String>>copyOf(Arrays.<Pair<String, @LocalizableKey String>>asList(
+        private final static ImmutableList<Pair<String, @Localized String>> OPERATORS = ImmutableList.<Pair<String, @Localized String>>copyOf(Arrays.<Pair<String, @Localized String>>asList(
             opD("*", "op.times"),
             opD("/", "op.divide"),
             opD("^", "op.raise")

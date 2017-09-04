@@ -159,7 +159,7 @@ public class EditTaggedTypeDialog extends ErrorableDialog<DataType>
 
         }
 
-        public Either<String, TagType<DataType>> calculateResult()
+        public Either<@Localized String, TagType<DataType>> calculateResult()
         {
             @Nullable String name = tagName.valueProperty().getValue();
             if (name == null)

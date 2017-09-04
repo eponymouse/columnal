@@ -9,12 +9,17 @@ import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
 import com.pholser.junit.quickcheck.generator.java.time.LocalTimeGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import com.sun.javafx.PlatformUtil;
 import javafx.application.Platform;
+import javafx.scene.input.Clipboard;
+import javafx.scene.input.DataFormat;
+import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.testfx.api.FxRobotInterface;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.Column;
 import records.data.ColumnId;
@@ -77,15 +82,7 @@ import java.time.LocalTime;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.SortedMap;
-import java.util.TreeMap;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
@@ -775,6 +772,18 @@ public class TestUtil
         }
         while (fx(() -> windowToUse.getScene().lookup(".id-tableDisplay-menu-button")) == null);
     }
+
+    // WOuld be nice to get this working, but doesn't currently work
+    public static void writePaste_doesntwork(FxRobotInterface robot, String string)
+    {
+        fx_(() -> Clipboard.getSystemClipboard().setContent(Collections.singletonMap(DataFormat.PLAIN_TEXT, string)));
+        robot.push(PlatformUtil.isMac() ? KeyCode.COMMAND : KeyCode.CONTROL, KeyCode.V);
+    }
+
+    /*public static interface TablesMaker
+    {
+        public List<Table>
+    }*/
 
     @OnThread(Tag.Simulation)
     public static void openDataAsTable(Stage windowToUse, @Nullable TypeManager typeManager, RecordSet data) throws IOException, InterruptedException, ExecutionException, InvocationTargetException, UserException, InternalException

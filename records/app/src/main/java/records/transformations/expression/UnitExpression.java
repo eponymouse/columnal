@@ -8,6 +8,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.UnitLexer;
 import records.grammar.UnitParser;
+import records.grammar.UnitParser.SingleContext;
 import records.grammar.UnitParser.UnbracketedUnitContext;
 import records.grammar.UnitParser.UnitContext;
 import records.gui.expressioneditor.ConsecutiveBase;
@@ -37,22 +38,38 @@ public abstract class UnitExpression
         }
         else
         {
-            SingleUnitExpression singleUnit = new SingleUnitExpression(ctx.single().singleUnit().getText());
-            if (ctx.single().NUMBER() != null)
+            SingleContext singleItem = ctx.single();
+            if (singleItem.singleUnit() == null && singleItem.NUMBER() != null)
             {
                 try
                 {
-                    return new UnitRaiseExpression(singleUnit, Integer.parseInt(ctx.single().NUMBER().getText()));
+                    return new UnitExpressionIntLiteral(Integer.parseInt(singleItem.NUMBER().getText()));
                 }
                 catch (NumberFormatException e)
                 {
                     // Zero is guaranteed to be an error, so best default:
-                    return new UnitRaiseExpression(singleUnit, 0);
+                    return new UnitExpressionIntLiteral(0);
                 }
             }
             else
             {
-                return singleUnit;
+                SingleUnitExpression singleUnit = new SingleUnitExpression(singleItem.singleUnit().getText());
+                if (ctx.single().NUMBER() != null)
+                {
+                    try
+                    {
+                        return new UnitRaiseExpression(singleUnit, Integer.parseInt(ctx.single().NUMBER().getText()));
+                    }
+                    catch (NumberFormatException e)
+                    {
+                        // Zero is guaranteed to be an error, so best default:
+                        return new UnitRaiseExpression(singleUnit, 0);
+                    }
+                }
+                else
+                {
+                    return singleUnit;
+                }
             }
         }
     }

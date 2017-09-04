@@ -76,7 +76,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         {
             scrollTo(".id-tableDisplay-menu-button");
             clickOn(".id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-addTransformation");
-            selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getName().toLowerCase().matches("calculate.?columns"));
+            selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getDisplayName().toLowerCase().matches("calculate.?columns"));
             push(KeyCode.TAB);
             write("DestCol");
             // Focus expression editor:

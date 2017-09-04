@@ -64,6 +64,7 @@ import java.util.stream.Stream;
 @OnThread(Tag.FXPlatform)
 public class FXUtility
 {
+    private static boolean testingMode = false;
     private static final Set<String> loadedFonts = new HashSet<>();
 
     @OnThread(Tag.FXPlatform)
@@ -339,6 +340,19 @@ public class FXUtility
     public static <T> T focused(@UnknownInitialization T item)
     {
         return item;
+    }
+
+    public static void _test_setTestingMode()
+    {
+        testingMode = true;
+    }
+
+    public static @Nullable File getFileSaveAs(Node parent)
+    {
+        if (testingMode)
+            return new TextInputDialog().showAndWait().map(File::new).orElse(null);
+        else
+            return new FileChooser().showSaveDialog(parent.getScene() == null ? null : parent.getScene().getWindow());
     }
 
     public static interface DragHandler

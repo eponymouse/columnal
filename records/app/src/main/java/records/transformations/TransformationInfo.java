@@ -19,24 +19,36 @@ import java.util.List;
 public abstract class TransformationInfo
 {
     /**
-     * The name, as will be shown in the search bar and used for saving and loading.
+     * The name, as will be used for saving and loading.
      */
-    protected final String name;
+    protected final String canonicalName;
+
+    /**
+     * The name, as will be shown in the search bar and display.
+     */
+    protected final String displayName;
+
     /**
      * Keywords to search (e.g. alternative names for this function).
      */
     protected final List<String> keywords;
 
     @OnThread(Tag.Any)
-    public TransformationInfo(String name, List<String> keywords)
+    public TransformationInfo(String canonicalName, String displayName, List<String> keywords)
     {
-        this.name = name;
+        this.canonicalName = canonicalName;
+        this.displayName = displayName;
         this.keywords = keywords;
     }
 
-    public final String getName()
+    public final String getCanonicalName()
     {
-        return name;
+        return canonicalName;
+    }
+
+    public final String getDisplayName()
+    {
+        return displayName;
     }
 
     @OnThread(Tag.Simulation)

@@ -4,7 +4,7 @@ options { tokenVocab = UnitLexer; }
 
 singleUnit : IDENT;
 scale : NUMBER (POWER NUMBER)?;
-single : singleUnit (POWER NUMBER)?;
+single : singleUnit (POWER NUMBER)? | ({_input.LT(1).getText().equals("1")}? NUMBER);
 divideBy : (WS? DIVIDE WS? unit);
 timesBy : WS? TIMES WS? unit;
 unbracketedUnit : unit (divideBy | timesBy+)?;

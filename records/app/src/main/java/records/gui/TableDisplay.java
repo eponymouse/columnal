@@ -27,6 +27,7 @@ import records.data.Table;
 import records.data.Table.TableDisplayBase;
 import records.data.TableOperations;
 import records.data.Transformation;
+import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.importers.ClipboardUtils;
@@ -40,7 +41,15 @@ import utility.gui.FXUtility;
 import records.gui.stable.StableView;
 import utility.gui.GUI;
 
+import java.io.BufferedOutputStream;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -197,7 +206,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             recordSet -> new TableDataDisplay(recordSet, table.getOperations(), parent::modified).getNode()));
         Utility.addStyleClass(body, "table-body");
         setCenter(body);
-        Utility.addStyleClass(this, "table-wrapper", table instanceof Transformation ? "tableDisplay-transformation" : "tableDisplay-source");
+        Utility.addStyleClass(this, "table-wrapper", "tableDisplay", table instanceof Transformation ? "tableDisplay-transformation" : "tableDisplay-source");
         setPickOnBounds(true);
         Pane spacer = new Pane();
         spacer.setVisible(false);
@@ -312,8 +321,53 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     {
         return new ContextMenu(
             GUI.menuItem("tableDisplay.menu.addTransformation", () -> parent.newTransformFromSrc(table)),
-            GUI.menuItem("tableDisplay.menu.copyValues", () -> Utility.alertOnErrorFX_(() -> ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), table.getData().getColumns())))
+            GUI.menuItem("tableDisplay.menu.copyValues", () -> Utility.alertOnErrorFX_(() -> ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), table.getData().getColumns()))),
+            GUI.menuItem("tableDisplay.menu.exportToCSV", () -> {
+                File file = FXUtility.getFileSaveAs(parent);
+                if (file != null)
+                {
+                    final File fileNonNull = file;
+                    Workers.onWorkerThread("Export to CSV", Workers.Priority.SAVE_TO_DISK, () -> Utility.alertOnError_(() -> exportToCSV(table, fileNonNull)));
+                }
+            })
         );
+    }
+
+    @OnThread(Tag.Simulation)
+    private static void exportToCSV(Table src, File dest) throws InternalException, UserException
+    {
+        // Write column names:
+        try (BufferedWriter out = new BufferedWriter(new FileWriter(dest)))
+        {
+            @OnThread(Tag.Any) RecordSet data = src.getData();
+            @OnThread(Tag.Any) List<Column> columns = data.getColumns();
+            for (int i = 0; i < columns.size(); i++)
+            {
+                Column column = columns.get(i);
+                out.write(quoteCSV(column.getName().getRaw()));
+                if (i < columns.size() - 1)
+                    out.write(",");
+            }
+            for (int row = 0; data.indexValid(row); row += 1)
+            {
+                for (int i = 0; i < columns.size(); i++)
+                {
+                    out.write(quoteCSV(DataTypeUtility.valueToString(columns.get(i).getType(), columns.get(i).getType().getCollapsed(row), null)));
+                    if (i < columns.size() - 1)
+                        out.write(",");
+                }
+            }
+        }
+        catch (IOException e)
+        {
+            throw new UserException("Problem writing to file: " + dest.getAbsolutePath(), e);
+        }
+    }
+
+    @OnThread(Tag.Any)
+    private static String quoteCSV(String original)
+    {
+        return "\"" + original.replace("\"", "\"\"\"") + "\"";
     }
 
     @Pure // It does changes position, but doesn't alter fields which is what matters

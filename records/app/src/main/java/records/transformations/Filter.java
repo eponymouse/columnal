@@ -480,7 +480,7 @@ public class Filter extends TransformationEditable
     {
         public Info()
         {
-            super("Keep rows", Arrays.asList("remove", "delete"));
+            super("keep", "Keep rows", Arrays.asList("remove", "delete"));
         }
 
         @Override

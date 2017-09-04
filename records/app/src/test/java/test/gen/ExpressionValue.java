@@ -14,7 +14,7 @@ import java.util.List;
 public class ExpressionValue
 {
     public final DataType type;
-    // Should be match between number of values and number of column entries
+    // Number of values  in list will equal number of rows
     // in recordSet.  Will be 1 for GenBackwards and N for GenForwards.
     public final List<@Value Object> value;
     public final RecordSet recordSet;

@@ -79,7 +79,7 @@ public class EditTransformationDialog
                 @Override
                 public String toString(TransformationInfo object)
                 {
-                    return object.getName();
+                    return object.getDisplayName();
                 }
 
                 @Override

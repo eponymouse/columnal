@@ -2,6 +2,7 @@ package records.data;
 
 import com.google.common.collect.Sets;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Table.Saver;
@@ -20,15 +21,8 @@ import utility.SimulationSupplier;
 import utility.Utility;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.TreeMap;
-import java.util.UUID;
+import java.util.*;
+import java.util.Map.Entry;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -188,18 +182,42 @@ public class TableManager
     {
         // TODO save units
         saver.saveType(typeManager.save());
-        List<List<Table>> values = new ArrayList<>();
+        Map<TableId, TablesWithSameId> values = new HashMap<>();
         // Deep copy:
         synchronized (this)
         {
-            for (Set<Table> tables : usedIds.values())
+            for (Entry<TableId, Set<Table>> tables : usedIds.entrySet())
             {
-                values.add(new ArrayList<>(tables));
+                values.put(tables.getKey(), new TablesWithSameId(tables.getKey(), tables.getValue()));
             }
         }
-        for (List<Table> tables : values)
+
+        Map<@NonNull TablesWithSameId, List<TablesWithSameId>> edges = new HashMap<>();
+        for (TablesWithSameId tablesWithSameId : values.values())
         {
-            for (Table table : tables)
+            List<TablesWithSameId> dests = edges.computeIfAbsent(tablesWithSameId, k -> new ArrayList<>());
+            for (Table table : tablesWithSameId.tables)
+            {
+                if (table instanceof Transformation)
+                {
+                    for (TableId srcId : ((Transformation) table).getSources())
+                    {
+                        TablesWithSameId dest = values.get(srcId);
+                        if (dest != null)
+                            dests.add(dest);
+                    }
+                }
+            }
+        }
+
+
+        List<TablesWithSameId> ordered = GraphUtility.lineariseDAG(values.values(), edges, Collections.emptyList());
+        // lineariseDAG makes all edges point forwards, but we want them pointing backwards
+        // so reverse:
+        Collections.reverse(ordered);
+        for (TablesWithSameId tables : ordered)
+        {
+            for (Table table : tables.tables)
             {
                 table.save(destination, saver);
             }
@@ -390,5 +408,34 @@ public class TableManager
 
         @OnThread(Tag.Simulation)
         public Transformation loadOne(TableManager mgr, TableContext table) throws UserException, InternalException;
+    }
+
+    private static class TablesWithSameId
+    {
+        private final TableId id;
+        private final List<Table> tables;
+
+        public TablesWithSameId(TableId id, Collection<Table> tables)
+        {
+            this.id = id;
+            this.tables = new ArrayList<>(tables);
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            TablesWithSameId that = (TablesWithSameId) o;
+
+            return id.equals(that.id);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return id.hashCode();
+        }
     }
 }

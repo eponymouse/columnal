@@ -81,7 +81,7 @@ public class TransformationManager implements TransformationLoader
     {
         for (TransformationInfo t : getTransformations())
         {
-            if (t.getName().equals(text))
+            if (t.getCanonicalName().equals(text))
                 return t;
         }
         throw new UserException("Transformation not found: \"" + text + "\"");

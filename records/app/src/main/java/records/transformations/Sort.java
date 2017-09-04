@@ -285,7 +285,7 @@ public class Sort extends TransformationEditable
         @OnThread(Tag.Any)
         public Info()
         {
-            super(NAME, Collections.emptyList());
+            super(NAME, "Sort", Collections.emptyList());
         }
 
         @Override

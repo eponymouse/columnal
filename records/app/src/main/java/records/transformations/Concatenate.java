@@ -353,7 +353,7 @@ public class Concatenate extends TransformationEditable
     {
         public Info()
         {
-            super("concatenate", Arrays.asList("append", "join"));
+            super("concatenate", "Concatenate", Arrays.asList("append", "join"));
         }
 
         @Override
