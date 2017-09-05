@@ -86,6 +86,11 @@ public class TestExportToCSV extends ApplicationTest implements ScrollToTrait
 
         TestUtil.openDataAsTable(windowToUse, manager);
 
+        // Bring table to front:
+        clickOn("#id-menu-view").clickOn(".id-menu-find");
+        write(calculated.getId().getRaw());
+        push(KeyCode.ENTER);
+
         NodeQuery tableMenuButton = lookup(".tableDisplay").match(t -> t instanceof TableDisplay && ((TableDisplay)t).getTable().getId().equals(calculated.getId())).lookup(".id-tableDisplay-menu-button");
         scrollTo(tableMenuButton);
         @SuppressWarnings("nullness") // Will throw if null and fail test, which is fine
