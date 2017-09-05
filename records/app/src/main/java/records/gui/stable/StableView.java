@@ -11,6 +11,7 @@ import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.event.Event;
 import javafx.geometry.Orientation;
 import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
@@ -24,6 +25,7 @@ import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -552,7 +554,7 @@ public class StableView
                     }
                 });
                 Nodes.addInputMap(pane, InputMap.sequence(
-                    InputMap.consume(EventPattern.keyPressed(KeyCode.END), e -> {
+                    InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.END), e -> {
                         int lastContentRowIndex = getLastContentRowIndex().orElse(-1);
                         if (lastContentRowIndex < 0)
                             return;
@@ -570,7 +572,7 @@ public class StableView
                         }
                         e.consume();
                     }),
-                    InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
+                    InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
                         columns.get(columnIndexFinal).edit(curRowIndex, null, pane::requestFocus);
                         e.consume();
                     })

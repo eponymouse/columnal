@@ -8,6 +8,7 @@ import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;
 import utility.Either;
 import utility.Utility;
+import utility.gui.TranslationUtility;
 
 import java.math.BigDecimal;
 import java.util.Collections;
@@ -21,7 +22,7 @@ public class NumberEntry extends TerminalComponent<Number>
     public NumberEntry(ImmutableList<Component<?>> parents, @Nullable Number initial)
     {
         super(parents);
-        items.add(new Item(getItemParents(), initial == null ? "" : (initial instanceof BigDecimal ? ((BigDecimal) initial).toPlainString() : initial.toString()), ItemVariant.EDITABLE_NUMBER, "Number"));
+        items.add(new Item(getItemParents(), initial == null ? "" : (initial instanceof BigDecimal ? ((BigDecimal) initial).toPlainString() : initial.toString()), ItemVariant.EDITABLE_NUMBER, TranslationUtility.getString("entry.prompt.number")));
     }
 
     @Override

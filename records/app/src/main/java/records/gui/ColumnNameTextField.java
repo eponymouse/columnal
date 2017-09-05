@@ -24,7 +24,7 @@ public class ColumnNameTextField extends ErrorableTextField<ColumnId>
         super(s -> {
             s = Utility.collapseSpaces(s);
             if (s.isEmpty())
-                return ConversionResult.<@NonNull ColumnId>error(TranslationUtility.getString("column.name.cannotBeBlank"));
+                return ConversionResult.<@NonNull ColumnId>error(TranslationUtility.getString("column.name.error.missing"));
             return ConversionResult.success(new ColumnId(s));
         });
     }

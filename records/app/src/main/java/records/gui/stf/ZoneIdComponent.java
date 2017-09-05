@@ -8,6 +8,7 @@ import records.gui.stf.StructuredTextField.ItemVariant;
 import records.gui.stf.StructuredTextField.Suggestion;
 import utility.Either;
 import utility.Pair;
+import utility.gui.TranslationUtility;
 
 import java.time.DateTimeException;
 import java.time.ZoneId;
@@ -25,7 +26,7 @@ public class ZoneIdComponent extends TerminalComponent<ZoneId>
     public ZoneIdComponent(ImmutableList<Component<?>> componentParents, @Nullable ZoneId initialZoneId)
     {
         super(componentParents);
-        items.add(new Item(getItemParents(), initialZoneId == null ? "" : initialZoneId.getId(), ItemVariant.EDITABLE_ZONEID, "Zone"));
+        items.add(new Item(getItemParents(), initialZoneId == null ? "" : initialZoneId.getId(), ItemVariant.EDITABLE_ZONEID, TranslationUtility.getString("entry.prompt.zone")));
     }
 
     @Override

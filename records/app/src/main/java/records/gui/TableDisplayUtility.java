@@ -320,40 +320,40 @@ public class TableDisplayUtility
         return dataTypeValue.applyGet(new DataTypeVisitorGetEx<GetValueAndComponent<?>, InternalException>()
         {
             @Override
-            public GetValueAndComponent<?> number(GetValue<Number> g, NumberInfo displayInfo) throws InternalException
+            public GetValueAndComponent<?> number(GetValue<@Value Number> g, NumberInfo displayInfo) throws InternalException
             {
-                return new GetValueAndComponent<>(g, NumberEntry::new);
+                return new GetValueAndComponent<@Value Number>(g, NumberEntry::new);
             }
 
             @Override
-            public GetValueAndComponent<?> text(GetValue<String> g) throws InternalException
+            public GetValueAndComponent<?> text(GetValue<@Value String> g) throws InternalException
             {
-                return new GetValueAndComponent<>(g, TextEntry::new);
+                return new GetValueAndComponent<@Value String>(g, TextEntry::new);
             }
 
             @Override
-            public GetValueAndComponent<?> bool(GetValue<Boolean> g) throws InternalException
+            public GetValueAndComponent<?> bool(GetValue<@Value Boolean> g) throws InternalException
             {
-                return new GetValueAndComponent<>(g, BoolComponent::new);
+                return new GetValueAndComponent<@Value Boolean>(g, BoolComponent::new);
             }
 
             @Override
-            public GetValueAndComponent<?> date(DateTimeInfo dateTimeInfo, GetValue<TemporalAccessor> g) throws InternalException
+            public GetValueAndComponent<?> date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException
             {
                 switch (dateTimeInfo.getType())
                 {
                     case YEARMONTHDAY:
-                        return new GetValueAndComponent<>(g, YMD::new);
+                        return new GetValueAndComponent<@Value TemporalAccessor>(g, YMD::new);
                     case YEARMONTH:
-                        return new GetValueAndComponent<>(g, YM::new);
+                        return new GetValueAndComponent<@Value TemporalAccessor>(g, YM::new);
                     case TIMEOFDAY:
-                        return new GetValueAndComponent<>(g, TimeComponent::new);
+                        return new GetValueAndComponent<@Value TemporalAccessor>(g, TimeComponent::new);
                     case TIMEOFDAYZONED:
-                        return new GetValueAndComponent<>(g, (parents, value) -> new Component2<TemporalAccessor/*OffsetTime*/, TemporalAccessor /*LocalTime*/, ZoneOffset>(parents, subParents -> new TimeComponent(subParents, value), null, subParents -> new PlusMinusOffsetComponent(parents, value.get(ChronoField.OFFSET_SECONDS)), (a, b) -> OffsetTime.of((LocalTime)a, b)));
+                        return new GetValueAndComponent<@Value TemporalAccessor>(g, (parents, value) -> new Component2<TemporalAccessor/*OffsetTime*/, TemporalAccessor /*LocalTime*/, ZoneOffset>(parents, subParents -> new TimeComponent(subParents, value), null, subParents -> new PlusMinusOffsetComponent(parents, value.get(ChronoField.OFFSET_SECONDS)), (a, b) -> OffsetTime.of((LocalTime)a, b)));
                     case DATETIME:
-                        return new GetValueAndComponent<>(g, (parents, value) -> new Component2<TemporalAccessor/*LocalDateTime*/, TemporalAccessor /*LocalDate*/, TemporalAccessor /*LocalTime*/>(parents, subParents -> new YMD(subParents, value), " ", subParents -> new TimeComponent(subParents, value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)));
+                        return new GetValueAndComponent<@Value TemporalAccessor>(g, (parents, value) -> new Component2<TemporalAccessor/*LocalDateTime*/, TemporalAccessor /*LocalDate*/, TemporalAccessor /*LocalTime*/>(parents, subParents -> new YMD(subParents, value), " ", subParents -> new TimeComponent(subParents, value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)));
                     case DATETIMEZONED:
-                        return new GetValueAndComponent<>(g, (parents0, value) ->
+                        return new GetValueAndComponent<@Value TemporalAccessor>(g, (parents0, value) ->
                             new Component2<TemporalAccessor /*ZonedDateTime*/, TemporalAccessor /*LocalDateTime*/, ZoneId>(parents0,
                                 parents1 -> new Component2<TemporalAccessor /*LocalDateTime*/, TemporalAccessor /*LocalDate*/, TemporalAccessor /*LocalTime*/>(
                                         parents1, parents2 -> new YMD(parents2, value), " ", parents2 -> new TimeComponent(parents2, value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)),

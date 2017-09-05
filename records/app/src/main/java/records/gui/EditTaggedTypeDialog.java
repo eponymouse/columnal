@@ -52,7 +52,7 @@ public class EditTaggedTypeDialog extends ErrorableDialog<DataType>
         typeName = new ErrorableTextField<String>(name -> {
             name = name.trim();
             if (name.isEmpty())
-                return ErrorableTextField.ConversionResult.<@NonNull String>error(TranslationUtility.getString("taggedtype.name.missing"));
+                return ErrorableTextField.ConversionResult.<@NonNull String>error(TranslationUtility.getString("taggedtype.error.name.missing"));
             else if (typeManager.lookupType(name) == null)
                 return ErrorableTextField.ConversionResult.success(name);
             else
@@ -78,7 +78,7 @@ public class EditTaggedTypeDialog extends ErrorableDialog<DataType>
     }
 
     @Override
-    protected Either<String, DataType> calculateResult()
+    protected Either<@Localized String, DataType> calculateResult()
     {
         @Nullable String name = typeName.valueProperty().get();
         if (name == null)
@@ -138,7 +138,7 @@ public class EditTaggedTypeDialog extends ErrorableDialog<DataType>
             tagName = new ErrorableTextField<String>(name -> {
                 // TODO check if tag name is valid
                 if (name.trim().isEmpty())
-                    return ErrorableTextField.ConversionResult.<@NonNull String>error("taggedtype.error.tagName.empty");
+                    return ErrorableTextField.ConversionResult.<@NonNull String>error(TranslationUtility.getString("taggedtype.error.tagName.empty"));
                 else
                     return ConversionResult.success(name.trim());
             });
@@ -164,13 +164,13 @@ public class EditTaggedTypeDialog extends ErrorableDialog<DataType>
             @Nullable String name = tagName.valueProperty().getValue();
             if (name == null)
             {
-                return Either.left("taggedtype.error.tagName.invalid");
+                return Either.left(TranslationUtility.getString("taggedtype.error.tagName.invalid"));
             }
             @Nullable Optional<DataType> innerType = subType.get();
             // Not actually sure this can ever occur, but no harm in handling it:
             if (innerType == null)
             {
-                return Either.left("taggedtype.error.tagType.invalid");
+                return Either.left(TranslationUtility.getString("taggedtype.error.tagType.invalid"));
             }
             return Either.right(new DataType.TagType<>(name, innerType.orElse(null)));
         }

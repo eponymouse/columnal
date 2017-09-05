@@ -516,10 +516,10 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     public ImmutableList<Pair<String, @Localized String>> operatorKeywords()
     {
         return ImmutableList.of(
-            new Pair<>(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ORCASE), "op.caseor"),
-            new Pair<>(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASEGUARD), "op.casegiven"),
-            new Pair<>(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN), "op.casethen"),
-            new Pair<>(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASE), "op.case"));
+            opD(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ORCASE), "op.caseor"),
+            opD(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASEGUARD), "op.casegiven"),
+            opD(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN), "op.casethen"),
+            opD(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASE), "op.case"));
     }
 
     @Override

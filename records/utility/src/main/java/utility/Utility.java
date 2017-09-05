@@ -58,6 +58,7 @@ import org.antlr.v4.runtime.Vocabulary;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.*;
 import org.checkerframework.dataflow.qual.Pure;
@@ -952,6 +953,13 @@ public class Utility
             return s.substring(1, s.length() - 1);
         else
             return s;
+    }
+
+    // Annotates that a String is universal, e.g. a symbol or a number, which doesn't need translating
+    @SuppressWarnings("localized")
+    public static @Localized String universal(String string)
+    {
+        return string;
     }
 
     public static class ReadState

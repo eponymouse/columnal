@@ -17,6 +17,7 @@ import utility.FXPlatformFunctionIntUser;
 import utility.FXPlatformRunnable;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -347,7 +348,7 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
         public EmptyListComponent(ImmutableList<Component<?>> componentParents)
         {
             super(componentParents);
-            items.add(new Item(getItemParents(), "", ItemVariant.EMPTY_LIST_PROMPT, "List"));
+            items.add(new Item(getItemParents(), "", ItemVariant.EMPTY_LIST_PROMPT, TranslationUtility.getString("entry.prompt.list")));
         }
 
         // Shouldn't happen because parent won't call endEdit on us:

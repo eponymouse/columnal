@@ -16,6 +16,7 @@ import utility.Either;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -138,7 +139,7 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
                 tagNameChanged(items.get(0).getValue());
             });
 
-            items.add(new Item(getItemParents(), initialContent, ItemVariant.TAG_NAME, "Tag"));
+            items.add(new Item(getItemParents(), initialContent, ItemVariant.TAG_NAME, TranslationUtility.getString("entry.prompt.tag")));
         }
 
 

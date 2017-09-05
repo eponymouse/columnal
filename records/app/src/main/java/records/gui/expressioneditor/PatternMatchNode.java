@@ -319,7 +319,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     @Override
     public ImmutableList<Pair<String, @Localized String>> operatorKeywords()
     {
-        return ImmutableList.of(new Pair<>(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASE), "op.case"));
+        return ImmutableList.of(opD(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.CASE), "op.case"));
     }
 
     public boolean isLastClause(ClauseNode clauseNode)

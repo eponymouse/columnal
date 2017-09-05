@@ -1,11 +1,13 @@
 package records.gui.stf;
 
 import com.google.common.collect.ImmutableList;
+import javafx.event.Event;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -136,14 +138,14 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
         });
 
         Nodes.addInputMap(FXUtility.keyboard(this), InputMap.sequence(
-            InputMap.consume(EventPattern.keyPressed(KeyCode.TAB), e -> {
+            InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.TAB), (KeyEvent e) -> {
                 if (autoComplete != null)
                 {
                     autoComplete.fireSelected();
                     e.consume();
                 }
             }),
-            InputMap.consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
+            InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), (KeyEvent e) -> {
                 if (endEdit != null)
                 {
                     endEdit.run(); // Should move focus away from us

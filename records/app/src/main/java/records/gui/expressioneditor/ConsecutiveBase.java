@@ -7,7 +7,6 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
@@ -26,7 +25,6 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
-import utility.gui.TranslationUtility;
 
 import java.util.AbstractList;
 import java.util.ArrayList;
@@ -34,7 +32,6 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -788,11 +785,6 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         OperandNode<EXPRESSION> loadOperand(String src, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent) throws UserException, InternalException;
     }
 
-    private static Pair<String, @Localized String> opD(String op, @LocalizableKey String key)
-    {
-        return new Pair<>(op, TranslationUtility.getString(key));
-    }
-
     private static class ExpressionOps implements OperandOps<Expression, ExpressionNodeParent>
     {
         private final static ImmutableList<Pair<String, @Localized String>> OPERATORS = ImmutableList.<Pair<String, @Localized String>>copyOf(Arrays.<Pair<String, @Localized String>>asList(
@@ -813,7 +805,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             opD("~", "op.matches"),
             opD("\u00B1", "op.plusminus")
         ));
-        private final Set<Integer> ALPHABET = OPERATORS.stream().map(p -> p.getFirst()).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
+        private final Set<Integer> ALPHABET = OPERATORS.stream().map(ExpressionOps::getOp).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
+
+        private static String getOp(Pair<String, @Localized String> p)
+        {
+            return p.getFirst();
+        }
 
         @Override
         public ImmutableList<Pair<String, @Localized String>> getValidOperators(ExpressionNodeParent parent)
@@ -823,7 +820,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
         public boolean isOperatorAlphabet(char character, ExpressionNodeParent expressionNodeParent)
         {
-            return ALPHABET.contains((Integer)(int)character) || expressionNodeParent.operatorKeywords().stream().anyMatch((Pair<String, @Localized String> k) -> k.getFirst().codePointAt(0) == character);
+            return ALPHABET.contains((Integer)(int)character) || expressionNodeParent.operatorKeywords().stream().anyMatch((Pair<String, @Localized String> k) -> getOp(k).codePointAt(0) == character);
         }
 
         @Override
@@ -918,7 +915,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             opD("/", "op.divide"),
             opD("^", "op.raise")
         ));
-        private final Set<Integer> ALPHABET = OPERATORS.stream().map(p -> p.getFirst()).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
+        private final Set<Integer> ALPHABET = OPERATORS.stream().map(UnitExpressionOps::getOp).flatMapToInt(String::codePoints).boxed().collect(Collectors.<@NonNull Integer>toSet());
+
+        private static String getOp(Pair<String, @Localized String> p)
+        {
+            return p.getFirst();
+        }
 
         @Override
         public OperandNode<UnitExpression> makeGeneral(ConsecutiveBase<UnitExpression, UnitNodeParent> parent, UnitNodeParent semanticParent, @Nullable String initialContent)

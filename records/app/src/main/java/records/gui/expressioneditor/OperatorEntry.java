@@ -86,14 +86,14 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
         return Stream.of(container);
     }
 
-    private static <EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> List<Completion> getCompletions(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, List<Pair<String, @LocalizableKey String>> validOperators, String s)
+    private static <EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> List<Completion> getCompletions(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, List<Pair<String, @Localized String>> validOperators, String s)
     {
         ArrayList<Completion> r = new ArrayList<>();
         for (Character c : parent.terminatedByChars())
         {
             r.add(new KeyShortcutCompletion("End bracketed expressions", c));
         }
-        for (Pair<String, @LocalizableKey String> operator : validOperators)
+        for (Pair<String, @Localized String> operator : validOperators)
         {
             r.add(new SimpleCompletion(operator.getFirst(), operator.getSecond()));
         }
@@ -152,10 +152,10 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
         private final String operator;
         private final @Localized String description;
 
-        public SimpleCompletion(String operator, @LocalizableKey String descriptionKey)
+        public SimpleCompletion(String operator, @Localized String description)
         {
             this.operator = operator;
-            this.description = TranslationUtility.getString(descriptionKey);
+            this.description = description;
         }
 
         @Override

@@ -104,11 +104,11 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
         });
     }
 
-    private StructuredTextField<@NonNull ?> makeField(@UnknownInitialization(Object.class) NewColumnDialog this, DataType dataType) throws InternalException
+    private StructuredTextField<@NonNull ? extends @Value Object> makeField(@UnknownInitialization(Object.class) NewColumnDialog this, DataType dataType) throws InternalException
     {
         return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, DataTypeUtility.makeDefaultValue(dataType)));
     }
-    private <@NonNull T extends @NonNull Object> StructuredTextField<T> fieldFromComponent(@UnknownInitialization(Object.class) NewColumnDialog this, Component<T> component) throws InternalException
+    private <@NonNull T extends @NonNull @Value Object> StructuredTextField<T> fieldFromComponent(@UnknownInitialization(Object.class) NewColumnDialog this, Component<T> component) throws InternalException
     {
         return new StructuredTextField<>(component, v -> {defaultValueAsString = v.getFirst();});
     }

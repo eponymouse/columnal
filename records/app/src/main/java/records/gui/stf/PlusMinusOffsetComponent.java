@@ -8,6 +8,8 @@ import records.gui.stf.StructuredTextField.ItemVariant;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.Utility;
+import utility.gui.TranslationUtility;
 
 import java.time.ZoneOffset;
 import java.util.Arrays;
@@ -41,10 +43,10 @@ public class PlusMinusOffsetComponent extends TerminalComponent<ZoneOffset>
             plusMinus = "";
         }
         items.addAll(Arrays.asList(
-            new Item(getItemParents(), plusMinus, ItemVariant.TIMEZONE_PLUS_MINUS, "\u00B1"),
-            new Item(getItemParents(), initialHours, ItemVariant.EDITABLE_OFFSET_HOUR, "Zone Hours"),
+            new Item(getItemParents(), plusMinus, ItemVariant.TIMEZONE_PLUS_MINUS, Utility.universal("\u00B1")),
+            new Item(getItemParents(), initialHours, ItemVariant.EDITABLE_OFFSET_HOUR, TranslationUtility.getString("entry.date.plusMinusOffset.hour")),
             new Item(getItemParents(), ":"),
-            new Item(getItemParents(), initialMinutes, ItemVariant.EDITABLE_OFFSET_MINUTE, "Zone Minutes")));
+            new Item(getItemParents(), initialMinutes, ItemVariant.EDITABLE_OFFSET_MINUTE, TranslationUtility.getString("entry.date.plusMinusOffset.minute"))));
     }
 
     @Override

@@ -279,8 +279,8 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     public ImmutableList<Pair<String, @Localized String>> operatorKeywords()
     {
         return ImmutableList.of(
-            new Pair<>(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN), "op.then"),
-            new Pair<>(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ELSE), "op.else"));
+            opD(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.THEN), "op.then"),
+            opD(Utility.literal(ExpressionLexer.VOCABULARY, ExpressionLexer.ELSE), "op.else"));
     }
 
     private class SubConsecutive extends Consecutive<Expression, ExpressionNodeParent>

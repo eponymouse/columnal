@@ -6,8 +6,12 @@ import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.scene.Node;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import utility.Pair;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.util.IdentityHashMap;
 import java.util.Iterator;
@@ -38,6 +42,11 @@ abstract class DeepNodeTree
                 updateListeners();
             }
         });
+    }
+
+    protected static Pair<String, @Localized String> opD(String op, @LocalizableKey String key)
+    {
+        return new Pair<>(op, TranslationUtility.getString(key));
     }
 
     @SuppressWarnings("initialization") // Can't prove calculateNodes is safe to call here
