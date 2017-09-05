@@ -17,8 +17,13 @@ import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ButtonType;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListView;
 import javafx.scene.control.ScrollPane;
+import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
@@ -30,6 +35,7 @@ import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.DataSource;
 import records.data.Table;
 import records.data.Table.FullSaver;
@@ -54,6 +60,7 @@ import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 18/10/2016.
@@ -187,13 +194,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
 
     public Point2D snapTableDisplayPosition(TableDisplay tableDisplay, double x, double y)
     {
-        int index = Utility.indexOfRef(mainPane.getChildren(), tableDisplay);
-        if (index < mainPane.getChildren().size() - 1)
-        {
-            // False will come before true, so this pushes tableDisplay to end of list;
-            mainPane.getChildren().remove(tableDisplay);
-            mainPane.getChildren().add(tableDisplay);
-        }
+        bringTableDisplayToFront(tableDisplay);
 
         // Snap to nearest 5:
         x = Math.round(x / 5.0) * 5.0;
@@ -208,6 +209,17 @@ public class View extends StackPane implements TableManager.TableManagerListener
             iterations += 1;
         }
         return new Point2D(x, y);
+    }
+
+    private void bringTableDisplayToFront(TableDisplay tableDisplay)
+    {
+        int index = Utility.indexOfRef(mainPane.getChildren(), tableDisplay);
+        if (index < mainPane.getChildren().size() - 1)
+        {
+            // This seems to be the only way to do a re-order:
+            mainPane.getChildren().remove(tableDisplay);
+            mainPane.getChildren().add(tableDisplay);
+        }
     }
 
     private boolean overlapsAnyExcept(TableDisplay except, double x, double y)
@@ -468,5 +480,86 @@ public class View extends StackPane implements TableManager.TableManagerListener
     {
         return FXUtility.mapBindingLazy(diskFile, f -> f.getName() + " [" + f.getParent() + "]");
     }
+
+    @OnThread(Tag.FXPlatform)
+    public class FindEverywhereDialog extends Dialog<Void>
+    {
+
+        private final ListView<Result> results;
+
+        private class Result
+        {
+            // TODO separate show text from find text
+            private final String text;
+            private final FXPlatformRunnable onPick;
+
+            public Result(String text, FXPlatformRunnable onPick)
+            {
+                this.text = text;
+                this.onPick = onPick;
+            }
+
+            public boolean matches(String findString)
+            {
+                return text.toLowerCase().contains(findString.toLowerCase());
+            }
+
+            @Override
+            public String toString()
+            {
+                return text;
+            }
+        }
+
+        public FindEverywhereDialog()
+        {
+            TextField findField = new TextField();
+            results = new ListView<>();
+
+            List<Result> allPossibleResults = findAllPossibleResults();
+            results.getItems().setAll(allPossibleResults);
+
+            FXUtility.addChangeListenerPlatformNN(findField.textProperty(), text -> {
+                results.getItems().setAll(allPossibleResults.stream().filter(r -> r.matches(text)).collect(Collectors.toList()));
+                results.getSelectionModel().selectFirst();
+            });
+            findField.setOnAction(e -> selectResult());
+
+            BorderPane content = new BorderPane();
+            content.setTop(findField);
+            content.setCenter(results);
+            getDialogPane().setContent(content);
+            getDialogPane().getButtonTypes().setAll(ButtonType.CLOSE);
+
+            setOnShown(e -> findField.requestFocus());
+        }
+
+        @RequiresNonNull("results")
+        @SuppressWarnings("initialization")
+        private void selectResult(@UnknownInitialization(Object.class) FindEverywhereDialog this)
+        {
+            @Nullable Result result = results.getSelectionModel().getSelectedItem();
+            if (result != null)
+            {
+                result.onPick.run();
+            }
+            close();
+        }
+
+        private List<Result> findAllPossibleResults(@UnknownInitialization(Object.class) FindEverywhereDialog this)
+        {
+            List<Result> r = new ArrayList<>();
+            // Tables:
+            r.addAll(Utility.mapList(getAllTables(), t -> new Result(t.getId().getRaw(), () -> {
+                TableDisplay tableDisplay = (TableDisplay) t.getDisplay();
+                if (tableDisplay != null)
+                    bringTableDisplayToFront(tableDisplay);
+            })));
+
+            return r;
+        }
+    }
+
+
 }
 

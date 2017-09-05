@@ -87,7 +87,7 @@ public class TestExportToCSV extends ApplicationTest implements ScrollToTrait
         TestUtil.openDataAsTable(windowToUse, manager);
 
         // Bring table to front:
-        clickOn("#id-menu-view").clickOn(".id-menu-find");
+        clickOn("#id-menu-view").clickOn(".id-menu-view-find");
         write(calculated.getId().getRaw());
         push(KeyCode.ENTER);
 

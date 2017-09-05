@@ -89,7 +89,7 @@ public class MatchExpression extends NonOperatorExpression
 
         public String save()
         {
-            return " @case " + patterns.stream().map(p -> p.save()).collect(Collectors.joining(" @orcase ")) + " @then " + outcome.save(false);
+            return " @case " + patterns.stream().map(p -> p.save()).collect(Collectors.joining(" @or ")) + " @then " + outcome.save(false);
         }
 
         public MatchClause copy(MatchExpression e)

@@ -192,10 +192,9 @@ public class TableManager
             }
         }
 
-        Map<@NonNull TablesWithSameId, List<TablesWithSameId>> edges = new HashMap<>();
+        Map<@NonNull TablesWithSameId, List<TablesWithSameId>> incomingEdges = new HashMap<>();
         for (TablesWithSameId tablesWithSameId : values.values())
         {
-            List<TablesWithSameId> dests = edges.computeIfAbsent(tablesWithSameId, k -> new ArrayList<>());
             for (Table table : tablesWithSameId.tables)
             {
                 if (table instanceof Transformation)
@@ -204,14 +203,17 @@ public class TableManager
                     {
                         TablesWithSameId dest = values.get(srcId);
                         if (dest != null)
-                            dests.add(dest);
+                        {
+                            List<TablesWithSameId> incoming = incomingEdges.computeIfAbsent(dest, k -> new ArrayList<>());
+                            incoming.add(tablesWithSameId);
+                        }
                     }
                 }
             }
         }
 
 
-        List<TablesWithSameId> ordered = GraphUtility.lineariseDAG(values.values(), edges, Collections.emptyList());
+        List<TablesWithSameId> ordered = GraphUtility.lineariseDAG(values.values(), incomingEdges, Collections.emptyList());
         // lineariseDAG makes all edges point forwards, but we want them pointing backwards
         // so reverse:
         Collections.reverse(ordered);

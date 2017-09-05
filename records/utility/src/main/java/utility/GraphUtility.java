@@ -21,12 +21,12 @@ public class GraphUtility
      * as possible (if there are multiple orderings available).
      *
      * @param nodes The full set of nodes in the graph, which will be returned, but maybe in a different order
-     * @param originalEdges A map from a node to its list of incoming edges.  Nodes with no incoming may be absent or map to an empty list.
+     * @param incomingEdges A map from a node to its list of *incoming* edges.  Nodes with no incoming may be absent or map to an empty list.
      * @param putAsLateAsPossible See above
      * @param <T> The node type.  Nodes are compared using .equals
      * @return The flattened ordered list of nodes.
      */
-    public static <T> List<T> lineariseDAG(Collection<@NonNull T> nodes, Map<@NonNull T, ? extends Collection<T>> originalEdges, Collection<T> putAsLateAsPossible)
+    public static <T> List<T> lineariseDAG(Collection<@NonNull T> nodes, Map<@NonNull T, ? extends Collection<T>> incomingEdges, Collection<T> putAsLateAsPossible)
     {
         // Kahn's algorithm, from wikipedia:
         //   L ← Empty list that will contain the sorted elements
@@ -41,7 +41,7 @@ public class GraphUtility
 
         // We don't have any empty lists in the map:
         Map<@NonNull T, List<T>> remainingEdges = new HashMap<>();
-        for (Entry<@NonNull T, ? extends Collection<T>> origEdge : originalEdges.entrySet())
+        for (Entry<@NonNull T, ? extends Collection<T>> origEdge : incomingEdges.entrySet())
         {
             if (!origEdge.getValue().isEmpty())
                 remainingEdges.put(origEdge.getKey(), new ArrayList<>(origEdge.getValue()));

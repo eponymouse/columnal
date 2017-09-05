@@ -9,6 +9,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
@@ -216,6 +217,7 @@ public abstract class Table
     }
 
     @OnThread(Tag.FXPlatform)
+    @Pure
     public synchronized @Nullable TableDisplayBase getDisplay()
     {
         return display;

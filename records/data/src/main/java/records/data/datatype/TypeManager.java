@@ -284,7 +284,6 @@ public class TypeManager
         OutputBuilder b = new OutputBuilder();
         for (DataType dataType : orderedDataTypes)
         {
-
             b.t(FormatLexer.TYPE, FormatLexer.VOCABULARY);
             b.quote(dataType.getTaggedTypeName());
             dataType.save(b, true);

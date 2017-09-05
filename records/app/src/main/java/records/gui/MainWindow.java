@@ -97,6 +97,9 @@ public class MainWindow
             GUI.menu("menu.data",
                 GUI.menuItem("menu.data.new", () -> newTable(v)),
                 GUI.menuItem("menu.data.import", () -> importText(v, stage))
+            ),
+            GUI.menu("menu.view",
+                GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait())
             )
         );
 

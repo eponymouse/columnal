@@ -353,6 +353,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 if (i < columns.size() - 1)
                     out.write(",");
             }
+            out.write("\n");
             for (int row = 0; data.indexValid(row); row += 1)
             {
                 for (int i = 0; i < columns.size(); i++)
@@ -361,6 +362,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                     if (i < columns.size() - 1)
                         out.write(",");
                 }
+                out.write("\n");
             }
         }
         catch (IOException e)
