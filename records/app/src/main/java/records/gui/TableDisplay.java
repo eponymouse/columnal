@@ -3,6 +3,7 @@ package records.gui;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -79,6 +80,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     private boolean resizeBottom;
     @OnThread(Tag.Any)
     private final AtomicReference<Bounds> mostRecentBounds;
+    private final HBox header;
 
     @OnThread(Tag.FX)
     public Point2D closestPointTo(double parentX, double parentY)
@@ -223,7 +225,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
         Label title = new Label(table.getId().getOutput());
         Utility.addStyleClass(title, "table-title");
-        HBox header = new HBox(actionsButton, title, spacer);
+        header = new HBox(actionsButton, title, spacer);
         if (table.showAddColumnButton())
         {
             Button addColumnButton = GUI.button("tableDisplay.addColumn", () -> Utility.alertOnErrorFX_(() -> {
@@ -263,8 +265,11 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 Point2D pos = localToParent(sceneToLocal(sceneX, sceneY));
                 double newX = Math.max(0, pos.getX() - offsetDrag.getX());
                 double newY = Math.max(0, pos.getY() - offsetDrag.getY());
-                setLayoutX(newX);
-                setLayoutY(newY);
+
+                @SuppressWarnings("initialization") // Due to passing this
+                Point2D snapped = parent.snapTableDisplayPosition(this, newX, newY);
+                setLayoutX(snapped.getX());
+                setLayoutY(snapped.getY());
                 parent.tableMovedOrResized(this);
             }
         });
@@ -421,5 +426,12 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     public Bounds getPosition()
     {
         return mostRecentBounds.get();
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) Bounds getHeaderBoundsInParent()
+    {
+        // Header in parent is our local coords, so localToParent that to get our parent:
+        return localToParent(header.getBoundsInParent());
     }
 }

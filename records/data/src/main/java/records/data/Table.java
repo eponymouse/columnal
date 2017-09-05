@@ -3,6 +3,8 @@ package records.data;
 import annotation.qual.Value;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import javafx.geometry.Rectangle2D;
+import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -249,5 +251,8 @@ public abstract class Table
     {
         @OnThread(Tag.Any)
         public Bounds getPosition();
+
+        @OnThread(Tag.FXPlatform)
+        public Bounds getHeaderBoundsInParent();
     }
 }

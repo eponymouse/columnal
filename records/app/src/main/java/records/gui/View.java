@@ -10,8 +10,10 @@ import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
 import javafx.collections.MapChangeListener;
 import javafx.collections.ObservableMap;
+import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -49,6 +51,7 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 
@@ -62,6 +65,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
 
     private final ObservableMap<Transformation, Overlays> overlays;
     private final TableManager tableManager;
+    // The pane which actually holds the TableDisplay items:
     private final Pane mainPane;
     // We want a display that dims everything except the hovered-over table
     // But that requires clipping which messes up the mouse selection.  So we
@@ -179,6 +183,41 @@ public class View extends StackPane implements TableManager.TableManagerListener
     public void tableMovedOrResized(@UnknownInitialization TableDisplay tableDisplay)
     {
         adjustParent.run();
+    }
+
+    public Point2D snapTableDisplayPosition(TableDisplay tableDisplay, double x, double y)
+    {
+        int index = Utility.indexOfRef(mainPane.getChildren(), tableDisplay);
+        if (index < mainPane.getChildren().size() - 1)
+        {
+            // False will come before true, so this pushes tableDisplay to end of list;
+            mainPane.getChildren().remove(tableDisplay);
+            mainPane.getChildren().add(tableDisplay);
+        }
+
+        // Snap to nearest 5:
+        x = Math.round(x / 5.0) * 5.0;
+        y = Math.round(y / 5.0) * 5.0;
+
+        // Prevent infinite loop:
+        int iterations = 0;
+        while (overlapsAnyExcept(tableDisplay, x, y) && iterations < 200)
+        {
+            x += 5;
+            y += 5;
+            iterations += 1;
+        }
+        return new Point2D(x, y);
+    }
+
+    private boolean overlapsAnyExcept(TableDisplay except, double x, double y)
+    {
+        Bounds exceptHeader = new BoundingBox(x, y, except.getHeaderBoundsInParent().getWidth(), except.getHeaderBoundsInParent().getHeight());
+        return tableManager.getAllTables().stream()
+                .flatMap(t -> Utility.streamNullable(t.getDisplay()))
+                .filter(d -> d != except)
+                .map(t -> t.getHeaderBoundsInParent())
+                .anyMatch(r -> r.intersects(exceptHeader));
     }
 
     @OnThread(Tag.FXPlatform)
