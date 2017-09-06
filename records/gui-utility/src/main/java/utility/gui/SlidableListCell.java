@@ -73,7 +73,7 @@ public class SlidableListCell<T> extends ListCell<T>
 
     @Override
     @OnThread(Tag.FX)
-    protected void updateItem(T item, boolean empty)
+    protected void updateItem(@Nullable T item, boolean empty)
     {
         super.updateItem(item, empty);
         xPosition.setValue(0);

@@ -46,6 +46,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
+import utility.gui.DeletableListView;
 import utility.gui.FXUtility;
 import utility.gui.FXUtility.DragHandler;
 import utility.gui.GUI;
@@ -192,8 +193,6 @@ public class HideColumns extends TransformationEditable
         private final ObservableList<ColumnId> columnsToHide;
         private final ListView<ColumnId> srcColumnList;
 
-        private final ObservableList<DeletableListCell> selectedCells;
-        private boolean hoverOverSelection = false;
 
         @OnThread(Tag.FXPlatform)
         @SuppressWarnings("initialization")
@@ -206,7 +205,6 @@ public class HideColumns extends TransformationEditable
                 addAllItems(Collections.singletonList(col));
             });
             srcColumnList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-            selectedCells = FXCollections.observableArrayList();
             srcColumnList.setOnKeyPressed(e -> {
                 if (e.getCode() == KeyCode.ENTER)
                 {
@@ -236,15 +234,7 @@ public class HideColumns extends TransformationEditable
             VBox addWrapper = new VBox(add);
             addWrapper.getStyleClass().add("add-column-wrapper");
 
-            ListView<ColumnId> hiddenColumns = new ListView<>(columnsToHide);
-            hiddenColumns.setCellFactory(lv -> new DeletableListCell(lv));
-            hiddenColumns.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-            hiddenColumns.setOnKeyPressed(e -> {
-                if (e.getCode() == KeyCode.DELETE || e.getCode() == KeyCode.BACK_SPACE)
-                {
-                    deleteSelection(hiddenColumns);
-                }
-            });
+            DeletableListView<ColumnId> hiddenColumns = new DeletableListView<>(columnsToHide);
 
             FXUtility.enableDragTo(hiddenColumns, Collections.singletonMap(FXUtility.getTextDataFormat("ColumnId"), new DragHandler()
             {
@@ -324,97 +314,6 @@ public class HideColumns extends TransformationEditable
         public @Nullable TableId getSourceId()
         {
             return srcControl.getTableIdOrNull();
-        }
-
-        @OnThread(Tag.FXPlatform)
-        public void deleteSelection(ListView<ColumnId> listView)
-        {
-            ArrayList<DeletableListCell> cols = new ArrayList<>(selectedCells);
-            List<ColumnId> selectedItems = new ArrayList<>(listView.getSelectionModel().getSelectedItems());
-            listView.getSelectionModel().clearSelection();
-            DeletableListCell.animateOutToRight(cols, () -> columnsToHide.removeAll(selectedItems));
-        }
-
-        private class DeletableListCell extends SlidableListCell<ColumnId>
-        {
-            private final SmallDeleteButton button;
-            private final Label label;
-
-            @SuppressWarnings("initialization")
-            public DeletableListCell(ListView<ColumnId> listView)
-            {
-                getStyleClass().add("deletable-list-cell");
-                button = new SmallDeleteButton();
-                button.setOnAction(() -> {
-                    if (isSelected())
-                    {
-                        // Delete all in selection
-                        deleteSelection(listView);
-                    }
-                    else
-                    {
-                        // Just delete this one
-                        animateOutToRight(Collections.singletonList(this), () -> columnsToHide.remove(getItem()));
-                    }
-                });
-                button.setOnHover(entered -> {
-                    if (isSelected())
-                    {
-                        hoverOverSelection = entered;
-                        // Set hover state on all (including us):
-                        for (DeletableListCell selectedCell : selectedCells)
-                        {
-                            selectedCell.updateHoverState(hoverOverSelection);
-                        }
-
-                    }
-                    // If not selected, nothing to do
-                });
-                label = new Label("");
-                BorderPane.setAlignment(label, Pos.CENTER_LEFT);
-                BorderPane borderPane = new BorderPane(label, null, button, null, null);
-                borderPane.getStyleClass().add("deletable-list-cell-content");
-                setGraphic(borderPane);
-            }
-
-            private void updateHoverState(boolean hovering)
-            {
-                pseudoClassStateChanged(PseudoClass.getPseudoClass("my_hover_sel"), hovering);
-            }
-
-            @Override
-            public void updateSelected(boolean selected)
-            {
-                if (selected)
-                {
-                    selectedCells.add(this);
-                    updateHoverState(hoverOverSelection);
-                }
-                else
-                {
-                    selectedCells.remove(this);
-                    updateHoverState(false);
-                }
-                super.updateSelected(selected);
-            }
-
-            @Override
-            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-            protected void updateItem(ColumnId item, boolean empty)
-            {
-                if (empty)
-                {
-                    label.setText("");
-                    button.setVisible(false);
-                }
-                else
-                {
-                    label.setText(item.toString());
-                    button.setVisible(true);
-                }
-
-                super.updateItem(item, empty);
-            }
         }
     }
 

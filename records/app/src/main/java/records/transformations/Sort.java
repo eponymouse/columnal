@@ -6,10 +6,12 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.GridPane;
@@ -19,6 +21,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -52,7 +55,9 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
+import utility.gui.DeletableListView;
 import utility.gui.FXUtility;
+import utility.gui.FXUtility.DragHandler;
 import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
@@ -385,8 +390,46 @@ public class Sort extends TransformationEditable
             });
             colsAndSort.add(GUI.vbox("add-column-wrapper", button), 1, 1);
 
-            ListView<Optional<ColumnId>> sortByView = FXUtility.readOnlyListView(sortBy, c -> !c.isPresent() ? "Original order" : c.get() + ", then if equal, by");
+            ListView<Optional<ColumnId>> sortByView = new DeletableListView<Optional<ColumnId>>(sortBy) {
+                @Override
+                @OnThread(Tag.FXPlatform)
+                @SuppressWarnings("initialization")
+                protected boolean canDeleteValue(Optional<ColumnId> value)
+                {
+                    return value.isPresent();
+                }
+
+                @Override
+                @OnThread(Tag.FXPlatform)
+                protected String valueToString(Optional<ColumnId> c)
+                {
+                    return !c.isPresent() ? "Original order" : c.get() + ", then if equal, by";
+                }
+            };
             colsAndSort.add(sortByView, 2, 1);
+
+            FXUtility.enableDragTo(sortByView, Collections.singletonMap(FXUtility.getTextDataFormat("ColumnId"), new DragHandler()
+            {
+                @Override
+                public @OnThread(Tag.FXPlatform) void dragMoved(Point2D pointInScene)
+                {
+
+                }
+
+                @Override
+                @SuppressWarnings("unchecked")
+                public @OnThread(Tag.FXPlatform) boolean dragEnded(Dragboard db, Point2D pointInScene)
+                {
+                    // TODO need to add to right position within list
+                    @Nullable Object content = db.getContent(FXUtility.getTextDataFormat("ColumnId"));
+                    if (content != null && content instanceof List)
+                    {
+                        addAllItems((List<ColumnId>) content);
+                        return true;
+                    }
+                    return false;
+                }
+            }));
 
             //FXUtility.enableDragFrom();
             //FXUtility.enableDragTo(sortByView, Optional::of, "ColumnId");

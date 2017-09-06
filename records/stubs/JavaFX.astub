@@ -101,6 +101,13 @@ class TableView
 {
     //@UnderInitialization(TableView.class) List getItems();
 }
+class ListView<T>
+{
+    void setCellFactory(Callback factory) @UnknownInitialization;
+    MultipleSelectionModel<T> getSelectionModel() @UnknownInitialization;
+    void setOnKeyPressed(EventHandler handler) @UnknownInitialization;
+    List getItems() @UnknownInitialization;
+}
 class TableCell
 {
      void setGraphic(@Nullable Node a);
@@ -108,6 +115,7 @@ class TableCell
 class ListCell
 {
      StringProperty textProperty() @UnknownInitialization;
+     void updateItem(@Nullable T item, boolean empty);
 }
 class Cell<T>
 {
