@@ -69,6 +69,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.stream.Collectors;
 
 /**
  * A transformation which preserves all data from the original table
@@ -351,11 +352,16 @@ public class Sort extends TransformationEditable
             int beforeIndex = optBeforeIndex.orElse(sortBy.size() - 1);
             for (ColumnId column : items)
             {
-                if (!sortBy.contains(Optional.of(column)))
+                int existingIndex = sortBy.indexOf(Optional.of(column));
+                if (existingIndex >= 0 && existingIndex < beforeIndex)
                 {
-                    sortBy.add(beforeIndex, Optional.of(column));
-                    beforeIndex += 1;
+                    beforeIndex -= 1;
                 }
+                sortBy.remove(Optional.of(column));
+
+                sortBy.add(beforeIndex, Optional.of(column));
+                beforeIndex += 1;
+
             }
         }
 
@@ -414,6 +420,11 @@ public class Sort extends TransformationEditable
                 }
             };
             colsAndSort.add(sortByView, 2, 1);
+
+            // We also allow drag-from sortByView, to allow repositioning within the list:
+            FXUtility.enableDragFrom(sortByView, "ColumnId", TransferMode.MOVE, xs -> xs.stream().flatMap(x -> Utility.streamNullable(x.orElse(null))).collect(Collectors.toList()), (tm, items) -> {
+                // Don't actually need to remove here, as the drop code below already does the removal and re-position if item is already in list
+            });
 
             FXUtility.enableDragTo(sortByView, Collections.singletonMap(FXUtility.getTextDataFormat("ColumnId"), new DragHandler()
             {

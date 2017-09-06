@@ -91,14 +91,35 @@ public class FXUtility
         return listView;
     }
 
-
     public static <T> void enableDragFrom(ListView<T> listView, String type, TransferMode transferMode)
     {
+        enableDragFrom(listView, type, transferMode, x -> x, null);
+    }
+
+    public static <T, U> void enableDragFrom(ListView<T> listView, String type, TransferMode transferMode, FXPlatformFunction<List<T>, U> mapToSerializable, @Nullable FXPlatformBiConsumer<@Nullable TransferMode, U> onDragComplete)
+    {
+        DataFormat textDataFormat = getTextDataFormat(type);
         listView.setOnDragDetected(e -> {
             Dragboard db = listView.startDragAndDrop(transferMode);
             List<T> selected = new ArrayList<>(listView.getSelectionModel().getSelectedItems());
-            db.setContent(Collections.singletonMap(getTextDataFormat(type), selected));
+            db.setContent(Collections.singletonMap(textDataFormat, mapToSerializable.apply(selected)));
             e.consume();
+        });
+        listView.setOnDragDone(e -> {
+            Object content = e.getDragboard().getContent(textDataFormat);
+            if (onDragComplete != null)
+            {
+                try
+                {
+                    @SuppressWarnings("unchecked")
+                    U contentCast = (U) content;
+                    onDragComplete.consume(e.getTransferMode(), contentCast);
+                }
+                catch (ClassCastException ex)
+                {
+                }
+                e.consume();
+            }
         });
     }
 
