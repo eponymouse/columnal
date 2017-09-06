@@ -32,6 +32,7 @@ import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -67,7 +68,7 @@ public abstract class TransformationEditor
     protected static ListView<ColumnId> getColumnListView(TableManager mgr, ObservableObjectValue<@Nullable TableId> idProperty, @Nullable FXPlatformConsumer<ColumnId> onDoubleClick)
     {
         ListView<ColumnId> lv = new ListView<>();
-        lv.setPlaceholder(new Label("Could not find table: " + idProperty.get()));
+        lv.setPlaceholder(GUI.labelWrapParam("transformEditor.columnList.noSuchTable", ""));
         FXUtility.addChangeListenerPlatform(idProperty, id -> updateList(lv, id, id == null ? null : mgr.getSingleTableOrNull(id)));
         {
             @Nullable TableId id = idProperty.get();
@@ -108,21 +109,25 @@ public abstract class TransformationEditor
 
     private static void updateList(ListView<ColumnId> lv, @Nullable TableId id, @Nullable Table src)
     {
-        lv.setPlaceholder(new Label("Could not find table: " + id));
+        lv.setPlaceholder(GUI.labelWrapParam("transformEditor.columnList.noSuchTable", id == null ? "" : id.getOutput()));
         if (src != null)
         {
             try
             {
                 lv.setItems(FXCollections.observableArrayList(src.getData().getColumnIds()));
+                if (lv.getItems().isEmpty())
+                {
+                    lv.setPlaceholder(GUI.labelWrapParam("transformEditor.columnList.noColumns", id == null ? "" : id.getOutput()));
+                }
             }
             catch (UserException e)
             {
-                lv.setPlaceholder(new Label("Could not find table: " + id + "\n" + e.getLocalizedMessage()));
+                lv.setPlaceholder(GUI.labelWrapParam("transformEditor.columnList.noSuchTable.user", id == null ? "" : id.getOutput(), e.getLocalizedMessage()));
             }
             catch (InternalException e)
             {
                 Utility.report(e);
-                lv.setPlaceholder(new Label("Could not find table due to internal error: " + id + "\n" + e.getLocalizedMessage()));
+                lv.setPlaceholder(GUI.labelWrapParam("transformEditor.columnList.noSuchTable.internal", id == null ? "" : id.getOutput(), e.getLocalizedMessage()));
             }
         }
     }

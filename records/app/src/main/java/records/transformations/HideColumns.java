@@ -216,7 +216,7 @@ public class HideColumns extends TransformationEditable
         @Override
         public String getDisplayTitle()
         {
-            return "Hide";
+            return "Hide columns";
         }
 
         @Override
@@ -413,7 +413,7 @@ public class HideColumns extends TransformationEditable
     {
         public Info()
         {
-            super("hide", "Hide", Arrays.asList("collapse"));
+            super("hide", "Hide columns", Arrays.asList("collapse"));
         }
 
         @Override

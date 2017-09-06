@@ -101,9 +101,17 @@ public class GUI
      */
     public static Node labelWrap(@LocalizableKey String contentKey, String... styleClasses)
     {
-        TextFlow textFlow = new TextFlow(new Text(TranslationUtility.getString(contentKey)));
-        textFlow.getStyleClass().addAll(styleClasses);
-        return textFlow;
+        Label label = new Label(TranslationUtility.getString(contentKey));
+        label.setWrapText(true);
+        label.getStyleClass().addAll(styleClasses);
+        return label;
+    }
+
+    public static Node labelWrapParam(@LocalizableKey String contentKey, String... params)
+    {
+        Label label = new Label(TranslationUtility.getString(contentKey, params));
+        label.setWrapText(true);
+        return label;
     }
 
     public static Node labelled(@LocalizableKey String labelKey, @HelpKey String helpId, Node choiceNode)
