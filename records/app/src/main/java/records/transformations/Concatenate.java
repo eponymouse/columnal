@@ -6,6 +6,7 @@ import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -322,6 +323,12 @@ public class Concatenate extends TransformationEditable
         public String getDisplayTitle()
         {
             return "Concatenate";
+        }
+
+        @Override
+        public Pair<@LocalizableKey String, @LocalizableKey String> getDescriptionKeys()
+        {
+            return new Pair<>("TODO", "TODO");
         }
 
         @Override

@@ -11,6 +11,7 @@ import javafx.scene.control.SelectionMode;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
@@ -384,6 +385,12 @@ public class SummaryStatistics extends TransformationEditable
                 ops.add(new Pair<>(entry.getKey(), entry.getValue()));
             }
             columnListView = getColumnListView(mgr, srcControl.tableIdProperty(), null);
+        }
+
+        @Override
+        public Pair<@LocalizableKey String, @LocalizableKey String> getDescriptionKeys()
+        {
+            return new Pair<>("TODO", "TODO");
         }
 
         @Override

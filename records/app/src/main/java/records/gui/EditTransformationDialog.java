@@ -1,14 +1,18 @@
 package records.gui;
 
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.binding.StringBinding;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.cell.TextFieldListCell;
@@ -23,8 +27,12 @@ import javafx.stage.Modality;
 import javafx.stage.Window;
 import javafx.util.Callback;
 import javafx.util.StringConverter;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import org.controlsfx.control.HyperlinkLabel;
 import records.data.TableId;
 import records.data.Transformation;
 import records.transformations.TransformationInfo;
@@ -34,10 +42,12 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
+import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.Workers;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.util.List;
 import java.util.Optional;
@@ -49,6 +59,7 @@ import java.util.Optional;
 public class EditTransformationDialog
 {
     private final Dialog<SimulationSupplier<Transformation>> dialog;
+    private final BooleanProperty showingMoreDescription = new SimpleBooleanProperty(false);
     private final View parentView;
 
     private EditTransformationDialog(Window owner, View parentView, @Nullable TableId srcId, @Nullable TransformationEditor existing)
@@ -61,7 +72,8 @@ public class EditTransformationDialog
         dialog.getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
         dialog.getDialogPane().lookupButton(ButtonType.OK).getStyleClass().add("ok-button");
         dialog.setResizable(true);
-        dialog.getDialogPane().setPrefWidth(800.0);
+        dialog.getDialogPane().setPrefWidth(850.0);
+        dialog.getDialogPane().setPrefHeight(700.0);
 
         List<TransformationInfo> available = TransformationManager.getInstance().getTransformations();
 
@@ -106,14 +118,22 @@ public class EditTransformationDialog
         Text title = new Text("");
         title.getStyleClass().add("transformation-title");
         title.textProperty().bind(new SelectedTransformationStringBinding(editor, TransformationEditor::getDisplayTitle));
-        HBox titleWrapper = new HBox(new Label("\u219D"), title);
+        HBox titleWrapper = new HBox(/*new Label("\u219D"), */title);
         titleWrapper.getStyleClass().add("transformation-title-wrapper");
         infoPane.getChildren().add(titleWrapper);
         Text description = new Text("");
         description.getStyleClass().add("transformation-description");
-        description.textProperty().bind(new SelectedTransformationStringBinding(editor, TransformationEditor::getDescription));
-        // TODO have a short version which you can expand into long version.
-        TextFlow textFlow = new TextFlow(description);
+        @SuppressWarnings("initialization")
+        SelectedTransformationStringBinding descriptionBinding = new SelectedTransformationStringBinding(editor, this::getDescriptionFor)
+        {{
+            super.bind(showingMoreDescription);
+        }};
+        description.textProperty().bind(descriptionBinding);
+        Hyperlink moreLessLink = new Hyperlink();
+        moreLessLink.textProperty().bind(Bindings.when(showingMoreDescription).then(TranslationUtility.getString("transformEditor.less")).otherwise(TranslationUtility.getString("transformEditor.more")));
+        moreLessLink.setOnAction(e -> showingMoreDescription.set(!showingMoreDescription.get()));
+        TextFlow textFlow = new TextFlow(description, moreLessLink);
+        textFlow.getStyleClass().add("transformation-description-wrapper");
         //textFlow.maxWidthProperty().bind(infoPane.widthProperty());
         infoPane.getChildren().add(textFlow);
         pane.setCenter(infoPane);
@@ -159,6 +179,13 @@ public class EditTransformationDialog
         });
     }
 
+    @RequiresNonNull("showingMoreDescription")
+    private @Localized String getDescriptionFor(@UnknownInitialization(Object.class) EditTransformationDialog this, TransformationEditor editor)
+    {
+        Pair<@LocalizableKey String, @LocalizableKey String> descriptionKeys = editor.getDescriptionKeys();
+        return TranslationUtility.getString(descriptionKeys.getFirst()) + (showingMoreDescription.get() ? TranslationUtility.getString(descriptionKeys.getSecond()) : "");
+    }
+
     // Make a new transformation with the given source table
     public EditTransformationDialog(Window owner, View parentView, TableId src)
     {
@@ -185,9 +212,9 @@ public class EditTransformationDialog
     private static class SelectedTransformationStringBinding extends StringBinding
     {
         private final ObjectExpression<Optional<TransformationEditor>> selectedTransformation;
-        private final FXPlatformFunction<TransformationEditor, String> getString;
+        private final FXPlatformFunction<TransformationEditor, @Localized String> getString;
 
-        public SelectedTransformationStringBinding(ObjectExpression<Optional<TransformationEditor>> selectedTransformation, FXPlatformFunction<TransformationEditor, String> getString)
+        public SelectedTransformationStringBinding(ObjectExpression<Optional<TransformationEditor>> selectedTransformation, FXPlatformFunction<TransformationEditor, @Localized String> getString)
         {
             this.selectedTransformation = selectedTransformation;
             this.getString = getString;

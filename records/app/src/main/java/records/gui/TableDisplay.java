@@ -1,5 +1,6 @@
 package records.gui;
 
+import javafx.application.Platform;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -239,6 +240,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                         Utility.alertOnError_(() ->
                         {
                             table.addColumn(choice.get().name, choice.get().type, choice.get().defaultValueUnparsed);
+                            Platform.runLater(() -> parent.modified());
                         });
                     });
                 }

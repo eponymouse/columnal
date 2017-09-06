@@ -15,11 +15,13 @@ import javafx.scene.input.Dragboard;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
@@ -46,6 +48,7 @@ import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.FXUtility.DragHandler;
+import utility.gui.GUI;
 import utility.gui.SlidableListCell;
 import utility.gui.SmallDeleteButton;
 import utility.gui.TranslationUtility;
@@ -220,9 +223,9 @@ public class HideColumns extends TransformationEditable
         }
 
         @Override
-        public @Localized String getDescription()
+        public Pair<@LocalizableKey String, @LocalizableKey String> getDescriptionKeys()
         {
-            return TranslationUtility.getString("hide.description");
+            return new Pair<>("hide.description.short", "hide.description.rest");
         }
 
         @Override
@@ -231,7 +234,7 @@ public class HideColumns extends TransformationEditable
             Button add = new Button(">>");
             add.setMinWidth(Region.USE_PREF_SIZE);
             VBox addWrapper = new VBox(add);
-            addWrapper.getStyleClass().add("add-wrapper");
+            addWrapper.getStyleClass().add("add-column-wrapper");
 
             ListView<ColumnId> hiddenColumns = new ListView<>(columnsToHide);
             hiddenColumns.setCellFactory(lv -> new DeletableListCell(lv));
@@ -271,11 +274,17 @@ public class HideColumns extends TransformationEditable
                 //sortHiddenColumns();
             });
 
-            HBox.setHgrow(srcColumnList, Priority.ALWAYS);
-            HBox.setHgrow(hiddenColumns, Priority.ALWAYS);
-            HBox hBox = new HBox(srcColumnList, addWrapper, hiddenColumns);
-            hBox.getStyleClass().add("hide-columns-lists");
-            return new VBox(srcControl, hBox);
+            GridPane gridPane = new GridPane();
+
+            GridPane.setHgrow(srcColumnList, Priority.ALWAYS);
+            GridPane.setHgrow(hiddenColumns, Priority.ALWAYS);
+            gridPane.add(GUI.label("transformEditor.hide.srcColumns"), 0, 0);
+            gridPane.add(GUI.label("transformEditor.hide.hiddenColumns"), 2, 0);
+            gridPane.add(srcColumnList, 0, 1);
+            gridPane.add(addWrapper, 1, 1);
+            gridPane.add(hiddenColumns, 2, 1);
+            gridPane.getStyleClass().add("hide-columns-lists");
+            return GUI.vbox("hide-columns-content", srcControl, gridPane);
         }
 
         @OnThread(Tag.FXPlatform)

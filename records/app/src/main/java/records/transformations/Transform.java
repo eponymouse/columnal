@@ -9,6 +9,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -275,6 +276,12 @@ public class Transform extends TransformationEditable
             return new ExpressionEditor(container.getValue(), srcControl.getTableOrNull(), new ReadOnlyObjectWrapper<@Nullable DataType>(null), mgr, e -> {
                 container.set(e);
             });
+        }
+
+        @Override
+        public Pair<@LocalizableKey String, @LocalizableKey String> getDescriptionKeys()
+        {
+            return new Pair<>("TODO", "TODO");
         }
 
         @Override

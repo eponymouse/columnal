@@ -16,6 +16,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.util.StringConverter;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
@@ -51,11 +52,10 @@ public abstract class TransformationEditor
 
     /**
      * The description to show at the top of the information display.
+     *
+     * Returns one key for the short version, and one for the remaining text.
      */
-    public @Localized String getDescription()
-    {
-        return ""; // TODO make this abstract once I've written the descriptions.
-    }
+    public abstract Pair<@LocalizableKey String, @LocalizableKey String> getDescriptionKeys();
 
     public abstract Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError);
 

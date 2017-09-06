@@ -12,10 +12,12 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.TransferMode;
+import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -51,6 +53,7 @@ import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
@@ -351,9 +354,9 @@ public class Sort extends TransformationEditable
         }
 
         @Override
-        public @Localized String getDescription()
+        public Pair<@LocalizableKey String, @LocalizableKey String> getDescriptionKeys()
         {
-            return TranslationUtility.getString("sort.description");
+            return new Pair<>("sort.description.short", "sort.description.rest");
         }
 
         @Override
@@ -366,23 +369,24 @@ public class Sort extends TransformationEditable
         @SuppressWarnings({"keyfor", "intern"})
         public @OnThread(Tag.FXPlatform) Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
-            HBox colsAndSort = new HBox();
+            GridPane colsAndSort = new GridPane();
+            colsAndSort.add(GUI.label("transformEditor.sort.srcColumns"), 0, 0);
+            colsAndSort.add(GUI.label("transformEditor.sort.sortColumns"), 2, 0);
+
             // TODO need to handle changes to source table.
             columnListView.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-            colsAndSort.getChildren().add(columnListView);
+            colsAndSort.add(columnListView, 0, 1);
 
-            VBox buttons = new VBox();
             Button button = new Button(">>");
             button.setMinWidth(Region.USE_PREF_SIZE);
             button.setOnAction(e ->
             {
                 addAllItems(columnListView.getSelectionModel().getSelectedItems());
             });
-            buttons.getChildren().add(button);
-            colsAndSort.getChildren().add(buttons);
+            colsAndSort.add(GUI.vbox("add-column-wrapper", button), 1, 1);
 
             ListView<Optional<ColumnId>> sortByView = FXUtility.readOnlyListView(sortBy, c -> !c.isPresent() ? "Original order" : c.get() + ", then if equal, by");
-            colsAndSort.getChildren().add(sortByView);
+            colsAndSort.add(sortByView, 2, 1);
 
             //FXUtility.enableDragFrom();
             //FXUtility.enableDragTo(sortByView, Optional::of, "ColumnId");

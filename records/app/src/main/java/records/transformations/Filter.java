@@ -420,9 +420,9 @@ public class Filter extends TransformationEditable
         }
 
         @Override
-        public @Localized String getDescription()
+        public Pair<@Localized String, @Localized String> getDescriptionKeys()
         {
-            return TranslationUtility.getString("filter.description");
+            return new Pair<>("filter.description.short", "filter.description.rest");
         }
 
         @Override

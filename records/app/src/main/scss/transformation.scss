@@ -14,6 +14,9 @@
         -fx-text-fill: grey;
     }
 }
+.transformation-description-wrapper {
+    -fx-padding: 0 0 1em 0;
+}
 .transformation-description {
     -fx-fill: grey;
 }
@@ -27,14 +30,17 @@
     }
 }
 
-/* Hide columns */
-.hide-columns-lists {
-    -fx-padding: 1em 0 0 0;
-    -fx-spacing: 1em;
-    -fx-fill-height: true;
+.add-column-wrapper {
+    -fx-padding: 4em 1em 0 0.6em;
+}
 
-    .add-wrapper {
-        -fx-padding: 4em 0 0 0;
+/* Hide columns */
+.hide-columns-content {
+    -fx-spacing: 0.5em;
+    .hide-columns-lists {
+        -fx-padding: 1em 0 0 0;
+        -fx-spacing: 1em;
+        -fx-fill-height: true;
     }
 }
 
