@@ -52,18 +52,26 @@
 }
 .deletable-list-cell-content {
     -fx-padding: 3px;
+    -fx-background-insets: 0 0 0 0, 0 0 0 0;
 
     .deletable-list-cell:filled:even > & {
-        -fx-background-color: $list-even;
+        -fx-background-color: black, $list-even;
     }
     .deletable-list-cell:filled:odd > & {
-        -fx-background-color: $list-odd;
+        -fx-background-color: black, $list-odd;
     }
     .deletable-list-cell:filled:selected > & {
-        -fx-background-color: $list-selection-unfocused;
+        -fx-background-color: black, $list-selection-unfocused;
     }
     .list-view:focused .deletable-list-cell:filled:selected > & {
-        -fx-background-color: $list-selection-focused;
+        -fx-background-color: black, $list-selection-focused;
+    }
+
+    .deletable-list-cell:filled:drop-target-at-bottom > & {
+        -fx-background-insets: 0 0 0 0, 0 0 1 0;
+    }
+    .deletable-list-cell:filled:drop-target-at-top > & {
+        -fx-background-insets: 0 0 0 0, 1 0 0 0;
     }
 
     .deletable-list-cell:filled:selected > & > .label {

@@ -358,6 +358,9 @@ public class FXUtility
     public static interface DragHandler
     {
         @OnThread(Tag.FXPlatform)
+        default void dragExited() {}
+
+        @OnThread(Tag.FXPlatform)
         void dragMoved(Point2D pointInScene);
 
         @OnThread(Tag.FXPlatform)
@@ -367,6 +370,12 @@ public class FXUtility
     // Point is in Scene
     public static void enableDragTo(Node destination, Map<DataFormat, DragHandler> receivers)
     {
+        destination.setOnDragExited(e -> {
+            for (DragHandler dragHandler : receivers.values())
+            {
+                dragHandler.dragExited();
+            }
+        });
         destination.setOnDragOver(e -> {
             boolean accepts = false;
             for (Entry<DataFormat, DragHandler> receiver : receivers.entrySet())

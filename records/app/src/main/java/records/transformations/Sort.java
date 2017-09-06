@@ -56,6 +56,7 @@ import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.DeletableListView;
+import utility.gui.DeletableListView.DeletableListCell;
 import utility.gui.FXUtility;
 import utility.gui.FXUtility.DragHandler;
 import utility.gui.GUI;
@@ -67,6 +68,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.OptionalInt;
 
 /**
  * A transformation which preserves all data from the original table
@@ -333,22 +335,27 @@ public class Sort extends TransformationEditable
                 this.sortBy.add(Optional.of(c));
             }
             this.sortBy.add(Optional.empty());
-            columnListView = getColumnListView(mgr, srcControl.tableIdProperty(), c -> addAllItems(Collections.singletonList(c)));
+            columnListView = getColumnListView(mgr, srcControl.tableIdProperty(), c -> addAllItems(OptionalInt.empty(), Collections.singletonList(c)));
             columnListView.setOnKeyPressed(e -> {
                 if (e.getCode() == KeyCode.ENTER)
                 {
-                    addAllItems(columnListView.getSelectionModel().getSelectedItems());
+                    addAllItems(OptionalInt.empty(), columnListView.getSelectionModel().getSelectedItems());
                 }
             });
             FXUtility.enableDragFrom(columnListView, "ColumnId", TransferMode.COPY);
         }
 
-        private void addAllItems(List<ColumnId> items)
+        private void addAllItems(OptionalInt optBeforeIndex, List<ColumnId> items)
         {
+            // By default, add just before last item (which will be Optional.empty, meaning default sort order:
+            int beforeIndex = optBeforeIndex.orElse(sortBy.size() - 1);
             for (ColumnId column : items)
             {
                 if (!sortBy.contains(Optional.of(column)))
-                    sortBy.add(sortBy.size() - 1, Optional.of(column));
+                {
+                    sortBy.add(beforeIndex, Optional.of(column));
+                    beforeIndex += 1;
+                }
             }
         }
 
@@ -386,11 +393,11 @@ public class Sort extends TransformationEditable
             button.setMinWidth(Region.USE_PREF_SIZE);
             button.setOnAction(e ->
             {
-                addAllItems(columnListView.getSelectionModel().getSelectedItems());
+                addAllItems(OptionalInt.empty(), columnListView.getSelectionModel().getSelectedItems());
             });
             colsAndSort.add(GUI.vbox("add-column-wrapper", button), 1, 1);
 
-            ListView<Optional<ColumnId>> sortByView = new DeletableListView<Optional<ColumnId>>(sortBy) {
+            DeletableListView<Optional<ColumnId>> sortByView = new DeletableListView<Optional<ColumnId>>(sortBy) {
                 @Override
                 @OnThread(Tag.FXPlatform)
                 @SuppressWarnings("initialization")
@@ -403,7 +410,7 @@ public class Sort extends TransformationEditable
                 @OnThread(Tag.FXPlatform)
                 protected String valueToString(Optional<ColumnId> c)
                 {
-                    return !c.isPresent() ? "Original order" : c.get() + ", then if equal, by";
+                    return !c.isPresent() ? "Original order" : c.get() + "; if equal, by";
                 }
             };
             colsAndSort.add(sortByView, 2, 1);
@@ -411,20 +418,55 @@ public class Sort extends TransformationEditable
             FXUtility.enableDragTo(sortByView, Collections.singletonMap(FXUtility.getTextDataFormat("ColumnId"), new DragHandler()
             {
                 @Override
+                public @OnThread(Tag.FXPlatform) void dragExited()
+                {
+                    clearAllCellsStates();
+                }
+
+                @Override
                 public @OnThread(Tag.FXPlatform) void dragMoved(Point2D pointInScene)
                 {
+                    clearAllCellsStates();
 
+                    Pair<@Nullable DeletableListView<Optional<ColumnId>>.DeletableListCell, @Nullable DeletableListView<Optional<ColumnId>>.DeletableListCell> nearest = sortByView.getNearestGap(pointInScene.getX(), pointInScene.getY());
+                    if (nearest.getFirst() != null)
+                    {
+                        FXUtility.setPseudoclass(nearest.getFirst(), "drop-target-at-bottom", true);
+                    }
+                    if (nearest.getSecond() != null)
+                    {
+                        FXUtility.setPseudoclass(nearest.getSecond(), "drop-target-at-top", true);
+                    }
+                }
+
+                @OnThread(Tag.FXPlatform)
+                private void clearAllCellsStates()
+                {
+                    sortByView.forAllCells(c -> {
+                        FXUtility.setPseudoclass(c, "drop-target-at-top", false);
+                        FXUtility.setPseudoclass(c, "drop-target-at-bottom", false);
+                    });
                 }
 
                 @Override
                 @SuppressWarnings("unchecked")
                 public @OnThread(Tag.FXPlatform) boolean dragEnded(Dragboard db, Point2D pointInScene)
                 {
+                    clearAllCellsStates();
+
+                    Pair<@Nullable DeletableListView<Optional<ColumnId>>.DeletableListCell, @Nullable DeletableListView<Optional<ColumnId>>.DeletableListCell> nearest = sortByView.getNearestGap(pointInScene.getX(), pointInScene.getY());
+
+                    // If no nearest, or no nearest below, just add at end of list
+                    OptionalInt beforeIndex = nearest.getSecond() == null ? OptionalInt.empty() : OptionalInt.of(Utility.indexOfRef(sortBy, nearest.getSecond().getItem()));
+                    // If it's -1, set it to empty:
+                    if (beforeIndex.orElse(-1) == -1)
+                        beforeIndex = OptionalInt.empty();
+
                     // TODO need to add to right position within list
                     @Nullable Object content = db.getContent(FXUtility.getTextDataFormat("ColumnId"));
                     if (content != null && content instanceof List)
                     {
-                        addAllItems((List<ColumnId>) content);
+                        addAllItems(beforeIndex, (List<ColumnId>) content);
                         return true;
                     }
                     return false;

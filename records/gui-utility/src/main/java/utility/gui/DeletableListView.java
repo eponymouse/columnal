@@ -6,6 +6,7 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.css.PseudoClass;
+import javafx.geometry.Bounds;
 import javafx.geometry.Pos;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
@@ -17,7 +18,11 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
+import utility.Pair;
+import utility.Utility;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -28,6 +33,8 @@ import java.util.List;
  */
 public class DeletableListView<T> extends ListView<T>
 {
+    // Keep track of all cells for the purposes of finding bounds:
+    private final List<WeakReference<DeletableListCell>> allCells = new ArrayList<>();
     // Have to keep manual track of the selected cells.  ListView only tells us selected items,
     // but can't map that back to selected cells:
     private final ObservableList<DeletableListCell> selectedCells = FXCollections.observableArrayList();
@@ -36,7 +43,11 @@ public class DeletableListView<T> extends ListView<T>
     public DeletableListView(ObservableList<T> items)
     {
         super(items);
-        setCellFactory(lv -> new DeletableListCell(lv));
+        setCellFactory(lv -> {
+            DeletableListCell cell = new DeletableListCell(lv);
+            allCells.add(new WeakReference<>(cell));
+            return cell;
+        });
         // Default is to allow multi-select.  Caller can always change later:
         getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
         setOnKeyPressed(e -> {
@@ -62,7 +73,7 @@ public class DeletableListView<T> extends ListView<T>
     }
 
     @OnThread(Tag.FXPlatform)
-    public void deleteSelection(@UnknownInitialization(ListView.class) DeletableListView<T> this)
+    private void deleteSelection(@UnknownInitialization(ListView.class) DeletableListView<T> this)
     {
         ArrayList<DeletableListCell> cols = new ArrayList<>(selectedCells);
         List<T> selectedItems = new ArrayList<>(getSelectionModel().getSelectedItems());
@@ -71,7 +82,58 @@ public class DeletableListView<T> extends ListView<T>
         DeletableListCell.animateOutToRight(cols, () -> getItems().removeAll(selectedItems));
     }
 
-    private class DeletableListCell extends SlidableListCell<T>
+    /**
+     * Gets the nearest gap before/after a cell to the given scene X/Y position.  The first component
+     * of the pair is the cell above (may be blank if at top of list), the second component is the
+     * one below (ditto if at bottom).  Both parts may be blank if list is empty.
+     * @return
+     */
+    @OnThread(Tag.FXPlatform)
+    public Pair<@Nullable DeletableListCell, @Nullable DeletableListCell> getNearestGap(double sceneX, double sceneY)
+    {
+        // Y is in scene coords.  We set initial a pixel outside so that any items within bounds will "win" against them:
+        Pair<Double, @Nullable DeletableListCell> nearestAbove = new Pair<>(localToScene(0.0, -1.0).getY(), null);
+        Pair<Double, @Nullable DeletableListCell> nearestBelow = new Pair<>(localToScene(0.0, getHeight() + 1.0).getY(), null);
+
+        for (WeakReference<DeletableListCell> ref : allCells)
+        {
+            @Nullable DeletableListCell cell = ref.get();
+            if (cell != null && !cell.isEmpty())
+            {
+                Bounds sceneBounds = cell.localToScene(cell.getBoundsInLocal());
+                if (Math.abs(sceneBounds.getMaxY() - sceneY) < Math.abs(nearestAbove.getFirst() - sceneY))
+                {
+                    nearestAbove = new Pair<>(sceneBounds.getMaxY(), cell);
+                }
+
+                if (Math.abs(sceneBounds.getMinY() - sceneY) < Math.abs(nearestBelow.getFirst() - sceneY))
+                {
+                    nearestBelow = new Pair<>(sceneBounds.getMinY(), cell);
+                }
+            }
+        }
+
+        // If nearest below is above nearest above, we picked both from last cell in the list; only return the nearest above:
+        if (nearestBelow.getFirst() < nearestAbove.getFirst())
+            return new Pair<>(nearestAbove.getSecond(), null);
+        else
+            return new Pair<>(nearestAbove.getSecond(), nearestBelow.getSecond());
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public void forAllCells(FXPlatformConsumer<DeletableListCell> action)
+    {
+        for (WeakReference<DeletableListCell> ref : allCells)
+        {
+            @Nullable DeletableListCell cell = ref.get();
+            if (cell != null)
+            {
+                action.consume(cell);
+            }
+        }
+    }
+
+    public class DeletableListCell extends SlidableListCell<T>
     {
         private final SmallDeleteButton button;
         private final Label label;

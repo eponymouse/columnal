@@ -349,10 +349,10 @@ public class AutoComplete extends PopupControl
     {
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        protected void updateItem(Completion item, boolean empty)
+        protected void updateItem(@Nullable Completion item, boolean empty)
         {
             textProperty().unbind();
-            if (empty)
+            if (empty || item == null)
             {
                 setGraphic(null);
                 setText("");
