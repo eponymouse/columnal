@@ -48,7 +48,7 @@ public abstract class TransformationEditor
     /**
      * The title to show at the top of the information display.
      */
-    public abstract String getDisplayTitle();
+    public abstract @Localized String getDisplayTitle();
 
     /**
      * The description to show at the top of the information display.

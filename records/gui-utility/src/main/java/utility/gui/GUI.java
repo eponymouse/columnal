@@ -170,10 +170,10 @@ public class GUI
             return new ListCell<C>() {
                 @Override
                 @OnThread(Tag.FX)
-                public void updateItem(C item, boolean empty)
+                public void updateItem(@Nullable C item, boolean empty)
                 {
                     super.updateItem(item, empty);
-                    if (empty)
+                    if (empty || item == null)
                     {
                         setText("");
                     }

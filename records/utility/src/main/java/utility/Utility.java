@@ -956,7 +956,7 @@ public class Utility
     }
 
     // Annotates that a String is universal, e.g. a symbol or a number, which doesn't need translating
-    @SuppressWarnings("localized")
+    @SuppressWarnings("i18n")
     public static @Localized String universal(String string)
     {
         return string;

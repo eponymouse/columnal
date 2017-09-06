@@ -458,34 +458,34 @@ public class TableDisplayUtility
     }
 
     @OnThread(Tag.FXPlatform)
-    public static Component<@NonNull ?> component(ImmutableList<Component<?>> parents, DataType dataType, @Nullable @Value Object value) throws InternalException
+    public static Component<@NonNull @Value ?> component(ImmutableList<Component<?>> parents, DataType dataType, @Nullable @Value Object value) throws InternalException
     {
         return dataType.apply(new DataTypeVisitorEx<Component<@NonNull ?>, InternalException>()
         {
             @Override
             @OnThread(Tag.FXPlatform)
-            public Component<@NonNull ?> number(NumberInfo displayInfo) throws InternalException
+            public Component<@NonNull @Value ?> number(NumberInfo displayInfo) throws InternalException
             {
                 return new NumberEntry(parents, (Number) value);
             }
 
             @Override
             @OnThread(Tag.FXPlatform)
-            public Component<@NonNull ?> text() throws InternalException
+            public Component<@NonNull @Value ?> text() throws InternalException
             {
                 return new TextEntry(parents, value == null ? "" : (String)value);
             }
 
             @Override
             @OnThread(Tag.FXPlatform)
-            public Component<@NonNull ?> bool() throws InternalException
+            public Component<@NonNull @Value ?> bool() throws InternalException
             {
                 return new BoolComponent(parents, (Boolean)value);
             }
 
             @Override
             @OnThread(Tag.FXPlatform)
-            public Component<@NonNull ?> date(DateTimeInfo dateTimeInfo) throws InternalException
+            public Component<@NonNull @Value ?> date(DateTimeInfo dateTimeInfo) throws InternalException
             {
                 switch (dateTimeInfo.getType())
                 {
@@ -511,14 +511,14 @@ public class TableDisplayUtility
 
             @Override
             @OnThread(Tag.FXPlatform)
-            public Component<@NonNull ?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
+            public Component<@NonNull @Value ?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
             {
                 return new TaggedComponent(parents, tagTypes, (TaggedValue)value);
             }
 
             @Override
             @OnThread(Tag.FXPlatform)
-            public Component<@NonNull ?> tuple(ImmutableList<DataType> types) throws InternalException
+            public Component<@NonNull @Value ?> tuple(ImmutableList<DataType> types) throws InternalException
             {
                 List<FXPlatformFunctionInt<ImmutableList<Component<?>>, Component<? extends Object>>> comps = new ArrayList<>(types.size());
                 for (int i = 0; i < types.size(); i++)
@@ -532,7 +532,7 @@ public class TableDisplayUtility
 
             @Override
             @OnThread(Tag.FXPlatform)
-            public Component<@NonNull ?> array(@Nullable DataType inner) throws InternalException
+            public Component<@NonNull @Value ?> array(@Nullable DataType inner) throws InternalException
             {
                 if (inner == null)
                     throw new InternalException("Can't make components for the empty list type");

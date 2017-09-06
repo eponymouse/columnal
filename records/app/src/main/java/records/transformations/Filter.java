@@ -10,6 +10,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -420,7 +421,7 @@ public class Filter extends TransformationEditable
         }
 
         @Override
-        public Pair<@Localized String, @Localized String> getDescriptionKeys()
+        public Pair<@LocalizableKey String, @LocalizableKey String> getDescriptionKeys()
         {
             return new Pair<>("filter.description.short", "filter.description.rest");
         }

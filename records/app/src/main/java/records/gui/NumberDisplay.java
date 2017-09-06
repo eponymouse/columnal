@@ -277,7 +277,7 @@ class NumberDisplay
         }
     }
 
-    public static DisplayCache<@Value Number, NumberDisplay> makeDisplayCache(GetValue<Number> g, @Nullable NumberDisplayInfo displayInfo, Column column)
+    public static DisplayCache<@Value Number, NumberDisplay> makeDisplayCache(GetValue<@Value Number> g, @Nullable NumberDisplayInfo displayInfo, Column column)
     {
         return new DisplayCache<@Value Number, NumberDisplay>(g, vis -> formatColumn(displayInfo, vis), n -> n.textArea) {
             @Override
