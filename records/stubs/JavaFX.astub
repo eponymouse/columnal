@@ -82,6 +82,10 @@ class Button
 {
     void setOnAction(@NonNull EventHandler<ActionEvent> ev) @UnknownInitialization;
 }
+class Label
+{
+    void setText(String s) @UnknownInitialization;
+}
 class ToggleButton
 {
     ToggleButton(@Localized String text);

@@ -2,6 +2,7 @@ package records.gui;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.controlsfx.control.PopOver.ArrowLocation;
 import records.data.ColumnId;
 import records.data.TableId;
 import records.data.TableManager;
@@ -29,4 +30,10 @@ public class ColumnNameTextField extends ErrorableTextField<ColumnId>
         });
     }
 
+    @Override
+    public ColumnNameTextField withArrowLocation(ArrowLocation location)
+    {
+        super.withArrowLocation(location);
+        return this;
+    }
 }

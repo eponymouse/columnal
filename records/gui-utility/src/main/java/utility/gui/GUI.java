@@ -121,6 +121,13 @@ public class GUI
         return hBox;
     }
 
+    public static Node labelled(@LocalizableKey String labelKey, Node choiceNode)
+    {
+        HBox hBox = new HBox(label(labelKey), choiceNode);
+        hBox.getStyleClass().add("labelled-wrapper");
+        return hBox;
+    }
+
     public static LabelledGrid.Row labelledGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, Node choiceNode)
     {
         return new LabelledGrid.Row(label(labelKey), helpBox(helpId, choiceNode), choiceNode);

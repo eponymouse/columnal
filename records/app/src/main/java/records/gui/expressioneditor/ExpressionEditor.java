@@ -1,6 +1,9 @@
 package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableSet;
+import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -51,6 +54,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     private @Nullable SelectionInfo<?> selection;
     private @Nullable ConsecutiveChild<?> curHoverDropTarget;
     private boolean selectionLocked;
+    private ObjectProperty<@Nullable DataType> latestType = new SimpleObjectProperty<>(null);
 
     public void registerFocusable(TextField textField)
     {
@@ -69,6 +73,11 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     public boolean isFocused()
     {
         return childIsFocused();
+    }
+
+    public ObjectExpression<@Nullable DataType> typeProperty()
+    {
+        return latestType;
     }
 
     private static class SelectionInfo<E extends @NonNull Object>
@@ -282,7 +291,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
             {
                 if (srcTable != null && tableManager != null)
                 {
-                    expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), (e, s, q) ->
+                    @Nullable DataType dataType = expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), (e, s, q) ->
                     {
                         if (!errorDisplayers.showError(e, s, q))
                         {
@@ -290,6 +299,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
                             showError(s, q);
                         }
                     });
+                    latestType.set(dataType);
                 }
             }
             catch (InternalException | UserException e)

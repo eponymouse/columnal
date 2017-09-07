@@ -321,7 +321,7 @@ public class HideColumns extends TransformationEditable
     {
         public Info()
         {
-            super("hide", "Hide columns", Arrays.asList("collapse"));
+            super("drop.columns", "Drop columns", Arrays.asList("collapse"));
         }
 
         @Override

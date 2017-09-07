@@ -10,11 +10,10 @@ import javafx.scene.control.TextField;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.dataflow.qual.Pure;
 import org.controlsfx.control.PopOver;
+import org.controlsfx.control.PopOver.ArrowLocation;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -122,6 +121,12 @@ public class ErrorableTextField<T>
     public void setText(String text)
     {
         field.setText(text);
+    }
+
+    public ErrorableTextField<T> withArrowLocation(ArrowLocation location)
+    {
+        popOver.setArrowLocation(location);
+        return this;
     }
 
     public static class ConversionResult<T>

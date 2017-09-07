@@ -44,6 +44,13 @@
     }
 }
 
+.calculate-columns-content {
+    .labelled-wrapper {
+        .label {
+            -fx-padding: 0 0.5em 0 0;
+        }
+    }
+}
 
 
 .deletable-list-cell {

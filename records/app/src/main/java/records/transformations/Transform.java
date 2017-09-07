@@ -7,13 +7,18 @@ import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.Node;
+import javafx.scene.control.ScrollPane;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import org.controlsfx.control.PopOver.ArrowLocation;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -31,6 +36,7 @@ import records.grammar.TransformationParser.TransformContext;
 import records.grammar.TransformationParser.TransformItemContext;
 import records.gui.ColumnNameTextField;
 import records.gui.SingleSourceControl;
+import records.gui.TypeLabel;
 import records.gui.View;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.loadsave.OutputBuilder;
@@ -46,6 +52,7 @@ import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
@@ -246,7 +253,7 @@ public class Transform extends TransformationEditable
         private final @Nullable TableId ourId;
         private final SingleSourceControl srcControl;
         private final List<Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>>> newColumns = new ArrayList<>();
-        private final List<Pair<ColumnNameTextField, ExpressionEditor>> newColumnEdit = new ArrayList<>();
+        private final ScrollPane columnListScrollPane;
         private SimpleBooleanProperty allColNamesValid = new SimpleBooleanProperty(false);
 
         @OnThread(Tag.FXPlatform)
@@ -254,16 +261,25 @@ public class Transform extends TransformationEditable
         {
             ourId = id;
             this.srcControl = new SingleSourceControl(view, mgr, srcId);
+            List<Node> columnEditors = new ArrayList<>();
             for (Pair<ColumnId, Expression> newColumn : newColumns)
             {
                 SimpleObjectProperty<Expression> wrapper = new SimpleObjectProperty<>(newColumn.getSecond());
-                ColumnNameTextField columnNameTextField = new ColumnNameTextField(newColumn.getFirst());
+                ColumnNameTextField columnNameTextField = new ColumnNameTextField(newColumn.getFirst()).withArrowLocation(ArrowLocation.BOTTOM_CENTER);
                 FXUtility.addChangeListenerPlatform(columnNameTextField.valueProperty(), v -> {
                     validateColumnNames();
                 });
                 this.newColumns.add(new Pair<>(columnNameTextField.valueProperty(), wrapper));
-                newColumnEdit.add(new Pair<>(columnNameTextField, makeExpressionEditor(mgr, srcControl, wrapper)));
+                GridPane gridPane = new GridPane();
+                gridPane.add(GUI.labelled("transformEditor.column.name", columnNameTextField.getNode()), 0, 0);
+                ExpressionEditor expressionEditor = makeExpressionEditor(mgr, srcControl, wrapper);
+                gridPane.add(GUI.labelled("transformEditor.column.type", new TypeLabel(expressionEditor.typeProperty())), 0, 1);
+                gridPane.add(expressionEditor.getContainer(), 1, 0);
+                GridPane.setRowSpan(expressionEditor.getContainer(), 2);
+                // TODO add a resize control at the bottom of the item.
+                columnEditors.add(gridPane);
             }
+            columnListScrollPane = new ScrollPane(new VBox(columnEditors.toArray(new Node[0])));
             validateColumnNames();
         }
 
@@ -283,7 +299,7 @@ public class Transform extends TransformationEditable
         @Override
         public Pair<@LocalizableKey String, @LocalizableKey String> getDescriptionKeys()
         {
-            return new Pair<>("TODO", "TODO");
+            return new Pair<>("calculate.description.short", "calculate.description.rest");
         }
 
         @Override
@@ -295,14 +311,7 @@ public class Transform extends TransformationEditable
         @Override
         public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
-            // TODO allow adding/removing columns
-            GridPane gridPane = new GridPane();
-            for (int i = 0; i < newColumnEdit.size(); i++)
-            {
-                gridPane.add(newColumnEdit.get(i).getFirst().getNode(), 0, i);
-                gridPane.add(newColumnEdit.get(i).getSecond().getContainer(), 1, i);
-            }
-            return gridPane;
+            return GUI.wrap(columnListScrollPane, "calculate-columns-content");
         }
 
         @Override

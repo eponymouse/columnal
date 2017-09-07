@@ -65,7 +65,7 @@ import java.util.Map.Entry;
 @OnThread(Tag.Simulation)
 public class SummaryStatistics extends TransformationEditable
 {
-    public static final String NAME = "summary";
+    public static final String NAME = "aggregate";
     private final @Nullable Table src;
     private final TableId srcTableId;
     // ColumnId here is the destination column, not source column:
@@ -334,7 +334,7 @@ public class SummaryStatistics extends TransformationEditable
         @OnThread(Tag.Any)
         public Info()
         {
-            super(NAME, "Summary", Arrays.asList("min", "max"));
+            super(NAME, "Aggregate", Arrays.asList("min", "max"));
         }
 
         @Override
