@@ -18,6 +18,7 @@ import javafx.stage.PopupWindow.AnchorLocation;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import org.controlsfx.control.PopOver;
 import org.jetbrains.annotations.NotNull;
 import records.transformations.expression.ErrorRecorder;
 import threadchecker.OnThread;
@@ -75,7 +76,7 @@ public class ExpressionEditorUtil
         private final SimpleStringProperty message = new SimpleStringProperty("");
         private final ObservableList<ErrorRecorder.QuickFix> quickFixes = FXCollections.observableArrayList();
         private final VBox vBox;
-        private @Nullable PopupControl popup = null;
+        private @Nullable PopOver popup = null;
         private boolean focused = false;
         private boolean hovering = false;
 
@@ -88,7 +89,7 @@ public class ExpressionEditorUtil
             FXUtility.addChangeListenerPlatformNN(vBox.hoverProperty(), this::mouseHoverStatusChanged);
         }
 
-        private static class ErrorMessagePopup extends PopupControl
+        private static class ErrorMessagePopup extends PopOver
         {
             private final BooleanBinding hasFixes;
 
@@ -116,33 +117,13 @@ public class ExpressionEditorUtil
 
                 VBox container = new VBox(errorLabel, fixList);
 
-                setSkin(new Skin<ErrorMessagePopup>()
-                {
-                    @Override
-                    @OnThread(Tag.FX)
-                    public ErrorMessagePopup getSkinnable()
-                    {
-                        return ErrorMessagePopup.this;
-                    }
-
-                    @Override
-                    @OnThread(Tag.FX)
-                    public Node getNode()
-                    {
-                        return container;
-                    }
-
-                    @Override
-                    @OnThread(Tag.FX)
-                    public void dispose()
-                    {
-                    }
-                });
+                setContentNode(container);
             }
         }
 
         private void show()
         {
+            System.err.println("Showing error");
             // Shouldn't be non-null already, but just in case:
             if (popup != null)
             {
@@ -152,8 +133,7 @@ public class ExpressionEditorUtil
             {
                 Bounds screenBounds = vBox.localToScreen(vBox.getBoundsInLocal());
                 popup = new ErrorMessagePopup(message, quickFixes);
-                popup.setAnchorLocation(AnchorLocation.CONTENT_BOTTOM_LEFT);
-                popup.show(vBox, screenBounds.getMinX(), screenBounds.getMinY());
+                popup.show(vBox);
             }
         }
 
@@ -163,6 +143,7 @@ public class ExpressionEditorUtil
         {
             popup.hide();
             popup = null;
+            System.err.println("Hiding error");
         }
 
         public void mouseHoverStatusChanged(boolean newHovering)
