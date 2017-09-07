@@ -19,6 +19,7 @@ import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 
 import java.util.Map;
 import java.util.Random;
@@ -40,7 +41,7 @@ public class UnfinishedExpression extends NonOperatorExpression
     @Override
     public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
-        onError.recordError(this, "Incomplete expression");
+        onError.recordError(this, "Incomplete expression: " + text);
         return null; // Unfinished expressions can't type check
     }
 

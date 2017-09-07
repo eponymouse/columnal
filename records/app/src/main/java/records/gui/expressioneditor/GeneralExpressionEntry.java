@@ -566,23 +566,12 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
         else if (status.get() == Status.LITERAL)
         {
-            NumericLiteralContext number = parseOrNull(ExpressionParser::numericLiteral);
-            if (number != null)
-            {
-                try
-                {
-                    return errorDisplayer.record(this, new NumericLiteral(Utility.parseNumber(number.getText()), unitSpecifier == null ? null : unitSpecifier.save(errorDisplayer, onError)));
-                }
-                catch (UserException e)
-                {
-                    return errorDisplayer.record(this, new UnfinishedExpression(textField.getText().trim()));
-                }
-            }
             BooleanLiteralContext bool = parseOrNull(ExpressionParser::booleanLiteral);
             if (bool != null)
             {
                 return errorDisplayer.record(this, new BooleanLiteral(bool.getText().equals("true")));
             }
+            // Numeric literals are handled at the end, so deliberately fall through:
         }
         else if (status.get() == Status.VARIABLE_DECL && textField.getText().trim().length() > 0)
         {
@@ -592,7 +581,19 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             return new VarUseExpression(textField.getText().trim());
         }
-        // Unfinished:
+        // Unfinished -- could be number though:
+        NumericLiteralContext number = parseOrNull(ExpressionParser::numericLiteral);
+        if (number != null)
+        {
+            try
+            {
+                return errorDisplayer.record(this, new NumericLiteral(Utility.parseNumber(number.getText()), unitSpecifier == null ? null : unitSpecifier.save(errorDisplayer, onError)));
+            }
+            catch (UserException e)
+            {
+                // Fall through to unfinished case...
+            }
+        }
         return errorDisplayer.record(this, new UnfinishedExpression(textField.getText().trim()));
     }
 

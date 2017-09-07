@@ -123,7 +123,6 @@ public class ExpressionEditorUtil
 
         private void show()
         {
-            System.err.println("Showing error");
             // Shouldn't be non-null already, but just in case:
             if (popup != null)
             {
@@ -143,7 +142,6 @@ public class ExpressionEditorUtil
         {
             popup.hide();
             popup = null;
-            System.err.println("Hiding error");
         }
 
         public void mouseHoverStatusChanged(boolean newHovering)
