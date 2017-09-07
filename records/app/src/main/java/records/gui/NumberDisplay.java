@@ -67,7 +67,7 @@ class NumberDisplay
     private boolean displayDotVisible;
 
     @OnThread(Tag.FXPlatform)
-    public NumberDisplay(int rowIndex, Number n, GetValue<Number> g, @Nullable NumberDisplayInfo ndi, Column column, FXPlatformConsumer<OptionalInt> formatVisible)
+    public NumberDisplay(int rowIndex, Number n, GetValue<@Value Number> g, @Nullable NumberDisplayInfo ndi, Column column, FXPlatformConsumer<OptionalInt> formatVisible)
     {
         currentEditValue = n;
         textArea = new StyleClassedTextArea(false) // plain undo manager

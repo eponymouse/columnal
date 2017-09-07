@@ -349,13 +349,13 @@ public class TableDisplayUtility
                     case TIMEOFDAY:
                         return new GetValueAndComponent<@Value TemporalAccessor>(g, TimeComponent::new);
                     case TIMEOFDAYZONED:
-                        return new GetValueAndComponent<@Value TemporalAccessor>(g, (parents, value) -> new Component2<TemporalAccessor/*OffsetTime*/, TemporalAccessor /*LocalTime*/, ZoneOffset>(parents, subParents -> new TimeComponent(subParents, value), null, subParents -> new PlusMinusOffsetComponent(parents, value.get(ChronoField.OFFSET_SECONDS)), (a, b) -> OffsetTime.of((LocalTime)a, b)));
+                        return new GetValueAndComponent<@Value TemporalAccessor>(g, (parents, value) -> new Component2<@Value TemporalAccessor/*OffsetTime*/, @Value TemporalAccessor /*LocalTime*/, @Value ZoneOffset>(parents, subParents -> new TimeComponent(subParents, value), null, subParents -> new PlusMinusOffsetComponent(parents, value.get(ChronoField.OFFSET_SECONDS)), (a, b) -> OffsetTime.of((LocalTime)a, b)));
                     case DATETIME:
-                        return new GetValueAndComponent<@Value TemporalAccessor>(g, (parents, value) -> new Component2<TemporalAccessor/*LocalDateTime*/, TemporalAccessor /*LocalDate*/, TemporalAccessor /*LocalTime*/>(parents, subParents -> new YMD(subParents, value), " ", subParents -> new TimeComponent(subParents, value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)));
+                        return new GetValueAndComponent<@Value TemporalAccessor>(g, (parents, value) -> new Component2<@Value TemporalAccessor/*LocalDateTime*/, @Value TemporalAccessor /*LocalDate*/, @Value TemporalAccessor /*LocalTime*/>(parents, subParents -> new YMD(subParents, value), " ", subParents -> new TimeComponent(subParents, value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)));
                     case DATETIMEZONED:
                         return new GetValueAndComponent<@Value TemporalAccessor>(g, (parents0, value) ->
-                            new Component2<TemporalAccessor /*ZonedDateTime*/, TemporalAccessor /*LocalDateTime*/, ZoneId>(parents0,
-                                parents1 -> new Component2<TemporalAccessor /*LocalDateTime*/, TemporalAccessor /*LocalDate*/, TemporalAccessor /*LocalTime*/>(
+                            new Component2<@Value TemporalAccessor /*ZonedDateTime*/, @Value TemporalAccessor /*LocalDateTime*/, @Value ZoneId>(parents0,
+                                parents1 -> new Component2<@Value TemporalAccessor /*LocalDateTime*/, @Value TemporalAccessor /*LocalDate*/, @Value TemporalAccessor /*LocalTime*/>(
                                         parents1, parents2 -> new YMD(parents2, value), " ", parents2 -> new TimeComponent(parents2, value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)),
                                 " ",
                                 parents1 -> new ZoneIdComponent(parents1, ((ZonedDateTime)value).getZone()), (a, b) -> ZonedDateTime.of((LocalDateTime)a, b))
@@ -430,24 +430,24 @@ public class TableDisplayUtility
 
                 @NonNull DataType innerType = inner;
 
-                return new GetValueAndComponent<ListEx>(DataTypeUtility.toListEx(innerType, g), (parents, value) ->
+                return new GetValueAndComponent<@Value ListEx>(DataTypeUtility.toListEx(innerType, g), (parents, value) ->
                 {
                     List<@Value Object> fxList = DataTypeUtility.fetchList(value);
 
                     // Have to use some casts because we can't express the type safety:
                     @SuppressWarnings("unchecked")
-                    ComponentMaker<Object> makeComponent = (ComponentMaker)valueAndComponent(innerType.fromCollapsed((index, prog) -> 0)).makeComponent;
-                    List<FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends @NonNull Object>>> components = new ArrayList<>(fxList.size());
+                    ComponentMaker<@Value Object> makeComponent = (ComponentMaker)valueAndComponent(innerType.fromCollapsed((index, prog) -> DataTypeUtility.value(0))).makeComponent;
+                    List<FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends @NonNull @Value Object>>> components = new ArrayList<>(fxList.size());
                     for (int i = 0; i < fxList.size(); i++)
                     {
                         int iFinal = i;
                         components.add(subParents -> makeComponent.makeComponent(subParents, fxList.get(iFinal)));
                     }
 
-                    return new VariableLengthComponentList<ListEx, Object>(parents, "[", ",", components, "]", ListExList::new)
+                    return new VariableLengthComponentList<@Value ListEx, @Value Object>(parents, "[", ",", components, "]", ListExList::new)
                     {
                         @Override
-                        protected Component<? extends Object> makeNewEntry(ImmutableList<Component<?>> subParents) throws InternalException
+                        protected Component<? extends @Value Object> makeNewEntry(ImmutableList<Component<?>> subParents) throws InternalException
                         {
                             return component(subParents, innerType, null);
                         }
@@ -460,7 +460,7 @@ public class TableDisplayUtility
     @OnThread(Tag.FXPlatform)
     public static Component<@NonNull @Value ?> component(ImmutableList<Component<?>> parents, DataType dataType, @Nullable @Value Object value) throws InternalException
     {
-        return dataType.apply(new DataTypeVisitorEx<Component<@NonNull ?>, InternalException>()
+        return dataType.apply(new DataTypeVisitorEx<Component<@NonNull @Value ?>, InternalException>()
         {
             @Override
             @OnThread(Tag.FXPlatform)
@@ -496,12 +496,12 @@ public class TableDisplayUtility
                     case TIMEOFDAY:
                         return new TimeComponent(parents, (TemporalAccessor)value);
                     case TIMEOFDAYZONED:
-                        return new Component2<TemporalAccessor /*OffsetTime*/, TemporalAccessor /*LocalTime*/, ZoneOffset>(parents, subParents -> new TimeComponent(subParents, (TemporalAccessor)value), null, subParents -> new PlusMinusOffsetComponent(subParents, value == null ? null : ((OffsetTime)value).getOffset().getTotalSeconds()), (a, b) -> OffsetTime.of((LocalTime) a, b));
+                        return new Component2<@Value TemporalAccessor /*OffsetTime*/, @Value TemporalAccessor /*LocalTime*/, @Value ZoneOffset>(parents, subParents -> new TimeComponent(subParents, (TemporalAccessor)value), null, subParents -> new PlusMinusOffsetComponent(subParents, value == null ? null : ((OffsetTime)value).getOffset().getTotalSeconds()), (a, b) -> OffsetTime.of((LocalTime) a, b));
                     case DATETIME:
-                        return new Component2<TemporalAccessor /*LocalDateTime*/, TemporalAccessor /*LocalDate*/, TemporalAccessor /*LocalTime*/>(parents, subParents -> new YMD(subParents, (TemporalAccessor)value), " ", subParents -> new TimeComponent(subParents, (TemporalAccessor)value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b));
+                        return new Component2<@Value TemporalAccessor /*LocalDateTime*/, @Value TemporalAccessor /*LocalDate*/, @Value TemporalAccessor /*LocalTime*/>(parents, subParents -> new YMD(subParents, (TemporalAccessor)value), " ", subParents -> new TimeComponent(subParents, (TemporalAccessor)value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b));
                     case DATETIMEZONED:
-                        return new Component2<TemporalAccessor /*ZonedDateTime*/, TemporalAccessor /*LocalDateTime*/, ZoneId>(parents,
-                                        parents1 -> new Component2<TemporalAccessor /*LocalDateTime*/, TemporalAccessor /*LocalDate*/, TemporalAccessor /*LocalTime*/>(
+                        return new Component2<@Value TemporalAccessor /*ZonedDateTime*/, @Value TemporalAccessor /*LocalDateTime*/, @Value ZoneId>(parents,
+                                        parents1 -> new Component2<@Value TemporalAccessor /*LocalDateTime*/, @Value TemporalAccessor /*LocalDate*/, @Value TemporalAccessor /*LocalTime*/>(
                                                 parents1, parents2 -> new YMD(parents2, (TemporalAccessor)value), " ", parents2 -> new TimeComponent(parents2, (TemporalAccessor)value), (a, b) -> LocalDateTime.of((LocalDate)a, (LocalTime)b)),
                                         " ",
                                         parents1 -> new ZoneIdComponent(parents1, value == null ? null : ((ZonedDateTime)value).getZone()), (a, b) -> ZonedDateTime.of((LocalDateTime)a, b));
@@ -520,14 +520,14 @@ public class TableDisplayUtility
             @OnThread(Tag.FXPlatform)
             public Component<@NonNull @Value ?> tuple(ImmutableList<DataType> types) throws InternalException
             {
-                List<FXPlatformFunctionInt<ImmutableList<Component<?>>, Component<? extends Object>>> comps = new ArrayList<>(types.size());
+                List<FXPlatformFunctionInt<ImmutableList<Component<?>>, Component<? extends @Value Object>>> comps = new ArrayList<>(types.size());
                 for (int i = 0; i < types.size(); i++)
                 {
                     DataType type = types.get(i);
                     int iFinal = i;
-                    comps.add(subParents -> component(subParents, type, value == null ? null : ((Object[]) value)[iFinal]));
+                    comps.add(subParents -> component(subParents, type, value == null ? null : ((@Value Object @Value[]) value)[iFinal]));
                 }
-                return new FixedLengthComponentList<Object[], Object>(parents, "(", ",", comps, ")", l -> l.toArray());
+                return new FixedLengthComponentList<@Value Object @Value[], @Value Object>(parents, "(", ",", comps, ")", (List<@Value Object> l) -> DataTypeUtility.value(l.toArray(new @Value Object[0])));
             }
 
             @Override
@@ -540,10 +540,10 @@ public class TableDisplayUtility
                 @NonNull DataType innerType = inner;
                 if (value == null)
                 {
-                    return new VariableLengthComponentList<ListEx, Object>(parents, "[", ",", "]", ListExList::new)
+                    return new VariableLengthComponentList<@Value ListEx, @Value Object>(parents, "[", ",", "]", ListExList::new)
                     {
                         @Override
-                        protected Component<? extends Object> makeNewEntry(ImmutableList<Component<?>> subParents) throws InternalException
+                        protected Component<? extends @Value Object> makeNewEntry(ImmutableList<Component<?>> subParents) throws InternalException
                         {
                             return component(subParents, innerType, null);
                         }
@@ -557,18 +557,18 @@ public class TableDisplayUtility
 
                         // Have to use some casts because we can't express the type safety:
                         @SuppressWarnings("unchecked")
-                        ComponentMaker<Object> makeComponent = (ComponentMaker) valueAndComponent(innerType.fromCollapsed((index, prog) -> 0)).makeComponent;
-                        List<FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends @NonNull Object>>> components = new ArrayList<>(fxList.size());
+                        ComponentMaker<@Value Object> makeComponent = (ComponentMaker) valueAndComponent(innerType.fromCollapsed((index, prog) -> DataTypeUtility.value(0))).makeComponent;
+                        List<FXPlatformFunctionIntUser<ImmutableList<Component<?>>, Component<? extends @NonNull @Value Object>>> components = new ArrayList<>(fxList.size());
                         for (int i = 0; i < fxList.size(); i++)
                         {
                             int iFinal = i;
                             components.add(subParents -> makeComponent.makeComponent(subParents, fxList.get(iFinal)));
                         }
 
-                        return new VariableLengthComponentList<ListEx, Object>(parents, "[", ",", components, "]", ListExList::new)
+                        return new VariableLengthComponentList<@Value ListEx, @Value Object>(parents, "[", ",", components, "]", ListExList::new)
                         {
                             @Override
-                            protected Component<? extends Object> makeNewEntry(ImmutableList<Component<?>> subParents) throws InternalException
+                            protected Component<? extends @Value Object> makeNewEntry(ImmutableList<Component<?>> subParents) throws InternalException
                             {
                                 return component(subParents, innerType, null);
                             }

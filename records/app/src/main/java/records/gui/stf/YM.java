@@ -1,5 +1,6 @@
 package records.gui.stf;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -30,7 +31,7 @@ import java.util.Set;
  * Created by neil on 28/06/2017.
  */
 @OnThread(Tag.FXPlatform)
-public class YM extends TerminalComponent<TemporalAccessor/*YearMonth*/>
+public class YM extends TerminalComponent<@Value TemporalAccessor/*YearMonth*/>
 {
     private final String initialMonth;
     private final String initialYear;
@@ -78,7 +79,7 @@ public class YM extends TerminalComponent<TemporalAccessor/*YearMonth*/>
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public Either<List<ErrorFix>, TemporalAccessor> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, @Value TemporalAccessor> endEdit(StructuredTextField<?> field)
     {
         List<ErrorFix> fixes = new ArrayList<>();
         field.revertEditFix().ifPresent(f -> fixes.add(f));

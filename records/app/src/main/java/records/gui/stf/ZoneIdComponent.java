@@ -1,5 +1,6 @@
 package records.gui.stf;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stf.StructuredTextField.ErrorFix;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 /**
  * Created by neil on 11/07/2017.
  */
-public class ZoneIdComponent extends TerminalComponent<ZoneId>
+public class ZoneIdComponent extends TerminalComponent<@Value ZoneId>
 {
     public ZoneIdComponent(ImmutableList<Component<?>> componentParents, @Nullable ZoneId initialZoneId)
     {
@@ -30,7 +31,7 @@ public class ZoneIdComponent extends TerminalComponent<ZoneId>
     }
 
     @Override
-    public Either<List<ErrorFix>, ZoneId> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, @Value ZoneId> endEdit(StructuredTextField<?> field)
     {
         try
         {

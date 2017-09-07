@@ -1,8 +1,10 @@
 package records.gui.stf;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.NavigationActions.SelectionPolicy;
+import records.data.datatype.DataTypeUtility;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;
@@ -16,7 +18,7 @@ import java.util.List;
 /**
  * Created by neil on 28/06/2017.
  */
-public class BoolComponent extends TerminalComponent<Boolean>
+public class BoolComponent extends TerminalComponent<@Value Boolean>
 {
     public BoolComponent(ImmutableList<Component<?>> parents, @Nullable Boolean initial)
     {
@@ -25,18 +27,18 @@ public class BoolComponent extends TerminalComponent<Boolean>
     }
 
     @Override
-    public Either<List<ErrorFix>, Boolean> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, @Value Boolean> endEdit(StructuredTextField<?> field)
     {
         String val = getItem(ItemVariant.EDITABLE_BOOLEAN).trim().toLowerCase();
         if (val.equals("true"))
         {
             items.set(0, items.get(0).replaceContent("true"));
-            return Either.right(true);
+            return Either.right(DataTypeUtility.value(true));
         }
         else if (val.equals("false"))
         {
             items.set(0, items.get(0).replaceContent("false"));
-            return Either.right(false);
+            return Either.right(DataTypeUtility.value(false));
         }
         else
             return Either.left(Collections.emptyList());

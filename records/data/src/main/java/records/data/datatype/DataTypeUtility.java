@@ -488,15 +488,15 @@ public class DataTypeUtility
         });
     }
 
-    public static GetValue<ListEx> toListEx(DataType innerType, GetValue<Pair<Integer, DataTypeValue>> g)
+    public static GetValue<@Value ListEx> toListEx(DataType innerType, GetValue<Pair<Integer, DataTypeValue>> g)
     {
-        return new GetValue<ListEx>()
+        return new GetValue<@Value ListEx>()
         {
             @Override
-            public ListEx getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+            public @Value ListEx getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
             {
                 Pair<Integer, DataTypeValue> p = g.getWithProgress(index, progressListener);
-                return new ListEx()
+                return DataTypeUtility.value(new ListEx()
                 {
                     @Override
                     public int size() throws InternalException, UserException
@@ -509,7 +509,7 @@ public class DataTypeUtility
                     {
                         return p.getSecond().getCollapsed(index);
                     }
-                };
+                });
             }
 
             @Override

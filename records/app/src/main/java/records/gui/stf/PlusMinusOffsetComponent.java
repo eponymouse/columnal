@@ -1,5 +1,6 @@
 package records.gui.stf;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stf.StructuredTextField.ErrorFix;
@@ -19,7 +20,7 @@ import java.util.List;
 /**
  * The {+|-}HH:MM on the end for a timezone offset.
  */
-public class PlusMinusOffsetComponent extends TerminalComponent<ZoneOffset>
+public class PlusMinusOffsetComponent extends TerminalComponent<@Value ZoneOffset>
 {
     @OnThread(Tag.FXPlatform)
     public PlusMinusOffsetComponent(ImmutableList<Component<?>> parents, @Nullable Integer seconds)
@@ -50,7 +51,7 @@ public class PlusMinusOffsetComponent extends TerminalComponent<ZoneOffset>
     }
 
     @Override
-    public Either<List<ErrorFix>, ZoneOffset> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, @Value ZoneOffset> endEdit(StructuredTextField<?> field)
     {
         int sign = getItem(ItemVariant.TIMEZONE_PLUS_MINUS).equals("-") ? -1 : 1;
 

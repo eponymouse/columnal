@@ -1,5 +1,6 @@
 package records.gui.stf;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stf.StructuredTextField.ErrorFix;
@@ -18,7 +19,7 @@ import java.util.List;
 /**
  * Created by neil on 28/06/2017.
  */
-public class TimeComponent extends TerminalComponent<TemporalAccessor/*LocalTime*/>
+public class TimeComponent extends TerminalComponent<@Value TemporalAccessor/*LocalTime*/>
 {
 
     public TimeComponent(ImmutableList<Component<?>> parents, @Nullable TemporalAccessor value)
@@ -54,7 +55,7 @@ public class TimeComponent extends TerminalComponent<TemporalAccessor/*LocalTime
     }
 
     @Override
-    public Either<List<ErrorFix>, TemporalAccessor> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, @Value TemporalAccessor> endEdit(StructuredTextField<?> field)
     {
         List<ErrorFix> fixes = new ArrayList<>();
         field.revertEditFix().ifPresent(f -> fixes.add(f));

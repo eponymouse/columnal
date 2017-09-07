@@ -34,6 +34,14 @@ class YearMonth
     public static @Value YearMonth of(int year, int month);
     public static @Value YearMonth from(TemporalAccessor temporal);
 }
+class ZoneId
+{
+    public static @Value ZoneId of(String zone);
+}
+class ZoneOffset
+{
+    public static @Value ZoneOffset ofHoursMinutes(int hours, int minutes);
+}
 package java.time.format;
 class DateTimeFormatter
 {

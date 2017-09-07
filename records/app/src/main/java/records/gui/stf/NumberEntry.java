@@ -1,7 +1,9 @@
 package records.gui.stf;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataTypeUtility;
 import records.error.UserException;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
@@ -17,7 +19,7 @@ import java.util.List;
 /**
  * Created by neil on 28/06/2017.
  */
-public class NumberEntry extends TerminalComponent<Number>
+public class NumberEntry extends TerminalComponent<@Value Number>
 {
     public NumberEntry(ImmutableList<Component<?>> parents, @Nullable Number initial)
     {
@@ -26,11 +28,11 @@ public class NumberEntry extends TerminalComponent<Number>
     }
 
     @Override
-    public Either<List<ErrorFix>, Number> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, @Value Number> endEdit(StructuredTextField<?> field)
     {
         try
         {
-            return Either.right(Utility.parseNumber(getItem(ItemVariant.EDITABLE_NUMBER)));
+            return Either.right(DataTypeUtility.value(Utility.parseNumber(getItem(ItemVariant.EDITABLE_NUMBER))));
         }
         catch (UserException e)
         {
