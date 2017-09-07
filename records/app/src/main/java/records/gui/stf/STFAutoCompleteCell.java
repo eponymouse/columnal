@@ -33,7 +33,7 @@ public class STFAutoCompleteCell extends ListCell<Suggestion>
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    protected void updateItem(Suggestion item, boolean empty)
+    protected void updateItem(@Nullable Suggestion item, boolean empty)
     {
         super.updateItem(item, empty);
         if (item != null && !empty)

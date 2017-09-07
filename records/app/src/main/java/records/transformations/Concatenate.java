@@ -7,6 +7,7 @@ import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.KeyFor;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -41,6 +42,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
+import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -320,9 +322,9 @@ public class Concatenate extends TransformationEditable
         }
 
         @Override
-        public String getDisplayTitle()
+        public @Localized String getDisplayTitle()
         {
-            return "Concatenate";
+            return TranslationUtility.getString("transformEditor.concatenate.title");
         }
 
         @Override

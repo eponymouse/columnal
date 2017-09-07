@@ -962,6 +962,12 @@ public class Utility
         return string;
     }
 
+    @SuppressWarnings("i18n")
+    public static @Localized String concatLocal(@Localized String a, @Localized String b)
+    {
+        return a + b;
+    }
+
     public static class ReadState
     {
         private final File file;

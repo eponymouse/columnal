@@ -366,9 +366,9 @@ public class Sort extends TransformationEditable
         }
 
         @Override
-        public String getDisplayTitle()
+        public @Localized String getDisplayTitle()
         {
-            return "Sort";
+            return TranslationUtility.getString("transformEditor.sort.title");
         }
 
         @Override

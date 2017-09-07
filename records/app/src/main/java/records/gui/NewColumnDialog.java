@@ -33,6 +33,7 @@ import records.transformations.expression.NumericLiteral;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.Pair;
 import utility.Utility;
 import utility.gui.ErrorLabel;
 import utility.gui.ErrorableDialog;
@@ -108,9 +109,9 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
     {
         return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, DataTypeUtility.makeDefaultValue(dataType)));
     }
-    private <@NonNull T extends @NonNull @Value Object> StructuredTextField<T> fieldFromComponent(@UnknownInitialization(Object.class) NewColumnDialog this, Component<T> component) throws InternalException
+    private <@NonNull @Value T extends @NonNull @Value Object> StructuredTextField<T> fieldFromComponent(@UnknownInitialization(Object.class) NewColumnDialog this, Component<T> component) throws InternalException
     {
-        return new StructuredTextField<>(component, v -> {defaultValueAsString = v.getFirst();});
+        return new StructuredTextField<@NonNull @Value T>(component, (Pair<String, @NonNull @Value T> v) -> {defaultValueAsString = v.getFirst();});
     }
 
     @RequiresNonNull({"typeSelectionPane"})

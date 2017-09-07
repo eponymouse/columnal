@@ -10,6 +10,7 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -45,6 +46,7 @@ import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -285,9 +287,9 @@ public class Transform extends TransformationEditable
         }
 
         @Override
-        public String getDisplayTitle()
+        public @Localized String getDisplayTitle()
         {
-            return "Calculate columns";
+            return TranslationUtility.getString("transformEditor.calculate.title");
         }
 
         @Override

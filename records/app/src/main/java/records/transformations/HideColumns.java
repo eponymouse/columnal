@@ -215,9 +215,9 @@ public class HideColumns extends TransformationEditable
         }
 
         @Override
-        public String getDisplayTitle()
+        public @Localized String getDisplayTitle()
         {
-            return "Hide columns";
+            return TranslationUtility.getString("transformEditor.hide.title");
         }
 
         @Override

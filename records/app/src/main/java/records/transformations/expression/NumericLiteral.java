@@ -18,6 +18,7 @@ import records.transformations.expression.ErrorRecorder.QuickFix;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.TranslationUtility;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -46,7 +47,7 @@ public class NumericLiteral extends Literal
 
         Either<Pair<String, List<UnitExpression>>, Unit> errOrUnit = unit.asUnit(state.getUnitManager());
         return errOrUnit.<@Nullable DataType>either(err -> {
-            onError.recordError(this, err.getFirst(), Utility.mapList(err.getSecond(), u -> new QuickFix("Fix unit", () -> new NumericLiteral(value, u))));
+            onError.recordError(this, err.getFirst(), Utility.mapList(err.getSecond(), u -> new QuickFix(TranslationUtility.getString("quick.fix.unit"), () -> new NumericLiteral(value, u))));
             return null;
         }, u -> DataType.number(new NumberInfo(u, null)));
     }

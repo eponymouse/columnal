@@ -183,7 +183,7 @@ public class EditTransformationDialog
     private @Localized String getDescriptionFor(@UnknownInitialization(Object.class) EditTransformationDialog this, TransformationEditor editor)
     {
         Pair<@LocalizableKey String, @LocalizableKey String> descriptionKeys = editor.getDescriptionKeys();
-        return TranslationUtility.getString(descriptionKeys.getFirst()) + (showingMoreDescription.get() ? TranslationUtility.getString(descriptionKeys.getSecond()) : "");
+        return Utility.concatLocal(TranslationUtility.getString(descriptionKeys.getFirst()), showingMoreDescription.get() ? TranslationUtility.getString(descriptionKeys.getSecond()) : "");
     }
 
     // Make a new transformation with the given source table

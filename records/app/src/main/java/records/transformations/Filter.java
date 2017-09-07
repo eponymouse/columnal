@@ -415,9 +415,9 @@ public class Filter extends TransformationEditable
         }
 
         @Override
-        public String getDisplayTitle()
+        public @Localized String getDisplayTitle()
         {
-            return "Filter";
+            return TranslationUtility.getString("transformEditor.filter.title");
         }
 
         @Override
