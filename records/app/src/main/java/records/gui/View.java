@@ -416,7 +416,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
             }
             overlays.put(transformation, new Overlays(sourceDisplays, transformation.getTransformationLabel(), tableDisplay, () ->
             {
-                View.this.editTransform(transformation.getId(), ((TransformationEditable)transformation).edit(View.this));
+                View.this.editTransform(transformation.getId(), ((TransformationEditable)transformation).edit(View.this), transformation.getPosition());
             }));
 
             save();
@@ -443,10 +443,10 @@ public class View extends StackPane implements TableManager.TableManagerListener
             return (TableDisplay)table.getDisplay();
     }
 
-    public void editTransform(TableId existingTableId, TransformationEditor selectedEditor)
+    public void editTransform(TableId existingTableId, TransformationEditor selectedEditor, @Nullable Bounds position)
     {
         EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, selectedEditor);
-        showEditDialog(dialog, existingTableId);
+        showEditDialog(dialog, existingTableId, position);
     }
 
     @SuppressWarnings("nullness") // Can't be a View without an actual window
@@ -458,13 +458,13 @@ public class View extends StackPane implements TableManager.TableManagerListener
     public void newTransformFromSrc(Table src)
     {
         EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, src.getId());
-        showEditDialog(dialog, null);
+        showEditDialog(dialog, null, null);
     }
 
-    private void showEditDialog(EditTransformationDialog dialog, @Nullable TableId replaceOnOK)
+    private void showEditDialog(EditTransformationDialog dialog, @Nullable TableId replaceOnOK, @Nullable Bounds position)
     {
         // add will re-run any dependencies:
-        dialog.show().ifPresent(t -> Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> tableManager.edit(replaceOnOK, t))));
+        dialog.show().ifPresent(t -> Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> tableManager.edit(replaceOnOK, () -> t.get().loadPosition(position)))));
     }
 
     @Override

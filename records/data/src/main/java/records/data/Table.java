@@ -65,6 +65,26 @@ public abstract class Table
     @OnThread(Tag.Any)
     public abstract RecordSet getData() throws UserException, InternalException;
 
+    public final synchronized Table loadPosition(@Nullable Bounds position)
+    {
+        if (position != null)
+        {
+            prevPosition = position;
+            if (display != null)
+                display.loadPosition(prevPosition);
+        }
+        return this;
+    }
+
+    @OnThread(Tag.Any)
+    public synchronized Bounds getPosition()
+    {
+        if (display != null)
+            return display.getPosition();
+        else
+            return prevPosition;
+    }
+
     public static interface Saver
     {
         @OnThread(Tag.Simulation)
