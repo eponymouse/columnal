@@ -31,6 +31,7 @@ import javafx.scene.shape.QuadCurve;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
 import javafx.stage.Window;
+import javafx.util.Duration;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -87,6 +88,8 @@ public class View extends StackPane implements TableManager.TableManagerListener
     private final ObjectProperty<File> diskFile;
     // Null means modified since last save
     private final ObjectProperty<@Nullable Instant> lastSaveTime = new SimpleObjectProperty<>(null);
+    // Cancels a delayed save operation:
+    private @Nullable FXPlatformRunnable cancelDelayedSave;
 
     private void save()
     {
@@ -189,6 +192,12 @@ public class View extends StackPane implements TableManager.TableManagerListener
 
     public void tableMovedOrResized(@UnknownInitialization TableDisplay tableDisplay)
     {
+        // Save new position after delay:
+        if (cancelDelayedSave != null)
+        {
+            cancelDelayedSave.run();
+        }
+        cancelDelayedSave = FXUtility.runAfterDelay(Duration.millis(1000), () -> modified());
         adjustParent.run();
     }
 

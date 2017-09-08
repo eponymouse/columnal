@@ -156,6 +156,7 @@ public abstract class Table
             }
         }
         this.display = display;
+        display.loadPosition(prevPosition);
     }
 
     public synchronized final void loadPosition(PositionContext position) throws UserException
@@ -167,6 +168,10 @@ public abstract class Table
             double mx = Double.parseDouble(position.item(2).getText());
             double my = Double.parseDouble(position.item(3).getText());
             prevPosition = new BoundingBox(x, y, mx - x, my - y);
+            if (display != null)
+            {
+                display.loadPosition(prevPosition);
+            }
         }
         catch (Exception e)
         {
@@ -251,6 +256,9 @@ public abstract class Table
      */
     public static interface TableDisplayBase
     {
+        @OnThread(Tag.Any)
+        public void loadPosition(Bounds bounds);
+
         @OnThread(Tag.Any)
         public Bounds getPosition();
 

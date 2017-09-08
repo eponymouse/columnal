@@ -425,6 +425,17 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         return false;
     }
 
+    @Override
+    public @OnThread(Tag.Any) void loadPosition(Bounds bounds)
+    {
+        Platform.runLater(() -> {
+            setLayoutX(bounds.getMinX());
+            setLayoutY(bounds.getMinY());
+            setWidth(bounds.getWidth());
+            setHeight(bounds.getHeight());
+        });
+    }
+
     @OnThread(Tag.Any)
     @Override
     public Bounds getPosition()
