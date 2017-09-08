@@ -28,6 +28,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import annotation.userindex.qual.UserIndex;
@@ -639,6 +640,11 @@ public class Utility
         return () -> values.iterator();
     }
 
+    public static Iterable<Integer> iterableStream(IntStream values)
+    {
+        return () -> values.iterator();
+    }
+
     public static <T> String listToString(List<@NonNull T> options)
     {
         return "[" + options.stream().map(Object::toString).collect(Collectors.joining(", ")) + "]";
@@ -966,6 +972,11 @@ public class Utility
     public static @Localized String concatLocal(@Localized String a, @Localized String b)
     {
         return a + b;
+    }
+
+    public static String codePointToString(int codepoint)
+    {
+        return new String(new int[] {codepoint}, 0, 1);
     }
 
     public static class ReadState

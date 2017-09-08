@@ -152,6 +152,10 @@ class InnerShadow
 {
     void setInput(@Nullable Effect e);
 }
+class Blend
+{
+    public Blend(BlendMode b, @Nullable Effect a, @Nullable Effect b);
+}
 
 package javafx.scene.layout;
 class BorderPane

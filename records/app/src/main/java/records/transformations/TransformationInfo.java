@@ -28,16 +28,20 @@ public abstract class TransformationInfo
      */
     protected final String displayName;
 
+    private final String imageFileName;
+
     /**
      * Keywords to search (e.g. alternative names for this function).
      */
     protected final List<String> keywords;
 
+
     @OnThread(Tag.Any)
-    public TransformationInfo(String canonicalName, String displayName, List<String> keywords)
+    public TransformationInfo(String canonicalName, String displayName, String imageFileName, List<String> keywords)
     {
         this.canonicalName = canonicalName;
         this.displayName = displayName;
+        this.imageFileName =imageFileName;
         this.keywords = keywords;
     }
 
@@ -57,4 +61,8 @@ public abstract class TransformationInfo
     @OnThread(Tag.FXPlatform)
     public abstract TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src);
 
+    public final String getImageFileName()
+    {
+        return imageFileName;
+    }
 }

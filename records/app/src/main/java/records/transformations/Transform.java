@@ -223,7 +223,7 @@ public class Transform extends TransformationEditable
     {
         public Info()
         {
-            super("calculate", "Calculate Columns", Arrays.asList("transform"));
+            super("calculate", "Calculate", "preview-calculate.png", Arrays.asList("transform"));
         }
 
         @Override
@@ -276,7 +276,7 @@ public class Transform extends TransformationEditable
                 gridPane.add(GUI.labelled("transformEditor.column.type", new TypeLabel(expressionEditor.typeProperty())), 0, 1);
                 gridPane.add(expressionEditor.getContainer(), 1, 0);
                 GridPane.setRowSpan(expressionEditor.getContainer(), 2);
-                // TODO add a resize control at the bottom of the item.
+                //#error TODO add a resize control at the bottom of the item.
                 columnEditors.add(gridPane);
             }
             columnListScrollPane = new ScrollPane(new VBox(columnEditors.toArray(new Node[0])));

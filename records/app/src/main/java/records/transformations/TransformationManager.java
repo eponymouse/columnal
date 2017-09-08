@@ -40,13 +40,15 @@ public class TransformationManager implements TransformationLoader
     @OnThread(Tag.Any)
     public List<TransformationInfo> getTransformations()
     {
+        // Note: the order here is the order they are shown in the transformation edit dialog,
+        // but is otherwise unimportant.
         return Arrays.asList(
-            new Concatenate.Info(),
-            new Filter.Info(),
-            new HideColumns.Info(),
-            new Sort.Info(),
+            new Transform.Info(),
             new SummaryStatistics.Info(),
-            new Transform.Info()
+            new Filter.Info(),
+            new Sort.Info(),
+            new HideColumns.Info(),
+            new Concatenate.Info()
         );
     }
 

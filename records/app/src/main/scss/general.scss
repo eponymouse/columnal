@@ -32,8 +32,13 @@
 
 .labelled-wrapper {
     -fx-alignment: center-left;
-    .label {
+    & > .label {
         -fx-padding: 0 2em 0 0;
+    }
+}
+.labelled-wrapper-vertical {
+    & > .label {
+        -fx-padding: 0 0 0.5em 0;
     }
 }
 .labelled-grid {

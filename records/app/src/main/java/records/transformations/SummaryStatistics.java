@@ -334,7 +334,7 @@ public class SummaryStatistics extends TransformationEditable
         @OnThread(Tag.Any)
         public Info()
         {
-            super(NAME, "Aggregate", Arrays.asList("min", "max"));
+            super(NAME, "Aggregate", "preview-aggregate.png", Arrays.asList("min", "max"));
         }
 
         @Override

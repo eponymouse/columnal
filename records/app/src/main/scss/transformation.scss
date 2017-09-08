@@ -1,7 +1,15 @@
 @import 'colors';
 
 .transformation-list {
-    -fx-pref-width: 12em;
+    -fx-pref-width: 16em;
+    -fx-background-color: white;
+    &:focused {
+        -fx-background-color: white;
+    }
+    .list-cell {
+        -fx-graphic-text-gap: 1em;
+        -fx-label-padding: 0.5em 0 0.5em 0;
+    }
 }
 .transformation-info {
     -fx-padding: 0 1em 0 1em;
@@ -46,7 +54,7 @@
 
 .calculate-columns-content {
     .labelled-wrapper {
-        .label {
+        & > .label {
             -fx-padding: 0 0.5em 0 0;
         }
     }

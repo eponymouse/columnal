@@ -14,13 +14,20 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
+import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.cell.TextFieldListCell;
+import javafx.scene.effect.Blend;
+import javafx.scene.effect.BlendMode;
+import javafx.scene.effect.ColorAdjust;
+import javafx.scene.effect.ColorInput;
+import javafx.scene.image.ImageView;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
+import javafx.scene.paint.Color;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import javafx.stage.Modality;
@@ -47,8 +54,10 @@ import utility.SimulationSupplier;
 import utility.Utility;
 import utility.Workers;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
+import java.net.URL;
 import java.util.List;
 import java.util.Optional;
 
@@ -81,29 +90,54 @@ public class EditTransformationDialog
         //and a custom section (per function) for params.
 
         BorderPane pane = new BorderPane();
-        ObservableList<TransformationInfo> filteredList = FXCollections.observableArrayList(available);
-        ListView<TransformationInfo> filteredListView = new ListView<>(filteredList);
+        ListView<TransformationInfo> filteredListView = new ListView<>(FXCollections.observableArrayList(available));
         filteredListView.setEditable(false);
         filteredListView.setCellFactory(lv ->
         {
-            return new TextFieldListCell<TransformationInfo>(new StringConverter<TransformationInfo>()
+            return new ListCell<TransformationInfo>()
             {
+                private @Nullable ImageView imageView;
+
                 @Override
-                public String toString(TransformationInfo object)
+                protected void updateItem(@Nullable TransformationInfo item, boolean empty)
                 {
-                    return object.getDisplayName();
+                    // By default, image view vanishes:
+                    imageView = null;
+                    setGraphic(null);
+
+                    if (item != null && !empty)
+                    {
+                        setText(item.getDisplayName());
+                        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+                        if (systemClassLoader != null)
+                        {
+                            URL imageURL = systemClassLoader.getResource(item.getImageFileName());
+                            if (imageURL != null)
+                            {
+                                imageView = new ImageView(imageURL.toExternalForm());
+                                imageView.setFitWidth(100.0);
+                                imageView.setPreserveRatio(true);
+                                imageView.setSmooth(true);
+                                setGraphic(imageView);
+                            }
+                        }
+                    }
+                    super.updateItem(item, empty);
                 }
 
                 @Override
-                public TransformationInfo fromString(String string)
+                public void updateSelected(boolean selected)
                 {
-                    // Not editable so shouldn't happen
-                    throw new UnsupportedOperationException();
+                    if (imageView != null)
+                    {
+                        imageView.setEffect(selected ? new ColorAdjust(0, 0, 1.0, 0.0) : null);
+                    }
+                    super.updateSelected(selected);
                 }
-            });
+            };
         });
         filteredListView.getStyleClass().add("transformation-list");
-        pane.setLeft(filteredListView);
+        pane.setLeft(GUI.labelledAbove("transformEditor.transform.type", filteredListView));
         ReadOnlyObjectProperty<TransformationInfo> selectedTransformation = filteredListView.getSelectionModel().selectedItemProperty();
         SimpleObjectProperty<Optional<TransformationEditor>> editor = new SimpleObjectProperty<>();
         FXUtility.addChangeListenerPlatform(selectedTransformation, trans ->

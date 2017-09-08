@@ -15,9 +15,9 @@ import java.util.List;
  */
 public abstract class SingleSourceTransformationInfo extends TransformationInfo
 {
-    public SingleSourceTransformationInfo(String canonicalName, String displayName, List<String> keywords)
+    public SingleSourceTransformationInfo(String canonicalName, String displayName, String imageFileName, List<String> keywords)
     {
-        super(canonicalName, displayName, keywords);
+        super(canonicalName, displayName, imageFileName, keywords);
     }
 
     @Override

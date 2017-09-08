@@ -481,7 +481,7 @@ public class Filter extends TransformationEditable
     {
         public Info()
         {
-            super("keep", "Keep rows", Arrays.asList("remove", "delete"));
+            super("keep", "Filter rows", "preview-filter.png", Arrays.asList("remove", "delete"));
         }
 
         @Override

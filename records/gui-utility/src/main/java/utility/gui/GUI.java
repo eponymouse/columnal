@@ -128,6 +128,14 @@ public class GUI
         return hBox;
     }
 
+
+    public static Node labelledAbove(@LocalizableKey String labelKey, Node item)
+    {
+        BorderPane borderPane = new BorderPane(item, label(labelKey), null, null, null);
+        borderPane.getStyleClass().add("labelled-wrapper-vertical");
+        return borderPane;
+    }
+
     public static LabelledGrid.Row labelledGridRow(@LocalizableKey String labelKey, @HelpKey String helpId, Node choiceNode)
     {
         return new LabelledGrid.Row(label(labelKey), helpBox(helpId, choiceNode), choiceNode);
