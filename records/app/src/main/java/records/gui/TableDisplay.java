@@ -333,7 +333,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
         if (table instanceof TransformationEditable)
         {
-            items.add(GUI.menuItem("tableDisplay.menu.edit", () -> parent.editTransform(table.getId(), ((TransformationEditable)table).edit(parent), table.getPosition())));
+            items.add(GUI.menuItem("tableDisplay.menu.edit", () -> parent.editTransform((TransformationEditable)table)));
         }
 
         items.addAll(Arrays.asList(

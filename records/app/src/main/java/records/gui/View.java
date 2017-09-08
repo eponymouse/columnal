@@ -59,6 +59,7 @@ import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -356,8 +357,8 @@ public class View extends StackPane implements TableManager.TableManagerListener
         });
         //TODO let escape cancel
 
-
-        overlays = FXCollections.observableHashMap();
+        // Must use identity hash map as transformations' hash code can change if position changes.
+        overlays = FXCollections.observableMap(new IdentityHashMap<>());
         overlays.addListener((MapChangeListener<? super Transformation, ? super Overlays>) c -> {
             Overlays removed = c.getValueRemoved();
             if (removed != null)
@@ -416,7 +417,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
             }
             overlays.put(transformation, new Overlays(sourceDisplays, transformation.getTransformationLabel(), tableDisplay, () ->
             {
-                View.this.editTransform(transformation.getId(), ((TransformationEditable)transformation).edit(View.this), transformation.getPosition());
+                View.this.editTransform((TransformationEditable)transformation);
             }));
 
             save();
@@ -443,10 +444,10 @@ public class View extends StackPane implements TableManager.TableManagerListener
             return (TableDisplay)table.getDisplay();
     }
 
-    public void editTransform(TableId existingTableId, TransformationEditor selectedEditor, @Nullable Bounds position)
+    public void editTransform(TransformationEditable existing)
     {
-        EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, selectedEditor);
-        showEditDialog(dialog, existingTableId, position);
+        EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, existing.edit(this));
+        showEditDialog(dialog, existing, existing.getPosition());
     }
 
     @SuppressWarnings("nullness") // Can't be a View without an actual window
@@ -461,10 +462,14 @@ public class View extends StackPane implements TableManager.TableManagerListener
         showEditDialog(dialog, null, null);
     }
 
-    private void showEditDialog(EditTransformationDialog dialog, @Nullable TableId replaceOnOK, @Nullable Bounds position)
+    private void showEditDialog(EditTransformationDialog dialog, @Nullable TransformationEditable replaceOnOK, @Nullable Bounds position)
     {
         // add will re-run any dependencies:
-        dialog.show().ifPresent(t -> Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> tableManager.edit(replaceOnOK, () -> t.get().loadPosition(position)))));
+        dialog.show().ifPresent(t -> {
+            if (replaceOnOK != null)
+                overlays.remove(replaceOnOK);
+            Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> tableManager.edit(replaceOnOK == null ? null : replaceOnOK.getId(), () -> t.get().loadPosition(position))));
+        });
     }
 
     @Override
