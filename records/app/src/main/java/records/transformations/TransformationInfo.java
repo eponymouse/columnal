@@ -65,4 +65,18 @@ public abstract class TransformationInfo
     {
         return imageFileName;
     }
+
+
+    // TransformationInfo is uniquely keyed by the canonical name:
+    @Override
+    public final int hashCode()
+    {
+        return getCanonicalName().hashCode();
+    }
+
+    @Override
+    public final boolean equals(@Nullable Object obj)
+    {
+        return obj instanceof TransformationInfo && obj != null && getCanonicalName().equals(((TransformationInfo)obj).getCanonicalName());
+    }
 }

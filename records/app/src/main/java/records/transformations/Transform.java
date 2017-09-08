@@ -303,6 +303,12 @@ public class Transform extends TransformationEditable
         }
 
         @Override
+        public TransformationInfo getInfo()
+        {
+            return new Info();
+        }
+
+        @Override
         public @Localized String getDisplayTitle()
         {
             return TranslationUtility.getString("transformEditor.calculate.title");

@@ -124,7 +124,7 @@ public class ErrorableTextField<T>
         });
     }
 
-    public void setText(String text)
+    public void setText(@UnknownInitialization(ErrorableTextField.class) ErrorableTextField<T> this, String text)
     {
         field.setText(text);
     }

@@ -400,6 +400,12 @@ public class SummaryStatistics extends TransformationEditable
         }
 
         @Override
+        public TransformationInfo getInfo()
+        {
+            return new Info();
+        }
+
+        @Override
         public String getDisplayTitle()
         {
             return "Basic Statistics";

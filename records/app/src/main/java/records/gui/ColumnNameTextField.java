@@ -33,6 +33,8 @@ public class ColumnNameTextField extends ErrorableTextField<ColumnId>
                 return ConversionResult.<@NonNull ColumnId>error(TranslationUtility.getString("column.name.error.missing"));
             return checkAlphabet(s, ColumnNameTextField::validCharacter, ColumnId::new);
         });
+        if (initial != null)
+            setText(initial.getRaw());
         setPromptText(TranslationUtility.getString("column.name.prompt"));
     }
 

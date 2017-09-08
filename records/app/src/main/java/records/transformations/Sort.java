@@ -366,6 +366,12 @@ public class Sort extends TransformationEditable
         }
 
         @Override
+        public TransformationInfo getInfo()
+        {
+            return new Sort.Info();
+        }
+
+        @Override
         public @Localized String getDisplayTitle()
         {
             return TranslationUtility.getString("transformEditor.sort.title");

@@ -44,6 +44,11 @@ import java.util.List;
 @OnThread(Tag.FXPlatform)
 public abstract class TransformationEditor
 {
+    /**
+     * Gets the info on the transformation
+     * @return
+     */
+    public abstract TransformationInfo getInfo();
 
     /**
      * The title to show at the top of the information display.

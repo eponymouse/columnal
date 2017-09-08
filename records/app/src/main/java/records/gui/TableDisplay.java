@@ -11,6 +11,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -33,6 +34,7 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.importers.ClipboardUtils;
+import records.transformations.TransformationEditable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -51,6 +53,7 @@ import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
@@ -326,7 +329,14 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
     private static ContextMenu makeTableContextMenu(View parent, Table table)
     {
-        return new ContextMenu(
+        List<MenuItem> items = new ArrayList<>();
+
+        if (table instanceof TransformationEditable)
+        {
+            items.add(GUI.menuItem("tableDisplay.menu.edit", () -> parent.editTransform(table.getId(), ((TransformationEditable)table).edit(parent))));
+        }
+
+        items.addAll(Arrays.asList(
             GUI.menuItem("tableDisplay.menu.addTransformation", () -> parent.newTransformFromSrc(table)),
             GUI.menuItem("tableDisplay.menu.copyValues", () -> Utility.alertOnErrorFX_(() -> ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), table.getData().getColumns()))),
             GUI.menuItem("tableDisplay.menu.exportToCSV", () -> {
@@ -337,7 +347,8 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                     Workers.onWorkerThread("Export to CSV", Workers.Priority.SAVE_TO_DISK, () -> Utility.alertOnError_(() -> exportToCSV(table, fileNonNull)));
                 }
             })
-        );
+        ));
+        return new ContextMenu(items.toArray(new MenuItem[0]));
     }
 
     @OnThread(Tag.Simulation)

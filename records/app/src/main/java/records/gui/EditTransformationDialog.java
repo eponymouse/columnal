@@ -37,6 +37,7 @@ import javafx.util.StringConverter;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.controlsfx.control.HyperlinkLabel;
@@ -58,7 +59,9 @@ import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
 import java.net.URL;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 /**
@@ -68,6 +71,9 @@ import java.util.Optional;
 public class EditTransformationDialog
 {
     private final Dialog<SimulationSupplier<Transformation>> dialog;
+    // Once user has started editing, we keep hold of it if they switch back, until the dialog is dismissed:
+    // The key is the canonical name of the transformation.
+    private final Map<String, TransformationEditor> editors = new HashMap<>();
     private final BooleanProperty showingMoreDescription = new SimpleBooleanProperty(false);
     private final View parentView;
 
@@ -86,13 +92,14 @@ public class EditTransformationDialog
 
         List<TransformationInfo> available = TransformationManager.getInstance().getTransformations();
 
-        //#error TODO add a filter box, a listview with functions
-        //and a custom section (per function) for params.
-
+        if (existing != null)
+        {
+            editors.put(existing.getInfo().getCanonicalName(), existing);
+        }
         BorderPane pane = new BorderPane();
-        ListView<TransformationInfo> filteredListView = new ListView<>(FXCollections.observableArrayList(available));
-        filteredListView.setEditable(false);
-        filteredListView.setCellFactory(lv ->
+        ListView<TransformationInfo> transformationTypeList = new ListView<>(FXCollections.observableArrayList(available));
+        transformationTypeList.setEditable(false);
+        transformationTypeList.setCellFactory(lv ->
         {
             return new ListCell<TransformationInfo>()
             {
@@ -136,14 +143,21 @@ public class EditTransformationDialog
                 }
             };
         });
-        filteredListView.getStyleClass().add("transformation-list");
-        pane.setLeft(GUI.labelledAbove("transformEditor.transform.type", filteredListView));
-        ReadOnlyObjectProperty<TransformationInfo> selectedTransformation = filteredListView.getSelectionModel().selectedItemProperty();
+        transformationTypeList.getStyleClass().add("transformation-list");
+        pane.setLeft(GUI.labelledAbove("transformEditor.transform.type", transformationTypeList));
+        ReadOnlyObjectProperty<TransformationInfo> selectedTransformation = transformationTypeList.getSelectionModel().selectedItemProperty();
         SimpleObjectProperty<Optional<TransformationEditor>> editor = new SimpleObjectProperty<>();
         FXUtility.addChangeListenerPlatform(selectedTransformation, trans ->
         {
             if (trans != null)
-                editor.set(Optional.of(trans.editNew(parentView, parentView.getManager(), srcId, srcId == null ? null : parentView.getManager().getSingleTableOrNull(srcId))));
+            {
+                @NonNull TransformationInfo transFinal = trans;
+                editor.set(Optional.ofNullable(
+                    editors.computeIfAbsent(transFinal.getCanonicalName(), n ->
+                        transFinal.editNew(parentView, parentView.getManager(), srcId, srcId == null ? null : parentView.getManager().getSingleTableOrNull(srcId))
+                    )
+                ));
+            }
             else
                 editor.set(Optional.empty());
         });
@@ -211,6 +225,12 @@ public class EditTransformationDialog
                 return null;
             }
         });
+
+        // Wait until everything is set up to execute this:
+        if (existing == null)
+            transformationTypeList.getSelectionModel().selectFirst();
+        else
+            transformationTypeList.getSelectionModel().select(existing.getInfo());
     }
 
     @RequiresNonNull("showingMoreDescription")
