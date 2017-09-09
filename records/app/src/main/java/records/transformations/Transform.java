@@ -254,52 +254,15 @@ public class Transform extends TransformationEditable
     private static class Editor extends TransformationEditor
     {
         private final SingleSourceControl srcControl;
-        private final List<Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>>> newColumns = new ArrayList<>();
-        private final ScrollPaneFill columnListScrollPane;
-        private SimpleBooleanProperty allColNamesValid = new SimpleBooleanProperty(false);
+        private final ColumnExpressionList columnEditors;
 
         @OnThread(Tag.FXPlatform)
         public Editor(View view, TableManager mgr, @Nullable TableId srcId, List<Pair<ColumnId, Expression>> newColumns)
         {
             this.srcControl = new SingleSourceControl(view, mgr, srcId);
-            List<Node> columnEditors = new ArrayList<>();
-            for (Pair<ColumnId, Expression> newColumn : newColumns)
-            {
-                SimpleObjectProperty<Expression> wrapper = new SimpleObjectProperty<>(newColumn.getSecond());
-                ColumnNameTextField columnNameTextField = new ColumnNameTextField(newColumn.getFirst()).withArrowLocation(ArrowLocation.BOTTOM_CENTER);
-                FXUtility.addChangeListenerPlatform(columnNameTextField.valueProperty(), v -> {
-                    validateColumnNames();
-                });
-                this.newColumns.add(new Pair<>(columnNameTextField.valueProperty(), wrapper));
-                GridPane gridPane = new GridPane();
-                gridPane.add(columnNameTextField.getNode(), 0, 0);
-                ExpressionEditor expressionEditor = makeExpressionEditor(mgr, srcControl, wrapper);
-                TypeLabel typeLabel = new TypeLabel(expressionEditor.typeProperty());
-                gridPane.add(typeLabel, 1, 0);
-                GridPane.setHgrow(typeLabel, Priority.ALWAYS);
-                BorderPane containerAndLabel = new BorderPane(expressionEditor.getContainer(), null, null, null, new Label("="));
-                gridPane.add(containerAndLabel, 0, 1);
-                GridPane.setColumnSpan(containerAndLabel, 2);
-                GridPane.setHgrow(containerAndLabel, Priority.ALWAYS);
-                columnEditors.add(gridPane);
-            }
-            columnListScrollPane = new ScrollPaneFill();
-            columnListScrollPane.setContent(new VBox(columnEditors.toArray(new Node[0])));
-            validateColumnNames();
+            this.columnEditors = new ColumnExpressionList(mgr, srcControl, newColumns);
         }
 
-        @RequiresNonNull({"allColNamesValid", "newColumns"})
-        private void validateColumnNames(@UnknownInitialization Editor this)
-        {
-            allColNamesValid.set(newColumns.stream().allMatch((Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>> p) -> p.getFirst().get() != null));
-        }
-
-        private static ExpressionEditor makeExpressionEditor(TableManager mgr, SingleSourceControl srcControl, SimpleObjectProperty<Expression> container)
-        {
-            return new ExpressionEditor(container.getValue(), srcControl.getTableOrNull(), new ReadOnlyObjectWrapper<@Nullable DataType>(null), mgr, e -> {
-                container.set(e);
-            });
-        }
 
         @Override
         public Pair<@LocalizableKey String, @LocalizableKey String> getDescriptionKeys()
@@ -322,21 +285,13 @@ public class Transform extends TransformationEditable
         @Override
         public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
-            BorderPane outer = new BorderPane();
-            BorderPane top = new BorderPane();
-            top.setLeft(GUI.label("transformEditor.column.name"));
-            top.setRight(GUI.label("transformEditor.column.type"));
-            top.getStyleClass().add("calculate-columns-titles");
-            outer.setTop(top);
-            outer.setCenter(columnListScrollPane);
-            outer.getStyleClass().add("calculate-columns-content");
-            return outer;
+            return columnEditors.getNode();
         }
 
         @Override
         public BooleanExpression canPressOk()
         {
-            return allColNamesValid;
+            return columnEditors.allColumnNamesValidProperty();
         }
 
         @Override
@@ -345,7 +300,7 @@ public class Transform extends TransformationEditable
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             // They were only allowed to press OK if all columns were non-null:
             @SuppressWarnings("nullness")
-            ImmutableList<Pair<ColumnId, Expression>> cols = newColumns.stream().
+            ImmutableList<Pair<ColumnId, Expression>> cols = columnEditors.getColumns().stream().
                     map((Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>> p) -> p.map((ObjectExpression<@Nullable ColumnId> e) -> e.get(), e -> e.get())).collect(ImmutableList.toImmutableList());
             return () -> new Transform(mgr, ourId, srcId.get(), cols);
         }

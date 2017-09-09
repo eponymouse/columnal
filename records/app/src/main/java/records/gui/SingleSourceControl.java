@@ -1,5 +1,6 @@
 package records.gui;
 
+import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.property.SimpleObjectProperty;
@@ -26,6 +27,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.SimulationSupplier;
+import utility.gui.FXUtility;
 
 import java.util.stream.Collectors;
 
@@ -35,7 +37,8 @@ import java.util.stream.Collectors;
 @OnThread(Tag.FXPlatform)
 public class SingleSourceControl extends HBox implements CompletionListener
 {
-    private final ObjectProperty<@Nullable TableId> curSelection;
+    private final ObjectProperty<@Nullable TableId> curSelectionId;
+    private final ObjectExpression<@Nullable Table> curSelection;
     private final TableManager mgr;
     private final AutoComplete autoComplete;
 
@@ -43,7 +46,8 @@ public class SingleSourceControl extends HBox implements CompletionListener
     public SingleSourceControl(View view, TableManager mgr, @Nullable TableId srcTableId)
     {
         this.mgr = mgr;
-        this.curSelection = new SimpleObjectProperty<>(srcTableId);
+        this.curSelectionId = new SimpleObjectProperty<>(srcTableId);
+        this.curSelection = FXUtility.<@Nullable TableId, @Nullable Table>mapBindingEager(curSelectionId, id -> id == null ? null : mgr.getSingleTableOrNull(id));
         getStyleClass().add("single-source-control");
         Label label = new Label("Source:");
         TextField selected = new TextField(srcTableId == null ? "" : srcTableId.getOutput());
@@ -72,19 +76,19 @@ public class SingleSourceControl extends HBox implements CompletionListener
 
     public @Nullable TableId getTableIdOrNull()
     {
-        return curSelection.get();
+        return curSelectionId.get();
     }
 
     @Pure
     public @Nullable Table getTableOrNull()
     {
-        @Nullable TableId cur = curSelection.get();
+        @Nullable TableId cur = curSelectionId.get();
         return cur == null ? null : mgr.getSingleTableOrNull(cur);
     }
 
     public SimulationSupplier<TableId> getTableIdSupplier()
     {
-        TableId cur = curSelection.get();
+        TableId cur = curSelectionId.get();
         return () ->
         {
             if (cur == null)
@@ -97,7 +101,7 @@ public class SingleSourceControl extends HBox implements CompletionListener
 
     public ObservableObjectValue<@Nullable TableId> tableIdProperty()
     {
-        return curSelection;
+        return curSelectionId;
     }
 
     // CompletionListener methods:
@@ -124,6 +128,11 @@ public class SingleSourceControl extends HBox implements CompletionListener
     public String exactCompletion(String currentText, Completion selectedItem)
     {
         return ((TableCompletion)selectedItem).t.getId().getOutput();
+    }
+
+    public ObjectExpression<@Nullable Table> tableProperty()
+    {
+        return curSelection;
     }
 
     private static class TableCompletion extends Completion

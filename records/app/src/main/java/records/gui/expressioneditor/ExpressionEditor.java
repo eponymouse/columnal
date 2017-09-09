@@ -114,14 +114,15 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     }
 
     @SuppressWarnings("initialization")
-    public ExpressionEditor(Expression startingValue, @Nullable Table srcTable, ObservableObjectValue<@Nullable DataType> expectedType, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
+    public ExpressionEditor(Expression startingValue, ObjectExpression<@Nullable Table> srcTable, ObservableObjectValue<@Nullable DataType> expectedType, TableManager tableManager, FXPlatformConsumer<@NonNull Expression> onChangeHandler)
     {
         super(EXPRESSION_OPS,  null, null, "");
         this.container = new FlowPane();
         this.tableManager = tableManager;
         container.getStyleClass().add("expression-editor");
         container.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
-        this.srcTable = srcTable;
+        // TODO respond to dynamic adjustment of table to revalidate column references:
+        this.srcTable = srcTable.getValue();
         this.expectedType = expectedType;
         container.getChildren().setAll(nodes());
         FXUtility.listen(nodes(), c -> {

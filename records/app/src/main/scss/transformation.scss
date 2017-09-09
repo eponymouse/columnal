@@ -57,9 +57,6 @@
 }
 
 /* Calculate */
-.calculate-columns-titles {
-    -fx-padding: 0 0 0.5em 0;
-}
 .calculate-columns-content {
     .labelled-wrapper {
         & > .label {
@@ -70,6 +67,12 @@
         -fx-alignment: center-right;
         -fx-text-alignment: right;
     }
+}
+
+.column-expression-list-titles {
+    -fx-padding: 0 0 0.5em 0;
+}
+.column-expression-list {
     .scroll-pane-fill {
         -fx-background-color: -fx-control-inner-background;
         -fx-background-insets: 0;
