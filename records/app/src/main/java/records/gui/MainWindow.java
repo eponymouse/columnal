@@ -33,6 +33,7 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
+import utility.gui.ScrollPaneFill;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
@@ -60,19 +61,9 @@ public class MainWindow
     // If src is null, make new
     public static MainWindowActions show(final Stage stage, File destinationFile, @Nullable String src) throws UserException, InternalException
     {
-        ScrollPane scrollPane = new ScrollPane();
-        // From https://reportmill.wordpress.com/2014/06/03/make-scrollpane-content-fill-viewport-bounds/
-        FXPlatformRunnable fillViewportBounds = () -> {
-            Bounds bounds = scrollPane.getViewportBounds();
-            if (bounds != null)
-            {
-                Node content = scrollPane.getContent();
-                scrollPane.setFitToWidth(content.prefWidth(-1) < bounds.getWidth());
-                scrollPane.setFitToHeight(content.prefHeight(-1) < bounds.getHeight());
-            }
-        };
+        ScrollPaneFill scrollPane = new ScrollPaneFill();
 
-        View v = new View(fillViewportBounds, destinationFile);
+        View v = new View(scrollPane::fillWidth, destinationFile);
         stage.titleProperty().bind(v.titleProperty());
         views.put(v, stage);
         stage.setOnHidden(e -> {
@@ -179,8 +170,6 @@ public class MainWindow
         scrollPane.getStyleClass().add("main-scroll");
         scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
         scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
-
-        FXUtility.addChangeListenerPlatform(scrollPane.viewportBoundsProperty(), b -> fillViewportBounds.run());
 
         BorderPane root = new BorderPane(scrollPane, menuBar, null, null, null);
         Scene scene = new Scene(root);
