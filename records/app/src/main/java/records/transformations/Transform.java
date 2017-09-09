@@ -8,10 +8,12 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
+import javafx.scene.control.Label;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -53,6 +55,7 @@ import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
+import utility.gui.ScrollPaneFill;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
@@ -252,7 +255,7 @@ public class Transform extends TransformationEditable
     {
         private final SingleSourceControl srcControl;
         private final List<Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>>> newColumns = new ArrayList<>();
-        private final ScrollPane columnListScrollPane;
+        private final ScrollPaneFill columnListScrollPane;
         private SimpleBooleanProperty allColNamesValid = new SimpleBooleanProperty(false);
 
         @OnThread(Tag.FXPlatform)
@@ -269,15 +272,19 @@ public class Transform extends TransformationEditable
                 });
                 this.newColumns.add(new Pair<>(columnNameTextField.valueProperty(), wrapper));
                 GridPane gridPane = new GridPane();
-                gridPane.add(GUI.labelled("transformEditor.column.name", columnNameTextField.getNode()), 0, 0);
+                gridPane.add(columnNameTextField.getNode(), 0, 0);
                 ExpressionEditor expressionEditor = makeExpressionEditor(mgr, srcControl, wrapper);
-                gridPane.add(GUI.labelled("transformEditor.column.type", new TypeLabel(expressionEditor.typeProperty())), 0, 1);
-                gridPane.add(expressionEditor.getContainer(), 1, 0);
-                GridPane.setRowSpan(expressionEditor.getContainer(), 2);
-                //#error TODO add a resize control at the bottom of the item.
+                TypeLabel typeLabel = new TypeLabel(expressionEditor.typeProperty());
+                gridPane.add(typeLabel, 1, 0);
+                GridPane.setHgrow(typeLabel, Priority.ALWAYS);
+                BorderPane containerAndLabel = new BorderPane(expressionEditor.getContainer(), null, null, null, new Label("="));
+                gridPane.add(containerAndLabel, 0, 1);
+                GridPane.setColumnSpan(containerAndLabel, 2);
+                GridPane.setHgrow(containerAndLabel, Priority.ALWAYS);
                 columnEditors.add(gridPane);
             }
-            columnListScrollPane = new ScrollPane(new VBox(columnEditors.toArray(new Node[0])));
+            columnListScrollPane = new ScrollPaneFill();
+            columnListScrollPane.setContent(new VBox(columnEditors.toArray(new Node[0])));
             validateColumnNames();
         }
 
@@ -315,7 +322,15 @@ public class Transform extends TransformationEditable
         @Override
         public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
-            return GUI.wrap(columnListScrollPane, "calculate-columns-content");
+            BorderPane outer = new BorderPane();
+            BorderPane top = new BorderPane();
+            top.setLeft(GUI.label("transformEditor.column.name"));
+            top.setRight(GUI.label("transformEditor.column.type"));
+            top.getStyleClass().add("calculate-columns-titles");
+            outer.setTop(top);
+            outer.setCenter(columnListScrollPane);
+            outer.getStyleClass().add("calculate-columns-content");
+            return outer;
         }
 
         @Override

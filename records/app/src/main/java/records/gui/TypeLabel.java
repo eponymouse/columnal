@@ -4,6 +4,7 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -21,20 +22,25 @@ public class TypeLabel extends Label
 {
     public TypeLabel(ObjectExpression<@Nullable DataType> typeProperty)
     {
-        FXUtility.addChangeListenerPlatform(typeProperty, type -> {
-            if (type != null)
+        getStyleClass().add("type-label");
+        FXUtility.addChangeListenerPlatform(typeProperty, this::updateType);
+        updateType(typeProperty.getValue());
+    }
+
+    private void updateType(@UnknownInitialization(Label.class) TypeLabel this, @Nullable DataType type)
+    {
+        if (type != null)
+        {
+            try
             {
-                try
-                {
-                    setText(type.toDisplay(false));
-                }
-                catch(UserException | InternalException e)
-                {
-                    setText("Error: " + e.getLocalizedMessage());
-                }
+                setText(type.toDisplay(false));
             }
-            else
-                setText("Invalid expression");
-        });
+            catch(UserException | InternalException e)
+            {
+                setText("Error: " + e.getLocalizedMessage());
+            }
+        }
+        else
+            setText("Invalid expression");
     }
 }

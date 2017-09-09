@@ -42,7 +42,6 @@ import java.util.stream.Stream;
  */
 public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNodeParent> implements ExpressionNodeParent
 {
-    private final ScrollPane scrollPane;
     private final FlowPane container;
     private final ObservableObjectValue<@Nullable DataType> expectedType;
     private final @Nullable Table srcTable;
@@ -119,8 +118,6 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
     {
         super(EXPRESSION_OPS,  null, null, "");
         this.container = new FlowPane();
-        this.scrollPane = new ScrollPane(container);
-        scrollPane.setPrefHeight(200.0);
         this.tableManager = tableManager;
         container.getStyleClass().add("expression-editor");
         container.getStylesheets().add(FXUtility.getStylesheet("expression-editor.css"));
@@ -201,7 +198,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
 
     public Node getContainer()
     {
-        return scrollPane;
+        return container;
     }
 
 //    @Override

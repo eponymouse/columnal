@@ -5,6 +5,7 @@ import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.collections.ObservableList;
 import javafx.css.Styleable;
+import javafx.geometry.Pos;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -12,6 +13,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -121,11 +123,14 @@ public class GUI
         return hBox;
     }
 
-    public static Node labelled(@LocalizableKey String labelKey, Node choiceNode)
+    public static Node labelled(@LocalizableKey String labelKey, Node choiceNode, String... styleClasses)
     {
-        HBox hBox = new HBox(label(labelKey), choiceNode);
-        hBox.getStyleClass().add("labelled-wrapper");
-        return hBox;
+        Label label = label(labelKey);
+        HBox pane = new HBox(label, choiceNode);
+        pane.getStyleClass().add("labelled-wrapper");
+        pane.getStyleClass().addAll(styleClasses);
+        HBox.setHgrow(choiceNode, Priority.ALWAYS);
+        return pane;
     }
 
 

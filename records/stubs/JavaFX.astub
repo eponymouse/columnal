@@ -93,6 +93,13 @@ class ToggleButton
     void setGraphic(Node graphic) @UnknownInitialization;
     BooleanProperty selectedProperty() @UnknownInitialization;
 }
+class ScrollPane
+{
+    Property viewportBoundsProperty() @UnknownInitialization;
+    Node getContent() @UnknownInitialization;
+    void setFitToWidth(boolean b) @UnknownInitialization;
+    void setFitToHeight(boolean b) @UnknownInitialization;
+}
 @Interned class ButtonType
 {
 

@@ -23,6 +23,7 @@ public class ScrollPaneFill extends ScrollPane
 {
     public ScrollPaneFill()
     {
+        getStyleClass().add("scroll-pane-fill");
         FXUtility.addChangeListenerPlatform(viewportBoundsProperty(), b -> fillWidth(b));
     }
 
