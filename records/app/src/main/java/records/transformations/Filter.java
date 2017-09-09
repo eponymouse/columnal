@@ -201,7 +201,7 @@ public class Filter extends TransformationEditable
     @Override
     public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
     {
-        return new Editor(view, getManager(), getId(), srcTableId, src, filterExpression);
+        return new Editor(view, getManager(), srcTableId, src, filterExpression);
     }
 
     @Override
@@ -231,7 +231,6 @@ public class Filter extends TransformationEditable
 
     private static class Editor extends TransformationEditor
     {
-        private final @Nullable TableId thisTableId;
         private final SingleSourceControl srcControl;
         private final List<ColumnId> allColumns = new ArrayList<>();
         //private final ObservableList<Pair<String, List<DisplayValue>>> srcHeaderAndData;
@@ -242,10 +241,9 @@ public class Filter extends TransformationEditable
 
         @SuppressWarnings("initialization")
         @OnThread(Tag.FXPlatform)
-        public Editor(View view, TableManager mgr, @Nullable TableId thisTableId, @Nullable TableId srcTableId, @Nullable Table src, Expression expression)
+        public Editor(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src, Expression expression)
         {
             this.mgr = mgr;
-            this.thisTableId = thisTableId;
             this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
             //this.srcHeaderAndData = FXCollections.observableArrayList();
             //this.destHeaderAndData = FXCollections.observableArrayList();
@@ -470,7 +468,7 @@ public class Filter extends TransformationEditable
         }
 
         @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, TableId thisTableId)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             return () -> new Filter(mgr, thisTableId, srcId.get(), expression);
@@ -499,7 +497,7 @@ public class Filter extends TransformationEditable
         @Override
         public TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(view, mgr, null, srcTableId, src, new BooleanLiteral(true));
+            return new Editor(view, mgr, srcTableId, src, new BooleanLiteral(true));
         }
     }
 

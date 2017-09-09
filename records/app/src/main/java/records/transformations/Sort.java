@@ -287,7 +287,7 @@ public class Sort extends TransformationEditable
     @Override
     public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
     {
-        return new Editor(view, getManager(), getId(), srcTableId, originalSortBy);
+        return new Editor(view, getManager(), srcTableId, originalSortBy);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -311,13 +311,12 @@ public class Sort extends TransformationEditable
         @Override
         public TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(view, mgr, null, srcTableId, Collections.emptyList());
+            return new Editor(view, mgr, srcTableId, Collections.emptyList());
         }
     }
 
     private static class Editor extends TransformationEditor
     {
-        private final @Nullable TableId thisTableId;
         private final SingleSourceControl srcControl;
         private final ObservableList<Optional<ColumnId>> sortBy;
         private final BooleanProperty ready = new SimpleBooleanProperty(false);
@@ -325,9 +324,8 @@ public class Sort extends TransformationEditable
 
         @SuppressWarnings("initialization")
         @OnThread(Tag.FXPlatform)
-        private Editor(View view, TableManager mgr, @Nullable TableId thisTableId, @Nullable TableId srcTableId, List<ColumnId> sortBy)
+        private Editor(View view, TableManager mgr, @Nullable TableId srcTableId, List<ColumnId> sortBy)
         {
-            this.thisTableId = thisTableId;
             this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
             this.sortBy = FXCollections.observableArrayList();
             // TODO handle case that src table is missing
@@ -657,7 +655,7 @@ public class Sort extends TransformationEditable
         }
 
         @Override
-        public @OnThread(Tag.FXPlatform) SimulationSupplier<Transformation> getTransformation(TableManager mgr)
+        public @OnThread(Tag.FXPlatform) SimulationSupplier<Transformation> getTransformation(TableManager mgr, TableId thisTableId)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             return () -> {

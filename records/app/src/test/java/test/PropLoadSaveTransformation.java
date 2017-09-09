@@ -107,7 +107,7 @@ public class PropLoadSaveTransformation
             {
                 throw new RuntimeException(e);
             }
-            f.complete(((TransformationEditable)original.transformation).edit(view).getTransformation(original.mgr));
+            f.complete(((TransformationEditable)original.transformation).edit(view).getTransformation(original.mgr, original.transformation.getId()));
         });
         assertEquals(original.transformation, f.get(10, TimeUnit.SECONDS).get());
     }

@@ -446,7 +446,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
 
     public void editTransform(TransformationEditable existing)
     {
-        EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, existing.edit(this));
+        EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, existing.getId(), existing.edit(this));
         showEditDialog(dialog, existing, existing.getPosition());
     }
 

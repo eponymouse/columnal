@@ -340,7 +340,7 @@ public class SummaryStatistics extends TransformationEditable
         @Override
         public TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(view, mgr, null, srcTableId, src, Collections.emptyMap(), Collections.emptyList());
+            return new Editor(view, mgr, srcTableId, src, Collections.emptyMap(), Collections.emptyList());
         }
 
         @Override
@@ -361,12 +361,11 @@ public class SummaryStatistics extends TransformationEditable
     @Override
     public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
     {
-        return new Editor(view, getManager(), getId(), srcTableId, src, summaries, splitBy);
+        return new Editor(view, getManager(), srcTableId, src, summaries, splitBy);
     }
 
     private static class Editor extends TransformationEditor
     {
-        private final @Nullable TableId thisTableId;
         private final SingleSourceControl srcControl;
         private final BooleanProperty ready = new SimpleBooleanProperty(false);
         private final ObservableList<@NonNull Pair<ColumnId, SummaryType>> ops;
@@ -374,9 +373,8 @@ public class SummaryStatistics extends TransformationEditable
         private final ListView<ColumnId> columnListView;
 
         @OnThread(Tag.FXPlatform)
-        private Editor(View view, TableManager mgr, @Nullable TableId thisTableId, @Nullable TableId srcTableId, @Nullable Table src, Map<ColumnId, SummaryType> summaries, List<ColumnId> splitBy)
+        private Editor(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src, Map<ColumnId, SummaryType> summaries, List<ColumnId> splitBy)
         {
-            this.thisTableId = thisTableId;
             this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
             this.ops = FXCollections.observableArrayList();
             this.splitBy = FXCollections.observableArrayList(splitBy);
@@ -537,7 +535,7 @@ public class SummaryStatistics extends TransformationEditable
         }
 
         @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, TableId thisTableId)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             return () -> {

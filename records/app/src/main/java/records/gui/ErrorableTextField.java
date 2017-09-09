@@ -142,6 +142,11 @@ public class ErrorableTextField<T>
         return this;
     }
 
+    public List<String> getStyleClass(@UnknownInitialization(ErrorableTextField.class) ErrorableTextField<T> this)
+    {
+        return field.getStyleClass();
+    }
+
     public static class ConversionResult<T>
     {
         private final boolean success;
@@ -289,10 +294,11 @@ public class ErrorableTextField<T>
         {
             private final QuickFix fix;
 
+            @OnThread(Tag.FXPlatform)
             public FixRow(QuickFix fix)
             {
                 this.fix = fix;
-                getStyleClass().add("errorable-text-field-quick-fix-row");
+                FixRow.this.getStyleClass().add("errorable-text-field-quick-fix-row");
 
                 setOnMouseClicked(e -> {
                     doFix();

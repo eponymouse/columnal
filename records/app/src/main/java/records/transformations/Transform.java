@@ -168,7 +168,7 @@ public class Transform extends TransformationEditable
     @Override
     public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
     {
-        return new Editor(view, getManager(), this.getId(), this.srcTableId, this.newColumns);
+        return new Editor(view, getManager(), this.srcTableId, this.newColumns);
     }
 
     @Override
@@ -243,23 +243,21 @@ public class Transform extends TransformationEditable
         @Override
         public @OnThread(Tag.FXPlatform) TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(view, mgr, null, srcTableId, Collections.singletonList(new Pair<>(new ColumnId(""), new NumericLiteral(0, null))));
+            return new Editor(view, mgr, srcTableId, Collections.singletonList(new Pair<>(new ColumnId(""), new NumericLiteral(0, null))));
         }
     }
 
     @OnThread(Tag.FXPlatform)
     private static class Editor extends TransformationEditor
     {
-        private final @Nullable TableId ourId;
         private final SingleSourceControl srcControl;
         private final List<Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>>> newColumns = new ArrayList<>();
         private final ScrollPane columnListScrollPane;
         private SimpleBooleanProperty allColNamesValid = new SimpleBooleanProperty(false);
 
         @OnThread(Tag.FXPlatform)
-        public Editor(View view, TableManager mgr, @Nullable TableId id, @Nullable TableId srcId, List<Pair<ColumnId, Expression>> newColumns)
+        public Editor(View view, TableManager mgr, @Nullable TableId srcId, List<Pair<ColumnId, Expression>> newColumns)
         {
-            ourId = id;
             this.srcControl = new SingleSourceControl(view, mgr, srcId);
             List<Node> columnEditors = new ArrayList<>();
             for (Pair<ColumnId, Expression> newColumn : newColumns)
@@ -327,7 +325,7 @@ public class Transform extends TransformationEditable
         }
 
         @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, TableId ourId)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             // They were only allowed to press OK if all columns were non-null:

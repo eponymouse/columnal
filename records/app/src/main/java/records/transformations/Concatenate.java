@@ -252,7 +252,7 @@ public class Concatenate extends TransformationEditable
     @Override
     public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
     {
-        return new Editor(view, getId(), sources, sourceTables, missingValues);
+        return new Editor(view, sources, sourceTables, missingValues);
     }
 
     @Override
@@ -308,14 +308,12 @@ public class Concatenate extends TransformationEditable
 
     private static class Editor extends TransformationEditor
     {
-        private final @Nullable TableId tableId;
         private final List<TableId> srcTableIds;
         private final List<Table> srcs; // May be empty
         private final Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingVals;
 
-        private Editor(View view, @Nullable TableId tableId, List<TableId> srcTableIds, List<Table> srcs, Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingVals)
+        private Editor(View view, List<TableId> srcTableIds, List<Table> srcs, Map<ColumnId, Pair<DataType, Optional<@Value Object>>> missingVals)
         {
-            this.tableId = tableId;
             this.srcTableIds = srcTableIds;
             this.srcs = srcs;
             this.missingVals = missingVals;
@@ -352,7 +350,7 @@ public class Concatenate extends TransformationEditable
         }
 
         @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, TableId tableId)
         {
             return () -> new Concatenate(mgr, tableId, srcTableIds, missingVals);
         }
@@ -395,7 +393,7 @@ public class Concatenate extends TransformationEditable
         @Override
         public @OnThread(Tag.FXPlatform) TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(view, null, srcTableId == null ? Collections.emptyList() : Collections.singletonList(srcTableId), src == null ? Collections.emptyList() : Collections.singletonList(src), Collections.emptyMap());
+            return new Editor(view,  srcTableId == null ? Collections.emptyList() : Collections.singletonList(srcTableId), src == null ? Collections.emptyList() : Collections.singletonList(src), Collections.emptyMap());
         }
     }
 

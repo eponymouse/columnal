@@ -691,8 +691,7 @@ public class GuessFormat
 
             LabelledGrid choices = new LabelledGrid();
             choices.getStyleClass().add("choice-grid");
-            TableNameTextField nameField = new TableNameTextField(mgr);
-            nameField.setText(suggestedName);
+            TableNameTextField nameField = new TableNameTextField(mgr, new TableId(suggestedName));
             @SuppressWarnings("unchecked")
             SegmentedButtonValue<Boolean> linkCopyButtons = new SegmentedButtonValue<>(new Pair<@LocalizableKey String, Boolean>("table.copy", false), new Pair<@LocalizableKey String, Boolean>("table.link", true));
             choices.addRow(GUI.labelledGridRow("table.name", "guess-format/tableName", nameField.getNode()));

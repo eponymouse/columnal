@@ -1,8 +1,11 @@
 package records.gui;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableId;
 import records.data.TableManager;
+import threadchecker.OnThread;
+import threadchecker.Tag;
 import utility.Utility;
 import utility.gui.TranslationUtility;
 
@@ -15,7 +18,8 @@ import java.util.stream.Collectors;
  */
 public class TableNameTextField extends ErrorableTextField<TableId>
 {
-    public TableNameTextField(TableManager tableManager)
+    @OnThread(Tag.FXPlatform)
+    public TableNameTextField(TableManager tableManager, final @Nullable TableId editingId)
     {
         // We automatically remove leading/trailing whitespace, rather than complaining about it.
         // We also convert any whitespace (including multiple chars) into a single space
@@ -25,7 +29,8 @@ public class TableNameTextField extends ErrorableTextField<TableId>
                 return ConversionResult.<@NonNull TableId>error(TranslationUtility.getString("table.name.cannotBeBlank"));
             TableId tableId = new TableId(s);
             List<TableId> similar = new ArrayList<>();
-            if (tableManager.isFreeId(tableId, similar))
+            // If we match the beginning ID, that is OK, otherwise the ID must be free:
+            if (tableId.equals(editingId) || tableManager.isFreeId(tableId, similar))
             {
                 if (similar.isEmpty())
                     return ConversionResult.success(tableId);
@@ -37,6 +42,9 @@ public class TableNameTextField extends ErrorableTextField<TableId>
                 return ConversionResult.<@NonNull TableId>error(TranslationUtility.getString("table.name.exists", s));
             }
         });
+        getStyleClass().add("table-name-text-field");
+        if (editingId != null)
+            setText(editingId.getRaw());
+        setPromptText(TranslationUtility.getString("table.name.prompt"));
     }
-
 }

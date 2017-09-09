@@ -66,7 +66,7 @@ public abstract class TransformationEditor
 
     public abstract BooleanExpression canPressOk();
 
-    public abstract SimulationSupplier<Transformation> getTransformation(TableManager mgr);
+    public abstract SimulationSupplier<Transformation> getTransformation(TableManager mgr, TableId newId);
 
     public abstract @Nullable TableId getSourceId();
 

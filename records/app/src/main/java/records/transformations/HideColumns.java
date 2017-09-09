@@ -160,7 +160,7 @@ public class HideColumns extends TransformationEditable
     @Override
     public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
     {
-        return new Editor(view, getManager(), getId(), srcTableId, src, hideIds);
+        return new Editor(view, getManager(), srcTableId, src, hideIds);
     }
 
     @Override
@@ -188,7 +188,6 @@ public class HideColumns extends TransformationEditable
 
     private static class Editor extends TransformationEditor
     {
-        private final @Nullable TableId tableId;
         private final SingleSourceControl srcControl;
         private final ObservableList<ColumnId> columnsToHide;
         private final ListView<ColumnId> srcColumnList;
@@ -196,9 +195,8 @@ public class HideColumns extends TransformationEditable
 
         @OnThread(Tag.FXPlatform)
         @SuppressWarnings("initialization")
-        public Editor(View view, TableManager mgr, @Nullable TableId tableId, @Nullable TableId srcTableId, @Nullable Table src, List<ColumnId> toHide)
+        public Editor(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src, List<ColumnId> toHide)
         {
-            this.tableId = tableId;
             columnsToHide = FXCollections.observableArrayList(toHide);
             this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
             this.srcColumnList = getColumnListView(mgr, srcControl.tableIdProperty(), col -> {
@@ -310,7 +308,7 @@ public class HideColumns extends TransformationEditable
         }
 
         @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr)
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, TableId tableId)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             return () -> new HideColumns(mgr, tableId, srcId.get(), columnsToHide);
@@ -341,7 +339,7 @@ public class HideColumns extends TransformationEditable
         @Override
         public @OnThread(Tag.FXPlatform) TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(view, mgr, null, srcTableId, src, Collections.emptyList());
+            return new Editor(view, mgr, srcTableId, src, Collections.emptyList());
         }
     }
 
