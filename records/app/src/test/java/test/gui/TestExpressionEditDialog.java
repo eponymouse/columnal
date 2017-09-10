@@ -1,17 +1,12 @@
 package test.gui;
 
-import com.pholser.junit.quickcheck.From;
-import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import javafx.application.Platform;
 import javafx.scene.Node;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.image.Image;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.ClipboardContent;
-import javafx.scene.input.DataFormat;
 import javafx.scene.input.KeyCode;
 import javafx.scene.paint.Color;
 import javafx.stage.Stage;
@@ -20,41 +15,37 @@ import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
-import records.data.Column;
+import org.testfx.util.WaitForAsyncUtils;
 import records.data.ColumnId;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.data.MemoryBooleanColumn;
-import records.data.MemoryNumericColumn;
 import records.data.RecordSet;
+import records.data.TableId;
 import records.data.TableManager;
-import records.error.InternalException;
-import records.error.UserException;
+import records.gui.EditTransformationDialog;
+import records.gui.MainWindow;
+import records.gui.View;
 import records.transformations.HideColumns;
 import records.transformations.TransformationInfo;
 import test.DummyManager;
 import test.TestUtil;
-import test.gen.ExpressionValue;
-import test.gen.GenExpressionValueBackwards;
-import test.gen.GenExpressionValueForwards;
-import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
 
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Random;
-import java.util.concurrent.ExecutionException;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
+import static org.hamcrest.Matchers.lessThan;
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(JUnitQuickcheck.class)
 public class TestExpressionEditDialog extends ApplicationTest implements ScrollToTrait, ListUtilTrait, TextFieldTrait
@@ -62,6 +53,9 @@ public class TestExpressionEditDialog extends ApplicationTest implements ScrollT
     @SuppressWarnings("nullness")
     @OnThread(Tag.Any)
     private Stage windowToUse;
+    @SuppressWarnings("nullness")
+    @OnThread(Tag.Any)
+    private TableManager mgr;
 
     @Override
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
@@ -75,7 +69,7 @@ public class TestExpressionEditDialog extends ApplicationTest implements ScrollT
     public void loadEditDialog() throws Exception
     {
         // Need to load up main window with initial table and then open transformation dialog:
-        TableManager mgr = new DummyManager();
+        mgr = new DummyManager();
 
         EditableRecordSet recordSet = new EditableRecordSet(Arrays.<ExFunction<RecordSet, EditableColumn>>asList(
             (RecordSet rs) -> new MemoryBooleanColumn(rs, new ColumnId("Alfred the Great"), Collections.emptyList(), false),
@@ -97,32 +91,74 @@ public class TestExpressionEditDialog extends ApplicationTest implements ScrollT
         assertNotNull(list);
         if (list == null) return; // Checker doesn't understand assert
         selectGivenListViewItem(list, (TransformationInfo ti) -> ti instanceof HideColumns.Info);
+        assertErrorPopupShowing(false);
         clickOn(".transformation-table-id");
         TextField field = selectAllCurrentTextField();
         push(KeyCode.DELETE);
-        // Assert that empty field shows red border:
-        assertRedBorder(field);
-        // TODO assert that error popup is showing
+        // Assert that empty field shows red border and error popup:
+        assertRedBorder(field, true);
+        assertErrorPopupShowing(true);
+        write(" Test  Spaces\u00A0And\u2000Tabs \u00A0 (incl \u2001\u2002 \u2003 \u3000 Multiple)\u00A0");
+        assertEquals(new TableId("Test Spaces And Tabs (incl Multiple)"),
+            TestUtil.<@Nullable TableId>fx(() -> {
+                @Nullable EditTransformationDialog editTransformationDialog = MainWindow._test_getViews().keySet().iterator().next()._test_getCurrentlyShowingEditTransformationDialog();
+                if (editTransformationDialog != null)
+                    return editTransformationDialog._test_getDestTableNameField().valueProperty().get();
+                else
+                    return null;
+            }));
+
+        // Make sure duplicate table name gives error:
+        selectAllCurrentTextField();
+        push(KeyCode.DELETE);
+        assertRedBorder(field, true);
+        assertErrorPopupShowing(true);
+        String sourceId = TestUtil.fx(() -> MainWindow._test_getViews().keySet().iterator().next().getManager().getAllTables().get(0).getId().getRaw());
+        write(sourceId.charAt(0));
+        // Wait for error fade-out:
+        TestUtil.sleep(200);
+        assertRedBorder(field, false);
+        assertErrorPopupShowing(false);
+        write(sourceId.substring(1));
+        assertRedBorder(field, true);
+        assertErrorPopupShowing(true);
+        write("A");
+        // Wait for error fade-out:
+        TestUtil.sleep(200);
+        assertRedBorder(field, false);
+        assertErrorPopupShowing(false);
     }
 
     @OnThread(Tag.FX)
-    private void assertRedBorder(Node node)
+    private void assertErrorPopupShowing(boolean showing)
+    {
+        assertEquals(showing, lookup(".errorable-text-field-popup").tryQuery().map(Node::isVisible).orElse(false));
+    }
+
+    @OnThread(Tag.FX)
+    private void assertRedBorder(Node node, boolean shouldBeRed)
     {
         Image image = TestUtil.fx(() -> node.snapshot(null, null));
         // For debugging -- but you must paste while program is still running!
+        /*
         TestUtil.fx_(() -> {
             ClipboardContent clipboardContent = new ClipboardContent();
             clipboardContent.putImage(image);
             Clipboard.getSystemClipboard().setContent(clipboardContent);
         });
-        assertRed(image.getPixelReader().getColor(2, 2));
-        assertRed(image.getPixelReader().getColor((int)image.getWidth() - 3, (int)image.getHeight() - 3));
+        */
+        assertRed(shouldBeRed, image.getPixelReader().getColor(2, 2));
+        assertRed(shouldBeRed, image.getPixelReader().getColor((int)image.getWidth() - 3, (int)image.getHeight() - 3));
     }
 
     @OnThread(Tag.FX)
-    private void assertRed(Color color)
+    private void assertRed(boolean red, Color color)
     {
         // Assert that red is twice average of blue and green:
-        assertThat("Color: " + color, color.getRed(), greaterThan(color.getBlue() + color.getGreen()));
+        if (red)
+            assertThat("Color: " + color, color.getRed(), greaterThan(color.getBlue() + color.getGreen()));
+        else
+            // Not much more red than the other colours:
+            assertThat("Color " + color, color.getRed(), lessThan(color.getBlue() + color.getGreen() * 0.6));
     }
 }

@@ -91,6 +91,8 @@ public class View extends StackPane implements TableManager.TableManagerListener
     private final ObjectProperty<@Nullable Instant> lastSaveTime = new SimpleObjectProperty<>(null);
     // Cancels a delayed save operation:
     private @Nullable FXPlatformRunnable cancelDelayedSave;
+    // Currently only used for testing:
+    private @Nullable EditTransformationDialog currentlyShowingEditTransformationDialog;
 
     private void save()
     {
@@ -464,12 +466,14 @@ public class View extends StackPane implements TableManager.TableManagerListener
 
     private void showEditDialog(EditTransformationDialog dialog, @Nullable TransformationEditable replaceOnOK, @Nullable Bounds position)
     {
+        currentlyShowingEditTransformationDialog = dialog;
         // add will re-run any dependencies:
         dialog.show().ifPresent(t -> {
             if (replaceOnOK != null)
                 overlays.remove(replaceOnOK);
             Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> tableManager.edit(replaceOnOK == null ? null : replaceOnOK.getId(), () -> t.get().loadPosition(position))));
         });
+        currentlyShowingEditTransformationDialog = null;
     }
 
     @Override
@@ -494,6 +498,12 @@ public class View extends StackPane implements TableManager.TableManagerListener
     {
         return FXUtility.mapBindingLazy(diskFile, f -> f.getName() + " [" + f.getParent() + "]");
     }
+
+    public @Nullable EditTransformationDialog _test_getCurrentlyShowingEditTransformationDialog()
+    {
+        return currentlyShowingEditTransformationDialog;
+    }
+
 
     @OnThread(Tag.FXPlatform)
     public class FindEverywhereDialog extends Dialog<Void>

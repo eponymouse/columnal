@@ -28,6 +28,7 @@ public class TableNameTextField extends ErrorableTextField<TableId>
             if (s.isEmpty())
                 return ConversionResult.<@NonNull TableId>error(TranslationUtility.getString("table.name.cannotBeBlank"));
             TableId tableId = new TableId(s);
+            //System.err.println("Comparing \"" + s + "\" with " + Utility.listToString(Utility.mapList(tableManager.getAllTables(), t -> "\"" + t.getId().getRaw() + "\"")));
             List<TableId> similar = new ArrayList<>();
             // If we match the beginning ID, that is OK, otherwise the ID must be free:
             if (tableId.equals(editingId) || tableManager.isFreeId(tableId, similar))

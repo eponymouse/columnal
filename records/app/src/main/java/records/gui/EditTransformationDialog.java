@@ -67,6 +67,8 @@ public class EditTransformationDialog
     // The key is the canonical name of the transformation.
     private final Map<String, TransformationEditor> editors = new HashMap<>();
     private final BooleanProperty showingMoreDescription = new SimpleBooleanProperty(false);
+    // Currently retained only for testing:
+    private TableNameTextField destTableNameField;
 
     /**
      * Edits a transformation: either a new one (srcId non-null and existing null) or an existing (srcId null and and existing non-null)
@@ -115,6 +117,7 @@ public class EditTransformationDialog
         VBox infoPane = new VBox();
         infoPane.getStyleClass().add("transformation-info");
         TableNameTextField tableNameTextField = new TableNameTextField(parentView.getManager(), existing == null ? null : existing.getFirst());
+        destTableNameField = tableNameTextField;
         tableNameTextField.getStyleClass().add("transformation-table-id");
         Node tableNamePane = GUI.labelled("transformEditor.table.name", tableNameTextField.getNode(), "table-name-wrapper");
 
@@ -272,6 +275,11 @@ public class EditTransformationDialog
     public Optional<SimulationSupplier<Transformation>> show()
     {
         return dialog.showAndWait();
+    }
+
+    public TableNameTextField _test_getDestTableNameField()
+    {
+        return destTableNameField;
     }
 
     private static class SelectedTransformationStringBinding extends StringBinding
