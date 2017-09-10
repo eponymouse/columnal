@@ -23,7 +23,6 @@ import records.transformations.Filter;
 import records.transformations.HideColumns;
 import records.transformations.Sort;
 import records.transformations.SummaryStatistics;
-import records.transformations.SummaryStatistics.SummaryType;
 import records.transformations.Transform;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
@@ -199,13 +198,13 @@ public class PropRunTransformation
         assumeTrue(numericColumn.isPresent());
 
         Expression countExpression = new CallExpression("count", new ColumnReference(original.data().getData().getColumns().get(0).getName(), ColumnReferenceType.WHOLE_COLUMN));
-        SummaryStatistics summaryStatistics = new SummaryStatistics(original.mgr, null, original.data().getId(), Collections.singletonMap(new ColumnId("COUNT"), new SummaryType(countExpression)), Collections.emptyList());
+        SummaryStatistics summaryStatistics = new SummaryStatistics(original.mgr, null, original.data().getId(), ImmutableList.of(new Pair<>(new ColumnId("COUNT"), countExpression)), ImmutableList.of());
         assertEquals(1, summaryStatistics.getData().getLength());
         assertEquals(1, summaryStatistics.getData().getColumns().size());
         assertEquals(original.data().getData().getLength(), DataTypeUtility.requireInteger(summaryStatistics.getData().getColumns().get(0).getType().getCollapsed(0)));
 
         Expression sumExpression = new CallExpression("sum", new ColumnReference(numericColumn.get().getName(), ColumnReferenceType.WHOLE_COLUMN));
-        summaryStatistics = new SummaryStatistics(original.mgr, null, original.data().getId(), Collections.singletonMap(new ColumnId("SUM"), new SummaryType(sumExpression)), Collections.emptyList());
+        summaryStatistics = new SummaryStatistics(original.mgr, null, original.data().getId(), ImmutableList.of(new Pair<>(new ColumnId("SUM"), sumExpression)), ImmutableList.of());
         assertEquals(1, summaryStatistics.getData().getLength());
         assertEquals(1, summaryStatistics.getData().getColumns().size());
         assertThat(TestUtil.toString(numericColumn.get()), Utility.toBigDecimal(Utility.valueNumber(summaryStatistics.getData().getColumns().get(0).getType().getCollapsed(0))), comparesEqualTo(bdSum(numericColumn.get().getLength(), numericColumn.get().getType())));

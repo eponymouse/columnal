@@ -171,7 +171,9 @@ public class Transform extends TransformationEditable
     @Override
     public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
     {
-        return new Editor(view, getManager(), this.srcTableId, this.newColumns);
+        @SuppressWarnings("nullness")
+        ImmutableList<Pair<@Nullable ColumnId, Expression>> newColumnsN = this.newColumns;
+        return new Editor(view, getManager(), this.srcTableId, newColumnsN);
     }
 
     @Override
@@ -246,7 +248,7 @@ public class Transform extends TransformationEditable
         @Override
         public @OnThread(Tag.FXPlatform) TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(view, mgr, srcTableId, Collections.singletonList(new Pair<>(new ColumnId(""), new NumericLiteral(0, null))));
+            return new Editor(view, mgr, srcTableId, Collections.singletonList(new Pair<@Nullable ColumnId, Expression>(null, new NumericLiteral(0, null))));
         }
     }
 
@@ -257,7 +259,7 @@ public class Transform extends TransformationEditable
         private final ColumnExpressionList columnEditors;
 
         @OnThread(Tag.FXPlatform)
-        public Editor(View view, TableManager mgr, @Nullable TableId srcId, List<Pair<ColumnId, Expression>> newColumns)
+        public Editor(View view, TableManager mgr, @Nullable TableId srcId, List<Pair<@Nullable ColumnId, Expression>> newColumns)
         {
             this.srcControl = new SingleSourceControl(view, mgr, srcId);
             this.columnEditors = new ColumnExpressionList(mgr, srcControl, newColumns);

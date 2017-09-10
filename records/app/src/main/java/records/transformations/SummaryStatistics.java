@@ -1,5 +1,7 @@
 package records.transformations;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.SimpleBooleanProperty;
@@ -58,6 +60,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 21/10/2016.
@@ -70,39 +73,12 @@ public class SummaryStatistics extends TransformationEditable
     private final TableId srcTableId;
     // ColumnId here is the destination column, not source column:
     @OnThread(Tag.Any)
-    private final Map<ColumnId, SummaryType> summaries;
+    private final ImmutableList<Pair<ColumnId, Expression>> summaries;
+    // Columns to split by:
     @OnThread(Tag.Any)
-    private final List<ColumnId> splitBy;
+    private final ImmutableList<ColumnId> splitBy;
     @OnThread(Tag.Any)
     private String error;
-
-    public static final class SummaryType
-    {
-        public SummaryType(Expression summaryExpression)
-        {
-            this.summaryExpression = summaryExpression;
-        }
-
-        private final Expression summaryExpression;
-
-        @Override
-        public boolean equals(@Nullable Object o)
-        {
-            if (this == o) return true;
-            if (o == null || getClass() != o.getClass()) return false;
-
-            SummaryType that = (SummaryType) o;
-
-            return summaryExpression.equals(that.summaryExpression);
-        }
-
-        @Override
-        public int hashCode()
-        {
-            return summaryExpression.hashCode();
-        }
-    }
-
     private final @Nullable RecordSet result;
 
     @OnThread(Tag.Simulation)
@@ -134,7 +110,7 @@ public class SummaryStatistics extends TransformationEditable
         }
     }
 
-    public SummaryStatistics(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, Map<ColumnId, SummaryType> summaries, List<ColumnId> splitBy) throws InternalException
+    public SummaryStatistics(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, ImmutableList<Pair<ColumnId, Expression>> summaries, ImmutableList<ColumnId> splitBy) throws InternalException
     {
         super(mgr, thisTableId);
         this.srcTableId = srcTableId;
@@ -200,15 +176,15 @@ public class SummaryStatistics extends TransformationEditable
                 }
             }
 
-            for (Entry<ColumnId, SummaryType> e : summaries.entrySet())
+            for (Pair<ColumnId, Expression> e : summaries)
             {
-                Expression expression = e.getValue().summaryExpression;
+                Expression expression = e.getSecond();
                 ErrorRecorderStorer errors = new ErrorRecorderStorer();
                 @Nullable DataType type = expression.check(src, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
                 if (type == null)
                     throw new UserException((@NonNull String)errors.getAllErrors().findFirst().orElse("Unknown type error"));
                 @NonNull DataType typeFinal = type;
-                columns.add(rs -> typeFinal.makeCalculatedColumn(rs, e.getKey(), i -> expression.getValue(i, new EvaluateState())));
+                columns.add(rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.getValue(i, new EvaluateState())));
             }
 
             theResult = new RecordSet(columns)
@@ -340,7 +316,7 @@ public class SummaryStatistics extends TransformationEditable
         @Override
         public TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(view, mgr, srcTableId, src, Collections.emptyMap(), Collections.emptyList());
+            return new Editor(view, mgr, srcTableId, src, ImmutableList.of(), Collections.emptyList());
         }
 
         @Override
@@ -348,13 +324,13 @@ public class SummaryStatistics extends TransformationEditable
         {
             SummaryContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::summary);
 
-            Map<ColumnId, SummaryType> summaryTypes = new HashMap<>();
+            ImmutableList.Builder<Pair<ColumnId, Expression>> summaryTypes = ImmutableList.builder();
             for (SummaryColContext sumType : loaded.summaryCol())
             {
-                summaryTypes.put(new ColumnId(sumType.column.getText()), new SummaryType(Expression.parse(null, sumType.expression().EXPRESSION().getText(), mgr.getTypeManager())));
+                summaryTypes.add(new Pair<>(new ColumnId(sumType.column.getText()), Expression.parse(null, sumType.expression().EXPRESSION().getText(), mgr.getTypeManager())));
             }
-            List<ColumnId> splits = Utility.<SplitByContext, ColumnId>mapList(loaded.splitBy(), s -> new ColumnId(s.column.getText()));
-            return new SummaryStatistics(mgr, tableId, srcTableId, summaryTypes, splits);
+            ImmutableList<ColumnId> splits = loaded.splitBy().stream().map(s -> new ColumnId(s.column.getText())).collect(ImmutableList.toImmutableList());
+            return new SummaryStatistics(mgr, tableId, srcTableId, summaryTypes.build(), splits);
         }
     }
 
@@ -368,20 +344,16 @@ public class SummaryStatistics extends TransformationEditable
     {
         private final SingleSourceControl srcControl;
         private final BooleanProperty ready = new SimpleBooleanProperty(false);
-        private final ObservableList<@NonNull Pair<ColumnId, SummaryType>> ops;
+        private final ObservableList<@NonNull Pair<ColumnId, Expression>> ops;
         private final ObservableList<@NonNull ColumnId> splitBy;
         private final ListView<ColumnId> columnListView;
 
         @OnThread(Tag.FXPlatform)
-        private Editor(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src, Map<ColumnId, SummaryType> summaries, List<ColumnId> splitBy)
+        private Editor(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src, ImmutableList<Pair<ColumnId, Expression>> summaries, List<ColumnId> splitBy)
         {
             this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
-            this.ops = FXCollections.observableArrayList();
             this.splitBy = FXCollections.observableArrayList(splitBy);
-            for (Entry<ColumnId, SummaryType> entry : summaries.entrySet())
-            {
-                ops.add(new Pair<>(entry.getKey(), entry.getValue()));
-            }
+            this.ops = FXCollections.observableArrayList(summaries);
             columnListView = getColumnListView(mgr, srcControl.tableIdProperty(), null);
         }
 
@@ -448,7 +420,7 @@ public class SummaryStatistics extends TransformationEditable
             buttons.getChildren().add(button);
             colsAndSummaries.getChildren().add(buttons);
 
-            ListView<Pair<ColumnId, SummaryType>> opListView = FXUtility.readOnlyListView(ops, op -> op.getFirst() + "." + op.getSecond().toString());
+            ListView<Pair<ColumnId, Expression>> opListView = FXUtility.readOnlyListView(ops, op -> op.getFirst() + "." + op.getSecond().toString());
             ListView<ColumnId> splitListView = FXUtility.readOnlyListView(splitBy, s -> s.toString());
             colsAndSummaries.getChildren().add(new VBox(opListView, splitListView));
             return colsAndSummaries;
@@ -539,12 +511,7 @@ public class SummaryStatistics extends TransformationEditable
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             return () -> {
-                Map<ColumnId, SummaryType> summaries = new HashMap<>();
-                for (Pair<ColumnId, SummaryType> op : ops)
-                {
-                    summaries.put(op.getFirst(), op.getSecond());
-                }
-                return new SummaryStatistics(mgr, thisTableId, srcId.get(), summaries, splitBy);
+                return new SummaryStatistics(mgr, thisTableId, srcId.get(), ImmutableList.copyOf(ops), ImmutableList.copyOf(splitBy));
             };
         }
     }
@@ -553,12 +520,12 @@ public class SummaryStatistics extends TransformationEditable
     protected @OnThread(Tag.Any) List<String> saveDetail(@Nullable File destination)
     {
         OutputBuilder b = new OutputBuilder();
-        for (Entry<ColumnId, SummaryType> entry : summaries.entrySet())
+        for (Pair<ColumnId, Expression> entry : summaries)
         {
             b.kw("SUMMARY");
-            b.id(entry.getKey());
+            b.id(entry.getFirst());
             b.t(TransformationLexer.EXPRESSION_BEGIN, TransformationLexer.VOCABULARY);
-            b.raw(entry.getValue().summaryExpression.save(true));
+            b.raw(entry.getSecond().save(true));
             b.nl();
         }
         for (ColumnId c : splitBy)
