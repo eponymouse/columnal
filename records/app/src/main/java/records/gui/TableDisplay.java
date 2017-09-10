@@ -217,11 +217,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         Pane spacer = new Pane();
         spacer.setVisible(false);
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        Button actionsButton = GUI.button("tableDisplay.menu.button", () -> {});
-        // Have to set event handler afterwards, as we need reference to the button:
-        actionsButton.setOnAction(e -> {
-            makeTableContextMenu(parent, table).show(actionsButton, Side.BOTTOM, 0, 0);
-        });
+        Button actionsButton = GUI.buttonMenu("tableDisplay.menu.button", () -> makeTableContextMenu(parent, table));
 
         Button addButton = GUI.button("tableDisplay.addTransformation", () -> {
             parent.newTransformFromSrc(table);

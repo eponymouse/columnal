@@ -3,9 +3,11 @@ package utility.gui;
 import annotation.help.qual.HelpKey;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.css.Styleable;
 import javafx.geometry.Pos;
+import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyCode;
@@ -36,6 +38,7 @@ import utility.Utility;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Created by neil on 17/04/2017.
@@ -47,6 +50,35 @@ public class GUI
     {
         Button button = new Button(TranslationUtility.getString(msgKey));
         button.setOnAction(e -> onAction.run());
+        addIdClass(button, msgKey);
+        button.getStyleClass().addAll(styleClasses);
+        return button;
+    }
+
+    /**
+     * Makes a button which, when pressed, shows a context menu immediately beneath it.  If the menu is
+     * already showing, hides it instead.
+     */
+    public static Button buttonMenu(@LocalizableKey String msgKey, FXPlatformSupplier<ContextMenu> makeMenu, String... styleClasses)
+    {
+        Button button = new Button(TranslationUtility.getString(msgKey));
+        SimpleObjectProperty<@Nullable ContextMenu> currentlyShowing = new SimpleObjectProperty<>(null);
+        button.setOnAction(e -> {
+            @Nullable ContextMenu current = currentlyShowing.get();
+            if (current == null)
+            {
+                current = makeMenu.get();
+                currentlyShowing.set(current);
+                current.setOnHidden(ev -> {currentlyShowing.set(null);});
+                current.show(button, Side.BOTTOM, 0, 0);
+            }
+            else
+            {
+                current.hide();
+                // Action listener should have done this anyway, but just in case:
+                currentlyShowing.set(null);
+            }
+        });
         addIdClass(button, msgKey);
         button.getStyleClass().addAll(styleClasses);
         return button;
