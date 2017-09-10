@@ -41,6 +41,7 @@ import utility.gui.ScrollPaneFill;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
 /**
  * A GUI list of column names and expression editors for that column.
@@ -54,12 +55,12 @@ public class ColumnExpressionList
     private final BorderPane outerPane;
     private final VBox columnEditors;
 
-    public ColumnExpressionList(TableManager mgr, SingleSourceControl srcTableControl, List<Pair<@Nullable ColumnId, Expression>> initialColumns)
+    public ColumnExpressionList(TableManager mgr, SingleSourceControl srcTableControl, List<Pair<ColumnId, Expression>> initialColumns)
     {
         ObjectExpression<@Nullable Table> srcTable = srcTableControl.tableProperty();
 
         columnEditors = new VBox();
-        for (Pair<@Nullable ColumnId, Expression> newColumn : initialColumns)
+        for (Pair<ColumnId, Expression> newColumn : initialColumns)
         {
             addColumn(mgr, srcTable, newColumn, columns.size());
         }
@@ -79,7 +80,7 @@ public class ColumnExpressionList
 
     @RequiresNonNull({"allColNamesValid", "columns", "columnEditors"})
     private void addColumn(@UnknownInitialization(Object.class) ColumnExpressionList this,
-                           TableManager mgr, ObjectExpression<@Nullable Table> srcTable, Pair<@Nullable ColumnId, Expression> newColumn, int destIndex)
+                           TableManager mgr, ObjectExpression<@Nullable Table> srcTable, Pair<ColumnId, Expression> newColumn, int destIndex)
     {
         SimpleObjectProperty<Expression> wrapper = new SimpleObjectProperty<>(newColumn.getSecond());
         ColumnNameTextField columnNameTextField = new ColumnNameTextField(newColumn.getFirst()).withArrowLocation(ArrowLocation.BOTTOM_CENTER);
@@ -103,17 +104,17 @@ public class ColumnExpressionList
                 GUI.menuItem("columnExpression.copy", () -> {
                     // Don't use destIndex, because it might be stale.  Instead find us in list:
                     int curIndex = Utility.indexOfRef(columns, columnPair);
-                    addColumn(mgr, srcTable, new Pair<>(columnNameTextField.valueProperty().getValue(), expressionEditor.save(new ErrorDisplayerRecord(), err -> {})), curIndex + 1);
+                    addColumn(mgr, srcTable, new Pair<>(Optional.ofNullable(columnNameTextField.valueProperty().getValue()).orElse(new ColumnId("")), expressionEditor.save(new ErrorDisplayerRecord(), err -> {})), curIndex + 1);
                 }),
                 GUI.menuItem("columnExpression.addBefore", () -> {
                     // Don't use destIndex, because it might be stale.  Instead find us in list:
                     int curIndex = Utility.indexOfRef(columns, columnPair);
-                    addColumn(mgr, srcTable, new Pair<>(null, new UnfinishedExpression("")), curIndex);
+                    addColumn(mgr, srcTable, new Pair<>(new ColumnId(""), new UnfinishedExpression("")), curIndex);
                 }),
                 GUI.menuItem("columnExpression.addAfter", () -> {
                     // Don't use destIndex, because it might be stale.  Instead find us in list:
                     int curIndex = Utility.indexOfRef(columns, columnPair);
-                    addColumn(mgr, srcTable, new Pair<>(null, new UnfinishedExpression("")), curIndex + 1);
+                    addColumn(mgr, srcTable, new Pair<>(new ColumnId(""), new UnfinishedExpression("")), curIndex + 1);
                 })
             );
         }), 2, 0);

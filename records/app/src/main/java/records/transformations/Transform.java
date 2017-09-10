@@ -63,6 +63,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -171,9 +172,7 @@ public class Transform extends TransformationEditable
     @Override
     public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
     {
-        @SuppressWarnings("nullness")
-        ImmutableList<Pair<@Nullable ColumnId, Expression>> newColumnsN = this.newColumns;
-        return new Editor(view, getManager(), this.srcTableId, newColumnsN);
+        return new Editor(view, getManager(), this.srcTableId, newColumns);
     }
 
     @Override
@@ -248,7 +247,7 @@ public class Transform extends TransformationEditable
         @Override
         public @OnThread(Tag.FXPlatform) TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(view, mgr, srcTableId, Collections.singletonList(new Pair<@Nullable ColumnId, Expression>(null, new NumericLiteral(0, null))));
+            return new Editor(view, mgr, srcTableId, Collections.singletonList(new Pair<ColumnId, Expression>(new ColumnId(""), new NumericLiteral(0, null))));
         }
     }
 
@@ -259,7 +258,7 @@ public class Transform extends TransformationEditable
         private final ColumnExpressionList columnEditors;
 
         @OnThread(Tag.FXPlatform)
-        public Editor(View view, TableManager mgr, @Nullable TableId srcId, List<Pair<@Nullable ColumnId, Expression>> newColumns)
+        public Editor(View view, TableManager mgr, @Nullable TableId srcId, List<Pair<ColumnId, Expression>> newColumns)
         {
             this.srcControl = new SingleSourceControl(view, mgr, srcId);
             this.columnEditors = new ColumnExpressionList(mgr, srcControl, newColumns);
@@ -301,9 +300,8 @@ public class Transform extends TransformationEditable
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             // They were only allowed to press OK if all columns were non-null:
-            @SuppressWarnings("nullness")
             ImmutableList<Pair<ColumnId, Expression>> cols = columnEditors.getColumns().stream().
-                    map((Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>> p) -> p.map((ObjectExpression<@Nullable ColumnId> e) -> e.get(), e -> e.get())).collect(ImmutableList.toImmutableList());
+                    map((Pair<ObjectExpression<@Nullable ColumnId>, ObjectExpression<Expression>> p) -> p.map((ObjectExpression<@Nullable ColumnId> e) -> Optional.ofNullable(e.get()).orElse(new ColumnId("")), e -> e.get())).collect(ImmutableList.toImmutableList());
             return () -> new Transform(mgr, ourId, srcId.get(), cols);
         }
 

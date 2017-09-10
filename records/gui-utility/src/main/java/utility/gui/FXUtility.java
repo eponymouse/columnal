@@ -382,7 +382,7 @@ public class FXUtility
         default void dragExited() {}
 
         @OnThread(Tag.FXPlatform)
-        void dragMoved(Point2D pointInScene);
+        default void dragMoved(Point2D pointInScene) {};
 
         @OnThread(Tag.FXPlatform)
         boolean dragEnded(Dragboard dragboard, Point2D pointInScene);

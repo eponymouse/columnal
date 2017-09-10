@@ -10,6 +10,7 @@ import javafx.collections.ObservableList;
 import javafx.scene.control.Button;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
@@ -347,6 +348,7 @@ public class SummaryStatistics extends TransformationEditable
         private final ObservableList<@NonNull Pair<ColumnId, Expression>> ops;
         private final ObservableList<@NonNull ColumnId> splitBy;
         private final ListView<ColumnId> columnListView;
+        private final ColumnExpressionList columnExpressions;
 
         @OnThread(Tag.FXPlatform)
         private Editor(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src, ImmutableList<Pair<ColumnId, Expression>> summaries, List<ColumnId> splitBy)
@@ -354,7 +356,8 @@ public class SummaryStatistics extends TransformationEditable
             this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
             this.splitBy = FXCollections.observableArrayList(splitBy);
             this.ops = FXCollections.observableArrayList(summaries);
-            columnListView = getColumnListView(mgr, srcControl.tableIdProperty(), null);
+            this.columnListView = getColumnListView(mgr, srcControl.tableIdProperty(), null);
+            this.columnExpressions = new ColumnExpressionList(mgr, srcControl, summaries);
         }
 
         @Override
@@ -422,8 +425,9 @@ public class SummaryStatistics extends TransformationEditable
 
             ListView<Pair<ColumnId, Expression>> opListView = FXUtility.readOnlyListView(ops, op -> op.getFirst() + "." + op.getSecond().toString());
             ListView<ColumnId> splitListView = FXUtility.readOnlyListView(splitBy, s -> s.toString());
-            colsAndSummaries.getChildren().add(new VBox(opListView, splitListView));
-            return colsAndSummaries;
+            colsAndSummaries.getChildren().add(splitListView);
+
+            return new BorderPane(columnExpressions.getNode(), colsAndSummaries, null, null, null);
         }
 /*
         private static boolean valid(Column src, SummaryType summaryType) throws InternalException, UserException

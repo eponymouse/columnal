@@ -243,12 +243,6 @@ public class HideColumns extends TransformationEditable
             FXUtility.enableDragTo(hiddenColumns, Collections.singletonMap(FXUtility.getTextDataFormat("ColumnId"), new DragHandler()
             {
                 @Override
-                public @OnThread(Tag.FXPlatform) void dragMoved(Point2D pointInScene)
-                {
-
-                }
-
-                @Override
                 @SuppressWarnings("unchecked")
                 public @OnThread(Tag.FXPlatform) boolean dragEnded(Dragboard db, Point2D pointInScene)
                 {
