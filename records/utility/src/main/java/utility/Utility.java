@@ -819,7 +819,7 @@ public class Utility
      */
     public static String collapseSpaces(String s)
     {
-        return s.trim().replaceAll("(?U)\\s+", " ");
+        return s.replaceAll("(?U)\\s+", " ").trim();
     }
 
     /**
