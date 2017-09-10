@@ -44,6 +44,7 @@ import test.gen.GenImmediateData.MustIncludeNumber;
 import test.gen.GenImmediateData.NumTables;
 import utility.ExRunnable;
 import utility.FXPlatformRunnable;
+import utility.SimulationRunnable;
 import utility.SimulationSupplier;
 import utility.TaggedValue;
 import records.data.Transformation;
@@ -620,7 +621,32 @@ public class TestUtil
                     Utility.log(e);
                 }
             });
-            return f.get(3, TimeUnit.SECONDS);
+            return f.get(10, TimeUnit.SECONDS);
+        }
+        catch (Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
+    @OnThread(Tag.Any)
+    public static void sim_(SimulationRunnable action)
+    {
+        try
+        {
+            CompletableFuture<Object> f = new CompletableFuture<>();
+            Workers.onWorkerThread("Test.sim", Priority.FETCH, () -> {
+                try
+                {
+                    action.run();
+                    f.complete(new Object());
+                }
+                catch (Exception e)
+                {
+                    Utility.log(e);
+                }
+            });
+            f.get(3, TimeUnit.SECONDS);
         }
         catch (Exception e)
         {
@@ -758,6 +784,18 @@ public class TestUtil
         return list.remove(index);
     }
 
+    /**
+     * IMPORTANT: we say Simulation thread to satisfy thread-checker, but don't call it from the actual
+     * simultation thread or it will time out!  Just tag yours as simulation, too.
+     *
+     *
+     * @param windowToUse
+     * @param mgr
+     * @throws IOException
+     * @throws InterruptedException
+     * @throws ExecutionException
+     * @throws InvocationTargetException
+     */
     @OnThread(Tag.Simulation)
     public static void openDataAsTable(Stage windowToUse, TableManager mgr) throws IOException, InterruptedException, ExecutionException, InvocationTargetException
     {
@@ -768,6 +806,7 @@ public class TestUtil
         Platform.runLater(() -> checkedToRuntime_(() -> MainWindow.show(windowToUse, temp, saved)));
         do
         {
+            //System.err.println("Waiting for main window");
             sleep(1000);
         }
         while (fx(() -> windowToUse.getScene().lookup(".id-tableDisplay-menu-button")) == null);

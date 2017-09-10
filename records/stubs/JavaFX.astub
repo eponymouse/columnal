@@ -61,6 +61,8 @@ class Node
     @Pure Point2D sceneToLocal(double x, double y) @UnknownInitialization;
     void setLayoutX(double x) @UnknownInitialization;
     void setLayoutY(double y) @UnknownInitialization;
+
+    WritableImage snapshot(@Nullable SnapshotParameters params, @Nullable WritableImage image);
 }
 class Scene
 {
