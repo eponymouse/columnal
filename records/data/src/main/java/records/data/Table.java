@@ -1,10 +1,7 @@
 package records.data;
 
-import annotation.qual.Value;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
-import javafx.geometry.Rectangle2D;
-import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -14,16 +11,19 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
-import records.grammar.MainParser.PositionContext;
+import records.grammar.MainParser.DisplayContext;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.Utility;
 
 import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 /**
@@ -32,12 +32,28 @@ import java.util.stream.Collectors;
  */
 public abstract class Table
 {
+    public static enum Display
+    {
+        /** No table shown, just a label */
+        COLLAPSED,
+        /** All columns shown */
+        ALL,
+        /** Only those affected by transformations since last time table was shown */
+        ALTERED,
+        /** A custom set (done by black list, not white list) */
+        CUSTOM;
+    }
+
     private final TableManager mgr;
     private final TableId id;
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private @MonotonicNonNull TableDisplayBase display;
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private Bounds prevPosition = new BoundingBox(0, 0, 100, 400);
+
+    // The list is the blacklist, only applicable if first is CUSTOM:
+    @OnThread(value = Tag.Any, requireSynchronized = true)
+    private Pair<Display, List<ColumnId>> showColumns = new Pair<>(Display.ALL, Collections.emptyList());
 
     /**
      * If id is null, an arbitrary free id is taken
@@ -71,7 +87,7 @@ public abstract class Table
         {
             prevPosition = position;
             if (display != null)
-                display.loadPosition(prevPosition);
+                display.loadPosition(prevPosition, getShowColumns());
         }
         return this;
     }
@@ -176,26 +192,40 @@ public abstract class Table
             }
         }
         this.display = display;
-        display.loadPosition(prevPosition);
+        display.loadPosition(prevPosition, getShowColumns());
     }
 
-    public synchronized final void loadPosition(PositionContext position) throws UserException
+    public synchronized final void loadPosition(DisplayContext display) throws UserException
     {
         try
         {
-            double x = Double.parseDouble(position.item(0).getText());
-            double y = Double.parseDouble(position.item(1).getText());
-            double mx = Double.parseDouble(position.item(2).getText());
-            double my = Double.parseDouble(position.item(3).getText());
+            double x = Double.parseDouble(display.item(0).getText());
+            double y = Double.parseDouble(display.item(1).getText());
+            double mx = Double.parseDouble(display.item(2).getText());
+            double my = Double.parseDouble(display.item(3).getText());
             prevPosition = new BoundingBox(x, y, mx - x, my - y);
-            if (display != null)
+
+            // Now handle the show-columns:
+            if (display.ALL() != null)
+                showColumns = new Pair<>(Display.ALL, Collections.emptyList());
+            else if (display.ALTERED() != null)
+                showColumns = new Pair<>(Display.ALTERED, Collections.emptyList());
+            else if (display.COLLAPSED() != null)
+                showColumns = new Pair<>(Display.COLLAPSED, Collections.emptyList());
+            else
             {
-                display.loadPosition(prevPosition);
+                List<ColumnId> blackList = Utility.mapList(display.item().subList(4, display.item().size()), itemContext -> new ColumnId(itemContext.getText()));
+                showColumns = new Pair<>(Display.CUSTOM, blackList);
+            }
+
+            if (this.display != null)
+            {
+                this.display.loadPosition(prevPosition, getShowColumns());
             }
         }
         catch (Exception e)
         {
-            throw new UserException("Could not parse position: \"" + position.getText() + "\"");
+            throw new UserException("Could not parse position: \"" + display.getText() + "\"");
         }
     }
 
@@ -208,6 +238,30 @@ public abstract class Table
         }
         Bounds b = prevPosition;
         out.t(MainLexer.POSITION).d(b.getMinX()).d(b.getMinY()).d(b.getMaxX()).d(b.getMaxY()).nl();
+        out.t(MainLexer.SHOWCOLUMNS);
+        switch (showColumns.getFirst())
+        {
+            case ALL: out.t(MainLexer.ALL); break;
+            case ALTERED: out.t(MainLexer.ALTERED); break;
+            case COLLAPSED: out.t(MainLexer.COLLAPSED); break;
+            case CUSTOM:
+                out.t(MainLexer.EXCEPT);
+                // TODO output the list;
+                break;
+        }
+        out.nl();
+    }
+
+    @OnThread(Tag.Any)
+    public synchronized void setShowColumns(Display newState, List<ColumnId> blackList)
+    {
+        showColumns = new Pair<>(newState, blackList);
+    }
+
+    @OnThread(Tag.Any)
+    public synchronized Pair<Display, Predicate<ColumnId>> getShowColumns()
+    {
+        return showColumns.mapSecond(blackList -> s -> !blackList.contains(s));
     }
 
     protected class WholeTableException extends UserException
@@ -277,7 +331,7 @@ public abstract class Table
     public static interface TableDisplayBase
     {
         @OnThread(Tag.Any)
-        public void loadPosition(Bounds bounds);
+        public void loadPosition(Bounds bounds, Pair<Display, Predicate<ColumnId>> display);
 
         @OnThread(Tag.Any)
         public Bounds getPosition();

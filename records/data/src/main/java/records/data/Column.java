@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import records.data.Table.Display;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -20,6 +21,7 @@ import utility.Workers.Priority;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 /**
  * A column of data in a RecordSet.
@@ -132,6 +134,31 @@ public abstract class Column
     {
         return null;
     }
+
+    /**
+     * The predicate is only checked if display is CUSTOM
+     */
+    @OnThread(Tag.Any)
+    public final boolean shouldShow(Pair<Display, Predicate<ColumnId>> columnSelection)
+    {
+        switch (columnSelection.getFirst())
+        {
+            case ALL:
+                return true;
+            case ALTERED:
+                return isAltered();
+            case CUSTOM:
+                return columnSelection.getSecond().test(getName());
+        }
+        return false;
+    }
+
+    /**
+     * Is this column altered in this record set (true) or copied as-is from previous (false).
+     * Used to decide whether we show column if display setting is set to ALTERED
+     */
+    @OnThread(Tag.Any)
+    protected abstract boolean isAltered();
 
     public static interface ProgressListener
     {

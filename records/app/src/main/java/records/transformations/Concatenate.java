@@ -220,6 +220,12 @@ public class Concatenate extends TransformationEditable
                             }
                             return type;
                         }
+
+                        @Override
+                        protected boolean isAltered()
+                        {
+                            return true;
+                        }
                     };
                 }
             }), totalLength);

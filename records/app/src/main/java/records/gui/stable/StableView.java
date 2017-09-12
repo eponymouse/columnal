@@ -368,6 +368,7 @@ public class StableView
         }
 
         headerItemsContainer.getChildren().clear();
+        headerItems.clear();
         for (int i = 0; i < columns.size(); i++)
         {
             Pair<String, ColumnHandler> column = columns.get(i);

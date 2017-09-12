@@ -1,6 +1,8 @@
 package records.gui;
 
 import javafx.application.Platform;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -9,9 +11,12 @@ import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.CheckMenuItem;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.RadioMenuItem;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -25,8 +30,10 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
+import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table;
+import records.data.Table.Display;
 import records.data.Table.TableDisplayBase;
 import records.data.TableOperations;
 import records.data.Transformation;
@@ -39,6 +46,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformRunnable;
+import utility.Pair;
 import utility.Utility;
 import utility.Workers;
 import utility.gui.FXUtility;
@@ -54,9 +62,13 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 
 /**
  * A pane which displays a table.  This includes the faux title bar
@@ -85,6 +97,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     @OnThread(Tag.Any)
     private final AtomicReference<Bounds> mostRecentBounds;
     private final HBox header;
+    private final ObjectProperty<Pair<Display, Predicate<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, c -> true));
 
     @OnThread(Tag.FX)
     public Point2D closestPointTo(double parentX, double parentY)
@@ -114,22 +127,20 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     }
 
     @OnThread(Tag.FXPlatform)
-    private static class TableDataDisplay extends StableView implements RecordSet.RecordSetListener
+    private class TableDataDisplay extends StableView implements RecordSet.RecordSetListener
     {
         private final FXPlatformRunnable onModify;
         private final RecordSet recordSet;
-        private final TableOperations operations;
 
         @SuppressWarnings("initialization")
         @UIEffect
-        public TableDataDisplay(RecordSet recordSet, TableOperations operations, FXPlatformRunnable onModify)
+        public TableDataDisplay(RecordSet recordSet, FXPlatformRunnable onModify)
         {
             super();
             this.recordSet = recordSet;
             this.onModify = onModify;
-            this.operations = operations;
             recordSet.setListener(this);
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet), operations);
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns()), table.getOperations());
             setRows(recordSet::indexValid);
             //TODO restore editability
             //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
@@ -158,6 +169,11 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 //Platform.runLater(() -> getItems().addAll(indexesToAdd));
             });
 
+
+            FXUtility.addChangeListenerPlatformNN(columnDisplay, newDisplay -> {
+                setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay), table.getOperations());
+                setRows(recordSet::indexValid);
+            });
         }
 
         @Override
@@ -189,7 +205,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         @Override
         public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
         {
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet), operations);
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns()), table.getOperations());
             setRows(recordSet::indexValid);
         }
     }
@@ -209,7 +225,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         }
         this.recordSetOrError = recordSetOrError;
         StackPane body = new StackPane(this.recordSetOrError.<Node>either(err -> new Label(err),
-            recordSet -> new TableDataDisplay(recordSet, table.getOperations(), parent::modified).getNode()));
+            recordSet -> new TableDataDisplay(recordSet, parent::modified).getNode()));
         Utility.addStyleClass(body, "table-body");
         setCenter(body);
         Utility.addStyleClass(this, "table-wrapper", "tableDisplay", table instanceof Transformation ? "tableDisplay-transformation" : "tableDisplay-source");
@@ -217,7 +233,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         Pane spacer = new Pane();
         spacer.setVisible(false);
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        Button actionsButton = GUI.buttonMenu("tableDisplay.menu.button", () -> makeTableContextMenu(parent, table));
+        Button actionsButton = GUI.buttonMenu("tableDisplay.menu.button", () -> makeTableContextMenu(parent));
 
         Button addButton = GUI.button("tableDisplay.addTransformation", () -> {
             parent.newTransformFromSrc(table);
@@ -323,7 +339,8 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         this.table.setDisplay(usInit);
     }
 
-    private static ContextMenu makeTableContextMenu(View parent, Table table)
+    @RequiresNonNull({"columnDisplay", "table"})
+    private ContextMenu makeTableContextMenu(@UnknownInitialization(Object.class) TableDisplay this, View parent)
     {
         List<MenuItem> items = new ArrayList<>();
 
@@ -332,7 +349,18 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             items.add(GUI.menuItem("tableDisplay.menu.edit", () -> parent.editTransform((TransformationEditable)table)));
         }
 
+        ToggleGroup show = new ToggleGroup();
+        Map<Display, RadioMenuItem> showItems = new EnumMap<>(Display.class);
+
+        showItems.put(Display.COLLAPSED, GUI.radioMenuItem("tableDisplay.menu.show.collapse", () -> setDisplay(Display.COLLAPSED, Collections.emptyList(), parent)));
+        showItems.put(Display.ALL, GUI.radioMenuItem("tableDisplay.menu.show.all", () -> setDisplay(Display.ALL, Collections.emptyList(), parent)));
+        showItems.put(Display.ALTERED, GUI.radioMenuItem("tableDisplay.menu.show.altered", () -> setDisplay(Display.ALTERED, Collections.emptyList(), parent)));
+        showItems.put(Display.CUSTOM, GUI.radioMenuItem("tableDisplay.menu.show.custom", () -> editCustomDisplay(parent)));
+
         items.addAll(Arrays.asList(
+            GUI.menu("tableDisplay.menu.showColumns",
+                GUI.radioMenuItems(show, showItems.values().toArray(new RadioMenuItem[0]))
+            ),
             GUI.menuItem("tableDisplay.menu.addTransformation", () -> parent.newTransformFromSrc(table)),
             GUI.menuItem("tableDisplay.menu.copyValues", () -> Utility.alertOnErrorFX_(() -> ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), table.getData().getColumns()))),
             GUI.menuItem("tableDisplay.menu.exportToCSV", () -> {
@@ -344,7 +372,23 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 }
             })
         ));
+        Optional.ofNullable(showItems.get(columnDisplay.get().getFirst())).ifPresent(show::selectToggle);
         return new ContextMenu(items.toArray(new MenuItem[0]));
+    }
+
+    @RequiresNonNull({"columnDisplay", "table"})
+    private void editCustomDisplay(@UnknownInitialization(Object.class) TableDisplay this, View parent)
+    {
+        // TODO show a dialog asking for custom blacklist, then set state to CUSTOM
+        setDisplay(Display.CUSTOM, Collections.emptyList(), parent);
+    }
+
+    @RequiresNonNull({"columnDisplay", "table"})
+    private void setDisplay(@UnknownInitialization(Object.class) TableDisplay this, Display newState, List<ColumnId> blackList, View parent)
+    {
+        this.columnDisplay.set(new Pair<>(newState, s -> !blackList.contains(s)));
+        table.setShowColumns(newState, blackList);
+        parent.modified();
     }
 
     @OnThread(Tag.Simulation)
@@ -433,13 +477,14 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     }
 
     @Override
-    public @OnThread(Tag.Any) void loadPosition(Bounds bounds)
+    public @OnThread(Tag.Any) void loadPosition(Bounds bounds, Pair<Display, Predicate<ColumnId>> display)
     {
         Platform.runLater(() -> {
             setLayoutX(bounds.getMinX());
             setLayoutY(bounds.getMinY());
             setWidth(bounds.getWidth());
             setHeight(bounds.getHeight());
+            this.columnDisplay.set(display);
         });
     }
 

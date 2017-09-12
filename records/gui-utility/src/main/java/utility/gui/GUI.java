@@ -253,4 +253,23 @@ public class GUI
         comboBox.setCellFactory(lv -> cellFactory.get());
         return comboBox;
     }
+
+    public static RadioMenuItem radioMenuItem(@LocalizableKey String labelKey, FXPlatformRunnable runWhenSelected)
+    {
+        RadioMenuItem item = new RadioMenuItem(TranslationUtility.getString(labelKey));
+        item.setOnAction(e -> {
+            System.err.println("onAction for " + labelKey + " sel: " + item.isSelected());
+            runWhenSelected.run();
+        });
+        return item;
+    }
+
+    public static MenuItem[] radioMenuItems(ToggleGroup toggleGroup, RadioMenuItem... radioMenuItems)
+    {
+        for (RadioMenuItem radioMenuItem : radioMenuItems)
+        {
+            radioMenuItem.setToggleGroup(toggleGroup);
+        }
+        return radioMenuItems;
+    }
 }

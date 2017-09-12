@@ -2,13 +2,16 @@ package records.data;
 
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import records.data.Table.Display;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.SimulationRunnable;
 
 import java.util.List;
+import java.util.function.Predicate;
 
 /**
  * Created by neil on 29/05/2017.
@@ -35,4 +38,11 @@ public abstract class EditableColumn extends Column
     }
 
     public abstract @NonNull @Value Object getDefaultValue();
+
+    @Override
+    protected boolean isAltered()
+    {
+        // If we're editable, we must be new:
+        return true;
+    }
 }

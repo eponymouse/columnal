@@ -19,7 +19,9 @@ import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import records.data.Column;
 import records.data.Column.ProgressListener;
+import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.Table.Display;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitorEx;
@@ -66,6 +68,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 01/05/2017.
@@ -74,9 +78,9 @@ import java.util.function.Function;
 public class TableDisplayUtility
 {
 
-    public static List<Pair<String, ColumnHandler>> makeStableViewColumns(RecordSet recordSet)
+    public static ImmutableList<Pair<String, ColumnHandler>> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection)
     {
-        return Utility.mapList(recordSet.getColumns(), col -> {
+        return recordSet.getColumns().stream().filter(c -> c.shouldShow(columnSelection)).<Pair<String, ColumnHandler>>map(col -> {
             try
             {
                 return getDisplay(col);
@@ -123,7 +127,7 @@ public class TableDisplayUtility
                     }
                 });
             }
-        });
+        }).collect(ImmutableList.toImmutableList());
     }
 
     private static Pair<String, ColumnHandler> getDisplay(@NonNull Column column) throws UserException, InternalException

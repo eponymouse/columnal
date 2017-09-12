@@ -31,9 +31,9 @@ dataFormat : FORMAT (SKIPROWS numRows)? detail FORMAT NEWLINE;
 
 blank : NEWLINE;
 
-position : POSITION item item item item NEWLINE;
+display : POSITION item item item item NEWLINE SHOWCOLUMNS (ALL | ALTERED | COLLAPSED | EXCEPT item*) NEWLINE;
 
-table : (dataSource | transformation) position END tableId NEWLINE;
+table : (dataSource | transformation) display END tableId NEWLINE;
 
 units : UNITS detail UNITS NEWLINE;
 types : TYPES detail TYPES NEWLINE;

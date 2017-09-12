@@ -119,6 +119,12 @@ public class HideColumns extends TransformationEditable
                 {
                     return c.getType();
                 }
+
+                @Override
+                protected boolean isAltered()
+                {
+                    return false;
+                }
             }))
             {
                 @Override

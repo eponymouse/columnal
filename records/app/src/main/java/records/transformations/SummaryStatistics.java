@@ -158,6 +158,12 @@ public class SummaryStatistics extends TransformationEditable
                             throw new UnimplementedException(); // TODO
                             //return orig.getType().copy(this::getWithProgress);
                         }
+
+                        @Override
+                        protected boolean isAltered()
+                        {
+                            return true;
+                        }
                     });
                 }
 

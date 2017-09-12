@@ -114,6 +114,12 @@ public class Transform extends TransformationEditable
                         {
                             return c.getType();
                         }
+
+                        @Override
+                        protected boolean isAltered()
+                        {
+                            return false;
+                        }
                     });
                 }
             }

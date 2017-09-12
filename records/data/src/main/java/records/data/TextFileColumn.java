@@ -2,6 +2,7 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnStorage.BeforeGet;
+import records.data.Table.Display;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.NumberInfo;
@@ -27,6 +28,7 @@ import java.time.temporal.TemporalAccessor;
 import java.time.temporal.TemporalQuery;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.UnaryOperator;
 
 /**
@@ -136,5 +138,12 @@ public final class TextFileColumn extends Column
                 storage.addAll(Utility.mapListEx(values, parseValue));
             }
         );
+    }
+
+    @Override
+    protected boolean isAltered()
+    {
+        // If we are direct from text file, we must be new:
+        return true;
     }
 }

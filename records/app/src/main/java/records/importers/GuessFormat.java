@@ -35,6 +35,7 @@ import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledText;
 import records.data.ColumnId;
 import records.data.RecordSet;
+import records.data.Table.Display;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.TextFileColumn.TextFileColumnListener;
@@ -931,7 +932,7 @@ public class GuessFormat
             {
                 @OnThread(Tag.Simulation) RecordSet recordSet = TextImport.makeRecordSet(typeManager, file, t, textAreaFiller);
                 Platform.runLater(() -> {
-                    gui.tableView.setColumns(TableDisplayUtility.makeStableViewColumns(recordSet), null);
+                    gui.tableView.setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, new Pair<>(Display.ALL, c -> true)), null);
                     gui.tableView.setRows(recordSet::indexValid);
                 });
             }

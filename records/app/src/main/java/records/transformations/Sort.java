@@ -172,6 +172,12 @@ public class Sort extends TransformationEditable
                             return DataTypeUtility.value(sortMap.getInt(i));
                         });
                     }
+
+                    @Override
+                    protected boolean isAltered()
+                    {
+                        return true;
+                    }
                 });
             }
 

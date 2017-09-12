@@ -2,6 +2,7 @@ package records.data;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnStorage.BeforeGet;
+import records.data.Table.Display;
 import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -10,6 +11,9 @@ import threadchecker.Tag;
 import utility.ExBiConsumer;
 import utility.ExConsumer;
 import utility.ExFunction;
+import utility.Pair;
+
+import java.util.function.Predicate;
 
 /**
  * Created by neil on 14/01/2017.
@@ -44,5 +48,11 @@ public class CachedCalculatedColumn<S extends ColumnStorage<?>> extends Calculat
     protected int getCacheFilled()
     {
         return cache.filled();
+    }
+
+    @Override
+    protected boolean isAltered()
+    {
+        return true;
     }
 }

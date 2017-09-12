@@ -126,6 +126,12 @@ public class Filter extends TransformationEditable
                                 return DataTypeUtility.value(indexMap.getInt(i));
                             });
                         }
+
+                        @Override
+                        protected boolean isAltered()
+                        {
+                            return true;
+                        }
                     });
                 }
 
