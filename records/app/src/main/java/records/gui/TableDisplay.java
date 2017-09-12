@@ -1,18 +1,20 @@
 package records.gui;
 
+import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.collections.FXCollections;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
-import javafx.geometry.Rectangle2D;
-import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckMenuItem;
+import javafx.scene.control.ButtonType;
 import javafx.scene.control.ContextMenu;
+import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
@@ -35,12 +37,14 @@ import records.data.RecordSet;
 import records.data.Table;
 import records.data.Table.Display;
 import records.data.Table.TableDisplayBase;
-import records.data.TableOperations;
+import records.data.TableId;
+import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
 import records.importers.ClipboardUtils;
+import records.transformations.HideColumnsPanel;
 import records.transformations.TransformationEditable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -53,11 +57,8 @@ import utility.gui.FXUtility;
 import records.gui.stable.StableView;
 import utility.gui.GUI;
 
-import java.io.BufferedOutputStream;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -68,7 +69,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
-import java.util.function.Predicate;
 
 /**
  * A pane which displays a table.  This includes the faux title bar
@@ -97,7 +97,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     @OnThread(Tag.Any)
     private final AtomicReference<Bounds> mostRecentBounds;
     private final HBox header;
-    private final ObjectProperty<Pair<Display, Predicate<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, c -> true));
+    private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
 
     @OnThread(Tag.FX)
     public Point2D closestPointTo(double parentX, double parentY)
@@ -171,7 +171,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
 
             FXUtility.addChangeListenerPlatformNN(columnDisplay, newDisplay -> {
-                setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay), table.getOperations());
+                setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s))), table.getOperations());
                 setRows(recordSet::indexValid);
             });
         }
@@ -352,9 +352,9 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         ToggleGroup show = new ToggleGroup();
         Map<Display, RadioMenuItem> showItems = new EnumMap<>(Display.class);
 
-        showItems.put(Display.COLLAPSED, GUI.radioMenuItem("tableDisplay.menu.show.collapse", () -> setDisplay(Display.COLLAPSED, Collections.emptyList(), parent)));
-        showItems.put(Display.ALL, GUI.radioMenuItem("tableDisplay.menu.show.all", () -> setDisplay(Display.ALL, Collections.emptyList(), parent)));
-        showItems.put(Display.ALTERED, GUI.radioMenuItem("tableDisplay.menu.show.altered", () -> setDisplay(Display.ALTERED, Collections.emptyList(), parent)));
+        showItems.put(Display.COLLAPSED, GUI.radioMenuItem("tableDisplay.menu.show.collapse", () -> setDisplay(Display.COLLAPSED, ImmutableList.of(), parent)));
+        showItems.put(Display.ALL, GUI.radioMenuItem("tableDisplay.menu.show.all", () -> setDisplay(Display.ALL, ImmutableList.of(), parent)));
+        showItems.put(Display.ALTERED, GUI.radioMenuItem("tableDisplay.menu.show.altered", () -> setDisplay(Display.ALTERED, ImmutableList.of(), parent)));
         showItems.put(Display.CUSTOM, GUI.radioMenuItem("tableDisplay.menu.show.custom", () -> editCustomDisplay(parent)));
 
         items.addAll(Arrays.asList(
@@ -379,14 +379,16 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     @RequiresNonNull({"columnDisplay", "table"})
     private void editCustomDisplay(@UnknownInitialization(Object.class) TableDisplay this, View parent)
     {
-        //#error TODO show a dialog asking for custom blacklist, then set state to CUSTOM
-        setDisplay(Display.CUSTOM, Collections.emptyList(), parent);
+        ImmutableList<ColumnId> blackList = new CustomColumnDisplayDialog(parent.getManager(), table.getId(), columnDisplay.get().getSecond()).showAndWait().orElse(null);
+        // Only switch if they didn't cancel, otherwise use previous view mode:
+        if (blackList != null)
+            setDisplay(Display.CUSTOM, blackList, parent);
     }
 
     @RequiresNonNull({"columnDisplay", "table"})
-    private void setDisplay(@UnknownInitialization(Object.class) TableDisplay this, Display newState, List<ColumnId> blackList, View parent)
+    private void setDisplay(@UnknownInitialization(Object.class) TableDisplay this, Display newState, ImmutableList<ColumnId> blackList, View parent)
     {
-        this.columnDisplay.set(new Pair<>(newState, s -> !blackList.contains(s)));
+        this.columnDisplay.set(new Pair<>(newState, blackList));
         table.setShowColumns(newState, blackList);
         parent.modified();
     }
@@ -477,7 +479,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     }
 
     @Override
-    public @OnThread(Tag.Any) void loadPosition(Bounds bounds, Pair<Display, Predicate<ColumnId>> display)
+    public @OnThread(Tag.Any) void loadPosition(Bounds bounds, Pair<Display, ImmutableList<ColumnId>> display)
     {
         Platform.runLater(() -> {
             setLayoutX(bounds.getMinX());
@@ -500,5 +502,25 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     {
         // Header in parent is our local coords, so localToParent that to get our parent:
         return localToParent(header.getBoundsInParent());
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private static class CustomColumnDisplayDialog extends Dialog<ImmutableList<ColumnId>>
+    {
+        private final HideColumnsPanel hideColumnsPanel;
+
+        public CustomColumnDisplayDialog(TableManager mgr, TableId tableId, ImmutableList<ColumnId> initialHidden)
+        {
+            this.hideColumnsPanel = new HideColumnsPanel(mgr, new ReadOnlyObjectWrapper<>(tableId), initialHidden);
+            getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets());
+            getDialogPane().setContent(hideColumnsPanel.getNode());
+            getDialogPane().getButtonTypes().setAll(ButtonType.OK, ButtonType.CANCEL);
+            setResultConverter(bt -> {
+                if (bt == ButtonType.OK)
+                    return hideColumnsPanel.getHiddenColumns();
+                else
+                    return null;
+            });
+        }
     }
 }

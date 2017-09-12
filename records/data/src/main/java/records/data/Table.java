@@ -1,5 +1,6 @@
 package records.data;
 
+import com.google.common.collect.ImmutableList;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -53,7 +54,7 @@ public abstract class Table
 
     // The list is the blacklist, only applicable if first is CUSTOM:
     @OnThread(value = Tag.Any, requireSynchronized = true)
-    private Pair<Display, List<ColumnId>> showColumns = new Pair<>(Display.ALL, Collections.emptyList());
+    private Pair<Display, ImmutableList<ColumnId>> showColumns = new Pair<>(Display.ALL, ImmutableList.of());
 
     /**
      * If id is null, an arbitrary free id is taken
@@ -87,7 +88,7 @@ public abstract class Table
         {
             prevPosition = position;
             if (display != null)
-                display.loadPosition(prevPosition, getShowColumns());
+                display.loadPosition(prevPosition, showColumns);
         }
         return this;
     }
@@ -192,7 +193,7 @@ public abstract class Table
             }
         }
         this.display = display;
-        display.loadPosition(prevPosition, getShowColumns());
+        display.loadPosition(prevPosition, showColumns);
     }
 
     public synchronized final void loadPosition(DisplayContext display) throws UserException
@@ -207,20 +208,20 @@ public abstract class Table
 
             // Now handle the show-columns:
             if (display.ALL() != null)
-                showColumns = new Pair<>(Display.ALL, Collections.emptyList());
+                showColumns = new Pair<>(Display.ALL, ImmutableList.of());
             else if (display.ALTERED() != null)
-                showColumns = new Pair<>(Display.ALTERED, Collections.emptyList());
+                showColumns = new Pair<>(Display.ALTERED, ImmutableList.of());
             else if (display.COLLAPSED() != null)
-                showColumns = new Pair<>(Display.COLLAPSED, Collections.emptyList());
+                showColumns = new Pair<>(Display.COLLAPSED, ImmutableList.of());
             else
             {
-                List<ColumnId> blackList = Utility.mapList(display.item().subList(4, display.item().size()), itemContext -> new ColumnId(itemContext.getText()));
+                ImmutableList<ColumnId> blackList = display.item().subList(4, display.item().size()).stream().map(itemContext -> new ColumnId(itemContext.getText())).collect(ImmutableList.toImmutableList());
                 showColumns = new Pair<>(Display.CUSTOM, blackList);
             }
 
             if (this.display != null)
             {
-                this.display.loadPosition(prevPosition, getShowColumns());
+                this.display.loadPosition(prevPosition, showColumns);
             }
         }
         catch (Exception e)
@@ -253,7 +254,7 @@ public abstract class Table
     }
 
     @OnThread(Tag.Any)
-    public synchronized void setShowColumns(Display newState, List<ColumnId> blackList)
+    public synchronized void setShowColumns(Display newState, ImmutableList<ColumnId> blackList)
     {
         showColumns = new Pair<>(newState, blackList);
     }
@@ -331,7 +332,7 @@ public abstract class Table
     public static interface TableDisplayBase
     {
         @OnThread(Tag.Any)
-        public void loadPosition(Bounds bounds, Pair<Display, Predicate<ColumnId>> display);
+        public void loadPosition(Bounds bounds, Pair<Display, ImmutableList<ColumnId>> display);
 
         @OnThread(Tag.Any)
         public Bounds getPosition();
