@@ -379,7 +379,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     @RequiresNonNull({"columnDisplay", "table"})
     private void editCustomDisplay(@UnknownInitialization(Object.class) TableDisplay this, View parent)
     {
-        // TODO show a dialog asking for custom blacklist, then set state to CUSTOM
+        //#error TODO show a dialog asking for custom blacklist, then set state to CUSTOM
         setDisplay(Display.CUSTOM, Collections.emptyList(), parent);
     }
 

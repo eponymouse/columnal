@@ -99,7 +99,7 @@ public class SingleSourceControl extends HBox implements CompletionListener
         };
     }
 
-    public ObservableObjectValue<@Nullable TableId> tableIdProperty()
+    public ObjectExpression<@Nullable TableId> tableIdProperty()
     {
         return curSelectionId;
     }

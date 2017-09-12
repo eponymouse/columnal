@@ -1,5 +1,6 @@
 package test.gen;
 
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
@@ -39,7 +40,7 @@ public class GenNonsenseHideColumns extends Generator<Transformation_Mgr>
         try
         {
             DummyManager mgr = new DummyManager();
-            return new Transformation_Mgr(mgr, new HideColumns(mgr, ids.getFirst(), ids.getSecond(), cols));
+            return new Transformation_Mgr(mgr, new HideColumns(mgr, ids.getFirst(), ids.getSecond(), ImmutableList.copyOf(cols)));
         }
         catch (InternalException | UserException e)
         {

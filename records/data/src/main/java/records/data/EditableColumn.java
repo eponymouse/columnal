@@ -40,6 +40,7 @@ public abstract class EditableColumn extends Column
     public abstract @NonNull @Value Object getDefaultValue();
 
     @Override
+    @OnThread(Tag.Any)
     protected boolean isAltered()
     {
         // If we're editable, we must be new:

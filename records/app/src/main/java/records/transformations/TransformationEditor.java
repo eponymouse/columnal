@@ -1,6 +1,7 @@
 package records.transformations;
 
 import javafx.beans.binding.BooleanExpression;
+import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
@@ -29,6 +30,7 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
@@ -70,15 +72,20 @@ public abstract class TransformationEditor
 
     public abstract @Nullable TableId getSourceId();
 
-    protected static ListView<ColumnId> getColumnListView(TableManager mgr, ObservableObjectValue<@Nullable TableId> idProperty, @Nullable FXPlatformConsumer<ColumnId> onDoubleClick)
+    protected static ListView<ColumnId> getColumnListView(TableManager mgr, ObjectExpression<@Nullable TableId> idProperty, @Nullable ObservableList<ColumnId> exclude, @Nullable FXPlatformConsumer<ColumnId> onDoubleClick)
     {
         ListView<ColumnId> lv = new ListView<>();
         lv.setPlaceholder(GUI.labelWrapParam("transformEditor.columnList.noSuchTable", ""));
-        FXUtility.addChangeListenerPlatform(idProperty, id -> updateList(lv, id, id == null ? null : mgr.getSingleTableOrNull(id)));
-        {
+        FXPlatformRunnable update = () -> {
             @Nullable TableId id = idProperty.get();
-            updateList(lv, id, id == null ? null : mgr.getSingleTableOrNull(id));
-        }
+            updateList(lv, id, id == null ? null : mgr.getSingleTableOrNull(id), exclude);
+        };
+        FXUtility.addChangeListenerPlatform(idProperty, id -> update.run());
+        if (exclude != null)
+            FXUtility.listen(exclude, c -> update.run());
+        // Also run initially:
+        update.run();
+
         lv.setCellFactory(lv2 -> new TextFieldListCell<ColumnId>(new StringConverter<ColumnId>()
         {
             @Override
@@ -112,14 +119,17 @@ public abstract class TransformationEditor
         return lv;
     }
 
-    private static void updateList(ListView<ColumnId> lv, @Nullable TableId id, @Nullable Table src)
+    private static void updateList(ListView<ColumnId> lv, @Nullable TableId id, @Nullable Table src, @Nullable List<ColumnId> exclude)
     {
         lv.setPlaceholder(GUI.labelWrapParam("transformEditor.columnList.noSuchTable", id == null ? "" : id.getOutput()));
         if (src != null)
         {
             try
             {
-                lv.setItems(FXCollections.observableArrayList(src.getData().getColumnIds()));
+                List<ColumnId> columnIds = new ArrayList<>(src.getData().getColumnIds());
+                if (exclude != null)
+                    columnIds.removeAll(exclude);
+                lv.setItems(FXCollections.observableArrayList(columnIds));
                 if (lv.getItems().isEmpty())
                 {
                     lv.setPlaceholder(GUI.labelWrapParam("transformEditor.columnList.noColumns", id == null ? "" : id.getOutput()));

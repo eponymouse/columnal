@@ -362,7 +362,7 @@ public class SummaryStatistics extends TransformationEditable
             this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
             this.splitBy = FXCollections.observableArrayList(splitBy);
             this.ops = FXCollections.observableArrayList(summaries);
-            this.columnListView = getColumnListView(mgr, srcControl.tableIdProperty(), null);
+            this.columnListView = getColumnListView(mgr, srcControl.tableIdProperty(), null, null);
             this.columnExpressions = new ColumnExpressionList(mgr, srcControl, summaries);
         }
 

@@ -330,7 +330,7 @@ public class PropRunTransformation
         // Test zero:
         {
             List<ColumnId> expected = new ArrayList<>(originalIds);
-            HideColumns hidden = new HideColumns(original.mgr, null, original.data().getId(), Collections.emptyList());
+            HideColumns hidden = new HideColumns(original.mgr, null, original.data().getId(), ImmutableList.of());
             assertEquals(expected, hidden.getData().getColumnIds());
             assertDataSame(hidden.getData(), original.data().getData(), Function.identity());
         }
@@ -340,7 +340,7 @@ public class PropRunTransformation
         {
             List<ColumnId> expected = new ArrayList<>(originalIds);
             expected.remove(single);
-            HideColumns hidden = new HideColumns(original.mgr, null, original.data().getId(), Collections.singletonList(single));
+            HideColumns hidden = new HideColumns(original.mgr, null, original.data().getId(), ImmutableList.of(single));
             assertEquals(expected, hidden.getData().getColumnIds());
             assertDataSame(hidden.getData(), original.data().getData(), Function.identity());
         }
@@ -400,7 +400,7 @@ public class PropRunTransformation
         // Hiding all should be invalid:
         try
         {
-            new HideColumns(original.mgr, null, original.data().getId(), original.data().getData().getColumnIds()).getData();
+            new HideColumns(original.mgr, null, original.data().getId(), ImmutableList.copyOf(original.data().getData().getColumnIds())).getData();
             fail("Hide all");
         }
         catch (UserException e)
@@ -415,7 +415,7 @@ public class PropRunTransformation
         {
             try
             {
-                new HideColumns(original.mgr, null, original.data().getId(), toRemove).getData();
+                new HideColumns(original.mgr, null, original.data().getId(), ImmutableList.copyOf(toRemove)).getData();
                 fail("Hide non-existing");
             }
             catch (UserException e)

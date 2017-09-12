@@ -141,6 +141,7 @@ public final class TextFileColumn extends Column
     }
 
     @Override
+    @OnThread(Tag.Any)
     protected boolean isAltered()
     {
         // If we are direct from text file, we must be new:

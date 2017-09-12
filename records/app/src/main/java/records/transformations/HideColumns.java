@@ -1,5 +1,6 @@
 package records.transformations;
 
+import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.collections.FXCollections;
@@ -73,18 +74,18 @@ public class HideColumns extends TransformationEditable
     private final @Nullable Table src;
     private final @Nullable RecordSet result;
     @OnThread(Tag.Any)
-    private final List<ColumnId> hideIds;
+    private final ImmutableList<ColumnId> hideIds;
     private final List<Column> shownColumns = new ArrayList<>();
     @OnThread(Tag.Any)
     private String error;
 
-    public HideColumns(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, List<ColumnId> toHide) throws InternalException
+    public HideColumns(TableManager mgr, @Nullable TableId thisTableId, TableId srcTableId, ImmutableList<ColumnId> toHide) throws InternalException
     {
         super(mgr, thisTableId);
         this.srcTableId = srcTableId;
         this.src = mgr.getSingleTableOrNull(srcTableId);
         this.error = "Unknown error with table \"" + thisTableId + "\"";
-        this.hideIds = new ArrayList<>(toHide);
+        this.hideIds = toHide;
         if (this.src == null)
         {
             this.result = null;
@@ -166,7 +167,7 @@ public class HideColumns extends TransformationEditable
     @Override
     public @OnThread(Tag.FXPlatform) TransformationEditor edit(View view)
     {
-        return new Editor(view, getManager(), srcTableId, src, hideIds);
+        return new Editor(view, getManager(), srcTableId, hideIds);
     }
 
     @Override
@@ -195,27 +196,14 @@ public class HideColumns extends TransformationEditable
     private static class Editor extends TransformationEditor
     {
         private final SingleSourceControl srcControl;
-        private final ObservableList<ColumnId> columnsToHide;
-        private final ListView<ColumnId> srcColumnList;
-
+        private final HideColumnsPanel columnsPanel;
 
         @OnThread(Tag.FXPlatform)
         @SuppressWarnings("initialization")
-        public Editor(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src, List<ColumnId> toHide)
+        public Editor(View view, TableManager mgr, @Nullable TableId srcTableId, ImmutableList<ColumnId> toHide)
         {
-            columnsToHide = FXCollections.observableArrayList(toHide);
             this.srcControl = new SingleSourceControl(view, mgr, srcTableId);
-            this.srcColumnList = getColumnListView(mgr, srcControl.tableIdProperty(), col -> {
-                addAllItems(Collections.singletonList(col));
-            });
-            srcColumnList.getSelectionModel().setSelectionMode(SelectionMode.MULTIPLE);
-            srcColumnList.setOnKeyPressed(e -> {
-                if (e.getCode() == KeyCode.ENTER)
-                {
-                    addAllItems(srcColumnList.getSelectionModel().getSelectedItems());
-                }
-            });
-            FXUtility.enableDragFrom(srcColumnList, "ColumnId", TransferMode.COPY);
+            this.columnsPanel = new HideColumnsPanel(mgr, srcControl.tableIdProperty(), toHide);
         }
 
         @Override
@@ -239,67 +227,9 @@ public class HideColumns extends TransformationEditable
         @Override
         public Pane getParameterDisplay(FXPlatformConsumer<Exception> reportError)
         {
-            Button add = new Button(">>");
-            add.setMinWidth(Region.USE_PREF_SIZE);
-            VBox addWrapper = new VBox(add);
-            addWrapper.getStyleClass().add("add-column-wrapper");
-
-            DeletableListView<ColumnId> hiddenColumns = new DeletableListView<>(columnsToHide);
-
-            FXUtility.enableDragTo(hiddenColumns, Collections.singletonMap(FXUtility.getTextDataFormat("ColumnId"), new DragHandler()
-            {
-                @Override
-                @SuppressWarnings("unchecked")
-                public @OnThread(Tag.FXPlatform) boolean dragEnded(Dragboard db, Point2D pointInScene)
-                {
-                    @Nullable Object content = db.getContent(FXUtility.getTextDataFormat("ColumnId"));
-                    if (content != null && content instanceof List)
-                    {
-                        addAllItems((List<ColumnId>) content);
-                        return true;
-                    }
-                    return false;
-                }
-            }));
-
-            add.setOnAction(e -> {
-                ObservableList<ColumnId> selectedItems = srcColumnList.getSelectionModel().getSelectedItems();
-                addAllItems(selectedItems);
-                //sortHiddenColumns();
-            });
-
-            GridPane gridPane = new GridPane();
-
-            GridPane.setHgrow(srcColumnList, Priority.ALWAYS);
-            GridPane.setHgrow(hiddenColumns, Priority.ALWAYS);
-            gridPane.add(GUI.label("transformEditor.hide.srcColumns"), 0, 0);
-            gridPane.add(GUI.label("transformEditor.hide.hiddenColumns"), 2, 0);
-            gridPane.add(srcColumnList, 0, 1);
-            gridPane.add(addWrapper, 1, 1);
-            gridPane.add(hiddenColumns, 2, 1);
-            gridPane.getStyleClass().add("hide-columns-lists");
-            return GUI.vbox("hide-columns-content", srcControl, gridPane);
+            return GUI.vbox("hide-columns-content", srcControl, columnsPanel.getNode());
         }
 
-        @OnThread(Tag.FXPlatform)
-        public void addAllItems(List<ColumnId> items)
-        {
-            for (ColumnId selected : items)
-            {
-                if (!columnsToHide.contains(selected))
-                {
-                    columnsToHide.add(selected);
-                }
-            }
-            ObservableList<ColumnId> srcList = srcColumnList.getItems();
-            columnsToHide.sort(Comparator.<ColumnId, Pair<Integer, ColumnId>>comparing(col -> {
-                // If it's in the original, we sort by original position
-                // Otherwise we put it at the top (which will be -1 in original, which
-                // works out neatly) and sort by name.
-                int srcIndex = srcList.indexOf(col);
-                return new Pair<Integer, ColumnId>(srcIndex, col);
-            }, Pair.comparator()));
-        }
 
         @Override
         public BooleanExpression canPressOk()
@@ -311,7 +241,8 @@ public class HideColumns extends TransformationEditable
         public SimulationSupplier<Transformation> getTransformation(TableManager mgr, TableId tableId)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
-            return () -> new HideColumns(mgr, tableId, srcId.get(), columnsToHide);
+            ImmutableList<ColumnId> hiddenCols = columnsPanel.getHiddenColumns();
+            return () -> new HideColumns(mgr, tableId, srcId.get(), hiddenCols);
         }
 
         @Override
@@ -333,13 +264,13 @@ public class HideColumns extends TransformationEditable
         {
             HideColumnsContext loaded = Utility.parseAsOne(detail, TransformationLexer::new, TransformationParser::new, TransformationParser::hideColumns);
 
-            return new HideColumns(mgr, tableId, srcTableId, Utility.mapList(loaded.hideColumn(), hc -> new ColumnId(hc.column.getText())));
+            return new HideColumns(mgr, tableId, srcTableId, loaded.hideColumn().stream().map(hc -> new ColumnId(hc.column.getText())).collect(ImmutableList.toImmutableList()));
         }
 
         @Override
         public @OnThread(Tag.FXPlatform) TransformationEditor editNew(View view, TableManager mgr, @Nullable TableId srcTableId, @Nullable Table src)
         {
-            return new Editor(view, mgr, srcTableId, src, Collections.emptyList());
+            return new Editor(view, mgr, srcTableId, ImmutableList.of());
         }
     }
 

@@ -51,6 +51,7 @@ public class CachedCalculatedColumn<S extends ColumnStorage<?>> extends Calculat
     }
 
     @Override
+    @OnThread(Tag.Any)
     protected boolean isAltered()
     {
         return true;

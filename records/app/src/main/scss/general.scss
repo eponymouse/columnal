@@ -149,3 +149,11 @@
     -fx-font-weight: 600;
     -fx-font-size: 80%;
 }
+
+.hide-columns-lists {
+    .hidden-columns-list-view {
+         .cell .label .text {
+             -fx-strikethrough: true;
+         }
+    }
+}

@@ -340,7 +340,7 @@ public class Sort extends TransformationEditable
                 this.sortBy.add(Optional.of(c));
             }
             this.sortBy.add(Optional.empty());
-            columnListView = getColumnListView(mgr, srcControl.tableIdProperty(), c -> addAllItems(OptionalInt.empty(), Collections.singletonList(c)));
+            columnListView = getColumnListView(mgr, srcControl.tableIdProperty(), null, c -> addAllItems(OptionalInt.empty(), Collections.singletonList(c)));
             columnListView.setOnKeyPressed(e -> {
                 if (e.getCode() == KeyCode.ENTER)
                 {
