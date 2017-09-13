@@ -5,9 +5,9 @@ import javafx.application.Platform;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.collections.FXCollections;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
+import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -63,7 +63,6 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -277,6 +276,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         header.setOnMouseDragged(e -> {
             double sceneX = e.getSceneX();
             double sceneY = e.getSceneY();
+            // If it is a resize, that will be taken care of in the called method.  Otherwise, we do a drag-move:
             if (offsetDrag != null && !FXUtility.mouse(this).dragResize(parent, sceneX, sceneY))
             {
                 Point2D pos = localToParent(sceneToLocal(sceneX, sceneY));
@@ -284,11 +284,14 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 double newY = Math.max(0, pos.getY() - offsetDrag.getY());
 
                 @SuppressWarnings("initialization") // Due to passing this
-                Point2D snapped = parent.snapTableDisplayPosition(this, newX, newY);
+                Point2D snapped = parent.snapTableDisplayPositionWhileDragging(this, e.isShiftDown(), new Point2D(newX, newY), new Dimension2D(getBoundsInLocal().getWidth(), getBoundsInLocal().getHeight()));
                 setLayoutX(snapped.getX());
                 setLayoutY(snapped.getY());
                 parent.tableMovedOrResized(this);
             }
+        });
+        header.setOnMouseReleased(e -> {
+            parent.tableDragEnded();
         });
 
         setOnMouseMoved(e -> {
@@ -329,7 +332,9 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         });
         setOnMousePressed(onPressed);
         setOnMouseDragged(e -> FXUtility.mouse(this).dragResize(parent, e.getSceneX(), e.getSceneY()));
-        setOnMouseReleased(e -> { resizing = false; });
+        setOnMouseReleased(e -> {
+            resizing = false;
+        });
 
         mostRecentBounds = new AtomicReference<>(getBoundsInParent());
         FXUtility.addChangeListenerPlatformNN(boundsInParentProperty(), b -> mostRecentBounds.set(b));

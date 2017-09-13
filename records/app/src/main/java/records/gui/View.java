@@ -8,10 +8,13 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
+import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
+import javafx.collections.ObservableList;
 import javafx.collections.ObservableMap;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
 import javafx.geometry.Rectangle2D;
 import javafx.scene.Cursor;
@@ -27,6 +30,7 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.StackPane;
+import javafx.scene.shape.Line;
 import javafx.scene.shape.QuadCurve;
 import javafx.scene.shape.Rectangle;
 import javafx.scene.shape.Shape;
@@ -40,6 +44,7 @@ import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.DataSource;
 import records.data.Table;
 import records.data.Table.FullSaver;
+import records.data.Table.TableDisplayBase;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.Transformation;
@@ -62,7 +67,10 @@ import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 18/10/2016.
@@ -76,6 +84,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     private final TableManager tableManager;
     // The pane which actually holds the TableDisplay items:
     private final Pane mainPane;
+    private final Pane overlayPane;
     // We want a display that dims everything except the hovered-over table
     // But that requires clipping which messes up the mouse selection.  So we
     // use two panes: one which is invisible for the mouse events, and one for the
@@ -93,6 +102,8 @@ public class View extends StackPane implements TableManager.TableManagerListener
     private @Nullable FXPlatformRunnable cancelDelayedSave;
     // Currently only used for testing:
     private @Nullable EditTransformationDialog currentlyShowingEditTransformationDialog;
+
+    private final ObservableList<Line> snapGuides = FXCollections.observableArrayList();
 
     private void save()
     {
@@ -204,13 +215,121 @@ public class View extends StackPane implements TableManager.TableManagerListener
         adjustParent.run();
     }
 
-    public Point2D snapTableDisplayPosition(TableDisplay tableDisplay, double x, double y)
+    public void tableDragEnded()
+    {
+        snapGuides.clear();
+    }
+
+    // Basically a pair of a double value for snapping to (X or Y determined by context),
+    // and a guide line to draw (if any) to help the user understand the origin of the snap
+    class SnapToAndLine
+    {
+        private final double snapTo;
+        private final @Nullable Line guideLine;
+
+        @OnThread(Tag.FXPlatform)
+        public SnapToAndLine(double snapTo, @Nullable Line guideLine)
+        {
+            this.snapTo = snapTo;
+            this.guideLine = guideLine;
+            if (guideLine != null)
+            {
+                guideLine.setMouseTransparent(true);
+                guideLine.getStyleClass().add("line-snap-guide");
+            }
+        }
+    }
+
+    /**
+     * Snaps the table display position.  There are three types of snapping:
+     *  - One is snapping to the nearest N pixels.  This is always in force.
+     *  - The second is snapping to avoid table headers overlapping.
+     *  - The third is snapping to adjoin nearby tables.  This can be disabled by
+     *    passing true as the second parameter (usually in response to the user
+     *    holding a modifier key while dragging).
+     */
+    public Point2D snapTableDisplayPositionWhileDragging(TableDisplay tableDisplay, boolean suppressSnapTogether, Point2D position, Dimension2D size)
     {
         bringTableDisplayToFront(tableDisplay);
+        snapGuides.clear();
+
+        double x = position.getX();
+        double y = position.getY();
 
         // Snap to nearest 5:
         x = Math.round(x / 5.0) * 5.0;
         y = Math.round(y / 5.0) * 5.0;
+
+        if (!suppressSnapTogether)
+        {
+            // This snap is itself subdivided into two kinds:
+            //  - One is an adjacency snap: our left side can snap to nearby right sides
+            //    (and our bottom side to nearby top sides, top to bottom, right to left),
+            //    as long as we the vertical bounds overlap.
+            //  - The other is an alignment snap: our top side can snap to a nearby top side,
+            //    and our left side to a nearby left.  We don't currently alignment snap bottom or right.
+
+            // Closeness for adjacency snap:
+            final double ADJACENCY_THRESHOLD = 30;
+            // Amount that we must overlap in the other dimension to consider an adjacency snap:
+            final double ADJACENCY_OVERLAP_AMOUNT = 30;
+            // Closeness horiz/vert for alignment snap vert/horiz:
+            final double ALIGNMENT_DISTANCE = 200;
+            // Closeness horiz/vert for alignment snap horiz/vert:
+            final double ALIGNMENT_THRESHOLD = 20;
+
+            Pair<@Nullable SnapToAndLine, @Nullable SnapToAndLine> pos = findFirstLeftAndFirstRight(getAllTables().stream()
+                .filter(t -> t != tableDisplay.getTable())
+                .flatMap(t -> {
+                    @Nullable TableDisplayBase display = t.getDisplay();
+                    if (display == null)
+                        return Stream.empty();
+
+                    Bounds b = display.getPosition();
+                    // Candidate points and distance.  We will pick lowest distance.
+                    // The snap values are either an X candidate (Left) or a Y candidate (Right).
+                    List<Pair<Double, Either<SnapToAndLine, SnapToAndLine>>> snaps = new ArrayList<>();
+                    // Check for our left adjacent to their right:
+                    if (Math.abs(b.getMaxX() - position.getX()) < ADJACENCY_THRESHOLD
+                        && rangeOverlaps(ADJACENCY_OVERLAP_AMOUNT, position.getY(), position.getY() + size.getHeight(), b.getMinY(), b.getMaxY()))
+                    {
+                        snaps.add(new Pair<>(b.getMaxX() - position.getX(), Either.left(new SnapToAndLine(b.getMaxX(), null))));
+                    }
+                    // Check our right adjacent to their left:
+                    if (Math.abs(b.getMinX() - (position.getX() + size.getWidth())) < ADJACENCY_THRESHOLD
+                        && rangeOverlaps(ADJACENCY_OVERLAP_AMOUNT, position.getY(), position.getY() + size.getHeight(), b.getMinY(), b.getMaxY()))
+                    {
+                        snaps.add(new Pair<>(b.getMinX() - (position.getX() + size.getWidth()), Either.left(new SnapToAndLine(b.getMinX() - size.getWidth(), null))));
+                    }
+
+                    // TODO top/bottom adjacency
+
+                    // Check alignment with our top:
+                    if (Math.abs(b.getMinY() - position.getY()) < ALIGNMENT_THRESHOLD
+                        && rangeOverlaps(0, b.getMinX() - ALIGNMENT_DISTANCE, b.getMaxX() + ALIGNMENT_DISTANCE, position.getX(), position.getX() + size.getWidth()))
+                    {
+                        Line guide = new Line(Math.min(b.getMinX(), position.getX()), b.getMinY(), Math.max(b.getMaxX(), position.getX() + size.getWidth()), b.getMinY());
+                        snaps.add(new Pair<>(b.getMinY() - position.getY(), Either.right(new SnapToAndLine(b.getMinY(), guide))));
+                    }
+
+                    // TODO left alignment
+
+                    return snaps.stream();
+                    
+                }).sorted(Comparator.comparing(p -> Math.abs(p.getFirst()))).map(p -> p.getSecond()));
+            if (pos.getFirst() != null)
+            {
+                x = pos.getFirst().snapTo;
+                if (pos.getFirst().guideLine != null)
+                    snapGuides.add(pos.getFirst().guideLine);
+            }
+            if (pos.getSecond() != null)
+            {
+                y = pos.getSecond().snapTo;
+                if (pos.getSecond().guideLine != null)
+                    snapGuides.add(pos.getSecond().guideLine);
+            }
+        }
 
         // Prevent infinite loop:
         int iterations = 0;
@@ -220,7 +339,37 @@ public class View extends StackPane implements TableManager.TableManagerListener
             y += 5;
             iterations += 1;
         }
+
         return new Point2D(x, y);
+    }
+
+    /**
+     * Checks if the two ranges aMin--aMax and bMin--bMax overlap by at least overlapAmount (true = they do overlap by that much or more)
+     */
+    private static boolean rangeOverlaps(double overlapAmount, double aMin, double aMax, double bMin, double bMax)
+    {
+        // From https://stackoverflow.com/questions/2953967/built-in-function-for-computing-overlap-in-python
+
+        return Math.max(0, Math.min(aMax, bMax)) - Math.max(aMin, bMin) >= overlapAmount;
+    }
+
+    // Doesn't really need to be generic in both, but better type safety checking this way:
+    private static <A,B> Pair<@Nullable A, @Nullable B> findFirstLeftAndFirstRight(Stream<Either<A, B>> stream)
+    {
+        // Atomic is a bit overkill, but creating arrays of generic types is a pain:
+        AtomicReference<@Nullable A> left = new AtomicReference<>(null);
+        AtomicReference<@Nullable B> right = new AtomicReference<>(null);
+        for (Either<A, B> v : Utility.iterableStream(stream))
+        {
+            // Overwrite null only; leave other values intact:
+            v.either_(x -> left.compareAndSet(null, x), x -> right.compareAndSet(null, x));
+
+            // No point continuing if we've already found both:
+            if (left.get() != null && right.get() != null)
+                break;
+        }
+
+        return new Pair<>(left.get(), right.get());
     }
 
     private void bringTableDisplayToFront(TableDisplay tableDisplay)
@@ -228,9 +377,13 @@ public class View extends StackPane implements TableManager.TableManagerListener
         int index = Utility.indexOfRef(mainPane.getChildren(), tableDisplay);
         if (index < mainPane.getChildren().size() - 1)
         {
-            // This seems to be the only way to do a re-order:
-            mainPane.getChildren().remove(tableDisplay);
-            mainPane.getChildren().add(tableDisplay);
+            // The only way to do a re-order in Java 8 is to rearrange the children.
+            // Simple thing would be to move the node to the end of the list -- but if a drag has begun
+            // on this node (one of the ways we might be called), the remove/add interrupts the drag.
+            // So instead, we take all those items ahead of us in the list and move them behind us:
+            List<Node> ahead = new ArrayList<>(mainPane.getChildren().subList(index + 1, mainPane.getChildren().size()));
+            mainPane.getChildren().remove(index + 1, mainPane.getChildren().size());
+            mainPane.getChildren().addAll(index, ahead);
         }
     }
 
@@ -321,10 +474,12 @@ public class View extends StackPane implements TableManager.TableManagerListener
         diskFile = new SimpleObjectProperty<>(location);
         tableManager = new TableManager(TransformationManager.getInstance(), this);
         mainPane = new Pane();
+        overlayPane = new Pane();
+        overlayPane.setMouseTransparent(true);
         pickPaneMouse = new Pane();
         pickPaneDisplay = new Pane();
         pickPaneDisplay.getStyleClass().add("view-pick-pane");
-        getChildren().add(mainPane);
+        getChildren().addAll(mainPane, overlayPane);
         getStyleClass().add("view");
         currentPick = new SimpleObjectProperty<>(null);
         // Needs to pick up mouse events on mouse pane, not display pane:
@@ -365,12 +520,20 @@ public class View extends StackPane implements TableManager.TableManagerListener
             Overlays removed = c.getValueRemoved();
             if (removed != null)
             {
-                mainPane.getChildren().removeAll(removed.arrowFrom, removed.name, removed.arrowTo);
+                overlayPane.getChildren().removeAll(removed.arrowFrom, removed.name, removed.arrowTo);
             }
             Overlays added = c.getValueAdded();
             if (added != null)
             {
-                mainPane.getChildren().addAll(added.arrowFrom, added.name, added.arrowTo);
+                overlayPane.getChildren().addAll(added.arrowFrom, added.name, added.arrowTo);
+            }
+        });
+
+        snapGuides.addListener((ListChangeListener<Line>) c -> {
+            while (c.next())
+            {
+                overlayPane.getChildren().removeAll(c.getRemoved());
+                overlayPane.getChildren().addAll(c.getAddedSubList());
             }
         });
     }

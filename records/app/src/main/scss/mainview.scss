@@ -27,3 +27,9 @@
 .view-pick-pane {
     -fx-background-color: rgba(40, 40, 40, 0.3);
 }
+
+.line-snap-guide {
+    -fx-stroke-width: 5;
+    -fx-stroke-dash-array: 12 16;
+    -fx-stroke-line-cap: round;
+}
