@@ -85,6 +85,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     // The pane which actually holds the TableDisplay items:
     private final Pane mainPane;
     private final Pane overlayPane;
+    private final Pane snapGuidePane;
     // We want a display that dims everything except the hovered-over table
     // But that requires clipping which messes up the mouse selection.  So we
     // use two panes: one which is invisible for the mouse events, and one for the
@@ -301,6 +302,18 @@ public class View extends StackPane implements TableManager.TableManagerListener
                     {
                         snaps.add(new Pair<>(b.getMinX() - (position.getX() + size.getWidth()), Either.left(new SnapToAndLine(b.getMinX() - size.getWidth(), null))));
                     }
+                    // Check for our top adjacent to their bottom:
+                    if (Math.abs(b.getMaxY() - position.getY()) < ADJACENCY_THRESHOLD
+                        && rangeOverlaps(ADJACENCY_OVERLAP_AMOUNT, position.getX(), position.getX() + size.getWidth(), b.getMinX(), b.getMaxX()))
+                    {
+                        snaps.add(new Pair<>(b.getMaxY() - position.getY(), Either.right(new SnapToAndLine(b.getMaxY(), null))));
+                    }
+                    // Check our bottom adjacent to their top:
+                    if (Math.abs(b.getMinY() - (position.getY() + size.getHeight())) < ADJACENCY_THRESHOLD
+                        && rangeOverlaps(ADJACENCY_OVERLAP_AMOUNT, position.getX(), position.getX() + size.getWidth(), b.getMinX(), b.getMaxX()))
+                    {
+                        snaps.add(new Pair<>(b.getMinY() - (position.getY() + size.getHeight()), Either.right(new SnapToAndLine(b.getMinY() - size.getHeight(), null))));
+                    }
 
                     // TODO top/bottom adjacency
 
@@ -311,8 +324,13 @@ public class View extends StackPane implements TableManager.TableManagerListener
                         Line guide = new Line(Math.min(b.getMinX(), position.getX()), b.getMinY(), Math.max(b.getMaxX(), position.getX() + size.getWidth()), b.getMinY());
                         snaps.add(new Pair<>(b.getMinY() - position.getY(), Either.right(new SnapToAndLine(b.getMinY(), guide))));
                     }
-
-                    // TODO left alignment
+                    // And with our left:
+                    if (Math.abs(b.getMinX() - position.getX()) < ALIGNMENT_THRESHOLD
+                        && rangeOverlaps(0, b.getMinY() - ALIGNMENT_DISTANCE, b.getMaxY() + ALIGNMENT_DISTANCE, position.getY(), position.getY() + size.getHeight()))
+                    {
+                        Line guide = new Line(b.getMinX(), Math.min(b.getMinY(), position.getY()), b.getMinX(), Math.max(b.getMaxY(), position.getY() + size.getHeight()));
+                        snaps.add(new Pair<>(b.getMinX() - position.getX(), Either.left(new SnapToAndLine(b.getMinX(), guide))));
+                    }
 
                     return snaps.stream();
                     
@@ -475,11 +493,13 @@ public class View extends StackPane implements TableManager.TableManagerListener
         tableManager = new TableManager(TransformationManager.getInstance(), this);
         mainPane = new Pane();
         overlayPane = new Pane();
-        overlayPane.setMouseTransparent(true);
+        overlayPane.setPickOnBounds(false);
+        snapGuidePane = new Pane();
+        snapGuidePane.setMouseTransparent(true);
         pickPaneMouse = new Pane();
         pickPaneDisplay = new Pane();
         pickPaneDisplay.getStyleClass().add("view-pick-pane");
-        getChildren().addAll(mainPane, overlayPane);
+        getChildren().addAll(mainPane, overlayPane, snapGuidePane);
         getStyleClass().add("view");
         currentPick = new SimpleObjectProperty<>(null);
         // Needs to pick up mouse events on mouse pane, not display pane:
@@ -532,8 +552,8 @@ public class View extends StackPane implements TableManager.TableManagerListener
         snapGuides.addListener((ListChangeListener<Line>) c -> {
             while (c.next())
             {
-                overlayPane.getChildren().removeAll(c.getRemoved());
-                overlayPane.getChildren().addAll(c.getAddedSubList());
+                snapGuidePane.getChildren().removeAll(c.getRemoved());
+                snapGuidePane.getChildren().addAll(c.getAddedSubList());
             }
         });
     }
