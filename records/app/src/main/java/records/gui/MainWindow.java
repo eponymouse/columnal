@@ -15,6 +15,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
@@ -28,6 +29,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
+import utility.Pair;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
@@ -59,7 +61,7 @@ public class MainWindow
     }
 
     // If src is null, make new
-    public static MainWindowActions show(final Stage stage, File destinationFile, @Nullable String src) throws UserException, InternalException
+    public static MainWindowActions show(final Stage stage, File destinationFile, @Nullable Pair<File, String> src) throws UserException, InternalException
     {
         ScrollPaneFill scrollPane = new ScrollPaneFill();
 
@@ -133,7 +135,7 @@ public class MainWindow
             {
                 try
                 {
-                    MainWindow.show(new Stage(), open, FileUtils.readFileToString(open, "UTF-8"));
+                    MainWindow.show(new Stage(), open, new Pair<>(open, FileUtils.readFileToString(open, "UTF-8")));
                 }
                 catch (IOException | UserException | InternalException ex)
                 {
@@ -180,8 +182,8 @@ public class MainWindow
 
         if (src != null)
         {
-            @NonNull String srcFinal = src;
-            Workers.onWorkerThread("Load", Priority.LOAD_FROM_DISK, () -> Utility.alertOnError_(() -> v.getManager().loadAll(srcFinal)));
+            @NonNull Pair<File, String> srcFinal = src;
+            Workers.onWorkerThread("Load", Priority.LOAD_FROM_DISK, () -> Utility.alertOnError_(err -> TranslationUtility.getString("error.loading", srcFinal.getFirst().getAbsolutePath(), err), () -> v.getManager().loadAll(srcFinal.getSecond())));
         }
 
         stage.show();

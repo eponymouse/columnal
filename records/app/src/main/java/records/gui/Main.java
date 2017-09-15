@@ -7,6 +7,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.MainWindow.MainWindowActions;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.gui.FXUtility;
 
 import java.io.File;
@@ -38,7 +39,7 @@ public class Main extends Application
                 File paramFile = new File(param);
                 if (param.endsWith(".rec"))
                 {
-                    MainWindow.show(new Stage(), paramFile, FileUtils.readFileToString(paramFile, Charset.forName("UTF-8")));
+                    MainWindow.show(new Stage(), paramFile, new Pair<>(paramFile, FileUtils.readFileToString(paramFile, Charset.forName("UTF-8"))));
                 }
                 else
                 {

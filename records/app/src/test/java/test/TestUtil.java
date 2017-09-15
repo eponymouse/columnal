@@ -803,7 +803,7 @@ public class TestUtil
         temp.deleteOnExit();
         String saved = save(mgr);
         System.out.println("Saving: {{{" + saved + "}}}");
-        Platform.runLater(() -> checkedToRuntime_(() -> MainWindow.show(windowToUse, temp, saved)));
+        Platform.runLater(() -> checkedToRuntime_(() -> MainWindow.show(windowToUse, temp, new Pair<>(temp, saved))));
         do
         {
             //System.err.println("Waiting for main window");

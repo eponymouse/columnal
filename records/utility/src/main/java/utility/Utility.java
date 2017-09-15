@@ -1159,9 +1159,14 @@ public class Utility
         void run() throws InternalException, UserException;
     }
 
-
     @OnThread(Tag.Simulation)
     public static void alertOnError_(RunOrError r)
+    {
+        alertOnError_(err -> err, r);
+    }
+
+    @OnThread(Tag.Simulation)
+    public static void alertOnError_(Function<@Localized String, @Localized String> errWrap, RunOrError r)
     {
         try
         {
@@ -1171,7 +1176,7 @@ public class Utility
         {
             Platform.runLater(() ->
             {
-                showError(e);
+                showError(errWrap, e);
             });
         }
     }
@@ -1209,6 +1214,12 @@ public class Utility
     @OnThread(Tag.FXPlatform)
     public static void showError(Exception e)
     {
+        showError(x -> x, e);
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static void showError(Function<@Localized String, @Localized String> errWrap, Exception e)
+    {
         if (showingError)
         {
             // TODO do something with the queued errors; add to shown dialog?
@@ -1217,7 +1228,7 @@ public class Utility
         else
         {
             log(e);
-            String localizedMessage = e.getLocalizedMessage();
+            String localizedMessage = errWrap.apply(e.getLocalizedMessage());
             Alert alert = new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK);
             alert.initModality(Modality.APPLICATION_MODAL);
             showingError = true;

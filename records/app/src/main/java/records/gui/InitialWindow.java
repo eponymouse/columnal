@@ -13,6 +13,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.Utility;
 import utility.gui.*;
 
@@ -72,7 +73,7 @@ public class InitialWindow
         {
             try
             {
-                MainWindow.show(new Stage(), src, FileUtils.readFileToString(src, "UTF-8"));
+                MainWindow.show(new Stage(), src, new Pair<>(src, FileUtils.readFileToString(src, "UTF-8")));
                 Utility.usedFile(src);
                 // Only hide us if the load and show completed successfully:
                 parent.hide();
