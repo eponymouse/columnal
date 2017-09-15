@@ -71,6 +71,7 @@ public abstract class DataSource extends Table
             LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
             ImmediateDataSource immediateDataSource = new ImmediateDataSource(manager, new TableId(immed.tableId().getText()), recordSet);
             manager.record(immediateDataSource);
+            immediateDataSource.loadPosition(table.display());
             return immediateDataSource;
         }
         else

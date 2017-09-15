@@ -287,11 +287,11 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 Point2D snapped = parent.snapTableDisplayPositionWhileDragging(this, e.isShiftDown(), new Point2D(newX, newY), new Dimension2D(getBoundsInLocal().getWidth(), getBoundsInLocal().getHeight()));
                 setLayoutX(snapped.getX());
                 setLayoutY(snapped.getY());
-                parent.tableMovedOrResized(this);
             }
         });
         header.setOnMouseReleased(e -> {
             parent.tableDragEnded();
+            parent.tableMovedOrResized(this);
         });
 
         setOnMouseMoved(e -> {
