@@ -32,6 +32,7 @@ import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
+import javafx.stage.Window;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -534,7 +535,7 @@ public class FXUtility
      * @param tag
      * @return
      */
-    public static @Nullable File chooseFileOpen(@LocalizableKey String titleKey, String tag, Stage parent, ExtensionFilter... extensionFilters)
+    public static @Nullable File chooseFileOpen(@LocalizableKey String titleKey, String tag, Window parent, ExtensionFilter... extensionFilters)
     {
         FileChooser fc = new FileChooser();
         fc.setTitle(TranslationUtility.getString(titleKey));

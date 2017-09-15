@@ -930,7 +930,7 @@ public class GuessFormat
         Workers.onWorkerThread("Loading" + file.getName(), Priority.LOAD_FROM_DISK, () -> {
             try
             {
-                @OnThread(Tag.Simulation) RecordSet recordSet = TextImport.makeRecordSet(typeManager, file, t, textAreaFiller);
+                @OnThread(Tag.Simulation) RecordSet recordSet = TextImporter.makeRecordSet(typeManager, file, t, textAreaFiller);
                 Platform.runLater(() -> {
                     gui.tableView.setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, new Pair<>(Display.ALL, c -> true)), null);
                     gui.tableView.setRows(recordSet::indexValid);

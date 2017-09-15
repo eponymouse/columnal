@@ -1,7 +1,10 @@
 package records.importers;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import javafx.application.Platform;
+import javafx.stage.Window;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
 import records.data.Column;
@@ -30,13 +33,19 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
 import records.importers.GuessFormat.ImportInfo;
+import records.importers.base.Importer;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ReadState;
+import utility.Workers;
+import utility.Workers.Priority;
+import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -55,8 +64,31 @@ import java.util.Set;
 /**
  * Created by neil on 31/10/2016.
  */
-public class TextImport
+public class TextImporter implements Importer
 {
+    @OnThread(Tag.Any)
+    @Override
+    public ImmutableList<Pair<@Localized String, ImmutableList<String>>> getSupportedFileTypes()
+    {
+        return ImmutableList.of(new Pair<@Localized String, ImmutableList<String>>(TranslationUtility.getString("data.import.type.text"), ImmutableList.of("*.txt", "*.csv")));
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, File src, FXPlatformConsumer<DataSource> onLoad)
+    {
+        Workers.onWorkerThread("GuessFormat data", Priority.LOAD_FROM_DISK, () ->
+        {
+            try
+            {
+                importTextFile(tableManager, src, rs -> onLoad.consume(rs));
+            }
+            catch (InternalException | UserException | IOException ex)
+            {
+                FXUtility.logAndShowError("import.text.error", ex);
+            }
+        });
+    }
+
     @OnThread(Tag.Simulation)
     public static void importTextFile(TableManager mgr, File textFile, FXPlatformConsumer<DataSource> then) throws IOException, InternalException, UserException
     {

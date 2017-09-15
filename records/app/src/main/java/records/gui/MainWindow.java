@@ -5,17 +5,13 @@ import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
-import javafx.geometry.Bounds;
-import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.FileChooser;
-import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
@@ -24,11 +20,10 @@ import records.data.ImmediateDataSource;
 import records.error.InternalException;
 import records.error.UserException;
 import records.importers.HTMLImport;
-import records.importers.TextImport;
+import records.importers.TextImporter;
+import records.importers.manager.ImporterManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.Workers;
@@ -89,7 +84,7 @@ public class MainWindow
             ),
             GUI.menu("menu.data",
                 GUI.menuItem("menu.data.new", () -> newTable(v)),
-                GUI.menuItem("menu.data.import", () -> importText(v, stage))
+                GUI.menuItem("menu.data.import", () -> chooseAndImportFile(v, stage))
             ),
             GUI.menu("menu.view",
                 GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait())
@@ -100,7 +95,7 @@ public class MainWindow
 
         MenuItem importItem = new MenuItem("Text");
         importItem.setOnAction(e -> {
-            importText(v, stage);
+            chooseAndImportFile(v, stage);
         });
         MenuItem importHTMLItem = new MenuItem("HTML");
         importHTMLItem.setOnAction(e -> {
@@ -158,7 +153,7 @@ public class MainWindow
             try
             {
                 DataSource rs = HTMLImport.importHTMLFile(v.getManager(), new File("S:\\Downloads\\Report_10112016.xls")).get(0);
-                    //TextImport.importTextFile(new File("J:\\price\\farm-output-jun-2016.txt"  "J:\\price\\detailed.txt"));
+                    //TextImporter.importTextFile(new File("J:\\price\\farm-output-jun-2016.txt"  "J:\\price\\detailed.txt"));
                 Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.addSource(rs)));
             }
             catch (IOException | InternalException | UserException ex)
@@ -193,37 +188,14 @@ public class MainWindow
             @Override
             public void importFile(File file)
             {
-                importText(v, file);
+                ImporterManager.getInstance().importFile(stage, v.getManager(), file, ds -> v.addSource(ds));
             }
         };
     }
 
-    private static void importText(View v, Stage stage)
+    private static void chooseAndImportFile(View v, Stage stage)
     {
-        @Nullable File chosen = FXUtility.chooseFileOpen("data.import.dialogTitle", "dataOpen", stage,
-            new ExtensionFilter(TranslationUtility.getString("data.import.type.text"), "*.txt", "*.csv"),
-            new ExtensionFilter(TranslationUtility.getString("extension.allfiles"), "*.*")
-        );
-        if (chosen != null)
-        {
-            importText(v, chosen);
-        }
-    }
-
-    private static void importText(View v, @NonNull File chosenFinal)
-    {
-        Workers.onWorkerThread("GuessFormat data", Priority.LOAD_FROM_DISK, () ->
-        {
-            try
-            {
-                TextImport.importTextFile(v.getManager(), chosenFinal, rs ->
-                        Utility.alertOnErrorFX_(() -> v.addSource(rs)));
-            }
-            catch (InternalException | UserException | IOException ex)
-            {
-                FXUtility.logAndShowError("import.text.error", ex);
-            }
-        });
+        ImporterManager.getInstance().chooseAndImportFile(stage, v.getManager(), ds -> v.addSource(ds));
     }
 
     public static void closeAll()

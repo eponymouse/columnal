@@ -5,6 +5,8 @@ import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.MainWindow.MainWindowActions;
+import records.importers.TextImporter;
+import records.importers.manager.ImporterManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -26,6 +28,8 @@ public class Main extends Application
         FXUtility.ensureFontLoaded("NotoSans-Regular.ttf");
         FXUtility.ensureFontLoaded("SourceCodePro-Regular.ttf");
         FXUtility.ensureFontLoaded("SourceCodePro-Semibold.ttf");
+
+        ImporterManager.getInstance().registerImporter(new TextImporter());
 
         Parameters parameters = getParameters();
         if (parameters.getUnnamed().isEmpty())
