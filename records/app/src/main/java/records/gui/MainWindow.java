@@ -19,8 +19,7 @@ import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.error.InternalException;
 import records.error.UserException;
-import records.importers.HTMLImport;
-import records.importers.TextImporter;
+import records.importers.HTMLImporter;
 import records.importers.manager.ImporterManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -92,55 +91,6 @@ public class MainWindow
             )
         );
 
-        Menu menu = new Menu("Data");
-
-        MenuItem importItem = new MenuItem("Text");
-        importItem.setOnAction(e -> {
-            chooseAndImportFile(v, stage);
-        });
-        MenuItem importHTMLItem = new MenuItem("HTML");
-        importHTMLItem.setOnAction(e -> {
-            FileChooser fc = new FileChooser();
-            File chosen = fc.showOpenDialog(stage);
-            if (chosen != null)
-            {
-                @NonNull File chosenFinal = chosen;
-                Workers.onWorkerThread("GuessFormat data", Priority.LOAD_FROM_DISK, () ->
-                {
-                    try
-                    {
-                        for (DataSource rs : HTMLImport.importHTMLFile(v.getManager(), chosenFinal))
-                        {
-                            Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.addSource(rs)));
-                        }
-                    }
-                    catch (IOException | InternalException | UserException ex)
-                    {
-                        FXUtility.logAndShowError("import.html.error", ex);
-                    }
-                });
-            }
-        });
-        menu.getItems().addAll(importItem, importHTMLItem);
-
-        MenuItem openItem = new MenuItem(TranslationUtility.getString("menu.project.open"));
-        openItem.setOnAction(e -> {
-            FileChooser fc = new FileChooser();
-            File open = fc.showOpenDialog(stage);
-            if (open != null)
-            {
-                try
-                {
-                    MainWindow.show(new Stage(), open, new Pair<>(open, FileUtils.readFileToString(open, "UTF-8")));
-                }
-                catch (IOException | UserException | InternalException ex)
-                {
-                    FXUtility.logAndShowError("open.error", ex);
-                }
-            }
-        });
-        menu.getItems().add(openItem);
-
         /*
         MenuItem saveItem = new MenuItem("Save to Clipboard");
         saveItem.setOnAction(e -> {
@@ -153,7 +103,7 @@ public class MainWindow
         Workers.onWorkerThread("Example import", () -> {
             try
             {
-                DataSource rs = HTMLImport.importHTMLFile(v.getManager(), new File("S:\\Downloads\\Report_10112016.xls")).get(0);
+                DataSource rs = HTMLImporter.importHTMLFile(v.getManager(), new File("S:\\Downloads\\Report_10112016.xls")).get(0);
                     //TextImporter.importTextFile(new File("J:\\price\\farm-output-jun-2016.txt"  "J:\\price\\detailed.txt"));
                 Platform.runLater(() -> Utility.alertOnErrorFX_(() -> v.addSource(rs)));
             }

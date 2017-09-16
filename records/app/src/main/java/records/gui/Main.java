@@ -5,6 +5,7 @@ import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.MainWindow.MainWindowActions;
+import records.importers.HTMLImporter;
 import records.importers.TextImporter;
 import records.importers.manager.ImporterManager;
 import threadchecker.OnThread;
@@ -30,6 +31,8 @@ public class Main extends Application
         FXUtility.ensureFontLoaded("SourceCodePro-Semibold.ttf");
 
         ImporterManager.getInstance().registerImporter(new TextImporter());
+        // TODO move this to a plugin:
+        ImporterManager.getInstance().registerImporter(new HTMLImporter());
 
         Parameters parameters = getParameters();
         if (parameters.getUnnamed().isEmpty())

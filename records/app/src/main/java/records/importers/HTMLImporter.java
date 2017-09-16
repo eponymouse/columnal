@@ -1,5 +1,9 @@
 package records.importers;
 
+import com.google.common.collect.ImmutableList;
+import javafx.application.Platform;
+import javafx.stage.Window;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jsoup.Jsoup;
@@ -9,7 +13,10 @@ import org.jsoup.select.Elements;
 import records.data.*;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeUtility;
+import records.importers.base.Importer;
 import utility.ExFunction;
+import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.TaggedValue;
 import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
@@ -27,6 +34,8 @@ import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
+import utility.Workers;
+import utility.Workers.Priority;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,12 +47,12 @@ import java.util.List;
 /**
  * Created by neil on 31/10/2016.
  */
-public class HTMLImport
+public class HTMLImporter implements Importer
 {
     @OnThread(Tag.Simulation)
-    public static List<DataSource> importHTMLFile(TableManager mgr, File htmlFile) throws IOException, InternalException, UserException
+    private static ImmutableList<DataSource> importHTMLFile(TableManager mgr, File htmlFile) throws IOException, InternalException, UserException
     {
-        List<DataSource> results = new ArrayList<>();
+        ImmutableList.Builder<DataSource> results = ImmutableList.builder();
         Document doc = parse(htmlFile);
         Elements tables = doc.select("table");
 
@@ -134,12 +143,45 @@ public class HTMLImport
             results.add(new ImmediateDataSource(mgr, new EditableRecordSet(columns, () -> len)));
 
         }
-        return results;
+        return results.build();
     }
 
     @SuppressWarnings("nullness")
     private static Document parse(File htmlFile) throws IOException
     {
         return Jsoup.parse(htmlFile, null);
+    }
+
+    @Override
+    public @Localized String getName()
+    {
+        return "HTML Import";
+    }
+
+    @Override
+    public @OnThread(Tag.Any) ImmutableList<Pair<@Localized String, ImmutableList<String>>> getSupportedFileTypes()
+    {
+        return ImmutableList.of(new Pair<>("HTML", ImmutableList.of("*.html", "*.htm")));
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager tableManager, File src, FXPlatformConsumer<DataSource> onLoad)
+    {
+        Workers.onWorkerThread("Importing HTML", Priority.LOAD_FROM_DISK, () -> Utility.alertOnError_(() -> {
+            try
+            {
+                ImmutableList<DataSource> loaded = importHTMLFile(tableManager, src);
+                Platform.runLater(() -> {
+                    for (DataSource dataSource : loaded)
+                    {
+                        onLoad.consume(dataSource);
+                    }
+                });
+            }
+            catch (IOException e)
+            {
+                throw new UserException("IO Error", e);
+            }
+        }));
     }
 }

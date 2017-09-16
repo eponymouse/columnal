@@ -28,7 +28,9 @@ public interface Importer
      * @param parent The window parent, in case you need to show any dialogs
      * @param tableManager The destination table manager
      * @param src The file to read from
-     * @param onLoad The callback to call if the load is successful
+     * @param onLoad The callback to call if the load is successful.  If you
+     *               have multiple tables to import, calling this multiple times
+     *               is safe.
      */
     @OnThread(Tag.FXPlatform)
     public void importFile(Window parent, TableManager tableManager, File src, FXPlatformConsumer<DataSource> onLoad);
