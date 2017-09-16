@@ -68,19 +68,10 @@ public class ImporterManager
     @OnThread(Tag.FXPlatform)
     public void chooseAndImportLink(Window parent, TableManager tableManager, FXPlatformConsumer<DataSource> onLoad)
     {
-        @Nullable Pair<URL, Importer> choice = new ImportLinkDialog().showAndWait().orElse(null);
+        @Nullable Pair<File, Importer> choice = new ImportLinkDialog().showAndWait().orElse(null);
         if (choice != null)
         {
-            try
-            {
-                @Nullable File downloaded = download(choice.getFirst());
-                if (downloaded != null)
-                    choice.getSecond().importFile(parent, tableManager, downloaded, onLoad);
-            }
-            catch (IOException e)
-            {
-                FXUtility.logAndShowError("error.downloading", e);
-            }
+            choice.getSecond().importFile(parent, tableManager, choice.getFirst(), onLoad);
         }
     }
 
@@ -90,6 +81,10 @@ public class ImporterManager
         int slash = suggested.indexOf('/');
         if (slash != -1)
             suggested = suggested.substring(slash + 1);
+        // From https://stackoverflow.com/a/32628056/412908
+        suggested = suggested.replaceAll("[^\\p{IsAlphabetic}^\\p{IsDigit}]", "");
+        if (suggested.length() < 3)
+            suggested += "abc";
         File f = File.createTempFile(suggested, null);
         f.deleteOnExit();
         FileUtils.copyURLToFile(url, f);
@@ -125,7 +120,7 @@ public class ImporterManager
         return SINGLETON;
     }
 
-    private class ImportLinkDialog extends ErrorableDialog<Pair<URL, Importer>>
+    private class ImportLinkDialog extends ErrorableDialog<Pair<File, Importer>>
     {
         private final ErrorableTextField<URL> linkField;
         private final PickImporterPane pickImporterPane;
@@ -143,7 +138,7 @@ public class ImporterManager
 
         @Override
         @OnThread(Tag.FXPlatform)
-        protected Either<String, Pair<URL, Importer>> calculateResult()
+        protected Either<String, Pair<File, Importer>> calculateResult()
         {
             @Nullable URL url = linkField.valueProperty().get();
             if (url == null)
@@ -153,19 +148,32 @@ public class ImporterManager
             if (importer == null)
                 return Either.left("Must pick an importer");
 
-            return Either.right(new Pair<>(url, importer));
+            try
+            {
+                // TODO show progress while downloading
+                return Either.right(new Pair<>(download(url), importer));
+            }
+            catch (Exception e)
+            {
+                return Either.left("Problem downloading: " + e.getLocalizedMessage());
+            }
+
+
         }
     }
 
 
     private static ConversionResult<URL> checkURL(String src)
     {
+        if (src.isEmpty())
+            return ConversionResult.error("URL cannot be blank");
+
         Exception originalException = null;
         try
         {
             return ConversionResult.success(new URL(src));
         }
-        catch (MalformedURLException e)
+        catch (Exception e)
         {
             originalException = e;
         }
@@ -178,7 +186,7 @@ public class ImporterManager
                 return ConversionResult.success(file);
             }
         }
-        catch (MalformedURLException | URISyntaxException e)
+        catch (Exception e)
         {
         }
 
@@ -187,7 +195,7 @@ public class ImporterManager
         {
             return ConversionResult.success(new URL("http://" + src));
         }
-        catch (MalformedURLException e)
+        catch (Exception e)
         {
         }
 
