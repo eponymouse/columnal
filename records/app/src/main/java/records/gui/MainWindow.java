@@ -84,7 +84,8 @@ public class MainWindow
             ),
             GUI.menu("menu.data",
                 GUI.menuItem("menu.data.new", () -> newTable(v)),
-                GUI.menuItem("menu.data.import", () -> chooseAndImportFile(v, stage))
+                GUI.menuItem("menu.data.import.file", () -> chooseAndImportFile(v, stage)),
+                GUI.menuItem("menu.data.import.link", () -> chooseAndImportLink(v, stage))
             ),
             GUI.menu("menu.view",
                 GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait())
@@ -196,6 +197,11 @@ public class MainWindow
     private static void chooseAndImportFile(View v, Stage stage)
     {
         ImporterManager.getInstance().chooseAndImportFile(stage, v.getManager(), ds -> v.addSource(ds));
+    }
+
+    private static void chooseAndImportLink(View v, Stage stage)
+    {
+        ImporterManager.getInstance().chooseAndImportLink(stage, v.getManager(), ds -> v.addSource(ds));
     }
 
     public static void closeAll()

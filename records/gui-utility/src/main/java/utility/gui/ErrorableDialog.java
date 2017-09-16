@@ -55,7 +55,7 @@ public abstract class ErrorableDialog<R> extends Dialog<R>
     // Given back as Node because it's only meant for adding to GUI.  Subclasses don't set
     // the text, we do.
     @OnThread(Tag.FXPlatform)
-    public Node getErrorLabel(@UnknownInitialization(ErrorableDialog.class) ErrorableDialog<R> this)
+    public final Node getErrorLabel(@UnknownInitialization(ErrorableDialog.class) ErrorableDialog<R> this)
     {
         return errorLabel;
     }

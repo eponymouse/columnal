@@ -89,6 +89,12 @@ public class TextImporter implements Importer
         });
     }
 
+    @Override
+    public @Localized String getName()
+    {
+        return "Text files [CSV]";
+    }
+
     @OnThread(Tag.Simulation)
     public static void importTextFile(TableManager mgr, File textFile, FXPlatformConsumer<DataSource> then) throws IOException, InternalException, UserException
     {

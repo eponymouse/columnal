@@ -32,4 +32,9 @@ public interface Importer
      */
     @OnThread(Tag.FXPlatform)
     public void importFile(Window parent, TableManager tableManager, File src, FXPlatformConsumer<DataSource> onLoad);
+
+    /**
+     * The name of the importer to display to the user when picking an importer
+     */
+    @Localized String getName();
 }
