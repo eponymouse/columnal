@@ -121,6 +121,11 @@ class ListView<T>
     void setOnKeyPressed(EventHandler handler) @UnknownInitialization;
     List getItems() @UnknownInitialization;
 }
+class SelectionModel<T>
+{
+    ReadOnlyObjectProperty<@Nullable T> selectedItemProperty();
+    @Nullable T getSelectedItem();
+}
 class TableCell
 {
      void setGraphic(@Nullable Node a);

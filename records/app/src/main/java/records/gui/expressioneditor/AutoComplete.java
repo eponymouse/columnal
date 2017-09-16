@@ -79,9 +79,10 @@ public class AutoComplete extends PopupControl
             return new CompleteCell();
         });
         completions.setOnMouseClicked(e -> {
-            if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY)
+            @Nullable Completion selectedItem = completions.getSelectionModel().getSelectedItem();
+            if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && selectedItem != null)
             {
-                textField.setText(onSelect.doubleClick(textField.getText(), completions.getSelectionModel().getSelectedItem()));
+                textField.setText(onSelect.doubleClick(textField.getText(), selectedItem));
             }
         });
 

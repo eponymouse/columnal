@@ -805,7 +805,7 @@ public class GuessFormat
         }
         // Default handling:
         Node choiceNode;
-        ObjectExpression<C> choiceExpression;
+        ObjectExpression<@Nullable C> choiceExpression;
 
         List<C> options = rawChoicePoint.getOptions();
         if (options.size() == 1)
@@ -839,7 +839,7 @@ public class GuessFormat
                 tableView.setPlaceholderText(e.getLocalizedMessage());
             }
         };
-        pick.consume(choiceExpression.get());
+        pick.consume(Optional.ofNullable(choiceExpression.get()).orElse(options.get(0)));
         FXUtility.addChangeListenerPlatformNN(choiceExpression, pick);
     }
 

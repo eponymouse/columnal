@@ -98,7 +98,7 @@ public class EditTransformationDialog
         ListView<TransformationInfo> transformationTypeList = makeTransformationTypeList(TransformationManager.getInstance().getTransformations());
         Label transformTypeLabel = GUI.label("transformEditor.transform.type");
         content.setLeft(new BorderPane(transformationTypeList, transformTypeLabel, null, null, null));
-        ReadOnlyObjectProperty<TransformationInfo> selectedTransformation = transformationTypeList.getSelectionModel().selectedItemProperty();
+        ReadOnlyObjectProperty<@Nullable TransformationInfo> selectedTransformation = transformationTypeList.getSelectionModel().selectedItemProperty();
         SimpleObjectProperty<Optional<TransformationEditor>> editor = new SimpleObjectProperty<>();
         FXUtility.addChangeListenerPlatform(selectedTransformation, trans ->
         {
