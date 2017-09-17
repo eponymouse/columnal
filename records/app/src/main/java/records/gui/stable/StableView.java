@@ -125,6 +125,7 @@ public class StableView
 
     private final ObjectProperty<@Nullable Pair<Integer, Integer>> focusedCell = new SimpleObjectProperty<>(null);
     private @Nullable TableOperations operations;
+    private final SimpleBooleanProperty nonEmptyProperty = new SimpleBooleanProperty(false);
 
 
     public StableView()
@@ -152,8 +153,10 @@ public class StableView
         final BorderPane lineNumberWrapper = new BorderPane(lineNumbers);
         lineNumberWrapper.setPickOnBounds(false);
         lineNumberWrapper.getStyleClass().add("stable-view-side");
+        lineNumberWrapper.visibleProperty().bind(nonEmptyProperty);
         placeholder = new Label("<Empty>");
         placeholder.getStyleClass().add(".stable-view-placeholder");
+        placeholder.visibleProperty().bind(nonEmptyProperty.not());
         
         Button topButton = new Button("", makeButtonArrow());
         topButton.getStyleClass().addAll("stable-view-button", "stable-view-button-top");
@@ -162,12 +165,17 @@ public class StableView
         topButton.prefWidthProperty().bind(vbar.widthProperty());
         topButton.prefHeightProperty().bind(topButton.prefWidthProperty());
         BorderPane.setAlignment(topButton, Pos.BOTTOM_RIGHT);
+        topButton.visibleProperty().bind(nonEmptyProperty);
         Region topLeft = new Region();
         topLeft.getStyleClass().add("stable-view-top-left");
         FXUtility.forcePrefSize(topLeft);
         topLeft.setMaxHeight(Double.MAX_VALUE);
         topLeft.prefWidthProperty().bind(lineNumberWrapper.widthProperty());
-        Pane top = new BorderPane(header, null, GUI.wrap(topButton, "stable-button-top-wrapper"), null, topLeft);
+        topLeft.visibleProperty().bind(nonEmptyProperty);
+        Pane topButtonWrapper = GUI.wrap(topButton, "stable-button-top-wrapper");
+        topButtonWrapper.visibleProperty().bind(nonEmptyProperty);
+
+        Pane top = new BorderPane(header, null, topButtonWrapper, null, topLeft);
         top.getStyleClass().add("stable-view-top");
 
         Button leftButton = new Button("", makeButtonArrow());
@@ -177,6 +185,7 @@ public class StableView
         leftButton.prefWidthProperty().bind(leftButton.prefHeightProperty());
         FXUtility.forcePrefSize(leftButton);
         BorderPane.setAlignment(leftButton, Pos.BOTTOM_RIGHT);
+        leftButton.visibleProperty().bind(nonEmptyProperty);
         Pane left = new BorderPane(lineNumberWrapper, null, null, GUI.wrap(leftButton, "stable-button-left-wrapper"), null);
         left.setPickOnBounds(false);
         left.getStyleClass().add("stable-view-left");
@@ -188,6 +197,7 @@ public class StableView
         bottomButton.prefWidthProperty().bind(vbar.widthProperty());
         bottomButton.prefHeightProperty().bind(bottomButton.prefWidthProperty());
         StackPane.setAlignment(bottomButton, Pos.BOTTOM_RIGHT);
+        bottomButton.visibleProperty().bind(nonEmptyProperty);
         
         stackPane = new StackPane(placeholder, new BorderPane(scrollPane, top, null, null, left), bottomButton);
         headerItemsContainer.layoutXProperty().bind(virtualFlow.breadthOffsetProperty().map(d -> -d));
@@ -379,7 +389,7 @@ public class StableView
             headerItems.add(headerItem);
         }
 
-        placeholder.setVisible(columns.isEmpty());
+        nonEmptyProperty.set(!columns.isEmpty());
 
         scrollToTopLeft();
     }
