@@ -169,7 +169,7 @@ public class StableView
         topButton.prefWidthProperty().bind(vbar.widthProperty());
         topButton.prefHeightProperty().bind(topButton.prefWidthProperty());
         BorderPane.setAlignment(topButton, Pos.BOTTOM_RIGHT);
-        topButton.visibleProperty().bind(nonEmptyProperty);
+        topButton.visibleProperty().bind(vbar.visibleProperty());
         Region topLeft = new Region();
         topLeft.getStyleClass().add("stable-view-top-left");
         FXUtility.forcePrefSize(topLeft);
@@ -177,7 +177,7 @@ public class StableView
         topLeft.prefWidthProperty().bind(lineNumberWrapper.widthProperty());
         topLeft.visibleProperty().bind(nonEmptyProperty);
         Pane topButtonWrapper = GUI.wrap(topButton, "stable-button-top-wrapper");
-        topButtonWrapper.visibleProperty().bind(nonEmptyProperty);
+        topButtonWrapper.visibleProperty().bind(vbar.visibleProperty());
 
         Pane top = new BorderPane(header, null, topButtonWrapper, null, topLeft);
         top.getStyleClass().add("stable-view-top");
@@ -190,7 +190,9 @@ public class StableView
         FXUtility.forcePrefSize(leftButton);
         BorderPane.setAlignment(leftButton, Pos.BOTTOM_RIGHT);
         leftButton.visibleProperty().bind(nonEmptyProperty);
-        Pane left = new BorderPane(lineNumberWrapper, null, null, GUI.wrap(leftButton, "stable-button-left-wrapper"), null);
+        Pane leftButtonWrapper = GUI.wrap(leftButton, "stable-button-left-wrapper");
+        leftButtonWrapper.visibleProperty().bind(hbar.visibleProperty());
+        Pane left = new BorderPane(lineNumberWrapper, null, null, leftButtonWrapper, null);
         left.setPickOnBounds(false);
         left.getStyleClass().add("stable-view-left");
 
@@ -201,7 +203,7 @@ public class StableView
         bottomButton.prefWidthProperty().bind(vbar.widthProperty());
         bottomButton.prefHeightProperty().bind(bottomButton.prefWidthProperty());
         StackPane.setAlignment(bottomButton, Pos.BOTTOM_RIGHT);
-        bottomButton.visibleProperty().bind(nonEmptyProperty);
+        bottomButton.visibleProperty().bind(vbar.visibleProperty());
         
         stackPane = new StackPane(placeholder, new BorderPane(scrollPane, top, null, null, left), bottomButton);
         headerItemsContainer.layoutXProperty().bind(virtualFlow.breadthOffsetProperty().map(d -> -d));
