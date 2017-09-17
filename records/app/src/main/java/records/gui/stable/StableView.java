@@ -143,8 +143,10 @@ public class StableView
         hbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.HORIZONTAL).findFirst().get();
         vbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.VERTICAL).findFirst().get();
         lineNumbers = VirtualFlow.createVertical(items, x -> new LineNumber());
-        // Need to prevent independent scrolling on the line numbers:
+        // Need to prevent independent scrolling on the line numbers.
+        // Instead we forward the scroll to the whole table:
         lineNumbers.addEventFilter(ScrollEvent.SCROLL, e -> {
+            FXUtility.mouse(this).forwardedScrollEvent(e);
             e.consume();
         });
         final BorderPane lineNumberWrapper = new BorderPane(lineNumbers);
@@ -447,6 +449,17 @@ public class StableView
         return columns.size();
     }
 
+    public void scrollBy(double x, double y)
+    {
+        virtualFlow.scrollXBy(x);
+        virtualFlow.scrollYBy(y);
+    }
+
+    public void forwardedScrollEvent(ScrollEvent se)
+    {
+        scrollBy(-se.getDeltaX(), -se.getDeltaY());
+    }
+
     private class HeaderItem extends Label
     {
         private final int itemIndex;
@@ -635,6 +648,11 @@ public class StableView
                                 focusedCell.set(gotFocus ? new Pair<>(columnIndexFinal, rowIndex) : null);
                             });
                             cell.getChildren().setAll(n);
+
+                            n.addEventFilter(ScrollEvent.SCROLL, e -> {
+                                FXUtility.mouse(StableView.this).forwardedScrollEvent(e);
+                                e.consume();
+                            });
                         }, firstVisibleRow.curRowIndex, lastVisibleRow.curRowIndex);
 
                         // Swap old input map (if any) for new (if any)

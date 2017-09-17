@@ -24,6 +24,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
@@ -675,9 +676,11 @@ public class GuessFormat
             Dialog<Pair<ImportInfo, TextFormat>> dialog = new Dialog<>();
             StyleClassedTextArea sourceFileView = new StyleClassedTextArea();
             sourceFileView.getStyleClass().addAll("source", "stable-view-matched");
-            sourceFileView.setEditable(false);
             StableView tableView = new StableView();
-            AtomicInteger updateCounter = new AtomicInteger(0);
+            sourceFileView.addEventFilter(ScrollEvent.SCROLL, se -> {
+                tableView.forwardedScrollEvent(se);
+                se.consume();
+            });
             FXUtility.addChangeListenerPlatformNN(tableView.topShowingCell(), topShowing -> {
                 System.err.println("Top: " + topShowing);
                 sourceFileView.showParagraphAtTop(topShowing.getFirst());
