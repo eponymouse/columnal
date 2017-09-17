@@ -455,24 +455,24 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             boolean changed = false;
             if (resizeBottom)
             {
-                setMinHeight(p.getY() + (originalSizeHeight - offsetDragY));
+                setPrefHeight(p.getY() + (originalSizeHeight - offsetDragY));
                 changed = true;
             }
             if (resizeRight)
             {
-                setMinWidth(p.getX() + (originalSizeWidth - offsetDragX));
+                setPrefWidth(p.getX() + (originalSizeWidth - offsetDragX));
                 changed = true;
             }
             if (resizeLeft)
             {
                 setLayoutX(localToParent(p.getX() - offsetDragX, getLayoutY()).getX());
-                setMinWidth(originalSizeMaxX - getLayoutX());
+                setPrefWidth(originalSizeMaxX - getLayoutX());
                 changed = true;
             }
             if (resizeTop)
             {
                 setLayoutY(localToParent(getLayoutX(), p.getY() - offsetDragY).getY());
-                setMinHeight(originalSizeMaxY - getLayoutY());
+                setPrefHeight(originalSizeMaxY - getLayoutY());
                 changed = true;
             }
             if (changed)

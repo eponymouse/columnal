@@ -19,6 +19,9 @@
     -fx-text-fill: white;
     -fx-font-weight: bold;
     -fx-background-color: transparent;
+
+    -fx-min-width: 6em;
+    -fx-text-overrun: ellipsis;
 }
 
 .transformation-arrow {
