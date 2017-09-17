@@ -36,7 +36,9 @@ public class ChoicePoint<C extends Choice, R>
         // Good candidate, can stop at this one if searching for best
         PROMISING,
         // Poor candidate, search others if looking for best.
-        FALLBACK;
+        FALLBACK,
+        // No way:
+        NOTVIABLE;
     }
 
     public static abstract class Choice {

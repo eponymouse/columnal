@@ -389,7 +389,7 @@ public class GuessFormat
                 headerRowChoices.add(new HeaderRowChoice(headerRows));
             }
 
-            return ChoicePoint.choose(Quality.PROMISING, 0, HeaderRowChoice.getType(), (HeaderRowChoice hrc) ->
+            return ChoicePoint.choose(headerRowChoices.isEmpty() ? Quality.NOTVIABLE : Quality.PROMISING, 0, HeaderRowChoice.getType(), (HeaderRowChoice hrc) ->
                 ChoicePoint.choose(Quality.PROMISING, 0, SeparatorChoice.getType(), (SeparatorChoice sep) ->
                 ChoicePoint.choose(Quality.PROMISING, 0, QuoteChoice.getType(), (QuoteChoice quot) ->
                 {
