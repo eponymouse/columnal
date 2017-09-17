@@ -79,7 +79,8 @@ public class HTMLImporter implements Importer
                 }
             }
 
-            Format format = GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals);
+            // TODO show a dialog
+            Format format = GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals).get();
 
             List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
             for (int i = 0; i < format.columnTypes.size(); i++)

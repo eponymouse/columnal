@@ -5,6 +5,7 @@ import javafx.collections.FXCollections;
 import javafx.scene.Node;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
+import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
@@ -39,6 +40,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class ImporterManager
 {
@@ -56,8 +58,9 @@ public class ImporterManager
     public void chooseAndImportFile(Window parent, TableManager tableManager, FXPlatformConsumer<DataSource> onLoad)
     {
         @Nullable File chosen = FXUtility.chooseFileOpen("data.import.dialogTitle", "dataImport", parent,
-                registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream())
-                        .map(p -> new ExtensionFilter(p.getFirst(), p.getSecond()))
+                Stream.concat(registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream())
+                        .map(p -> new ExtensionFilter(p.getFirst(), p.getSecond())),
+                        Stream.of(new ExtensionFilter("All files", "*.*")))
                         .toArray(ExtensionFilter[]::new)
         );
         if (chosen != null)
@@ -102,11 +105,12 @@ public class ImporterManager
             if (importer.getSupportedFileTypes().stream().anyMatch(p -> p.getSecond().stream().anyMatch(ext -> matches(file, ext))))
             {
                 importer.importFile(parent, tableManager, file, onLoad);
-                break;
+                return;
             }
         }
 
-        // TODO if none match, give user free choice of importers
+        // If none match, give user free choice of importers:
+        new PickImporterDialog(file).showAndWait().ifPresent(importer -> importer.importFile(parent, tableManager, file, onLoad));
     }
 
     private static boolean matches(File file, String wildcard)
@@ -232,6 +236,29 @@ public class ImporterManager
         public @Nullable Importer get()
         {
             return importerList.getSelectionModel().getSelectedItem();
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    private class PickImporterDialog extends ErrorableDialog<Importer>
+    {
+        private final PickImporterPane pickImporterPane;
+
+        public PickImporterDialog(File src)
+        {
+            pickImporterPane = new PickImporterPane();
+            getDialogPane().setContent(new VBox(new Label("Pick importer for " + src.getName()), pickImporterPane, getErrorLabel()));
+
+        }
+
+        @Override
+        protected Either<String, Importer> calculateResult()
+        {
+            @Nullable Importer sel = pickImporterPane.get();
+            if (sel != null)
+                return Either.right(sel);
+            else
+                return Either.left("Pick an importer");
         }
     }
 }

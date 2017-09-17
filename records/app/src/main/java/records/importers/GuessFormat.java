@@ -16,6 +16,8 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.Alert;
+import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
@@ -69,6 +71,7 @@ import utility.gui.LabelledGrid;
 import utility.gui.LabelledGrid.Row;
 import utility.gui.SegmentedButtonValue;
 import records.gui.stable.StableView;
+import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -104,40 +107,39 @@ public class GuessFormat
     public static final int MAX_HEADER_ROWS = 5;
     public static final int INITIAL_ROWS_TEXT_FILE = 100;
 
-    public static Format guessGeneralFormat(UnitManager mgr, List<List<String>> vals)
+    /**
+     *
+     * @param mgr
+     * @param vals List of rows, where each row is list of values
+     * @return
+     */
+    public static ChoicePoint<?, Format> guessGeneralFormat(UnitManager mgr, List<List<String>> vals)
     {
-        try
+        List<Choice> headerRowChoices = new ArrayList<>();
+        for (int headerRows = 0; headerRows < Math.min(MAX_HEADER_ROWS, vals.size() - 1); headerRows++)
         {
-            // All-text formats, indexed by number of header rows:
-            final TreeMap<Integer, Format> allText = new TreeMap<>();
-            // Guesses header rows:
-            for (int headerRows = 0; headerRows < Math.min(MAX_HEADER_ROWS, vals.size() - 1); headerRows++)
+            headerRowChoices.add(new HeaderRowChoice(headerRows));
+        }
+
+        return ChoicePoint.<HeaderRowChoice, Format>choose(Quality.PROMISING, 0, HeaderRowChoice.getType(), (HeaderRowChoice hrc) -> {
+            int headerRows = hrc.numHeaderRows;
+            try
             {
-                try
-                {
-                    Format format = guessBodyFormat(mgr, vals.get(headerRows).size(), headerRows, vals);
-                    // If they are all text record this as feasible but keep going in case we get better
-                    // result with more header rows:
-                    if (format.columnTypes.stream().allMatch(c -> c.type instanceof TextColumnType || c.type instanceof BlankColumnType))
-                        allText.put(headerRows, format);
-                    else // Not all just text; go with it:
-                        return format;
-                }
-                catch (GuessException e)
-                {
-                    // Ignore and skip more header rows
-                }
+                Format format = guessBodyFormat(mgr, vals.get(headerRows).size(), headerRows, vals);
+                // If they are all text record this as feasible but keep going in case we get better
+                // result with more header rows:
+                return ChoicePoint.success(
+                        format.columnTypes.stream().allMatch(c -> c.type instanceof TextColumnType || c.type instanceof BlankColumnType) ? Quality.FALLBACK : Quality.PROMISING,
+                        0.0,
+                        format
+                );
             }
-            throw new GuessException("Problem figuring out header rows, or data empty");
-        }
-        catch (GuessException e)
-        {
-            // Always valid backup: a single text column, no header
-            Format fmt = new Format(0, Collections.singletonList(new ColumnInfo(new TextColumnType(), new ColumnId("Content"))));
-            String msg = e.getLocalizedMessage();
-            fmt.recordProblem(msg == null ? "Unknown" : msg);
-            return fmt;
-        }
+            catch (GuessException e)
+            {
+                // Not a good guess then.
+                return ChoicePoint.failure(e);
+            }
+        });
     }
 
     public static class GuessException extends UserException
@@ -808,7 +810,12 @@ public class GuessFormat
         ObjectExpression<@Nullable C> choiceExpression;
 
         List<C> options = rawChoicePoint.getOptions();
-        if (options.size() == 1)
+        if (options.isEmpty())
+        {
+            choiceNode = new Label("No possible options for " + TranslationUtility.getString(choiceType.getLabelKey()));
+            choiceExpression = new ReadOnlyObjectWrapper<>(null);
+        }
+        else if (options.size() == 1)
         {
             choiceNode = new Label(options.get(0).toString());
             choiceExpression = new ReadOnlyObjectWrapper<>(options.get(0));
@@ -839,7 +846,13 @@ public class GuessFormat
                 tableView.setPlaceholderText(e.getLocalizedMessage());
             }
         };
-        pick.consume(Optional.ofNullable(choiceExpression.get()).orElse(options.get(0)));
+
+        @Nullable C choice = choiceExpression.get();
+        if (choice != null)
+            pick.consume(choice);
+        else if (!options.isEmpty())
+            pick.consume(options.get(0));
+        // Otherwise can't pick anything; no options available.
         FXUtility.addChangeListenerPlatformNN(choiceExpression, pick);
     }
 
