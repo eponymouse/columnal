@@ -141,6 +141,10 @@ public class StableView
         scrollPane.getStyleClass().add("stable-view-scroll-pane");
         scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
         scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
+        // VirtualFlow seems to get layout issues when empty, so don't
+        // make it layout when empty:
+        scrollPane.managedProperty().bind(nonEmptyProperty);
+        scrollPane.visibleProperty().bind(nonEmptyProperty);
         hbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.HORIZONTAL).findFirst().get();
         vbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.VERTICAL).findFirst().get();
         lineNumbers = VirtualFlow.createVertical(items, x -> new LineNumber());

@@ -11,6 +11,9 @@
 .table-header {
     -fx-background-color: steelblue;
     -fx-padding: 6 6 0 6;
+    & .button {
+        -fx-cursor: default;
+    }
 }
 .table-title {
     -fx-text-fill: white;

@@ -299,10 +299,12 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 return;
             double padding = body.getPadding().getBottom();
             Point2D p = sceneToLocal(e.getSceneX(), e.getSceneY());
-            resizeLeft = p.getX() < padding;
-            resizeRight = p.getX() > getBoundsInLocal().getMaxX() - padding;
+            double paddingResizeToleranceFactor = 2.5;
+            resizeLeft = p.getX() < padding * paddingResizeToleranceFactor;
+            resizeRight = p.getX() > getBoundsInLocal().getMaxX() - padding * paddingResizeToleranceFactor;
+            // Top deliberately doesn't use extra tolerance, as more likely want to drag to move:
             resizeTop = p.getY() < padding;
-            resizeBottom = p.getY() > getBoundsInLocal().getMaxY() - padding;
+            resizeBottom = p.getY() > getBoundsInLocal().getMaxY() - padding * paddingResizeToleranceFactor;
             if (resizeLeft)
             {
                 if (resizeTop)
