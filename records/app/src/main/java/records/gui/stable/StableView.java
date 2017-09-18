@@ -119,8 +119,9 @@ public class StableView
     private final DropShadow leftDropShadow;
     private final DropShadow topDropShadow;
     private final DropShadow topLeftDropShadow;
-    private boolean atTop;
-    private boolean atLeft;
+    // Table will start in top left, so these should start as true:
+    private boolean atTop = true;
+    private boolean atLeft = true;
     private final ObjectProperty<Pair<Integer, Double>> topShowingCellProperty = new SimpleObjectProperty<>(new Pair<>(0, 0.0));
 
     private final ObjectProperty<@Nullable Pair<Integer, Integer>> focusedCell = new SimpleObjectProperty<>(null);
@@ -256,8 +257,9 @@ public class StableView
                 int firstVisibleRowIndex = firstVisible.getCurRowIndex();
                 StableRow lastVisible = c.getList().get(c.getList().size() - 1);
                 int lastVisibleRowIndex = lastVisible.getCurRowIndex();
-                double topY = virtualFlow.cellToViewport(firstVisible, 0, 0).getY();
-                double bottomY = virtualFlow.cellToViewport(lastVisible, 0, lastVisible.getNode().getHeight() - 4).getY();
+                // These values are negative, so negate to deal with them as positive:
+                double topY = -virtualFlow.cellToViewport(firstVisible, 0, 0).getY();
+                double bottomY = -virtualFlow.cellToViewport(lastVisible, 0, lastVisible.getNode().getHeight() - 4).getY();
                 //FXUtility.setPseudoclass(header, "pinned", topY >= 5 || firstVisibleRowIndex > 0);
                 atTop = topY < 5 && firstVisibleRowIndex == 0;
                 updateShadows(header, lineNumberWrapper, topLeft);
