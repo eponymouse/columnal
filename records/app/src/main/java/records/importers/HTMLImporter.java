@@ -13,10 +13,19 @@ import org.jsoup.select.Elements;
 import records.data.*;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeUtility;
+import records.gui.stable.ReadOnlyStringColumnHandler;
+import records.gui.stable.StableView.ColumnHandler;
+import records.importers.GuessFormat.ImportInfo;
 import records.importers.base.Importer;
+import records.importers.gui.ImportChoicesDialog;
+import records.importers.gui.ImportChoicesDialog.SourceInfo;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformSupplier;
 import utility.Pair;
+import utility.SimulationConsumer;
+import utility.SimulationFunction;
+import utility.SimulationSupplier;
 import utility.TaggedValue;
 import records.data.columntype.BlankColumnType;
 import records.data.columntype.CleanDateColumnType;
@@ -43,6 +52,7 @@ import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * Created by neil on 31/10/2016.
@@ -50,15 +60,17 @@ import java.util.List;
 public class HTMLImporter implements Importer
 {
     @OnThread(Tag.Simulation)
-    private static ImmutableList<DataSource> importHTMLFile(TableManager mgr, File htmlFile) throws IOException, InternalException, UserException
+    private static void importHTMLFileThen(TableManager mgr, File htmlFile, SimulationConsumer<ImmutableList<DataSource>> withDataSources) throws IOException, InternalException, UserException
     {
-        ImmutableList.Builder<DataSource> results = ImmutableList.builder();
+        ArrayList<FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>>> results = new ArrayList<>();
         Document doc = parse(htmlFile);
         Elements tables = doc.select("table");
 
         for (Element table : tables)
         {
-            List<List<String>> vals = new ArrayList<>();
+            // TODO pick the header section out for column titles
+            // vals is a list of rows:
+            final List<List<String>> vals = new ArrayList<>();
             for (Element tableBit : table.children())
             {
                 if (!tableBit.tagName().equals("tbody"))
@@ -79,72 +91,115 @@ public class HTMLImporter implements Importer
                 }
             }
 
-            // TODO show a dialog
-            Format format = GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals).get();
-
-            List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
-            for (int i = 0; i < format.columnTypes.size(); i++)
+            ImmutableList.Builder<Pair<String, ColumnHandler>> columnHandlers = ImmutableList.builder();
+            if (!vals.isEmpty())
             {
-                ColumnInfo columnInfo = format.columnTypes.get(i);
-                int iFinal = i;
-                List<String> slice = Utility.sliceSkipBlankRows(vals, format.headerRows, iFinal);
-                ColumnType columnType = columnInfo.type;
-                if (columnType instanceof NumericColumnType)
+                for (int columnIndex = 0; columnIndex < vals.get(0).size(); columnIndex++)
                 {
-                    //TODO remove prefix
-                    // TODO treat maybe blank as a tagged type
-                    columns.add(rs ->
+                    int columnIndexFinal = columnIndex;
+                    columnHandlers.add(new Pair<>("Column " + (columnIndex + 1), new ReadOnlyStringColumnHandler()
                     {
-                        NumericColumnType numericColumnType = (NumericColumnType) columnType;
-                        return new MemoryNumericColumn(rs, columnInfo.title, new NumberInfo(numericColumnType.unit, numericColumnType.displayInfo), slice.stream().map(numericColumnType::removePrefix));
-                    });
+                        @Override
+                        @OnThread(Tag.FXPlatform)
+                        public void fetchValueForRow(int rowIndex, FXPlatformConsumer<String> withValue)
+                        {
+                            String s;
+                            try
+                            {
+                                s = vals.get(rowIndex).get(columnIndexFinal);
+                            }
+                            catch (IndexOutOfBoundsException e)
+                            {
+                                s = "<Missing>";
+                            }
+                            withValue.consume(s);
+                        }
+                    }));
                 }
-                else if (columnType instanceof TextColumnType)
-                {
-                    columns.add(rs -> new MemoryStringColumn(rs, columnInfo.title, slice, ""));
-                }
-                else if (columnType instanceof CleanDateColumnType)
-                {
-                    columns.add(rs -> new MemoryTemporalColumn(rs, columnInfo.title, ((CleanDateColumnType) columnType).getDateTimeInfo(), Utility.<String, TemporalAccessor>mapListInt(slice, s -> ((CleanDateColumnType) columnType).parse(s)), DateTimeInfo.DEFAULT_VALUE));
-                }
-                else if (columnType instanceof OrBlankColumnType && ((OrBlankColumnType)columnType).getInner() instanceof NumericColumnType)
-                {
-                    OrBlankColumnType or = (OrBlankColumnType) columnType;
-                    NumericColumnType inner = (NumericColumnType) or.getInner();
-                    String idealTypeName = "?Number{" + (inner.unit.equals(Unit.SCALAR) ? "" : inner.unit) + "}";
-                    @Nullable DataType type = mgr.getTypeManager().lookupType(idealTypeName);
-                    // Only way it's there already is if it's same from another column, so use it.
-                    if (type == null)
-                    {
-                        type = mgr.getTypeManager().registerTaggedType(idealTypeName, Arrays.asList(
-                            new TagType<DataType>("Blank", null),
-                            new TagType<DataType>(idealTypeName.substring(1), DataType.number(new NumberInfo(inner.unit, inner.displayInfo)))
-                        ));
-                    }
-                    @NonNull DataType typeFinal = type;
-                    columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, typeFinal.getTaggedTypeName(), typeFinal.getTagTypes(), Utility.mapListEx(slice, item -> {
-                        if (item.isEmpty())
-                            return new TaggedValue(0, null);
-                        else
-                            return new TaggedValue(1, DataTypeUtility.value(Utility.parseNumber(inner.removePrefix(item))));
-                    }), new TaggedValue(0, null)));
-                }
-                else if (!(columnType instanceof BlankColumnType))
-                {
-                    throw new InternalException("Unhandled column type: " + columnType.getClass());
-                }
-                // If it's blank, should we add any column?
-                // Maybe if it has title?                }
             }
+            SourceInfo sourceInfo = new SourceInfo(columnHandlers.build(), vals.size());
 
-            int len = vals.size() - format.headerRows - (int)vals.stream().skip(format.headerRows).filter(r -> r.stream().allMatch(String::isEmpty)).count();
+            // TODO show a dialog
+            SimulationFunction<Format, EditableRecordSet> loadData = format -> {
+                List<ExFunction<RecordSet, EditableColumn>> columns = new ArrayList<>();
+                for (int i = 0; i < format.columnTypes.size(); i++)
+                {
+                    ColumnInfo columnInfo = format.columnTypes.get(i);
+                    int iFinal = i;
+                    List<String> slice = Utility.sliceSkipBlankRows(vals, format.headerRows, iFinal);
+                    ColumnType columnType = columnInfo.type;
+                    if (columnType instanceof NumericColumnType)
+                    {
+                        //TODO remove prefix
+                        // TODO treat maybe blank as a tagged type
+                        columns.add(rs ->
+                        {
+                            NumericColumnType numericColumnType = (NumericColumnType) columnType;
+                            return new MemoryNumericColumn(rs, columnInfo.title, new NumberInfo(numericColumnType.unit, numericColumnType.displayInfo), slice.stream().map(numericColumnType::removePrefix));
+                        });
+                    }
+                    else if (columnType instanceof TextColumnType)
+                    {
+                        columns.add(rs -> new MemoryStringColumn(rs, columnInfo.title, slice, ""));
+                    }
+                    else if (columnType instanceof CleanDateColumnType)
+                    {
+                        columns.add(rs -> new MemoryTemporalColumn(rs, columnInfo.title, ((CleanDateColumnType) columnType).getDateTimeInfo(), Utility.<String, TemporalAccessor>mapListInt(slice, s -> ((CleanDateColumnType) columnType).parse(s)), DateTimeInfo.DEFAULT_VALUE));
+                    }
+                    else if (columnType instanceof OrBlankColumnType && ((OrBlankColumnType)columnType).getInner() instanceof NumericColumnType)
+                    {
+                        OrBlankColumnType or = (OrBlankColumnType) columnType;
+                        NumericColumnType inner = (NumericColumnType) or.getInner();
+                        String idealTypeName = "?Number{" + (inner.unit.equals(Unit.SCALAR) ? "" : inner.unit) + "}";
+                        @Nullable DataType type = mgr.getTypeManager().lookupType(idealTypeName);
+                        // Only way it's there already is if it's same from another column, so use it.
+                        if (type == null)
+                        {
+                            type = mgr.getTypeManager().registerTaggedType(idealTypeName, Arrays.asList(
+                                new TagType<DataType>("Blank", null),
+                                new TagType<DataType>(idealTypeName.substring(1), DataType.number(new NumberInfo(inner.unit, inner.displayInfo)))
+                            ));
+                        }
+                        @NonNull DataType typeFinal = type;
+                        columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, typeFinal.getTaggedTypeName(), typeFinal.getTagTypes(), Utility.mapListEx(slice, item -> {
+                            if (item.isEmpty())
+                                return new TaggedValue(0, null);
+                            else
+                                return new TaggedValue(1, DataTypeUtility.value(Utility.parseNumber(inner.removePrefix(item))));
+                        }), new TaggedValue(0, null)));
+                    }
+                    else if (!(columnType instanceof BlankColumnType))
+                    {
+                        throw new InternalException("Unhandled column type: " + columnType.getClass());
+                    }
+                    // If it's blank, should we add any column?
+                    // Maybe if it has title?                }
+                }
 
-            vals = null; // Make sure we don't keep a reference
-            // Not because we null it, but because we make it non-final.
-            results.add(new ImmediateDataSource(mgr, new EditableRecordSet(columns, () -> len)));
+                int len = vals.size() - format.headerRows - (int)vals.stream().skip(format.headerRows).filter(r -> r.stream().allMatch(String::isEmpty)).count();
 
+                return new EditableRecordSet(columns, () -> len);
+                // Make sure we don't keep a reference to vals:
+                // Not because we null it, but because we make it non-final.
+                //results.add(new ImmediateDataSource(mgr, new EditableRecordSet(columns, () -> len)));
+            };
+            results.add(() -> {
+                @Nullable Pair<ImportInfo, Format> outcome = new ImportChoicesDialog<>(mgr, htmlFile.getName(), GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals), loadData, c -> sourceInfo).showAndWait().orElse(null);
+
+                if (outcome != null)
+                {
+                    @NonNull Pair<ImportInfo, Format> outcomeNonNull = outcome;
+                    SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, loadData.apply(outcomeNonNull.getSecond()));
+                    return makeDataSource;
+                }
+                else
+                    return null;
+            });
         }
-        return results.build();
+        Platform.runLater(() -> {
+            List<SimulationSupplier<DataSource>> sources = results.stream().flatMap((FXPlatformSupplier<@Nullable SimulationSupplier<DataSource>> s) -> Utility.streamNullable(s.get())).collect(Collectors.toList());
+            Workers.onWorkerThread("Loading HTML", Priority.LOAD_FROM_DISK, () -> Utility.alertOnError_(() -> withDataSources.consume(Utility.mapListExI(sources, s -> s.get()))));
+        });
     }
 
     @SuppressWarnings("nullness")
@@ -171,12 +226,13 @@ public class HTMLImporter implements Importer
         Workers.onWorkerThread("Importing HTML", Priority.LOAD_FROM_DISK, () -> Utility.alertOnError_(() -> {
             try
             {
-                ImmutableList<DataSource> loaded = importHTMLFile(tableManager, src);
-                Platform.runLater(() -> {
-                    for (DataSource dataSource : loaded)
-                    {
-                        onLoad.consume(dataSource);
-                    }
+                importHTMLFileThen(tableManager, src, dataSources -> {
+                    Platform.runLater(() -> {
+                        for (DataSource dataSource : dataSources)
+                        {
+                            onLoad.consume(dataSource);
+                        }
+                    });
                 });
             }
             catch (IOException e)
