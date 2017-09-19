@@ -4,8 +4,8 @@ import annotation.help.qual.HelpKey;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
-import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
@@ -13,15 +13,10 @@ import records.error.UserException;
 import records.importers.ChoicePoint.Choice;
 import utility.ExFunction;
 import utility.ExSupplier;
+import utility.Pair;
 import utility.Utility;
-import utility.gui.TranslationUtility;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -93,12 +88,28 @@ public class ChoicePoint<C extends Choice, R>
                 '}';
         }
 
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            ChoiceType<?> that = (ChoiceType<?>) o;
+
+            return choiceClass.equals(that.choiceClass);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return choiceClass.hashCode();
+        }
+
         //TODO: methods for free entry, and for help
     }
 
-    private final @Nullable ChoiceType<C> choiceType;
-    // If none, end of the road (either successful or failure, depending on exception/vakye)
-    private final List<C> options;
+    // If null, end of the road (either successful or failure, depending on exception/vakye)
+    private final @Nullable Pair<ChoiceType<C>, ImmutableList<C>> options;
     private final Quality quality;
     private final double score;
     private final @Nullable Exception exception;
@@ -106,10 +117,9 @@ public class ChoicePoint<C extends Choice, R>
     // If we take current choice, what's the next choice point?
     private final LoadingCache<C, ChoicePoint<?, R>> calculated;
 
-    private ChoicePoint(@Nullable ChoiceType<C> choiceType, List<C> options, Quality quality, double score, @Nullable Exception exception, @Nullable R value, final @Nullable ExFunction<C, ChoicePoint<?, R>> calculate)
+    private ChoicePoint(@Nullable Pair<ChoiceType<C>, ImmutableList<C>> options, Quality quality, double score, @Nullable Exception exception, @Nullable R value, final @Nullable ExFunction<C, ChoicePoint<?, R>> calculate)
     {
-        this.choiceType = choiceType;
-        this.options = new ArrayList<>(options);
+        this.options = options;
         this.quality = quality;
         this.score = score;
         this.exception = exception;
@@ -141,9 +151,9 @@ public class ChoicePoint<C extends Choice, R>
     @SafeVarargs
     public static <C extends Choice, R> ChoicePoint<C, R> choose(Quality quality, double score, ChoiceType<C> choiceType, ExFunction<C, ChoicePoint<?, R>> hereOnwards, C... choices)
     {
-        List<C> allOptions = new ArrayList<>();
-        allOptions.addAll(Arrays.<C>asList(choices));
-        Map<C, ChoicePoint<?, R>> calc = new HashMap<>();
+        //List<C> allOptions = new ArrayList<>();
+        //allOptions.addAll(Arrays.<C>asList(choices));
+        //Map<C, ChoicePoint<?, R>> calc = new HashMap<>();
         /*
         for (C choice : choices)
         {
@@ -163,7 +173,7 @@ public class ChoicePoint<C extends Choice, R>
             calc.put(choice, next);
         }
         */
-        return new ChoicePoint<C, R>(choiceType, allOptions, quality, score, null, null, hereOnwards);
+        return new ChoicePoint<C, R>(new Pair<>(choiceType, ImmutableList.copyOf(choices)), quality, score, null, null, hereOnwards);
     }
 
     /*
@@ -184,7 +194,7 @@ public class ChoicePoint<C extends Choice, R>
 
     public static <R> ChoicePoint<Choice, R> success(Quality quality, double score, R value)
     {
-        return new ChoicePoint<Choice, R>(null, Collections.<Choice>emptyList(), quality, score, null, value, null);
+        return new ChoicePoint<Choice, R>(null, quality, score, null, value, null);
     }
 
     public static <R> ChoicePoint<Choice, R> run(ExSupplier<@NonNull R> supplier)
@@ -202,12 +212,12 @@ public class ChoicePoint<C extends Choice, R>
 
     public static <R> ChoicePoint<Choice, R> failure(Exception e)
     {
-        return new ChoicePoint<Choice, R>(null, Collections.<Choice>emptyList(), Quality.FALLBACK, -Double.MAX_VALUE, e, null, null);
+        return new ChoicePoint<Choice, R>(null, Quality.FALLBACK, -Double.MAX_VALUE, e, null, null);
     }
 
     public <S> ChoicePoint<?, S> then(ExFunction<R, @NonNull S> then)
     {
-        if (options.isEmpty())
+        if (options == null || options.getSecond().isEmpty())
         {
             if (value != null)
             {
@@ -215,13 +225,13 @@ public class ChoicePoint<C extends Choice, R>
                 return ChoicePoint.<S>run(() -> then.apply(valueFinal));
             }
             else
-                return new ChoicePoint<Choice, S>(null, Collections.<Choice>emptyList(), quality, score, exception, null, null);
+                return new ChoicePoint<Choice, S>(null, quality, score, exception, null, null);
         }
         else
         {
             // Not a leaf; need to copy and go deeper:
             // Options is non-empty so exception and value not null:
-            return new ChoicePoint<C, S>(choiceType, options, quality, score, null, null, (ExFunction<C, ChoicePoint<?, S>>) choice -> {
+            return new ChoicePoint<C, S>(options, quality, score, null, null, (ExFunction<C, ChoicePoint<?, S>>) choice -> {
                 try
                 {
                     return calculated.get(choice).then(then);
@@ -249,8 +259,8 @@ public class ChoicePoint<C extends Choice, R>
 
     public ChoicePoint<?, R> select(C choice) throws InternalException
     {
-        if (!options.contains(choice))
-            throw new InternalException("Picking unavailable choice: " + choice + " from: " + Utility.listToString(options));
+        if (options == null || !options.getSecond().contains(choice))
+            throw new InternalException("Picking unavailable choice: " + choice + " from: " + Utility.listToString(options == null ? Collections.<@NonNull C>emptyList() : options.getSecond()));
         try
         {
             return calculated.get(choice);
@@ -261,19 +271,14 @@ public class ChoicePoint<C extends Choice, R>
         }
     }
 
-    public List<C> getOptions()
+    public @Nullable Pair<ChoiceType<C>, ImmutableList<C>> getOptions()
     {
-        return Collections.unmodifiableList(options);
+        return options;
     }
 
     public Quality getQuality()
     {
         return quality;
-    }
-
-    public @Nullable ChoiceType<C> getChoiceType()
-    {
-        return choiceType;
     }
 
     @Override

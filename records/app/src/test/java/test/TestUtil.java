@@ -859,7 +859,7 @@ public class TestUtil
     @SafeVarargs
     public static <C extends Choice, R> @NonNull R pick(ChoicePoint<C, R> choicePoint, ChoicePick<C>... picks) throws InternalException, UserException
     {
-        ChoiceType<C> choicePointType = choicePoint.getChoiceType();
+        ChoiceType<C> choicePointType = choicePoint.getOptions().getFirst();
         if (choicePointType == null)
         {
             return choicePoint.get();

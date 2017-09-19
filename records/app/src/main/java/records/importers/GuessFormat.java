@@ -2,25 +2,18 @@ package records.importers;
 
 import com.google.common.base.Objects;
 import com.google.common.collect.HashMultiset;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Multiset;
 import com.google.common.collect.Multisets;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Sets.SetView;
 import javafx.application.Platform;
-import javafx.beans.binding.ObjectExpression;
-import javafx.beans.property.ObjectProperty;
-import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
 import javafx.geometry.Point2D;
-import javafx.scene.Node;
-import javafx.scene.control.Alert;
-import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
-import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
@@ -36,6 +29,7 @@ import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledText;
+import org.fxmisc.wellbehaved.event.InputMap;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table.Display;
@@ -54,13 +48,17 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.TableDisplayUtility;
 import records.gui.TableNameTextField;
+import records.gui.stable.StableView.CellContentReceiver;
+import records.gui.stable.StableView.ColumnHandler;
 import records.importers.ChoicePoint.Choice;
 import records.importers.ChoicePoint.ChoiceType;
 import records.importers.ChoicePoint.Quality;
+import records.importers.gui.ImportChoicesDialog;
+import records.importers.gui.ImportChoicesDialog.SourceInfo;
 import records.transformations.function.ToDate;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.Utility.IndexRange;
@@ -72,7 +70,6 @@ import utility.gui.LabelledGrid;
 import utility.gui.LabelledGrid.Row;
 import utility.gui.SegmentedButtonValue;
 import records.gui.stable.StableView;
-import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -93,8 +90,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.TreeMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
@@ -673,104 +668,77 @@ public class GuessFormat
         ChoicePoint<?, TextFormat> choicePoints = guessTextFormat(mgr.getUnitManager(), initial);
         Platform.runLater(() ->
         {
-            Dialog<Pair<ImportInfo, TextFormat>> dialog = new Dialog<>();
-            StyleClassedTextArea sourceFileView = new StyleClassedTextArea();
-            sourceFileView.getStyleClass().addAll("source", "stable-view-matched");
-            StableView tableView = new StableView();
-            sourceFileView.addEventFilter(ScrollEvent.SCROLL, se -> {
-                tableView.forwardedScrollEvent(se);
-                se.consume();
-            });
-            FXUtility.addChangeListenerPlatformNN(tableView.topShowingCell(), topShowing -> {
-                System.err.println("Top: " + topShowing);
-                sourceFileView.showParagraphAtTop(topShowing.getFirst());
-                sourceFileView.layout();
-                // We want to adjust offset after layout pass:
-                double y = 0 - topShowing.getSecond() - tableView.topHeightProperty().get();
-                System.err.println("Scrolling by " + y);
-                sourceFileView.scrollBy(new Point2D(0, y));
-                sourceFileView.layout();
-            });
-
-
-            LabelledGrid choices = new LabelledGrid();
-            choices.getStyleClass().add("choice-grid");
-            TableNameTextField nameField = new TableNameTextField(mgr, new TableId(suggestedName));
-            @SuppressWarnings("unchecked")
-            SegmentedButtonValue<Boolean> linkCopyButtons = new SegmentedButtonValue<>(new Pair<@LocalizableKey String, Boolean>("table.copy", false), new Pair<@LocalizableKey String, Boolean>("table.link", true));
-            choices.addRow(GUI.labelledGridRow("table.name", "guess-format/tableName", nameField.getNode()));
-            choices.addRow(GUI.labelledGridRow("table.linkCopy", "guess-format/linkCopy", linkCopyButtons));
-
-            SimpleObjectProperty<@Nullable TextFormat> formatProperty = new SimpleObjectProperty<>(null);
-            try
+            ColumnHandler columnHandler = new ColumnHandler()
             {
-                @Nullable Stream<Choice> bestGuess = findBestGuess(choicePoints);
-
-                makeGUI(mgr.getTypeManager(), choicePoints, bestGuess == null ? Collections.emptyList() : bestGuess.collect(Collectors.<@NonNull Choice>toList()), file, initial, choices, sourceFileView, tableView, formatProperty);
-            }
-            catch (InternalException e)
-            {
-                Utility.log(e);
-                choices.addRow(new Row(new Label("Internal error: "), null, new TextFlow(new Text(e.getLocalizedMessage()))));
-            }
-
-
-            SplitPane splitPane = new SplitPane(sourceFileView, tableView.getNode());
-            Pane content = new BorderPane(splitPane, choices, null, null, null);
-            content.getStyleClass().add("guess-format-content");
-            dialog.getDialogPane().getStylesheets().addAll(FXUtility.getSceneStylesheets("guess-format"));
-            dialog.getDialogPane().setContent(content);
-            dialog.getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
-            // Prevent enter/escape activating buttons:
-            ((Button)dialog.getDialogPane().lookupButton(ButtonType.CANCEL)).setCancelButton(false);
-            ((Button)dialog.getDialogPane().lookupButton(ButtonType.OK)).setDefaultButton(false);
-            //TODO disable ok button if name isn't valid
-            dialog.setResultConverter(bt -> {
-                @Nullable TableId tableId = nameField.valueProperty().get();
-                @Nullable TextFormat textFormat = formatProperty.get();
-                if (bt == ButtonType.OK && tableId != null && textFormat != null)
+                @Override
+                public void fetchValue(int rowIndex, CellContentReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
                 {
-                    return new Pair<>(new ImportInfo(tableId, linkCopyButtons.valueProperty().get()), textFormat);
+                    // TODO
                 }
-                return null;
-            });
-            dialog.setResizable(true);
 
-            //dialog.initModality(Modality.NONE); // For scenic view
-            dialog.setOnShown(e -> {
-                //org.scenicview.ScenicView.show(dialog.getDialogPane().getScene());
+                @Override
+                public void columnResized(double width)
+                {
 
-                // Have to use runAfter because the OK button gets focused
-                // so we have to wait, then steal the focus back:
-                FXUtility.runAfter(() -> nameField.requestFocusWhenInScene());
-            });
-            dialog.showAndWait().ifPresent(then);
+                }
 
+                @Override
+                public @Nullable InputMap<?> getInputMapForParent(int rowIndex)
+                {
+                    return null;
+                }
+
+                @Override
+                public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable endEdit)
+                {
+                    // Not editable
+                }
+
+                @Override
+                public boolean isEditable()
+                {
+                    return false;
+                }
+
+                @Override
+                public boolean editHasFocus(int rowIndex)
+                {
+                    return false;
+                }
+            };
+            new ImportChoicesDialog<>(mgr, suggestedName, choicePoints, f -> null, choices -> {
+                @Nullable CharsetChoice charsetChoice = choices.getChoice(CharsetChoice.getType());
+                if (charsetChoice == null)
+                    return null;
+                else
+                    return new SourceInfo(ImmutableList.of(new Pair<>("Text File Line", columnHandler)), Optional.ofNullable(initial.get(charsetChoice.charset)).map(l -> l.size()).orElse(0));
+            }).showAndWait().ifPresent(then);
         });
         System.err.println(choicePoints);
 
     }
 
-    // Null means not viable, empty stream means no more choices to make
-    private static <C extends Choice> @Nullable Stream<Choice> findBestGuess(ChoicePoint<C, TextFormat> choicePoints)
+    // Finished flag indicates whether it finished or was not viable
+    public static <C extends Choice, FORMAT extends Format> Choices findBestGuess(ChoicePoint<C, FORMAT> choicePoints)
     {
-        if (choicePoints.getOptions().isEmpty())
-            return Stream.empty();
+        Pair<ChoiceType<C>, ImmutableList<C>> options = choicePoints.getOptions();
+        if (options == null || options.getSecond().isEmpty())
+            return Choices.FINISHED;
         else
         {
             // At the moment, we just try first and if that gives promising all the way, we take it:
-            for (C choice : choicePoints.getOptions())
+            for (C choice : options.getSecond())
             {
                 try
                 {
-                    ChoicePoint<?, TextFormat> next = choicePoints.select(choice);
+                    ChoicePoint<?, FORMAT> next = choicePoints.select(choice);
                     if (next.getQuality() == Quality.PROMISING)
                     {
                         // Keep going!
-                        Stream<Choice> inner = findBestGuess(next);
-                        if (inner != null)
+                        Choices inner = findBestGuess(next);
+                        if (inner.isFinished())
                         {
-                            return Stream.<Choice>concat(Stream.of(choice), inner);
+                            return inner.with(options.getFirst(), choice);
                         }
                         // Otherwise try next choice
                     }
@@ -781,93 +749,8 @@ public class GuessFormat
                 }
             }
             // No options found:
-            return null;
+            return Choices.UNFINISHED;
         }
-    }
-
-    @OnThread(Tag.FXPlatform)
-    private static <C extends Choice> void makeGUI(TypeManager typeManager, ChoicePoint<C, TextFormat> rawChoicePoint, List<Choice> mostRecentPick, File file, Map<Charset, List<String>> initial, LabelledGrid controlGrid, StyleClassedTextArea textArea, StableView tableView, ObjectProperty<@Nullable TextFormat> destProperty) throws InternalException
-    {
-        final @Nullable ChoiceType<C> choiceType = rawChoicePoint.getChoiceType();
-        if (choiceType == null)
-        {
-            try
-            {
-                TextFormat t = rawChoicePoint.get();
-                List<String> initialLines = initial.get(t.charset);
-                if (initialLines == null)
-                    throw new InternalException("Charset pick gives no initial lines");
-                destProperty.set(t);
-                previewFormat(typeManager, file, initialLines, t, new GUI_Items(textArea, tableView, t.headerRows));
-            }
-            catch (UserException e)
-            {
-                tableView.setPlaceholderText(e.getLocalizedMessage());
-            }
-            return;
-        }
-        // Default handling:
-        Node choiceNode;
-        ObjectExpression<@Nullable C> choiceExpression;
-
-        List<C> options = rawChoicePoint.getOptions();
-        if (options.isEmpty())
-        {
-            choiceNode = new Label("No possible options for " + TranslationUtility.getString(choiceType.getLabelKey()));
-            choiceExpression = new ReadOnlyObjectWrapper<>(null);
-        }
-        else if (options.size() == 1)
-        {
-            choiceNode = new Label(options.get(0).toString());
-            choiceExpression = new ReadOnlyObjectWrapper<>(options.get(0));
-        }
-        else
-        {
-            ComboBox<C> combo = GUI.comboBoxStyled(FXCollections.observableArrayList(options));
-            @Nullable C choice = findByClass(mostRecentPick, choiceType.getChoiceClass());
-            if (choice == null || !combo.getItems().contains(choice))
-                combo.getSelectionModel().selectFirst();
-            else
-                combo.getSelectionModel().select(choice);
-            choiceNode = combo;
-            choiceExpression = combo.getSelectionModel().selectedItemProperty();
-        }
-        int rowNumber = controlGrid.addRow(GUI.labelledGridRow(choiceType.getLabelKey(), choiceType.getHelpId(), choiceNode));
-        FXPlatformConsumer<C> pick = item -> {
-            try
-            {
-                ChoicePoint<?, TextFormat> next = rawChoicePoint.select(item);
-                controlGrid.clearRowsAfter(rowNumber);
-                makeGUI(typeManager, next, mostRecentPick, file, initial, controlGrid, textArea, tableView, destProperty);
-            }
-            catch (InternalException e)
-            {
-                Utility.log(e);
-                tableView.clear(null);
-                tableView.setPlaceholderText(e.getLocalizedMessage());
-            }
-        };
-
-        @Nullable C choice = choiceExpression.get();
-        if (choice != null)
-            pick.consume(choice);
-        else if (!options.isEmpty())
-            pick.consume(options.get(0));
-        // Otherwise can't pick anything; no options available.
-        FXUtility.addChangeListenerPlatformNN(choiceExpression, pick);
-    }
-
-    // There should only be one item per class in the list
-    private static <C extends Choice> @Nullable C findByClass(List<Choice> choiceItems, Class<? extends C> targetClass)
-    {
-        for (Choice c : choiceItems)
-        {
-            if (targetClass.isInstance(c))
-            {
-                return targetClass.cast(c);
-            }
-        }
-        return null;
     }
 
     private static class GUI_Items implements ChangeListener<Pair<Integer, Integer>>
