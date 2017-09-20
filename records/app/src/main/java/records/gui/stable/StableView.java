@@ -114,6 +114,8 @@ public class StableView
     private static final double EDGE_DRAG_TOLERANCE = 8;
     private static final double MIN_COLUMN_WIDTH = 30;
     private final List<HeaderItem> headerItems = new ArrayList<>();
+    // A column is only editable if it is marked editable AND the table is editable:
+    private boolean tableEditable = true;
     private final ScrollBar hbar;
     private final ScrollBar vbar;
     private final DropShadow leftDropShadow;
@@ -478,6 +480,15 @@ public class StableView
         scrollBy(-se.getDeltaX(), -se.getDeltaY());
     }
 
+    /**
+     * Makes the table editable.  Setting this to true only makes the columns editable if they themselves are marked
+     * as editable.  But setting it to false makes the columns read-only regardless of their marking.
+     */
+    public void setEditable(boolean editable)
+    {
+        this.tableEditable = editable;
+    }
+
     private class HeaderItem extends Label
     {
         private final int itemIndex;
@@ -574,7 +585,7 @@ public class StableView
                     boolean editing = curRowIndex >= 0 && columns.get(columnIndexFinal).editHasFocus(curRowIndex);
                     if (editing || isAppendRow(curRowIndex))
                         return; // Not for us to take mouse click
-                    if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && columns.get(columnIndexFinal).isEditable() && curRowIndex >= 0)
+                    if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && tableEditable && columns.get(columnIndexFinal).isEditable() && curRowIndex >= 0)
                     {
                         columns.get(columnIndexFinal).edit(curRowIndex, new Point2D(e.getSceneX(), e.getSceneY()), pane::requestFocus);
                         e.consume();

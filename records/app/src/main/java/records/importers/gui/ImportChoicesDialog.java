@@ -77,6 +77,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
     public ImportChoicesDialog(TableManager mgr, String suggestedName, ChoicePoint<?, FORMAT> choicePoints, SimulationFunction<FORMAT, ? extends @Nullable RecordSet> loadData, SimulationFunction<Choices, @Nullable SourceInfo> srcData)
     {
         StableView tableView = new StableView();
+        tableView.setEditable(false);
         StableView srcTableView = new StableView();
         srcTableView.getNode().addEventFilter(ScrollEvent.SCROLL, se -> {
             tableView.forwardedScrollEvent(se);

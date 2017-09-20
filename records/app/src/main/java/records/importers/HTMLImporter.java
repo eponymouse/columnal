@@ -94,7 +94,8 @@ public class HTMLImporter implements Importer
             ImmutableList.Builder<Pair<String, ColumnHandler>> columnHandlers = ImmutableList.builder();
             if (!vals.isEmpty())
             {
-                for (int columnIndex = 0; columnIndex < vals.get(0).size(); columnIndex++)
+                int widest = vals.stream().mapToInt(l -> l.size()).max().orElse(0);
+                for (int columnIndex = 0; columnIndex < widest; columnIndex++)
                 {
                     int columnIndexFinal = columnIndex;
                     columnHandlers.add(new Pair<>("Column " + (columnIndex + 1), new ReadOnlyStringColumnHandler()
@@ -162,7 +163,7 @@ public class HTMLImporter implements Importer
                         }
                         @NonNull DataType typeFinal = type;
                         columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, typeFinal.getTaggedTypeName(), typeFinal.getTagTypes(), Utility.mapListEx(slice, item -> {
-                            if (item.isEmpty())
+                            if (item.isEmpty() || item.trim().equals(or.getBlankString()))
                                 return new TaggedValue(0, null);
                             else
                                 return new TaggedValue(1, DataTypeUtility.value(Utility.parseNumber(inner.removePrefix(item))));

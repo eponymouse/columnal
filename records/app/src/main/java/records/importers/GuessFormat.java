@@ -111,8 +111,8 @@ public class GuessFormat
      */
     public static ChoicePoint<?, Format> guessGeneralFormat(UnitManager mgr, List<List<String>> vals)
     {
-        List<Choice> headerRowChoices = new ArrayList<>();
-        for (int headerRows = 0; headerRows < Math.min(MAX_HEADER_ROWS, vals.size() - 1); headerRows++)
+        List<HeaderRowChoice> headerRowChoices = new ArrayList<>();
+        for (int headerRows = 0; headerRows <= Math.min(MAX_HEADER_ROWS, vals.size() - 2); headerRows++)
         {
             headerRowChoices.add(new HeaderRowChoice(headerRows));
         }
@@ -135,7 +135,7 @@ public class GuessFormat
                 // Not a good guess then.
                 return ChoicePoint.failure(e);
             }
-        });
+        }, headerRowChoices.toArray(new HeaderRowChoice[0]));
     }
 
     public static class GuessException extends UserException
@@ -380,7 +380,7 @@ public class GuessFormat
             @NonNull List<String> initial = initialCheck;
 
             List<Choice> headerRowChoices = new ArrayList<>();
-            for (int headerRows = 0; headerRows < Math.min(MAX_HEADER_ROWS, initial.size() - 1); headerRows++)
+            for (int headerRows = 0; headerRows <= Math.min(MAX_HEADER_ROWS, initial.size() - 2); headerRows++)
             {
                 headerRowChoices.add(new HeaderRowChoice(headerRows));
             }
