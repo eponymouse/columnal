@@ -801,6 +801,7 @@ public class StableView
         // (in which case the point is passed) or by pressing enter (in which case
         // point is null).
         // Will only be called if isEditable returns true
+        // Must call the call-back when editing finishes.  The boolean is true if value was changed, false if it wasn't
         public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable endEdit);
 
         // Can this column be edited?

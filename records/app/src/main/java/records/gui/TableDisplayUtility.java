@@ -39,18 +39,11 @@ import records.error.UserException;
 import records.gui.stf.*;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
-import utility.FXPlatformFunctionInt;
-import utility.FXPlatformFunctionIntUser;
-import utility.FXPlatformRunnable;
-import utility.Pair;
-import utility.TaggedValue;
-import utility.Utility;
+import utility.*;
 import records.gui.stable.StableView.ColumnHandler;
 import records.gui.stable.StableView.CellContentReceiver;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
-import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 
@@ -78,12 +71,12 @@ import java.util.stream.Collectors;
 public class TableDisplayUtility
 {
 
-    public static ImmutableList<Pair<String, ColumnHandler>> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection)
+    public static ImmutableList<Pair<String, ColumnHandler>> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, FXPlatformRunnable onDataChange)
     {
         return recordSet.getColumns().stream().filter(c -> c.shouldShow(columnSelection)).<Pair<String, ColumnHandler>>map(col -> {
             try
             {
-                return getDisplay(col);
+                return getDisplay(col, onDataChange);
             }
             catch (InternalException | UserException e)
             {
@@ -130,9 +123,9 @@ public class TableDisplayUtility
         }).collect(ImmutableList.toImmutableList());
     }
 
-    private static Pair<String, ColumnHandler> getDisplay(@NonNull Column column) throws UserException, InternalException
+    private static Pair<String, ColumnHandler> getDisplay(@NonNull Column column, FXPlatformRunnable onDataChange) throws UserException, InternalException
     {
-        return new Pair<>(column.getName().getRaw(), makeField(column.getType(), column.isEditable()));
+        return new Pair<>(column.getName().getRaw(), makeField(column.getType(), column.isEditable(), onDataChange));
         /*column.getType().<ColumnHandler, UserException>applyGet(new DataTypeVisitorGetEx<ColumnHandler, UserException>()
         {
             @Override
@@ -305,13 +298,13 @@ public class TableDisplayUtility
             this.makeComponent = makeComponent;
         }
 
-        public DisplayCacheSTF<T> makeDisplayCache(boolean isEditable)
+        public DisplayCacheSTF<T> makeDisplayCache(boolean isEditable, FXPlatformRunnable onDataChange)
         {
             return new DisplayCacheSTF<T>(g, (value, store) -> {
                 StructuredTextField<T> structuredTextField = new StructuredTextField<>(makeComponent.makeComponent(ImmutableList.of(), value), isEditable ? (Pair<String, T> p) -> store.consume(p.getSecond()) : null);
                 structuredTextField.setEditable(isEditable);
                 return structuredTextField;
-            }) {
+            }, onDataChange) {
                 @Override
                 public boolean isEditable()
                 {
@@ -323,9 +316,9 @@ public class TableDisplayUtility
 
     // public for testing:
     @OnThread(Tag.FXPlatform)
-    public static DisplayCacheSTF<?> makeField(DataTypeValue dataTypeValue, boolean isEditable) throws InternalException
+    public static DisplayCacheSTF<?> makeField(DataTypeValue dataTypeValue, boolean isEditable, FXPlatformRunnable onDataChange) throws InternalException
     {
-        return valueAndComponent(dataTypeValue).makeDisplayCache(isEditable);
+        return valueAndComponent(dataTypeValue).makeDisplayCache(isEditable, onDataChange);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -603,14 +596,16 @@ public class TableDisplayUtility
         public StructuredTextField<? extends V> make(V value, FXPlatformConsumer<V> storeValue) throws InternalException, UserException;
     }
 
-    public static class DisplayCacheSTF<V> extends DisplayCache<V, StructuredTextField<? extends V>>
+    public static class DisplayCacheSTF<@Value V> extends DisplayCache<V, StructuredTextField<? extends V>>
     {
         private final FieldMaker<V> makeField;
+        private final FXPlatformRunnable onDataChange;
 
-        public DisplayCacheSTF(GetValue<V> g, FieldMaker<V> makeField)
+        public DisplayCacheSTF(GetValue<V> g, FieldMaker<V> makeField, FXPlatformRunnable onDataChange)
         {
             super(g, cs -> {}, f -> new NodeDetails(f, l -> FXUtility.addChangeListenerPlatformNN(f.focusedProperty(), l)));
             this.makeField = makeField;
+            this.onDataChange = onDataChange;
         }
 
         @Override
@@ -625,7 +620,29 @@ public class TableDisplayUtility
             @Nullable StructuredTextField<? extends V> display = getRowIfShowing(rowIndex);
             if (display != null)
             {
-                display.edit(scenePoint, endEdit);
+                @Value V startValue = display.getCompletedValue();
+                display.edit(scenePoint, endValue -> {
+                    // Best default is to assume it changed:
+                    boolean changed = true;
+                    try
+                    {
+                        if (startValue != null && endValue != null)
+                        {
+                            // Hack around thread-checker.  Value was made on FX thread so safe to examine there:
+                            changed = ((ExBiFunction<@Value @NonNull Object, @Value @NonNull Object, Integer>) (Utility::compareValues)).apply(startValue, endValue) != 0;
+                        }
+                    }
+                    catch (InternalException | UserException e)
+                    {
+                        // Will just count as changed:
+                        Utility.log(e);
+                    }
+                    endEdit.run();
+                    if (changed)
+                    {
+                        onDataChange.run();
+                    }
+                });
             }
         }
 

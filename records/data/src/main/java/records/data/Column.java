@@ -113,12 +113,6 @@ public abstract class Column
         return false;
     }
 
-    @OnThread(Tag.Simulation)
-    public final void modified(int rowIndex)
-    {
-        recordSet.modified(name, rowIndex);
-    }
-
     // For testing: return copy of column with length trimmed to shrunkLength
     public Column _test_shrink(RecordSet rs, int shrunkLength) throws InternalException, UserException
     {

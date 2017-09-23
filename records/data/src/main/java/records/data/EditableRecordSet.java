@@ -207,7 +207,8 @@ public class EditableRecordSet extends RecordSet
             RecordSetListener listenerFinal = listener;
             Platform.runLater(() -> listenerFinal.removedAddedRows(index, 0, count));
         }
-        // TODO re-run dependents
+        // Re-run dependents:
+        modified(null, null);
 
         return () -> {
             for (SimulationRunnable revertOne : revert)
@@ -252,7 +253,8 @@ public class EditableRecordSet extends RecordSet
             RecordSetListener listenerFinal = listener;
             Platform.runLater(() -> listenerFinal.removedAddedRows(deleteIndex, count, 0));
         }
-        // TODO re-run dependents
+        // Re-run dependents
+        modified(null, null);
 
         return () -> {
             for (SimulationRunnable revertOne : revert)
@@ -277,5 +279,7 @@ public class EditableRecordSet extends RecordSet
             if (listener != null)
                 listener.addedColumn(col);
         });
+        //Re-run dependents:
+        modified(col.getName(), null);
     }
 }

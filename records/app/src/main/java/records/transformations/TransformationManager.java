@@ -10,8 +10,12 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
 import records.grammar.MainParser;
+import records.grammar.MainParser.DetailContext;
 import records.grammar.MainParser.SourceNameContext;
 import records.grammar.MainParser.TableContext;
+import records.grammar.MainParser.TableIdContext;
+import records.grammar.MainParser.TransformationContext;
+import records.grammar.MainParser.TransformationNameContext;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -64,10 +68,14 @@ public class TransformationManager implements TransformationLoader
     {
         try
         {
-            TransformationInfo t = getTransformation(table.transformation().transformationName().getText());
-            String detail = table.transformation().detail().DETAIL_LINE().stream().<String>map(TerminalNode::getText).collect(Collectors.joining(""));
-            List<TableId> source = Utility.<SourceNameContext, TableId>mapList(table.transformation().sourceName(), s -> new TableId(s.item().getText()));
-            Transformation transformation = t.load(mgr, new TableId(table.transformation().tableId().getText()), source, detail);
+            TransformationContext transformationContext = table.transformation();
+            TransformationNameContext transformationName = transformationContext.transformationName();
+            TransformationInfo t = getTransformation(transformationName.getText());
+            DetailContext detailContext = transformationContext.detail();
+            String detail = detailContext.DETAIL_LINE().stream().<String>map(TerminalNode::getText).collect(Collectors.joining(""));
+            List<TableId> source = Utility.<SourceNameContext, TableId>mapList(transformationContext.sourceName(), s -> new TableId(s.item().getText()));
+            TableIdContext tableIdContext = transformationContext.tableId();
+            Transformation transformation = t.load(mgr, new TableId(tableIdContext.getText()), source, detail);
             mgr.record(transformation);
             transformation.loadPosition(table.display());
             return transformation;

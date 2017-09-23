@@ -310,18 +310,18 @@ public abstract class RecordSet
     }
 
     @OnThread(Tag.Simulation)
-    public void modified(ColumnId columnId, int rowIndex)
+    public void modified(@Nullable ColumnId columnId, @Nullable Integer rowIndex)
     {
         Platform.runLater(() -> {
             if (listener != null)
-                listener.modifiedDataItems(rowIndex, rowIndex);
+                listener.modifiedDataItems(rowIndex == null ? -1 : rowIndex, rowIndex == null ? -1 : rowIndex);
         });
     }
 
     @OnThread(Tag.FXPlatform)
     public static interface RecordSetListener
     {
-        // Range of rows modified
+        // Range of rows modified.  -1 for both params means all rows
         @OnThread(Tag.FXPlatform)
         public void modifiedDataItems(int startRowIncl, int endRowIncl);
 

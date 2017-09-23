@@ -238,21 +238,23 @@ public class TableManager
      * The saved scripts are then re-run with the new data (which may mean they
      * contain errors where they did not before)
      *
-     * @param replaceTableId
-     * @param replacement
+     * @param affectedTableId The TableId which is affected, i.e. the table for which all dependents will need to be re-run
+     * @param makeReplacement If null, existing table will be
+     *                        left untouched and only its dependents re-run.  If non-null,
+     *                        the table will be replaced by output
+     *                        of this supplier.
+     *
      * @throws InternalException
      * @throws UserException
      */
     @OnThread(Tag.Simulation)
-    public void edit(@Nullable TableId replaceTableId, SimulationSupplier<? extends Table> makeReplacement) throws InternalException, UserException
+    public void edit(@Nullable TableId affectedTableId, @Nullable SimulationSupplier<? extends Table> makeReplacement) throws InternalException, UserException
     {
         Map<TableId, List<TableId>> edges = new HashMap<>();
         HashSet<TableId> affected = new HashSet<>();
         // If it is null, new table, so nothing should be affected:
-        if (replaceTableId != null)
-            affected.add(replaceTableId);
-        if (replaceTableId != null)
-            affected.add(replaceTableId);
+        if (affectedTableId != null)
+            affected.add(affectedTableId);
         HashSet<TableId> allIds = new HashSet<>();
         synchronized (this)
         {
@@ -273,10 +275,12 @@ public class TableManager
         List<String> reRun = new ArrayList<>();
         AtomicInteger toSave = new AtomicInteger(1); // Keep one extra until we've lined up all jobs
         CompletableFuture<List<String>> savedToReRun = new CompletableFuture<>();
+
         if (processFrom != -1)
         {
             for (int i = processFrom; i < linearised.size(); i++)
             {
+                // Don't include the original changed transformation itself:
                 if (!affected.contains(linearised.get(i)))
                 {
                     // Add job:
@@ -303,12 +307,15 @@ public class TableManager
             savedToReRun.complete(reRun);
         }
 
-        synchronized (this)
+        if (makeReplacement != null)
         {
-            if (replaceTableId != null)
-                removeAndSerialise(replaceTableId, new Table.BlankSaver());
+            synchronized (this)
+            {
+                if (affectedTableId != null)
+                    removeAndSerialise(affectedTableId, new Table.BlankSaver());
+            }
+            record(makeReplacement.get());
         }
-        record(makeReplacement.get());
 
         savedToReRun.thenAccept(ss -> {
             Utility.alertOnError_(() -> reAddAll(ss));
@@ -368,7 +375,6 @@ public class TableManager
         {
             Utility.alertOnError_(() -> {
                 Transformation transformation = transformationLoader.loadOne(this, script);
-                listener.addTransformation(transformation);
             });
 
         }

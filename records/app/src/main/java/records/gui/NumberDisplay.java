@@ -121,7 +121,6 @@ class NumberDisplay
                     extractFullParts(storeFinal);
                     Workers.onWorkerThread("Storing value " + textArea.getText(), Workers.Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> {
                         g.set(rowIndex, DataTypeUtility.value(storeFinal));
-                        column.modified(rowIndex);
                     }));
                     textArea.deselect();
                     shrinkToNormalAfterEditing();

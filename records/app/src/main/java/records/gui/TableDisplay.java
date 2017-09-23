@@ -139,7 +139,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             this.recordSet = recordSet;
             this.onModify = onModify;
             recordSet.setListener(this);
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns()), table.getOperations());
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations());
             setRows(recordSet::indexValid);
             //TODO restore editability
             //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
@@ -170,7 +170,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
 
             FXUtility.addChangeListenerPlatformNN(columnDisplay, newDisplay -> {
-                setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s))), table.getOperations());
+                setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), onModify), table.getOperations());
                 setRows(recordSet::indexValid);
             });
         }
@@ -204,7 +204,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         @Override
         public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
         {
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns()), table.getOperations());
+            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations());
             setRows(recordSet::indexValid);
         }
     }
@@ -224,7 +224,10 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         }
         this.recordSetOrError = recordSetOrError;
         StackPane body = new StackPane(this.recordSetOrError.<Node>either(err -> new Label(err),
-            recordSet -> new TableDataDisplay(recordSet, parent::modified).getNode()));
+            recordSet -> new TableDataDisplay(recordSet, () -> {
+                parent.modified();
+                Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH,() -> Utility.alertOnError_(() -> parent.getManager().edit(table.getId(), null)));
+            }).getNode()));
         Utility.addStyleClass(body, "table-body");
         setCenter(body);
         Utility.addStyleClass(this, "table-wrapper", "tableDisplay", table instanceof Transformation ? "tableDisplay-transformation" : "tableDisplay-source");

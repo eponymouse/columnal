@@ -89,7 +89,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
     private @Nullable STFAutoComplete autoComplete;
     private int completingForItem = -1;
     private boolean inSuperReplace;
-    private @Nullable FXPlatformRunnable endEdit;
+    private @Nullable FXPlatformConsumer<T> endEdit;
 
     // store action takes the string value of the field, and the parsed value of the field, when it is valid.
     public StructuredTextField(Component<T> content, @Nullable FXPlatformConsumer<Pair<String, T>> store) throws InternalException
@@ -148,7 +148,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
             InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), (KeyEvent e) -> {
                 if (endEdit != null)
                 {
-                    endEdit.run(); // Should move focus away from us
+                    endEdit.consume(FXUtility.keyboard(this).getCompletedValue()); // Should move focus away from us
                 }
                 e.consume();
             })
@@ -572,7 +572,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
         }
     }
 
-    public void edit(@Nullable Point2D scenePoint, FXPlatformRunnable endEdit)
+    public void edit(@Nullable Point2D scenePoint, FXPlatformConsumer<T> endEdit)
     {
         if (!isEditable())
             return;
