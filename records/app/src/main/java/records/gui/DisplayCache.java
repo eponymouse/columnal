@@ -59,13 +59,13 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
     @OnThread(Tag.Any)
     private final GetValue<V> getValue;
     private final @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells;
-    private final FXPlatformFunction<G, Region> getNode;
+    private final FXPlatformFunction<G, NodeDetails> getNode;
     private int firstVisibleRowIndexIncl = -1;
     private int lastVisibleRowIndexIncl = -1;
     private double latestWidth = -1;
 
     @OnThread(Tag.Any)
-    public DisplayCache(GetValue<V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, FXPlatformFunction<G, Region> getNode)
+    public DisplayCache(GetValue<V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, FXPlatformFunction<G, NodeDetails> getNode)
     {
         this.getValue = getValue;
         this.formatVisibleCells = formatVisibleCells;
@@ -207,11 +207,12 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
             {
                 if (loadedItemOrError != null)
                 {
-                    callback.setCellContent(rowIndex, loadedItemOrError.either(p -> getNode.apply(p.getSecond()), Label::new));
+                    NodeDetails item = loadedItemOrError.either(p -> getNode.apply(p.getSecond()), err -> new NodeDetails(new Label(err), l -> {}));
+                    callback.setCellContent(rowIndex, item.node, item.setFocusListener);
                 }
                 else
                 {
-                    callback.setCellContent(rowIndex, new Label("Loading: " + progress));
+                    callback.setCellContent(rowIndex, new Label("Loading: " + progress), c -> {});
                 }
             }
         }
@@ -301,6 +302,18 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
         {
             this.originalFinished = finished;
             this.us = us;
+        }
+    }
+
+    public static class NodeDetails
+    {
+        private final Region node;
+        private final FXPlatformConsumer<FXPlatformConsumer<Boolean>> setFocusListener;
+
+        public NodeDetails(Region node, FXPlatformConsumer<FXPlatformConsumer<Boolean>> setFocusListener)
+        {
+            this.node = node;
+            this.setFocusListener = setFocusListener;
         }
     }
 }

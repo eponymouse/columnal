@@ -89,11 +89,24 @@ $stable-view-header-border: hsb(0, 0%, 40%);
     -fx-border-width: 0 1 1 0;
     -fx-border-color: gray(60%);
 }
-.stable-view-row-cell:focused {
-    -fx-background-color: pink;
-    & .structured-text-field {
-        -fx-text-color: white;
+
+/* focused-cell means the cell wrapper has focus (cell selected) */
+.stable-view-row-cell:focused-cell {
+    -fx-background-color: $focus-color;
+    & .structured-text-field .text {
+        -fx-fill: $focus-color-text;
     }
+}
+/* editing-cell means the cell inside the wrapper has focus (cell being edited) */
+.stable-view-row-cell:editing-cell {
+    -fx-background-color: $focus-color, white;
+    -fx-background-insets: 0, 2;
+    & .styled-text-area .text {
+        -fx-fill: black;
+    }
+}
+.stable-view-row-cell:focused-row-col {
+    -fx-background-color: $focus-color-row-col;
 }
 .stable-view-row-cell .structured-text-field {
     -fx-background-color: transparent;
@@ -104,7 +117,7 @@ $stable-view-header-border: hsb(0, 0%, 40%);
 
 .stable-view-row-cell, .stable-view-row-number,
    .stable-view-matched .paragraph-text {
-    -fx-pref-height: 28px; /*20pt;*/
+    -fx-pref-height: 22px;
     /*-fx-snap-to-pixel: true;*/
 }
 
@@ -113,6 +126,8 @@ $stable-view-header-border: hsb(0, 0%, 40%);
    -fx-max-width: 9999.0;
    -fx-background-color: gray(95%);
    -fx-background-insets: 0;
+   -fx-background-radius: 0;
+   -fx-padding: 0;
    &:hover {
        -fx-background-color: white;
        -fx-cursor: hand;

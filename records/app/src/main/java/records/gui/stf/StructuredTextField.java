@@ -574,6 +574,9 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
 
     public void edit(@Nullable Point2D scenePoint, FXPlatformRunnable endEdit)
     {
+        if (!isEditable())
+            return;
+
         this.endEdit = endEdit;
         if (scenePoint != null)
         {

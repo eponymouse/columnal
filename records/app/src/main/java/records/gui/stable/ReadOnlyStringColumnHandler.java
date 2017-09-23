@@ -17,7 +17,7 @@ public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
     @Override
     public final void fetchValue(int rowIndex, CellContentReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
     {
-        fetchValueForRow(rowIndex, s -> receiver.setCellContent(rowIndex, new Label(s)));
+        fetchValueForRow(rowIndex, s -> receiver.setCellContent(rowIndex, new Label(s), c -> {}));
     }
 
     @OnThread(Tag.FXPlatform)

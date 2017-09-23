@@ -55,6 +55,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.SimulationFunction;
@@ -95,6 +96,19 @@ import java.util.OptionalInt;
  *                 .stable-button-left: Button [button to jump to left]
  *                     .stable-view-button-arrow: Region [the arrow graphic]
  *         .stable-view-row-numbers: StackPane [ ... ]
+ *
+ * The table contents inside the VirtualFlow are as follows.  Because tables tend to have a higher limit
+ * of number of rows than columns, we have a vertical VirtualFlow, and each column is displayed even if
+ * it's off screen (whereas rows are virtualized, so rows off-screen are not displayed).  The architecture
+ * of each row is:
+ *
+ * .stable-view-row: HBox
+ *     .stable-view-row-cell: StackPane
+ *         ?: ? -- The cell contents can be any node
+ *
+ * Because we potentially allow the cell contents to be a compound structure, we don't access its properties
+ * directly for determining focus, and instead rely on listeners in our code rather than observable properties.
+ *
  */
 
 @OnThread(Tag.FXPlatform)
@@ -578,17 +592,35 @@ public class StableView
                 {
                     FXUtility.onceNotNull(pane.sceneProperty(), s -> {pane.requestFocus();});
                 }
+                int columnIndexFinal = columnIndex;
+                FXUtility.addChangeListenerPlatformNN(pane.focusedProperty(), focus -> {
+                    FXUtility.setPseudoclass(pane, "focused-cell", focus);
+                    markFocusCross(columnIndexFinal, curRowIndex, focus);
+                    focusedCell.set(focus ? new Pair<>(columnIndexFinal, curRowIndex) : null);
+                });
                 FXUtility.forcePrefSize(pane);
                 pane.prefWidthProperty().bind(columnSizes.get(columnIndex));
-                int columnIndexFinal = columnIndex;
                 pane.addEventFilter(MouseEvent.ANY, e -> {
-                    boolean editing = curRowIndex >= 0 && columns.get(columnIndexFinal).editHasFocus(curRowIndex);
-                    if (editing || isAppendRow(curRowIndex))
-                        return; // Not for us to take mouse click
-                    if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY && tableEditable && columns.get(columnIndexFinal).isEditable() && curRowIndex >= 0)
+                    if (e.getEventType() != MouseEvent.MOUSE_CLICKED)
                     {
-                        columns.get(columnIndexFinal).edit(curRowIndex, new Point2D(e.getSceneX(), e.getSceneY()), pane::requestFocus);
-                        e.consume();
+                        boolean editing = curRowIndex >= 0 && columns.get(columnIndexFinal).editHasFocus(curRowIndex);
+                        if (!editing && !pane.isFocused() && !isAppendRow(curRowIndex))
+                        {
+                            // Hide events from inner panel if we're not yet editing:
+                            e.consume();
+                        }
+                    }
+                });
+                pane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
+                    if (e.getEventType() == MouseEvent.MOUSE_CLICKED)
+                        System.err.println("Detected click in filter");
+                    boolean editing = curRowIndex >= 0 && columns.get(columnIndexFinal).editHasFocus(curRowIndex);
+
+                    if (e.getEventType() == MouseEvent.MOUSE_CLICKED)
+                        System.err.println("Editing: " + editing + " pane focus: " + pane.isFocused());
+                    if (editing || isAppendRow(curRowIndex))
+                    {
+                        return; // Not for us to take mouse click
                     }
                     else if (!pane.isFocused() && e.getClickCount() == 1 && e.getButton() == MouseButton.PRIMARY && curRowIndex >= 0)
                     {
@@ -667,21 +699,17 @@ public class StableView
                         int columnIndexFinal = columnIndex;
                         StableRow firstVisibleRow = virtualFlow.visibleCells().get(0);
                         StableRow lastVisibleRow = virtualFlow.visibleCells().get(virtualFlow.visibleCells().size() - 1);
-                        column.fetchValue(rowIndex, (x, n) ->
+                        column.fetchValue(rowIndex, (x, cellContent, setFocusChanged) ->
                         {
                             Pane cell = cells.get(columnIndexFinal);
-                            n.setFocusTraversable(true);
-                            FXUtility.addChangeListenerPlatformNN(n.focusedProperty(), gotFocus ->
-                            {
-                                FXUtility.setPseudoclass(cell, "focused-cell", gotFocus);
-                                focusedCell.set(gotFocus ? new Pair<>(columnIndexFinal, rowIndex) : null);
-                            });
-                            cell.getChildren().setAll(n);
+                            cell.getChildren().setAll(cellContent);
 
-                            n.addEventFilter(ScrollEvent.SCROLL, e -> {
+                            cellContent.addEventFilter(ScrollEvent.SCROLL, e -> {
                                 FXUtility.mouse(StableView.this).forwardedScrollEvent(e);
                                 e.consume();
                             });
+                            setFocusChanged.consume(focus -> cellContentFocusChanged(columnIndexFinal, focus));
+
                         }, firstVisibleRow.curRowIndex, lastVisibleRow.curRowIndex);
 
                         // Swap old input map (if any) for new (if any)
@@ -694,6 +722,11 @@ public class StableView
                     }
                 }
             }
+        }
+
+        private void cellContentFocusChanged(int columnIndex, boolean focused)
+        {
+            FXUtility.setPseudoclass(cells.get(columnIndex), "editing-cell", focused);
         }
 
         // You have to override this to avoid the UnsupportedOperationException
@@ -717,10 +750,36 @@ public class StableView
         }
     }
 
+    /**
+     * Marks the whole row and column lightly to indicate the real focused cell.
+     */
+    private void markFocusCross(int columnIndex, int rowIndex, boolean gotFocus)
+    {
+        for (StableRow stableRow : virtualFlow.visibleCells())
+        {
+            boolean correctRow = stableRow.curRowIndex == rowIndex;
+            for (int cellCol = 0; cellCol < stableRow.cells.size(); cellCol++)
+            {
+                boolean correctColumn = cellCol == columnIndex;
+                // XOR; don't want to set it for actually focused cell:
+                if (correctRow != correctColumn)
+                {
+                    FXUtility.setPseudoclass(stableRow.cells.get(cellCol), "focused-row-col", gotFocus);
+                }
+            }
+        }
+    }
+
     @OnThread(Tag.FXPlatform)
     public static interface CellContentReceiver
     {
-        public void setCellContent(int rowIndex, Region cellContent);
+        /**
+         * Sets the content of a cell on the given row.
+         * @param rowIndex
+         * @param cellContent
+         * @param setOnFocusChange A callback with a listener for focus changing on the cell
+         */
+        public void setCellContent(int rowIndex, Region cellContent, FXPlatformConsumer<FXPlatformConsumer<Boolean>> setOnFocusChange);
     }
 
     @OnThread(Tag.FXPlatform)

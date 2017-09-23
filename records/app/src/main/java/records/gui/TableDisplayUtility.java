@@ -93,7 +93,7 @@ public class TableDisplayUtility
                     @Override
                     public void fetchValue(int rowIndex, CellContentReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
                     {
-                        receiver.setCellContent(rowIndex, new Label("Error: " + e.getLocalizedMessage()));
+                        receiver.setCellContent(rowIndex, new Label("Error: " + e.getLocalizedMessage()), c -> {});
                     }
 
                     @Override
@@ -307,7 +307,17 @@ public class TableDisplayUtility
 
         public DisplayCacheSTF<T> makeDisplayCache(boolean isEditable)
         {
-            return new DisplayCacheSTF<T>(g, (value, store) -> new StructuredTextField<T>(makeComponent.makeComponent(ImmutableList.of(), value), isEditable ? (Pair<String, T> p) -> store.consume(p.getSecond()) : null));
+            return new DisplayCacheSTF<T>(g, (value, store) -> {
+                StructuredTextField<T> structuredTextField = new StructuredTextField<>(makeComponent.makeComponent(ImmutableList.of(), value), isEditable ? (Pair<String, T> p) -> store.consume(p.getSecond()) : null);
+                structuredTextField.setEditable(isEditable);
+                return structuredTextField;
+            }) {
+                @Override
+                public boolean isEditable()
+                {
+                    return isEditable;
+                }
+            };
         }
     }
 
@@ -599,7 +609,7 @@ public class TableDisplayUtility
 
         public DisplayCacheSTF(GetValue<V> g, FieldMaker<V> makeField)
         {
-            super(g, cs -> {}, f -> f);
+            super(g, cs -> {}, f -> new NodeDetails(f, l -> FXUtility.addChangeListenerPlatformNN(f.focusedProperty(), l)));
             this.makeField = makeField;
         }
 

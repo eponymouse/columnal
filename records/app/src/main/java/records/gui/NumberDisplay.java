@@ -29,6 +29,7 @@ import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.NumberDisplayInfo;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.DisplayCache.NodeDetails;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -279,7 +280,7 @@ class NumberDisplay
 
     public static DisplayCache<@Value Number, NumberDisplay> makeDisplayCache(GetValue<@Value Number> g, @Nullable NumberDisplayInfo displayInfo, Column column)
     {
-        return new DisplayCache<@Value Number, NumberDisplay>(g, vis -> formatColumn(displayInfo, vis), n -> n.textArea) {
+        return new DisplayCache<@Value Number, NumberDisplay>(g, vis -> formatColumn(displayInfo, vis), n -> new NodeDetails(n.textArea, l -> FXUtility.addChangeListenerPlatformNN(n.textArea.focusedProperty(), l))) {
             @Override
             protected NumberDisplay makeGraphical(int rowIndex, @Value Number value)
             {
