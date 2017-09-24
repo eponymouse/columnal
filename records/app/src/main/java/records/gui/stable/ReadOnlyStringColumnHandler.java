@@ -2,9 +2,9 @@ package records.gui.stable;
 
 import javafx.geometry.Point2D;
 import javafx.scene.control.Label;
+import javafx.scene.layout.Region;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.wellbehaved.event.InputMap;
-import records.gui.stable.StableView.CellContentReceiver;
 import records.gui.stable.StableView.ColumnHandler;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -15,9 +15,9 @@ import utility.SimulationFunction;
 public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
 {
     @Override
-    public final void fetchValue(int rowIndex, CellContentReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, FXPlatformConsumer<Region> setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
     {
-        fetchValueForRow(rowIndex, s -> receiver.setCellContent(rowIndex, new Label(s), c -> {}));
+        fetchValueForRow(rowIndex, s -> setCellContent.consume(new Label(s)));
     }
 
     @OnThread(Tag.FXPlatform)
@@ -36,7 +36,7 @@ public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
     }
 
     @Override
-    public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable endEdit)
+    public void edit(int rowIndex, @Nullable Point2D scenePoint)
     {
         // Not editable
     }

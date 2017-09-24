@@ -1,8 +1,7 @@
 package records.gui;
 
+import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
 import javafx.application.Platform;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Region;
@@ -20,21 +19,22 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.Workers.Worker;
 import records.gui.stable.StableView.ColumnHandler;
-import records.gui.stable.StableView.CellContentReceiver;
 
 import java.util.ArrayList;
 import java.util.List;
 import java.util.OptionalInt;
+import java.util.concurrent.ExecutionException;
 
 /**
  * DisplayCache is responsible for managing the thread-hopping loading
- * of values, and the display in case of errors or loading bars.
+ * of values for a single column, and the display in case of errors or loading bars.
  * The display of actual items is handled by the caller of this class,
  * as is any saving of edited values.
  *
@@ -54,18 +54,18 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
     private static final int INITIAL_DISPLAY_CACHE_SIZE = 60;
     private static final int MAX_DISPLAY_CACHE_SIZE = 500;
     @OnThread(Tag.FXPlatform)
-    private final LoadingCache<@NonNull Integer, @NonNull DisplayCacheItem> displayCacheItems;
+    private final Cache<@NonNull Integer, @NonNull DisplayCacheItem> displayCacheItems;
 
     @OnThread(Tag.Any)
     private final GetValue<V> getValue;
     private final @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells;
-    private final FXPlatformFunction<G, NodeDetails> getNode;
+    private final FXPlatformFunction<G, Region> getNode;
     private int firstVisibleRowIndexIncl = -1;
     private int lastVisibleRowIndexIncl = -1;
     private double latestWidth = -1;
 
     @OnThread(Tag.Any)
-    public DisplayCache(GetValue<V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, FXPlatformFunction<G, NodeDetails> getNode)
+    public DisplayCache(GetValue<V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, FXPlatformFunction<G, Region> getNode)
     {
         this.getValue = getValue;
         this.formatVisibleCells = formatVisibleCells;
@@ -73,19 +73,15 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
         displayCacheItems = CacheBuilder.newBuilder()
             .initialCapacity(INITIAL_DISPLAY_CACHE_SIZE)
             .maximumSize(MAX_DISPLAY_CACHE_SIZE)
-            .build(new CacheLoader<Integer, DisplayCacheItem>()
-            {
-                @Override
-                @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-                public DisplayCacheItem load(Integer index) throws Exception
-                {
-                    return new DisplayCacheItem(index);
-                }
-            });
+            .build();
     }
 
-    protected abstract G makeGraphical(int rowIndex, V value) throws InternalException, UserException;
+    protected abstract G makeGraphical(int rowIndex, V value, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus) throws InternalException, UserException;
 
+    /**
+     * Details about the cells which are currently visible.  Used to format columns, if a column is adjusted
+     * based on what is on screen (e.g. aligning the decimal point in a numeric column)
+     */
     public class VisibleDetails
     {
         public final int firstVisibleRowIndex;
@@ -103,7 +99,8 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
             visibleCells = new ArrayList<>(lastVisibleRowIndexIncl - firstVisibleRowIndexIncl + 1);
             for (int i = firstVisibleRowIndexIncl; i <= lastVisibleRowIndexIncl; i++)
             {
-                @Nullable Either<Pair<V, G>, @Localized String> loadedItemOrError = displayCacheItems.getUnchecked(i).loadedItemOrError;
+                @Nullable DisplayCacheItem item = displayCacheItems.getIfPresent(i);
+                @Nullable Either<Pair<V, G>, @Localized String> loadedItemOrError = item == null ? null : item.loadedItemOrError;
                 if (loadedItemOrError != null)
                     visibleCells.add(loadedItemOrError.<@Nullable G>either(p -> p.getSecond(), s -> (@Nullable G)null));
                 else
@@ -124,14 +121,20 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
     }
 
     @Override
-    public final void fetchValue(int rowIndex, CellContentReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, FXPlatformConsumer<Region> setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
     {
         this.firstVisibleRowIndexIncl = firstVisibleRowIndexIncl;
         this.lastVisibleRowIndexIncl = lastVisibleRowIndexIncl;
-        @NonNull DisplayCacheItem item = displayCacheItems.getUnchecked(rowIndex);
+        try
+        {
+            displayCacheItems.get(rowIndex, () -> new DisplayCacheItem(rowIndex, focusListener, relinquishFocus, setCellContent));
+        }
+        catch (ExecutionException e)
+        {
+            Utility.log(e);
+            setCellContent.consume(new Label(e.getLocalizedMessage()));
+        }
         formatVisible(OptionalInt.of(rowIndex));
-
-        item.setCallback(receiver);
     }
 
     @Override
@@ -180,40 +183,42 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
         private @MonotonicNonNull Either<Pair<V, G>, @Localized String> loadedItemOrError;
         private double progress = 0;
         @OnThread(Tag.FXPlatform)
-        private @MonotonicNonNull CellContentReceiver callback;
+        private final FXPlatformConsumer<Region> callbackSetCellContent;
+        private final FXPlatformConsumer<Boolean> onFocusChange;
+        private final FXPlatformRunnable relinquishFocus;
 
         @SuppressWarnings("initialization") // ValueLoader, though I don't quite understand why
-        public DisplayCacheItem(int index)
+        public DisplayCacheItem(int index, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus, FXPlatformConsumer<Region> callbackSetCellContent)
         {
             this.rowIndex = index;
             loader = new ValueLoader(index, this);
+            this.onFocusChange = onFocusChange;
+            this.relinquishFocus = relinquishFocus;
+            this.callbackSetCellContent = callbackSetCellContent;
             Workers.onWorkerThread("Value load for display: " + index, Priority.FETCH, loader);
-            triggerCallback();
+            updateDisplay();
         }
 
         public synchronized void update(V loadedItem)
         {
             Utility.alertOnErrorFX_(() -> {
-                this.loadedItemOrError = Either.left(new Pair<>(loadedItem, makeGraphical(rowIndex, loadedItem)));
+                this.loadedItemOrError = Either.left(new Pair<>(loadedItem, makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)));
             });
-            triggerCallback();
+            updateDisplay();
             formatVisible(OptionalInt.of(rowIndex));
         }
 
         @OnThread(Tag.FXPlatform)
-        public void triggerCallback()
+        public void updateDisplay()
         {
-            if (callback != null)
+            if (loadedItemOrError != null)
             {
-                if (loadedItemOrError != null)
-                {
-                    NodeDetails item = loadedItemOrError.either(p -> getNode.apply(p.getSecond()), err -> new NodeDetails(new Label(err), l -> {}));
-                    callback.setCellContent(rowIndex, item.node, item.setFocusListener);
-                }
-                else
-                {
-                    callback.setCellContent(rowIndex, new Label("Loading: " + progress), c -> {});
-                }
+                Region item = loadedItemOrError.either(p -> getNode.apply(p.getSecond()), err -> new Label(err));
+                callbackSetCellContent.consume(item);
+            }
+            else
+            {
+                callbackSetCellContent.consume(new Label("Loading: " + progress));
             }
         }
 
@@ -226,19 +231,13 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
         {
             // TODO store progressState
             this.progress = progress;
-            triggerCallback();
+            updateDisplay();
         }
 
         public void error(@Localized String error)
         {
             this.loadedItemOrError = Either.right(error);
-            triggerCallback();
-        }
-
-        public void setCallback(CellContentReceiver receiver)
-        {
-            this.callback = receiver;
-            triggerCallback();
+            updateDisplay();
         }
     }
 
@@ -302,18 +301,6 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
         {
             this.originalFinished = finished;
             this.us = us;
-        }
-    }
-
-    public static class NodeDetails
-    {
-        private final Region node;
-        private final FXPlatformConsumer<FXPlatformConsumer<Boolean>> setFocusListener;
-
-        public NodeDetails(Region node, FXPlatformConsumer<FXPlatformConsumer<Boolean>> setFocusListener)
-        {
-            this.node = node;
-            this.setFocusListener = setFocusListener;
         }
     }
 }

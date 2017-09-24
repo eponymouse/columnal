@@ -111,7 +111,7 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
     }
     private <@NonNull @Value T extends @NonNull @Value Object> StructuredTextField<T> fieldFromComponent(@UnknownInitialization(Object.class) NewColumnDialog this, Component<T> component) throws InternalException
     {
-        return new StructuredTextField<@NonNull @Value T>(component, (Pair<String, @NonNull @Value T> v) -> {defaultValueAsString = v.getFirst();});
+        return new StructuredTextField<@NonNull @Value T>(component, (Pair<String, @NonNull @Value T> v) -> {defaultValueAsString = v.getFirst();}, null);
     }
 
     @RequiresNonNull({"typeSelectionPane"})

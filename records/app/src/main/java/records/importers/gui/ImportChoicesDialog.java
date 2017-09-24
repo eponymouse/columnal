@@ -117,7 +117,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                         {
                             @NonNull RecordSet recordSetNonNull = recordSet;
                             Platform.runLater(() -> {
-                                tableView.setColumns(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), () -> {}), null);
+                                tableView.setColumns(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), null), null);
                                 tableView.setRows(recordSetNonNull::indexValid);
                             });
                         }

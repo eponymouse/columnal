@@ -20,6 +20,7 @@ import javafx.scene.control.SplitPane;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
@@ -48,7 +49,6 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.TableDisplayUtility;
 import records.gui.TableNameTextField;
-import records.gui.stable.StableView.CellContentReceiver;
 import records.gui.stable.StableView.ColumnHandler;
 import records.importers.ChoicePoint.Choice;
 import records.importers.ChoicePoint.ChoiceType;
@@ -672,7 +672,7 @@ public class GuessFormat
             ColumnHandler columnHandler = new ColumnHandler()
             {
                 @Override
-                public void fetchValue(int rowIndex, CellContentReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+                public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, FXPlatformConsumer<Region> setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
                 {
                     // TODO
                 }
@@ -690,7 +690,7 @@ public class GuessFormat
                 }
 
                 @Override
-                public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable endEdit)
+                public void edit(int rowIndex, @Nullable Point2D scenePoint)
                 {
                     // Not editable
                 }
@@ -830,7 +830,7 @@ public class GuessFormat
             {
                 @OnThread(Tag.Simulation) RecordSet recordSet = TextImporter.makeRecordSet(typeManager, file, t, textAreaFiller);
                 Platform.runLater(() -> {
-                    gui.tableView.setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, new Pair<>(Display.ALL, c -> true), () -> {}), null);
+                    gui.tableView.setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, new Pair<>(Display.ALL, c -> true), null), null);
                     gui.tableView.setRows(recordSet::indexValid);
                 });
             }

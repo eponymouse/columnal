@@ -89,10 +89,9 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
     private @Nullable STFAutoComplete autoComplete;
     private int completingForItem = -1;
     private boolean inSuperReplace;
-    private @Nullable FXPlatformConsumer<T> endEdit;
 
     // store action takes the string value of the field, and the parsed value of the field, when it is valid.
-    public StructuredTextField(Component<T> content, @Nullable FXPlatformConsumer<Pair<String, T>> store) throws InternalException
+    public StructuredTextField(Component<T> content, @Nullable FXPlatformConsumer<Pair<String, T>> store, @Nullable EndEditActions<? super T> endEdit) throws InternalException
     {
         super(false);
         getStyleClass().add("structured-text-field");
@@ -117,6 +116,10 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
                     completedValue = v;
                     storeNonNull.consume(new Pair<>(getText(), completedValue));
                     lastValidValue = captureState();
+                    if (endEdit != null)
+                    {
+                        endEdit.notifyChanged(completedValue);
+                    }
                 });
             }
         });
@@ -148,7 +151,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
             InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), (KeyEvent e) -> {
                 if (endEdit != null)
                 {
-                    endEdit.consume(FXUtility.keyboard(this).getCompletedValue()); // Should move focus away from us
+                    endEdit.notifyChanged(FXUtility.keyboard(this).getCompletedValue()); // Should move focus away from us
                 }
                 e.consume();
             })
@@ -572,12 +575,26 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
         }
     }
 
-    public void edit(@Nullable Point2D scenePoint, FXPlatformConsumer<T> endEdit)
+    public interface EndEditActions<T>
+    {
+        /**
+         * Called when edit has finished, and the value in the field was changed
+         */
+        @OnThread(Tag.FXPlatform)
+        public void notifyChanged(T newValue);
+
+        /**
+         * Called when user presses enter or escape, to move the focus elsewhere (e.g. next node)
+         */
+        @OnThread(Tag.FXPlatform)
+        public void focusElsewhere();
+    }
+
+    public void edit(@Nullable Point2D scenePoint)
     {
         if (!isEditable())
             return;
 
-        this.endEdit = endEdit;
         if (scenePoint != null)
         {
             Point2D local = sceneToLocal(scenePoint);

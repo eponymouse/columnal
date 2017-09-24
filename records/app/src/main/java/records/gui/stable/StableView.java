@@ -648,7 +648,7 @@ public class StableView
                         e.consume();
                     }),
                     InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
-                        columns.get(columnIndexFinal).edit(curRowIndex, null, pane::requestFocus);
+                        columns.get(columnIndexFinal).edit(curRowIndex, null);
                         e.consume();
                     })
                 ));
@@ -699,7 +699,7 @@ public class StableView
                         int columnIndexFinal = columnIndex;
                         StableRow firstVisibleRow = virtualFlow.visibleCells().get(0);
                         StableRow lastVisibleRow = virtualFlow.visibleCells().get(virtualFlow.visibleCells().size() - 1);
-                        column.fetchValue(rowIndex, (x, cellContent, setFocusChanged) ->
+                        column.fetchValue(rowIndex, focus -> cellContentFocusChanged(columnIndexFinal, focus), () -> cells.get(columnIndexFinal).requestFocus(), cellContent ->
                         {
                             Pane cell = cells.get(columnIndexFinal);
                             cell.getChildren().setAll(cellContent);
@@ -708,8 +708,6 @@ public class StableView
                                 FXUtility.mouse(StableView.this).forwardedScrollEvent(e);
                                 e.consume();
                             });
-                            setFocusChanged.consume(focus -> cellContentFocusChanged(columnIndexFinal, focus));
-
                         }, firstVisibleRow.curRowIndex, lastVisibleRow.curRowIndex);
 
                         // Swap old input map (if any) for new (if any)
@@ -771,24 +769,12 @@ public class StableView
     }
 
     @OnThread(Tag.FXPlatform)
-    public static interface CellContentReceiver
-    {
-        /**
-         * Sets the content of a cell on the given row.
-         * @param rowIndex
-         * @param cellContent
-         * @param setOnFocusChange A callback with a listener for focus changing on the cell
-         */
-        public void setCellContent(int rowIndex, Region cellContent, FXPlatformConsumer<FXPlatformConsumer<Boolean>> setOnFocusChange);
-    }
-
-    @OnThread(Tag.FXPlatform)
     public static interface ColumnHandler
     {
         // Called to fetch a value.  Once available, receiver should be called.
         // Until then it will be blank.  You can call receiver multiple times though,
         // so you can just call it with a placeholder before returning.
-        public void fetchValue(int rowIndex, CellContentReceiver receiver, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl);
+        public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, FXPlatformConsumer<Region> setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl);
 
         // Called when the column gets resized (graphically).  Width is in pixels
         public void columnResized(double width);
@@ -801,8 +787,7 @@ public class StableView
         // (in which case the point is passed) or by pressing enter (in which case
         // point is null).
         // Will only be called if isEditable returns true
-        // Must call the call-back when editing finishes.  The boolean is true if value was changed, false if it wasn't
-        public void edit(int rowIndex, @Nullable Point2D scenePoint, FXPlatformRunnable endEdit);
+        public void edit(int rowIndex, @Nullable Point2D scenePoint);
 
         // Can this column be edited?
         public boolean isEditable();
