@@ -24,14 +24,12 @@ import org.fxmisc.richtext.model.*;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
-import org.jetbrains.annotations.NotNull;
 import records.error.InternalException;
 import records.gui.stf.Component.InsertState;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -151,7 +149,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
             InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), (KeyEvent e) -> {
                 if (endEdit != null)
                 {
-                    endEdit.notifyChanged(FXUtility.keyboard(this).getCompletedValue()); // Should move focus away from us
+                    endEdit.relinquishFocus(); // Should move focus away from us
                 }
                 e.consume();
             })
@@ -587,7 +585,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
          * Called when user presses enter or escape, to move the focus elsewhere (e.g. next node)
          */
         @OnThread(Tag.FXPlatform)
-        public void focusElsewhere();
+        public void relinquishFocus();
     }
 
     public void edit(@Nullable Point2D scenePoint)

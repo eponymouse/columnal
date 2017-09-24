@@ -311,7 +311,7 @@ public class TableDisplayUtility
                     }
 
                     @Override
-                    public @OnThread(Tag.FXPlatform) void focusElsewhere()
+                    public @OnThread(Tag.FXPlatform) void relinquishFocus()
                     {
                         relinquishFocus.run();
                     }
