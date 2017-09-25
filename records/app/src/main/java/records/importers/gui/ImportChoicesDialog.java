@@ -117,8 +117,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                         {
                             @NonNull RecordSet recordSetNonNull = recordSet;
                             Platform.runLater(() -> {
-                                tableView.setColumns(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), null), null);
-                                tableView.setRows(recordSetNonNull::indexValid);
+                                tableView.setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSetNonNull, new Pair<>(Display.ALL, c -> true), null), null, recordSetNonNull::indexValid);
                             });
                         }
                     }
@@ -132,7 +131,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             }
             else
             {
-                tableView.setColumns(Collections.emptyList(), null);
+                tableView.setColumnsAndRows(Collections.emptyList(), null, i -> false);
             }
         });
         SimpleObjectProperty<@Nullable Choices> choicesProperty = new SimpleObjectProperty<>(null);
@@ -146,8 +145,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                     {
                         @NonNull SourceInfo sourceInfoNonNull = sourceInfo;
                         Platform.runLater(() -> {
-                            srcTableView.setColumns(sourceInfoNonNull.srcColumns, null);
-                            srcTableView.setRows(i -> i < sourceInfoNonNull.numRows);
+                            srcTableView.setColumnsAndRows(sourceInfoNonNull.srcColumns, null, i -> i < sourceInfoNonNull.numRows);
                         });
                     }
                 }));

@@ -70,6 +70,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * A customised equivalent of TableView
@@ -122,6 +123,10 @@ public class StableView
     private final Label placeholder;
     private final StackPane stackPane; // has scrollPane and placeholder as its children
 
+    // An integer counter which tracks which instance of setColumnsAndRows we are on.  Used to
+    // effectively cancel some queued run-laters if the method is called twice in quick succession.
+    @OnThread(Tag.FXPlatform)
+    private AtomicInteger columnAndRowSet = new AtomicInteger(0);
     private final BooleanProperty showingRowNumbers = new SimpleBooleanProperty(true);
     private final List<ColumnHandler> columns;
     private final List<DoubleProperty> columnSizes;
@@ -382,13 +387,14 @@ public class StableView
     public void clear(@Nullable TableOperations operations)
     {
         // Clears rows, too:
-        setColumns(Collections.emptyList(), operations);
+        setColumnsAndRows(Collections.emptyList(), operations, i -> false);
     }
 
     // If append is empty, can't append.  If it's present, can append, and run
     // this action after appending.
-    public void setColumns(List<Pair<String, ColumnHandler>> columns, @Nullable TableOperations operations)
+    public void setColumnsAndRows(List<Pair<String, ColumnHandler>> columns, @Nullable TableOperations operations, SimulationFunction<Integer, Boolean> isRowValid)
     {
+        final int curColumnAndRowSet = this.columnAndRowSet.incrementAndGet();
         this.operations = operations;
         // Important to clear the items, as we need to make new cells
         // which will have the updated number of columns
@@ -416,10 +422,7 @@ public class StableView
         nonEmptyProperty.set(!columns.isEmpty());
 
         scrollToTopLeft();
-    }
 
-    public void setRows(SimulationFunction<Integer, Boolean> isRowValid)
-    {
         boolean addAppendRow = operations != null && operations.appendRows != null;
         Workers.onWorkerThread("Calculating table rows", Priority.FETCH, () -> {
             int toAdd = 0;
@@ -428,23 +431,34 @@ public class StableView
                 outer:
                 for (int i = 0; i < 10; i++)
                 {
-                    toAdd = 0;
+                    // Cancel if a latet setColumnsAndRows call has occurred:
+                    if (curColumnAndRowSet != this.columnAndRowSet.get())
+                        return;
+
                     for (int j = 0; j < 10; j++)
                     {
                         if (isRowValid.apply(i * 10 + j))
                         {
                             toAdd++;
-                        } else
+                        }
+                        else
+                        {
                             break outer;
+                        }
                     }
                     int toAddFinal = toAdd;
                     Platform.runLater(() ->
                     {
+                        // Cancel if a latet setColumnsAndRows call has occurred:
+                        if (curColumnAndRowSet != this.columnAndRowSet.get())
+                            return;
+
                         for (int k = 0; k < toAddFinal; k++)
                         {
                             items.add(null);
                         }
                     });
+                    toAdd = 0;
                 }
             }
             catch (InternalException | UserException e)
@@ -457,6 +471,10 @@ public class StableView
                 toAdd += 1;
             int toAddFinal = toAdd;
             Platform.runLater(() -> {
+                // Cancel if a latet setColumnsAndRows call has occurred:
+                if (curColumnAndRowSet != this.columnAndRowSet.get())
+                    return;
+
                 for (int k = 0; k < toAddFinal; k++)
                 {
                     items.add(null);
@@ -622,7 +640,7 @@ public class StableView
                     {
                         return; // Not for us to take mouse click
                     }
-                    else if (!pane.isFocused() && e.getClickCount() == 1 && e.getButton() == MouseButton.PRIMARY && curRowIndex >= 0)
+                    else if (!pane.isFocused() && e.getClickCount() == 1 && (e.getButton() == MouseButton.PRIMARY || e.getButton() == MouseButton.SECONDARY) && curRowIndex >= 0)
                     {
                         pane.requestFocus();
                         e.consume();

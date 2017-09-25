@@ -139,8 +139,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             this.recordSet = recordSet;
             this.onModify = onModify;
             recordSet.setListener(this);
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations());
-            setRows(recordSet::indexValid);
+            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), recordSet::indexValid);
             //TODO restore editability
             //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
             //boolean expandable = getColumns().stream().allMatch(TableColumn::isEditable);
@@ -170,8 +169,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
 
             FXUtility.addChangeListenerPlatformNN(columnDisplay, newDisplay -> {
-                setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), onModify), table.getOperations());
-                setRows(recordSet::indexValid);
+                setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), onModify), table.getOperations(), recordSet::indexValid);
             });
         }
 
@@ -204,8 +202,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         @Override
         public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
         {
-            setColumns(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations());
-            setRows(recordSet::indexValid);
+            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), recordSet::indexValid);
         }
     }
 

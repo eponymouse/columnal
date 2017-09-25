@@ -110,6 +110,8 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
             usFocused.updateAutoComplete(getSelection());
             if (!focused)
             {
+                // Deselect when focus is lost:
+                usFocused.deselect();
                 usFocused.endEdit().either_(x -> showFixPopup(x), v -> {
                     completedValue = v;
                     storeNonNull.consume(new Pair<>(getText(), completedValue));
