@@ -117,13 +117,15 @@ $stable-view-header-border: hsb(0, 0%, 40%);
 
 .stable-view-row-cell, .stable-view-row-number,
    .stable-view-matched .paragraph-text {
-    -fx-pref-height: 22px;
+    -fx-pref-height: 25px;
     /*-fx-snap-to-pixel: true;*/
 }
 
 /* The colors should be overridden by the hover pseudo-class, which is intended */
 .stable-view-row-append-button {
    -fx-max-width: 9999.0;
+   -fx-min-height: 24px;
+   -fx-max-height: 24px;
    -fx-background-color: gray(95%);
    -fx-background-insets: 0;
    -fx-background-radius: 0;

@@ -200,6 +200,7 @@ public class StableView
         topLeft.visibleProperty().bind(nonEmptyProperty);
         Pane topButtonWrapper = GUI.wrap(topButton, "stable-button-top-wrapper");
         topButtonWrapper.visibleProperty().bind(vbar.visibleProperty());
+        topButtonWrapper.managedProperty().bind(topButtonWrapper.visibleProperty());
 
         Pane top = new BorderPane(header, null, topButtonWrapper, null, topLeft);
         top.getStyleClass().add("stable-view-top");
@@ -214,6 +215,7 @@ public class StableView
         leftButton.visibleProperty().bind(nonEmptyProperty);
         Pane leftButtonWrapper = GUI.wrap(leftButton, "stable-button-left-wrapper");
         leftButtonWrapper.visibleProperty().bind(hbar.visibleProperty());
+        leftButtonWrapper.managedProperty().bind(leftButtonWrapper.visibleProperty());
         Pane left = new BorderPane(lineNumberWrapper, null, null, leftButtonWrapper, null);
         left.setPickOnBounds(false);
         left.getStyleClass().add("stable-view-left");
