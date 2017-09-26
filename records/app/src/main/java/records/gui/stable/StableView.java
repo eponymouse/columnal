@@ -1,6 +1,7 @@
 package records.gui.stable;
 
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.BooleanProperty;
@@ -9,6 +10,7 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
@@ -49,6 +51,9 @@ import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
+import org.reactfx.collection.LiveArrayList;
+import org.reactfx.collection.LiveList;
+import org.reactfx.value.Val;
 import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
 import records.error.InternalException;
@@ -122,6 +127,8 @@ public class StableView
     private final VirtualizedScrollPane scrollPane;
     private final Label placeholder;
     private final StackPane stackPane; // has scrollPane and placeholder as its children
+    private final Val<Double> widthEstimate;
+    private final Val<Double> heightEstimate;
 
     // An integer counter which tracks which instance of setColumnsAndRows we are on.  Used to
     // effectively cancel some queued run-laters if the method is called twice in quick succession.
@@ -129,7 +136,7 @@ public class StableView
     private AtomicInteger columnAndRowSet = new AtomicInteger(0);
     private final BooleanProperty showingRowNumbers = new SimpleBooleanProperty(true);
     private final List<ColumnHandler> columns;
-    private final List<DoubleProperty> columnSizes;
+    private final LiveList<DoubleProperty> columnSizes;
     private static final double EDGE_DRAG_TOLERANCE = 8;
     private static final double MIN_COLUMN_WIDTH = 30;
     private final List<HeaderItem> headerItems = new ArrayList<>();
@@ -234,7 +241,7 @@ public class StableView
         placeholder.managedProperty().bind(placeholder.visibleProperty());
         stackPane.getStyleClass().add("stable-view");
         columns = new ArrayList<>();
-        columnSizes = new ArrayList<>();
+        columnSizes = new LiveArrayList<>();
 
         Rectangle headerClip = new Rectangle();
         headerClip.widthProperty().bind(header.widthProperty());
@@ -302,6 +309,9 @@ public class StableView
             FXUtility.setPseudoclass(stackPane, "at-left", d < 1);
             FXUtility.setPseudoclass(stackPane, "at-right", d >= headerItemsContainer.getWidth() - virtualFlow.getWidth() - 3);
         });
+
+        widthEstimate = Val.combine(virtualFlow.totalWidthEstimateProperty(), lineNumbers.totalWidthEstimateProperty(), (x, y) -> x + y);
+        heightEstimate = Val.combine(virtualFlow.totalHeightEstimateProperty(), headerItemsContainer.heightProperty(), (x, y) -> x + y.doubleValue());
     }
 
     public void scrollToTopLeft()
@@ -521,6 +531,18 @@ public class StableView
     public void setEditable(boolean editable)
     {
         this.tableEditable = editable;
+    }
+
+    public ObservableValue<Double> widthEstimateProperty()
+    {
+        // Includes line number width:
+        return widthEstimate;
+    }
+
+    public ObservableValue<Double> heightEstimateProperty()
+    {
+        // Includes header items height:
+        return heightEstimate;
     }
 
     private class HeaderItem extends Label

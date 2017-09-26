@@ -2,8 +2,10 @@ package records.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.EventHandler;
 import javafx.geometry.Bounds;
@@ -19,6 +21,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.RadioMenuItem;
 import javafx.scene.control.ToggleGroup;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -28,6 +31,7 @@ import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.dataflow.qual.Pure;
@@ -84,6 +88,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     private static final int LOAD_CHUNK = 100;
     private final Either<String, RecordSet> recordSetOrError;
     private final Table table;
+    private @MonotonicNonNull TableDataDisplay tableDataDisplay;
     private boolean resizing;
     // In parent coordinates:
     private @Nullable Bounds originalSize;
@@ -97,6 +102,11 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     private final AtomicReference<Bounds> mostRecentBounds;
     private final HBox header;
     private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
+
+    // If true, automatically resizes to fit content.  Manual resizing will set this to false,
+    // but a double-click will return to automatic resizing.
+    private final BooleanProperty sizedToFitHorizontal = new SimpleBooleanProperty(false);
+    private final BooleanProperty sizedToFitVertical = new SimpleBooleanProperty(false);
 
     @OnThread(Tag.FX)
     public Point2D closestPointTo(double parentX, double parentY)
@@ -221,10 +231,10 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         }
         this.recordSetOrError = recordSetOrError;
         StackPane body = new StackPane(this.recordSetOrError.<Node>either(err -> new Label(err),
-            recordSet -> new TableDataDisplay(recordSet, () -> {
+            recordSet -> (tableDataDisplay = new TableDataDisplay(recordSet, () -> {
                 parent.modified();
                 Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH,() -> Utility.alertOnError_(() -> parent.getManager().edit(table.getId(), null)));
-            }).getNode()));
+            })).getNode()));
         Utility.addStyleClass(body, "table-body");
         setCenter(body);
         Utility.addStyleClass(this, "table-wrapper", "tableDisplay", table instanceof Transformation ? "tableDisplay-transformation" : "tableDisplay-source");
@@ -337,13 +347,56 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         setOnMouseReleased(e -> {
             resizing = false;
         });
+        setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2 && e.getButton() == MouseButton.PRIMARY)
+            {
+                if (resizeRight)
+                {
+                    sizedToFitHorizontal.set(true);
+                }
+                // Not an else -- both can fire if over bottom right:
+                if (resizeBottom)
+                {
+                    sizedToFitVertical.set(true);
+                }
+            }
+        });
 
         mostRecentBounds = new AtomicReference<>(getBoundsInParent());
         FXUtility.addChangeListenerPlatformNN(boundsInParentProperty(), b -> mostRecentBounds.set(b));
 
+        if (tableDataDisplay != null)
+        {
+            FXUtility.addChangeListenerPlatformNN(sizedToFitHorizontal, b -> FXUtility.mouse(this).updateSnappedFitWidth());
+            FXUtility.addChangeListenerPlatformNN(sizedToFitVertical, b -> FXUtility.mouse(this).updateSnappedFitHeight());
+            FXUtility.addChangeListenerPlatformNN(tableDataDisplay.widthEstimateProperty(), w -> FXUtility.mouse(this).updateSnappedFitWidth());
+            FXUtility.addChangeListenerPlatformNN(tableDataDisplay.heightEstimateProperty(), h -> FXUtility.mouse(this).updateSnappedFitHeight());
+        }
+
         // Must be done as last item:
         @SuppressWarnings("initialization") @Initialized TableDisplay usInit = this;
         this.table.setDisplay(usInit);
+    }
+
+    private void updateSnappedFitWidth()
+    {
+        if (sizedToFitHorizontal.get() && tableDataDisplay != null)
+        {
+            setPrefWidth(tableDataDisplay.widthEstimateProperty().getValue());
+        }
+    }
+
+    private void updateSnappedFitHeight()
+    {
+        if (sizedToFitVertical.get() && tableDataDisplay != null)
+        {
+            setPrefHeight(
+                tableDataDisplay.heightEstimateProperty().getValue() +
+                header.getHeight() +
+                ((Pane)getCenter()).getInsets().getTop() + ((Pane)getCenter()).getInsets().getBottom()
+                + 2 // Fudge factor: possibly overall border?
+            );
+        }
     }
 
     @RequiresNonNull({"columnDisplay", "table"})
@@ -456,23 +509,27 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             if (resizeBottom)
             {
                 setPrefHeight(p.getY() + (originalSizeHeight - offsetDragY));
+                sizedToFitVertical.set(false);
                 changed = true;
             }
             if (resizeRight)
             {
                 setPrefWidth(p.getX() + (originalSizeWidth - offsetDragX));
+                sizedToFitHorizontal.set(false);
                 changed = true;
             }
             if (resizeLeft)
             {
                 setLayoutX(localToParent(p.getX() - offsetDragX, getLayoutY()).getX());
                 setPrefWidth(originalSizeMaxX - getLayoutX());
+                sizedToFitHorizontal.set(false);
                 changed = true;
             }
             if (resizeTop)
             {
                 setLayoutY(localToParent(getLayoutX(), p.getY() - offsetDragY).getY());
                 setPrefHeight(originalSizeMaxY - getLayoutY());
+                sizedToFitVertical.set(false);
                 changed = true;
             }
             if (changed)
