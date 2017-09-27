@@ -13,8 +13,6 @@ import org.jsoup.select.Elements;
 import records.data.*;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeUtility;
-import records.gui.stable.ReadOnlyStringColumnHandler;
-import records.gui.stable.StableView.ColumnHandler;
 import records.importers.GuessFormat.ImportInfo;
 import records.importers.base.Importer;
 import records.importers.gui.ImportChoicesDialog;
@@ -37,7 +35,6 @@ import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.unit.Unit;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -91,34 +88,7 @@ public class HTMLImporter implements Importer
                 }
             }
 
-            ImmutableList.Builder<Pair<String, ColumnHandler>> columnHandlers = ImmutableList.builder();
-            if (!vals.isEmpty())
-            {
-                int widest = vals.stream().mapToInt(l -> l.size()).max().orElse(0);
-                for (int columnIndex = 0; columnIndex < widest; columnIndex++)
-                {
-                    int columnIndexFinal = columnIndex;
-                    columnHandlers.add(new Pair<>("Column " + (columnIndex + 1), new ReadOnlyStringColumnHandler()
-                    {
-                        @Override
-                        @OnThread(Tag.FXPlatform)
-                        public void fetchValueForRow(int rowIndex, FXPlatformConsumer<String> withValue)
-                        {
-                            String s;
-                            try
-                            {
-                                s = vals.get(rowIndex).get(columnIndexFinal);
-                            }
-                            catch (IndexOutOfBoundsException e)
-                            {
-                                s = "<Missing>";
-                            }
-                            withValue.consume(s);
-                        }
-                    }));
-                }
-            }
-            SourceInfo sourceInfo = new SourceInfo(columnHandlers.build(), vals.size());
+            SourceInfo sourceInfo = ImporterUtility.makeSourceInfo(vals);
 
             // TODO show a dialog
             SimulationFunction<Format, EditableRecordSet> loadData = format -> {

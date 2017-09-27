@@ -5,6 +5,7 @@ import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.MainWindow.MainWindowActions;
+import records.importers.ExcelImporter;
 import records.importers.HTMLImporter;
 import records.importers.TextImporter;
 import records.importers.manager.ImporterManager;
@@ -33,6 +34,7 @@ public class Main extends Application
         ImporterManager.getInstance().registerImporter(new TextImporter());
         // TODO move this to a plugin:
         ImporterManager.getInstance().registerImporter(new HTMLImporter());
+        ImporterManager.getInstance().registerImporter(new ExcelImporter());
 
         Parameters parameters = getParameters();
         if (parameters.getUnnamed().isEmpty())
