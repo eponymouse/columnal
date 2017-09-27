@@ -382,7 +382,10 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     {
         if (sizedToFitHorizontal.get() && tableDataDisplay != null)
         {
-            setPrefWidth(tableDataDisplay.widthEstimateProperty().getValue());
+            setPrefWidth(tableDataDisplay.widthEstimateProperty().getValue() +
+                ((Pane)getCenter()).getInsets().getLeft() + ((Pane)getCenter()).getInsets().getRight()
+                + 2 // Fudge factor: possibly overall border?
+            );
         }
     }
 

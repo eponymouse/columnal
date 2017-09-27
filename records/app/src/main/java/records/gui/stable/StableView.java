@@ -60,6 +60,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.DeepListBinding;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
@@ -127,7 +128,8 @@ public class StableView
     private final VirtualizedScrollPane scrollPane;
     private final Label placeholder;
     private final StackPane stackPane; // has scrollPane and placeholder as its children
-    private final Val<Double> widthEstimate;
+    private final ObservableValue<Double> columnSizeTotal;
+    private final DoubleProperty widthEstimate;
     private final Val<Double> heightEstimate;
 
     // An integer counter which tracks which instance of setColumnsAndRows we are on.  Used to
@@ -310,7 +312,10 @@ public class StableView
             FXUtility.setPseudoclass(stackPane, "at-right", d >= headerItemsContainer.getWidth() - virtualFlow.getWidth() - 3);
         });
 
-        widthEstimate = Val.combine(virtualFlow.totalWidthEstimateProperty(), lineNumbers.totalWidthEstimateProperty(), (x, y) -> x + y);
+        columnSizeTotal = new DeepListBinding<Number, Double>(columnSizes, ds -> ds.stream().mapToDouble(Number::doubleValue).sum());
+        widthEstimate = new SimpleDoubleProperty();
+        FXUtility.addChangeListenerPlatformNN(columnSizeTotal, d -> widthEstimate.set(columnSizeTotal.getValue() + lineNumbers.getWidth()));
+        FXUtility.addChangeListenerPlatformNN(lineNumbers.widthProperty(), d -> widthEstimate.set(columnSizeTotal.getValue() + lineNumbers.getWidth()));
         heightEstimate = Val.combine(virtualFlow.totalHeightEstimateProperty(), headerItemsContainer.heightProperty(), (x, y) -> x + y.doubleValue());
     }
 
@@ -533,7 +538,7 @@ public class StableView
         this.tableEditable = editable;
     }
 
-    public ObservableValue<Double> widthEstimateProperty()
+    public DoubleExpression widthEstimateProperty()
     {
         // Includes line number width:
         return widthEstimate;
