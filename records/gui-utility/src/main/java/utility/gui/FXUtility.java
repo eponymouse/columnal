@@ -263,7 +263,7 @@ public class FXUtility
     @OnThread(Tag.FXPlatform)
     @SuppressWarnings("nullness")
     // NN = Not Null
-    public static <T> void addChangeListenerPlatformNN(ObservableValue<T> property, FXPlatformConsumer<@NonNull T> listener)
+    public static <T> void addChangeListenerPlatformNN(ObservableValue<@NonNull T> property, FXPlatformConsumer<@NonNull T> listener)
     {
         // Defeat thread checker:
         property.addListener(new ChangeListener<T>()
@@ -431,10 +431,10 @@ public class FXUtility
         return Bindings.createObjectBinding(() -> extract.apply(original.get()), original);
     }
 
-    public static <T, R> ObjectExpression<R> mapBindingEager(ObservableObjectValue<T> original, FXPlatformFunction<T, R> extract)
+    public static <T, R> ObjectExpression<R> mapBindingEager(ObservableObjectValue<@Nullable T> original, FXPlatformFunction<@Nullable T, R> extract)
     {
         ObjectProperty<R> binding = new SimpleObjectProperty<>(extract.apply(original.get()));
-        addChangeListenerPlatformNN(original, x -> binding.setValue(extract.apply(x)));
+        addChangeListenerPlatform(original, x -> binding.setValue(extract.apply(x)));
         return binding;
     }
 

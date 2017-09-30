@@ -2,6 +2,8 @@ package records.importers.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
+import javafx.beans.binding.Bindings;
+import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
@@ -16,10 +18,13 @@ import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.RecordSet;
@@ -29,19 +34,22 @@ import records.data.TableManager;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.ErrorableTextField;
+import records.gui.ErrorableTextField.ConversionResult;
 import records.gui.TableDisplayUtility;
 import records.gui.TableNameTextField;
 import records.gui.stable.StableView;
 import records.gui.stable.StableView.ColumnHandler;
 import records.importers.ChoicePoint;
 import records.importers.ChoicePoint.Choice;
-import records.importers.ChoicePoint.ChoiceType;
+import records.importers.ChoicePoint.Options;
 import records.importers.Choices;
 import records.importers.Format;
 import records.importers.GuessFormat;
 import records.importers.GuessFormat.ImportInfo;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationFunction;
@@ -55,9 +63,12 @@ import utility.gui.LabelledGrid.Row;
 import utility.gui.SegmentedButtonValue;
 import utility.gui.TranslationUtility;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @OnThread(Tag.FXPlatform)
 public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<ImportInfo, FORMAT>>
@@ -199,7 +210,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
     @OnThread(Tag.FXPlatform)
     private static <C extends Choice, FORMAT extends Format> void makeGUI(TypeManager typeManager, final ChoicePoint<C, FORMAT> rawChoicePoint, Choices previousChoices, Choices currentChoices, LabelledGrid controlGrid, StableView tableView, ObjectProperty<@Nullable FORMAT> destProperty, ObjectProperty<@Nullable Choices> choicesProperty) throws InternalException
     {
-        final Pair<ChoiceType<C>, ImmutableList<C>> options = rawChoicePoint.getOptions();
+        final Options<C> options = rawChoicePoint.getOptions();
         if (options == null)
         {
             try
@@ -214,39 +225,92 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             }
             return;
         }
-        @NonNull Pair<ChoiceType<C>, ImmutableList<C>> optionsNonNull = options;
+        @NonNull Options<C> optionsNonNull = options;
         // Default handling:
         Node choiceNode;
         ObjectExpression<@Nullable C> choiceExpression;
 
-        if (options.getSecond().isEmpty())
+        if (options.isEmpty())
         {
-            choiceNode = new Label("No possible options for " + TranslationUtility.getString(options.getFirst().getLabelKey()));
+            // This is only if quick picks is empty and manual entry is not possible:
+            choiceNode = new Label("No possible options for " + TranslationUtility.getString(options.choiceType.getLabelKey()));
             choiceExpression = new ReadOnlyObjectWrapper<>(null);
         }
-        else if (options.getSecond().size() == 1)
+        else if (options.quickPicks.size() == 1 && options.stringEntry == null)
         {
-            choiceNode = new Label(options.getSecond().get(0).toString());
-            choiceExpression = new ReadOnlyObjectWrapper<>(options.getSecond().get(0));
+            choiceNode = new Label(options.quickPicks.get(0).toString());
+            choiceExpression = new ReadOnlyObjectWrapper<>(options.quickPicks.get(0));
         }
         else
         {
-            ComboBox<C> combo = GUI.comboBoxStyled(FXCollections.observableArrayList(options.getSecond()));
-            @Nullable C choice = previousChoices.getChoice(options.getFirst());
+            List<PickOrOther<C>> quickAndOther = new ArrayList<>();
+            for (C quickPick : options.quickPicks)
+            {
+                quickAndOther.add(new PickOrOther<>(quickPick));
+            }
+            if (options.stringEntry != null)
+                quickAndOther.add(new PickOrOther<>());
+            final @NonNull @Initialized ComboBox<PickOrOther<C>> combo = GUI.comboBoxStyled(FXCollections.observableArrayList(quickAndOther));
+            @Nullable C choice = previousChoices.getChoice(options.choiceType);
             if (choice == null || !combo.getItems().contains(choice))
                 combo.getSelectionModel().selectFirst();
             else
-                combo.getSelectionModel().select(choice);
-            choiceNode = combo;
-            choiceExpression = combo.getSelectionModel().selectedItemProperty();
+                combo.getSelectionModel().select(new PickOrOther<>(choice));
+
+            final @Nullable @Initialized ObjectExpression<@Nullable C> fieldValue;
+            if (options.stringEntry != null)
+            {
+                final @NonNull Function<String, Either<String, C>> stringEntry = options.stringEntry;
+                ErrorableTextField<C> field = new ErrorableTextField<>(s -> {
+                    return stringEntry.apply(s).either(e -> ConversionResult.error(e), v -> ConversionResult.success(v));
+                });
+                fieldValue = field.valueProperty();
+                choiceNode = new HBox(combo, field.getNode());
+                field.getNode().visibleProperty().bind(Bindings.equal(combo.getSelectionModel().selectedItemProperty(), new PickOrOther<>()));
+                field.getNode().managedProperty().bind(field.getNode().visibleProperty());
+                FXUtility.addChangeListenerPlatformNN(field.getNode().visibleProperty(), vis -> {
+                    if (vis)
+                        field.requestFocusWhenInScene();
+                });
+            }
+            else
+            {
+                fieldValue = null;
+                choiceNode = combo;
+            }
+            choiceExpression = new ObjectBinding<@Nullable C>()
+            {
+                {
+                    super.bind(combo.getSelectionModel().selectedItemProperty());
+                    if (fieldValue != null)
+                        super.bind(fieldValue);
+                }
+                @Override
+                protected @Nullable C computeValue()
+                {
+                    @Nullable PickOrOther<C> selectedItem = combo.getSelectionModel().getSelectedItem();
+                    if (selectedItem != null && selectedItem.value != null)
+                        return selectedItem.value;
+                    else if (selectedItem != null && selectedItem.value == null && fieldValue != null && fieldValue.get() != null)
+                        return fieldValue.get();
+                    else
+                        return null;
+                }
+            };
         }
-        int rowNumber = controlGrid.addRow(GUI.labelledGridRow(options.getFirst().getLabelKey(), options.getFirst().getHelpId(), choiceNode));
-        FXPlatformConsumer<C> pick = item -> {
+        int rowNumber = controlGrid.addRow(GUI.labelledGridRow(options.choiceType.getLabelKey(), options.choiceType.getHelpId(), choiceNode));
+        FXPlatformConsumer<@Nullable C> pick = item -> {
+            if (item == null)
+            {
+                tableView.clear(null);
+                tableView.setPlaceholderText("Enter a valid option");
+                return;
+            }
             try
             {
                 ChoicePoint<?, FORMAT> next = rawChoicePoint.select(item);
                 controlGrid.clearRowsAfter(rowNumber);
-                makeGUI(typeManager, next, previousChoices, currentChoices.with(optionsNonNull.getFirst(),item), controlGrid, tableView, destProperty, choicesProperty);
+                makeGUI(typeManager, next, previousChoices, currentChoices.with(optionsNonNull.choiceType,item), controlGrid, tableView, destProperty, choicesProperty);
             }
             catch (InternalException e)
             {
@@ -259,9 +323,48 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         @Nullable C choice = choiceExpression.get();
         if (choice != null)
             pick.consume(choice);
-        else if (!options.getSecond().isEmpty())
-            pick.consume(options.getSecond().get(0));
+        else if (!options.quickPicks.isEmpty())
+            pick.consume(options.quickPicks.get(0));
         // Otherwise can't pick anything; no options available.
-        FXUtility.addChangeListenerPlatformNN(choiceExpression, pick);
+        FXUtility.addChangeListenerPlatform(choiceExpression, pick);
+    }
+
+    // Either a value of type C, or an "Other" item
+    private static class PickOrOther<C>
+    {
+        private final @Nullable C value;
+
+        public PickOrOther()
+        {
+            this.value = null;
+        }
+
+        public PickOrOther(C value)
+        {
+            this.value = value;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            PickOrOther<?> that = (PickOrOther<?>) o;
+
+            return value != null ? value.equals(that.value) : that.value == null;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            return value != null ? value.hashCode() : 0;
+        }
+
+        @Override
+        public @Localized String toString()
+        {
+            return value == null ? TranslationUtility.getString("import.choice.specify") : value.toString();
+        }
     }
 }

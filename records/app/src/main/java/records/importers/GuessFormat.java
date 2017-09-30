@@ -24,6 +24,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.StyleClassedTextArea;
@@ -52,12 +53,14 @@ import records.gui.TableNameTextField;
 import records.gui.stable.StableView.ColumnHandler;
 import records.importers.ChoicePoint.Choice;
 import records.importers.ChoicePoint.ChoiceType;
+import records.importers.ChoicePoint.Options;
 import records.importers.ChoicePoint.Quality;
 import records.importers.gui.ImportChoicesDialog;
 import records.importers.gui.ImportChoicesDialog.SourceInfo;
 import records.transformations.function.ToDate;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
@@ -93,6 +96,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -136,7 +140,23 @@ public class GuessFormat
                 // Not a good guess then.
                 return ChoicePoint.failure(e);
             }
-        }, headerRowChoices.toArray(new HeaderRowChoice[0]));
+        }, headerRowChoices, GuessFormat::convertNonNegativeInteger);
+    }
+
+    private static Either<@Localized String, HeaderRowChoice> convertNonNegativeInteger(String input)
+    {
+        try
+        {
+            int n = Integer.parseInt(input);
+            if (n < 0)
+                return Either.left("Negative numbers not allowed");
+            else
+                return Either.right(new HeaderRowChoice(n));
+        }
+        catch (NumberFormatException e)
+        {
+            return Either.left(e.getLocalizedMessage());
+        }
     }
 
     public static class GuessException extends UserException
@@ -380,7 +400,7 @@ public class GuessFormat
 
             @NonNull List<String> initial = initialCheck;
 
-            List<Choice> headerRowChoices = new ArrayList<>();
+            List<HeaderRowChoice> headerRowChoices = new ArrayList<>();
             for (int headerRows = 0; headerRows <= Math.min(MAX_HEADER_ROWS, initial.size() - 2); headerRows++)
             {
                 headerRowChoices.add(new HeaderRowChoice(headerRows));
@@ -421,11 +441,33 @@ public class GuessFormat
                         TextFormat textFormat = new TextFormat(format, sep.separator, quot.quote, chc.charset);
                         double proportionNonText = (double)textFormat.columnTypes.stream().filter(c -> !(c.type instanceof TextColumnType) && !(c.type instanceof BlankColumnType)).count() / (double)textFormat.columnTypes.size();
                         return ChoicePoint.<TextFormat>success(proportionNonText > 0 ? Quality.PROMISING : Quality.FALLBACK, proportionNonText, textFormat);
-                    }, viableColumnCounts.toArray(new ColumnCountChoice[0]));
-                }, quot(null), quot("\""), quot("\'"))
-                , sep(";"), sep(","), sep("\t"), sep(":"), sep(" "))
-                , headerRowChoices.toArray(new HeaderRowChoice[0]));
-        }, initialByCharset.keySet().stream().<@NonNull CharsetChoice>map(CharsetChoice::new).collect(Collectors.<@NonNull CharsetChoice>toList()).<@NonNull CharsetChoice>toArray(new @NonNull CharsetChoice[0]));
+                    }, viableColumnCounts, null);
+                }, Arrays.asList(quot(null), quot("\""), quot("\'")), enterSingleChar(QuoteChoice::new))
+                , Arrays.asList(sep(";"), sep(","), sep("\t"), sep(":"), sep(" ")), enterSingleChar(SeparatorChoice::new))
+                , headerRowChoices, GuessFormat::convertNonNegativeInteger);
+        }, initialByCharset.keySet().stream().<@NonNull CharsetChoice>map(CharsetChoice::new).collect(Collectors.<@NonNull CharsetChoice>toList()), GuessFormat::pickCharset);
+    }
+
+    private static Either<@Localized String, CharsetChoice> pickCharset(String s)
+    {
+        try
+        {
+            return Either.right(new CharsetChoice(Charset.forName(s)));
+        }
+        catch (Exception e)
+        {
+            return Either.left("Charset not available: " + s);
+        }
+    }
+
+    private static <T> Function<String, Either<@Localized String, T>> enterSingleChar(Function<String, T> make)
+    {
+        return s -> {
+            if (s.length() == 1)
+                return Either.right(make.apply(s));
+            else
+                return Either.left("Must be single character");
+        };
     }
 
     private static class RowInfo
@@ -722,13 +764,13 @@ public class GuessFormat
     // Finished flag indicates whether it finished or was not viable
     public static <C extends Choice, FORMAT extends Format> Choices findBestGuess(ChoicePoint<C, FORMAT> choicePoints)
     {
-        Pair<ChoiceType<C>, ImmutableList<C>> options = choicePoints.getOptions();
-        if (options == null || options.getSecond().isEmpty())
+        Options<C> options = choicePoints.getOptions();
+        if (options == null || options.isEmpty())
             return Choices.FINISHED;
         else
         {
             // At the moment, we just try first and if that gives promising all the way, we take it:
-            for (C choice : options.getSecond())
+            for (C choice : options.quickPicks)
             {
                 try
                 {
@@ -739,7 +781,7 @@ public class GuessFormat
                         Choices inner = findBestGuess(next);
                         if (inner.isFinished())
                         {
-                            return inner.with(options.getFirst(), choice);
+                            return inner.with(options.choiceType, choice);
                         }
                         // Otherwise try next choice
                     }

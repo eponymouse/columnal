@@ -6,18 +6,22 @@ import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
 import records.importers.ChoicePoint.Choice;
+import utility.Either;
 import utility.ExFunction;
 import utility.ExSupplier;
 import utility.Pair;
 import utility.Utility;
 
 import java.util.Collections;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
+import java.util.function.Function;
 
 /**
  * Poor man's list monad.
@@ -108,8 +112,37 @@ public class ChoicePoint<C extends Choice, R>
         //TODO: methods for free entry, and for help
     }
 
-    // If null, end of the road (either successful or failure, depending on exception/vakye)
-    private final @Nullable Pair<ChoiceType<C>, ImmutableList<C>> options;
+    public static class Options<C extends Choice>
+    {
+        public final ChoiceType<C> choiceType;
+        public final ImmutableList<C> quickPicks;
+        // If null, quick picks are the only options.  If non-null, offer an "Other" pick
+        // in the combo box which shows a text field:
+        public final @Nullable Function<String, Either<@Localized String, C>> stringEntry;
+
+        public Options(ChoiceType<C> choiceType, ImmutableList<C> quickPicks, @Nullable Function<String, Either<@Localized String, C>> stringEntry)
+        {
+            this.choiceType = choiceType;
+            this.quickPicks = quickPicks;
+            this.stringEntry = stringEntry;
+        }
+
+        // Does this item have no possible choices?
+        public boolean isEmpty()
+        {
+            return quickPicks.isEmpty() && stringEntry == null;
+        }
+
+        // Note: this uses .equals() for comparison, not reference comparison.
+        // This is only a brief sanity check, not a definitive answer
+        public boolean canPick(C choice)
+        {
+            return quickPicks.contains(choice) || stringEntry != null;
+        }
+    }
+
+    // If null, end of the road (either successful or failure, depending on exception/value)
+    private final @Nullable Options<C> options;
     private final Quality quality;
     private final double score;
     private final @Nullable Exception exception;
@@ -117,7 +150,7 @@ public class ChoicePoint<C extends Choice, R>
     // If we take current choice, what's the next choice point?
     private final LoadingCache<C, ChoicePoint<?, R>> calculated;
 
-    private ChoicePoint(@Nullable Pair<ChoiceType<C>, ImmutableList<C>> options, Quality quality, double score, @Nullable Exception exception, @Nullable R value, final @Nullable ExFunction<C, ChoicePoint<?, R>> calculate)
+    private ChoicePoint(@Nullable Options<C> options, Quality quality, double score, @Nullable Exception exception, @Nullable R value, final @Nullable ExFunction<C, ChoicePoint<?, R>> calculate)
     {
         this.options = options;
         this.quality = quality;
@@ -148,8 +181,7 @@ public class ChoicePoint<C extends Choice, R>
             });
     }
 
-    @SafeVarargs
-    public static <C extends Choice, R> ChoicePoint<C, R> choose(Quality quality, double score, ChoiceType<C> choiceType, ExFunction<C, ChoicePoint<?, R>> hereOnwards, C... choices)
+    public static <C extends Choice, R> ChoicePoint<C, R> choose(Quality quality, double score, ChoiceType<C> choiceType, ExFunction<C, ChoicePoint<?, R>> hereOnwards, List<C> choices, @Nullable Function<String, Either<@Localized String, C>> pickManually)
     {
         //List<C> allOptions = new ArrayList<>();
         //allOptions.addAll(Arrays.<C>asList(choices));
@@ -173,7 +205,7 @@ public class ChoicePoint<C extends Choice, R>
             calc.put(choice, next);
         }
         */
-        return new ChoicePoint<C, R>(new Pair<>(choiceType, ImmutableList.copyOf(choices)), quality, score, null, null, hereOnwards);
+        return new ChoicePoint<C, R>(new Options<>(choiceType, ImmutableList.copyOf(choices), pickManually), quality, score, null, null, hereOnwards);
     }
 
     /*
@@ -217,7 +249,7 @@ public class ChoicePoint<C extends Choice, R>
 
     public <S> ChoicePoint<?, S> then(ExFunction<R, @NonNull S> then)
     {
-        if (options == null || options.getSecond().isEmpty())
+        if (options == null || options.isEmpty())
         {
             if (value != null)
             {
@@ -259,8 +291,8 @@ public class ChoicePoint<C extends Choice, R>
 
     public ChoicePoint<?, R> select(C choice) throws InternalException
     {
-        if (options == null || !options.getSecond().contains(choice))
-            throw new InternalException("Picking unavailable choice: " + choice + " from: " + Utility.listToString(options == null ? Collections.<@NonNull C>emptyList() : options.getSecond()));
+        if (options == null || !options.canPick(choice))
+            throw new InternalException("Picking unavailable choice: " + choice + " from initial list: " + Utility.listToString(options == null ? Collections.<@NonNull C>emptyList() : options.quickPicks));
         try
         {
             return calculated.get(choice);
@@ -271,7 +303,7 @@ public class ChoicePoint<C extends Choice, R>
         }
     }
 
-    public @Nullable Pair<ChoiceType<C>, ImmutableList<C>> getOptions()
+    public @Nullable Options<C> getOptions()
     {
         return options;
     }
