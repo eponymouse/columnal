@@ -57,11 +57,14 @@ public class ImporterManager
     @OnThread(Tag.FXPlatform)
     public void chooseAndImportFile(Window parent, TableManager tableManager, FXPlatformConsumer<DataSource> onLoad)
     {
+        ArrayList<ExtensionFilter> filters = new ArrayList<>();
+        filters.add(new ExtensionFilter("All Known Types", registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream().flatMap(p -> p.getSecond().stream())).collect(Collectors.toList())));
+        filters.addAll(registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream())
+                .map(p -> new ExtensionFilter(p.getFirst(), p.getSecond())).collect(Collectors.toList()));
+        filters.add(new ExtensionFilter("All files", "*.*"));
+
         @Nullable File chosen = FXUtility.chooseFileOpen("data.import.dialogTitle", "dataImport", parent,
-                Stream.concat(registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream())
-                        .map(p -> new ExtensionFilter(p.getFirst(), p.getSecond())),
-                        Stream.of(new ExtensionFilter("All files", "*.*")))
-                        .toArray(ExtensionFilter[]::new)
+                filters.toArray(new ExtensionFilter[0])
         );
         if (chosen != null)
         {
