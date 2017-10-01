@@ -96,7 +96,7 @@ public class ExcelImporter implements Importer
             ImporterUtility.rectangularise(vals);
 
             SimulationFunction<Format, EditableRecordSet> loadData = f -> {
-                return new EditableRecordSet(Collections.emptyList(), () -> 0);
+                return ImporterUtility.makeEditableRecordSet(mgr, vals, f);
             };
             SourceInfo sourceInfo = ImporterUtility.makeSourceInfo(vals);
             @Nullable Pair<ImportInfo, Format> outcome = new ImportChoicesDialog<>(mgr, src.getName(), GuessFormat.guessGeneralFormat(mgr.getUnitManager(), vals), loadData, c -> sourceInfo).showAndWait().orElse(null);
