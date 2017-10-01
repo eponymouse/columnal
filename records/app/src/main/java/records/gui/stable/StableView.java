@@ -298,7 +298,7 @@ public class StableView
                 FXUtility.setPseudoclass(stackPane, "at-top", topY < 1 && firstVisibleRowIndex == 0);
                 FXUtility.setPseudoclass(stackPane, "at-bottom", lastVisibleRowIndex == items.size() - 1 && bottomY < virtualFlow.getHeight());
                 lineNumbers.showAtOffset(firstVisibleRowIndex, -topY);
-                topShowingCellProperty.set(new Pair<>(firstVisibleRowIndex, topY));
+                topShowingCellProperty.set(new Pair<>(firstVisibleRowIndex, -topY));
                 // TODO call listener to update visible cells (DisplayCache needs this)
             }
         });
@@ -548,6 +548,11 @@ public class StableView
     {
         // Includes header items height:
         return heightEstimate;
+    }
+
+    public void showTopAtOffset(int row, double pixelOffset)
+    {
+        virtualFlow.showAtOffset(row, pixelOffset);
     }
 
     private class HeaderItem extends Label

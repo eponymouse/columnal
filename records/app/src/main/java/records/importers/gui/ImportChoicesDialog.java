@@ -97,17 +97,9 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             tableView.forwardedScrollEvent(se);
             se.consume();
         });
-        /* TODO restore matching scroll
-        FXUtility.addChangeListenerPlatformNN(tableView.topShowingCell(), topShowing -> {
-            System.err.println("Top: " + topShowing);
-            sourceFileView.showParagraphAtTop(topShowing.getFirst());
-            sourceFileView.layout();
-            // We want to adjust offset after layout pass:
-            double y = 0 - topShowing.getSecond() - tableView.topHeightProperty().get();
-            System.err.println("Scrolling by " + y);
-            sourceFileView.scrollBy(new Point2D(0, y));
-            sourceFileView.layout();
-        });*/
+        FXUtility.addChangeListenerPlatformNN(tableView.topShowingCell(), p -> {
+            srcTableView.showTopAtOffset(p.getFirst(), p.getSecond());
+        });
 
 
         LabelledGrid choices = new LabelledGrid();
