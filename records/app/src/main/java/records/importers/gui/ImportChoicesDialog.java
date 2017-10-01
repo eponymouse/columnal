@@ -2,12 +2,15 @@ package records.importers.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
+import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -196,6 +199,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             return null;
         });
         setResizable(true);
+        getDialogPane().setPrefSize(800, 600);
 
         //dialog.initModality(Modality.NONE); // For scenic view
         setOnShown(e -> {
@@ -278,25 +282,15 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                 fieldValue = null;
                 choiceNode = combo;
             }
-            choiceExpression = new ObjectBinding<@Nullable C>()
-            {
-                {
-                    super.bind(combo.getSelectionModel().selectedItemProperty());
-                    if (fieldValue != null)
-                        super.bind(fieldValue);
-                }
-                @Override
-                protected @Nullable C computeValue()
-                {
-                    @Nullable PickOrOther<C> selectedItem = combo.getSelectionModel().getSelectedItem();
+            ReadOnlyObjectProperty<@Nullable PickOrOther<C>> selectedItemProperty = combo.getSelectionModel().selectedItemProperty();
+            choiceExpression = FXUtility.<@Nullable PickOrOther<C>, @Nullable C>mapBindingEager(selectedItemProperty, (@Nullable PickOrOther<C> selectedItem) -> {
                     if (selectedItem != null && selectedItem.value != null)
                         return selectedItem.value;
                     else if (selectedItem != null && selectedItem.value == null && fieldValue != null && fieldValue.get() != null)
                         return fieldValue.get();
                     else
                         return null;
-                }
-            };
+            }, fieldValue == null ? new ObservableValue<?>[0] : new ObservableValue<?>[] {fieldValue});
         }
         int rowNumber = controlGrid.addRow(GUI.labelledGridRow(options.choiceType.getLabelKey(), options.choiceType.getHelpId(), choiceNode));
         FXPlatformConsumer<@Nullable C> pick = item -> {

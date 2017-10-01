@@ -3,6 +3,7 @@ package utility.gui;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
+import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -431,10 +432,14 @@ public class FXUtility
         return Bindings.createObjectBinding(() -> extract.apply(original.get()), original);
     }
 
-    public static <T, R> ObjectExpression<R> mapBindingEager(ObservableObjectValue<@Nullable T> original, FXPlatformFunction<@Nullable T, R> extract)
+    public static <T, R> ObjectExpression<R> mapBindingEager(ObservableObjectValue<@Nullable T> original, FXPlatformFunction<@Nullable T, R> extract, ObservableValue<?>... otherDependencies)
     {
         ObjectProperty<R> binding = new SimpleObjectProperty<>(extract.apply(original.get()));
         addChangeListenerPlatform(original, x -> binding.setValue(extract.apply(x)));
+        for (ObservableValue<?> otherDep : otherDependencies)
+        {
+            addChangeListenerPlatform(otherDep, y -> binding.setValue(extract.apply(original.get())));
+        }
         return binding;
     }
 

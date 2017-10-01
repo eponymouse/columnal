@@ -297,7 +297,7 @@ public class StableView
                 updateShadows(header, lineNumberWrapper, topLeft);
                 FXUtility.setPseudoclass(stackPane, "at-top", topY < 1 && firstVisibleRowIndex == 0);
                 FXUtility.setPseudoclass(stackPane, "at-bottom", lastVisibleRowIndex == items.size() - 1 && bottomY < virtualFlow.getHeight());
-                lineNumbers.showAtOffset(firstVisibleRowIndex, topY);
+                lineNumbers.showAtOffset(firstVisibleRowIndex, -topY);
                 topShowingCellProperty.set(new Pair<>(firstVisibleRowIndex, topY));
                 // TODO call listener to update visible cells (DisplayCache needs this)
             }
