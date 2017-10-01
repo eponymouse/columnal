@@ -127,7 +127,7 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
         this.lastVisibleRowIndexIncl = lastVisibleRowIndexIncl;
         try
         {
-            displayCacheItems.get(rowIndex, () -> new DisplayCacheItem(rowIndex, focusListener, relinquishFocus, setCellContent));
+            displayCacheItems.get(rowIndex, () -> new DisplayCacheItem(rowIndex, focusListener, relinquishFocus, setCellContent)).updateDisplay(setCellContent);
         }
         catch (ExecutionException e)
         {
@@ -183,7 +183,7 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
         private @MonotonicNonNull Either<Pair<V, G>, @Localized String> loadedItemOrError;
         private double progress = 0;
         @OnThread(Tag.FXPlatform)
-        private final FXPlatformConsumer<Region> callbackSetCellContent;
+        private FXPlatformConsumer<Region> callbackSetCellContent;
         private final FXPlatformConsumer<Boolean> onFocusChange;
         private final FXPlatformRunnable relinquishFocus;
 
@@ -196,7 +196,6 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
             this.relinquishFocus = relinquishFocus;
             this.callbackSetCellContent = callbackSetCellContent;
             Workers.onWorkerThread("Value load for display: " + index, Priority.FETCH, loader);
-            updateDisplay();
         }
 
         public synchronized void update(V loadedItem)
@@ -204,21 +203,23 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
             Utility.alertOnErrorFX_(() -> {
                 this.loadedItemOrError = Either.left(new Pair<>(loadedItem, makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)));
             });
-            updateDisplay();
+            updateDisplay(null);
             formatVisible(OptionalInt.of(rowIndex));
         }
 
         @OnThread(Tag.FXPlatform)
-        public void updateDisplay()
+        public void updateDisplay(@Nullable FXPlatformConsumer<Region> callbackSetCellContent)
         {
+            if (callbackSetCellContent != null)
+                this.callbackSetCellContent = callbackSetCellContent;
             if (loadedItemOrError != null)
             {
                 Region item = loadedItemOrError.either(p -> getNode.apply(p.getSecond()), err -> new Label(err));
-                callbackSetCellContent.consume(item);
+                this.callbackSetCellContent.consume(item);
             }
             else
             {
-                callbackSetCellContent.consume(new Label("Loading: " + progress));
+                this.callbackSetCellContent.consume(new Label("Loading: " + progress));
             }
         }
 
@@ -231,13 +232,13 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
         {
             // TODO store progressState
             this.progress = progress;
-            updateDisplay();
+            updateDisplay(null);
         }
 
         public void error(@Localized String error)
         {
             this.loadedItemOrError = Either.right(error);
-            updateDisplay();
+            updateDisplay(null);
         }
     }
 

@@ -756,6 +756,7 @@ public class StableView
                             Pane cell = cells.get(columnIndexFinal);
                             cell.getChildren().setAll(cellContent);
 
+                            // TODO don't keep adding this if cell gets re-used
                             cellContent.addEventFilter(ScrollEvent.SCROLL, e -> {
                                 FXUtility.mouse(StableView.this).forwardedScrollEvent(e);
                                 e.consume();
