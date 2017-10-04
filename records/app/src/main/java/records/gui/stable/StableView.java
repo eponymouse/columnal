@@ -59,6 +59,8 @@ import records.data.TableOperations.AppendRows;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stable.VirtScrollStrTextGrid.EditorKitCallback;
+import records.gui.stable.VirtScrollStrTextGrid.ValueLoadSave;
+import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DeepListBinding;
@@ -123,12 +125,11 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class StableView
 {
     protected final ObservableList<@Nullable Void> items;
-    private final VirtualFlow<@Nullable Void, StableRow> virtualFlow;
     private final VirtualFlow<@Nullable Void, LineNumber> lineNumbers;
     private final HBox headerItemsContainer;
-    private final VirtualizedScrollPane scrollPane;
+    private final VirtScrollStrTextGrid grid;
     private final Label placeholder;
-    private final StackPane stackPane; // has scrollPane and placeholder as its children
+    private final StackPane stackPane; // has grid and placeholder as its children
     private final ObservableValue<Double> columnSizeTotal;
     private final DoubleProperty widthEstimate;
     private final Val<Double> heightEstimate;
@@ -155,7 +156,6 @@ public class StableView
     private boolean atLeft = true;
     private final ObjectProperty<Pair<Integer, Double>> topShowingCellProperty = new SimpleObjectProperty<>(new Pair<>(0, 0.0));
 
-    private final ObjectProperty<@Nullable Pair<Integer, Integer>> focusedCell = new SimpleObjectProperty<>(null);
     private @Nullable TableOperations operations;
     private final SimpleBooleanProperty nonEmptyProperty = new SimpleBooleanProperty(false);
 
@@ -168,8 +168,18 @@ public class StableView
         headerItemsContainer = new HBox();
         final Pane header = new Pane(headerItemsContainer);
         header.getStyleClass().add("stable-view-header");
-        virtualFlow = VirtualFlow.<@Nullable Void, StableRow>createVertical(items, this::makeCell);
-        scrollPane = new VirtualizedScrollPane<VirtualFlow<@Nullable Void, StableRow>>(virtualFlow);
+        grid = new VirtScrollStrTextGrid(new ValueLoadSave()
+        {
+            @Override
+            public void fetchEditorKit(int rowIndex, int colIndex, FXPlatformConsumer<EditorKit<?>> setEditorKit)
+            {
+                if (columns != null && colIndex < columns.size())
+                {
+                    columns.get(colIndex).fetchValue(rowIndex, b -> {}, () -> {}, (rowIndex1, colIndex1, editorKit) -> setEditorKit.consume(editorKit), -1, -1);
+                }
+            }
+        });
+        /*
         scrollPane.getStyleClass().add("stable-view-scroll-pane");
         scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
         scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
@@ -179,6 +189,9 @@ public class StableView
         scrollPane.visibleProperty().bind(nonEmptyProperty);
         hbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.HORIZONTAL).findFirst().get();
         vbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.VERTICAL).findFirst().get();
+        */
+        hbar = new ScrollBar();
+        vbar = new ScrollBar();
         lineNumbers = VirtualFlow.createVertical(items, x -> new LineNumber());
         // Need to prevent independent scrolling on the line numbers.
         // Instead we forward the scroll to the whole table:
@@ -196,7 +209,7 @@ public class StableView
         
         Button topButton = new Button("", makeButtonArrow());
         topButton.getStyleClass().addAll("stable-view-button", "stable-view-button-top");
-        topButton.setOnAction(e -> virtualFlow.scrollYToPixel(0));
+        topButton.setOnAction(e -> grid.scrollYToPixel(0));
         FXUtility.forcePrefSize(topButton);
         topButton.prefWidthProperty().bind(vbar.widthProperty());
         topButton.prefHeightProperty().bind(topButton.prefWidthProperty());
@@ -217,7 +230,7 @@ public class StableView
 
         Button leftButton = new Button("", makeButtonArrow());
         leftButton.getStyleClass().addAll("stable-view-button", "stable-view-button-left");
-        leftButton.setOnAction(e -> virtualFlow.scrollXToPixel(0));
+        leftButton.setOnAction(e -> grid.scrollXToPixel(0));
         leftButton.prefHeightProperty().bind(hbar.heightProperty());
         leftButton.prefWidthProperty().bind(leftButton.prefHeightProperty());
         FXUtility.forcePrefSize(leftButton);
@@ -232,15 +245,16 @@ public class StableView
 
         Button bottomButton = new Button("", makeButtonArrow());
         bottomButton.getStyleClass().addAll("stable-view-button", "stable-view-button-bottom");
-        bottomButton.setOnAction(e -> virtualFlow.scrollYToPixel(Double.MAX_VALUE));
+        bottomButton.setOnAction(e -> grid.scrollYToPixel(Double.MAX_VALUE));
         FXUtility.forcePrefSize(bottomButton);
         bottomButton.prefWidthProperty().bind(vbar.widthProperty());
         bottomButton.prefHeightProperty().bind(bottomButton.prefWidthProperty());
         StackPane.setAlignment(bottomButton, Pos.BOTTOM_RIGHT);
         bottomButton.visibleProperty().bind(vbar.visibleProperty());
         
-        stackPane = new StackPane(placeholder, new BorderPane(scrollPane, top, null, null, left), bottomButton);
-        headerItemsContainer.layoutXProperty().bind(virtualFlow.breadthOffsetProperty().map(d -> -d));
+        stackPane = new StackPane(placeholder, new BorderPane(grid.getNode(), top, null, null, left), bottomButton);
+        // TODO figure out grid equivalent
+        //headerItemsContainer.layoutXProperty().bind(virtualFlow.breadthOffsetProperty().map(d -> -d));
         placeholder.managedProperty().bind(placeholder.visibleProperty());
         stackPane.getStyleClass().add("stable-view");
         columns = new ArrayList<>();
@@ -282,7 +296,7 @@ public class StableView
         topLeftDropShadow.setWidth(8);
         topLeftDropShadow.setSpread(0.4);
         
-        
+        /*
         FXUtility.listen(virtualFlow.visibleCells(), c -> {
             if (!c.getList().isEmpty())
             {
@@ -303,8 +317,9 @@ public class StableView
                 // TODO call listener to update visible cells (EditorKitCache needs this)
             }
         });
+        */
 
-        
+        /*
         FXUtility.addChangeListenerPlatformNN(virtualFlow.breadthOffsetProperty(), d -> {
             //FXUtility.setPseudoclass(lineNumbers, "pinned", d >= 5);
             atLeft = d < 5;
@@ -312,18 +327,19 @@ public class StableView
             FXUtility.setPseudoclass(stackPane, "at-left", d < 1);
             FXUtility.setPseudoclass(stackPane, "at-right", d >= headerItemsContainer.getWidth() - virtualFlow.getWidth() - 3);
         });
+        */
 
         columnSizeTotal = new DeepListBinding<Number, Double>(columnSizes, ds -> ds.stream().mapToDouble(Number::doubleValue).sum());
         widthEstimate = new SimpleDoubleProperty();
         FXUtility.addChangeListenerPlatformNN(columnSizeTotal, d -> widthEstimate.set(columnSizeTotal.getValue() + lineNumbers.getWidth()));
         FXUtility.addChangeListenerPlatformNN(lineNumbers.widthProperty(), d -> widthEstimate.set(columnSizeTotal.getValue() + lineNumbers.getWidth()));
-        heightEstimate = Val.combine(virtualFlow.totalHeightEstimateProperty(), headerItemsContainer.heightProperty(), (x, y) -> x + y.doubleValue());
+        heightEstimate = Val.combine(/*virtualFlow.totalHeightEstimateProperty()*/headerItemsContainer.heightProperty(), headerItemsContainer.heightProperty(), (x, y) -> x.doubleValue() + y.doubleValue());
     }
 
     public void scrollToTopLeft()
     {
-        virtualFlow.scrollYToPixel(0);
-        virtualFlow.scrollXToPixel(0);
+        grid.scrollYToPixel(0);
+        grid.scrollXToPixel(0);
     }
 
     @RequiresNonNull({"topDropShadow", "leftDropShadow", "topLeftDropShadow"})
@@ -511,7 +527,7 @@ public class StableView
     // Column Index, Row Index
     public ObjectExpression<@Nullable Pair<Integer, Integer>> focusedCellProperty()
     {
-        return focusedCell;
+        return grid.focusedCellProperty();
     }
 
     public int getColumnCount()
@@ -521,8 +537,8 @@ public class StableView
 
     public void scrollBy(double x, double y)
     {
-        virtualFlow.scrollXBy(x);
-        virtualFlow.scrollYBy(y);
+        grid.scrollXBy(x);
+        grid.scrollYBy(y);
     }
 
     public void forwardedScrollEvent(ScrollEvent se)
@@ -553,7 +569,7 @@ public class StableView
 
     public void showTopAtOffset(int row, double pixelOffset)
     {
-        virtualFlow.showAtOffset(row, pixelOffset);
+        grid.showAtOffset(row, pixelOffset);
     }
 
     private class HeaderItem extends Label
@@ -649,14 +665,15 @@ public class StableView
                 FXUtility.addChangeListenerPlatformNN(pane.focusedProperty(), focus -> {
                     FXUtility.setPseudoclass(pane, "focused-cell", focus);
                     markFocusCross(columnIndexFinal, curRowIndex, focus);
-                    focusedCell.set(focus ? new Pair<>(columnIndexFinal, curRowIndex) : null);
+                    if (focus)
+                        grid.focusCell(columnIndexFinal, curRowIndex);
                 });
                 FXUtility.forcePrefSize(pane);
                 pane.prefWidthProperty().bind(columnSizes.get(columnIndex));
                 pane.addEventFilter(MouseEvent.ANY, e -> {
                     if (e.getEventType() != MouseEvent.MOUSE_CLICKED)
                     {
-                        boolean editing = curRowIndex >= 0 && columns.get(columnIndexFinal).editHasFocus(curRowIndex);
+                        boolean editing = curRowIndex >= 0 && grid.isEditingCell(columnIndexFinal, curRowIndex);
                         if (!editing && !pane.isFocused() && !isAppendRow(curRowIndex))
                         {
                             // Hide events from inner panel if we're not yet editing:
@@ -667,7 +684,7 @@ public class StableView
                 pane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
                     if (e.getEventType() == MouseEvent.MOUSE_CLICKED)
                         System.err.println("Detected click in filter");
-                    boolean editing = curRowIndex >= 0 && columns.get(columnIndexFinal).editHasFocus(curRowIndex);
+                    boolean editing = curRowIndex >= 0 && grid.isEditingCell(columnIndexFinal, curRowIndex);
 
                     if (e.getEventType() == MouseEvent.MOUSE_CLICKED)
                         System.err.println("Editing: " + editing + " pane focus: " + pane.isFocused());
@@ -686,7 +703,8 @@ public class StableView
                         int lastContentRowIndex = getLastContentRowIndex().orElse(-1);
                         if (lastContentRowIndex < 0)
                             return;
-                        virtualFlow.show(lastContentRowIndex);
+                        grid.scrollYToPixel(Double.MAX_VALUE);
+                        /* TODO
                         Optional<StableRow> lastRow = virtualFlow.getCellIfVisible(lastContentRowIndex);
                         if (!lastRow.isPresent())
                         {
@@ -698,10 +716,11 @@ public class StableView
                         {
                             lastRow.get().cells.get(columnIndexFinal).requestFocus();
                         }
+                        */
                         e.consume();
                     }),
                     InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
-                        columns.get(columnIndexFinal).edit(curRowIndex, null);
+                        grid.editCell(columnIndexFinal, curRowIndex);
                         e.consume();
                     })
                 ));
@@ -750,10 +769,11 @@ public class StableView
                     {
                         ColumnHandler column = columns.get(columnIndex);
                         int columnIndexFinal = columnIndex;
-                        StableRow firstVisibleRow = virtualFlow.visibleCells().get(0);
-                        StableRow lastVisibleRow = virtualFlow.visibleCells().get(virtualFlow.visibleCells().size() - 1);
                         // TODO
                         /*
+                        StableRow firstVisibleRow = virtualFlow.visibleCells().get(0);
+                        StableRow lastVisibleRow = virtualFlow.visibleCells().get(virtualFlow.visibleCells().size() - 1);
+
                         column.fetchValue(rowIndex, focus -> cellContentFocusChanged(columnIndexFinal, focus), () -> cells.get(columnIndexFinal).requestFocus(), cellContent ->
                         {
                             Pane cell = cells.get(columnIndexFinal);
@@ -769,7 +789,7 @@ public class StableView
                         // Swap old input map (if any) for new (if any)
                         if (cellItemInputMaps.get(columnIndex) != null)
                             Nodes.removeInputMap(cells.get(columnIndex), cellItemInputMaps.get(columnIndex));
-                        @Nullable InputMap<?> inputMap = column.getInputMapForParent(rowIndex);
+                        @Nullable InputMap<?> inputMap = null ; // TODO column.getInputMapForParent(rowIndex);
                         cellItemInputMaps.set(columnIndex, inputMap);
                         if (inputMap != null)
                             Nodes.addInputMap(cells.get(columnIndex), inputMap);
@@ -809,6 +829,7 @@ public class StableView
      */
     private void markFocusCross(int columnIndex, int rowIndex, boolean gotFocus)
     {
+        /* TODO
         for (StableRow stableRow : virtualFlow.visibleCells())
         {
             boolean correctRow = stableRow.curRowIndex == rowIndex;
@@ -822,6 +843,7 @@ public class StableView
                 }
             }
         }
+        */
     }
 
     @OnThread(Tag.FXPlatform)

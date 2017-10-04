@@ -1,12 +1,19 @@
 package records.gui.stable;
 
+import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.layout.Region;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.openxmlformats.schemas.spreadsheetml.x2006.main.STFillId;
 import records.error.InternalException;
+import records.gui.stf.EditorKitSimpleLabel;
 import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -49,6 +56,8 @@ public class VirtScrollStrTextGrid
     private int totalRows;
     private double[] columnWidths;
 
+    private final ObjectProperty<@Nullable Pair<Integer, Integer>> focusedCell = new SimpleObjectProperty<>(null);
+
     private final ValueLoadSave loadSave;
 
     private final Container container;
@@ -68,9 +77,56 @@ public class VirtScrollStrTextGrid
         container = new Container();
     }
 
+    public ObjectExpression<@Nullable Pair<Integer, Integer>> focusedCellProperty()
+    {
+        return focusedCell;
+    }
+
+    public void scrollYToPixel(double y)
+    {
+        // TODO
+    }
+    public void scrollXToPixel(double x)
+    {
+        // TODO
+    }
+
+    // Focuses cell so that you can navigate around with keyboard
+    public void focusCell(int rowIndex, int columnIndex)
+    {
+        // TODO
+    }
+
+    // Edits cell so that you can start typing content
+    public void editCell(int rowIndex, int columnIndex)
+    {
+        // TODO
+    }
+
+    public boolean isEditingCell(int rowIndex, int columnIndex)
+    {
+        return false; // TODO
+    }
+
+    public void scrollXBy(double x)
+    {
+        //TODO
+    }
+
+    public void scrollYBy(double y)
+    {
+        //TODO
+    }
+
+    public void showAtOffset(int row, double pixelOffset)
+    {
+        //TODO
+    }
+
     public static interface ValueLoadSave
     {
-        EditorKit<?> getEditorKit(int rowIndex, int colIndex);
+        @OnThread(Tag.FXPlatform)
+        void fetchEditorKit(int rowIndex, int colIndex, FXPlatformConsumer<EditorKit<?>> setEditorKit);
     }
 
     public void setData(int numRows, double[] columnWidths, ValueLoadSave loadSave)
@@ -175,13 +231,17 @@ public class VirtScrollStrTextGrid
             }
             int realRow = firstVisibleRowIndex + visRowIndex;
             int realCol = firstVisibleColumnIndex + visColIndex;
-            cell.resetContent(loadSave.getEditorKit(realRow, realCol));
+            // Blank then queue fetch:
+            cell.resetContent(new EditorKitSimpleLabel<>("Loading..."));
+            // TODO need to make sure cell hasn't changed position in mean time.
+            loadSave.fetchEditorKit(realRow, realCol, k -> cell.resetContent(k));
             return cell;
         }
     }
 
     public static interface EditorKitCallback
     {
+        @OnThread(Tag.FXPlatform)
         public void loadedValue(int rowIndex, int colIndex, EditorKit<?> editorKit);
     }
 }

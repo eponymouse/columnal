@@ -285,7 +285,9 @@ public class TableDisplayUtility
         public EditorKitCache<T> makeDisplayCache(int columnIndex, boolean isEditable, FXPlatformRunnable onModify)
         {
             return new EditorKitCache<T>(columnIndex, g, vis -> {}, (rowIndex, value) -> {
-                return new EditorKit<T>(makeComponent.makeComponent(ImmutableList.of(), value), isEditable ? (Pair<String, T> p) -> {g.set(rowIndex, p.getSecond()); onModify.run();} : null);
+                return new EditorKit<T>(makeComponent.makeComponent(ImmutableList.of(), value), isEditable ? (Pair<String, T> p) -> {
+                    Workers.onWorkerThread("Saving", Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> g.set(rowIndex, p.getSecond())));
+                    onModify.run();} : null);
             });
         }
     }
