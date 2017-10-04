@@ -81,14 +81,14 @@ public abstract class ParentComponent<T> extends Component<T>
     }
 
     @Override
-    public final List<Suggestion> getSuggestions()
+    public final ImmutableList<Suggestion> getSuggestions()
     {
-        List<Suggestion> r = new ArrayList<>();
+        ImmutableList.Builder<Suggestion> r = ImmutableList.builder();
         for (int i = 0; i < getChildComponents().size(); i++)
         {
             int iFinal = i;
             r.addAll(Utility.mapList(getChildComponents().get(i).getSuggestions(), s -> s.offsetByNumItems(iFinal)));
         }
-        return r;
+        return r.build();
     }
 }

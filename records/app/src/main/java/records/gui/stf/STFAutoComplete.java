@@ -27,10 +27,10 @@ import java.util.List;
 public class STFAutoComplete extends PopupControl
 {
     private final ListView<Suggestion> completions;
-    private final StructuredTextField<?> parent;
+    private final StructuredTextField parent;
 
     @SuppressWarnings("initialization") // For passing the cell the this reference
-    public STFAutoComplete(StructuredTextField<?> parent, List<Suggestion> suggestions)
+    public STFAutoComplete(StructuredTextField parent, List<Suggestion> suggestions)
     {
         this.parent = parent;
         completions = new ListView<>(FXCollections.observableArrayList(suggestions));
@@ -69,7 +69,7 @@ public class STFAutoComplete extends PopupControl
 
     @SuppressWarnings("unchecked")
     @OnThread(Tag.FXPlatform)
-    private void disableListViewKeybindings(StructuredTextField<?> parent, ListView<Suggestion> listView)
+    private void disableListViewKeybindings(StructuredTextField parent, ListView<Suggestion> listView)
     {
         // This is a list of default bindings on ListView, most of which we want to disable:
         /*

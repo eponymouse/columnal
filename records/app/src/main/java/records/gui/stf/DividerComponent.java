@@ -20,7 +20,7 @@ public class DividerComponent extends TerminalComponent<@Nullable Void>
     }
 
     @Override
-    public Either<List<ErrorFix>, @Nullable Void> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, @Nullable Void> endEdit(StructuredTextField field)
     {
         return Either.right(null);
     }

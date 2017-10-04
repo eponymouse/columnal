@@ -51,6 +51,7 @@ import records.error.UserException;
 import records.gui.TableDisplayUtility;
 import records.gui.TableNameTextField;
 import records.gui.stable.StableView.ColumnHandler;
+import records.gui.stable.VirtScrollStrTextGrid.EditorKitCallback;
 import records.importers.ChoicePoint.Choice;
 import records.importers.ChoicePoint.ChoiceType;
 import records.importers.ChoicePoint.Options;
@@ -714,7 +715,7 @@ public class GuessFormat
             ColumnHandler columnHandler = new ColumnHandler()
             {
                 @Override
-                public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, FXPlatformConsumer<Region> setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+                public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
                 {
                     // TODO
                 }
@@ -726,25 +727,7 @@ public class GuessFormat
                 }
 
                 @Override
-                public @Nullable InputMap<?> getInputMapForParent(int rowIndex)
-                {
-                    return null;
-                }
-
-                @Override
-                public void edit(int rowIndex, @Nullable Point2D scenePoint)
-                {
-                    // Not editable
-                }
-
-                @Override
                 public boolean isEditable()
-                {
-                    return false;
-                }
-
-                @Override
-                public boolean editHasFocus(int rowIndex)
                 {
                     return false;
                 }

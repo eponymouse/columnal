@@ -6,6 +6,8 @@ import javafx.scene.layout.Region;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.wellbehaved.event.InputMap;
 import records.gui.stable.StableView.ColumnHandler;
+import records.gui.stable.VirtScrollStrTextGrid.EditorKitCallback;
+import records.gui.stf.EditorKitSimpleLabel;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -14,10 +16,17 @@ import utility.SimulationFunction;
 
 public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
 {
-    @Override
-    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, FXPlatformConsumer<Region> setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+    private final int columnIndex;
+
+    public ReadOnlyStringColumnHandler(int columnIndex)
     {
-        fetchValueForRow(rowIndex, s -> setCellContent.consume(new Label(s)));
+        this.columnIndex = columnIndex;
+    }
+
+    @Override
+    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+    {
+        fetchValueForRow(rowIndex, s -> setCellContent.loadedValue(rowIndex, columnIndex, new EditorKitSimpleLabel(s)));
     }
 
     @OnThread(Tag.FXPlatform)
@@ -30,25 +39,7 @@ public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
     }
 
     @Override
-    public @Nullable InputMap<?> getInputMapForParent(int rowIndex)
-    {
-        return null;
-    }
-
-    @Override
-    public void edit(int rowIndex, @Nullable Point2D scenePoint)
-    {
-        // Not editable
-    }
-
-    @Override
     public boolean isEditable()
-    {
-        return false;
-    }
-
-    @Override
-    public boolean editHasFocus(int rowIndex)
     {
         return false;
     }

@@ -2,29 +2,21 @@ package records.gui;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import javafx.beans.binding.BooleanBinding;
 import javafx.geometry.Point2D;
-import javafx.geometry.Pos;
 import javafx.scene.control.Label;
-import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Region;
-import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
 import org.fxmisc.richtext.model.StyledDocument;
 import org.fxmisc.richtext.model.StyledText;
-import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
-import org.fxmisc.wellbehaved.event.Nodes;
 import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table.Display;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeUtility;
@@ -35,9 +27,10 @@ import records.data.datatype.DataTypeValue;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.TypeId;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.stable.VirtScrollStrTextGrid.EditorKitCallback;
 import records.gui.stf.*;
+import records.gui.stf.StructuredTextField.EditorKit;
 import records.gui.stf.StructuredTextField.EndEditActions;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -61,9 +54,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 /**
  * Created by neil on 01/05/2017.
@@ -74,59 +65,51 @@ public class TableDisplayUtility
 
     public static ImmutableList<Pair<String, ColumnHandler>> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, @Nullable FXPlatformRunnable onModify)
     {
-        return recordSet.getColumns().stream().filter(c -> c.shouldShow(columnSelection)).<Pair<String, ColumnHandler>>map(col -> {
-            try
+        ImmutableList.Builder<Pair<String, ColumnHandler>> r = ImmutableList.builder();
+        for (int columnIndex = 0; columnIndex < recordSet.getColumns().size(); columnIndex++)
+        {
+            Column col = recordSet.getColumns().get(columnIndex);
+            if (col.shouldShow(columnSelection))
             {
-                return getDisplay(col, onModify != null ? onModify : FXPlatformRunnable.EMPTY);
-            }
-            catch (InternalException | UserException e)
-            {
-                // Show a dummy column with an error message:
-                return new Pair<>(col.getName().getRaw(), new ColumnHandler()
+                Pair<String, ColumnHandler> item;
+                try
                 {
-                    @Override
-                    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, FXPlatformConsumer<Region> setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+                    item = getDisplay(columnIndex, col, onModify != null ? onModify : FXPlatformRunnable.EMPTY);
+                }
+                catch (InternalException | UserException e)
+                {
+                    final int columnIndexFinal = columnIndex;
+                    // Show a dummy column with an error message:
+                    item = new Pair<>(col.getName().getRaw(), new ColumnHandler()
                     {
-                        setCellContent.consume(new Label("Error: " + e.getLocalizedMessage()));
-                    }
+                        @Override
+                        public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+                        {
+                            setCellContent.loadedValue(columnIndexFinal, rowIndex, new EditorKitSimpleLabel("Error: " + e.getLocalizedMessage()));
+                        }
 
-                    @Override
-                    public void columnResized(double width)
-                    {
+                        @Override
+                        public void columnResized(double width)
+                        {
 
-                    }
+                        }
 
-                    @Override
-                    public @Nullable InputMap<?> getInputMapForParent(int rowIndex)
-                    {
-                        return null;
-                    }
-
-                    @Override
-                    public void edit(int rowIndex, @Nullable Point2D scenePoint)
-                    {
-                        Utility.logStackTrace("Called edit when not editable");
-                    }
-
-                    @Override
-                    public boolean isEditable()
-                    {
-                        return false;
-                    }
-
-                    @Override
-                    public boolean editHasFocus(int rowIndex)
-                    {
-                        return false;
-                    }
-                });
+                        @Override
+                        public boolean isEditable()
+                        {
+                            return false;
+                        }
+                    });
+                }
+                r.add(item);
             }
-        }).collect(ImmutableList.toImmutableList());
+        }
+        return r.build();
     }
 
-    private static Pair<String, ColumnHandler> getDisplay(@NonNull Column column, FXPlatformRunnable onModify) throws UserException, InternalException
+    private static Pair<String, ColumnHandler> getDisplay(int columnIndex, @NonNull Column column, FXPlatformRunnable onModify) throws UserException, InternalException
     {
-        return new Pair<>(column.getName().getRaw(), makeField(column.getType(), column.isEditable(), onModify));
+        return new Pair<>(column.getName().getRaw(), makeField(columnIndex, column.getType(), column.isEditable(), onModify));
         /*column.getType().<ColumnHandler, UserException>applyGet(new DataTypeVisitorGetEx<ColumnHandler, UserException>()
         {
             @Override
@@ -193,7 +176,7 @@ public class TableDisplayUtility
                     }
                 }
 
-                return new DisplayCache<@Value String, StringDisplay>(g, null, s -> s) {
+                return new EditorKitCache<@Value String, StringDisplay>(g, null, s -> s) {
                     @Override
                     protected StringDisplay makeGraphical(int rowIndex, @Value String value)
                     {
@@ -299,41 +282,19 @@ public class TableDisplayUtility
             this.makeComponent = makeComponent;
         }
 
-        public DisplayCacheSTF<T> makeDisplayCache(boolean isEditable, FXPlatformRunnable onModify)
+        public EditorKitCache<T> makeDisplayCache(int columnIndex, boolean isEditable, FXPlatformRunnable onModify)
         {
-            return new DisplayCacheSTF<T>(g, (value, store, onFocusChange, relinquishFocus) -> {
-                StructuredTextField<T> structuredTextField = new StructuredTextField<>(makeComponent.makeComponent(ImmutableList.of(), value), isEditable ? (Pair<String, T> p) -> store.consume(p.getSecond()) : null, new EndEditActions<T>()
-                {
-                    @Override
-                    public @OnThread(Tag.FXPlatform) void notifyChanged(T newValue)
-                    {
-                        onModify.run();
-                    }
-
-                    @Override
-                    public @OnThread(Tag.FXPlatform) void relinquishFocus()
-                    {
-                        relinquishFocus.run();
-                    }
-                });
-                FXUtility.addChangeListenerPlatformNN(structuredTextField.focusedProperty(), onFocusChange);
-                structuredTextField.setEditable(isEditable);
-                return structuredTextField;
-            }) {
-                @Override
-                public boolean isEditable()
-                {
-                    return isEditable;
-                }
-            };
+            return new EditorKitCache<T>(columnIndex, g, vis -> {}, (rowIndex, value) -> {
+                return new EditorKit<T>(makeComponent.makeComponent(ImmutableList.of(), value), isEditable ? (Pair<String, T> p) -> {g.set(rowIndex, p.getSecond()); onModify.run();} : null);
+            });
         }
     }
 
     // public for testing:
     @OnThread(Tag.FXPlatform)
-    public static DisplayCacheSTF<?> makeField(DataTypeValue dataTypeValue, boolean isEditable, FXPlatformRunnable onModify) throws InternalException
+    public static EditorKitCache<?> makeField(int columnIndex, DataTypeValue dataTypeValue, boolean isEditable, FXPlatformRunnable onModify) throws InternalException
     {
-        return valueAndComponent(dataTypeValue).makeDisplayCache(isEditable, onModify);
+        return valueAndComponent(dataTypeValue).makeDisplayCache(columnIndex, isEditable, onModify);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -605,21 +566,22 @@ public class TableDisplayUtility
         });
     }
 
-    private static interface FieldMaker<V>
+    private static interface EditorKitMaker<V>
     {
         @OnThread(Tag.FXPlatform)
-        public StructuredTextField<? extends V> make(V value, FXPlatformConsumer<V> storeValue, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus) throws InternalException, UserException;
+        public EditorKit<V> make(V value, FXPlatformConsumer<V> storeValue, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus) throws InternalException, UserException;
     }
 
     /**
-     * A helper implementation of DisplayCache that uses StructuredTextField as its graphical item.
+     * A helper implementation of EditorKitCache that uses StructuredTextField as its graphical item.
      * @param <V>
      */
-    public static class DisplayCacheSTF<@Value V> extends DisplayCache<V, StructuredTextField<? extends V>>
+    /*
+    public static class DisplayCacheSTF<@Value V> extends EditorKitCache<V, StructuredTextField>
     {
-        private final FieldMaker<V> makeField;
+        private final EditorKitMaker<V> makeField;
 
-        public DisplayCacheSTF(GetValue<V> g, FieldMaker<V> makeField)
+        public DisplayCacheSTF(GetValue<V> g, EditorKitMaker<V> makeField)
         {
             super(g, cs -> {}, f -> f);
             this.makeField = makeField;
@@ -634,7 +596,7 @@ public class TableDisplayUtility
         @Override
         public void edit(int rowIndex, @Nullable Point2D scenePoint)
         {
-            @Nullable StructuredTextField<? extends V> display = getRowIfShowing(rowIndex);
+            @Nullable StructuredTextField display = getRowIfShowing(rowIndex);
             if (display != null)
             {
                 @Value V startValue = display.getCompletedValue();
@@ -651,16 +613,16 @@ public class TableDisplayUtility
         @Override
         public boolean editHasFocus(int rowIndex)
         {
-            @Nullable StructuredTextField<? extends V> display = getRowIfShowing(rowIndex);
+            @Nullable StructuredTextField display = getRowIfShowing(rowIndex);
             if (display != null)
                 return display.isFocused();
             return false;
         }
 
         @Override
-        protected StructuredTextField<? extends V> makeGraphical(int rowIndex, V value, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus) throws InternalException, UserException
+        protected StructuredTextField makeGraphical(int rowIndex, V value, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus) throws InternalException, UserException
         {
-            StructuredTextField<? extends V> field = makeField.make(value, v -> {
+            StructuredTextField field = makeField.make(value, v -> {
                 Workers.onWorkerThread("Saving " + v, Priority.SAVE_ENTRY, () ->
                 {
                     Utility.alertOnError_(() -> store(rowIndex, v));
@@ -670,4 +632,5 @@ public class TableDisplayUtility
             return field;
         }
     }
+    */
 }

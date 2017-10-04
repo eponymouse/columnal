@@ -54,7 +54,7 @@ public class ImporterUtility
             for (int columnIndex = 0; columnIndex < widest; columnIndex++)
             {
                 int columnIndexFinal = columnIndex;
-                columnHandlers.add(new Pair<>("Column " + (columnIndex + 1), new ReadOnlyStringColumnHandler()
+                columnHandlers.add(new Pair<>("Column " + (columnIndex + 1), new ReadOnlyStringColumnHandler(columnIndexFinal)
                 {
                     @Override
                     @OnThread(Tag.FXPlatform)

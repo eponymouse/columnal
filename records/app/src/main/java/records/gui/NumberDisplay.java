@@ -52,6 +52,7 @@ import java.util.OptionalInt;
 // package-visible
 class NumberDisplay
 {
+    /*
     private static final String NUMBER_DOT = "\u00B7"; //"\u2022";
     private static final String ELLIPSIS = "\u2026";//"\u22EF";
 
@@ -218,7 +219,7 @@ class NumberDisplay
     }
 
 
-    public static void formatColumn(@Nullable NumberDisplayInfo displayInfo, DisplayCache<Number, NumberDisplay>.VisibleDetails vis)
+    public static void formatColumn(@Nullable NumberDisplayInfo displayInfo, EditorKitCache<Number, NumberDisplay>.VisibleDetails vis)
     {
         // Left length is number of digits to left of decimal place, right length is number of digits to right of decimal place
         int maxLeftLength = vis.visibleCells.stream().mapToInt(d -> d == null ? 1 : d.fullIntegerPart.length()).max().orElse(1);
@@ -276,9 +277,9 @@ class NumberDisplay
         }
     }
 
-    public static DisplayCache<@Value Number, NumberDisplay> makeDisplayCache(GetValue<@Value Number> g, @Nullable NumberDisplayInfo displayInfo, Column column)
+    public static EditorKitCache<@Value Number, NumberDisplay> makeDisplayCache(GetValue<@Value Number> g, @Nullable NumberDisplayInfo displayInfo, Column column)
     {
-        return new DisplayCache<@Value Number, NumberDisplay>(g, vis -> formatColumn(displayInfo, vis), n -> n.textArea) {
+        return new EditorKitCache<@Value Number, NumberDisplay>(g, vis -> formatColumn(displayInfo, vis), n -> n.textArea) {
 
             @Override
             protected NumberDisplay makeGraphical(int rowIndex, @Value Number value, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus) throws InternalException, UserException
@@ -392,5 +393,5 @@ class NumberDisplay
 
         return left * SIZES.LEFT_DIGIT_WIDTH + (right == 0 ? 0 : (SIZES.DOT_WIDTH + SIZES.RIGHT_DIGIT_WIDTH * right));
     }
-
+*/
 }

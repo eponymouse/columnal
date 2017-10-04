@@ -103,7 +103,7 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
     }
 
     @Override
-    public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, R> endEdit(StructuredTextField field)
     {
         if (contentComponents.isEmpty())
             return Either.right(combine.apply(Collections.emptyList()));
@@ -353,7 +353,7 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
 
         // Shouldn't happen because parent won't call endEdit on us:
         @Override
-        public Either<List<ErrorFix>, Void> endEdit(StructuredTextField<?> field)
+        public Either<List<ErrorFix>, Void> endEdit(StructuredTextField field)
         {
             return Either.left(Collections.emptyList());
         }

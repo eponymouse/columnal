@@ -51,7 +51,7 @@ public class PlusMinusOffsetComponent extends TerminalComponent<@Value ZoneOffse
     }
 
     @Override
-    public Either<List<ErrorFix>, @Value ZoneOffset> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, @Value ZoneOffset> endEdit(StructuredTextField field)
     {
         int sign = getItem(ItemVariant.TIMEZONE_PLUS_MINUS).equals("-") ? -1 : 1;
 

@@ -58,6 +58,7 @@ import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.stable.VirtScrollStrTextGrid.EditorKitCallback;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DeepListBinding;
@@ -299,7 +300,7 @@ public class StableView
                 FXUtility.setPseudoclass(stackPane, "at-bottom", lastVisibleRowIndex == items.size() - 1 && bottomY < virtualFlow.getHeight());
                 lineNumbers.showAtOffset(firstVisibleRowIndex, -topY);
                 topShowingCellProperty.set(new Pair<>(firstVisibleRowIndex, -topY));
-                // TODO call listener to update visible cells (DisplayCache needs this)
+                // TODO call listener to update visible cells (EditorKitCache needs this)
             }
         });
 
@@ -751,6 +752,8 @@ public class StableView
                         int columnIndexFinal = columnIndex;
                         StableRow firstVisibleRow = virtualFlow.visibleCells().get(0);
                         StableRow lastVisibleRow = virtualFlow.visibleCells().get(virtualFlow.visibleCells().size() - 1);
+                        // TODO
+                        /*
                         column.fetchValue(rowIndex, focus -> cellContentFocusChanged(columnIndexFinal, focus), () -> cells.get(columnIndexFinal).requestFocus(), cellContent ->
                         {
                             Pane cell = cells.get(columnIndexFinal);
@@ -762,7 +765,7 @@ public class StableView
                                 e.consume();
                             });
                         }, firstVisibleRow.curRowIndex, lastVisibleRow.curRowIndex);
-
+                        */
                         // Swap old input map (if any) for new (if any)
                         if (cellItemInputMaps.get(columnIndex) != null)
                             Nodes.removeInputMap(cells.get(columnIndex), cellItemInputMaps.get(columnIndex));
@@ -827,26 +830,26 @@ public class StableView
         // Called to fetch a value.  Once available, receiver should be called.
         // Until then it will be blank.  You can call receiver multiple times though,
         // so you can just call it with a placeholder before returning.
-        public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, FXPlatformConsumer<Region> setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl);
+        public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl);
 
         // Called when the column gets resized (graphically).  Width is in pixels
         public void columnResized(double width);
 
         // Should return an InputMap, if any, to put on the parent node of the display.
         // Useful if you want to be able to press keys directly without beginning editing
-        public @Nullable InputMap<?> getInputMapForParent(int rowIndex);
+        //public @Nullable InputMap<?> getInputMapForParent(int rowIndex);
 
         // Called when the user initiates an error, either by double-clicking
         // (in which case the point is passed) or by pressing enter (in which case
         // point is null).
         // Will only be called if isEditable returns true
-        public void edit(int rowIndex, @Nullable Point2D scenePoint);
+        //public void edit(int rowIndex, @Nullable Point2D scenePoint);
 
         // Can this column be edited?
         public boolean isEditable();
 
         // Is this column value currently being edited?
-        public boolean editHasFocus(int rowIndex);
+        //public boolean editHasFocus(int rowIndex);
     }
 
     @OnThread(Tag.FXPlatform)

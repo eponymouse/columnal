@@ -29,6 +29,7 @@ import records.gui.NewColumnDialog.NewColumnDetails;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.gui.stf.Component;
 import records.gui.stf.StructuredTextField;
+import records.gui.stf.StructuredTextField.EditorKit;
 import records.transformations.expression.NumericLiteral;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -51,7 +52,7 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
     private final TextField name;
     private final VBox contents;
     private final TypeSelectionPane typeSelectionPane;
-    private StructuredTextField<? extends @Value Object> defaultValueEditor;
+    private StructuredTextField defaultValueEditor;
     private String defaultValueAsString = "";
 
     @OnThread(Tag.FXPlatform)
@@ -105,13 +106,14 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
         });
     }
 
-    private StructuredTextField<@NonNull ? extends @Value Object> makeField(@UnknownInitialization(Object.class) NewColumnDialog this, DataType dataType) throws InternalException
+    private StructuredTextField makeField(@UnknownInitialization(Object.class) NewColumnDialog this, DataType dataType) throws InternalException
     {
         return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, DataTypeUtility.makeDefaultValue(dataType)));
     }
-    private <@NonNull @Value T extends @NonNull @Value Object> StructuredTextField<T> fieldFromComponent(@UnknownInitialization(Object.class) NewColumnDialog this, Component<T> component) throws InternalException
+
+    private <@NonNull @Value T extends @NonNull @Value Object> StructuredTextField fieldFromComponent(@UnknownInitialization(Object.class) NewColumnDialog this, Component<T> component) throws InternalException
     {
-        return new StructuredTextField<@NonNull @Value T>(component, (Pair<String, @NonNull @Value T> v) -> {defaultValueAsString = v.getFirst();}, null);
+        return new StructuredTextField(() -> getDialogPane().lookupButton(ButtonType.OK).requestFocus(), new EditorKit<T>(component, (Pair<String, @NonNull @Value T> v) -> {defaultValueAsString = v.getFirst();}));
     }
 
     @RequiresNonNull({"typeSelectionPane"})

@@ -119,7 +119,7 @@ import static test.TestUtil.sim;
 public class TestStructuredTextField extends ApplicationTest
 {
     private StableView stableView;
-    private final ObjectProperty<StructuredTextField<?>> f = new SimpleObjectProperty<>();
+    private final ObjectProperty<StructuredTextField> f = new SimpleObjectProperty<>();
     private TextField dummy;
 
     @Override
@@ -226,12 +226,12 @@ public class TestStructuredTextField extends ApplicationTest
         );
     }
 
-    private StructuredTextField<?> dateField(DateTimeInfo dateTimeInfo, TemporalAccessor t) throws InternalException
+    private StructuredTextField dateField(DateTimeInfo dateTimeInfo, TemporalAccessor t) throws InternalException
     {
         return field(DataType.date(dateTimeInfo), t);
     }
 
-    private StructuredTextField<?> field(DataType dataType, Object value) throws InternalException
+    private StructuredTextField field(DataType dataType, Object value) throws InternalException
     {
         CompletableFuture<DataTypeValue> fut = new CompletableFuture<>();
         Workers.onWorkerThread("", Priority.SAVE_ENTRY, () ->
@@ -263,9 +263,9 @@ public class TestStructuredTextField extends ApplicationTest
 
         for (int i = 0; i < 5; i++)
         {
-            @Nullable StructuredTextField<?> stf = fx(() -> {
+            @Nullable StructuredTextField stf = fx(() -> {
                 stableView.getNode().applyCss();
-                return (@Nullable StructuredTextField<?>) stableView.getNode().lookup(".structured-text-field");
+                return (@Nullable StructuredTextField) stableView.getNode().lookup(".structured-text-field");
             });
             if (stf != null)
                 return stf;

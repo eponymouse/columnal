@@ -42,7 +42,7 @@ public class Component2<R, A, B> extends ParentComponent<R>
     }
 
     @Override
-    public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, R> endEdit(StructuredTextField field)
     {
         int aLength = a.getItems().size();
         Either<List<ErrorFix>, A> ax = a.endEdit(field);

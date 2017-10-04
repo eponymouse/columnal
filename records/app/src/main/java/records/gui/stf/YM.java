@@ -79,7 +79,7 @@ public class YM extends TerminalComponent<@Value TemporalAccessor/*YearMonth*/>
 
     @Override
     @OnThread(Tag.FXPlatform)
-    public Either<List<ErrorFix>, @Value TemporalAccessor> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, @Value TemporalAccessor> endEdit(StructuredTextField field)
     {
         List<ErrorFix> fixes = new ArrayList<>();
         field.revertEditFix().ifPresent(f -> fixes.add(f));
@@ -151,12 +151,12 @@ public class YM extends TerminalComponent<@Value TemporalAccessor/*YearMonth*/>
         throw new NumberFormatException();
     }
 
-    public void clampFix(StructuredTextField<?> field, List<ErrorFix> fixes, int month, String yearText, int year)
+    public void clampFix(StructuredTextField field, List<ErrorFix> fixes, int month, String yearText, int year)
     {
         fix(field, fixes, "entry.fix.clamp", month, yearText, year);
     }
 
-    public void fix(StructuredTextField<?> field, List<ErrorFix> fixes, @LocalizableKey String labelKey, int month, String yearText, int year)
+    public void fix(StructuredTextField field, List<ErrorFix> fixes, @LocalizableKey String labelKey, int month, String yearText, int year)
     {
         // For fixes, we always use fourYear.  If they really want a two digit year, they should enter the leading zeroes
         year = adjustYear2To4(month, yearText, year);

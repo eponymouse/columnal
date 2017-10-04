@@ -27,7 +27,7 @@ public class BoolComponent extends TerminalComponent<@Value Boolean>
     }
 
     @Override
-    public Either<List<ErrorFix>, @Value Boolean> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, @Value Boolean> endEdit(StructuredTextField field)
     {
         String val = getItem(ItemVariant.EDITABLE_BOOLEAN).trim().toLowerCase();
         if (val.equals("true"))
@@ -45,8 +45,8 @@ public class BoolComponent extends TerminalComponent<@Value Boolean>
     }
 
     @Override
-    public List<Suggestion> getSuggestions()
+    public ImmutableList<Suggestion> getSuggestions()
     {
-        return Arrays.asList(new Suggestion(items.get(0), "true"), new Suggestion(items.get(0), "false"));
+        return ImmutableList.of(new Suggestion(items.get(0), "true"), new Suggestion(items.get(0), "false"));
     }
 }

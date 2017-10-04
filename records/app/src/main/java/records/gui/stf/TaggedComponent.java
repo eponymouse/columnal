@@ -106,7 +106,7 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
     }
 
     @Override
-    public Either<List<ErrorFix>, TaggedValue> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, TaggedValue> endEdit(StructuredTextField field)
     {
         String tagName = getItem(ItemVariant.TAG_NAME);
         OptionalInt tagIndex = Utility.findFirstIndex(tagTypes, tt -> tt.getName().equals(tagName));
@@ -145,7 +145,7 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
 
 
         @Override
-        public Either<List<ErrorFix>, String> endEdit(StructuredTextField<?> field)
+        public Either<List<ErrorFix>, String> endEdit(StructuredTextField field)
         {
             return Either.right(getItem(ItemVariant.TAG_NAME));
         }

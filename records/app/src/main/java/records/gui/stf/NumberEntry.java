@@ -28,7 +28,7 @@ public class NumberEntry extends TerminalComponent<@Value Number>
     }
 
     @Override
-    public Either<List<ErrorFix>, @Value Number> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, @Value Number> endEdit(StructuredTextField field)
     {
         try
         {

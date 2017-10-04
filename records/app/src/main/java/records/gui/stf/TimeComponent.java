@@ -55,7 +55,7 @@ public class TimeComponent extends TerminalComponent<@Value TemporalAccessor/*Lo
     }
 
     @Override
-    public Either<List<ErrorFix>, @Value TemporalAccessor> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, @Value TemporalAccessor> endEdit(StructuredTextField field)
     {
         List<ErrorFix> fixes = new ArrayList<>();
         field.revertEditFix().ifPresent(f -> fixes.add(f));

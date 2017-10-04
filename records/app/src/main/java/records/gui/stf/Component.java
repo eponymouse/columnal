@@ -30,9 +30,9 @@ public abstract class Component<T>
 
     public abstract List<Item> getItems();
 
-    public List<Suggestion> getSuggestions()
+    public ImmutableList<Suggestion> getSuggestions()
     {
-        return Collections.emptyList();
+        return ImmutableList.of();
     }
 
     // Gets a list of parents, *including this node* to be passed as parent for an item.
@@ -43,7 +43,7 @@ public abstract class Component<T>
         return componentParentsAndSelf;
     }
 
-    public abstract Either<List<ErrorFix>, T> endEdit(StructuredTextField<?> field);
+    public abstract Either<List<ErrorFix>, T> endEdit(StructuredTextField field);
 
     protected final String getItem(ItemVariant item)
     {

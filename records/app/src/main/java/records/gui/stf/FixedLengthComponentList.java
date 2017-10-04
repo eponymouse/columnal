@@ -79,7 +79,7 @@ public class FixedLengthComponentList<R, T> extends ParentComponent<R>
     }
 
     @Override
-    public Either<List<ErrorFix>, R> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, R> endEdit(StructuredTextField field)
     {
         // This is a bit iffy as it threads a mutable array list through the
         // immutable-looking Either instances, but it is safe:

@@ -30,6 +30,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -72,67 +73,51 @@ import java.util.stream.Collectors;
  * Similarly, insertion only alters the structure in a list, otherwise it only alters content.
  */
 @OnThread(Tag.FXPlatform)
-public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
+public final class StructuredTextField extends StyleClassedTextArea
 {
     private final List<Item> curValue = new ArrayList<>();
-    private final Component<T> contentComponent;
-    private final List<Suggestion> suggestions;
+    private @MonotonicNonNull EditorKit<?> editorKit;
+    // Once created, list doesn't change.  But overall list
+    // may change when resetContent is called:
+    private ImmutableList<Suggestion> suggestions = ImmutableList.of();
     // All positions in the text area which are valid:
     private final BitSet possibleCaretPositions = new BitSet();
     // All positions in the text area which are valid and are beginning or end of words:
     private final BitSet possibleCaretWordPositions = new BitSet();
-    private @Nullable State lastValidValue;
     private @Nullable PopOver fixPopup;
-    private T completedValue;
     private @Nullable STFAutoComplete autoComplete;
     private int completingForItem = -1;
     private boolean inSuperReplace;
 
     // store action takes the string value of the field, and the parsed value of the field, when it is valid.
-    public StructuredTextField(Component<T> content, @Nullable FXPlatformConsumer<Pair<String, T>> store, @Nullable EndEditActions<? super T> endEdit) throws InternalException
+    public StructuredTextField(FXPlatformRunnable relinquishFocus)
     {
         super(false);
         getStyleClass().add("structured-text-field");
-        this.contentComponent = content;
-        List<Item> initialItems = content.getItems();
-        curValue.addAll(initialItems);
-        suggestions = content.getSuggestions();
 
         setPrefHeight(FXUtility.measureNotoSansHeight());
 
-
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
-            if (store == null)
+            if (editorKit == null || editorKit.store == null)
                 return;
-            final @NonNull FXPlatformConsumer<Pair<String, T>> storeNonNull = store;
 
-            StructuredTextField<T> usFocused = FXUtility.focused(this);
+            StructuredTextField usFocused = FXUtility.focused(this);
             usFocused.updateAutoComplete(getSelection());
             if (!focused)
             {
-                // Deselect when focus is lost:
-                usFocused.deselect();
-                usFocused.endEdit().either_(x -> showFixPopup(x), v -> {
-                    completedValue = v;
-                    storeNonNull.consume(new Pair<>(getText(), completedValue));
-                    lastValidValue = captureState();
-                    if (endEdit != null)
-                    {
-                        endEdit.notifyChanged(completedValue);
-                    }
-                });
+                usFocused.focusLost(editorKit);
             }
         });
 
         FXUtility.addChangeListenerPlatformNN(selectionProperty(), sel -> {
             //Utility.logStackTrace("Selection now: " + sel);
-            StructuredTextField<T> us = FXUtility.mouse(this);
-            if (!inSuperReplace)
+            StructuredTextField us = FXUtility.mouse(this);
+            if (!inSuperReplace && editorKit != null)
             {
-                if (contentComponent.selectionChanged(sel.getStart(), sel.getEnd()))
+                if (editorKit.contentComponent.selectionChanged(sel.getStart(), sel.getEnd()))
                 {
                     inSuperReplace = true;
-                    super.replace(0, getLength(), makeDoc(contentComponent.getItems()));
+                    super.replace(0, getLength(), makeDoc(editorKit.contentComponent.getItems()));
                     selectRange(sel.getStart(), sel.getEnd());
                     inSuperReplace = false;
                 }
@@ -149,30 +134,44 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
                 }
             }),
             InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), (KeyEvent e) -> {
-                if (endEdit != null)
-                {
-                    endEdit.relinquishFocus(); // Should move focus away from us
-                }
+                relinquishFocus.run(); // Should move focus away from us
                 e.consume();
             })
         ));
+    }
+
+    private <T> void focusLost(EditorKit<T> editorKit)
+    {
+        // Deselect when focus is lost:
+        deselect();
+        endEdit(editorKit).either_(x -> showFixPopup(x), v -> editorKit.storeValue(v, this));
+    }
+
+    public StructuredTextField(FXPlatformRunnable relinquishFocus, EditorKit<?> editorKit)
+    {
+        this(relinquishFocus);
+        resetContent(editorKit);
+    }
+
+    public <T> void resetContent(EditorKit<T> editorKit)
+    {
+        this.editorKit = editorKit;
+        List<Item> initialItems = editorKit.contentComponent.getItems();
+        curValue.addAll(initialItems);
+        suggestions = editorKit.contentComponent.getSuggestions();
 
         // Call super to avoid our own validation:
         super.replace(0, 0, makeDoc(initialItems));
         updatePossibleCaretPositions();
         @SuppressWarnings("initialization")
-        Either<List<ErrorFix>, T> endInitial = endEdit();
+        Either<List<ErrorFix>, T> endInitial = endEdit(editorKit);
         @Nullable T val = endInitial.<@Nullable T>either(err -> null, v -> v);
-        if (val == null)
+        editorKit.completedValue = val;
+        if (editorKit.store != null && val != null)
         {
-            throw new InternalException("Starting field off with invalid completed value: \"" + makeDoc(initialItems).getText() + "\" with items " + Utility.listToString(Utility.<Item, String>mapList(initialItems, item -> item.getScreenText())) + " err: " + endInitial.either(errs -> errs.stream().map(err -> err.label).collect(Collectors.joining()), v -> "VALUE!"));
+            editorKit.store.consume(new Pair<>(getText(), val));
         }
-        completedValue = val;
-        if (store != null)
-        {
-            store.consume(new Pair<>(getText(), completedValue));
-        }
-        lastValidValue = captureState();
+        editorKit.lastValidValue = editorKit.captureState(curValue, getDocument());
     }
 
     private void updateAutoComplete(javafx.scene.control.IndexRange selection)
@@ -209,18 +208,8 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
             autoComplete.update();
     }
 
-    private @Nullable State captureState(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this)
-    {
-        if (curValue != null && completedValue != null)
-        {
-            @NonNull T val = completedValue;
-            return new State(curValue, ReadOnlyStyledDocument.from(getDocument()), val);
-        }
-        else
-            return null;
-    }
 
-    private void showFixPopup(@UnknownInitialization StructuredTextField<T> this, List<ErrorFix> errorFixes)
+    private void showFixPopup(@UnknownInitialization StructuredTextField this, List<ErrorFix> errorFixes)
     {
         hidePopup();
         PopOver popup = new PopOver();
@@ -252,7 +241,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
         popup.show(this);
     }
 
-    private void hidePopup(@UnknownInitialization(Object.class) StructuredTextField<T> this)
+    private void hidePopup(@UnknownInitialization(Object.class) StructuredTextField this)
     {
         if (fixPopup != null)
         {
@@ -283,18 +272,21 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void replace(final int start, final int end, StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> replacement)
     {
+        if (editorKit == null)
+            return;
+
         System.err.println("Replacing: \"" + getText(start, end) + "\" with \"" + replacement.getText() + "\"");
 
         hidePopup();
         int insertPos = start;
         if (end > start)
         {
-            insertPos += contentComponent.delete(start, end).startDelta;
+            insertPos += editorKit.contentComponent.delete(start, end).startDelta;
         }
         ImmutableList<Integer> replacementCodepoints = replacement.getText().codePoints().boxed().collect(ImmutableList.toImmutableList());
         if (!replacementCodepoints.isEmpty())
         {
-            InsertState insertState = contentComponent.insert(new InsertState(0, insertPos, replacementCodepoints));
+            InsertState insertState = editorKit.contentComponent.insert(new InsertState(0, insertPos, replacementCodepoints));
             insertPos = insertState.cursorPos;
         }
 /*
@@ -364,15 +356,15 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
             cur = "";
         }
 */
-        updateDocument();
+        updateDocument(editorKit);
         selectRange(insertPos, insertPos);
         updateAutoComplete(getSelection());
     }
 
-    private void updateDocument()
+    private <T> void updateDocument(EditorKit<T> editorKit)
     {
         curValue.clear();
-        curValue.addAll(contentComponent.getItems());
+        curValue.addAll(editorKit.contentComponent.getItems());
         StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc = makeDoc(curValue);
         inSuperReplace = true;
         super.replace(0, getLength(), doc);
@@ -380,7 +372,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
         updatePossibleCaretPositions();
     }
 
-    private void updatePossibleCaretPositions(@UnknownInitialization(Object.class) StructuredTextField<T> this)
+    private void updatePossibleCaretPositions(@UnknownInitialization(Object.class) StructuredTextField this)
     {
         possibleCaretPositions.clear();
         possibleCaretWordPositions.clear();
@@ -403,12 +395,20 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
             possibleCaretWordPositions.set(curPos);
     }
 
-    protected Optional<ErrorFix> revertEditFix(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this)
+    protected Optional<ErrorFix> revertEditFix()
     {
-        if (lastValidValue == null)
+        if (editorKit != null)
+            return revertEditFix(editorKit);
+        else
+            return Optional.empty();
+    }
+
+    private <T> Optional<ErrorFix> revertEditFix(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField this, EditorKit<T> editorKit)
+    {
+        if (editorKit.lastValidValue == null)
             return Optional.empty();
         // Only needed out here for null checker:
-        @NonNull State prev = lastValidValue;
+        @NonNull State<T> prev = editorKit.lastValidValue;
         return Optional.of(new ErrorFix(TranslationUtility.getString("entry.fix.revert", prev.doc.getText()), "invalid-data-revert")
         {
             @Override
@@ -418,7 +418,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
             {
                 if (prev != null)
                 {
-                    setState(prev);
+                    setState(prev, editorKit);
                 }
             }
         });
@@ -441,7 +441,7 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
         return sb.toString();
     }
 
-    private class State
+    private static class State<T>
     {
         public final List<Item> items;
         public final ReadOnlyStyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> doc;
@@ -455,22 +455,28 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
         }
     }
 
-    private void setState(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField<T> this, State valueBeforeFocus)
+    private <T> void setState(@UnknownInitialization(StyleClassedTextArea.class) StructuredTextField this, State<T> valueBeforeFocus, EditorKit<T> editorKit)
     {
         curValue.clear();
         curValue.addAll(valueBeforeFocus.items);
         // Call super to avoid our own validation:
         super.replace(0, getLength(), valueBeforeFocus.doc);
-        completedValue = valueBeforeFocus.value;
+        editorKit.completedValue = valueBeforeFocus.value;
     }
 
     // Intended for use by subclasses during fixes.  Applies content and ends edit
     protected void setValue(String content)
     {
+        if (editorKit != null)
+            setValue(editorKit, content);
+    }
+
+    private <T> void setValue(EditorKit<T> editorKit, String content)
+    {
         replaceText(content);
-        endEdit().either_(err -> {}, v -> {
-            completedValue = v;
-            lastValidValue = captureState();
+        endEdit(editorKit).either_(err -> {}, v -> {
+            editorKit.completedValue = v;
+            editorKit.lastValidValue = editorKit.captureState(curValue, getDocument());
         });
     }
 
@@ -492,20 +498,18 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
 
     /**
      * If return is null, successful.  Otherwise list is of alternatives for fixing the error (may be empty)
-     * @return
+     *
+     * We pass editorKit as a parameter rather than using the
+     * member so that we can properly parameterise the type
+     * of this method.
      */
-    public Either<List<ErrorFix>, T> endEdit()
+    public <T> Either<List<ErrorFix>, T> endEdit(EditorKit<T> editorKit)
     {
-        Either<List<ErrorFix>, T> errorOrValue = contentComponent.endEdit(this);
+        Either<List<ErrorFix>, T> errorOrValue = editorKit.contentComponent.endEdit(this);
         // May have been changed by errors or fixes:
-        updateDocument();
+        updateDocument(editorKit);
         lineEnd(SelectionPolicy.CLEAR);
         return errorOrValue;
-    }
-
-    public T getCompletedValue()
-    {
-        return completedValue;
     }
 
     public static class CharEntryResult
@@ -942,5 +946,38 @@ public final class StructuredTextField<@NonNull T> extends StyleClassedTextArea
             return new Pair<>(pos.getFirst(), curValue.get(pos.getFirst()).getLength());
         else
             return pos;
+    }
+
+    public static class EditorKit<T>
+    {
+        private final Component<T> contentComponent;
+        private @Nullable T completedValue;
+        private final @Nullable FXPlatformConsumer<Pair<String, T>> store;
+        private @Nullable State<T> lastValidValue;
+
+        public EditorKit(Component<T> contentComponent, @Nullable FXPlatformConsumer<Pair<String, T>> store)
+        {
+            this.contentComponent = contentComponent;
+            this.store = store;
+        }
+
+        private @Nullable State<T> captureState(List<Item> curValue, StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> document)
+        {
+            if (curValue != null && completedValue != null)
+            {
+                @NonNull T val = completedValue;
+                return new State<>(curValue, ReadOnlyStyledDocument.from(document), val);
+            }
+            else
+                return null;
+        }
+
+        public void storeValue(T v, StructuredTextField stf)
+        {
+            completedValue = v;
+            if (store != null)
+                store.consume(new Pair<>(stf.getText(), v));
+            lastValidValue = captureState(stf.curValue, stf.getDocument());
+        }
     }
 }

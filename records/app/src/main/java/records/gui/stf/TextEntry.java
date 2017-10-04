@@ -27,7 +27,7 @@ public class TextEntry extends TerminalComponent<@Value String>
     }
 
     @Override
-    public Either<List<ErrorFix>, @Value String> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, @Value String> endEdit(StructuredTextField field)
     {
         return Either.right(DataTypeUtility.value(GrammarUtility.processEscapes("\"" + getItem(ItemVariant.EDITABLE_TEXT) + "\"")));
     }

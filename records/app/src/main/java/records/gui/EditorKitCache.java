@@ -14,6 +14,9 @@ import records.data.Column.ProgressListener;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.stable.VirtScrollStrTextGrid.EditorKitCallback;
+import records.gui.stf.EditorKitSimpleLabel;
+import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -33,18 +36,15 @@ import java.util.OptionalInt;
 import java.util.concurrent.ExecutionException;
 
 /**
- * DisplayCache is responsible for managing the thread-hopping loading
+ * EditorKitCache is responsible for managing the thread-hopping loading
  * of values for a single column, and the display in case of errors or loading bars.
  * The display of actual items is handled by the caller of this class,
  * as is any saving of edited values.
  *
  * V is the type of the value being displayed, e.g. Number
- * G is the type of the graphical item used to display it
- *    Once constructed, each G will only be used for a fixed row index,
- *    and its value will only change by being edited on the FX thread.
  */
 @OnThread(Tag.FXPlatform)
-public abstract class DisplayCache<V, G> implements ColumnHandler
+public final class EditorKitCache<V> implements ColumnHandler
 {
     public static enum ProgressState
     {
@@ -53,37 +53,48 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
 
     private static final int INITIAL_DISPLAY_CACHE_SIZE = 60;
     private static final int MAX_DISPLAY_CACHE_SIZE = 500;
+    // Maps row index to cached item:
     @OnThread(Tag.FXPlatform)
     private final Cache<@NonNull Integer, @NonNull DisplayCacheItem> displayCacheItems;
 
     @OnThread(Tag.Any)
     private final GetValue<V> getValue;
     private final @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells;
-    private final FXPlatformFunction<G, Region> getNode;
+    private final MakeEditorKit<V> makeEditorKit;
+    private final int columnIndex;
     private int firstVisibleRowIndexIncl = -1;
     private int lastVisibleRowIndexIncl = -1;
     private double latestWidth = -1;
 
     @OnThread(Tag.Any)
-    public DisplayCache(GetValue<V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, FXPlatformFunction<G, Region> getNode)
+    public EditorKitCache(int columnIndex, GetValue<V> getValue, @Nullable FXPlatformConsumer<VisibleDetails> formatVisibleCells, MakeEditorKit<V> makeEditorKit)
     {
+        this.columnIndex = columnIndex;
         this.getValue = getValue;
         this.formatVisibleCells = formatVisibleCells;
-        this.getNode = getNode;
+        this.makeEditorKit = makeEditorKit;
         displayCacheItems = CacheBuilder.newBuilder()
             .initialCapacity(INITIAL_DISPLAY_CACHE_SIZE)
             .maximumSize(MAX_DISPLAY_CACHE_SIZE)
             .build();
     }
 
-    protected abstract G makeGraphical(int rowIndex, V value, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus) throws InternalException, UserException;
+    public static interface MakeEditorKit<V>
+    {
+        @OnThread(Tag.FXPlatform)
+        public EditorKit<V> makeKit(int rowIndex, V initialValue) throws InternalException, UserException;
+    }
 
+/*
+    protected abstract EditorKit<V> makeEditorKit(int rowIndex, V value, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus) throws InternalException, UserException;
+*/
     /**
      * Details about the cells which are currently visible.  Used to format columns, if a column is adjusted
      * based on what is on screen (e.g. aligning the decimal point in a numeric column)
      */
     public class VisibleDetails
     {
+        /*
         public final int firstVisibleRowIndex;
         public final List<@Nullable G> visibleCells; // First one is firstVisibleRowIndex; If any are null it is because they are still loading
         public final OptionalInt newVisibleIndex; // Index into visibleCells, not a row number, which is the cause for this update
@@ -107,6 +118,7 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
                     visibleCells.add(null);
             }
         }
+        */
     }
 
     @OnThread(Tag.FXPlatform)
@@ -121,18 +133,18 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
     }
 
     @Override
-    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, FXPlatformConsumer<Region> setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
     {
         this.firstVisibleRowIndexIncl = firstVisibleRowIndexIncl;
         this.lastVisibleRowIndexIncl = lastVisibleRowIndexIncl;
         try
         {
-            displayCacheItems.get(rowIndex, () -> new DisplayCacheItem(rowIndex, focusListener, relinquishFocus, setCellContent)).updateDisplay(setCellContent);
+            displayCacheItems.get(rowIndex, () -> new DisplayCacheItem(rowIndex, focusListener, relinquishFocus, setCellContent)).updateDisplay();
         }
         catch (ExecutionException e)
         {
             Utility.log(e);
-            setCellContent.consume(new Label(e.getLocalizedMessage()));
+            setCellContent.loadedValue(rowIndex, columnIndex, new EditorKitSimpleLabel<>(e.getLocalizedMessage()));
         }
         formatVisible(OptionalInt.of(rowIndex));
     }
@@ -144,6 +156,14 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
         formatVisible(OptionalInt.empty());
     }
 
+    @Override
+    public boolean isEditable()
+    {
+        // Default is that we are editable:
+        return true;
+    }
+
+    /*
     protected final @Nullable G getRowIfShowing(int index)
     {
         @Nullable DisplayCacheItem item = displayCacheItems.getIfPresent(index);
@@ -152,12 +172,14 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
             return item.loadedItemOrError.<@Nullable G>either(p -> p.getSecond(), s -> null);
         }
         return null;
-    }
+    }*/
 
     protected final void formatVisible(OptionalInt rowIndexUpdated)
     {
+        /* TODO
         if (formatVisibleCells != null && firstVisibleRowIndexIncl != -1 && lastVisibleRowIndexIncl != -1 && latestWidth > 0)
             formatVisibleCells.consume(new VisibleDetails(rowIndexUpdated, firstVisibleRowIndexIncl, lastVisibleRowIndexIncl, latestWidth));
+        */
     }
 
 
@@ -180,15 +202,15 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
         private final int rowIndex;
         // The result of loading: either value or error.  If null, still loading
         @OnThread(Tag.FXPlatform)
-        private @MonotonicNonNull Either<Pair<V, G>, @Localized String> loadedItemOrError;
+        private @MonotonicNonNull Either<Pair<V, EditorKit<V>>, @Localized String> loadedItemOrError;
         private double progress = 0;
         @OnThread(Tag.FXPlatform)
-        private FXPlatformConsumer<Region> callbackSetCellContent;
+        private final EditorKitCallback callbackSetCellContent;
         private final FXPlatformConsumer<Boolean> onFocusChange;
         private final FXPlatformRunnable relinquishFocus;
 
         @SuppressWarnings("initialization") // ValueLoader, though I don't quite understand why
-        public DisplayCacheItem(int index, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus, FXPlatformConsumer<Region> callbackSetCellContent)
+        public DisplayCacheItem(int index, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus, EditorKitCallback callbackSetCellContent)
         {
             this.rowIndex = index;
             loader = new ValueLoader(index, this);
@@ -201,25 +223,23 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
         public synchronized void update(V loadedItem)
         {
             Utility.alertOnErrorFX_(() -> {
-                this.loadedItemOrError = Either.left(new Pair<>(loadedItem, makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)));
+                this.loadedItemOrError = Either.left(new Pair<>(loadedItem, makeEditorKit.makeKit(rowIndex, loadedItem)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/));
             });
-            updateDisplay(null);
+            updateDisplay();
             formatVisible(OptionalInt.of(rowIndex));
         }
 
         @OnThread(Tag.FXPlatform)
-        public void updateDisplay(@Nullable FXPlatformConsumer<Region> callbackSetCellContent)
+        public void updateDisplay()
         {
-            if (callbackSetCellContent != null)
-                this.callbackSetCellContent = callbackSetCellContent;
             if (loadedItemOrError != null)
             {
-                Region item = loadedItemOrError.either(p -> getNode.apply(p.getSecond()), err -> new Label(err));
-                this.callbackSetCellContent.consume(item);
+                EditorKit<V> editorKit = loadedItemOrError.either(p -> p.getSecond(), err -> new EditorKitSimpleLabel<>(err));
+                this.callbackSetCellContent.loadedValue(rowIndex, columnIndex, editorKit);
             }
             else
             {
-                this.callbackSetCellContent.consume(new Label("Loading: " + progress));
+                //this.callbackSetCellContent.loadedValue(new Label("Loading: " + progress));
             }
         }
 
@@ -232,13 +252,13 @@ public abstract class DisplayCache<V, G> implements ColumnHandler
         {
             // TODO store progressState
             this.progress = progress;
-            updateDisplay(null);
+            updateDisplay();
         }
 
         public void error(@Localized String error)
         {
             this.loadedItemOrError = Either.right(error);
-            updateDisplay(null);
+            updateDisplay();
         }
     }
 

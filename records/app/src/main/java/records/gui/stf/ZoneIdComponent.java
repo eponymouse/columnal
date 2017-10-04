@@ -31,7 +31,7 @@ public class ZoneIdComponent extends TerminalComponent<@Value ZoneId>
     }
 
     @Override
-    public Either<List<ErrorFix>, @Value ZoneId> endEdit(StructuredTextField<?> field)
+    public Either<List<ErrorFix>, @Value ZoneId> endEdit(StructuredTextField field)
     {
         try
         {
@@ -44,9 +44,9 @@ public class ZoneIdComponent extends TerminalComponent<@Value ZoneId>
     }
 
     @Override
-    public List<Suggestion> getSuggestions()
+    public ImmutableList<Suggestion> getSuggestions()
     {
         // TODO also add +00:00 style completions
-        return ZoneId.getAvailableZoneIds().stream().map(s -> new Suggestion(getItems().get(0), s)).collect(Collectors.toList());
+        return ZoneId.getAvailableZoneIds().stream().map(s -> new Suggestion(getItems().get(0), s)).collect(ImmutableList.toImmutableList());
     }
 }

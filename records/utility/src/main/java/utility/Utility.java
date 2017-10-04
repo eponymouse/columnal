@@ -24,8 +24,10 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Properties;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -977,6 +979,25 @@ public class Utility
     public static String codePointToString(int codepoint)
     {
         return new String(new int[] {codepoint}, 0, 1);
+    }
+
+    /**
+     * Sets the list to the given new size.  If elements
+     * must be added, makeNew is called for each new element.
+     * If elements must be removed, disposeOld is called for
+     * each old element (removed from the end of the list)
+     *
+     * @param list
+     * @param newSize
+     * @param makeNew
+     * @param disposeOld
+     */
+    public static <T> void resizeList(ArrayList<T> list, int newSize, Function<Integer, T> makeNew, Consumer<T> disposeOld)
+    {
+        while (list.size() < newSize)
+            list.add(makeNew.apply(list.size()));
+        while (list.size() > newSize)
+            disposeOld.accept(list.remove(list.size() - 1));
     }
 
     public static class ReadState
