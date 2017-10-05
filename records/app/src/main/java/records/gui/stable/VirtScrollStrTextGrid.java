@@ -129,7 +129,7 @@ public class VirtScrollStrTextGrid
         void fetchEditorKit(int rowIndex, int colIndex, FXPlatformConsumer<EditorKit<?>> setEditorKit);
     }
 
-    public void setData(int numRows, double[] columnWidths, ValueLoadSave loadSave)
+    public void setData(int numRows, double[] columnWidths)
     {
         // Snap to top:
         firstVisibleRowIndex = 0;
@@ -140,6 +140,8 @@ public class VirtScrollStrTextGrid
         // Empty previous:
         Utility.<ArrayList<StructuredTextField>>resizeList(visibleCells, 0, index -> new ArrayList<>(), cs -> spareCells.addAll(cs));
 
+        // These variables resize the number of elements,
+        // and then layout actually rejigs the display:
         this.totalRows = numRows;
         this.columnWidths = Arrays.copyOf(columnWidths, columnWidths.length);
 
@@ -198,10 +200,13 @@ public class VirtScrollStrTextGrid
             {
                 x = firstVisibleColumnOffset;
                 // If we need it, add another visible column
-                for (StructuredTextField cell : row)
+                for (int columnIndex = 0; columnIndex < row.size(); columnIndex++)
                 {
-                    cell.relocate(x, y);
+                    StructuredTextField cell = row.get(columnIndex);
+                    cell.resizeRelocate(x, y, columnWidths[columnIndex], rowHeight);
+                    x += columnWidths[columnIndex];
                 }
+                y += rowHeight;
             }
 
             // Don't let spare cells be more than two visible rows or columns:

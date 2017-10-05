@@ -1,5 +1,6 @@
 package records.gui.stable;
 
+import com.google.common.primitives.Doubles;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleExpression;
@@ -80,6 +81,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 /**
  * A customised equivalent of TableView
@@ -454,6 +456,8 @@ public class StableView
         }
 
         nonEmptyProperty.set(!columns.isEmpty());
+
+        grid.setData(18, Doubles.toArray(columnSizes.stream().map(s -> s.get()).collect(Collectors.toList())));
 
         scrollToTopLeft();
 
