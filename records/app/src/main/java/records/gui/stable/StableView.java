@@ -457,7 +457,7 @@ public class StableView
 
         nonEmptyProperty.set(!columns.isEmpty());
 
-        grid.setData(18, Doubles.toArray(columnSizes.stream().map(s -> s.get()).collect(Collectors.toList())));
+        grid.setData(isRowValid, Doubles.toArray(columnSizes.stream().map(s -> s.get()).collect(Collectors.toList())));
 
         scrollToTopLeft();
 

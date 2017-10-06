@@ -1,12 +1,13 @@
 package records.gui.stable;
 
+import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.layout.Region;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.openxmlformats.schemas.spreadsheetml.x2006.main.STFillId;
 import records.error.InternalException;
+import records.error.UserException;
 import records.gui.stf.EditorKitSimpleLabel;
 import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
@@ -14,11 +15,16 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
+import utility.SimulationFunction;
 import utility.Utility;
+import utility.Workers;
+import utility.Workers.Priority;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Predicate;
 
 /**
  * This is a lot like a VirtualizedScrollPane of HBox of
@@ -36,12 +42,13 @@ public class VirtScrollStrTextGrid
 {
     // Cells which are visible, organised as a 2D array
     // (inner is a row, outer is list of rows)
-    private final ArrayList<ArrayList<StructuredTextField>> visibleCells;
+    private final Map<CellPosition, StructuredTextField> visibleCells;
     private int firstVisibleColumnIndex;
     private int firstVisibleRowIndex;
-    // Offset of top visible cell.  Always <= 0
+    // Offset of top visible cell.  Always -rowHeight <= y <= 0
     private double firstVisibleColumnOffset;
     private double firstVisibleRowOffset;
+    private int visibleRowCount;
 
     // TODO: could try to use translate to make scrolling faster?
 
@@ -53,7 +60,13 @@ public class VirtScrollStrTextGrid
     private final ArrayList<StructuredTextField> spareCells;
 
     private double rowHeight;
-    private int totalRows;
+    // This is a minimum number of rows known to be in the table:
+    @OnThread(Tag.FXPlatform)
+    private int currentKnownRows = 0;
+    // A function to ask if the row index is valid.  If isRowValid(n)
+    // returns false, it's guaranteed that isRowValid(m) for m>=n is also false.
+    @OnThread(Tag.FXPlatform)
+    private @Nullable SimulationFunction<Integer, Boolean> isRowValid;
     private double[] columnWidths;
 
     private final ObjectProperty<@Nullable Pair<Integer, Integer>> focusedCell = new SimpleObjectProperty<>(null);
@@ -64,7 +77,7 @@ public class VirtScrollStrTextGrid
 
     public VirtScrollStrTextGrid(ValueLoadSave loadSave)
     {
-        visibleCells = new ArrayList<>();
+        visibleCells = new HashMap<>();
         firstVisibleColumnIndex = 0;
         firstVisibleRowIndex = 0;
         firstVisibleColumnOffset = 0;
@@ -84,8 +97,56 @@ public class VirtScrollStrTextGrid
 
     public void scrollYToPixel(double y)
     {
-        // TODO
+        // Can't scroll to negative:
+        if (y < 0)
+            y = 0;
+
+        // So, if y == 0 then we make first cell the top and offset == 0
+        // If y < 1*rowHeight, still first cell, and offset == -y
+        // If y < 2*rowHeight, second cell, and offset == rowHeight - y
+        // General pattern: divide by rowHeight and round down to get topCell
+        // Then offset is topCell*rowHeight - y
+        int topCell = (int)Math.floor(y / rowHeight);
+        this.firstVisibleRowIndex = topCell;
+        this.firstVisibleRowOffset = (topCell * rowHeight) - y;
+        updateKnownRows();
+        container.requestLayout();
     }
+
+    private void updateKnownRows()
+    {
+        final int prevKnownRows = currentKnownRows;
+        if (prevKnownRows > firstVisibleRowIndex + visibleRowCount + 200)
+        {
+            // If there's more than 200 unshown, that will do as an estimate:
+            return;
+        }
+
+        int searchMax = firstVisibleRowIndex + visibleRowCount + 250;
+        @Nullable SimulationFunction<Integer, Boolean> isRowValidFinal = this.isRowValid;
+        Workers.onWorkerThread("Calculating number of rows", Priority.FETCH, () -> {
+            int knownRows;
+            for (knownRows = prevKnownRows + 1; knownRows < searchMax; knownRows++)
+            {
+                try
+                {
+                    if (isRowValidFinal == null || !isRowValidFinal.apply(knownRows))
+                        break;
+                }
+                catch (InternalException | UserException e)
+                {
+                    Utility.log(e);
+                    break;
+                }
+            }
+            int knownRowsFinal = knownRows - 1;
+            Platform.runLater(() -> {
+                currentKnownRows = knownRowsFinal;
+                container.requestLayout();
+            });
+        });
+    }
+
     public void scrollXToPixel(double x)
     {
         // TODO
@@ -115,12 +176,18 @@ public class VirtScrollStrTextGrid
 
     public void scrollYBy(double y)
     {
-        //TODO
+        scrollYToPixel(firstVisibleRowIndex * rowHeight - firstVisibleRowOffset + y);
     }
 
     public void showAtOffset(int row, double pixelOffset)
     {
-        //TODO
+        // Shouldn't happen, but clamp row:
+        if (row < 0)
+            row = 0;
+        this.firstVisibleRowOffset = pixelOffset;
+        this.firstVisibleRowIndex = row;
+        updateKnownRows();
+        container.requestLayout();
     }
 
     public static interface ValueLoadSave
@@ -129,7 +196,7 @@ public class VirtScrollStrTextGrid
         void fetchEditorKit(int rowIndex, int colIndex, FXPlatformConsumer<EditorKit<?>> setEditorKit);
     }
 
-    public void setData(int numRows, double[] columnWidths)
+    public void setData(SimulationFunction<Integer, Boolean> isRowValid, double[] columnWidths)
     {
         // Snap to top:
         firstVisibleRowIndex = 0;
@@ -138,11 +205,14 @@ public class VirtScrollStrTextGrid
         firstVisibleRowOffset = 0;
 
         // Empty previous:
-        Utility.<ArrayList<StructuredTextField>>resizeList(visibleCells, 0, index -> new ArrayList<>(), cs -> spareCells.addAll(cs));
+        spareCells.addAll(visibleCells.values());
+        visibleCells.clear();
 
         // These variables resize the number of elements,
         // and then layout actually rejigs the display:
-        this.totalRows = numRows;
+        this.isRowValid = isRowValid;
+        this.currentKnownRows = 0;
+        updateKnownRows();
         this.columnWidths = Arrays.copyOf(columnWidths, columnWidths.length);
 
         container.requestLayout();
@@ -178,31 +248,50 @@ public class VirtScrollStrTextGrid
             double y = firstVisibleRowOffset;
 
             // We may not need the +1, but play safe:
-            int newNumVisibleRows = Math.min(totalRows - firstVisibleRowIndex, (int)Math.ceil(getHeight() / rowHeight) + 1);
+            int newNumVisibleRows = Math.min(currentKnownRows - firstVisibleRowIndex, (int)Math.ceil(getHeight() / rowHeight) + 1);
             int newNumVisibleCols = 0;
             for (int column = firstVisibleColumnIndex; x < getWidth() && column < columnWidths.length; column++)
             {
                 newNumVisibleCols += 1;
                 x += columnWidths[column];
             }
+            VirtScrollStrTextGrid.this.visibleRowCount = newNumVisibleRows;
 
-            Utility.resizeList(visibleCells, newNumVisibleRows, n -> new ArrayList<>(columnWidths.length), cs -> spareCells.addAll(cs));
-            for (int visRowIndex = 0; visRowIndex < visibleCells.size(); visRowIndex++)
-            {
-                int visRowIndexFinal = visRowIndex;
-                ArrayList<StructuredTextField> row = visibleCells.get(visRowIndex);
-                Utility.resizeList(row, newNumVisibleCols, visColIndex -> getSpareOrNewCell(visRowIndexFinal, visColIndex), cs -> spareCells.add(cs));
-            }
-
+            //TODO remove not-visible cells and put them in spare cells
 
             y = firstVisibleRowOffset;
-            for (ArrayList<StructuredTextField> row : visibleCells)
+            for (int rowIndex = firstVisibleRowIndex; rowIndex < firstVisibleRowIndex + newNumVisibleRows; rowIndex++)
             {
                 x = firstVisibleColumnOffset;
                 // If we need it, add another visible column
-                for (int columnIndex = 0; columnIndex < row.size(); columnIndex++)
+                for (int columnIndex = firstVisibleColumnIndex; columnIndex < firstVisibleColumnIndex + newNumVisibleCols; columnIndex++)
                 {
-                    StructuredTextField cell = row.get(columnIndex);
+                    CellPosition cellPosition = new CellPosition(rowIndex, columnIndex);
+                    StructuredTextField cell = visibleCells.get(cellPosition);
+                    // If cell isn't present, grab from spareCells:
+                    if (cell == null)
+                    {
+                        if (!spareCells.isEmpty())
+                        {
+                            cell = spareCells.remove(spareCells.size() - 1);
+                        }
+                        else
+                        {
+                            cell = new StructuredTextField(() -> focusCell(cellPosition.rowIndex, cellPosition
+                                    .columnIndex));
+                            getChildren().add(cell);
+                        }
+
+                        visibleCells.put(cellPosition, cell);
+                        StructuredTextField newCellFinal = cell;
+                        // Blank then queue fetch:
+                        cell.resetContent(new EditorKitSimpleLabel<>("Loading..."));
+                        loadSave.fetchEditorKit(rowIndex, columnIndex, k -> {
+                            // Check cell hasn't been re-used since:
+                            if (visibleCells.get(cellPosition) == newCellFinal)
+                                newCellFinal.resetContent(k);
+                        });
+                    }
                     cell.resizeRelocate(x, y, columnWidths[columnIndex], rowHeight);
                     x += columnWidths[columnIndex];
                 }
@@ -210,7 +299,7 @@ public class VirtScrollStrTextGrid
             }
 
             // Don't let spare cells be more than two visible rows or columns:
-            int maxSpareCells = 2 * Math.max(visibleCells.size(), visibleCells.isEmpty() ? 0 : visibleCells.get(0).size());
+            int maxSpareCells = 2 * Math.max(newNumVisibleCols * 2, newNumVisibleRows * 2);
 
             while (spareCells.size() > maxSpareCells)
                 container.getChildren().remove(spareCells.remove(spareCells.size() - 1));
@@ -220,33 +309,43 @@ public class VirtScrollStrTextGrid
                 spareCell.relocate(10000, 10000);
             }
         }
-
-
-        private StructuredTextField getSpareOrNewCell(int visRowIndex, int visColIndex)
-        {
-            StructuredTextField cell;
-            if (!spareCells.isEmpty())
-            {
-                cell = spareCells.remove(spareCells.size() - 1);
-            }
-            else
-            {
-                cell = new StructuredTextField(Container.this::requestFocus);
-                getChildren().add(cell);
-            }
-            int realRow = firstVisibleRowIndex + visRowIndex;
-            int realCol = firstVisibleColumnIndex + visColIndex;
-            // Blank then queue fetch:
-            cell.resetContent(new EditorKitSimpleLabel<>("Loading..."));
-            // TODO need to make sure cell hasn't changed position in mean time.
-            loadSave.fetchEditorKit(realRow, realCol, k -> cell.resetContent(k));
-            return cell;
-        }
     }
 
     public static interface EditorKitCallback
     {
         @OnThread(Tag.FXPlatform)
         public void loadedValue(int rowIndex, int colIndex, EditorKit<?> editorKit);
+    }
+
+    private static class CellPosition
+    {
+        public final int rowIndex;
+        public final int columnIndex;
+
+        private CellPosition(int rowIndex, int columnIndex)
+        {
+            this.rowIndex = rowIndex;
+            this.columnIndex = columnIndex;
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            CellPosition that = (CellPosition) o;
+
+            if (rowIndex != that.rowIndex) return false;
+            return columnIndex == that.columnIndex;
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = rowIndex;
+            result = 31 * result + columnIndex;
+            return result;
+        }
     }
 }
