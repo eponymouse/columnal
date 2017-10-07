@@ -107,6 +107,7 @@
                                     <!-- Add all the checkers you want to enable here -->
                                     <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
                                     <annotationProcessor>org.checkerframework.checker.i18n.I18nChecker</annotationProcessor>
+                                    <annotationProcessor>org.checkerframework.checker.lock.LockChecker</annotationProcessor>
                                     <!-- <annotationProcessor>org.checkerframework.checker.interning.InterningChecker</annotationProcessor> -->
                                     <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor>
                                     <annotationProcessor>annotation.userindex.UserIndexChecker</annotationProcessor>
