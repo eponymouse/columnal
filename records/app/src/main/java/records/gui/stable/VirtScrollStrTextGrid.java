@@ -41,6 +41,8 @@ import java.util.Map.Entry;
 @OnThread(Tag.FXPlatform)
 public class VirtScrollStrTextGrid implements EditorKitCallback
 {
+    private static final double GAP = 1;
+
     // Cells which are visible, organised as a 2D array
     // (inner is a row, outer is list of rows)
     private final Map<CellPosition, StructuredTextField> visibleCells;
@@ -109,8 +111,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         // If y < 2*rowHeight, second cell, and offset == rowHeight - y
         // General pattern: divide by rowHeight and round down to get topCell
         // Then offset is topCell*rowHeight - y
-        int topCell = (int)Math.floor(y / rowHeight);
-        showAtOffset(topCell, (topCell * rowHeight) - y, firstVisibleColumnIndex, firstVisibleColumnOffset);
+        int topCell = (int)Math.floor(y / (rowHeight + GAP));
+        showAtOffset(topCell, (topCell * (rowHeight + GAP)) - y, firstVisibleColumnIndex, firstVisibleColumnOffset);
     }
 
     private void updateKnownRows()
@@ -158,7 +160,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
                 showAtOffset(firstVisibleRowIndex, firstVisibleRowOffset, col, -x);
                 break;
             }
-            x -= columnWidths[col];
+            x -= columnWidths[col] + GAP;
         }
     }
 
@@ -183,14 +185,14 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
     {
         double currentX = 0;
         for (int col = 0; col < firstVisibleColumnIndex; col++)
-            currentX += columnWidths[col];
+            currentX += columnWidths[col] + GAP;
         currentX -= firstVisibleColumnOffset;
         scrollXToPixel(currentX + x);
     }
 
     public void scrollYBy(double y)
     {
-        scrollYToPixel(firstVisibleRowIndex * rowHeight - firstVisibleRowOffset + y);
+        scrollYToPixel(firstVisibleRowIndex * (rowHeight + GAP) - firstVisibleRowOffset + y);
     }
 
     // This is the canonical scroll method which all scroll
@@ -320,12 +322,12 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
             double y = firstVisibleRowOffset;
 
             // We may not need the +1, but play safe:
-            int newNumVisibleRows = Math.min(currentKnownRows - firstVisibleRowIndex, (int)Math.ceil(getHeight() / rowHeight) + 1);
+            int newNumVisibleRows = Math.min(currentKnownRows - firstVisibleRowIndex, (int)Math.ceil(getHeight() / (rowHeight + GAP)) + 1);
             int newNumVisibleCols = 0;
             for (int column = firstVisibleColumnIndex; x < getWidth() && column < columnWidths.length; column++)
             {
                 newNumVisibleCols += 1;
-                x += columnWidths[column];
+                x += columnWidths[column] + GAP;
             }
             VirtScrollStrTextGrid.this.visibleRowCount = newNumVisibleRows;
             VirtScrollStrTextGrid.this.visibleColumnCount = newNumVisibleCols;
@@ -377,9 +379,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
                         loadSave.fetchEditorKit(rowIndex, columnIndex, VirtScrollStrTextGrid.this);
                     }
                     cell.resizeRelocate(x, y, columnWidths[columnIndex], rowHeight);
-                    x += columnWidths[columnIndex];
+                    x += columnWidths[columnIndex] + GAP;
                 }
-                y += rowHeight;
+                y += rowHeight + GAP;
             }
 
             // Don't let spare cells be more than two visible rows or columns:
