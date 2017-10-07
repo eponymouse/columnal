@@ -302,9 +302,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
                 CellPosition pos = vis.getKey();
                 boolean shouldBeVisible =
                     pos.rowIndex >= firstVisibleRowIndex &&
-                    pos.rowIndex <= firstVisibleRowIndex + visibleRowCount &&
+                    pos.rowIndex < firstVisibleRowIndex + visibleRowCount &&
                     pos.columnIndex >= firstVisibleColumnIndex &&
-                    pos.columnIndex <= firstVisibleColumnIndex + visibleColumnCount;
+                    pos.columnIndex < firstVisibleColumnIndex + visibleColumnCount;
                 if (!shouldBeVisible)
                 {
                     spareCells.add(vis.getValue());
