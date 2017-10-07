@@ -3,7 +3,6 @@ package records.gui.stf;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stf.StructuredTextField.ErrorFix;
-import records.gui.stf.StructuredTextField.Suggestion;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;

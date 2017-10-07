@@ -11,7 +11,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 
-import java.util.Collections;
 import java.util.List;
 
 /**

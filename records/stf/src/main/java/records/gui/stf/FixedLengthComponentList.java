@@ -6,7 +6,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stf.StructuredTextField.ErrorFix;
-import records.gui.stf.StructuredTextField.Suggestion;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;

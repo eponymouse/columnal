@@ -5,7 +5,6 @@ import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.Suggestion;
 import utility.Utility;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 

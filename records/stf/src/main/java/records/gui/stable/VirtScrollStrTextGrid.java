@@ -15,7 +15,6 @@ import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Workers;

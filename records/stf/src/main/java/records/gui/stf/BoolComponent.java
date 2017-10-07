@@ -11,7 +11,6 @@ import records.gui.stf.StructuredTextField.ItemVariant;
 import records.gui.stf.StructuredTextField.Suggestion;
 import utility.Either;
 
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 

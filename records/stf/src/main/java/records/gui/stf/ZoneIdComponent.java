@@ -13,11 +13,8 @@ import utility.gui.TranslationUtility;
 
 import java.time.DateTimeException;
 import java.time.ZoneId;
-import java.time.ZoneOffset;
-import java.time.zone.ZoneRulesException;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * Created by neil on 11/07/2017.

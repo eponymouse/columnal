@@ -2,13 +2,12 @@ package records.gui.stf;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import javafx.collections.ListChangeListener;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
-import records.gui.TableDisplayUtility;
+import records.gui.stf.TableDisplayUtility;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;
@@ -18,11 +17,9 @@ import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.OptionalInt;
 
 /**

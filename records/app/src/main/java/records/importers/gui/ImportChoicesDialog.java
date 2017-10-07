@@ -2,9 +2,7 @@ package records.importers.gui;
 
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
-import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
-import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyObjectProperty;
@@ -25,7 +23,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import javafx.stage.Modality;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
@@ -40,7 +37,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.ErrorableTextField;
 import records.gui.ErrorableTextField.ConversionResult;
-import records.gui.TableDisplayUtility;
+import records.gui.stf.TableDisplayUtility;
 import records.gui.TableNameTextField;
 import records.gui.stable.StableView;
 import records.gui.stable.StableView.ColumnHandler;
@@ -72,8 +69,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @OnThread(Tag.FXPlatform)
 public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<ImportInfo, FORMAT>>

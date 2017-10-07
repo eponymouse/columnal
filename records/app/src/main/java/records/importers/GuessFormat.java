@@ -34,7 +34,7 @@ import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.TableDisplayUtility;
+import records.gui.stf.TableDisplayUtility;
 import records.gui.stable.StableView.ColumnHandler;
 import records.gui.stable.EditorKitCallback;
 import records.gui.stable.VirtScrollStrTextGrid.CellPosition;

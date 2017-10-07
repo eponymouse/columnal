@@ -3,7 +3,6 @@ package records.gui.stf;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.Localized;
 import records.gui.stf.StructuredTextField.EditorKit;
-import records.gui.stf.StructuredTextField.EndEditActions;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;

@@ -1,4 +1,4 @@
-package records.gui;
+package records.gui.stable;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;

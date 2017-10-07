@@ -47,6 +47,7 @@ import records.data.Transformation;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.stf.TableDisplayUtility;
 import records.importers.ClipboardUtils;
 import records.transformations.HideColumnsPanel;
 import records.transformations.TransformationEditable;

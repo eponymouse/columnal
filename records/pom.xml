@@ -16,6 +16,7 @@
         <module>anns</module>
         <module>gui-utility</module>
         <module>data</module>
+        <module>stf</module>
     </modules>
 
     <dependencies>

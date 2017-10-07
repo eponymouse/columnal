@@ -1,4 +1,4 @@
-package records.gui;
+package records.gui.stf;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
@@ -24,6 +24,7 @@ import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.TypeId;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.stable.EditorKitCache;
 import records.gui.stable.EditorKitCallback;
 import records.gui.stf.*;
 import records.gui.stf.StructuredTextField.EditorKit;
@@ -362,7 +363,8 @@ public class TableDisplayUtility
                 GetValue<Object[]> tupleGet = new GetValue<Object[]>()
                 {
                     @Override
-                    public Object @OnThread(Tag.Simulation) @NonNull [] getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
+                    @OnThread(Tag.Simulation)
+                    public Object@NonNull [] getWithProgress(int index, @Nullable ProgressListener progressListener) throws UserException, InternalException
                     {
                         Object[] r = new Object[types.size()];
                         for (int i = 0; i < r.length; i++)
@@ -373,8 +375,9 @@ public class TableDisplayUtility
                     }
 
                     @Override
+                    @OnThread(Tag.Simulation)
                     @SuppressWarnings("unchecked")
-                    public @OnThread(Tag.Simulation) void set(int index, Object[] value) throws InternalException, UserException
+                    public void set(int index, Object[] value) throws InternalException, UserException
                     {
                         for (int i = 0; i < value.length; i++)
                         {

@@ -8,6 +8,7 @@
       <module fileurl="file://$PROJECT_DIR$/records/gui-utility/gui-utility.iml" filepath="$PROJECT_DIR$/records/gui-utility/gui-utility.iml" />
       <module fileurl="file://$PROJECT_DIR$/records/parsers/parsers.iml" filepath="$PROJECT_DIR$/records/parsers/parsers.iml" />
       <module fileurl="file://$PROJECT_DIR$/records/records.iml" filepath="$PROJECT_DIR$/records/records.iml" />
+      <module fileurl="file://$PROJECT_DIR$/records/stf/stf.iml" filepath="$PROJECT_DIR$/records/stf/stf.iml" />
       <module fileurl="file://$PROJECT_DIR$/records/utility/utility.iml" filepath="$PROJECT_DIR$/records/utility/utility.iml" />
     </modules>
   </component>

@@ -23,7 +23,7 @@ public class TextEntry extends TerminalComponent<@Value String>
     public TextEntry(ImmutableList<Component<?>> parents, String initial)
     {
         super(parents);
-        items.addAll(Arrays.asList(new Item(getItemParents(), "\""), new Item(getItemParents(), escapeChars(initial), ItemVariant.EDITABLE_TEXT, ""), new Item(getItemParents(), "\"")));
+        items.addAll(Arrays.asList(new Item(getItemParents(), "\""), new Item(getItemParents(), GrammarUtility.escapeChars(initial), ItemVariant.EDITABLE_TEXT, ""), new Item(getItemParents(), "\"")));
     }
 
     @Override

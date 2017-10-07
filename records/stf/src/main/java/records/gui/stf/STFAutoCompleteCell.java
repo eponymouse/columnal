@@ -1,11 +1,7 @@
 package records.gui.stf;
 
-import javafx.application.Platform;
-import javafx.css.PseudoClass;
 import javafx.scene.control.ListCell;
-import javafx.scene.control.Skin;
 import javafx.scene.input.MouseButton;
-import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.flowless.Cell;
