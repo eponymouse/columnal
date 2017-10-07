@@ -2,7 +2,6 @@ package records.gui.stable;
 
 import com.google.common.primitives.Doubles;
 import javafx.application.Platform;
-import javafx.beans.binding.Bindings;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.BooleanProperty;
@@ -15,8 +14,6 @@ import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.event.Event;
-import javafx.geometry.Orientation;
-import javafx.geometry.Point2D;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -24,7 +21,6 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollBar;
-import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.effect.BlurType;
 import javafx.scene.effect.DropShadow;
 import javafx.scene.input.KeyCode;
@@ -48,7 +44,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.fxmisc.flowless.Cell;
 import org.fxmisc.flowless.VirtualFlow;
-import org.fxmisc.flowless.VirtualizedScrollPane;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
@@ -59,9 +54,7 @@ import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.stable.VirtScrollStrTextGrid.EditorKitCallback;
 import records.gui.stable.VirtScrollStrTextGrid.ValueLoadSave;
-import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DeepListBinding;
@@ -78,7 +71,6 @@ import utility.gui.GUI;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -173,11 +165,11 @@ public class StableView
         grid = new VirtScrollStrTextGrid(new ValueLoadSave()
         {
             @Override
-            public void fetchEditorKit(int rowIndex, int colIndex, FXPlatformConsumer<EditorKit<?>> setEditorKit)
+            public void fetchEditorKit(int rowIndex, int colIndex, EditorKitCallback setEditorKit)
             {
                 if (columns != null && colIndex < columns.size())
                 {
-                    columns.get(colIndex).fetchValue(rowIndex, b -> {}, () -> {}, (rowIndex1, colIndex1, editorKit) -> setEditorKit.consume(editorKit), -1, -1);
+                    columns.get(colIndex).fetchValue(rowIndex, b -> {}, () -> {}, setEditorKit, -1, -1);
                 }
             }
         });

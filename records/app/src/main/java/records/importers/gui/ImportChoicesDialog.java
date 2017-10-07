@@ -25,6 +25,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Modality;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
@@ -193,9 +194,10 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         setResizable(true);
         getDialogPane().setPrefSize(800, 600);
 
-        //dialog.initModality(Modality.NONE); // For scenic view
+
         setOnShown(e -> {
-            //org.scenicview.ScenicView.show(dialog.getDialogPane().getScene());
+            initModality(Modality.NONE); // For scenic view
+            org.scenicview.ScenicView.show(getDialogPane().getScene());
 
             // Have to use runAfter because the OK button gets focused
             // so we have to wait, then steal the focus back:

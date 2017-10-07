@@ -1,18 +1,11 @@
 package records.gui.stable;
 
-import javafx.geometry.Point2D;
-import javafx.scene.control.Label;
-import javafx.scene.layout.Region;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.fxmisc.wellbehaved.event.InputMap;
 import records.gui.stable.StableView.ColumnHandler;
-import records.gui.stable.VirtScrollStrTextGrid.EditorKitCallback;
 import records.gui.stf.EditorKitSimpleLabel;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
-import utility.SimulationFunction;
 
 public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
 {

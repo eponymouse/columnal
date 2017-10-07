@@ -13,7 +13,6 @@ import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -23,8 +22,9 @@ import utility.Workers.Priority;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.Map;
-import java.util.function.Predicate;
+import java.util.Map.Entry;
 
 /**
  * This is a lot like a VirtualizedScrollPane of HBox of
@@ -38,7 +38,7 @@ import java.util.function.Predicate;
  *    have same height throughout the grid.
  */
 @OnThread(Tag.FXPlatform)
-public class VirtScrollStrTextGrid
+public class VirtScrollStrTextGrid implements EditorKitCallback
 {
     // Cells which are visible, organised as a 2D array
     // (inner is a row, outer is list of rows)
@@ -49,6 +49,7 @@ public class VirtScrollStrTextGrid
     private double firstVisibleColumnOffset;
     private double firstVisibleRowOffset;
     private int visibleRowCount;
+    private int visibleColumnCount;
 
     // TODO: could try to use translate to make scrolling faster?
 
@@ -193,7 +194,7 @@ public class VirtScrollStrTextGrid
     public static interface ValueLoadSave
     {
         @OnThread(Tag.FXPlatform)
-        void fetchEditorKit(int rowIndex, int colIndex, FXPlatformConsumer<EditorKit<?>> setEditorKit);
+        void fetchEditorKit(int rowIndex, int colIndex, EditorKitCallback setEditorKit);
     }
 
     public void setData(SimulationFunction<Integer, Boolean> isRowValid, double[] columnWidths)
@@ -216,6 +217,16 @@ public class VirtScrollStrTextGrid
         this.columnWidths = Arrays.copyOf(columnWidths, columnWidths.length);
 
         container.requestLayout();
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) void loadedValue(int rowIndex, int colIndex, EditorKit<?> editorKit)
+    {
+        CellPosition cellPosition = new CellPosition(rowIndex, colIndex);
+        // Check cell hasn't been re-used since:
+        StructuredTextField cell = visibleCells.get(cellPosition);
+        if (cell != null)
+            cell.resetContent(editorKit);
     }
 
     public Region getNode()
@@ -256,8 +267,24 @@ public class VirtScrollStrTextGrid
                 x += columnWidths[column];
             }
             VirtScrollStrTextGrid.this.visibleRowCount = newNumVisibleRows;
+            VirtScrollStrTextGrid.this.visibleColumnCount = newNumVisibleCols;
 
-            //TODO remove not-visible cells and put them in spare cells
+            // Remove not-visible cells and put them in spare cells:
+            for (Iterator<Entry<CellPosition, StructuredTextField>> iterator = visibleCells.entrySet().iterator(); iterator.hasNext(); )
+            {
+                Entry<CellPosition, StructuredTextField> vis = iterator.next();
+                CellPosition pos = vis.getKey();
+                boolean shouldBeVisible =
+                    pos.rowIndex >= firstVisibleRowIndex &&
+                    pos.rowIndex <= firstVisibleRowIndex + visibleRowCount &&
+                    pos.columnIndex >= firstVisibleColumnIndex &&
+                    pos.columnIndex <= firstVisibleColumnIndex + visibleColumnCount;
+                if (!shouldBeVisible)
+                {
+                    spareCells.add(vis.getValue());
+                    iterator.remove();
+                }
+            }
 
             y = firstVisibleRowOffset;
             for (int rowIndex = firstVisibleRowIndex; rowIndex < firstVisibleRowIndex + newNumVisibleRows; rowIndex++)
@@ -286,11 +313,7 @@ public class VirtScrollStrTextGrid
                         StructuredTextField newCellFinal = cell;
                         // Blank then queue fetch:
                         cell.resetContent(new EditorKitSimpleLabel<>("Loading..."));
-                        loadSave.fetchEditorKit(rowIndex, columnIndex, k -> {
-                            // Check cell hasn't been re-used since:
-                            if (visibleCells.get(cellPosition) == newCellFinal)
-                                newCellFinal.resetContent(k);
-                        });
+                        loadSave.fetchEditorKit(rowIndex, columnIndex, VirtScrollStrTextGrid.this);
                     }
                     cell.resizeRelocate(x, y, columnWidths[columnIndex], rowHeight);
                     x += columnWidths[columnIndex];
@@ -309,12 +332,6 @@ public class VirtScrollStrTextGrid
                 spareCell.relocate(10000, 10000);
             }
         }
-    }
-
-    public static interface EditorKitCallback
-    {
-        @OnThread(Tag.FXPlatform)
-        public void loadedValue(int rowIndex, int colIndex, EditorKit<?> editorKit);
     }
 
     private static class CellPosition
