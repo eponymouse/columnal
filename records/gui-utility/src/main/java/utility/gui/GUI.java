@@ -1,8 +1,10 @@
 package utility.gui;
 
 import annotation.help.qual.HelpKey;
+import annotation.qual.Value;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
+import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.collections.ObservableList;
 import javafx.css.Styleable;
@@ -31,6 +33,7 @@ import org.fxmisc.wellbehaved.event.Nodes;
 import org.jetbrains.annotations.NotNull;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplier;
 import utility.Pair;
@@ -271,5 +274,12 @@ public class GUI
             radioMenuItem.setToggleGroup(toggleGroup);
         }
         return radioMenuItems;
+    }
+
+    public static <ROW, VALUE> TableColumn<ROW, VALUE> tableColumn(String columnTitle, FXPlatformFunction<ROW, VALUE> getValue)
+    {
+        TableColumn<ROW, VALUE> column = new TableColumn<>(columnTitle);
+        column.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(getValue.apply(d.getValue())));
+        return column;
     }
 }

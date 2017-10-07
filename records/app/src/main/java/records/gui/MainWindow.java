@@ -87,7 +87,8 @@ public class MainWindow
                 GUI.menuItem("menu.data.import.link", () -> chooseAndImportLink(v, stage))
             ),
             GUI.menu("menu.view",
-                GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait())
+                GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait()),
+                GUI.menuItem("menu.view.tasks", () -> TaskManagerWindow.getInstance().show())
             )
         );
 

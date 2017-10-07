@@ -1,5 +1,6 @@
 package utility;
 
+import com.google.common.collect.ImmutableList;
 import javafx.scene.layout.Priority;
 import org.checkerframework.checker.interning.qual.UsesObjectEquals;
 import org.checkerframework.checker.lock.qual.GuardedBy;
@@ -10,8 +11,11 @@ import threadchecker.Tag;
 
 import java.util.Comparator;
 import java.util.Iterator;
+import java.util.List;
+import java.util.OptionalLong;
 import java.util.PriorityQueue;
 import java.util.Stack;
+import java.util.stream.Stream;
 
 /**
  * Created by neil on 23/10/2016.
@@ -43,7 +47,8 @@ public class Workers
     }
 
     @GuardedBy("<self>")
-    private static Stack<WorkChunk> currentlyRunning = new Stack<>();
+    @OnThread(value = Tag.Any)
+    private static final Stack<WorkChunk> currentlyRunning = new Stack<>();
 
     private static class WorkChunk
     {
@@ -228,5 +233,29 @@ public class Workers
                 currentlyRunning.pop();
             }
         }
+    }
+
+    // The publicly viewable details by the user
+    public static class WorkInfo
+    {
+        public final String taskName;
+        public final Priority priority;
+        // Both a point in time using System.currentTimeMillis:
+        public final OptionalLong startedTime;
+        public final long queuedTime;
+
+        private WorkInfo(WorkChunk chunk)
+        {
+            this.taskName = chunk.title;
+            this.priority = chunk.priority;
+            this.queuedTime = chunk.timeReady;
+            this.startedTime = OptionalLong.empty();
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static synchronized ImmutableList<WorkInfo> getTaskList()
+    {
+        return Stream.concat(currentlyRunning.stream(), workQueue.stream()).map(WorkInfo::new).collect(ImmutableList.toImmutableList());
     }
 }
