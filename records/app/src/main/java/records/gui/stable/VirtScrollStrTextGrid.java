@@ -110,7 +110,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         // General pattern: divide by rowHeight and round down to get topCell
         // Then offset is topCell*rowHeight - y
         int topCell = (int)Math.floor(y / rowHeight);
-        showAtOffset(topCell, (topCell * rowHeight) - y);
+        showAtOffset(topCell, (topCell * rowHeight) - y, firstVisibleColumnIndex, firstVisibleColumnOffset);
     }
 
     private void updateKnownRows()
@@ -147,9 +147,19 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         });
     }
 
-    public void scrollXToPixel(double x)
+    public void scrollXToPixel(double targetX)
     {
-        // TODO
+        double x = Math.max(targetX, 0.0);
+        for (int col = 0; col < columnWidths.length; col++)
+        {
+            if (x < columnWidths[col])
+            {
+                // Stop here:
+                showAtOffset(firstVisibleRowIndex, firstVisibleRowOffset, col, -x);
+                break;
+            }
+            x -= columnWidths[col];
+        }
     }
 
     // Focuses cell so that you can navigate around with keyboard
@@ -171,7 +181,11 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
 
     public void scrollXBy(double x)
     {
-        //TODO
+        double currentX = 0;
+        for (int col = 0; col < firstVisibleColumnIndex; col++)
+            currentX += columnWidths[col];
+        currentX -= firstVisibleColumnOffset;
+        scrollXToPixel(currentX + x);
     }
 
     public void scrollYBy(double y)
@@ -182,18 +196,34 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
     // This is the canonical scroll method which all scroll
     // attempts should pass through, to avoid duplicating the
     // update code
-    public void showAtOffset(int row, double pixelOffset)
+    public void showAtOffset(int row, double rowPixelOffset, int col, double colPixelOffset)
     {
-        // Shouldn't happen, but clamp row:
+        // Shouldn't happen, but clamp row and col:
         if (row < 0)
             row = 0;
-        this.firstVisibleRowOffset = pixelOffset;
+        if (col < 0)
+            col = 0;
+        this.firstVisibleRowOffset = rowPixelOffset;
         this.firstVisibleRowIndex = row;
+        this.firstVisibleColumnOffset = colPixelOffset;
+        this.firstVisibleColumnIndex = col;
         scrollDependents.forEach((grid, lock) -> {
+            int targetRow = grid.firstVisibleRowIndex;
+            int targetCol = grid.firstVisibleColumnIndex;
+            double targetRowOffset = grid.firstVisibleRowOffset;
+            double targetColOffset = grid.firstVisibleColumnOffset;
             if (lock.includesVertical())
             {
-                grid.showAtOffset(firstVisibleRowIndex, firstVisibleRowOffset);
+                targetRow = firstVisibleRowIndex;
+                targetRowOffset = firstVisibleRowOffset;
             }
+            
+            if (lock.includesHorizontal())
+            {
+                targetCol = firstVisibleColumnIndex;
+                targetColOffset = firstVisibleColumnOffset;
+            }
+            grid.showAtOffset(targetRow, targetRowOffset, targetCol, targetColOffset);
         });
         updateKnownRows();
         container.requestLayout();
@@ -214,6 +244,11 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         public boolean includesVertical()
         {
             return this == VERTICAL || this == BOTH;
+        }
+
+        public boolean includesHorizontal()
+        {
+            return this == HORIZONTAL || this == BOTH;
         }
     }
 

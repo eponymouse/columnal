@@ -553,11 +553,6 @@ public class StableView
         return heightEstimate;
     }
 
-    public void showTopAtOffset(int row, double pixelOffset)
-    {
-        grid.showAtOffset(row, pixelOffset);
-    }
-
     public void bindScroll(StableView scrollSrc, ScrollLock scrollLock)
     {
         grid.bindScroll(scrollSrc.grid, scrollLock);
