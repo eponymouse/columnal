@@ -4,6 +4,8 @@ import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.input.MouseEvent;
+import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
@@ -18,6 +20,7 @@ import utility.SimulationFunction;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -73,7 +76,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
     private @Nullable SimulationFunction<Integer, Boolean> isRowValid;
     private double[] columnWidths;
 
-    private final ObjectProperty<@Nullable Pair<Integer, Integer>> focusedCell = new SimpleObjectProperty<>(null);
+    private final ObjectProperty<@Nullable CellPosition> focusedCell = new SimpleObjectProperty<>(null);
 
     private final ValueLoadSave loadSave;
 
@@ -95,7 +98,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         container = new Container();
     }
 
-    public ObjectExpression<@Nullable Pair<Integer, Integer>> focusedCellProperty()
+    public ObjectExpression<@Nullable CellPosition> focusedCellProperty()
     {
         return focusedCell;
     }
@@ -165,9 +168,14 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
     }
 
     // Focuses cell so that you can navigate around with keyboard
-    public void focusCell(int rowIndex, int columnIndex)
+    public void focusCell(CellPosition cellPosition)
     {
-        // TODO
+        visibleCells.forEach((visPos, visCell) -> {
+            FXUtility.setPseudoclass(visCell, "focused-cell", visPos.equals(cellPosition));
+
+        });
+        focusedCell.set(cellPosition);
+        container.requestFocus();
     }
 
     // Edits cell so that you can start typing content
@@ -292,6 +300,28 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
             cell.resetContent(editorKit);
     }
 
+    private @Nullable CellPosition getCellPositionAt(double x, double y)
+    {
+        int rowIndex;
+        int colIndex;
+        x -= firstVisibleColumnOffset;
+        for (colIndex = firstVisibleColumnIndex; colIndex < columnWidths.length; colIndex++)
+        {
+            x -= columnWidths[colIndex];
+            if (x < 0.0)
+            {
+                break;
+            }
+        }
+        if (x > 0.0)
+            return null;
+        y -= firstVisibleRowOffset;
+        rowIndex = (int)Math.floor(y / (rowHeight + GAP)) + firstVisibleRowIndex;
+        if (rowIndex >= currentKnownRows)
+            return null;
+        return new CellPosition(rowIndex, colIndex);
+    }
+
     public Region getNode()
     {
         return container;
@@ -300,6 +330,28 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
     @OnThread(Tag.FXPlatform)
     private class Container extends Region
     {
+        public Container()
+        {
+            getStyleClass().add("virt-grid");
+
+            addEventFilter(MouseEvent.MOUSE_CLICKED, clickEvent -> {
+                if (clickEvent.getClickCount() == 1)
+                {
+                    @Nullable CellPosition cellPosition = getCellPositionAt(clickEvent.getX(), clickEvent.getY());
+                    if (cellPosition != null)
+                        focusCell(cellPosition);
+                }
+                clickEvent.consume();
+            });
+
+            // Filter because we want to steal it from the cells themselves:
+            addEventFilter(ScrollEvent.ANY, scrollEvent -> {
+                scrollXBy(-scrollEvent.getDeltaX());
+                scrollYBy(-scrollEvent.getDeltaY());
+                scrollEvent.consume();
+            });
+        }
+
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected double computePrefWidth(double height)
@@ -364,11 +416,12 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
                         if (!spareCells.isEmpty())
                         {
                             cell = spareCells.remove(spareCells.size() - 1);
+                            // Reset state:
+                            FXUtility.setPseudoclass(cell, "focused-cell", false);
                         }
                         else
                         {
-                            cell = new StructuredTextField(() -> focusCell(cellPosition.rowIndex, cellPosition
-                                    .columnIndex));
+                            cell = new StructuredTextField(() -> focusCell(cellPosition));
                             getChildren().add(cell);
                         }
 
@@ -397,12 +450,12 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         }
     }
 
-    private static class CellPosition
+    public static class CellPosition
     {
         public final int rowIndex;
         public final int columnIndex;
 
-        private CellPosition(int rowIndex, int columnIndex)
+        public CellPosition(int rowIndex, int columnIndex)
         {
             this.rowIndex = rowIndex;
             this.columnIndex = columnIndex;

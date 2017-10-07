@@ -54,6 +54,7 @@ import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
 import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import records.gui.stable.VirtScrollStrTextGrid.ValueLoadSave;
 import threadchecker.OnThread;
@@ -511,7 +512,7 @@ public class StableView
     }
 
     // Column Index, Row Index
-    public ObjectExpression<@Nullable Pair<Integer, Integer>> focusedCellProperty()
+    public ObjectExpression<@Nullable CellPosition> focusedCellProperty()
     {
         return grid.focusedCellProperty();
     }
@@ -652,7 +653,7 @@ public class StableView
                     FXUtility.setPseudoclass(pane, "focused-cell", focus);
                     markFocusCross(columnIndexFinal, curRowIndex, focus);
                     if (focus)
-                        grid.focusCell(columnIndexFinal, curRowIndex);
+                        grid.focusCell(new CellPosition(curRowIndex, columnIndexFinal));
                 });
                 FXUtility.forcePrefSize(pane);
                 pane.prefWidthProperty().bind(columnSizes.get(columnIndex));

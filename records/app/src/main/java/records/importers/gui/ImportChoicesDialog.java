@@ -195,8 +195,8 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
 
 
         setOnShown(e -> {
-            initModality(Modality.NONE); // For scenic view
-            org.scenicview.ScenicView.show(getDialogPane().getScene());
+            //initModality(Modality.NONE); // For scenic view
+            //org.scenicview.ScenicView.show(getDialogPane().getScene());
 
             // Have to use runAfter because the OK button gets focused
             // so we have to wait, then steal the focus back:

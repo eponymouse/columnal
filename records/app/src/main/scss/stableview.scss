@@ -91,10 +91,12 @@ $stable-view-header-border: hsb(0, 0%, 40%);
 }
 
 /* focused-cell means the cell wrapper has focus (cell selected) */
-.stable-view-row-cell:focused-cell {
-    -fx-background-color: $focus-color;
-    & .structured-text-field .text {
-        -fx-fill: $focus-color-text;
+.virt-grid:focused {
+    & .structured-text-field:focused-cell {
+        -fx-background-color: $focus-color;
+        & .text {
+            -fx-fill: $focus-color-text;
+        }
     }
 }
 /* editing-cell means the cell inside the wrapper has focus (cell being edited) */

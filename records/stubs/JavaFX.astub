@@ -39,6 +39,8 @@ class Node
     ObservableList<String> getStyleClass() @UnknownInitialization;
     @Pure @Nullable Scene getScene() @UnknownInitialization;
 
+    void addEventFilter(EventType t, EventHandler handler) @UnknownInitialization;
+    void addEventHandler(EventType t, EventHandler handler) @UnknownInitialization;
     void setOnMousePressed(EventHandler<? super MouseEvent> value) @UnknownInitialization;
     void setOnMouseReleased(EventHandler<? super MouseEvent> value) @UnknownInitialization;
     void setOnMouseClicked(EventHandler<? super MouseEvent> value) @UnknownInitialization;

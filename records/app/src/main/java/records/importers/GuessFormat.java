@@ -37,6 +37,7 @@ import records.error.UserException;
 import records.gui.TableDisplayUtility;
 import records.gui.stable.StableView.ColumnHandler;
 import records.gui.stable.EditorKitCallback;
+import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
 import records.importers.ChoicePoint.Choice;
 import records.importers.ChoicePoint.ChoiceType;
 import records.importers.ChoicePoint.Options;
@@ -758,7 +759,7 @@ public class GuessFormat
         }
     }
 
-    private static class GUI_Items implements ChangeListener<Pair<Integer, Integer>>
+    private static class GUI_Items implements ChangeListener<@Nullable CellPosition>
     {
         public final StyleClassedTextArea textArea;
         public final StableView tableView;
@@ -799,19 +800,19 @@ public class GuessFormat
 
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public void changed(ObservableValue<? extends Pair<Integer, Integer>> prop, Pair<Integer, Integer> oldFocus, Pair<Integer, Integer> newFocus)
+        public void changed(ObservableValue<? extends @Nullable CellPosition> prop, @Nullable CellPosition oldFocus, @Nullable CellPosition newFocus)
         {
             if (oldFocus != null)
             {
-                int usedIndex = (oldFocus.getSecond()*tableView.getColumnCount() + oldFocus.getFirst()) * 2;
+                int usedIndex = (oldFocus.rowIndex*tableView.getColumnCount() + oldFocus.columnIndex) * 2;
                 if (usedRanges[usedIndex] != -1)
-                    overlayStyle(textArea, numHeaderRows, oldFocus.getSecond(), new IndexRange(usedRanges[usedIndex], usedRanges[usedIndex+1]), "selected-cell", (a, b) -> Sets.difference(a, b));
+                    overlayStyle(textArea, numHeaderRows, oldFocus.rowIndex, new IndexRange(usedRanges[usedIndex], usedRanges[usedIndex+1]), "selected-cell", (a, b) -> Sets.difference(a, b));
             }
             if (newFocus != null)
             {
-                int usedIndex = (newFocus.getSecond()*tableView.getColumnCount() + newFocus.getFirst()) * 2;
+                int usedIndex = (newFocus.rowIndex*tableView.getColumnCount() + newFocus.columnIndex) * 2;
                 if (usedRanges[usedIndex] != -1)
-                    overlayStyle(textArea, numHeaderRows, newFocus.getSecond(), new IndexRange(usedRanges[usedIndex], usedRanges[usedIndex+1]), "selected-cell", (a, b) -> Sets.union(a, b));
+                    overlayStyle(textArea, numHeaderRows, newFocus.rowIndex, new IndexRange(usedRanges[usedIndex], usedRanges[usedIndex+1]), "selected-cell", (a, b) -> Sets.union(a, b));
             }
         }
     }
