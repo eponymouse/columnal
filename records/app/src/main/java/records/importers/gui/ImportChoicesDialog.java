@@ -44,6 +44,7 @@ import records.gui.TableDisplayUtility;
 import records.gui.TableNameTextField;
 import records.gui.stable.StableView;
 import records.gui.stable.StableView.ColumnHandler;
+import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import records.importers.ChoicePoint;
 import records.importers.ChoicePoint.Choice;
 import records.importers.ChoicePoint.Options;
@@ -98,9 +99,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             tableView.forwardedScrollEvent(se);
             se.consume();
         });
-        FXUtility.addChangeListenerPlatformNN(tableView.topShowingCell(), p -> {
-            srcTableView.showTopAtOffset(p.getFirst(), p.getSecond());
-        });
+        srcTableView.bindScroll(tableView, ScrollLock.VERTICAL);
 
 
         LabelledGrid choices = new LabelledGrid();

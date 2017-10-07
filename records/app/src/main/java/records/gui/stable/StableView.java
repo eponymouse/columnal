@@ -54,6 +54,7 @@ import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import records.gui.stable.VirtScrollStrTextGrid.ValueLoadSave;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -148,7 +149,6 @@ public class StableView
     // Table will start in top left, so these should start as true:
     private boolean atTop = true;
     private boolean atLeft = true;
-    private final ObjectProperty<Pair<Integer, Double>> topShowingCellProperty = new SimpleObjectProperty<>(new Pair<>(0, 0.0));
 
     private @Nullable TableOperations operations;
     private final SimpleBooleanProperty nonEmptyProperty = new SimpleBooleanProperty(false);
@@ -375,16 +375,6 @@ public class StableView
         placeholder.setText(text);
     }
 
-    /**
-     * A pair with the row index and Y-offset of the top showing cell,
-     * listen to this if you want to act on scroll.
-     * @return
-     */
-    public ObjectExpression<Pair<Integer, Double>> topShowingCell()
-    {
-        return topShowingCellProperty;
-    }
-
     @EnsuresNonNullIf(expression = {"operations", "operations.appendRows"}, result=true)
     private boolean isAppendRow(int index)
     {
@@ -566,6 +556,11 @@ public class StableView
     public void showTopAtOffset(int row, double pixelOffset)
     {
         grid.showAtOffset(row, pixelOffset);
+    }
+
+    public void bindScroll(StableView scrollSrc, ScrollLock scrollLock)
+    {
+        grid.bindScroll(scrollSrc.grid, scrollLock);
     }
 
     private class HeaderItem extends Label

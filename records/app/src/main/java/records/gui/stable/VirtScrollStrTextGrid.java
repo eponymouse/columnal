@@ -22,6 +22,7 @@ import utility.Workers.Priority;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -75,6 +76,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
     private final ValueLoadSave loadSave;
 
     private final Container container;
+    private final Map<VirtScrollStrTextGrid, ScrollLock> scrollDependents = new IdentityHashMap<>();
 
     public VirtScrollStrTextGrid(ValueLoadSave loadSave)
     {
@@ -108,10 +110,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         // General pattern: divide by rowHeight and round down to get topCell
         // Then offset is topCell*rowHeight - y
         int topCell = (int)Math.floor(y / rowHeight);
-        this.firstVisibleRowIndex = topCell;
-        this.firstVisibleRowOffset = (topCell * rowHeight) - y;
-        updateKnownRows();
-        container.requestLayout();
+        showAtOffset(topCell, (topCell * rowHeight) - y);
     }
 
     private void updateKnownRows()
@@ -180,6 +179,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         scrollYToPixel(firstVisibleRowIndex * rowHeight - firstVisibleRowOffset + y);
     }
 
+    // This is the canonical scroll method which all scroll
+    // attempts should pass through, to avoid duplicating the
+    // update code
     public void showAtOffset(int row, double pixelOffset)
     {
         // Shouldn't happen, but clamp row:
@@ -187,8 +189,32 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
             row = 0;
         this.firstVisibleRowOffset = pixelOffset;
         this.firstVisibleRowIndex = row;
+        scrollDependents.forEach((grid, lock) -> {
+            if (lock.includesVertical())
+            {
+                grid.showAtOffset(firstVisibleRowIndex, firstVisibleRowOffset);
+            }
+        });
         updateKnownRows();
         container.requestLayout();
+    }
+
+    public void bindScroll(VirtScrollStrTextGrid src, ScrollLock lock)
+    {
+        src.scrollDependents.put(this, lock);
+        if (lock.includesVertical())
+            scrollYToPixel(src.firstVisibleRowIndex * src.rowHeight + src.firstVisibleColumnOffset);
+        // TODO support horizontal too
+    }
+
+    public static enum ScrollLock
+    {
+        HORIZONTAL, VERTICAL, BOTH;
+
+        public boolean includesVertical()
+        {
+            return this == VERTICAL || this == BOTH;
+        }
     }
 
     public static interface ValueLoadSave
