@@ -208,9 +208,21 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
     }
 
     // This scrolls just the layout, without smooth scrolling
-    private void scrollLayoutYBy(double y)
+    // Returns the amount that we actually scrolled by, which will either
+    // be given parameter, or otherwise it will have been clamped because we tried
+    // to scroll at the very top or very bottom
+    private double scrollLayoutYBy(double y)
     {
-        scrollYToPixel(firstVisibleRowIndex * (rowHeight + GAP) - firstVisibleRowOffset + y);
+        double prevScroll = getCurrentScrollY();
+        scrollYToPixel(prevScroll + y);
+        return getCurrentScrollY() - prevScroll;
+    }
+
+    // Gets current scroll Y, where 0 is scrolled all the way to the top,
+    // rowHeight+GAP means top of first row showing, etc
+    private double getCurrentScrollY()
+    {
+        return firstVisibleRowIndex * (rowHeight + GAP) - firstVisibleRowOffset;
     }
 
     // This is the canonical scroll method which all scroll
@@ -218,9 +230,12 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
     // update code
     public void showAtOffset(int row, double rowPixelOffset, int col, double colPixelOffset)
     {
-        // Shouldn't happen, but clamp row and col:
-        if (row < 0)
+        if (row <= 0)
+        {
             row = 0;
+            // Can't scroll above top of first item:
+            rowPixelOffset = 0.0;
+        }
         if (col < 0)
             col = 0;
         this.firstVisibleRowOffset = rowPixelOffset;
@@ -354,7 +369,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
     private double scrollOffset;
     // Scroll offset at scrollStartNanos
     private double scrollStartOffset;
-    private static final long SCROLL_TIME_NANOS = 300_000_000;
+    private static final long SCROLL_TIME_NANOS = 300_000_000L;
 
     public void smoothScroll(ScrollEvent scrollEvent)
     {
@@ -391,14 +406,14 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         // We subtract from current offset, because we may already be mid-scroll in which
         // case we don't want to jump, just want to add on (we will go faster to cover this
         // because scroll will be same duration but longer):
-        scrollOffset -= scrollEvent.getDeltaY();
+        scrollOffset += scrollLayoutYBy(-scrollEvent.getDeltaY());
         scrollStartOffset = scrollOffset;
         extraRows.set((int)Math.ceil(Math.abs(scrollOffset) / (rowHeight + GAP)));
-        scrollLayoutYBy(-scrollEvent.getDeltaY());
         container.setTranslateY(scrollOffset);
 
         // Start the smooth scrolling animation:
-        scroller.start();
+        if (scrollOffset != 0.0)
+            scroller.start();
     }
 
     @OnThread(Tag.FXPlatform)
@@ -474,7 +489,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
                 }
             }
 
-            y = firstVisibleRowOffset - Math.min(extraRows.get(), firstVisibleRowIndex) * rowHeight;
+            y = firstVisibleRowOffset - Math.min(extraRows.get(), firstVisibleRowIndex) * (rowHeight + GAP);
             for (int rowIndex = Math.max(0, firstVisibleRowIndex - extraRows.get()); rowIndex < Math.min(currentKnownRows, firstVisibleRowIndex + newNumVisibleRows + 2 * extraRows.get()); rowIndex++)
             {
                 x = firstVisibleColumnOffset;
