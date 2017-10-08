@@ -119,7 +119,7 @@ import java.util.stream.Collectors;
 public class StableView
 {
     protected final ObservableList<@Nullable Void> items;
-    private final VirtualFlow<@Nullable Void, LineNumber> lineNumbers;
+    private final VirtRowLabels lineNumbers;
     private final HBox headerItemsContainer;
     private final VirtScrollStrTextGrid grid;
     private final Label placeholder;
@@ -185,14 +185,8 @@ public class StableView
         */
         hbar = new ScrollBar();
         vbar = new ScrollBar();
-        lineNumbers = VirtualFlow.createVertical(items, x -> new LineNumber());
-        // Need to prevent independent scrolling on the line numbers.
-        // Instead we forward the scroll to the whole table:
-        lineNumbers.addEventFilter(ScrollEvent.SCROLL, e -> {
-            FXUtility.mouse(this).forwardedScrollEvent(e);
-            e.consume();
-        });
-        final BorderPane lineNumberWrapper = new BorderPane(lineNumbers);
+        lineNumbers = grid.makeLineNumbers(rowIndex -> Utility.mapList(FXUtility.mouse(this).getRowOperationsForSingleRow(rowIndex), RowOperation::makeMenuItem));
+        final BorderPane lineNumberWrapper = new BorderPane(lineNumbers.getNode());
         lineNumberWrapper.setPickOnBounds(false);
         lineNumberWrapper.getStyleClass().add("stable-view-side");
         lineNumberWrapper.visibleProperty().bind(nonEmptyProperty);
@@ -259,8 +253,8 @@ public class StableView
         header.setClip(headerClip);
 
         Rectangle sideClip = new Rectangle();
-        sideClip.widthProperty().bind(lineNumbers.widthProperty().add(10.0));
-        sideClip.heightProperty().bind(lineNumbers.heightProperty());
+        sideClip.widthProperty().bind(lineNumbers.getNode().widthProperty().add(10.0));
+        sideClip.heightProperty().bind(lineNumbers.getNode().heightProperty());
         lineNumberWrapper.setClip(sideClip);
 
         // CSS doesn't let us have different width to height, which we need to prevent
@@ -324,8 +318,8 @@ public class StableView
 
         columnSizeTotal = new DeepListBinding<Number, Double>(columnSizes, ds -> ds.stream().mapToDouble(Number::doubleValue).sum());
         widthEstimate = new SimpleDoubleProperty();
-        FXUtility.addChangeListenerPlatformNN(columnSizeTotal, d -> widthEstimate.set(columnSizeTotal.getValue() + lineNumbers.getWidth()));
-        FXUtility.addChangeListenerPlatformNN(lineNumbers.widthProperty(), d -> widthEstimate.set(columnSizeTotal.getValue() + lineNumbers.getWidth()));
+        FXUtility.addChangeListenerPlatformNN(columnSizeTotal, d -> widthEstimate.set(columnSizeTotal.getValue() + lineNumbers.getNode().getWidth()));
+        FXUtility.addChangeListenerPlatformNN(lineNumbers.getNode().widthProperty(), d -> widthEstimate.set(columnSizeTotal.getValue() + lineNumbers.getNode().getWidth()));
         heightEstimate = Val.combine(/*virtualFlow.totalHeightEstimateProperty()*/headerItemsContainer.heightProperty(), headerItemsContainer.heightProperty(), (x, y) -> x.doubleValue() + y.doubleValue());
     }
 
@@ -851,55 +845,6 @@ public class StableView
 
         // Is this column value currently being edited?
         //public boolean editHasFocus(int rowIndex);
-    }
-
-    @OnThread(Tag.FXPlatform)
-    private class LineNumber implements Cell<@Nullable Void, Node>
-    {
-        private final Label label = new Label();
-        private final Pane labelWrapper = new StackPane(label);
-        private int curRowIndex;
-
-        public LineNumber()
-        {
-            FXUtility.forcePrefSize(labelWrapper);
-            labelWrapper.getStyleClass().add("stable-view-row-number");
-            labelWrapper.setOnContextMenuRequested(e -> {
-                ContextMenu menu = new ContextMenu();
-                menu.getItems().addAll(Utility.mapList(getRowOperationsForSingleRow(curRowIndex), RowOperation::makeMenuItem));
-                menu.show(labelWrapper, e.getScreenX(), e.getScreenY());
-            });
-        }
-
-        @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public boolean isReusable()
-        {
-            return true;
-        }
-
-        @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public void updateIndex(int index)
-        {
-            curRowIndex = index;
-            label.setText(isAppendRow(index) ? "" : Integer.toString(index));
-        }
-
-        @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public Node getNode()
-        {
-            return labelWrapper;
-        }
-
-        // You have to override this to avoid the UnsupportedOperationException
-        @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public void updateItem(@Nullable Void item)
-        {
-            // Everything is actually done in updateIndex
-        }
     }
 
     private List<RowOperation> getRowOperationsForSingleRow(int rowIndex)

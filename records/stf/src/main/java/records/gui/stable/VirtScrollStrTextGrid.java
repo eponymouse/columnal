@@ -8,6 +8,7 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
@@ -20,6 +21,7 @@ import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -32,6 +34,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -49,8 +52,9 @@ import java.util.Map.Entry;
 @OnThread(Tag.FXPlatform)
 public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 {
-    private static final double GAP = 1;
-    public static final int MAX_EXTRA_ROW_COLS = 12;
+    // Package visible to let sidebars access it
+    static final double GAP = 1;
+    static final int MAX_EXTRA_ROW_COLS = 12;
 
     // Cells which are visible, organised as a 2D array
     // (inner is a row, outer is list of rows)
@@ -63,16 +67,13 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private int visibleRowCount;
     private int visibleColumnCount;
 
-    // TODO: could try to use translate to make scrolling faster?
-
-    // TODO add another sidestrip class for virtualizing row/column headers (line numbers and column names), then add listener to do the updating.
-
     // Cells which are spare: they are still members of the
     // parent pane to avoid costs of removing and re-adding,
     // but they are held at an off-screen position.
     private final ArrayList<StructuredTextField> spareCells;
 
-    private double rowHeight;
+    // Package visible to let sidebars access it
+    final double rowHeight;
     // This is a minimum number of rows known to be in the table:
     @OnThread(Tag.FXPlatform)
     private int currentKnownRows = 0;
@@ -86,9 +87,10 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     private final ValueLoadSave loadSave;
 
-    private final Container container;
-    // The items which are dependent on us:
-    private final Map<ScrollBindable, ScrollLock> scrollDependents = new IdentityHashMap<>();
+    // Package visible to let sidebars access it
+    final Container container;
+    // The items which are dependent on us.  Package-visible to allow sidebars to access it
+    final Map<ScrollBindable, ScrollLock> scrollDependents = new IdentityHashMap<>();
     // How many extra rows to show off-screen each side, to account for scrolling (when actual display can lag logical display):
     private final IntegerProperty extraRows = new SimpleIntegerProperty(0);
 
@@ -280,7 +282,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         container.requestLayout();
     }
 
-    // Binds the sc
+    // Binds this item's scroll to src, so that when src changes, this does too.
     public void bindScroll(VirtScrollStrTextGrid src, ScrollLock lock)
     {
         // We actually keep track in src of dependents, not in dest of things we depend on
@@ -292,6 +294,17 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             extraRows.bind(src.extraRows);
         }
         // TODO support horizontal too
+    }
+
+    // Various package-visible items used by sidebars:
+    int getFirstVisibleRowIndex() { return firstVisibleRowIndex; }
+    double getfirstVisibleRowOffset() { return firstVisibleRowOffset; }
+    int getCurrentKnownRows() { return currentKnownRows; }
+    int getExtraRows() { return extraRows.get(); }
+
+    public VirtRowLabels makeLineNumbers(FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems)
+    {
+        return new VirtRowLabels(this, makeContextMenuItems);
     }
 
     public static enum ScrollLock
@@ -438,8 +451,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             scroller.start();
     }
 
+    // Package-visible to allow sidebars access
     @OnThread(Tag.FXPlatform)
-    private class Container extends Region
+    class Container extends Region
     {
         public Container()
         {
@@ -536,7 +550,6 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                         }
 
                         visibleCells.put(cellPosition, cell);
-                        StructuredTextField newCellFinal = cell;
                         // Blank then queue fetch:
                         cell.resetContent(new EditorKitSimpleLabel<>("Loading..."));
                         loadSave.fetchEditorKit(rowIndex, columnIndex, VirtScrollStrTextGrid.this);
@@ -551,7 +564,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             int maxSpareCells = MAX_EXTRA_ROW_COLS * Math.max(newNumVisibleCols, newNumVisibleRows);
 
             while (spareCells.size() > maxSpareCells)
-                container.getChildren().remove(spareCells.remove(spareCells.size() - 1));
+                getChildren().remove(spareCells.remove(spareCells.size() - 1));
 
             for (StructuredTextField spareCell : spareCells)
             {
