@@ -520,15 +520,9 @@ public class StableView
         return columns.size();
     }
 
-    public void scrollBy(double x, double y)
-    {
-        grid.scrollXBy(x);
-        grid.scrollYBy(y);
-    }
-
     public void forwardedScrollEvent(ScrollEvent se)
     {
-        scrollBy(-se.getDeltaX(), -se.getDeltaY());
+        grid.smoothScroll(se);
     }
 
     /**

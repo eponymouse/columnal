@@ -4,11 +4,14 @@ import javafx.animation.AnimationTimer;
 import javafx.animation.Interpolator;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 import records.error.UserException;
@@ -82,9 +85,10 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
     private final ValueLoadSave loadSave;
 
     private final Container container;
+    // The items which are dependent on us:
     private final Map<VirtScrollStrTextGrid, ScrollLock> scrollDependents = new IdentityHashMap<>();
     // How many extra rows to show off-screen each side, to account for scrolling (when actual display can lag logical display):
-    private int extraRows = 0;
+    private final IntegerProperty extraRows = new SimpleIntegerProperty(0);
 
     public VirtScrollStrTextGrid(ValueLoadSave loadSave)
     {
@@ -106,6 +110,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         return focusedCell;
     }
 
+    // Immediately scrolls with no animation
     public void scrollYToPixel(double y)
     {
         // Can't scroll to negative:
@@ -192,7 +197,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         return false; // TODO
     }
 
-    public void scrollXBy(double x)
+    // This scrolls just the layout, without smooth scrolling
+    private void scrollLayoutXBy(double x)
     {
         double currentX = 0;
         for (int col = 0; col < firstVisibleColumnIndex; col++)
@@ -201,7 +207,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         scrollXToPixel(currentX + x);
     }
 
-    public void scrollYBy(double y)
+    // This scrolls just the layout, without smooth scrolling
+    private void scrollLayoutYBy(double y)
     {
         scrollYToPixel(firstVisibleRowIndex * (rowHeight + GAP) - firstVisibleRowOffset + y);
     }
@@ -242,11 +249,17 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         container.requestLayout();
     }
 
+    // Binds the sc
     public void bindScroll(VirtScrollStrTextGrid src, ScrollLock lock)
     {
+        // We actually keep track in src of dependents, not in dest of things we depend on
         src.scrollDependents.put(this, lock);
         if (lock.includesVertical())
+        {
             scrollYToPixel(src.firstVisibleRowIndex * src.rowHeight + src.firstVisibleColumnOffset);
+            container.translateYProperty().bind(src.container.translateYProperty());
+            extraRows.bind(src.extraRows);
+        }
         // TODO support horizontal too
     }
 
@@ -330,20 +343,67 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         return container;
     }
 
+    // Smooth scrolling bits:
+
+    // AnimationTimer is run every frame, and so lets us do smooth scrolling:
+    private @MonotonicNonNull AnimationTimer scroller;
+    // Start time of current animation (scrolling again resets this) and target end time:
+    private long scrollStartNanos;
+    private long scrollEndNanos;
+    // Always heading towards zero:
+    private double scrollOffset;
+    // Scroll offset at scrollStartNanos
+    private double scrollStartOffset;
+    private static final long SCROLL_TIME_NANOS = 300_000_000;
+
+    public void smoothScroll(ScrollEvent scrollEvent)
+    {
+        if (scroller == null)
+        {
+            scroller = new AnimationTimer()
+            {
+                @Override
+                public void handle(long now)
+                {
+                    // If scroll end time in future, and our target scroll is more than 1/8th pixel away:
+                    if (scrollEndNanos > now && Math.abs(scrollOffset) > 0.125)
+                    {
+                        scrollOffset = Interpolator.EASE_BOTH.interpolate(scrollStartOffset, 0, (double)(now - scrollStartNanos) / (scrollEndNanos - scrollStartNanos));
+                        container.setTranslateY(scrollOffset);
+                    }
+                    else
+                    {
+                        container.setTranslateY(0.0);
+                        scrollOffset = 0.0;
+                        extraRows.set(0);
+                        stop();
+                    }
+                }
+            };
+        }
+
+        // Reset start and end time:
+        scrollStartNanos = System.nanoTime();
+        scrollEndNanos = scrollStartNanos + SCROLL_TIME_NANOS;
+
+        scrollLayoutXBy(-scrollEvent.getDeltaX());
+
+        // We subtract from current offset, because we may already be mid-scroll in which
+        // case we don't want to jump, just want to add on (we will go faster to cover this
+        // because scroll will be same duration but longer):
+        scrollOffset -= scrollEvent.getDeltaY();
+        scrollStartOffset = scrollOffset;
+        extraRows.set((int)Math.ceil(Math.abs(scrollOffset) / (rowHeight + GAP)));
+        scrollLayoutYBy(-scrollEvent.getDeltaY());
+        container.setTranslateY(scrollOffset);
+
+        // Start the smooth scrolling animation:
+        scroller.start();
+    }
+
     @OnThread(Tag.FXPlatform)
     private class Container extends Region
     {
-        // AnimationTimer is run every frame, and so lets us do smooth scrolling:
-        private final AnimationTimer scroller;
-        // Start time of current animation (scrolling again resets this) and target end time:
-        private long scrollStartNanos;
-        private long scrollEndNanos;
-        // Always heading towards zero:
-        private double scrollOffset;
-        // Scroll offset at scrollStartNanos
-        private double scrollStartOffset;
-        private final long SCROLL_TIME_NANOS = 300_000_000;
-
         public Container()
         {
             getStyleClass().add("virt-grid");
@@ -358,47 +418,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
                 clickEvent.consume();
             });
 
-            scroller = new AnimationTimer()
-            {
-                @Override
-                public void handle(long now)
-                {
-                    // If scroll end time in future, and our target scroll is more than 1/8th pixel away:
-                    if (scrollEndNanos > now && Math.abs(scrollOffset) > 0.125)
-                    {
-                        scrollOffset = Interpolator.EASE_BOTH.interpolate(scrollStartOffset, 0, (double)(now - scrollStartNanos) / (scrollEndNanos - scrollStartNanos));
-                        setTranslateY(scrollOffset);
-                    }
-                    else
-                    {
-                        setTranslateY(0.0);
-                        scrollOffset = 0.0;
-                        extraRows = 0;
-                        stop();
-                    }
-                }
-            };
-
             // Filter because we want to steal it from the cells themselves:
             addEventFilter(ScrollEvent.ANY, scrollEvent -> {
-                // Reset start and end time:
-                scrollStartNanos = System.nanoTime();
-                scrollEndNanos = scrollStartNanos + SCROLL_TIME_NANOS;
-
-                scrollXBy(-scrollEvent.getDeltaX());
-
-                // We subtract from current offset, because we may already be mid-scroll in which
-                // case we don't want to jump, just want to add on (we will go faster to cover this
-                // because scroll will be same duration but longer):
-                scrollOffset -= scrollEvent.getDeltaY();
-                scrollStartOffset = scrollOffset;
-                extraRows = (int)Math.ceil(Math.abs(scrollOffset) / (rowHeight + GAP));
-                scrollYBy(-scrollEvent.getDeltaY());
-                setTranslateY(scrollOffset);
-
-                // Start the smooth scrolling animation:
-                scroller.start();
-
+                smoothScroll(scrollEvent);
                 scrollEvent.consume();
             });
         }
@@ -441,8 +463,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
                 Entry<CellPosition, StructuredTextField> vis = iterator.next();
                 CellPosition pos = vis.getKey();
                 boolean shouldBeVisible =
-                    pos.rowIndex >= Math.max(0, firstVisibleRowIndex - extraRows) &&
-                    pos.rowIndex < Math.min(currentKnownRows, firstVisibleRowIndex + visibleRowCount + 2 * extraRows) &&
+                    pos.rowIndex >= Math.max(0, firstVisibleRowIndex - extraRows.get()) &&
+                    pos.rowIndex < Math.min(currentKnownRows, firstVisibleRowIndex + visibleRowCount + 2 * extraRows.get()) &&
                     pos.columnIndex >= firstVisibleColumnIndex &&
                     pos.columnIndex < firstVisibleColumnIndex + visibleColumnCount;
                 if (!shouldBeVisible)
@@ -452,8 +474,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
                 }
             }
 
-            y = firstVisibleRowOffset - Math.min(extraRows, firstVisibleRowIndex) * rowHeight;
-            for (int rowIndex = Math.max(0, firstVisibleRowIndex - extraRows); rowIndex < Math.min(currentKnownRows, firstVisibleRowIndex + newNumVisibleRows + 2 * extraRows); rowIndex++)
+            y = firstVisibleRowOffset - Math.min(extraRows.get(), firstVisibleRowIndex) * rowHeight;
+            for (int rowIndex = Math.max(0, firstVisibleRowIndex - extraRows.get()); rowIndex < Math.min(currentKnownRows, firstVisibleRowIndex + newNumVisibleRows + 2 * extraRows.get()); rowIndex++)
             {
                 x = firstVisibleColumnOffset;
                 // If we need it, add another visible column
