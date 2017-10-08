@@ -216,6 +216,8 @@ class Region
 
     double getWidth() @UnknownInitialization;
     double getHeight() @UnknownInitialization;
+
+    void setTranslateY(double y) @UnknownInitialization;
 }
 
 package javafx.stage;
