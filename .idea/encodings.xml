@@ -5,6 +5,8 @@
     <file url="file://$PROJECT_DIR$/records/anns" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/app" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/data" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/expressions" charset="UTF-8" />
+    <file url="file://$PROJECT_DIR$/records/functions" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/gui-utility" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/parsers" charset="UTF-8" />
     <file url="file://$PROJECT_DIR$/records/stf" charset="UTF-8" />

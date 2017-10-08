@@ -5,6 +5,8 @@
       <module fileurl="file://$PROJECT_DIR$/records/anns/anns.iml" filepath="$PROJECT_DIR$/records/anns/anns.iml" />
       <module fileurl="file://$PROJECT_DIR$/records/app/app.iml" filepath="$PROJECT_DIR$/records/app/app.iml" />
       <module fileurl="file://$PROJECT_DIR$/records/data/data.iml" filepath="$PROJECT_DIR$/records/data/data.iml" />
+      <module fileurl="file://$PROJECT_DIR$/records/expressions/expressions.iml" filepath="$PROJECT_DIR$/records/expressions/expressions.iml" />
+      <module fileurl="file://$PROJECT_DIR$/records/functions/functions.iml" filepath="$PROJECT_DIR$/records/functions/functions.iml" />
       <module fileurl="file://$PROJECT_DIR$/records/gui-utility/gui-utility.iml" filepath="$PROJECT_DIR$/records/gui-utility/gui-utility.iml" />
       <module fileurl="file://$PROJECT_DIR$/records/parsers/parsers.iml" filepath="$PROJECT_DIR$/records/parsers/parsers.iml" />
       <module fileurl="file://$PROJECT_DIR$/records/records.iml" filepath="$PROJECT_DIR$/records/records.iml" />

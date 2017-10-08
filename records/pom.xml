@@ -17,6 +17,8 @@
         <module>gui-utility</module>
         <module>data</module>
         <module>stf</module>
+        <module>expressions</module>
+        <module>functions</module>
     </modules>
 
     <dependencies>

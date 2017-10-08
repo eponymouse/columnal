@@ -24,6 +24,8 @@
     <orderEntry type="module" module-name="anns" />
     <orderEntry type="module" module-name="data" />
     <orderEntry type="module" module-name="stf" />
+    <orderEntry type="module" module-name="expressions" />
+    <orderEntry type="module" module-name="functions" />
     <orderEntry type="library" name="Maven: com.google.guava:guava:21.0" level="project" />
     <orderEntry type="library" name="Maven: com.google.code.findbugs:jsr305:3.0.2" level="project" />
     <orderEntry type="library" scope="PROVIDED" name="Maven: org.checkerframework:checker-qual:2.1.14" level="project" />

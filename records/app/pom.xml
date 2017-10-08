@@ -45,6 +45,11 @@
             <artifactId>stf</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>groupId</groupId>
+            <artifactId>expressions</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
 
         <!-- Guava must come before checker framework so
         that it takes precedence -->

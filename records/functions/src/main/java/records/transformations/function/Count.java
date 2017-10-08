@@ -7,8 +7,6 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.Expression;
-import records.transformations.expression.Expression._test_TypeVary;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -35,7 +33,7 @@ public class Count extends FunctionDefinition
     }
 
     @Override
-    public Pair<List<Unit>, Expression> _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
+    public <E> Pair<List<Unit>, E> _test_typeFailure(Random r, _test_TypeVary<E> newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {
         return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.getDifferentType(DataType.array()));
     }
