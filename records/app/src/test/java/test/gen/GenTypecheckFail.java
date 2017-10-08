@@ -173,6 +173,12 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                             }
                             throw new RuntimeException("Type predicate too hard to satisfy");
                         }
+
+                        @Override
+                        public Expression makeArrayExpression(ImmutableList<Expression> items)
+                        {
+                            return new ArrayExpression(items);
+                        }
                     }, DummyManager.INSTANCE.getUnitManager());
                     if (failedCopy == null)
                         return null;
