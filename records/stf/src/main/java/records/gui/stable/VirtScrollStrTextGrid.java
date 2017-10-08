@@ -49,6 +49,7 @@ import java.util.Map.Entry;
 public class VirtScrollStrTextGrid implements EditorKitCallback
 {
     private static final double GAP = 1;
+    public static final int MAX_EXTRA_ROW_COLS = 12;
 
     // Cells which are visible, organised as a 2D array
     // (inner is a row, outer is list of rows)
@@ -123,7 +124,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         // General pattern: divide by rowHeight and round down to get topCell
         // Then offset is topCell*rowHeight - y
         int topCell = (int)Math.floor(y / (rowHeight + GAP));
-        showAtOffset(topCell, (topCell * (rowHeight + GAP)) - y, firstVisibleColumnIndex, firstVisibleColumnOffset);
+        double rowPixelOffset = (topCell * (rowHeight + GAP)) - y;
+        showAtOffset(topCell, rowPixelOffset, firstVisibleColumnIndex, firstVisibleColumnOffset);
     }
 
     private void updateKnownRows()
@@ -235,6 +237,12 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
             row = 0;
             // Can't scroll above top of first item:
             rowPixelOffset = 0.0;
+        }
+        else if (row >= currentKnownRows - 1)
+        {
+            // Can't scroll beyond showing the last cell at the top of the window:
+            row = currentKnownRows - 1;
+            rowPixelOffset = 0;
         }
         if (col < 0)
             col = 0;
@@ -384,7 +392,6 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
                     if (scrollEndNanos > now && Math.abs(scrollOffset) > 0.125)
                     {
                         scrollOffset = Interpolator.EASE_BOTH.interpolate(scrollStartOffset, 0, (double)(now - scrollStartNanos) / (scrollEndNanos - scrollStartNanos));
-                        System.err.println("" + scrollOffset + " " + now % 100_000_000_000L + " extra: " + extraRows.get());
                         container.setTranslateY(scrollOffset);
                     }
                     else
@@ -409,7 +416,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         // because scroll will be same duration but longer):
         scrollOffset += scrollLayoutYBy(-scrollEvent.getDeltaY());
         // Don't let offset get too large or we will need too many extra rows:
-        if (Math.abs(scrollOffset) > 8 * (rowHeight + GAP))
+        if (Math.abs(scrollOffset) > MAX_EXTRA_ROW_COLS * (rowHeight + GAP))
         {
             // Jump to the destination:
             scrollOffset = 0;
@@ -533,7 +540,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
             }
 
             // Don't let spare cells be more than two visible rows or columns:
-            int maxSpareCells = 2 * Math.max(newNumVisibleCols * 2, newNumVisibleRows * 2);
+            int maxSpareCells = MAX_EXTRA_ROW_COLS * Math.max(newNumVisibleCols, newNumVisibleRows);
 
             while (spareCells.size() > maxSpareCells)
                 container.getChildren().remove(spareCells.remove(spareCells.size() - 1));
