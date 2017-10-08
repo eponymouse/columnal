@@ -384,6 +384,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
                     if (scrollEndNanos > now && Math.abs(scrollOffset) > 0.125)
                     {
                         scrollOffset = Interpolator.EASE_BOTH.interpolate(scrollStartOffset, 0, (double)(now - scrollStartNanos) / (scrollEndNanos - scrollStartNanos));
+                        System.err.println("" + scrollOffset + " " + now % 100_000_000_000L + " extra: " + extraRows.get());
                         container.setTranslateY(scrollOffset);
                     }
                     else
@@ -407,6 +408,12 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         // case we don't want to jump, just want to add on (we will go faster to cover this
         // because scroll will be same duration but longer):
         scrollOffset += scrollLayoutYBy(-scrollEvent.getDeltaY());
+        // Don't let offset get too large or we will need too many extra rows:
+        if (Math.abs(scrollOffset) > 8 * (rowHeight + GAP))
+        {
+            // Jump to the destination:
+            scrollOffset = 0;
+        }
         scrollStartOffset = scrollOffset;
         extraRows.set((int)Math.ceil(Math.abs(scrollOffset) / (rowHeight + GAP)));
         container.setTranslateY(scrollOffset);
