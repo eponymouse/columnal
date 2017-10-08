@@ -20,6 +20,7 @@ import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Workers;
@@ -46,7 +47,7 @@ import java.util.Map.Entry;
  *    have same height throughout the grid.
  */
 @OnThread(Tag.FXPlatform)
-public class VirtScrollStrTextGrid implements EditorKitCallback
+public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 {
     private static final double GAP = 1;
     public static final int MAX_EXTRA_ROW_COLS = 12;
@@ -87,7 +88,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
 
     private final Container container;
     // The items which are dependent on us:
-    private final Map<VirtScrollStrTextGrid, ScrollLock> scrollDependents = new IdentityHashMap<>();
+    private final Map<ScrollBindable, ScrollLock> scrollDependents = new IdentityHashMap<>();
     // How many extra rows to show off-screen each side, to account for scrolling (when actual display can lag logical display):
     private final IntegerProperty extraRows = new SimpleIntegerProperty(0);
 
@@ -125,7 +126,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
         // Then offset is topCell*rowHeight - y
         int topCell = (int)Math.floor(y / (rowHeight + GAP));
         double rowPixelOffset = (topCell * (rowHeight + GAP)) - y;
-        showAtOffset(topCell, rowPixelOffset, firstVisibleColumnIndex, firstVisibleColumnOffset);
+        showAtOffset(new Pair<>(topCell, rowPixelOffset), null);
     }
 
     private void updateKnownRows()
@@ -170,7 +171,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
             if (x < columnWidths[col])
             {
                 // Stop here:
-                showAtOffset(firstVisibleRowIndex, firstVisibleRowOffset, col, -x);
+                showAtOffset(null, new Pair<>(col, -x));
                 break;
             }
             x -= columnWidths[col] + GAP;
@@ -230,43 +231,50 @@ public class VirtScrollStrTextGrid implements EditorKitCallback
     // This is the canonical scroll method which all scroll
     // attempts should pass through, to avoid duplicating the
     // update code
-    public void showAtOffset(int row, double rowPixelOffset, int col, double colPixelOffset)
+    @Override
+    public void showAtOffset(@Nullable Pair<Integer, Double> rowAndPixelOffset, @Nullable Pair<Integer, Double> colAndPixelOffset)
     {
-        if (row <= 0)
+        if (rowAndPixelOffset != null)
         {
-            row = 0;
-            // Can't scroll above top of first item:
-            rowPixelOffset = 0.0;
+            int row = rowAndPixelOffset.getFirst();
+            double rowPixelOffset = rowAndPixelOffset.getSecond();
+            if (row <= 0)
+            {
+                row = 0;
+                // Can't scroll above top of first item:
+                rowPixelOffset = 0.0;
+            }
+            else if (row >= currentKnownRows - 1)
+            {
+                // Can't scroll beyond showing the last cell at the top of the window:
+                row = currentKnownRows - 1;
+                rowPixelOffset = 0;
+            }
+            this.firstVisibleRowOffset = rowPixelOffset;
+            this.firstVisibleRowIndex = row;
         }
-        else if (row >= currentKnownRows - 1)
+        if (colAndPixelOffset != null)
         {
-            // Can't scroll beyond showing the last cell at the top of the window:
-            row = currentKnownRows - 1;
-            rowPixelOffset = 0;
+            int col = colAndPixelOffset.getFirst();
+            if (col < 0)
+                col = 0;
+
+            this.firstVisibleColumnOffset = colAndPixelOffset.getSecond();
+            this.firstVisibleColumnIndex = col;
         }
-        if (col < 0)
-            col = 0;
-        this.firstVisibleRowOffset = rowPixelOffset;
-        this.firstVisibleRowIndex = row;
-        this.firstVisibleColumnOffset = colPixelOffset;
-        this.firstVisibleColumnIndex = col;
         scrollDependents.forEach((grid, lock) -> {
-            int targetRow = grid.firstVisibleRowIndex;
-            int targetCol = grid.firstVisibleColumnIndex;
-            double targetRowOffset = grid.firstVisibleRowOffset;
-            double targetColOffset = grid.firstVisibleColumnOffset;
+            @Nullable Pair<Integer, Double> targetRow = null;
+            @Nullable Pair<Integer, Double> targetCol = null;
             if (lock.includesVertical())
             {
-                targetRow = firstVisibleRowIndex;
-                targetRowOffset = firstVisibleRowOffset;
+                targetRow = new Pair<>(firstVisibleRowIndex, firstVisibleRowOffset);
             }
             
             if (lock.includesHorizontal())
             {
-                targetCol = firstVisibleColumnIndex;
-                targetColOffset = firstVisibleColumnOffset;
+                targetCol = new Pair<>(firstVisibleColumnIndex, firstVisibleColumnOffset);
             }
-            grid.showAtOffset(targetRow, targetRowOffset, targetCol, targetColOffset);
+            grid.showAtOffset(targetRow, targetCol);
         });
         updateKnownRows();
         container.requestLayout();
