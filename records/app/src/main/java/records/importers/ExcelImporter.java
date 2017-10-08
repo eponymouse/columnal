@@ -3,6 +3,7 @@ package records.importers;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.stage.Window;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
@@ -60,8 +61,7 @@ public class ExcelImporter implements Importer
     {
         try
         {
-            FileInputStream excelFile = new FileInputStream(src);
-            Workbook workbook = new XSSFWorkbook(excelFile);
+            Workbook workbook = new XSSFWorkbook(src);
             // TODO offer sheet list as import choice
             Sheet datatypeSheet = workbook.getSheetAt(0);
             Iterator<Row> iterator = datatypeSheet.iterator();
@@ -111,7 +111,7 @@ public class ExcelImporter implements Importer
                 }));
             }
         }
-        catch (IOException e)
+        catch (IOException | InvalidFormatException e)
         {
 
         }
