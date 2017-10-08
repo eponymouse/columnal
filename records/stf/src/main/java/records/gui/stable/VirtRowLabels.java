@@ -1,21 +1,16 @@
 package records.gui.stable;
 
-import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
 import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
-import records.gui.stf.EditorKitSimpleLabel;
-import records.gui.stf.StructuredTextField;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
 import utility.Pair;
-import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.ArrayList;
