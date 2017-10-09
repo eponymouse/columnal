@@ -42,7 +42,7 @@ public class VirtRowLabels implements ScrollBindable
         @SuppressWarnings("initialization")
         ScrollLock prev = grid.scrollDependents.put(this, ScrollLock.VERTICAL);
         this.firstVisibleRowIndex = grid.getFirstVisibleRowIndex();
-        this.firstVisibleRowOffset = grid.getfirstVisibleRowOffset();
+        this.firstVisibleRowOffset = grid.getFirstVisibleRowOffset();
         container.translateYProperty().bind(grid.container.translateYProperty());
     }
 
@@ -100,7 +100,7 @@ public class VirtRowLabels implements ScrollBindable
                 }
             }
 
-            double y = firstVisibleRowOffset - Math.min(grid.getExtraRows(), firstVisibleRowIndex) * (grid.rowHeight + grid.GAP);
+            double y = firstVisibleRowOffset - grid.getExtraRows() * (grid.rowHeight + grid.GAP);
             for (int rowIndex = Math.max(0, firstVisibleRowIndex - grid.getExtraRows()); rowIndex < Math.min(grid.getCurrentKnownRows(), firstVisibleRowIndex + visibleRows + 2 * grid.getExtraRows()); rowIndex++)
             {
                 Label cell = visibleCells.get(rowIndex);

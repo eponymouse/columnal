@@ -1,5 +1,6 @@
 package records.gui.stable;
 
+import com.google.common.collect.ImmutableList;
 import javafx.animation.AnimationTimer;
 import javafx.animation.Interpolator;
 import javafx.application.Platform;
@@ -8,6 +9,7 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.scene.Node;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -93,6 +95,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     final Map<ScrollBindable, ScrollLock> scrollDependents = new IdentityHashMap<>();
     // How many extra rows to show off-screen each side, to account for scrolling (when actual display can lag logical display):
     private final IntegerProperty extraRows = new SimpleIntegerProperty(0);
+    private final IntegerProperty extraCols = new SimpleIntegerProperty(0);
 
     public VirtScrollStrTextGrid(ValueLoadSave loadSave)
     {
@@ -205,11 +208,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // This scrolls just the layout, without smooth scrolling
     private void scrollLayoutXBy(double x)
     {
-        double currentX = 0;
-        for (int col = 0; col < firstVisibleColumnIndex; col++)
-            currentX += columnWidths[col] + GAP;
-        currentX -= firstVisibleColumnOffset;
-        scrollXToPixel(currentX + x);
+        scrollXToPixel(getCurrentScrollX() + x);
     }
 
     // This scrolls just the layout, without smooth scrolling
@@ -228,6 +227,15 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private double getCurrentScrollY()
     {
         return firstVisibleRowIndex * (rowHeight + GAP) - firstVisibleRowOffset;
+    }
+
+    private double getCurrentScrollX()
+    {
+        double currentX = 0;
+        for (int col = 0; col < firstVisibleColumnIndex; col++)
+            currentX += columnWidths[col] + GAP;
+        currentX -= firstVisibleColumnOffset;
+        return currentX;
     }
 
     // This is the canonical scroll method which all scroll
@@ -287,24 +295,41 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     {
         // We actually keep track in src of dependents, not in dest of things we depend on
         src.scrollDependents.put(this, lock);
+
         if (lock.includesVertical())
         {
-            scrollYToPixel(src.firstVisibleRowIndex * src.rowHeight + src.firstVisibleColumnOffset);
+            scrollYToPixel(src.getCurrentScrollY());
             container.translateYProperty().bind(src.container.translateYProperty());
             extraRows.bind(src.extraRows);
         }
-        // TODO support horizontal too
+
+        if (lock.includesHorizontal())
+        {
+            scrollXToPixel(src.getCurrentScrollX());
+            container.translateXProperty().bind(src.container.translateXProperty());
+            extraCols.bind(src.extraCols);
+        }
     }
 
     // Various package-visible items used by sidebars:
     int getFirstVisibleRowIndex() { return firstVisibleRowIndex; }
-    double getfirstVisibleRowOffset() { return firstVisibleRowOffset; }
+    double getFirstVisibleRowOffset() { return firstVisibleRowOffset; }
+    int getFirstVisibleColIndex() { return firstVisibleColumnIndex; }
+    double getFirstVisibleColOffset() { return firstVisibleColumnOffset; }
     int getCurrentKnownRows() { return currentKnownRows; }
     int getExtraRows() { return extraRows.get(); }
+    int getNumColumns() { return columnWidths.length; }
+    double getColumnWidth(int columnIndex) { return columnWidths[columnIndex]; }
+    int getExtraCols() { return extraCols.get(); }
 
     public VirtRowLabels makeLineNumbers(FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems)
     {
         return new VirtRowLabels(this, makeContextMenuItems);
+    }
+
+    public VirtColHeaders makeColumnHeaders(FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems, FXPlatformFunction<Integer, ImmutableList<Node>> getHeaderContent)
+    {
+        return new VirtColHeaders(this, makeContextMenuItems, getHeaderContent);
     }
 
     public static enum ScrollLock
@@ -330,7 +355,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     public void setData(SimulationFunction<Integer, Boolean> isRowValid, double[] columnWidths)
     {
-        // Snap to top:
+        // Snap to top left:
         firstVisibleRowIndex = 0;
         firstVisibleColumnIndex = 0;
         firstVisibleColumnOffset = 0;
@@ -395,9 +420,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private long scrollStartNanos;
     private long scrollEndNanos;
     // Always heading towards zero:
-    private double scrollOffset;
+    private double scrollOffsetY;
     // Scroll offset at scrollStartNanos
-    private double scrollStartOffset;
+    private double scrollStartOffsetY;
     private static final long SCROLL_TIME_NANOS = 300_000_000L;
 
     public void smoothScroll(ScrollEvent scrollEvent)
@@ -410,15 +435,15 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 public void handle(long now)
                 {
                     // If scroll end time in future, and our target scroll is more than 1/8th pixel away:
-                    if (scrollEndNanos > now && Math.abs(scrollOffset) > 0.125)
+                    if (scrollEndNanos > now && Math.abs(scrollOffsetY) > 0.125)
                     {
-                        scrollOffset = Interpolator.EASE_BOTH.interpolate(scrollStartOffset, 0, (double)(now - scrollStartNanos) / (scrollEndNanos - scrollStartNanos));
-                        container.setTranslateY(scrollOffset);
+                        scrollOffsetY = Interpolator.EASE_BOTH.interpolate(scrollStartOffsetY, 0, (double)(now - scrollStartNanos) / (scrollEndNanos - scrollStartNanos));
+                        container.setTranslateY(scrollOffsetY);
                     }
                     else
                     {
                         container.setTranslateY(0.0);
-                        scrollOffset = 0.0;
+                        scrollOffsetY = 0.0;
                         extraRows.set(0);
                         stop();
                     }
@@ -435,19 +460,19 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         // We subtract from current offset, because we may already be mid-scroll in which
         // case we don't want to jump, just want to add on (we will go faster to cover this
         // because scroll will be same duration but longer):
-        scrollOffset += scrollLayoutYBy(-scrollEvent.getDeltaY());
+        scrollOffsetY += scrollLayoutYBy(-scrollEvent.getDeltaY());
         // Don't let offset get too large or we will need too many extra rows:
-        if (Math.abs(scrollOffset) > MAX_EXTRA_ROW_COLS * (rowHeight + GAP))
+        if (Math.abs(scrollOffsetY) > MAX_EXTRA_ROW_COLS * (rowHeight + GAP))
         {
             // Jump to the destination:
-            scrollOffset = 0;
+            scrollOffsetY = 0;
         }
-        scrollStartOffset = scrollOffset;
-        extraRows.set((int)Math.ceil(Math.abs(scrollOffset) / (rowHeight + GAP)));
-        container.setTranslateY(scrollOffset);
+        scrollStartOffsetY = scrollOffsetY;
+        extraRows.set((int)Math.ceil(Math.abs(scrollOffsetY) / (rowHeight + GAP)));
+        container.setTranslateY(scrollOffsetY);
 
         // Start the smooth scrolling animation:
-        if (scrollOffset != 0.0)
+        if (scrollOffsetY != 0.0)
             scroller.start();
     }
 

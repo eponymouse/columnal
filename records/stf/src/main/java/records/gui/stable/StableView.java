@@ -1,5 +1,6 @@
 package records.gui.stable;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Doubles;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleExpression;
@@ -120,7 +121,7 @@ public class StableView
 {
     protected final ObservableList<@Nullable Void> items;
     private final VirtRowLabels lineNumbers;
-    private final HBox headerItemsContainer;
+    private final VirtColHeaders headerItemsContainer;
     private final VirtScrollStrTextGrid grid;
     private final Label placeholder;
     private final StackPane stackPane; // has grid and placeholder as its children
@@ -133,11 +134,11 @@ public class StableView
     @OnThread(Tag.FXPlatform)
     private AtomicInteger columnAndRowSet = new AtomicInteger(0);
     private final BooleanProperty showingRowNumbers = new SimpleBooleanProperty(true);
-    private final List<ColumnHandler> columns;
+    // Contents can't change, but whole list can:
+    private ImmutableList<Pair<String, ColumnHandler>> columns = ImmutableList.of();
     private final LiveList<DoubleProperty> columnSizes;
     private static final double EDGE_DRAG_TOLERANCE = 8;
     private static final double MIN_COLUMN_WIDTH = 30;
-    private final List<HeaderItem> headerItems = new ArrayList<>();
     // A column is only editable if it is marked editable AND the table is editable:
     private boolean tableEditable = true;
     private final ScrollBar hbar;
@@ -158,9 +159,6 @@ public class StableView
         // We could make a dummy list which keeps track of size, but doesn't
         // actually bother storing the nulls:
         items = FXCollections.observableArrayList();
-        headerItemsContainer = new HBox();
-        final Pane header = new Pane(headerItemsContainer);
-        header.getStyleClass().add("stable-view-header");
         grid = new VirtScrollStrTextGrid(new ValueLoadSave()
         {
             @Override
@@ -168,7 +166,7 @@ public class StableView
             {
                 if (columns != null && colIndex < columns.size())
                 {
-                    columns.get(colIndex).fetchValue(rowIndex, b -> {}, () -> {}, setEditorKit, -1, -1);
+                    columns.get(colIndex).getSecond().fetchValue(rowIndex, b -> {}, () -> {}, setEditorKit, -1, -1);
                 }
             }
         });
@@ -185,6 +183,9 @@ public class StableView
         */
         hbar = new ScrollBar();
         vbar = new ScrollBar();
+        headerItemsContainer = grid.makeColumnHeaders(n -> Collections.emptyList(), col -> ImmutableList.of(new Label(columns.get(col).getFirst())));
+        final Pane header = new Pane(headerItemsContainer.getNode());
+        header.getStyleClass().add("stable-view-header");
         lineNumbers = grid.makeLineNumbers(rowIndex -> Utility.mapList(FXUtility.mouse(this).getRowOperationsForSingleRow(rowIndex), RowOperation::makeMenuItem));
         final BorderPane lineNumberWrapper = new BorderPane(lineNumbers.getNode());
         lineNumberWrapper.setPickOnBounds(false);
@@ -244,7 +245,6 @@ public class StableView
         //headerItemsContainer.layoutXProperty().bind(virtualFlow.breadthOffsetProperty().map(d -> -d));
         placeholder.managedProperty().bind(placeholder.visibleProperty());
         stackPane.getStyleClass().add("stable-view");
-        columns = new ArrayList<>();
         columnSizes = new LiveArrayList<>();
 
         Rectangle headerClip = new Rectangle();
@@ -320,7 +320,7 @@ public class StableView
         widthEstimate = new SimpleDoubleProperty();
         FXUtility.addChangeListenerPlatformNN(columnSizeTotal, d -> widthEstimate.set(columnSizeTotal.getValue() + lineNumbers.getNode().getWidth()));
         FXUtility.addChangeListenerPlatformNN(lineNumbers.getNode().widthProperty(), d -> widthEstimate.set(columnSizeTotal.getValue() + lineNumbers.getNode().getWidth()));
-        heightEstimate = Val.combine(/*virtualFlow.totalHeightEstimateProperty()*/headerItemsContainer.heightProperty(), headerItemsContainer.heightProperty(), (x, y) -> x.doubleValue() + y.doubleValue());
+        heightEstimate = Val.combine(/*virtualFlow.totalHeightEstimateProperty()*/headerItemsContainer.getNode().heightProperty(), headerItemsContainer.getNode().heightProperty(), (x, y) -> x.doubleValue() + y.doubleValue());
     }
 
     public void scrollToTopLeft()
@@ -398,36 +398,25 @@ public class StableView
     public void clear(@Nullable TableOperations operations)
     {
         // Clears rows, too:
-        setColumnsAndRows(Collections.emptyList(), operations, i -> false);
+        setColumnsAndRows(ImmutableList.of(), operations, i -> false);
     }
 
     // If append is empty, can't append.  If it's present, can append, and run
     // this action after appending.
-    public void setColumnsAndRows(List<Pair<String, ColumnHandler>> columns, @Nullable TableOperations operations, SimulationFunction<Integer, Boolean> isRowValid)
+    public void setColumnsAndRows(ImmutableList<Pair<String, ColumnHandler>> columns, @Nullable TableOperations operations, SimulationFunction<Integer, Boolean> isRowValid)
     {
         final int curColumnAndRowSet = this.columnAndRowSet.incrementAndGet();
         this.operations = operations;
         // Important to clear the items, as we need to make new cells
         // which will have the updated number of columns
         items.clear();
-        this.columns.clear();
-        this.columns.addAll(Utility.mapList(columns, p -> p.getSecond()));
+        this.columns = columns;
         this.columnSizes.clear();
         for (int i = 0; i < columns.size(); i++)
         {
             columnSizes.add(new SimpleDoubleProperty(100.0));
             ColumnHandler colHandler = columns.get(i).getSecond();
             FXUtility.addChangeListenerPlatformNN(columnSizes.get(i), d -> colHandler.columnResized(d.doubleValue()));
-        }
-
-        headerItemsContainer.getChildren().clear();
-        headerItems.clear();
-        for (int i = 0; i < columns.size(); i++)
-        {
-            Pair<String, ColumnHandler> column = columns.get(i);
-            HeaderItem headerItem = new HeaderItem(column.getFirst(), i);
-            headerItemsContainer.getChildren().add(headerItem);
-            headerItems.add(headerItem);
         }
 
         nonEmptyProperty.set(!columns.isEmpty());
@@ -500,7 +489,7 @@ public class StableView
 
     public DoubleExpression topHeightProperty()
     {
-        return headerItemsContainer.heightProperty();
+        return headerItemsContainer.getNode().heightProperty();
     }
 
     // Column Index, Row Index
@@ -593,7 +582,8 @@ public class StableView
                     if (draggingLeftEdge)
                     {
                         // Have to adjust size of column to our left
-                        headerItems.get(itemIndex - 1).setRightEdgeToSceneX(e.getSceneX() - offsetFromEdge);
+                        // TODO
+                        //headerItems.get(itemIndex - 1).setRightEdgeToSceneX(e.getSceneX() - offsetFromEdge);
                     }
                     else
                     {
@@ -740,7 +730,7 @@ public class StableView
                     }
                     else
                     {
-                        ColumnHandler column = columns.get(columnIndex);
+                        ColumnHandler column = columns.get(columnIndex).getSecond();
                         int columnIndexFinal = columnIndex;
                         // TODO
                         /*

@@ -132,7 +132,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             }
             else
             {
-                tableView.setColumnsAndRows(Collections.emptyList(), null, i -> false);
+                tableView.setColumnsAndRows(ImmutableList.of(), null, i -> false);
             }
         });
         SimpleObjectProperty<@Nullable Choices> choicesProperty = new SimpleObjectProperty<>(null);
