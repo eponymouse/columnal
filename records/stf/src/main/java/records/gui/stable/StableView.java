@@ -184,7 +184,7 @@ public class StableView
         hbar = new ScrollBar();
         vbar = new ScrollBar();
         headerItemsContainer = grid.makeColumnHeaders(n -> Collections.emptyList(), col -> ImmutableList.of(new Label(columns.get(col).getFirst())));
-        final Pane header = new Pane(headerItemsContainer.getNode());
+        final Pane header = new BorderPane(headerItemsContainer.getNode());
         header.getStyleClass().add("stable-view-header");
         lineNumbers = grid.makeLineNumbers(rowIndex -> Utility.mapList(FXUtility.mouse(this).getRowOperationsForSingleRow(rowIndex), RowOperation::makeMenuItem));
         final BorderPane lineNumberWrapper = new BorderPane(lineNumbers.getNode());

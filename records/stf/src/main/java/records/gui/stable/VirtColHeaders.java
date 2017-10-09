@@ -45,7 +45,7 @@ public class VirtColHeaders implements ScrollBindable
         this.container = new Container();
         // Declaration only so we can suppress warnings:
         @SuppressWarnings("initialization")
-        ScrollLock prev = grid.scrollDependents.put(this, ScrollLock.VERTICAL);
+        ScrollLock prev = grid.scrollDependents.put(this, ScrollLock.HORIZONTAL);
         this.firstVisibleColIndex = grid.getFirstVisibleColIndex();
         this.firstVisibleColOffset = grid.getFirstVisibleColOffset();
         container.translateYProperty().bind(grid.container.translateYProperty());
@@ -100,10 +100,13 @@ public class VirtColHeaders implements ScrollBindable
         {
             // We may not need the +1, but play safe:
             int visibleCols = 0;
-            for (double x = firstVisibleColOffset - sumColumnWidths(Math.max(0, firstVisibleColIndex - grid.getExtraCols()), firstVisibleColIndex); x < getWidth(); x += grid.getColumnWidth(firstVisibleColIndex + visibleCols) + grid.GAP)
+            double x = firstVisibleColOffset;
+            while (x < getWidth() && firstVisibleColIndex + visibleCols < grid.getNumColumns())
             {
+                x += grid.getColumnWidth(firstVisibleColIndex + visibleCols) + grid.GAP;
                 visibleCols += 1;
             }
+            System.err.println("Visible cols: " + visibleCols);
 
             // Remove not-visible cells and put them in spare cells:
             for (Iterator<Entry<Integer, VBox>> iterator = visibleCells.entrySet().iterator(); iterator.hasNext(); )
@@ -120,7 +123,7 @@ public class VirtColHeaders implements ScrollBindable
             }
 
             int firstCol = Math.max(0, firstVisibleColIndex - grid.getExtraCols());
-            double x = firstVisibleColOffset - sumColumnWidths(firstCol, firstVisibleColIndex);
+            x = firstVisibleColOffset - sumColumnWidths(firstCol, firstVisibleColIndex);
 
             for (int colIndex = firstCol; colIndex < Math.min(grid.getNumColumns(), firstVisibleColIndex + visibleCols + 2 * grid.getExtraCols()); colIndex++)
             {
