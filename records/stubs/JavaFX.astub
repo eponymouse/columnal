@@ -218,6 +218,8 @@ class Region
     double getHeight() @UnknownInitialization;
 
     void setTranslateY(double y) @UnknownInitialization;
+
+    void setClip(@Nullable Node node) @UnknownInitialization;
 }
 
 package javafx.stage;

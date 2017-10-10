@@ -15,6 +15,7 @@ import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
+import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
@@ -493,6 +494,10 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         {
             getStyleClass().add("virt-grid");
 
+            Rectangle clip = new Rectangle();
+            clip.widthProperty().bind(widthProperty());
+            clip.heightProperty().bind(heightProperty());
+            setClip(clip);
             addEventFilter(MouseEvent.ANY, mouseEvent -> {
                 @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
                 StructuredTextField cell = visibleCells.get(cellPosition);
