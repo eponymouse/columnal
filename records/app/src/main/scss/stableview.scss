@@ -98,6 +98,9 @@ $stable-view-header-border: hsb(0, 0%, 40%);
             -fx-fill: $focus-color-text;
         }
     }
+    & .structured-text-field:focused-row-col {
+        -fx-background-color: $focus-color-row-col;
+    }
 }
 /* editing-cell means the cell inside the wrapper has focus (cell being edited) */
 .stable-view-row-cell:editing-cell {

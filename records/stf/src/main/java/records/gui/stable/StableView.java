@@ -627,7 +627,6 @@ public class StableView
                 int columnIndexFinal = columnIndex;
                 FXUtility.addChangeListenerPlatformNN(pane.focusedProperty(), focus -> {
                     FXUtility.setPseudoclass(pane, "focused-cell", focus);
-                    markFocusCross(columnIndexFinal, curRowIndex, focus);
                     if (focus)
                         grid.focusCell(new CellPosition(curRowIndex, columnIndexFinal));
                 });
@@ -785,28 +784,6 @@ public class StableView
         {
             return curRowIndex;
         }
-    }
-
-    /**
-     * Marks the whole row and column lightly to indicate the real focused cell.
-     */
-    private void markFocusCross(int columnIndex, int rowIndex, boolean gotFocus)
-    {
-        /* TODO
-        for (StableRow stableRow : virtualFlow.visibleCells())
-        {
-            boolean correctRow = stableRow.curRowIndex == rowIndex;
-            for (int cellCol = 0; cellCol < stableRow.cells.size(); cellCol++)
-            {
-                boolean correctColumn = cellCol == columnIndex;
-                // XOR; don't want to set it for actually focused cell:
-                if (correctRow != correctColumn)
-                {
-                    FXUtility.setPseudoclass(stableRow.cells.get(cellCol), "focused-row-col", gotFocus);
-                }
-            }
-        }
-        */
     }
 
     @OnThread(Tag.FXPlatform)

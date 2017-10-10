@@ -192,6 +192,12 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         visibleCells.forEach((visPos, visCell) -> {
             FXUtility.setPseudoclass(visCell, "focused-cell", visPos.equals(cellPosition));
 
+            boolean correctRow = cellPosition != null && cellPosition.rowIndex == visPos.rowIndex;
+            boolean correctColumn = cellPosition != null && cellPosition.columnIndex == visPos.columnIndex;
+            // XOR; don't want to set it for actually focused cell:
+            boolean showAsCross = correctRow != correctColumn;
+            FXUtility.setPseudoclass(visCell, "focused-row-col", showAsCross);
+
         });
         focusedCell.set(cellPosition);
         if (cellPosition != null)
