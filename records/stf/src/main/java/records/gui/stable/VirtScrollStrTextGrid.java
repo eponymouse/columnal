@@ -416,6 +416,11 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         return container;
     }
 
+    public void updateClip()
+    {
+        container.updateClip();
+    }
+
     // Smooth scrolling bits:
 
     // AnimationTimer is run every frame, and so lets us do smooth scrolling:
@@ -451,6 +456,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                         extraRows.set(0);
                         stop();
                     }
+                    container.updateClip();
                 }
             };
         }
@@ -490,14 +496,16 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     @OnThread(Tag.FXPlatform)
     class Container extends Region
     {
+        private final Rectangle clip;
+
         public Container()
         {
             getStyleClass().add("virt-grid");
 
-            Rectangle clip = new Rectangle();
-            clip.widthProperty().bind(widthProperty());
-            clip.heightProperty().bind(heightProperty());
+            clip = new Rectangle();
             setClip(clip);
+
+
             addEventFilter(MouseEvent.ANY, mouseEvent -> {
                 @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
                 StructuredTextField cell = visibleCells.get(cellPosition);
@@ -626,6 +634,20 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             for (StructuredTextField spareCell : spareCells)
             {
                 spareCell.relocate(10000, 10000);
+            }
+
+            updateClip();
+        }
+
+        private void updateClip()
+        {
+            clip.setX(-getTranslateX());
+            clip.setY(-getTranslateY());
+            clip.setWidth(getWidth());
+            clip.setHeight(getHeight());
+            for (ScrollBindable scrollBindable : scrollDependents.keySet())
+            {
+                scrollBindable.updateClip();
             }
         }
     }

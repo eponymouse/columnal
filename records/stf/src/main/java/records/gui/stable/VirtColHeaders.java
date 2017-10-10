@@ -48,7 +48,7 @@ public class VirtColHeaders implements ScrollBindable
         ScrollLock prev = grid.scrollDependents.put(this, ScrollLock.HORIZONTAL);
         this.firstVisibleColIndex = grid.getFirstVisibleColIndex();
         this.firstVisibleColOffset = grid.getFirstVisibleColOffset();
-        container.translateYProperty().bind(grid.container.translateYProperty());
+        container.translateXProperty().bind(grid.container.translateXProperty());
     }
 
     @Override
@@ -71,6 +71,12 @@ public class VirtColHeaders implements ScrollBindable
             total += grid.getColumnWidth(i);
         }
         return total;
+    }
+
+    @Override
+    public void updateClip()
+    {
+
     }
 
     public Region getNode()

@@ -11,4 +11,7 @@ interface ScrollBindable
 {
     @OnThread(Tag.FXPlatform)
     public void showAtOffset(@Nullable Pair<Integer, Double> rowAndPixelOffset, @Nullable Pair<Integer, Double> colAndPixelOffset);
+
+    @OnThread(Tag.FXPlatform)
+    public void updateClip();
 }

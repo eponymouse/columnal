@@ -58,6 +58,12 @@ public class VirtRowLabels implements ScrollBindable
         }
     }
 
+    @Override
+    public void updateClip()
+    {
+
+    }
+
     public Region getNode()
     {
         return container;
