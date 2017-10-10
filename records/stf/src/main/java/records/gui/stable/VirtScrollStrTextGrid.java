@@ -19,6 +19,7 @@ import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
+import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.wellbehaved.event.EventPattern;
@@ -31,6 +32,7 @@ import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.SimulationFunction;
@@ -552,14 +554,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             });
 
             Nodes.addInputMap(FXUtility.keyboard(this), InputMap.sequence(
-                InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.HOME), e -> {
-                    FXUtility.keyboard(this).home();
-                    e.consume();
-                }),
-                InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.END), e -> {
-                    FXUtility.keyboard(this).end();
-                    e.consume();
-                }),
+                bind(KeyCode.HOME, Container::home),
+                bind(KeyCode.END, Container::end),
                 InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
                     @Nullable CellPosition focusedCellPosition = focusedCell.get();
                     if (focusedCellPosition != null)
@@ -569,6 +565,14 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                     e.consume();
                 })
             ));
+        }
+
+        private InputMap<KeyEvent> bind(@UnknownInitialization(Region.class) Container this, KeyCode keyCode, FXPlatformConsumer<Container> action)
+        {
+            return InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(keyCode), e -> {
+                action.consume(FXUtility.keyboard(this));
+                e.consume();
+            });
         }
 
         private void home()
