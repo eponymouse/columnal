@@ -83,7 +83,7 @@ public class VirtColHeaders implements ScrollBindable
         public Container()
         {
             addEventFilter(ScrollEvent.SCROLL, e -> {
-                grid.smoothScroll(e);
+                grid.smoothScroll(e, ScrollLock.BOTH);
                 e.consume();
             });
         }
@@ -106,7 +106,6 @@ public class VirtColHeaders implements ScrollBindable
                 x += grid.getColumnWidth(firstVisibleColIndex + visibleCols) + grid.GAP;
                 visibleCols += 1;
             }
-            System.err.println("Visible cols: " + visibleCols);
 
             // Remove not-visible cells and put them in spare cells:
             for (Iterator<Entry<Integer, VBox>> iterator = visibleCells.entrySet().iterator(); iterator.hasNext(); )

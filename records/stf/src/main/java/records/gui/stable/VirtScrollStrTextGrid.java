@@ -39,6 +39,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 
 /**
  * This is a lot like a VirtualizedScrollPane of HBox of
@@ -184,14 +185,15 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     }
 
     // Focuses cell so that you can navigate around with keyboard
-    public void focusCell(CellPosition cellPosition)
+    public void focusCell(@Nullable CellPosition cellPosition)
     {
         visibleCells.forEach((visPos, visCell) -> {
             FXUtility.setPseudoclass(visCell, "focused-cell", visPos.equals(cellPosition));
 
         });
         focusedCell.set(cellPosition);
-        container.requestFocus();
+        if (cellPosition != null)
+            container.requestFocus();
     }
 
     // Edits cell so that you can start typing content
@@ -425,7 +427,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private double scrollStartOffsetY;
     private static final long SCROLL_TIME_NANOS = 300_000_000L;
 
-    public void smoothScroll(ScrollEvent scrollEvent)
+    public void smoothScroll(ScrollEvent scrollEvent, ScrollLock axis)
     {
         if (scroller == null)
         {
@@ -455,21 +457,27 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         scrollStartNanos = System.nanoTime();
         scrollEndNanos = scrollStartNanos + SCROLL_TIME_NANOS;
 
-        scrollLayoutXBy(-scrollEvent.getDeltaX());
-
-        // We subtract from current offset, because we may already be mid-scroll in which
-        // case we don't want to jump, just want to add on (we will go faster to cover this
-        // because scroll will be same duration but longer):
-        scrollOffsetY += scrollLayoutYBy(-scrollEvent.getDeltaY());
-        // Don't let offset get too large or we will need too many extra rows:
-        if (Math.abs(scrollOffsetY) > MAX_EXTRA_ROW_COLS * (rowHeight + GAP))
+        if (axis.includesHorizontal())
         {
-            // Jump to the destination:
-            scrollOffsetY = 0;
+            scrollLayoutXBy(-scrollEvent.getDeltaX());
         }
-        scrollStartOffsetY = scrollOffsetY;
-        extraRows.set((int)Math.ceil(Math.abs(scrollOffsetY) / (rowHeight + GAP)));
-        container.setTranslateY(scrollOffsetY);
+
+        if (axis.includesVertical())
+        {
+            // We subtract from current offset, because we may already be mid-scroll in which
+            // case we don't want to jump, just want to add on (we will go faster to cover this
+            // because scroll will be same duration but longer):
+            scrollOffsetY += scrollLayoutYBy(-scrollEvent.getDeltaY());
+            // Don't let offset get too large or we will need too many extra rows:
+            if (Math.abs(scrollOffsetY) > MAX_EXTRA_ROW_COLS * (rowHeight + GAP))
+            {
+                // Jump to the destination:
+                scrollOffsetY = 0;
+            }
+            scrollStartOffsetY = scrollOffsetY;
+            extraRows.set((int) Math.ceil(Math.abs(scrollOffsetY) / (rowHeight + GAP)));
+            container.setTranslateY(scrollOffsetY);
+        }
 
         // Start the smooth scrolling animation:
         if (scrollOffsetY != 0.0)
@@ -484,20 +492,33 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         {
             getStyleClass().add("virt-grid");
 
-            addEventFilter(MouseEvent.MOUSE_CLICKED, clickEvent -> {
-                if (clickEvent.getClickCount() == 1)
+            addEventFilter(MouseEvent.ANY, mouseEvent -> {
+                @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
+                StructuredTextField cell = visibleCells.get(cellPosition);
+                boolean positionIsFocusedCellWrapper = Objects.equals(focusedCell.get(), cellPosition);
+                if (cell != null && cellPosition != null && mouseEvent.getClickCount() == 1 && !cell.isFocused() && !positionIsFocusedCellWrapper && mouseEvent.getEventType() == MouseEvent.MOUSE_CLICKED && mouseEvent.isStillSincePress())
                 {
-                    @Nullable CellPosition cellPosition = getCellPositionAt(clickEvent.getX(), clickEvent.getY());
-                    if (cellPosition != null)
-                        focusCell(cellPosition);
+                    focusCell(cellPosition);
                 }
-                clickEvent.consume();
+
+                // We want to let event through if either:
+                //   - we are already focusing the cell wrapper at that position
+                //   - OR the STF itself is already focused.
+                // Applying De Morgan's, mask the event if the cell wrapper isn't focused at that position
+                // AND the STF is not focused
+                if (cell != null && !cell.isFocused() && !(isFocused() && positionIsFocusedCellWrapper))
+                    mouseEvent.consume();
             });
 
             // Filter because we want to steal it from the cells themselves:
             addEventFilter(ScrollEvent.ANY, scrollEvent -> {
-                smoothScroll(scrollEvent);
+                smoothScroll(scrollEvent, ScrollLock.BOTH);
                 scrollEvent.consume();
+            });
+
+            FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
+                if (!focused)
+                    focusCell(null);
             });
         }
 
@@ -570,6 +591,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                         }
                         else
                         {
+                            // TODO modify the relinquish when the cell is re-used:
                             cell = new StructuredTextField(() -> focusCell(cellPosition));
                             getChildren().add(cell);
                         }

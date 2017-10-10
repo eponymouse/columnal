@@ -23,6 +23,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import javafx.stage.Modality;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
@@ -91,7 +92,8 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         tableView.setEditable(false);
         StableView srcTableView = new StableView();
         srcTableView.getNode().addEventFilter(ScrollEvent.SCROLL, se -> {
-            tableView.forwardedScrollEvent(se);
+            tableView.forwardedScrollEvent(se, ScrollLock.VERTICAL);
+            srcTableView.forwardedScrollEvent(se, ScrollLock.HORIZONTAL);
             se.consume();
         });
         srcTableView.bindScroll(tableView, ScrollLock.VERTICAL);

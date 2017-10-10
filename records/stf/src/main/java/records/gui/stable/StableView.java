@@ -503,9 +503,9 @@ public class StableView
         return columns.size();
     }
 
-    public void forwardedScrollEvent(ScrollEvent se)
+    public void forwardedScrollEvent(ScrollEvent se, ScrollLock axis)
     {
-        grid.smoothScroll(se);
+        grid.smoothScroll(se, axis);
     }
 
     /**

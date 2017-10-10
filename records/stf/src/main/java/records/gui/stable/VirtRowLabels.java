@@ -68,7 +68,7 @@ public class VirtRowLabels implements ScrollBindable
         public Container()
         {
             addEventFilter(ScrollEvent.SCROLL, e -> {
-                grid.smoothScroll(e);
+                grid.smoothScroll(e, ScrollLock.BOTH);
                 e.consume();
             });
         }
