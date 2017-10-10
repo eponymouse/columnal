@@ -9,6 +9,7 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseEvent;
@@ -499,6 +500,10 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 if (cell != null && cellPosition != null && mouseEvent.getClickCount() == 1 && !cell.isFocused() && !positionIsFocusedCellWrapper && mouseEvent.getEventType() == MouseEvent.MOUSE_CLICKED && mouseEvent.isStillSincePress())
                 {
                     focusCell(cellPosition);
+                }
+                if (cell != null && cellPosition != null && mouseEvent.getClickCount() == 2 && !cell.isFocused() && isFocused() && positionIsFocusedCellWrapper && mouseEvent.getEventType() == MouseEvent.MOUSE_CLICKED && mouseEvent.isStillSincePress())
+                {
+                    cell.edit(new Point2D(mouseEvent.getSceneX(), mouseEvent.getSceneY()));
                 }
 
                 // We want to let event through if either:
