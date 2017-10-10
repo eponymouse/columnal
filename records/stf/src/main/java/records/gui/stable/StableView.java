@@ -353,11 +353,6 @@ public class StableView
         return s;
     }
 
-    private StableRow makeCell(@UnknownInitialization(Object.class) StableView this, @Nullable Object data)
-    {
-        return new StableRow();
-    }
-
     public Node getNode()
     {
         return stackPane;
@@ -613,84 +608,6 @@ public class StableView
         private int curRowIndex = -1;
         private final List<Button> appendButtons = new ArrayList<>();
 
-        public StableRow()
-        {
-            hBox.getStyleClass().add("stable-view-row");
-            for (int columnIndex = 0; columnIndex < columns.size(); columnIndex++)
-            {
-                final Pane pane = new StackPane();
-                pane.getStyleClass().add("stable-view-row-cell");
-                if (columnIndex == 0)
-                {
-                    FXUtility.onceNotNull(pane.sceneProperty(), s -> {pane.requestFocus();});
-                }
-                int columnIndexFinal = columnIndex;
-                FXUtility.addChangeListenerPlatformNN(pane.focusedProperty(), focus -> {
-                    FXUtility.setPseudoclass(pane, "focused-cell", focus);
-                    if (focus)
-                        grid.focusCell(new CellPosition(curRowIndex, columnIndexFinal));
-                });
-                FXUtility.forcePrefSize(pane);
-                pane.prefWidthProperty().bind(columnSizes.get(columnIndex));
-                pane.addEventFilter(MouseEvent.ANY, e -> {
-                    if (e.getEventType() != MouseEvent.MOUSE_CLICKED)
-                    {
-                        boolean editing = curRowIndex >= 0 && grid.isEditingCell(columnIndexFinal, curRowIndex);
-                        if (!editing && !pane.isFocused() && !isAppendRow(curRowIndex))
-                        {
-                            // Hide events from inner panel if we're not yet editing:
-                            e.consume();
-                        }
-                    }
-                });
-                pane.addEventFilter(MouseEvent.MOUSE_CLICKED, e -> {
-                    if (e.getEventType() == MouseEvent.MOUSE_CLICKED)
-                        System.err.println("Detected click in filter");
-                    boolean editing = curRowIndex >= 0 && grid.isEditingCell(columnIndexFinal, curRowIndex);
-
-                    if (e.getEventType() == MouseEvent.MOUSE_CLICKED)
-                        System.err.println("Editing: " + editing + " pane focus: " + pane.isFocused());
-                    if (editing || isAppendRow(curRowIndex))
-                    {
-                        return; // Not for us to take mouse click
-                    }
-                    else if (!pane.isFocused() && e.getClickCount() == 1 && (e.getButton() == MouseButton.PRIMARY || e.getButton() == MouseButton.SECONDARY) && curRowIndex >= 0)
-                    {
-                        pane.requestFocus();
-                        e.consume();
-                    }
-                });
-                Nodes.addInputMap(pane, InputMap.sequence(
-                    InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.END), e -> {
-                        int lastContentRowIndex = getLastContentRowIndex().orElse(-1);
-                        if (lastContentRowIndex < 0)
-                            return;
-                        grid.scrollYToPixel(Double.MAX_VALUE);
-                        /* TODO
-                        Optional<StableRow> lastRow = virtualFlow.getCellIfVisible(lastContentRowIndex);
-                        if (!lastRow.isPresent())
-                        {
-                            virtualFlow.layout();
-                            lastRow = virtualFlow.getCellIfVisible(lastContentRowIndex);
-                        }
-
-                        if (lastRow.isPresent())
-                        {
-                            lastRow.get().cells.get(columnIndexFinal).requestFocus();
-                        }
-                        */
-                        e.consume();
-                    }),
-                    InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
-                        grid.editCell(columnIndexFinal, curRowIndex);
-                        e.consume();
-                    })
-                ));
-                cells.add(pane);
-                cellItemInputMaps.add(null);
-            }
-            hBox.getChildren().setAll(cells);
-        }
 
         @Override
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)

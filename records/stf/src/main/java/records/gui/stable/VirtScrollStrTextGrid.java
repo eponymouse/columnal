@@ -9,15 +9,21 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.event.Event;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.MenuItem;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.fxmisc.wellbehaved.event.EventPattern;
+import org.fxmisc.wellbehaved.event.InputMap;
+import org.fxmisc.wellbehaved.event.Nodes;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stf.EditorKitSimpleLabel;
@@ -205,7 +211,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     }
 
     // Edits cell so that you can start typing content
-    public void editCell(int rowIndex, int columnIndex)
+    public void editCell(CellPosition cellPosition)
     {
         // TODO
     }
@@ -544,6 +550,49 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 if (!focused)
                     focusCell(null);
             });
+
+            Nodes.addInputMap(FXUtility.keyboard(this), InputMap.sequence(
+                InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.HOME), e -> {
+                    FXUtility.keyboard(this).home();
+                    e.consume();
+                }),
+                InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.END), e -> {
+                    FXUtility.keyboard(this).end();
+                    e.consume();
+                }),
+                InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
+                    @Nullable CellPosition focusedCellPosition = focusedCell.get();
+                    if (focusedCellPosition != null)
+                    {
+                        editCell(focusedCellPosition);
+                    }
+                    e.consume();
+                })
+            ));
+        }
+
+        private void home()
+        {
+            @Nullable CellPosition focusedCellPos = focusedCell.get();
+            scrollYToPixel(0.0);
+            // Force layout before attempting to focus cell as it may not have been visible:
+            layout();
+            if (focusedCellPos != null)
+            {
+                focusCell(new CellPosition(0, focusedCellPos.columnIndex));
+            }
+        }
+
+        private void end()
+        {
+            @Nullable CellPosition focusedCellPos = focusedCell.get();
+            scrollYToPixel(Double.MAX_VALUE);
+            // Force layout before attempting to focus cell as it may not have been visible:
+            layout();
+            if (focusedCellPos != null)
+            {
+                focusCell(new CellPosition(currentKnownRows - 1, focusedCellPos.columnIndex));
+            }
         }
 
         @Override
