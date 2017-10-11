@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
 import java.util.Properties;
+import java.util.WeakHashMap;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -84,6 +85,8 @@ public class Utility
     @OnThread(Tag.FXPlatform)
     private static @MonotonicNonNull ObservableList<File> mruList;
     public static final String MRU_FILE_NAME = "recent.mru";
+    @OnThread(value = Tag.Any, requireSynchronized = true)
+    private static final Map<Thread, StackTraceElement[]> threadedCallers = new WeakHashMap<>();
 
     public static <T, R> List<@NonNull R> mapList(List<@NonNull T> list, Function<@NonNull T, @NonNull R> func)
     {
@@ -614,10 +617,47 @@ public class Utility
     }
 
     @SuppressWarnings("i18n")
-    public static void log(String info, Exception e)
+    public static void log(String info, Throwable e)
     {
         System.err.println(info);
-        e.printStackTrace(); // TODO
+        // Print our stack trace
+        System.err.println(e);
+        StackTraceElement[] trace = e.getStackTrace();
+        for (StackTraceElement traceElement : trace)
+            System.err.println("\tat " + traceElement);
+
+        // Print suppressed exceptions, if any
+        for (Throwable se : e.getSuppressed())
+            log("Suppressed:", se);
+
+        // Print cause, if any
+        Throwable ourCause = e.getCause();
+        if (ourCause != null)
+            log("Caused by:", ourCause);
+
+        synchronized (Utility.class)
+        {
+            StackTraceElement[] el = threadedCallers.get(Thread.currentThread());
+            if (el != null)
+            {
+                System.err.println("Original caller:");
+                for (StackTraceElement traceElement : el)
+                    System.err.println("\tat " + traceElement);
+            }
+        }
+    }
+
+    /**
+     * For the current thread, store the stack as extra info that will be printed
+     * if an exception is logged in this thread.  Will be overwritten by another
+     * call to this same method on the same thread.
+     */
+    public synchronized static void storeThreadedCaller(StackTraceElement @Nullable [] stack)
+    {
+        if (stack != null)
+            threadedCallers.put(Thread.currentThread(), stack);
+        else
+            threadedCallers.remove(Thread.currentThread());
     }
 
     public static void log(Exception e)
