@@ -5,6 +5,7 @@ import javafx.animation.AnimationTimer;
 import javafx.animation.Interpolator;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
@@ -13,7 +14,6 @@ import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
-import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
@@ -107,10 +107,13 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     final Container container;
     // The items which are dependent on us.  Package-visible to allow sidebars to access it
     final Map<ScrollBindable, ScrollLock> scrollDependents = new IdentityHashMap<>();
-    // How many extra rows to show off-screen each side, to account for scrolling (when actual display can lag logical display):
+    // How many extra rows to show off-screen, to account for scrolling (when actual display can lag logical display).
+    // Negative means we need them left/above, positive means we need them below/right:
     private final IntegerProperty extraRows = new SimpleIntegerProperty(0);
     private final IntegerProperty extraCols = new SimpleIntegerProperty(0);
     private @MonotonicNonNull Pair<VirtScrollStrTextGrid, ScrollLock> scrollLockedTo;
+    private final SmoothScroller scrollX;
+    private final SmoothScroller scrollY;
 
     public VirtScrollStrTextGrid(ValueLoadSave loadSave)
     {
@@ -125,6 +128,51 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         this.loadSave = loadSave;
 
         container = new Container();
+        scrollX = new SmoothScroller(container.translateXProperty(), extraCols, FXUtility.mouse(this)::scrollLayoutXBy, targetX -> {
+            // Count column widths in that direction until we reach target:
+            double curX;
+            int startCol;
+            if (targetX < 0)
+            {
+                // If it's negative, we're scrolling left, and we need to show extra
+                // rows to the right until they scroll out of view.
+                double w = 0;
+                for (startCol = firstVisibleColumnIndex; startCol < columnWidths.length; startCol++)
+                {
+                    w += columnWidths[startCol];
+                    if (w >= container.getWidth())
+                    {
+                        break;
+                    }
+                }
+                curX = w + firstVisibleColumnOffset - container.getWidth();
+                int col;
+                for (col = startCol + 1; curX < -targetX; col++)
+                {
+                    if (col >= columnWidths.length)
+                        return columnWidths.length - startCol;
+                    curX += columnWidths[col];
+                }
+                // Will be 0 or positive:
+                return col - startCol;
+            }
+            else
+            {
+                // Opposite: scrolling right, need extra rows left until scroll out of view:
+                startCol = firstVisibleColumnIndex;
+                int col;
+                curX = firstVisibleColumnOffset;
+                for (col = startCol - 1; curX > -targetX; col--)
+                {
+                    if (col < 0)
+                        return -startCol;
+                    curX -= columnWidths[col];
+                }
+                // Will be 0 or negative:
+                return col - startCol;
+            }
+        });
+        scrollY = new SmoothScroller(container.translateYProperty(), extraRows, FXUtility.mouse(this)::scrollLayoutYBy, y -> (int)(Math.signum(-y) * Math.ceil(Math.abs(y) / (rowHeight + GAP))));
     }
 
     public ObjectExpression<@Nullable CellPosition> focusedCellProperty()
@@ -227,9 +275,11 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     }
 
     // This scrolls just the layout, without smooth scrolling
-    private void scrollLayoutXBy(double x)
+    private double scrollLayoutXBy(double x)
     {
+        double prevScroll = getCurrentScrollX();
         scrollXToPixel(getCurrentScrollX() + x);
+        return getCurrentScrollX() - prevScroll;
     }
 
     // This scrolls just the layout, without smooth scrolling
@@ -252,11 +302,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     private double getCurrentScrollX()
     {
-        double currentX = 0;
-        for (int col = 0; col < firstVisibleColumnIndex; col++)
-            currentX += columnWidths[col] + GAP;
-        currentX -= firstVisibleColumnOffset;
-        return currentX;
+        return sumColumnWidths(0, firstVisibleColumnIndex) - firstVisibleColumnOffset;
     }
 
     // This is the canonical scroll method which all scroll
@@ -389,12 +435,16 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         return new VirtColHeaders(this, makeContextMenuItems, getHeaderContent);
     }
 
+    /**
+     * Adds the column widths for any column index C where startColIndexIncl <= C < endColIndexExcl
+     * If startColIndexIncl >= endColIndexExcl, zero will be returned.  Each column width includes GAP.
+     */
     double sumColumnWidths(int startColIndexIncl, int endColIndexExcl)
     {
         double total = 0;
         for (int i = startColIndexIncl; i < endColIndexExcl; i++)
         {
-            total += getColumnWidth(i);
+            total += getColumnWidth(i) + GAP;
         }
         return total;
     }
@@ -484,18 +534,6 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         container.updateClip();
     }
 
-    // Smooth scrolling bits:
-
-    // AnimationTimer is run every frame, and so lets us do smooth scrolling:
-    private @MonotonicNonNull AnimationTimer scroller;
-    // Start time of current animation (scrolling again resets this) and target end time:
-    private long scrollStartNanos;
-    private long scrollEndNanos;
-    // Always heading towards zero:
-    private double scrollOffsetY;
-    // Scroll offset at scrollStartNanos
-    private double scrollStartOffsetY;
-    private static final long SCROLL_TIME_NANOS = 300_000_000L;
 
     public void smoothScroll(ScrollEvent scrollEvent, ScrollLock axis)
     {
@@ -504,60 +542,104 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     public void smoothScroll(double deltaX, double deltaY)
     {
-        if (scroller == null)
-        {
-            scroller = new AnimationTimer()
-            {
-                @Override
-                public void handle(long now)
-                {
-                    // If scroll end time in future, and our target scroll is more than 1/8th pixel away:
-                    if (scrollEndNanos > now && Math.abs(scrollOffsetY) > 0.125)
-                    {
-                        scrollOffsetY = Interpolator.EASE_BOTH.interpolate(scrollStartOffsetY, 0, (double)(now - scrollStartNanos) / (scrollEndNanos - scrollStartNanos));
-                        container.setTranslateY(scrollOffsetY);
-                    }
-                    else
-                    {
-                        container.setTranslateY(0.0);
-                        scrollOffsetY = 0.0;
-                        extraRows.set(0);
-                        stop();
-                    }
-                    container.updateClip();
-                }
-            };
-        }
-
-        // Reset start and end time:
-        scrollStartNanos = System.nanoTime();
-        scrollEndNanos = scrollStartNanos + SCROLL_TIME_NANOS;
-
         if (deltaX != 0.0)
-        {
-            scrollLayoutXBy(deltaX);
-        }
-
+            scrollX.smoothScroll(deltaX);
         if (deltaY != 0.0)
+            scrollY.smoothScroll(deltaY);
+    }
+
+    // Smooth scrolling class.  Handles smooth scrolling on a single axis:
+    @OnThread(Tag.FXPlatform)
+    class SmoothScroller
+    {
+
+        // AnimationTimer is run every frame, and so lets us do smooth scrolling:
+        private @MonotonicNonNull AnimationTimer scroller;
+        // Start time of current animation (scrolling again resets this) and target end time:
+        private long scrollStartNanos;
+        private long scrollEndNanos;
+        // Always heading towards zero.  If it's negative, then the user is scrolling left/up,
+        // and thus we are currently that many pixels right/below of where it really should be,
+        // and then the animation will animate the content left/up.  If it's positive, invert all that.
+        private double scrollOffset;
+        // Scroll offset at scrollStartNanos
+        private double scrollStartOffset;
+        private static final long SCROLL_TIME_NANOS = 300_000_000L;
+
+        // The translateX/translateY of container, depending on which axis we are:
+        private final DoubleProperty translateProperty;
+        // extraRows/extraCols, depending on which axis we are:
+        private final IntegerProperty extraRowCols;
+        // Reference to scrollLayoutXBy/scrollLayoutYBy, depending on axis:
+        private final FXPlatformFunction<Double, Double> scrollLayoutBy;
+        // Given a scroll offset, works out how many extra rows/cols we need:
+        private final FXPlatformFunction<Double, Integer> calcExtraRowCols;
+
+        SmoothScroller(DoubleProperty translateProperty, IntegerProperty extraRowCols, FXPlatformFunction<Double, Double> scrollLayoutBy, FXPlatformFunction<Double, Integer> calcExtraRowCols)
         {
-            // We subtract from current offset, because we may already be mid-scroll in which
-            // case we don't want to jump, just want to add on (we will go faster to cover this
-            // because scroll will be same duration but longer):
-            scrollOffsetY += scrollLayoutYBy(deltaY);
-            // Don't let offset get too large or we will need too many extra rows:
-            if (Math.abs(scrollOffsetY) > MAX_EXTRA_ROW_COLS * (rowHeight + GAP))
-            {
-                // Jump to the destination:
-                scrollOffsetY = 0;
-            }
-            scrollStartOffsetY = scrollOffsetY;
-            extraRows.set((int) Math.ceil(Math.abs(scrollOffsetY) / (rowHeight + GAP)));
-            container.setTranslateY(scrollOffsetY);
+            this.translateProperty = translateProperty;
+            this.extraRowCols = extraRowCols;
+            this.scrollLayoutBy = scrollLayoutBy;
+            this.calcExtraRowCols = calcExtraRowCols;
         }
 
-        // Start the smooth scrolling animation:
-        if (scrollOffsetY != 0.0)
-            scroller.start();
+        public void smoothScroll(double delta)
+        {
+            if (scroller == null)
+            {
+                scroller = new AnimationTimer()
+                {
+                    @Override
+                    public void handle(long now)
+                    {
+                        // If scroll end time in future, and our target scroll is more than 1/8th pixel away:
+                        if (scrollEndNanos > now && Math.abs(scrollOffset) > 0.125)
+                        {
+                            scrollOffset = Interpolator.EASE_BOTH.interpolate(scrollStartOffset, 0, (double) (now - scrollStartNanos) / (scrollEndNanos - scrollStartNanos));
+                            translateProperty.set(scrollOffset);
+                        }
+                        else
+                        {
+                            translateProperty.set(0.0);
+                            scrollOffset = 0.0;
+                            extraRowCols.set(0);
+                            stop();
+                        }
+                        container.updateClip();
+                    }
+                };
+            }
+
+            // Reset start and end time:
+            scrollStartNanos = System.nanoTime();
+            scrollEndNanos = scrollStartNanos + SCROLL_TIME_NANOS;
+
+            if (delta != 0.0)
+            {
+                // We subtract from current offset, because we may already be mid-scroll in which
+                // case we don't want to jump, just want to add on (we will go faster to cover this
+                // because scroll will be same duration but longer):
+                scrollOffset += scrollLayoutBy.apply(delta);
+                int extra = calcExtraRowCols.apply(scrollOffset);
+                // Don't let offset get too large or we will need too many extra rows:
+                if (Math.abs(extra) > MAX_EXTRA_ROW_COLS)
+                {
+                    // Jump to the destination:
+                    scrollOffset = 0;
+                    extraRowCols.set(0);
+                }
+                else
+                {
+                    extraRowCols.set(extra);
+                }
+                scrollStartOffset = scrollOffset;
+                translateProperty.set(scrollOffset);
+            }
+
+            // Start the smooth scrolling animation:
+            if (scrollOffset != 0.0)
+                scroller.start();
+        }
     }
 
     // Package-visible to allow sidebars access
@@ -710,16 +792,23 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             VirtScrollStrTextGrid.this.visibleRowCount = newNumVisibleRows;
             VirtScrollStrTextGrid.this.visibleColumnCount = newNumVisibleCols;
 
+            // This includes extra rows needed for smooth scrolling:
+            int firstDisplayRow = Math.max(0, firstVisibleRowIndex + Math.min(0, extraRows.get()));
+            int lastDisplayRowExcl = Math.min(currentKnownRows, firstVisibleRowIndex + visibleRowCount + Math.max(0, extraRows.get()));
+            int firstDisplayCol = Math.max(0, firstVisibleColumnIndex + Math.min(0, extraCols.get()));
+            int lastDisplayColExcl = Math.min(columnWidths.length, firstVisibleColumnIndex + visibleColumnCount + Math.max(0, extraCols.get()));
+
             // Remove not-visible cells and put them in spare cells:
             for (Iterator<Entry<CellPosition, StructuredTextField>> iterator = visibleCells.entrySet().iterator(); iterator.hasNext(); )
             {
                 Entry<CellPosition, StructuredTextField> vis = iterator.next();
                 CellPosition pos = vis.getKey();
+
                 boolean shouldBeVisible =
-                    pos.rowIndex >= Math.max(0, firstVisibleRowIndex - extraRows.get()) &&
-                    pos.rowIndex < Math.min(currentKnownRows, firstVisibleRowIndex + visibleRowCount + 2 * extraRows.get()) &&
-                    pos.columnIndex >= firstVisibleColumnIndex &&
-                    pos.columnIndex < firstVisibleColumnIndex + visibleColumnCount;
+                    pos.rowIndex >= firstDisplayRow &&
+                    pos.rowIndex < lastDisplayRowExcl &&
+                    pos.columnIndex >= firstDisplayCol &&
+                    pos.columnIndex < lastDisplayColExcl;
                 if (!shouldBeVisible)
                 {
                     spareCells.add(vis.getValue());
@@ -727,12 +816,12 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 }
             }
 
-            y = firstVisibleRowOffset - Math.min(extraRows.get(), firstVisibleRowIndex) * (rowHeight + GAP);
-            for (int rowIndex = Math.max(0, firstVisibleRowIndex - extraRows.get()); rowIndex < Math.min(currentKnownRows, firstVisibleRowIndex + newNumVisibleRows + 2 * extraRows.get()); rowIndex++)
+            y = firstVisibleRowOffset - (firstVisibleRowIndex - firstDisplayRow) * (rowHeight + GAP);
+            for (int rowIndex = firstDisplayRow; rowIndex < lastDisplayRowExcl; rowIndex++)
             {
-                x = firstVisibleColumnOffset;
+                x = firstVisibleColumnOffset - sumColumnWidths(firstDisplayCol, firstVisibleColumnIndex);
                 // If we need it, add another visible column
-                for (int columnIndex = firstVisibleColumnIndex; columnIndex < firstVisibleColumnIndex + newNumVisibleCols; columnIndex++)
+                for (int columnIndex = firstDisplayCol; columnIndex < lastDisplayColExcl; columnIndex++)
                 {
                     CellPosition cellPosition = new CellPosition(rowIndex, columnIndex);
                     StructuredTextField cell = visibleCells.get(cellPosition);
