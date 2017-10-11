@@ -3,7 +3,6 @@ package records.gui.stable;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
-import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Region;
@@ -63,16 +62,6 @@ public class VirtColHeaders implements ScrollBindable
         }
     }
 
-    private double sumColumnWidths(int startColIndexIncl, int endColIndexExcl)
-    {
-        double total = 0;
-        for (int i = startColIndexIncl; i < endColIndexExcl; i++)
-        {
-            total += grid.getColumnWidth(i);
-        }
-        return total;
-    }
-
     @Override
     public void updateClip()
     {
@@ -128,7 +117,7 @@ public class VirtColHeaders implements ScrollBindable
             }
 
             int firstCol = Math.max(0, firstVisibleColIndex - grid.getExtraCols());
-            x = firstVisibleColOffset - sumColumnWidths(firstCol, firstVisibleColIndex);
+            x = firstVisibleColOffset - grid.sumColumnWidths(firstCol, firstVisibleColIndex);
 
             for (int colIndex = firstCol; colIndex < Math.min(grid.getNumColumns(), firstVisibleColIndex + visibleCols + 2 * grid.getExtraCols()); colIndex++)
             {

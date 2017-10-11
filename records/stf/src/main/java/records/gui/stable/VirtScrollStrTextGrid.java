@@ -10,7 +10,10 @@ import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.Event;
+import javafx.geometry.BoundingBox;
+import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
+import javafx.geometry.Rectangle2D;
 import javafx.scene.Node;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
@@ -107,6 +110,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // How many extra rows to show off-screen each side, to account for scrolling (when actual display can lag logical display):
     private final IntegerProperty extraRows = new SimpleIntegerProperty(0);
     private final IntegerProperty extraCols = new SimpleIntegerProperty(0);
+    private @MonotonicNonNull Pair<VirtScrollStrTextGrid, ScrollLock> scrollLockedTo;
 
     public VirtScrollStrTextGrid(ValueLoadSave loadSave)
     {
@@ -140,7 +144,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         // If y < 2*rowHeight, second cell, and offset == rowHeight - y
         // General pattern: divide by rowHeight and round down to get topCell
         // Then offset is topCell*rowHeight - y
-        int topCell = (int)Math.floor(y / (rowHeight + GAP));
+        int topCell = (int) Math.floor(y / (rowHeight + GAP));
         double rowPixelOffset = (topCell * (rowHeight + GAP)) - y;
         showAtOffset(new Pair<>(topCell, rowPixelOffset), null);
     }
@@ -164,8 +168,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 {
                     if (isRowValidFinal == null || !isRowValidFinal.apply(knownRows))
                         break;
-                }
-                catch (InternalException | UserException e)
+                } catch (InternalException | UserException e)
                 {
                     Utility.log(e);
                     break;
@@ -271,8 +274,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 row = 0;
                 // Can't scroll above top of first item:
                 rowPixelOffset = 0.0;
-            }
-            else if (row >= currentKnownRows - 1)
+            } else if (row >= currentKnownRows - 1)
             {
                 // Can't scroll beyond showing the last cell at the top of the window:
                 row = currentKnownRows - 1;
@@ -297,7 +299,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             {
                 targetRow = new Pair<>(firstVisibleRowIndex, firstVisibleRowOffset);
             }
-            
+
             if (lock.includesHorizontal())
             {
                 targetCol = new Pair<>(firstVisibleColumnIndex, firstVisibleColumnOffset);
@@ -311,8 +313,10 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // Binds this item's scroll to src, so that when src changes, this does too.
     public void bindScroll(VirtScrollStrTextGrid src, ScrollLock lock)
     {
-        // We actually keep track in src of dependents, not in dest of things we depend on
+        // We actually primarily keep track in src of dependents, not in dest of things we depend on
         src.scrollDependents.put(this, lock);
+        // But we also keep track ourselves:
+        scrollLockedTo = new Pair<>(src, lock);
 
         if (lock.includesVertical())
         {
@@ -330,15 +334,50 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     }
 
     // Various package-visible items used by sidebars:
-    int getFirstVisibleRowIndex() { return firstVisibleRowIndex; }
-    double getFirstVisibleRowOffset() { return firstVisibleRowOffset; }
-    int getFirstVisibleColIndex() { return firstVisibleColumnIndex; }
-    double getFirstVisibleColOffset() { return firstVisibleColumnOffset; }
-    int getCurrentKnownRows() { return currentKnownRows; }
-    int getExtraRows() { return extraRows.get(); }
-    int getNumColumns() { return columnWidths.length; }
-    double getColumnWidth(int columnIndex) { return columnWidths[columnIndex]; }
-    int getExtraCols() { return extraCols.get(); }
+    int getFirstVisibleRowIndex()
+    {
+        return firstVisibleRowIndex;
+    }
+
+    double getFirstVisibleRowOffset()
+    {
+        return firstVisibleRowOffset;
+    }
+
+    int getFirstVisibleColIndex()
+    {
+        return firstVisibleColumnIndex;
+    }
+
+    double getFirstVisibleColOffset()
+    {
+        return firstVisibleColumnOffset;
+    }
+
+    int getCurrentKnownRows()
+    {
+        return currentKnownRows;
+    }
+
+    int getExtraRows()
+    {
+        return extraRows.get();
+    }
+
+    int getNumColumns()
+    {
+        return columnWidths.length;
+    }
+
+    double getColumnWidth(int columnIndex)
+    {
+        return columnWidths[columnIndex];
+    }
+
+    int getExtraCols()
+    {
+        return extraCols.get();
+    }
 
     public VirtRowLabels makeLineNumbers(FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems)
     {
@@ -348,6 +387,16 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     public VirtColHeaders makeColumnHeaders(FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems, FXPlatformFunction<Integer, ImmutableList<Node>> getHeaderContent)
     {
         return new VirtColHeaders(this, makeContextMenuItems, getHeaderContent);
+    }
+
+    double sumColumnWidths(int startColIndexIncl, int endColIndexExcl)
+    {
+        double total = 0;
+        for (int i = startColIndexIncl; i < endColIndexExcl; i++)
+        {
+            total += getColumnWidth(i);
+        }
+        return total;
     }
 
     public static enum ScrollLock
@@ -419,7 +468,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         if (x > 0.0)
             return null;
         y -= firstVisibleRowOffset;
-        rowIndex = (int)Math.floor(y / (rowHeight + GAP)) + firstVisibleRowIndex;
+        rowIndex = (int) Math.floor(y / (rowHeight + GAP)) + firstVisibleRowIndex;
         if (rowIndex >= currentKnownRows)
             return null;
         return new CellPosition(rowIndex, colIndex);
@@ -450,6 +499,11 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     public void smoothScroll(ScrollEvent scrollEvent, ScrollLock axis)
     {
+        smoothScroll(axis.includesHorizontal() ? -scrollEvent.getDeltaX() : 0.0, axis.includesVertical() ? -scrollEvent.getDeltaY() : 0.0);
+    }
+
+    public void smoothScroll(double deltaX, double deltaY)
+    {
         if (scroller == null)
         {
             scroller = new AnimationTimer()
@@ -479,17 +533,17 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         scrollStartNanos = System.nanoTime();
         scrollEndNanos = scrollStartNanos + SCROLL_TIME_NANOS;
 
-        if (axis.includesHorizontal())
+        if (deltaX != 0.0)
         {
-            scrollLayoutXBy(-scrollEvent.getDeltaX());
+            scrollLayoutXBy(deltaX);
         }
 
-        if (axis.includesVertical())
+        if (deltaY != 0.0)
         {
             // We subtract from current offset, because we may already be mid-scroll in which
             // case we don't want to jump, just want to add on (we will go faster to cover this
             // because scroll will be same duration but longer):
-            scrollOffsetY += scrollLayoutYBy(-scrollEvent.getDeltaY());
+            scrollOffsetY += scrollLayoutYBy(deltaY);
             // Don't let offset get too large or we will need too many extra rows:
             if (Math.abs(scrollOffsetY) > MAX_EXTRA_ROW_COLS * (rowHeight + GAP))
             {
@@ -556,6 +610,10 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             Nodes.addInputMap(FXUtility.keyboard(this), InputMap.sequence(
                 bind(KeyCode.HOME, Container::home),
                 bind(KeyCode.END, Container::end),
+                bind(KeyCode.UP, c -> c.move(-1, 0)),
+                bind(KeyCode.DOWN, c -> c.move(1, 0)),
+                bind(KeyCode.LEFT, c -> c.move(0, -1)),
+                bind(KeyCode.RIGHT, c -> c.move(0, 1)),
                 InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
                     @Nullable CellPosition focusedCellPosition = focusedCell.get();
                     if (focusedCellPosition != null)
@@ -565,6 +623,27 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                     e.consume();
                 })
             ));
+        }
+
+        private void move(int rows, int columns)
+        {
+            @Nullable CellPosition focusedCellPos = focusedCell.get();
+            if (focusedCellPos != null)
+            {
+                int newRowIndex = focusedCellPos.rowIndex + rows;
+                if (newRowIndex < 0)
+                    newRowIndex = 0;
+                if (newRowIndex >= currentKnownRows)
+                    newRowIndex = currentKnownRows - 1;
+                int newColIndex = focusedCellPos.columnIndex + columns;
+                if (newColIndex < 0)
+                    newColIndex = 0;
+                if (newColIndex >= getNumColumns())
+                    newColIndex = getNumColumns() - 1;
+                CellPosition newFocusPos = new CellPosition(newRowIndex, newColIndex);
+                smoothScrollToEnsureVisible(newFocusPos);
+                focusCell(newFocusPos);
+            }
         }
 
         private InputMap<KeyEvent> bind(@UnknownInitialization(Region.class) Container this, KeyCode keyCode, FXPlatformConsumer<Container> action)
@@ -709,6 +788,65 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 scrollBindable.updateClip();
             }
         }
+    }
+
+    private void smoothScrollToEnsureVisible(CellPosition target)
+    {
+        Point2D currentXY = new Point2D(getCurrentScrollX(), getCurrentScrollY());
+        Bounds targetBounds = getPixelPosition(target);
+        double deltaX = 0.0;
+        double deltaY = 0.0;
+        if (targetBounds.getMinX() < currentXY.getX())
+        {
+            // Off screen to left, scroll til it's visible plus a margin:
+            deltaX = targetBounds.getMinX() - currentXY.getX() - 20;
+        }
+        else if (targetBounds.getMaxX() > currentXY.getX() + container.getWidth())
+        {
+            // Off screen to right:
+            deltaX = targetBounds.getMaxX() - (currentXY.getX() + container.getWidth()) + 20;
+        }
+
+        if (targetBounds.getMinY() < currentXY.getY())
+        {
+            // Off screen above, scroll til it's visible plus a margin:
+            deltaY = targetBounds.getMinY() - currentXY.getY() - 20;
+        }
+        else if (targetBounds.getMaxY() > currentXY.getY() + container.getHeight())
+        {
+            // Off screen below:
+            deltaY = targetBounds.getMaxY() - (currentXY.getY() + container.getHeight()) + 20;
+        }
+
+        if (scrollLockedTo != null)
+        {
+            if (scrollLockedTo.getSecond().includesHorizontal() && scrollLockedTo.getSecond().includesVertical())
+            {
+                scrollLockedTo.getFirst().smoothScroll(deltaX, deltaY);
+                deltaX = 0.0;
+                deltaY = 0.0;
+            }
+            else if (scrollLockedTo.getSecond().includesHorizontal())
+            {
+                scrollLockedTo.getFirst().smoothScroll(deltaX, 0.0);
+                deltaX = 0.0;
+            }
+            else if (scrollLockedTo.getSecond().includesVertical())
+            {
+                scrollLockedTo.getFirst().smoothScroll(0.0, deltaY);
+                deltaY = 0.0;
+            }
+        }
+
+        if (deltaX != 0.0 || deltaY != 0.0)
+            smoothScroll(deltaX, deltaY);
+    }
+
+    private Bounds getPixelPosition(CellPosition target)
+    {
+        double minX = sumColumnWidths(0, target.columnIndex);
+        double minY = (rowHeight + GAP) * target.rowIndex;
+        return new BoundingBox(minX, minY, columnWidths[target.columnIndex], rowHeight);
     }
 
     public static class CellPosition
