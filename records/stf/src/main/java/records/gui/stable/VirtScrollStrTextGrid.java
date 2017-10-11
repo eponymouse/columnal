@@ -75,6 +75,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // Cells which are visible, organised as a 2D array
     // (inner is a row, outer is list of rows)
     private final Map<CellPosition, StructuredTextField> visibleCells;
+    // The first index logically visible.  This is not actually necessarily the same
+    // as first really-visible, if we are currently doing some smooth scrolling:
     private int firstVisibleColumnIndex;
     private int firstVisibleRowIndex;
     // Offset of top visible cell.  Always -rowHeight <= y <= 0
@@ -793,10 +795,10 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             VirtScrollStrTextGrid.this.visibleColumnCount = newNumVisibleCols;
 
             // This includes extra rows needed for smooth scrolling:
-            int firstDisplayRow = Math.max(0, firstVisibleRowIndex + Math.min(0, extraRows.get()));
-            int lastDisplayRowExcl = Math.min(currentKnownRows, firstVisibleRowIndex + visibleRowCount + Math.max(0, extraRows.get()));
-            int firstDisplayCol = Math.max(0, firstVisibleColumnIndex + Math.min(0, extraCols.get()));
-            int lastDisplayColExcl = Math.min(columnWidths.length, firstVisibleColumnIndex + visibleColumnCount + Math.max(0, extraCols.get()));
+            int firstDisplayRow = getFirstDisplayRow();
+            int lastDisplayRowExcl = getLastDisplayRowExcl();
+            int firstDisplayCol = getFirstDisplayCol();
+            int lastDisplayColExcl = getLastDisplayColExcl();
 
             // Remove not-visible cells and put them in spare cells:
             for (Iterator<Entry<CellPosition, StructuredTextField>> iterator = visibleCells.entrySet().iterator(); iterator.hasNext(); )
@@ -877,6 +879,30 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 scrollBindable.updateClip();
             }
         }
+    }
+
+    // The last actual display column (exclusive), including any needed for displaying smooth scrolling
+    int getLastDisplayColExcl()
+    {
+        return Math.min(columnWidths.length, firstVisibleColumnIndex + visibleColumnCount + Math.max(0, extraCols.get()));
+    }
+
+    // The first actual display column, including any needed for displaying smooth scrolling
+    int getFirstDisplayCol()
+    {
+        return Math.max(0, firstVisibleColumnIndex + Math.min(0, extraCols.get()));
+    }
+
+    // The last actual display row (exclusive), including any needed for displaying smooth scrolling
+    int getLastDisplayRowExcl()
+    {
+        return Math.min(currentKnownRows, firstVisibleRowIndex + visibleRowCount + Math.max(0, extraRows.get()));
+    }
+
+    // The first actual display row, including any needed for displaying smooth scrolling
+    int getFirstDisplayRow()
+    {
+        return Math.max(0, firstVisibleRowIndex + Math.min(0, extraRows.get()));
     }
 
     private void smoothScrollToEnsureVisible(CellPosition target)

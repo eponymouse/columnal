@@ -31,9 +31,6 @@ public class VirtColHeaders implements ScrollBindable
     private final VirtScrollStrTextGrid grid;
     private final FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems;
     private final FXPlatformFunction<Integer, ImmutableList<Node>> getContent;
-    private int firstVisibleColIndex;
-    private double firstVisibleColOffset;
-
 
     //package-visible
     VirtColHeaders(VirtScrollStrTextGrid grid, FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems, FXPlatformFunction<Integer, ImmutableList<Node>> getContent)
@@ -45,8 +42,6 @@ public class VirtColHeaders implements ScrollBindable
         // Declaration only so we can suppress warnings:
         @SuppressWarnings("initialization")
         ScrollLock prev = grid.scrollDependents.put(this, ScrollLock.HORIZONTAL);
-        this.firstVisibleColIndex = grid.getFirstVisibleColIndex();
-        this.firstVisibleColOffset = grid.getFirstVisibleColOffset();
         container.translateXProperty().bind(grid.container.translateXProperty());
     }
 
@@ -56,8 +51,6 @@ public class VirtColHeaders implements ScrollBindable
     {
         if (colAndPixelOffset != null)
         {
-            this.firstVisibleColIndex = colAndPixelOffset.getFirst();
-            this.firstVisibleColOffset = colAndPixelOffset.getSecond();
             container.requestLayout();
         }
     }
@@ -93,22 +86,14 @@ public class VirtColHeaders implements ScrollBindable
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected void layoutChildren()
         {
-            // We may not need the +1, but play safe:
-            int visibleCols = 0;
-            double x = firstVisibleColOffset;
-            while (x < getWidth() && firstVisibleColIndex + visibleCols < grid.getNumColumns())
-            {
-                x += grid.getColumnWidth(firstVisibleColIndex + visibleCols) + grid.GAP;
-                visibleCols += 1;
-            }
+            int firstDisplayCol = grid.getFirstDisplayCol();
+            int lastDisplayColExcl = grid.getLastDisplayColExcl();
 
             // Remove not-visible cells and put them in spare cells:
             for (Iterator<Entry<Integer, VBox>> iterator = visibleCells.entrySet().iterator(); iterator.hasNext(); )
             {
                 Entry<Integer, VBox> vis = iterator.next();
-                boolean shouldBeVisible =
-                        vis.getKey() >= Math.max(0, firstVisibleColIndex - grid.getExtraRows()) &&
-                                vis.getKey() < Math.min(grid.getCurrentKnownRows(), firstVisibleColIndex + visibleCols + 2 * grid.getExtraRows());
+                boolean shouldBeVisible = vis.getKey() >= firstDisplayCol && vis.getKey() < lastDisplayColExcl;
                 if (!shouldBeVisible)
                 {
                     spareCells.add(vis.getValue());
@@ -116,10 +101,8 @@ public class VirtColHeaders implements ScrollBindable
                 }
             }
 
-            int firstCol = Math.max(0, firstVisibleColIndex - grid.getExtraCols());
-            x = firstVisibleColOffset - grid.sumColumnWidths(firstCol, firstVisibleColIndex);
-
-            for (int colIndex = firstCol; colIndex < Math.min(grid.getNumColumns(), firstVisibleColIndex + visibleCols + 2 * grid.getExtraCols()); colIndex++)
+            double x = grid.getFirstVisibleColOffset() - grid.sumColumnWidths(firstDisplayCol, grid.getFirstVisibleColIndex());
+            for (int colIndex = firstDisplayCol; colIndex < lastDisplayColExcl; colIndex++)
             {
                 VBox cell = visibleCells.get(colIndex);
                 // If cell isn't present, grab from spareCells:
@@ -153,7 +136,7 @@ public class VirtColHeaders implements ScrollBindable
             }
 
             // Don't let spare cells be more than two visible rows or columns:
-            int maxSpareCells = grid.MAX_EXTRA_ROW_COLS * visibleCols;
+            int maxSpareCells = grid.MAX_EXTRA_ROW_COLS * (lastDisplayColExcl - firstDisplayCol);
 
             while (spareCells.size() > maxSpareCells)
                 getChildren().remove(spareCells.remove(spareCells.size() - 1));

@@ -29,8 +29,6 @@ public class VirtRowLabels implements ScrollBindable
     private final Region container;
     private final VirtScrollStrTextGrid grid;
     private final FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems;
-    private int firstVisibleRowIndex;
-    private double firstVisibleRowOffset;
 
     //package-visible
     VirtRowLabels(VirtScrollStrTextGrid grid, FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems)
@@ -41,8 +39,6 @@ public class VirtRowLabels implements ScrollBindable
         // Declaration only so we can suppress warnings:
         @SuppressWarnings("initialization")
         ScrollLock prev = grid.scrollDependents.put(this, ScrollLock.VERTICAL);
-        this.firstVisibleRowIndex = grid.getFirstVisibleRowIndex();
-        this.firstVisibleRowOffset = grid.getFirstVisibleRowOffset();
         container.translateYProperty().bind(grid.container.translateYProperty());
     }
 
@@ -52,8 +48,6 @@ public class VirtRowLabels implements ScrollBindable
     {
         if (rowAndPixelOffset != null)
         {
-            this.firstVisibleRowIndex = rowAndPixelOffset.getFirst();
-            this.firstVisibleRowOffset = rowAndPixelOffset.getSecond();
             container.requestLayout();
         }
     }
@@ -89,16 +83,16 @@ public class VirtRowLabels implements ScrollBindable
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)
         protected void layoutChildren()
         {
-            // We may not need the +1, but play safe:
-            int visibleRows = Math.min(grid.getCurrentKnownRows() - firstVisibleRowIndex, (int)Math.ceil(getHeight() / (grid.rowHeight + grid.GAP)) + 1);
+            int firstDisplayRow = grid.getFirstDisplayRow();
+            int lastDisplayRowExcl = grid.getLastDisplayRowExcl();
 
             // Remove not-visible cells and put them in spare cells:
             for (Iterator<Entry<Integer, Label>> iterator = visibleCells.entrySet().iterator(); iterator.hasNext(); )
             {
                 Entry<Integer, Label> vis = iterator.next();
                 boolean shouldBeVisible =
-                    vis.getKey() >= Math.max(0, firstVisibleRowIndex - grid.getExtraRows()) &&
-                    vis.getKey() < Math.min(grid.getCurrentKnownRows(), firstVisibleRowIndex + visibleRows + 2 * grid.getExtraRows());
+                    vis.getKey() >= firstDisplayRow &&
+                    vis.getKey() < lastDisplayRowExcl;
                 if (!shouldBeVisible)
                 {
                     spareCells.add(vis.getValue());
@@ -106,8 +100,8 @@ public class VirtRowLabels implements ScrollBindable
                 }
             }
 
-            double y = firstVisibleRowOffset - grid.getExtraRows() * (grid.rowHeight + grid.GAP);
-            for (int rowIndex = Math.max(0, firstVisibleRowIndex - grid.getExtraRows()); rowIndex < Math.min(grid.getCurrentKnownRows(), firstVisibleRowIndex + visibleRows + 2 * grid.getExtraRows()); rowIndex++)
+            double y = grid.getFirstVisibleRowOffset() - (grid.getFirstVisibleRowIndex() - firstDisplayRow) * (grid.rowHeight + grid.GAP);
+            for (int rowIndex = firstDisplayRow; rowIndex < lastDisplayRowExcl; rowIndex++)
             {
                 Label cell = visibleCells.get(rowIndex);
                 // If cell isn't present, grab from spareCells:
@@ -141,7 +135,7 @@ public class VirtRowLabels implements ScrollBindable
             }
 
             // Don't let spare cells be more than two visible rows or columns:
-            int maxSpareCells = grid.MAX_EXTRA_ROW_COLS * visibleRows;
+            int maxSpareCells = grid.MAX_EXTRA_ROW_COLS * (lastDisplayRowExcl - firstDisplayRow);
 
             while (spareCells.size() > maxSpareCells)
                 getChildren().remove(spareCells.remove(spareCells.size() - 1));
