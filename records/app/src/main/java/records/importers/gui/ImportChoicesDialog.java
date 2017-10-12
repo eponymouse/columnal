@@ -91,7 +91,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         StableView tableView = new StableView();
         tableView.setEditable(false);
         StableView srcTableView = new StableView();
-        srcTableView.getNode().addEventFilter(ScrollEvent.SCROLL, se -> {
+        srcTableView.getNode().addEventFilter(ScrollEvent.ANY, se -> {
             tableView.forwardedScrollEvent(se, ScrollLock.VERTICAL);
             srcTableView.forwardedScrollEvent(se, ScrollLock.HORIZONTAL);
             se.consume();
