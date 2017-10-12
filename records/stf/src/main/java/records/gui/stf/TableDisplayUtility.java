@@ -26,6 +26,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stable.EditorKitCache;
 import records.gui.stable.EditorKitCallback;
+import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
 import records.gui.stf.*;
 import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
@@ -78,7 +79,7 @@ public class TableDisplayUtility
                     item = new Pair<>(col.getName().getRaw(), new ColumnHandler()
                     {
                         @Override
-                        public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+                        public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
                         {
                             setCellContent.loadedValue(columnIndexFinal, rowIndex, new EditorKitSimpleLabel("Error: " + e.getLocalizedMessage()));
                         }
@@ -279,10 +280,10 @@ public class TableDisplayUtility
 
         public EditorKitCache<T> makeDisplayCache(int columnIndex, boolean isEditable, FXPlatformRunnable onModify)
         {
-            return new EditorKitCache<T>(columnIndex, g, vis -> {}, (rowIndex, value) -> {
+            return new EditorKitCache<T>(columnIndex, g, vis -> {}, (rowIndex, value, relinquishFocus) -> {
                 return new EditorKit<T>(makeComponent.makeComponent(ImmutableList.of(), value), isEditable ? (Pair<String, T> p) -> {
                     Workers.onWorkerThread("Saving", Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> g.set(rowIndex, p.getSecond())));
-                    onModify.run();} : null);
+                    onModify.run();} : null, () -> relinquishFocus.consume(new CellPosition(rowIndex, columnIndex)));
             });
         }
     }

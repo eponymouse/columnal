@@ -78,6 +78,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // Cells which are visible, organised as a 2D array
     // (inner is a row, outer is list of rows)
     private final Map<CellPosition, StructuredTextField> visibleCells;
+    private final FXPlatformFunction<CellPosition, Boolean> canEdit;
     // The first index logically visible.  This is not actually necessarily the same
     // as first really-visible, if we are currently doing some smooth scrolling:
     private int firstVisibleColumnIndex;
@@ -122,8 +123,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private final Pane glass;
     private StackPane stackPane;
 
-    public VirtScrollStrTextGrid(ValueLoadSave loadSave)
+    public VirtScrollStrTextGrid(ValueLoadSave loadSave, FXPlatformFunction<CellPosition, Boolean> canEdit)
     {
+        this.canEdit = canEdit;
         visibleCells = new HashMap<>();
         firstVisibleColumnIndex = 0;
         firstVisibleRowIndex = 0;
@@ -277,12 +279,17 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // Edits cell so that you can start typing content
     public void editCell(CellPosition cellPosition)
     {
-        // TODO
+        StructuredTextField cell = visibleCells.get(cellPosition);
+        if (cell != null && canEdit.apply(cellPosition))
+        {
+            cell.requestFocus();
+        }
     }
 
     public boolean isEditingCell(int rowIndex, int columnIndex)
     {
-        return false; // TODO
+        StructuredTextField cell = visibleCells.get(new CellPosition(rowIndex, columnIndex));
+        return cell != null && cell.isFocused();
     }
 
     // This scrolls just the layout, without smooth scrolling
@@ -485,7 +492,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     public static interface ValueLoadSave
     {
         @OnThread(Tag.FXPlatform)
-        void fetchEditorKit(int rowIndex, int colIndex, EditorKitCallback setEditorKit);
+        void fetchEditorKit(int rowIndex, int colIndex, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setEditorKit);
     }
 
     public void setData(SimulationFunction<Integer, Boolean> isRowValid, double[] columnWidths)
@@ -721,6 +728,14 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                         editCell(focusedCellPosition);
                     }
                     e.consume();
+                }),
+                InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.SPACE), e -> {
+                    @Nullable CellPosition focusedCellPosition = focusedCell.get();
+                    if (focusedCellPosition != null)
+                    {
+                        editCell(focusedCellPosition);
+                    }
+                    e.consume();
                 })
             ));
         }
@@ -854,15 +869,14 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                         }
                         else
                         {
-                            // TODO modify the relinquish when the cell is re-used:
-                            cell = new StructuredTextField(() -> focusCell(cellPosition));
+                            cell = new StructuredTextField();
                             getChildren().add(cell);
                         }
 
                         visibleCells.put(cellPosition, cell);
                         // Blank then queue fetch:
                         cell.resetContent(new EditorKitSimpleLabel<>("Loading..."));
-                        loadSave.fetchEditorKit(rowIndex, columnIndex, VirtScrollStrTextGrid.this);
+                        loadSave.fetchEditorKit(rowIndex, columnIndex, VirtScrollStrTextGrid.this::focusCell, VirtScrollStrTextGrid.this);
                     }
                     cell.resizeRelocate(x, y, columnWidths[columnIndex], rowHeight);
                     x += columnWidths[columnIndex] + GAP;

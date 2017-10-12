@@ -17,6 +17,8 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -175,8 +177,13 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         getDialogPane().setContent(content);
         getDialogPane().getButtonTypes().setAll(ButtonType.CANCEL, ButtonType.OK);
         // Prevent enter/escape activating buttons:
-        ((Button)getDialogPane().lookupButton(ButtonType.CANCEL)).setCancelButton(false);
         ((Button)getDialogPane().lookupButton(ButtonType.OK)).setDefaultButton(false);
+        // I tried to use setCancelButton(false) but that isn't enough to prevent escape cancelling, so we consume
+        // the keypress:
+        getDialogPane().addEventHandler(KeyEvent.KEY_PRESSED, e -> {
+            if (e.getCode() == KeyCode.ESCAPE)
+                e.consume();
+        });
         //TODO disable ok button if name isn't valid
         setResultConverter(bt -> {
             @Nullable TableId tableId = nameField.valueProperty().get();

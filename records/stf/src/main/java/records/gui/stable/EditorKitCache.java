@@ -13,6 +13,7 @@ import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stable.EditorKitCallback;
+import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
 import records.gui.stf.EditorKitSimpleLabel;
 import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
@@ -77,7 +78,7 @@ public final class EditorKitCache<V> implements ColumnHandler
     public static interface MakeEditorKit<V>
     {
         @OnThread(Tag.FXPlatform)
-        public EditorKit<V> makeKit(int rowIndex, V initialValue) throws InternalException, UserException;
+        public EditorKit<V> makeKit(int rowIndex, V initialValue, FXPlatformConsumer<CellPosition> relinquishFocus) throws InternalException, UserException;
     }
 
 /*
@@ -128,7 +129,7 @@ public final class EditorKitCache<V> implements ColumnHandler
     }
 
     @Override
-    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
     {
         this.firstVisibleRowIndexIncl = firstVisibleRowIndexIncl;
         this.lastVisibleRowIndexIncl = lastVisibleRowIndexIncl;
@@ -202,10 +203,10 @@ public final class EditorKitCache<V> implements ColumnHandler
         @OnThread(Tag.FXPlatform)
         private final EditorKitCallback callbackSetCellContent;
         private final FXPlatformConsumer<Boolean> onFocusChange;
-        private final FXPlatformRunnable relinquishFocus;
+        private final FXPlatformConsumer<CellPosition> relinquishFocus;
 
         @SuppressWarnings("initialization") // ValueLoader, though I don't quite understand why
-        public DisplayCacheItem(int index, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformRunnable relinquishFocus, EditorKitCallback callbackSetCellContent)
+        public DisplayCacheItem(int index, FXPlatformConsumer<Boolean> onFocusChange, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback callbackSetCellContent)
         {
             this.rowIndex = index;
             loader = new ValueLoader(index, this);
@@ -218,7 +219,7 @@ public final class EditorKitCache<V> implements ColumnHandler
         public synchronized void update(V loadedItem)
         {
             Utility.alertOnErrorFX_(() -> {
-                this.loadedItemOrError = Either.left(new Pair<>(loadedItem, makeEditorKit.makeKit(rowIndex, loadedItem)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/));
+                this.loadedItemOrError = Either.left(new Pair<>(loadedItem, makeEditorKit.makeKit(rowIndex, loadedItem, relinquishFocus)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/));
             });
             updateDisplay();
             formatVisible(OptionalInt.of(rowIndex));

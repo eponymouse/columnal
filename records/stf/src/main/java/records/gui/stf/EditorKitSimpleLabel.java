@@ -31,6 +31,6 @@ public class EditorKitSimpleLabel<T> extends EditorKit<T>
             {
                 return Either.left(Collections.emptyList());
             }
-        }, p -> {});
+        }, p -> {}, () -> {});
     }
 }

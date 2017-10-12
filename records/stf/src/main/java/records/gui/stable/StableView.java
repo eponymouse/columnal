@@ -162,14 +162,14 @@ public class StableView
         grid = new VirtScrollStrTextGrid(new ValueLoadSave()
         {
             @Override
-            public void fetchEditorKit(int rowIndex, int colIndex, EditorKitCallback setEditorKit)
+            public void fetchEditorKit(int rowIndex, int colIndex, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setEditorKit)
             {
                 if (columns != null && colIndex < columns.size())
                 {
-                    columns.get(colIndex).getSecond().fetchValue(rowIndex, b -> {}, () -> {}, setEditorKit, -1, -1);
+                    columns.get(colIndex).getSecond().fetchValue(rowIndex, b -> {}, relinquishFocus, setEditorKit, -1, -1);
                 }
             }
-        });
+        }, pos -> tableEditable && columns.get(pos.columnIndex).getSecond().isEditable());
         /*
         scrollPane.getStyleClass().add("stable-view-scroll-pane");
         scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
@@ -709,7 +709,7 @@ public class StableView
         // Called to fetch a value.  Once available, receiver should be called.
         // Until then it will be blank.  You can call receiver multiple times though,
         // so you can just call it with a placeholder before returning.
-        public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl);
+        public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl);
 
         // Called when the column gets resized (graphically).  Width is in pixels
         public void columnResized(double width);

@@ -90,7 +90,7 @@ public final class StructuredTextField extends StyleClassedTextArea
     private boolean inSuperReplace;
 
     // store action takes the string value of the field, and the parsed value of the field, when it is valid.
-    public StructuredTextField(FXPlatformRunnable relinquishFocus)
+    public StructuredTextField()
     {
         super(false);
         getStyleClass().add("structured-text-field");
@@ -139,7 +139,13 @@ public final class StructuredTextField extends StyleClassedTextArea
                 }
             }),
             InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), (KeyEvent e) -> {
-                relinquishFocus.run(); // Should move focus away from us
+                if (editorKit != null)
+                    editorKit.relinquishFocus(); // Should move focus away from us
+                e.consume();
+            }),
+            InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ESCAPE), (KeyEvent e) -> {
+                if (editorKit != null)
+                    editorKit.relinquishFocus(); // Should move focus away from us
                 e.consume();
             })
         ));
@@ -152,9 +158,9 @@ public final class StructuredTextField extends StyleClassedTextArea
         endEdit(editorKit).either_(x -> showFixPopup(x), v -> editorKit.storeValue(v, this));
     }
 
-    public StructuredTextField(FXPlatformRunnable relinquishFocus, EditorKit<?> editorKit)
+    public StructuredTextField(EditorKit<?> editorKit)
     {
-        this(relinquishFocus);
+        this();
         resetContent(editorKit);
     }
 
@@ -584,21 +590,6 @@ public final class StructuredTextField extends StyleClassedTextArea
         }
     }
 
-    public interface EndEditActions<T>
-    {
-        /**
-         * Called when edit has finished, and the value in the field was changed
-         */
-        @OnThread(Tag.FXPlatform)
-        public void notifyChanged(T newValue);
-
-        /**
-         * Called when user presses enter or escape, to move the focus elsewhere (e.g. next node)
-         */
-        @OnThread(Tag.FXPlatform)
-        public void relinquishFocus();
-    }
-
     public void edit(@Nullable Point2D scenePoint)
     {
         if (!isEditable())
@@ -956,14 +947,16 @@ public final class StructuredTextField extends StyleClassedTextArea
     public static class EditorKit<T>
     {
         private final Component<T> contentComponent;
+        private final FXPlatformRunnable relinquishFocus;
         private @Nullable T completedValue;
         private final @Nullable FXPlatformConsumer<Pair<String, T>> store;
         private @Nullable State<T> lastValidValue;
 
-        public EditorKit(Component<T> contentComponent, @Nullable FXPlatformConsumer<Pair<String, T>> store)
+        public EditorKit(Component<T> contentComponent, @Nullable FXPlatformConsumer<Pair<String, T>> store, FXPlatformRunnable relinquishFocus)
         {
             this.contentComponent = contentComponent;
             this.store = store;
+            this.relinquishFocus = relinquishFocus;
         }
 
         private @Nullable State<T> captureState(List<Item> curValue, StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> document)
@@ -983,6 +976,11 @@ public final class StructuredTextField extends StyleClassedTextArea
             if (store != null)
                 store.consume(new Pair<>(stf.getText(), v));
             lastValidValue = captureState(stf.curValue, stf.getDocument());
+        }
+
+        public void relinquishFocus()
+        {
+            relinquishFocus.run();
         }
     }
 }

@@ -1,6 +1,7 @@
 package records.gui.stable;
 
 import records.gui.stable.StableView.ColumnHandler;
+import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
 import records.gui.stf.EditorKitSimpleLabel;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -17,7 +18,7 @@ public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
     }
 
     @Override
-    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformRunnable relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
+    public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
     {
         fetchValueForRow(rowIndex, s -> setCellContent.loadedValue(rowIndex, columnIndex, new EditorKitSimpleLabel(s)));
     }
