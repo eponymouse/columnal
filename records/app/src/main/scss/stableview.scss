@@ -102,6 +102,29 @@ $stable-view-header-border: hsb(0, 0%, 40%);
         -fx-background-color: $focus-color-row-col;
     }
 }
+
+.virt-grid-glass {
+    &:top-shadow {
+        -fx-border-color: linear-gradient(to bottom, rgba(0, 0, 0.5, 0.4), transparent);
+        -fx-border-style: solid;
+        -fx-border-width:
+            0.5em 0 0 0;
+    }
+    &:left-shadow {
+        -fx-border-color: linear-gradient(to right, rgba(0, 0, 0.5, 0.4), transparent);
+        -fx-border-style: solid;
+        -fx-border-width:
+            0 0 0 0.5em;
+    }
+    &:top-shadow:left-shadow {
+        -fx-border-color: linear-gradient(to bottom, rgba(0, 0, 0.5, 0.4), transparent), linear-gradient(to right, rgba(0, 0, 0.5, 0.4), transparent);
+        -fx-border-style: solid;
+        -fx-border-width:
+            0.5em 0 0 0, 0 0 0 0.5em;
+    }
+}
+
+
 /* editing-cell means the cell inside the wrapper has focus (cell being edited) */
 .stable-view-row-cell:editing-cell {
     -fx-background-color: $focus-color, white;

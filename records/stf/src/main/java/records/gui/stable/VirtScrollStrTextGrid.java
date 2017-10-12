@@ -20,7 +20,10 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
+import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -116,6 +119,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private @MonotonicNonNull Pair<VirtScrollStrTextGrid, ScrollLock> scrollLockedTo;
     private final SmoothScroller scrollX;
     private final SmoothScroller scrollY;
+    private final Pane glass;
+    private StackPane stackPane;
 
     public VirtScrollStrTextGrid(ValueLoadSave loadSave)
     {
@@ -130,6 +135,10 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         this.loadSave = loadSave;
 
         container = new Container();
+        glass = new Pane();
+        glass.setMouseTransparent(true);
+        glass.getStyleClass().add("virt-grid-glass");
+        stackPane = new StackPane(container, glass);
         scrollX = new SmoothScroller(container.translateXProperty(), extraCols, FXUtility.mouse(this)::scrollLayoutXBy, targetX -> {
             // Count column widths in that direction until we reach target:
             double curX;
@@ -330,6 +339,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             }
             this.firstVisibleRowOffset = rowPixelOffset;
             this.firstVisibleRowIndex = row;
+
+            boolean atTop = firstVisibleRowIndex == 0 && firstVisibleRowOffset >= -5;
+            FXUtility.setPseudoclass(glass, "top-shadow", !atTop);
         }
         if (colAndPixelOffset != null)
         {
@@ -339,6 +351,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
             this.firstVisibleColumnOffset = colAndPixelOffset.getSecond();
             this.firstVisibleColumnIndex = col;
+
+            boolean atLeft = firstVisibleColumnIndex == 0 && firstVisibleColumnOffset >= -5;
+            FXUtility.setPseudoclass(glass, "left-shadow", !atLeft);
         }
         scrollDependents.forEach((grid, lock) -> {
             @Nullable Pair<Integer, Double> targetRow = null;
@@ -528,7 +543,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     public Region getNode()
     {
-        return container;
+        return stackPane;
     }
 
     public void updateClip()
