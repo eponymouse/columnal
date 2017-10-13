@@ -363,6 +363,11 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             FXUtility.addChangeListenerPlatformNN(tableDataDisplay.heightEstimateProperty(), h -> FXUtility.mouse(this).updateSnappedFitHeight());
         }
 
+        setMaxWidth(USE_PREF_SIZE);
+        setMaxHeight(USE_PREF_SIZE);
+        setMinWidth(USE_PREF_SIZE);
+        setMinHeight(USE_PREF_SIZE);
+
         // Must be done as last item:
         @SuppressWarnings("initialization") @Initialized TableDisplay usInit = this;
         this.table.setDisplay(usInit);
@@ -541,8 +546,8 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         Platform.runLater(() -> {
             setLayoutX(bounds.getMinX());
             setLayoutY(bounds.getMinY());
-            setWidth(bounds.getWidth());
-            setHeight(bounds.getHeight());
+            setPrefWidth(bounds.getWidth());
+            setPrefHeight(bounds.getHeight());
             this.columnDisplay.set(display);
         });
     }
