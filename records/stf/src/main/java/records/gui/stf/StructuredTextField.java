@@ -178,10 +178,6 @@ public final class StructuredTextField extends StyleClassedTextArea
         Either<List<ErrorFix>, T> endInitial = endEdit(editorKit);
         @Nullable T val = endInitial.<@Nullable T>either(err -> null, v -> v);
         editorKit.completedValue = val;
-        if (editorKit.store != null && val != null)
-        {
-            editorKit.store.consume(new Pair<>(getText(), val));
-        }
         editorKit.lastValidValue = editorKit.captureState(curValue, getDocument());
     }
 
