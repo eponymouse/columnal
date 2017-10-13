@@ -127,10 +127,10 @@ public class VirtColHeaders implements ScrollBindable
                         });
                         getChildren().add(cell);
                     }
-
                     visibleCells.put(colIndex, cell);
                     cell.getChildren().setAll(getContent.apply(colIndex));
                 }
+                cell.setVisible(true);
                 cell.resizeRelocate(x, 0, grid.getColumnWidth(colIndex), getHeight());
                 x += grid.getColumnWidth(colIndex) + grid.GAP;
             }
@@ -143,7 +143,8 @@ public class VirtColHeaders implements ScrollBindable
 
             for (VBox spareCell : spareCells)
             {
-                spareCell.relocate(10000, 10000);
+                spareCell.relocate(-1000, -1000);
+                spareCell.setVisible(false);
             }
         }
     }

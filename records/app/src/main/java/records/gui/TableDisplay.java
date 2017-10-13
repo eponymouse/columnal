@@ -194,18 +194,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         @Override
         public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
         {
-            if (removedRowsCount > 0)
-            {
-                items.remove(startRowIncl, startRowIncl + removedRowsCount + 1);
-            }
-            if (addedRowsCount > 0)
-            {
-                // TODO this isn't very efficient:
-                for (int i = 0; i < addedRowsCount; i++)
-                {
-                    items.add(startRowIncl + i, null);
-                }
-            }
+            // TODO make table redisplay
 
             onModify.run();
         }

@@ -10,29 +10,17 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.event.Event;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
-import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.ScrollBar;
-import javafx.scene.effect.BlurType;
-import javafx.scene.effect.DropShadow;
-import javafx.scene.input.KeyCode;
-import javafx.scene.input.KeyEvent;
-import javafx.scene.input.MouseButton;
-import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
-import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -41,11 +29,6 @@ import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import org.fxmisc.flowless.Cell;
-import org.fxmisc.flowless.VirtualFlow;
-import org.fxmisc.wellbehaved.event.EventPattern;
-import org.fxmisc.wellbehaved.event.InputMap;
-import org.fxmisc.wellbehaved.event.Nodes;
 import org.reactfx.collection.LiveArrayList;
 import org.reactfx.collection.LiveList;
 import org.reactfx.value.Val;
@@ -60,7 +43,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DeepListBinding;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -119,7 +101,6 @@ import java.util.stream.Collectors;
 @OnThread(Tag.FXPlatform)
 public class StableView
 {
-    protected final ObservableList<@Nullable Void> items;
     private final VirtRowLabels lineNumbers;
     private final VirtColHeaders headerItemsContainer;
     private final VirtScrollStrTextGrid grid;
@@ -143,12 +124,6 @@ public class StableView
     private boolean tableEditable = true;
     private final ScrollBar hbar;
     private final ScrollBar vbar;
-    private final DropShadow leftDropShadow;
-    private final DropShadow topDropShadow;
-    private final DropShadow topLeftDropShadow;
-    // Table will start in top left, so these should start as true:
-    private boolean atTop = true;
-    private boolean atLeft = true;
 
     private @Nullable TableOperations operations;
     private final SimpleBooleanProperty nonEmptyProperty = new SimpleBooleanProperty(false);
@@ -156,9 +131,6 @@ public class StableView
 
     public StableView()
     {
-        // We could make a dummy list which keeps track of size, but doesn't
-        // actually bother storing the nulls:
-        items = FXCollections.observableArrayList();
         grid = new VirtScrollStrTextGrid(new ValueLoadSave()
         {
             @Override
@@ -257,65 +229,6 @@ public class StableView
         sideClip.heightProperty().bind(lineNumbers.getNode().heightProperty());
         lineNumberWrapper.setClip(sideClip);
 
-        // CSS doesn't let us have different width to height, which we need to prevent
-        // visible curling in at the edges:
-        topDropShadow = new DropShadow();
-        topDropShadow.setBlurType(BlurType.GAUSSIAN);
-        topDropShadow.setColor(Color.hsb(0, 0, 0.5, 0.7));
-        topDropShadow.setOffsetY(2);
-        topDropShadow.setHeight(8);
-        topDropShadow.setWidth(0);
-        topDropShadow.setSpread(0.4);
-        leftDropShadow = new DropShadow();
-        leftDropShadow.setBlurType(BlurType.GAUSSIAN);
-        leftDropShadow.setColor(Color.hsb(0, 0, 0.5, 0.7));
-        leftDropShadow.setHeight(0);
-        leftDropShadow.setWidth(8);
-        leftDropShadow.setOffsetX(2);
-        leftDropShadow.setSpread(0.4);
-        // Copy of topDropShadow, but with input of leftDropShadow:
-        topLeftDropShadow = new DropShadow();
-        topLeftDropShadow.setBlurType(BlurType.GAUSSIAN);
-        topLeftDropShadow.setColor(Color.hsb(0, 0, 0.5, 0.7));
-        topLeftDropShadow.setOffsetX(2);
-        topLeftDropShadow.setOffsetY(2);
-        topLeftDropShadow.setHeight(8);
-        topLeftDropShadow.setWidth(8);
-        topLeftDropShadow.setSpread(0.4);
-        
-        /*
-        FXUtility.listen(virtualFlow.visibleCells(), c -> {
-            if (!c.getList().isEmpty())
-            {
-                StableRow firstVisible = c.getList().get(0);
-                int firstVisibleRowIndex = firstVisible.getCurRowIndex();
-                StableRow lastVisible = c.getList().get(c.getList().size() - 1);
-                int lastVisibleRowIndex = lastVisible.getCurRowIndex();
-                // These values are negative, so negate to deal with them as positive:
-                double topY = -virtualFlow.cellToViewport(firstVisible, 0, 0).getY();
-                double bottomY = -virtualFlow.cellToViewport(lastVisible, 0, lastVisible.getNode().getHeight() - 4).getY();
-                //FXUtility.setPseudoclass(header, "pinned", topY >= 5 || firstVisibleRowIndex > 0);
-                atTop = topY < 5 && firstVisibleRowIndex == 0;
-                updateShadows(header, lineNumberWrapper, topLeft);
-                FXUtility.setPseudoclass(stackPane, "at-top", topY < 1 && firstVisibleRowIndex == 0);
-                FXUtility.setPseudoclass(stackPane, "at-bottom", lastVisibleRowIndex == items.size() - 1 && bottomY < virtualFlow.getHeight());
-                lineNumbers.showAtOffset(firstVisibleRowIndex, -topY);
-                topShowingCellProperty.set(new Pair<>(firstVisibleRowIndex, -topY));
-                // TODO call listener to update visible cells (EditorKitCache needs this)
-            }
-        });
-        */
-
-        /*
-        FXUtility.addChangeListenerPlatformNN(virtualFlow.breadthOffsetProperty(), d -> {
-            //FXUtility.setPseudoclass(lineNumbers, "pinned", d >= 5);
-            atLeft = d < 5;
-            updateShadows(header, lineNumberWrapper, topLeft);
-            FXUtility.setPseudoclass(stackPane, "at-left", d < 1);
-            FXUtility.setPseudoclass(stackPane, "at-right", d >= headerItemsContainer.getWidth() - virtualFlow.getWidth() - 3);
-        });
-        */
-
         columnSizeTotal = new DeepListBinding<Number, Double>(columnSizes, ds -> ds.stream().mapToDouble(Number::doubleValue).sum());
         widthEstimate = new SimpleDoubleProperty();
         FXUtility.addChangeListenerPlatformNN(columnSizeTotal, d -> widthEstimate.set(columnSizeTotal.getValue() + lineNumbers.getNode().getWidth()));
@@ -327,23 +240,6 @@ public class StableView
     {
         grid.scrollYToPixel(0);
         grid.scrollXToPixel(0);
-    }
-
-    @RequiresNonNull({"topDropShadow", "leftDropShadow", "topLeftDropShadow"})
-    private void updateShadows(@UnknownInitialization(Object.class) StableView this, Node top, Node left, Node topLeft)
-    {
-        if (!atTop)
-        {
-            top.setEffect(topDropShadow);
-            topLeft.setEffect(atLeft ? topDropShadow : topLeftDropShadow);
-        }
-        else
-        {
-            top.setEffect(null);
-            topLeft.setEffect(atLeft ? null : leftDropShadow);
-        }
-
-        left.setEffect(atLeft ? null : leftDropShadow);
     }
 
     private static Node makeButtonArrow()
@@ -361,23 +257,6 @@ public class StableView
     public void setPlaceholderText(@Localized String text)
     {
         placeholder.setText(text);
-    }
-
-    @EnsuresNonNullIf(expression = {"operations", "operations.appendRows"}, result=true)
-    private boolean isAppendRow(int index)
-    {
-        return operations != null && operations.appendRows != null && index == items.size() - 1;
-    }
-
-    private OptionalInt getLastContentRowIndex()
-    {
-        int last = items.size() - 1;
-        if (isAppendRow(last))
-            last -= 1;
-        if (last >= 0)
-            return OptionalInt.of(last);
-        else
-            return OptionalInt.empty();
     }
 
     private void appendRow(int newRowIndex)
@@ -402,9 +281,6 @@ public class StableView
     {
         final int curColumnAndRowSet = this.columnAndRowSet.incrementAndGet();
         this.operations = operations;
-        // Important to clear the items, as we need to make new cells
-        // which will have the updated number of columns
-        items.clear();
         this.columns = columns;
         this.columnSizes.clear();
         for (int i = 0; i < columns.size(); i++)
@@ -421,67 +297,6 @@ public class StableView
             Doubles.toArray(columnSizes.stream().map(s -> s.get()).collect(Collectors.toList())));
 
         scrollToTopLeft();
-
-        boolean addAppendRow = operations != null && operations.appendRows != null;
-        Workers.onWorkerThread("Calculating table rows", Priority.FETCH, () -> {
-            int toAdd = 0;
-            try
-            {
-                outer:
-                for (int i = 0; i < 10; i++)
-                {
-                    // Cancel if a latet setColumnsAndRows call has occurred:
-                    if (curColumnAndRowSet != this.columnAndRowSet.get())
-                        return;
-
-                    for (int j = 0; j < 10; j++)
-                    {
-                        if (isRowValid.apply(i * 10 + j))
-                        {
-                            toAdd++;
-                        }
-                        else
-                        {
-                            break outer;
-                        }
-                    }
-                    int toAddFinal = toAdd;
-                    Platform.runLater(() ->
-                    {
-                        // Cancel if a latet setColumnsAndRows call has occurred:
-                        if (curColumnAndRowSet != this.columnAndRowSet.get())
-                            return;
-
-                        for (int k = 0; k < toAddFinal; k++)
-                        {
-                            items.add(null);
-                        }
-                    });
-                    toAdd = 0;
-                }
-            }
-            catch (InternalException | UserException e)
-            {
-                Utility.log(e);
-                // TODO display somewhere?
-            }
-            // Add final row for the "+" buttons
-            if (addAppendRow)
-                toAdd += 1;
-            int toAddFinal = toAdd;
-            Platform.runLater(() -> {
-                // Cancel if a latet setColumnsAndRows call has occurred:
-                if (curColumnAndRowSet != this.columnAndRowSet.get())
-                    return;
-
-                for (int k = 0; k < toAddFinal; k++)
-                {
-                    items.add(null);
-                }
-            });
-        });
-
-        //TODO store it for fetching more
     }
 
     public DoubleExpression topHeightProperty()
@@ -598,110 +413,6 @@ public class StableView
         private void setRightEdgeToSceneX(double sceneX)
         {
             columnSizes.get(itemIndex).set(Math.max(MIN_COLUMN_WIDTH, sceneX - localToScene(getBoundsInLocal()).getMinX()));
-        }
-    }
-
-    @OnThread(Tag.FXPlatform)
-    private class StableRow implements Cell<@Nullable Void, Region>
-    {
-        private final HBox hBox = new HBox();
-        private final ArrayList<Pane> cells = new ArrayList<>();
-        private final ArrayList<@Nullable InputMap<?>> cellItemInputMaps = new ArrayList<>();
-        private int curRowIndex = -1;
-        private final List<Button> appendButtons = new ArrayList<>();
-
-
-        @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public boolean isReusable()
-        {
-            // TODO set this to true, but in that case we also need to handle number of columns changing
-            // under our feet.
-            return false;
-        }
-
-        @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public void updateIndex(int rowIndex)
-        {
-            if (rowIndex != curRowIndex || appendButtons.isEmpty() != !isAppendRow(rowIndex))
-            {
-                appendButtons.clear();
-                curRowIndex = rowIndex;
-
-                for (int columnIndex = 0; columnIndex < columns.size(); columnIndex++)
-                {
-                    if (isAppendRow(curRowIndex))
-                    {
-                        Button button = GUI.button("stableView.append", () -> appendRow(rowIndex), "stable-view-row-append-button");
-                        cells.get(columnIndex).getChildren().setAll(button);
-                        appendButtons.add(button);
-                        FXUtility.addChangeListenerPlatformNN(button.hoverProperty(), hover -> {
-                            for (Button other : appendButtons)
-                            {
-                                if (other != button)
-                                {
-                                    FXUtility.setPseudoclass(other, "hover", hover);
-                                }
-                            }
-                        });
-                    }
-                    else
-                    {
-                        ColumnHandler column = columns.get(columnIndex).getSecond();
-                        int columnIndexFinal = columnIndex;
-                        // TODO
-                        /*
-                        StableRow firstVisibleRow = virtualFlow.visibleCells().get(0);
-                        StableRow lastVisibleRow = virtualFlow.visibleCells().get(virtualFlow.visibleCells().size() - 1);
-
-                        column.fetchValue(rowIndex, focus -> cellContentFocusChanged(columnIndexFinal, focus), () -> cells.get(columnIndexFinal).requestFocus(), cellContent ->
-                        {
-                            Pane cell = cells.get(columnIndexFinal);
-                            cell.getChildren().setAll(cellContent);
-
-                            // TODO don't keep adding this if cell gets re-used
-                            cellContent.addEventFilter(ScrollEvent.SCROLL, e -> {
-                                FXUtility.mouse(StableView.this).forwardedScrollEvent(e);
-                                e.consume();
-                            });
-                        }, firstVisibleRow.curRowIndex, lastVisibleRow.curRowIndex);
-                        */
-                        // Swap old input map (if any) for new (if any)
-                        if (cellItemInputMaps.get(columnIndex) != null)
-                            Nodes.removeInputMap(cells.get(columnIndex), cellItemInputMaps.get(columnIndex));
-                        @Nullable InputMap<?> inputMap = null ; // TODO column.getInputMapForParent(rowIndex);
-                        cellItemInputMaps.set(columnIndex, inputMap);
-                        if (inputMap != null)
-                            Nodes.addInputMap(cells.get(columnIndex), inputMap);
-                    }
-                }
-            }
-        }
-
-        private void cellContentFocusChanged(int columnIndex, boolean focused)
-        {
-            FXUtility.setPseudoclass(cells.get(columnIndex), "editing-cell", focused);
-        }
-
-        // You have to override this to avoid the UnsupportedOperationException
-        @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public void updateItem(@Nullable Void item)
-        {
-            // Everything is actually done in updateIndex
-        }
-
-        @Override
-        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-        public Region getNode()
-        {
-            return hBox;
-        }
-
-        public int getCurRowIndex()
-        {
-            return curRowIndex;
         }
     }
 

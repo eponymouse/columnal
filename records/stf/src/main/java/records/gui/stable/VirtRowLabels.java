@@ -130,6 +130,7 @@ public class VirtRowLabels implements ScrollBindable
                     visibleCells.put(rowIndex, cell);
                     cell.setText("" + rowIndex);
                 }
+                cell.setVisible(true);
                 cell.resizeRelocate(0, y, getWidth(), grid.rowHeight);
                 y += grid.rowHeight + grid.GAP;
             }
@@ -142,7 +143,8 @@ public class VirtRowLabels implements ScrollBindable
 
             for (Label spareCell : spareCells)
             {
-                spareCell.relocate(10000, 10000);
+                spareCell.relocate(-1000, -1000);
+                spareCell.setVisible(false);
             }
         }
     }

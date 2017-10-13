@@ -902,6 +902,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                         cell.resetContent(new EditorKitSimpleLabel<>("Loading..."));
                         loadSave.fetchEditorKit(rowIndex, columnIndex, VirtScrollStrTextGrid.this::focusCell, VirtScrollStrTextGrid.this);
                     }
+                    cell.setVisible(true);
                     cell.resizeRelocate(x, y, columnWidths[columnIndex], rowHeight);
                     x += columnWidths[columnIndex] + GAP;
                 }
@@ -925,6 +926,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                         getChildren().add(newButton);
                         return newButton;
                     });
+                    appendButton.setVisible(true);
                     appendButton.resizeRelocate(x, y, columnWidths[columnIndex], rowHeight + GAP);
                     // TODO add the highlight-all-on-hover effect
                     x += columnWidths[columnIndex] + GAP;
@@ -934,7 +936,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             {
                 for (Button button : visibleRowAppendButtons.values())
                 {
-                    button.relocate(10000, 10000);
+                    button.relocate(-1000, -1000);
+                    button.setVisible(false);
                 }
             }
             // TODO remove unused append row buttons
@@ -947,7 +950,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
             for (StructuredTextField spareCell : spareCells)
             {
-                spareCell.relocate(10000, 10000);
+                spareCell.relocate(-1000, -1000);
+                spareCell.setVisible(false);
             }
 
             updateClip();
