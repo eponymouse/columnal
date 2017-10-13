@@ -15,6 +15,7 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
@@ -46,6 +47,7 @@ import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,6 +80,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // Cells which are visible, organised as a 2D array
     // (inner is a row, outer is list of rows)
     private final Map<CellPosition, StructuredTextField> visibleCells;
+    private final Map<Integer, Button> visibleRowAppendButtons;
     private final FXPlatformFunction<CellPosition, Boolean> canEdit;
     // The first index logically visible.  This is not actually necessarily the same
     // as first really-visible, if we are currently doing some smooth scrolling:
@@ -99,6 +102,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // This is a minimum number of rows known to be in the table:
     @OnThread(Tag.FXPlatform)
     private int currentKnownRows = 0;
+    private boolean currentKnownRowsIsFinal = false;
     // A function to ask if the row index is valid.  If isRowValid(n)
     // returns false, it's guaranteed that isRowValid(m) for m>=n is also false.
     @OnThread(Tag.FXPlatform)
@@ -122,11 +126,14 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private final SmoothScroller scrollY;
     private final Pane glass;
     private StackPane stackPane;
+    // null if you can't append to this grid:
+    private @Nullable FXPlatformConsumer<Integer> appendRow;
 
     public VirtScrollStrTextGrid(ValueLoadSave loadSave, FXPlatformFunction<CellPosition, Boolean> canEdit)
     {
         this.canEdit = canEdit;
         visibleCells = new HashMap<>();
+        visibleRowAppendButtons = new HashMap<>();
         firstVisibleColumnIndex = 0;
         firstVisibleRowIndex = 0;
         firstVisibleColumnOffset = 0;
@@ -212,6 +219,12 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     private void updateKnownRows()
     {
+        if (currentKnownRowsIsFinal)
+        {
+            // We already reached the end:
+            return;
+        }
+
         final int prevKnownRows = currentKnownRows;
         if (prevKnownRows > firstVisibleRowIndex + visibleRowCount + 200)
         {
@@ -223,21 +236,30 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         @Nullable SimulationFunction<Integer, Boolean> isRowValidFinal = this.isRowValid;
         Workers.onWorkerThread("Calculating number of rows", Priority.FETCH, () -> {
             int knownRows;
+            boolean reachedEnd = false;
             for (knownRows = prevKnownRows + 1; knownRows < searchMax; knownRows++)
             {
                 try
                 {
-                    if (isRowValidFinal == null || !isRowValidFinal.apply(knownRows))
+                    if (isRowValidFinal == null)
                         break;
-                } catch (InternalException | UserException e)
+                    if (!isRowValidFinal.apply(knownRows))
+                    {
+                        reachedEnd = true;
+                        break;
+                    }
+                }
+                catch (InternalException | UserException e)
                 {
                     Utility.log(e);
                     break;
                 }
             }
             int knownRowsFinal = knownRows - 1;
+            boolean reachedEndFinal = reachedEnd;
             Platform.runLater(() -> {
                 currentKnownRows = knownRowsFinal;
+                currentKnownRowsIsFinal = reachedEndFinal;
                 container.requestLayout();
             });
         });
@@ -495,7 +517,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         void fetchEditorKit(int rowIndex, int colIndex, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setEditorKit);
     }
 
-    public void setData(SimulationFunction<Integer, Boolean> isRowValid, double[] columnWidths)
+    public void setData(SimulationFunction<Integer, Boolean> isRowValid, @Nullable FXPlatformConsumer<Integer> appendRow, double[] columnWidths)
     {
         // Snap to top left:
         firstVisibleRowIndex = 0;
@@ -510,7 +532,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         // These variables resize the number of elements,
         // and then layout actually rejigs the display:
         this.isRowValid = isRowValid;
+        this.appendRow = appendRow;
         this.currentKnownRows = 0;
+        this.currentKnownRowsIsFinal = false;
         updateKnownRows();
         this.columnWidths = Arrays.copyOf(columnWidths, columnWidths.length);
 
@@ -883,6 +907,37 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 }
                 y += rowHeight + GAP;
             }
+            if (y < getHeight() && appendRow != null && currentKnownRowsIsFinal && currentKnownRows == lastDisplayRowExcl)
+            {
+                x = firstVisibleColumnOffset - sumColumnWidths(firstDisplayCol, firstVisibleColumnIndex);
+                for (int columnIndex = firstDisplayCol; columnIndex < lastDisplayColExcl; columnIndex++)
+                {
+                    Button appendButton = visibleRowAppendButtons.computeIfAbsent(columnIndex, i -> {
+                        Button newButton = GUI.button("stableView.append", () -> {
+                            // Shouldn't be given outer check, but this one is for the null checker:
+                            if (appendRow != null)
+                            {
+                                appendRow.consume(currentKnownRows);
+                                currentKnownRowsIsFinal = false;
+                                updateKnownRows();
+                            }
+                        }, "stable-view-row-append-button");
+                        getChildren().add(newButton);
+                        return newButton;
+                    });
+                    appendButton.resizeRelocate(x, y, columnWidths[columnIndex], rowHeight + GAP);
+                    // TODO add the highlight-all-on-hover effect
+                    x += columnWidths[columnIndex] + GAP;
+                }
+            }
+            else
+            {
+                for (Button button : visibleRowAppendButtons.values())
+                {
+                    button.relocate(10000, 10000);
+                }
+            }
+            // TODO remove unused append row buttons
 
             // Don't let spare cells be more than two visible rows or columns:
             int maxSpareCells = MAX_EXTRA_ROW_COLS * Math.max(newNumVisibleCols, newNumVisibleRows);

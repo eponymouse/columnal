@@ -416,7 +416,9 @@ public class StableView
 
         nonEmptyProperty.set(!columns.isEmpty());
 
-        grid.setData(isRowValid, Doubles.toArray(columnSizes.stream().map(s -> s.get()).collect(Collectors.toList())));
+        grid.setData(isRowValid,
+            operations != null && operations.appendRows != null ? FXUtility.mouse(this)::appendRow : null,
+            Doubles.toArray(columnSizes.stream().map(s -> s.get()).collect(Collectors.toList())));
 
         scrollToTopLeft();
 
