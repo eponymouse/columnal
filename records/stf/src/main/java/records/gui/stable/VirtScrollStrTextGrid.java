@@ -660,8 +660,11 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             }
 
             // Reset start and end time:
-            scrollStartNanos = System.nanoTime();
-            scrollEndNanos = scrollStartNanos + SCROLL_TIME_NANOS;
+            long now = System.nanoTime();
+            boolean justStarted = scrollEndNanos < now;
+            if (justStarted)
+                scrollStartNanos = now;
+            scrollEndNanos = now + SCROLL_TIME_NANOS;
 
             if (delta != 0.0)
             {
@@ -681,7 +684,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 {
                     extraRowCols.set(extra);
                 }
-                scrollStartOffset = scrollOffset;
+                if (justStarted)
+                    scrollStartOffset = scrollOffset;
                 translateProperty.set(scrollOffset);
             }
 
