@@ -9,6 +9,7 @@ import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
+import javafx.beans.value.ObservableDoubleValue;
 import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
@@ -57,6 +58,7 @@ import java.util.List;
 import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * A customised equivalent of TableView
@@ -108,7 +110,7 @@ public class StableView
     private final StackPane stackPane; // has grid and placeholder as its children
     private final ObservableValue<Double> columnSizeTotal;
     private final DoubleProperty widthEstimate;
-    private final Val<Double> heightEstimate;
+    private final DoubleProperty heightEstimate;
 
     // An integer counter which tracks which instance of setColumnsAndRows we are on.  Used to
     // effectively cancel some queued run-laters if the method is called twice in quick succession.
@@ -231,9 +233,13 @@ public class StableView
 
         columnSizeTotal = new DeepListBinding<Number, Double>(columnSizes, ds -> ds.stream().mapToDouble(Number::doubleValue).sum());
         widthEstimate = new SimpleDoubleProperty();
-        FXUtility.addChangeListenerPlatformNN(columnSizeTotal, d -> widthEstimate.set(columnSizeTotal.getValue() + lineNumbers.getNode().getWidth()));
-        FXUtility.addChangeListenerPlatformNN(lineNumbers.getNode().widthProperty(), d -> widthEstimate.set(columnSizeTotal.getValue() + lineNumbers.getNode().getWidth()));
-        heightEstimate = Val.combine(/*virtualFlow.totalHeightEstimateProperty()*/headerItemsContainer.getNode().heightProperty(), headerItemsContainer.getNode().heightProperty(), (x, y) -> x.doubleValue() + y.doubleValue());
+        FXPlatformConsumer<Number> widthListener = x -> widthEstimate.set(columnSizeTotal.getValue().doubleValue() + lineNumbers.getNode().getWidth());
+        FXUtility.addChangeListenerPlatformNN(columnSizeTotal, widthListener);
+        FXUtility.addChangeListenerPlatformNN(lineNumbers.getNode().widthProperty(), widthListener);
+        heightEstimate = new SimpleDoubleProperty();
+        FXPlatformConsumer<Number> heightListener = x -> heightEstimate.set(grid.totalHeightEstimateProperty().getValue() + headerItemsContainer.getNode().getHeight());
+        FXUtility.addChangeListenerPlatformNN(grid.totalHeightEstimateProperty(), heightListener);
+        FXUtility.addChangeListenerPlatformNN(headerItemsContainer.getNode().heightProperty(), heightListener);
     }
 
     public void scrollToTopLeft()
@@ -335,7 +341,7 @@ public class StableView
         return widthEstimate;
     }
 
-    public ObservableValue<Double> heightEstimateProperty()
+    public ObservableDoubleValue heightEstimateProperty()
     {
         // Includes header items height:
         return heightEstimate;

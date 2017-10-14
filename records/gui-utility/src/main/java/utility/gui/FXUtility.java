@@ -9,6 +9,7 @@ import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.Property;
 import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -264,7 +265,7 @@ public class FXUtility
     @OnThread(Tag.FXPlatform)
     @SuppressWarnings("nullness")
     // NN = Not Null
-    public static <T> void addChangeListenerPlatformNN(ObservableValue<@NonNull T> property, FXPlatformConsumer<@NonNull T> listener)
+    public static <T> void addChangeListenerPlatformNN(ObservableValue<@NonNull ? extends T> property, FXPlatformConsumer<@NonNull T> listener)
     {
         // Defeat thread checker:
         property.addListener(new ChangeListener<T>()
@@ -432,13 +433,24 @@ public class FXUtility
         return Bindings.createObjectBinding(() -> extract.apply(original.get()), original);
     }
 
-    public static <T, R> ObjectExpression<R> mapBindingEager(ObservableObjectValue<@Nullable T> original, FXPlatformFunction<@Nullable T, R> extract, ObservableValue<?>... otherDependencies)
+    public static <T, R> ObjectExpression<R> mapBindingEager(ObservableValue<@Nullable T> original, FXPlatformFunction<@Nullable T, R> extract, ObservableValue<?>... otherDependencies)
     {
-        ObjectProperty<R> binding = new SimpleObjectProperty<>(extract.apply(original.get()));
+        ObjectProperty<R> binding = new SimpleObjectProperty<>(extract.apply(original.getValue()));
         addChangeListenerPlatform(original, x -> binding.setValue(extract.apply(x)));
         for (ObservableValue<?> otherDep : otherDependencies)
         {
-            addChangeListenerPlatform(otherDep, y -> binding.setValue(extract.apply(original.get())));
+            addChangeListenerPlatform(otherDep, y -> binding.setValue(extract.apply(original.getValue())));
+        }
+        return binding;
+    }
+
+    public static <T, R> ObjectExpression<@NonNull R> mapBindingEagerNN(ObservableValue<@NonNull T> original, FXPlatformFunction<@NonNull T, @NonNull R> extract, ObservableValue<?>... otherDependencies)
+    {
+        ObjectProperty<@NonNull R> binding = new SimpleObjectProperty<>(extract.apply(original.getValue()));
+        addChangeListenerPlatformNN(original, x -> binding.setValue(extract.apply(x)));
+        for (ObservableValue<?> otherDep : otherDependencies)
+        {
+            addChangeListenerPlatform(otherDep, y -> binding.setValue(extract.apply(original.getValue())));
         }
         return binding;
     }
@@ -558,4 +570,13 @@ public class FXUtility
         return file;
     }
 
+    // TODO this seems to fall foul of checker, maybe try in 2.2.1?
+    public static <R, T> void bindEager(Property<R> dest, List<ObservableValue<@NonNull ? extends T>> srcs, FXPlatformFunction<Stream<@NonNull T>, R> calculate)
+    {
+        FXPlatformConsumer<@NonNull T> listener = x -> dest.setValue(calculate.apply(srcs.stream().<@NonNull T>map((ObservableValue<@NonNull ? extends @NonNull T> e) -> e.getValue())));
+        for (ObservableValue<@NonNull ? extends T> src : srcs)
+        {
+            FXUtility.<T>addChangeListenerPlatformNN(src, listener);
+        }
+    }
 }

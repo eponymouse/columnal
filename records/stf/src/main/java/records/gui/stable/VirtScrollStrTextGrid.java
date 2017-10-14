@@ -4,12 +4,15 @@ import com.google.common.collect.ImmutableList;
 import javafx.animation.AnimationTimer;
 import javafx.animation.Interpolator;
 import javafx.application.Platform;
+import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ObservableDoubleValue;
+import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -28,6 +31,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
@@ -82,6 +86,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private final Map<CellPosition, StructuredTextField> visibleCells;
     private final Map<Integer, Button> visibleRowAppendButtons;
     private final FXPlatformFunction<CellPosition, Boolean> canEdit;
+    private final ObservableValue<Double> totalHeightEstimate;
     // The first index logically visible.  This is not actually necessarily the same
     // as first really-visible, if we are currently doing some smooth scrolling:
     private int firstVisibleColumnIndex;
@@ -101,7 +106,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     final double rowHeight;
     // This is a minimum number of rows known to be in the table:
     @OnThread(Tag.FXPlatform)
-    private int currentKnownRows = 0;
+    private IntegerProperty currentKnownRows = new SimpleIntegerProperty(0);
     private boolean currentKnownRowsIsFinal = false;
     // A function to ask if the row index is valid.  If isRowValid(n)
     // returns false, it's guaranteed that isRowValid(m) for m>=n is also false.
@@ -142,6 +147,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         rowHeight = 24;
         columnWidths = new double[0];
         this.loadSave = loadSave;
+        this.totalHeightEstimate = FXUtility.<@NonNull Number, Double>mapBindingEagerNN(currentKnownRows, rows -> rows.doubleValue() * (rowHeight + GAP));
 
         container = new Container();
         glass = new Pane();
@@ -225,7 +231,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             return;
         }
 
-        final int prevKnownRows = currentKnownRows;
+        final int prevKnownRows = currentKnownRows.get();
         if (prevKnownRows > firstVisibleRowIndex + visibleRowCount + 200)
         {
             // If there's more than 200 unshown, that will do as an estimate:
@@ -258,7 +264,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             int knownRowsFinal = knownRows - 1;
             boolean reachedEndFinal = reachedEnd;
             Platform.runLater(() -> {
-                currentKnownRows = knownRowsFinal;
+                currentKnownRows.set(knownRowsFinal);
                 currentKnownRowsIsFinal = reachedEndFinal;
                 container.requestLayout();
             });
@@ -361,10 +367,10 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 // Can't scroll above top of first item:
                 rowPixelOffset = 0.0;
             }
-            else if (row > currentKnownRows - 1)
+            else if (row > currentKnownRows.get() - 1)
             {
                 // Can't scroll beyond showing the last cell at the top of the window:
-                row = currentKnownRows - 1;
+                row = currentKnownRows.get() - 1;
                 rowPixelOffset = 0;
             }
             this.firstVisibleRowOffset = rowPixelOffset;
@@ -449,7 +455,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     int getCurrentKnownRows()
     {
-        return currentKnownRows;
+        return currentKnownRows.get();
     }
 
     int getExtraRows()
@@ -496,6 +502,11 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         return total;
     }
 
+    public ObservableValue<Double> totalHeightEstimateProperty()
+    {
+        return totalHeightEstimate;
+    }
+
     public static enum ScrollLock
     {
         HORIZONTAL, VERTICAL, BOTH;
@@ -533,7 +544,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         // and then layout actually rejigs the display:
         this.isRowValid = isRowValid;
         this.appendRow = appendRow;
-        this.currentKnownRows = 0;
+        this.currentKnownRows.set(0);
         this.currentKnownRowsIsFinal = false;
         updateKnownRows();
         this.columnWidths = Arrays.copyOf(columnWidths, columnWidths.length);
@@ -568,7 +579,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             return null;
         y -= firstVisibleRowOffset;
         rowIndex = (int) Math.floor(y / (rowHeight + GAP)) + firstVisibleRowIndex;
-        if (rowIndex >= currentKnownRows)
+        if (rowIndex >= currentKnownRows.get())
             return null;
         return new CellPosition(rowIndex, colIndex);
     }
@@ -776,8 +787,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 int newRowIndex = focusedCellPos.rowIndex + rows;
                 if (newRowIndex < 0)
                     newRowIndex = 0;
-                if (newRowIndex >= currentKnownRows)
-                    newRowIndex = currentKnownRows - 1;
+                if (newRowIndex >= currentKnownRows.get())
+                    newRowIndex = currentKnownRows.get() - 1;
                 int newColIndex = focusedCellPos.columnIndex + columns;
                 if (newColIndex < 0)
                     newColIndex = 0;
@@ -817,7 +828,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             layout();
             if (focusedCellPos != null)
             {
-                focusCell(new CellPosition(currentKnownRows - 1, focusedCellPos.columnIndex));
+                focusCell(new CellPosition(currentKnownRows.get() - 1, focusedCellPos.columnIndex));
             }
         }
 
@@ -843,7 +854,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             double y = firstVisibleRowOffset;
 
             // We may not need the +1, but play safe:
-            int newNumVisibleRows = Math.min(currentKnownRows - firstVisibleRowIndex, (int)Math.ceil(getHeight() / (rowHeight + GAP)) + 1);
+            int newNumVisibleRows = Math.min(currentKnownRows.get() - firstVisibleRowIndex, (int)Math.ceil(getHeight() / (rowHeight + GAP)) + 1);
             int newNumVisibleCols = 0;
             for (int column = firstVisibleColumnIndex; x < getWidth() && column < columnWidths.length; column++)
             {
@@ -912,7 +923,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 }
                 y += rowHeight + GAP;
             }
-            if (y < getHeight() && appendRow != null && currentKnownRowsIsFinal && currentKnownRows == lastDisplayRowExcl)
+            if (y < getHeight() && appendRow != null && currentKnownRowsIsFinal && currentKnownRows.get() == lastDisplayRowExcl)
             {
                 x = firstVisibleColumnOffset - sumColumnWidths(firstDisplayCol, firstVisibleColumnIndex);
                 for (int columnIndex = firstDisplayCol; columnIndex < lastDisplayColExcl; columnIndex++)
@@ -922,7 +933,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                             // Shouldn't be given outer check, but this one is for the null checker:
                             if (appendRow != null)
                             {
-                                appendRow.consume(currentKnownRows);
+                                appendRow.consume(currentKnownRows.get());
                                 currentKnownRowsIsFinal = false;
                                 updateKnownRows();
                             }
@@ -989,7 +1000,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // The last actual display row (exclusive), including any needed for displaying smooth scrolling
     int getLastDisplayRowExcl()
     {
-        return Math.min(currentKnownRows, firstVisibleRowIndex + visibleRowCount + Math.max(0, extraRows.get()));
+        return Math.min(currentKnownRows.get(), firstVisibleRowIndex + visibleRowCount + Math.max(0, extraRows.get()));
     }
 
     // The first actual display row, including any needed for displaying smooth scrolling

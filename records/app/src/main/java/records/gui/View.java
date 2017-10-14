@@ -221,6 +221,11 @@ public class View extends StackPane implements TableManager.TableManagerListener
         snapGuides.clear();
     }
 
+    public double getSensibleMaxTableHeight()
+    {
+        return getHeight();
+    }
+
     // Basically a pair of a double value for snapping to (X or Y determined by context),
     // and a guide line to draw (if any) to help the user understand the origin of the snap
     class SnapToAndLine

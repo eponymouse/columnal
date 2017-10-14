@@ -89,6 +89,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     private static final int LOAD_CHUNK = 100;
     private final Either<String, RecordSet> recordSetOrError;
     private final Table table;
+    private final View parent;
     private @MonotonicNonNull TableDataDisplay tableDataDisplay;
     private boolean resizing;
     // In parent coordinates:
@@ -209,6 +210,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     @OnThread(Tag.FXPlatform)
     public TableDisplay(View parent, Table table)
     {
+        this.parent = parent;
         this.table = table;
         Either<String, RecordSet> recordSetOrError;
         try
@@ -388,12 +390,12 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     {
         if (sizedToFitVertical.get() && tableDataDisplay != null)
         {
-            setPrefHeight(
-                tableDataDisplay.heightEstimateProperty().getValue() +
+            setPrefHeight(Math.min(parent.getSensibleMaxTableHeight(),
+                tableDataDisplay.heightEstimateProperty().getValue().doubleValue() +
                 header.getHeight() +
                 ((Pane)getCenter()).getInsets().getTop() + ((Pane)getCenter()).getInsets().getBottom()
                 + 2 // Fudge factor: possibly overall border?
-            );
+            ));
         }
     }
 
