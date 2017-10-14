@@ -4,7 +4,9 @@ import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import threadchecker.OnThread;
@@ -29,6 +31,8 @@ public class VirtRowLabels implements ScrollBindable
     private final Region container;
     private final VirtScrollStrTextGrid grid;
     private final FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems;
+    private final Pane glass;
+    private final StackPane stackPane;
 
     //package-visible
     VirtRowLabels(VirtScrollStrTextGrid grid, FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems)
@@ -40,6 +44,10 @@ public class VirtRowLabels implements ScrollBindable
         @SuppressWarnings("initialization")
         ScrollLock prev = grid.scrollDependents.put(this, ScrollLock.VERTICAL);
         container.translateYProperty().bind(grid.container.translateYProperty());
+        glass = new Pane();
+        glass.setMouseTransparent(true);
+        glass.getStyleClass().add("virt-grid-glass");
+        stackPane = new StackPane(container, glass);
     }
 
     @Override
@@ -48,6 +56,8 @@ public class VirtRowLabels implements ScrollBindable
     {
         if (rowAndPixelOffset != null)
         {
+            boolean atTop = rowAndPixelOffset.getFirst() == 0 && rowAndPixelOffset.getSecond() >= -5;
+            FXUtility.setPseudoclass(glass, "top-shadow", !atTop);
             container.requestLayout();
         }
     }
@@ -60,7 +70,7 @@ public class VirtRowLabels implements ScrollBindable
 
     public Region getNode()
     {
-        return container;
+        return stackPane;
     }
 
     private class Container extends Region

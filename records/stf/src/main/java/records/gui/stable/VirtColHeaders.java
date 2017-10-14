@@ -5,7 +5,9 @@ import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.ScrollEvent;
+import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
@@ -31,6 +33,8 @@ public class VirtColHeaders implements ScrollBindable
     private final VirtScrollStrTextGrid grid;
     private final FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems;
     private final FXPlatformFunction<Integer, ImmutableList<Node>> getContent;
+    private final Pane glass;
+    private final StackPane stackPane;
 
     //package-visible
     VirtColHeaders(VirtScrollStrTextGrid grid, FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems, FXPlatformFunction<Integer, ImmutableList<Node>> getContent)
@@ -43,6 +47,10 @@ public class VirtColHeaders implements ScrollBindable
         @SuppressWarnings("initialization")
         ScrollLock prev = grid.scrollDependents.put(this, ScrollLock.HORIZONTAL);
         container.translateXProperty().bind(grid.container.translateXProperty());
+        glass = new Pane();
+        glass.setMouseTransparent(true);
+        glass.getStyleClass().add("virt-grid-glass");
+        stackPane = new StackPane(container, glass);
     }
 
     @Override
@@ -51,6 +59,8 @@ public class VirtColHeaders implements ScrollBindable
     {
         if (colAndPixelOffset != null)
         {
+            boolean atLeft = colAndPixelOffset.getFirst() == 0 && colAndPixelOffset.getSecond() >= -5;
+            FXUtility.setPseudoclass(glass, "left-shadow", !atLeft);
             container.requestLayout();
         }
     }
@@ -63,7 +73,7 @@ public class VirtColHeaders implements ScrollBindable
 
     public Region getNode()
     {
-        return container;
+        return stackPane;
     }
 
     private class Container extends Region
