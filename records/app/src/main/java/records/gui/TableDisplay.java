@@ -365,10 +365,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             FXUtility.addChangeListenerPlatformNN(tableDataDisplay.heightEstimateProperty(), h -> FXUtility.mouse(this).updateSnappedFitHeight());
         }
 
-        setMaxWidth(USE_PREF_SIZE);
-        setMaxHeight(USE_PREF_SIZE);
-        setMinWidth(USE_PREF_SIZE);
-        setMinHeight(USE_PREF_SIZE);
+        FXUtility.forcePrefSize(this);
 
         // Must be done as last item:
         @SuppressWarnings("initialization") @Initialized TableDisplay usInit = this;
@@ -566,6 +563,34 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     {
         // Header in parent is our local coords, so localToParent that to get our parent:
         return localToParent(header.getBoundsInParent());
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    protected double computePrefWidth(double height)
+    {
+        return getPrefWidth();
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    protected double computePrefHeight(double width)
+    {
+        return getPrefHeight();
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    protected double computeMinWidth(double height)
+    {
+        return getPrefWidth();
+    }
+
+    @Override
+    @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+    protected double computeMinHeight(double width)
+    {
+        return getPrefHeight();
     }
 
     @OnThread(Tag.FXPlatform)

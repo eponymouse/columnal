@@ -11,6 +11,7 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableDoubleValue;
 import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
@@ -20,6 +21,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.ScrollBar;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
@@ -45,6 +47,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
+import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -80,6 +83,10 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // Package visible to let sidebars access it
     static final double GAP = 1;
     static final int MAX_EXTRA_ROW_COLS = 12;
+    private final ScrollBar hBar;
+    private final ScrollBar vBar;
+
+    private boolean settingScrollBarVal = false;
 
     // Cells which are visible, organised as a 2D array
     // (inner is a row, outer is list of rows)
@@ -134,7 +141,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // null if you can't append to this grid:
     private @Nullable FXPlatformConsumer<Integer> appendRow;
 
-    public VirtScrollStrTextGrid(ValueLoadSave loadSave, FXPlatformFunction<CellPosition, Boolean> canEdit)
+    public VirtScrollStrTextGrid(ValueLoadSave loadSave, FXPlatformFunction<CellPosition, Boolean> canEdit, ScrollBar hBar, ScrollBar vBar)
     {
         this.canEdit = canEdit;
         visibleCells = new HashMap<>();
@@ -199,6 +206,54 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             }
         });
         scrollY = new SmoothScroller(container.translateYProperty(), extraRows, FXUtility.mouse(this)::scrollLayoutYBy, y -> (int)(Math.signum(-y) * Math.ceil(Math.abs(y) / (rowHeight + GAP))));
+
+        this.hBar = hBar;
+        hBar.setMin(0.0);
+        hBar.setMax(1.0);
+        hBar.setValue(0.0);
+        hBar.valueProperty().addListener(new ChangeListener<Number>()
+        {
+            @Override
+            @SuppressWarnings("nullness")
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<? extends Number> prop, Number oldScrollBarVal, Number newScrollBarVal)
+            {
+                if (!settingScrollBarVal)
+                {
+                    double delta = getMaxScrollX() * (newScrollBarVal.doubleValue() - oldScrollBarVal.doubleValue());
+                    scrollX.smoothScroll(delta);
+                }
+            }
+        });
+
+        this.vBar = vBar;
+        vBar.setMin(0.0);
+        vBar.setMax(1.0);
+        vBar.setValue(0.0);
+        vBar.valueProperty().addListener(new ChangeListener<Number>()
+        {
+            @Override
+            @SuppressWarnings("nullness")
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<? extends Number> prop, Number oldScrollBarVal, Number newScrollBarVal)
+            {
+                if (!settingScrollBarVal)
+                {
+                    double delta = getMaxScrollY() * (newScrollBarVal.doubleValue() - oldScrollBarVal.doubleValue());
+                    scrollY.smoothScroll(delta);
+                }
+            }
+        });
+    }
+
+    private double getMaxScrollX()
+    {
+        return sumColumnWidths(0, columnWidths.length) - 20.0;
+    }
+
+    private double getMaxScrollY()
+    {
+        return (currentKnownRows.get() - 1) * (rowHeight + GAP);
     }
 
     public ObjectExpression<@Nullable CellPosition> focusedCellProperty()
@@ -375,6 +430,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             }
             this.firstVisibleRowOffset = rowPixelOffset;
             this.firstVisibleRowIndex = row;
+            settingScrollBarVal = true;
+            vBar.setValue(getCurrentScrollY() / getMaxScrollY());
+            settingScrollBarVal = false;
 
             boolean atTop = firstVisibleRowIndex == 0 && firstVisibleRowOffset >= -5;
             FXUtility.setPseudoclass(glass, "top-shadow", !atTop);
@@ -387,6 +445,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
             this.firstVisibleColumnOffset = colAndPixelOffset.getSecond();
             this.firstVisibleColumnIndex = col;
+            settingScrollBarVal = true;
+            hBar.setValue(getCurrentScrollX() / getMaxScrollX());
+            settingScrollBarVal = false;
 
             boolean atLeft = firstVisibleColumnIndex == 0 && firstVisibleColumnOffset >= -5;
             FXUtility.setPseudoclass(glass, "left-shadow", !atLeft);
@@ -535,6 +596,10 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         firstVisibleColumnIndex = 0;
         firstVisibleColumnOffset = 0;
         firstVisibleRowOffset = 0;
+        settingScrollBarVal = true;
+        hBar.setValue(0.0);
+        vBar.setValue(0.0);
+        settingScrollBarVal = false;
 
         // Empty previous:
         spareCells.addAll(visibleCells.values());
@@ -612,7 +677,6 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     @OnThread(Tag.FXPlatform)
     class SmoothScroller
     {
-
         // AnimationTimer is run every frame, and so lets us do smooth scrolling:
         private @MonotonicNonNull AnimationTimer scroller;
         // Start time of current animation (scrolling again resets this) and target end time:

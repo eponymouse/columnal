@@ -2,6 +2,7 @@ package records.gui.stable;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.primitives.Doubles;
+import com.sun.javafx.scene.control.skin.ScrollBarSkin;
 import javafx.application.Platform;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
@@ -11,6 +12,7 @@ import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ObservableDoubleValue;
 import javafx.beans.value.ObservableValue;
+import javafx.geometry.Orientation;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -30,6 +32,7 @@ import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import org.jetbrains.annotations.NotNull;
 import org.reactfx.collection.LiveArrayList;
 import org.reactfx.collection.LiveList;
 import org.reactfx.value.Val;
@@ -133,6 +136,13 @@ public class StableView
 
     public StableView()
     {
+        hbar = new ScrollBar();
+        hbar.setOrientation(Orientation.HORIZONTAL);
+        hbar.getStyleClass().add("stable-view-scroll-bar");
+        vbar = new ScrollBar();
+        vbar.setOrientation(Orientation.VERTICAL);
+        vbar.getStyleClass().add("stable-view-scroll-bar");
+
         grid = new VirtScrollStrTextGrid(new ValueLoadSave()
         {
             @Override
@@ -143,7 +153,7 @@ public class StableView
                     columns.get(colIndex).getSecond().fetchValue(rowIndex, b -> {}, relinquishFocus, setEditorKit, -1, -1);
                 }
             }
-        }, pos -> tableEditable && columns.get(pos.columnIndex).getSecond().isEditable());
+        }, pos -> tableEditable && columns.get(pos.columnIndex).getSecond().isEditable(), hbar, vbar);
         /*
         scrollPane.getStyleClass().add("stable-view-scroll-pane");
         scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
@@ -155,8 +165,7 @@ public class StableView
         hbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.HORIZONTAL).findFirst().get();
         vbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.VERTICAL).findFirst().get();
         */
-        hbar = new ScrollBar();
-        vbar = new ScrollBar();
+
         headerItemsContainer = grid.makeColumnHeaders(n -> Collections.emptyList(), col -> ImmutableList.of(new Label(columns.get(col).getFirst())));
         final Pane header = new BorderPane(headerItemsContainer.getNode());
         header.getStyleClass().add("stable-view-header");
@@ -169,67 +178,51 @@ public class StableView
         placeholder.getStyleClass().add(".stable-view-placeholder");
         placeholder.visibleProperty().bind(nonEmptyProperty.not());
         
-        Button topButton = new Button("", makeButtonArrow());
+        Button topButton = makeScrollEndButton();
         topButton.getStyleClass().addAll("stable-view-button", "stable-view-button-top");
         topButton.setOnAction(e -> grid.scrollYToPixel(0));
-        FXUtility.forcePrefSize(topButton);
-        topButton.prefWidthProperty().bind(vbar.widthProperty());
-        topButton.prefHeightProperty().bind(topButton.prefWidthProperty());
-        BorderPane.setAlignment(topButton, Pos.BOTTOM_RIGHT);
-        topButton.visibleProperty().bind(vbar.visibleProperty());
+
         Region topLeft = new Region();
         topLeft.getStyleClass().add("stable-view-top-left");
         FXUtility.forcePrefSize(topLeft);
         topLeft.setMaxHeight(Double.MAX_VALUE);
         topLeft.prefWidthProperty().bind(lineNumberWrapper.widthProperty());
         topLeft.visibleProperty().bind(nonEmptyProperty);
-        Pane topButtonWrapper = GUI.wrap(topButton, "stable-button-top-wrapper");
-        topButtonWrapper.visibleProperty().bind(vbar.visibleProperty());
-        topButtonWrapper.managedProperty().bind(topButtonWrapper.visibleProperty());
 
-        Pane top = new BorderPane(header, null, topButtonWrapper, null, topLeft);
+        Pane top = new BorderPane(header, null, null, null, topLeft);
         top.getStyleClass().add("stable-view-top");
 
-        Button leftButton = new Button("", makeButtonArrow());
+        Button leftButton = makeScrollEndButton();
         leftButton.getStyleClass().addAll("stable-view-button", "stable-view-button-left");
         leftButton.setOnAction(e -> grid.scrollXToPixel(0));
-        leftButton.prefHeightProperty().bind(hbar.heightProperty());
-        leftButton.prefWidthProperty().bind(leftButton.prefHeightProperty());
-        FXUtility.forcePrefSize(leftButton);
-        BorderPane.setAlignment(leftButton, Pos.BOTTOM_RIGHT);
-        leftButton.visibleProperty().bind(nonEmptyProperty);
-        Pane leftButtonWrapper = GUI.wrap(leftButton, "stable-button-left-wrapper");
-        leftButtonWrapper.visibleProperty().bind(hbar.visibleProperty());
-        leftButtonWrapper.managedProperty().bind(leftButtonWrapper.visibleProperty());
-        Pane left = new BorderPane(lineNumberWrapper, null, null, leftButtonWrapper, null);
-        left.setPickOnBounds(false);
-        left.getStyleClass().add("stable-view-left");
 
-        Button bottomButton = new Button("", makeButtonArrow());
+        Button bottomButton = makeScrollEndButton();
         bottomButton.getStyleClass().addAll("stable-view-button", "stable-view-button-bottom");
         bottomButton.setOnAction(e -> grid.scrollYToPixel(Double.MAX_VALUE));
-        FXUtility.forcePrefSize(bottomButton);
-        bottomButton.prefWidthProperty().bind(vbar.widthProperty());
-        bottomButton.prefHeightProperty().bind(bottomButton.prefWidthProperty());
-        StackPane.setAlignment(bottomButton, Pos.BOTTOM_RIGHT);
-        bottomButton.visibleProperty().bind(vbar.visibleProperty());
-        
-        stackPane = new StackPane(placeholder, new BorderPane(grid.getNode(), top, null, null, left), bottomButton);
+
+        BorderPane rightVertScroll = new BorderPane(vbar, topButton, null, bottomButton, null);
+        BorderPane bottomHorizScroll = new BorderPane(hbar, null, null, null, leftButton);
+        rightVertScroll.visibleProperty().bind(nonEmptyProperty);
+        bottomHorizScroll.visibleProperty().bind(nonEmptyProperty);
+
+        stackPane = new StackPane(placeholder, new BorderPane(grid.getNode(), top, rightVertScroll, bottomHorizScroll, lineNumberWrapper));
         // TODO figure out grid equivalent
         //headerItemsContainer.layoutXProperty().bind(virtualFlow.breadthOffsetProperty().map(d -> -d));
         placeholder.managedProperty().bind(placeholder.visibleProperty());
         stackPane.getStyleClass().add("stable-view");
         columnSizes = new LiveArrayList<>();
 
+        // Need to clip, otherwise scrolled-out part can still show up:
         Rectangle headerClip = new Rectangle();
         headerClip.widthProperty().bind(header.widthProperty());
-        headerClip.heightProperty().bind(header.heightProperty().add(10.0));
+        headerClip.heightProperty().bind(header.heightProperty());
         header.setClip(headerClip);
 
         Rectangle sideClip = new Rectangle();
-        sideClip.widthProperty().bind(lineNumbers.getNode().widthProperty().add(10.0));
+        sideClip.widthProperty().bind(lineNumbers.getNode().widthProperty());
         sideClip.heightProperty().bind(lineNumbers.getNode().heightProperty());
         lineNumberWrapper.setClip(sideClip);
+
 
         columnSizeTotal = new DeepListBinding<Number, Double>(columnSizes, ds -> ds.stream().mapToDouble(Number::doubleValue).sum());
         widthEstimate = new SimpleDoubleProperty();
@@ -240,6 +233,15 @@ public class StableView
         FXPlatformConsumer<Number> heightListener = x -> heightEstimate.set(grid.totalHeightEstimateProperty().getValue() + headerItemsContainer.getNode().getHeight());
         FXUtility.addChangeListenerPlatformNN(grid.totalHeightEstimateProperty(), heightListener);
         FXUtility.addChangeListenerPlatformNN(headerItemsContainer.getNode().heightProperty(), heightListener);
+    }
+
+    private static Button makeScrollEndButton()
+    {
+        Button button = new Button("", makeButtonArrow());
+        FXUtility.forcePrefSize(button);
+        button.setPrefWidth(ScrollBarSkin.DEFAULT_WIDTH + 2);
+        button.setPrefHeight(ScrollBarSkin.DEFAULT_WIDTH + 2);
+        return button;
     }
 
     public void scrollToTopLeft()

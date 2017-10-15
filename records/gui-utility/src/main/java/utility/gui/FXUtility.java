@@ -305,7 +305,7 @@ public class FXUtility
         list.addListener((ListChangeListener<T>)(ListChangeListener.Change<? extends T> c) -> listener.consume(c));
     }
 
-    public static void forcePrefSize(Region region)
+    public static void forcePrefSize(@UnknownInitialization(Region.class) Region region)
     {
         region.setMinWidth(Region.USE_PREF_SIZE);
         region.setMaxWidth(Region.USE_PREF_SIZE);
