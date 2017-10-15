@@ -8,6 +8,7 @@ import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.event.EventHandler;
+import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
@@ -289,10 +290,12 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 Point2D snapped = parent.snapTableDisplayPositionWhileDragging(this, e.isShiftDown(), new Point2D(newX, newY), new Dimension2D(getBoundsInLocal().getWidth(), getBoundsInLocal().getHeight()));
                 setLayoutX(snapped.getX());
                 setLayoutY(snapped.getY());
+                FXUtility.mouse(this).updateMostRecentBounds();
             }
         });
         header.setOnMouseReleased(e -> {
             parent.tableDragEnded();
+            FXUtility.mouse(this).updateMostRecentBounds();
             parent.tableMovedOrResized(this);
         });
 
@@ -354,8 +357,8 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             }
         });
 
-        mostRecentBounds = new AtomicReference<>(getBoundsInParent());
-        FXUtility.addChangeListenerPlatformNN(boundsInParentProperty(), b -> mostRecentBounds.set(b));
+        mostRecentBounds = new AtomicReference<>();
+        updateMostRecentBounds();
 
         if (tableDataDisplay != null)
         {
@@ -370,6 +373,12 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         // Must be done as last item:
         @SuppressWarnings("initialization") @Initialized TableDisplay usInit = this;
         this.table.setDisplay(usInit);
+    }
+
+    @RequiresNonNull("mostRecentBounds")
+    private void updateMostRecentBounds(@UnknownInitialization(BorderPane.class) TableDisplay this)
+    {
+        mostRecentBounds.set(new BoundingBox(getLayoutX(), getLayoutY(), getPrefWidth(), getPrefHeight()));
     }
 
     private void updateSnappedFitWidth()
@@ -531,6 +540,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             }
             if (changed)
             {
+                updateMostRecentBounds();
                 parent.tableMovedOrResized(this);
             }
 
@@ -547,6 +557,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             setLayoutY(bounds.getMinY());
             setPrefWidth(bounds.getWidth());
             setPrefHeight(bounds.getHeight());
+            updateMostRecentBounds();
             this.columnDisplay.set(display);
         });
     }
