@@ -378,7 +378,8 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     @RequiresNonNull("mostRecentBounds")
     private void updateMostRecentBounds(@UnknownInitialization(BorderPane.class) TableDisplay this)
     {
-        mostRecentBounds.set(new BoundingBox(getLayoutX(), getLayoutY(), getPrefWidth(), getPrefHeight()));
+        BoundingBox bounds = new BoundingBox(getLayoutX(), getLayoutY(), getPrefWidth(), getPrefHeight());
+        mostRecentBounds.set(bounds);
     }
 
     private void updateSnappedFitWidth()
@@ -552,12 +553,14 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     @Override
     public @OnThread(Tag.Any) void loadPosition(Bounds bounds, Pair<Display, ImmutableList<ColumnId>> display)
     {
+        // Important we do this now, not in runLater, as if we then save,
+        // it will be valid:
+        mostRecentBounds.set(bounds);
         Platform.runLater(() -> {
             setLayoutX(bounds.getMinX());
             setLayoutY(bounds.getMinY());
             setPrefWidth(bounds.getWidth());
             setPrefHeight(bounds.getHeight());
-            updateMostRecentBounds();
             this.columnDisplay.set(display);
         });
     }
