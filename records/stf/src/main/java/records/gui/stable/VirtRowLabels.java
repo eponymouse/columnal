@@ -68,6 +68,12 @@ public class VirtRowLabels implements ScrollBindable
 
     }
 
+    @Override
+    public void columnWidthsChanged()
+    {
+        // Doesn't affect us
+    }
+
     public Region getNode()
     {
         return stackPane;

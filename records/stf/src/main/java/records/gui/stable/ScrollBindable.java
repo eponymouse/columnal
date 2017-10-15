@@ -14,4 +14,7 @@ interface ScrollBindable
 
     @OnThread(Tag.FXPlatform)
     public void updateClip();
+
+    @OnThread(Tag.FXPlatform)
+    public void columnWidthsChanged();
 }

@@ -570,6 +570,22 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         return totalHeightEstimate;
     }
 
+    public void setColumnWidth(int columnIndex, double width)
+    {
+        columnWidths[columnIndex] = width;
+        columnWidthsChanged();
+    }
+
+    public void columnWidthsChanged()
+    {
+        // TODO change hBar scroll.  Anything else?
+        container.requestLayout();
+        for (ScrollBindable scrollBindable : scrollDependents.keySet())
+        {
+            scrollBindable.columnWidthsChanged();
+        }
+    }
+
     public static enum ScrollLock
     {
         HORIZONTAL, VERTICAL, BOTH;

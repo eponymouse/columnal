@@ -1,9 +1,11 @@
 package records.gui.stable;
 
 import com.google.common.collect.ImmutableList;
+import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
@@ -24,6 +26,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+/**
+ * The column headers that sit above a {@link VirtScrollStrTextGrid}.  Support arbitrary content,
+ * and resizing.
+ */
 @OnThread(Tag.FXPlatform)
 public class VirtColHeaders implements ScrollBindable
 {
@@ -35,6 +41,24 @@ public class VirtColHeaders implements ScrollBindable
     private final FXPlatformFunction<Integer, ImmutableList<Node>> getContent;
     private final Pane glass;
     private final StackPane stackPane;
+
+
+    private static final double EDGE_DRAG_TOLERANCE = 8;
+    private static final double MIN_COLUMN_WIDTH = 30;
+
+    // Actually dragging to resize?
+    private boolean midResizeDrag = false;
+    // Could drag-resize if they started at cur pos
+    private boolean dragPossible = false;
+    // 0 for resizing first header, etc, meaning you are dragging
+    // the right edge of that particular header.
+    // (Leftmost edge cannot be dragged).  Dragging always
+    // resizes header item before it (to left), but not the one after it
+    // Only valid if midResizeDrag is true or dragPossible is true
+    private int resizingHeader;
+    // Horizontal offset from divider being dragged to mouse
+    // position while dragging.  Only valid if midResizeDrag is true or dragPossible = true
+    private double dragOffset;
 
     //package-visible
     VirtColHeaders(VirtScrollStrTextGrid grid, FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems, FXPlatformFunction<Integer, ImmutableList<Node>> getContent)
@@ -51,6 +75,69 @@ public class VirtColHeaders implements ScrollBindable
         glass.setMouseTransparent(true);
         glass.getStyleClass().add("virt-grid-glass");
         stackPane = new StackPane(container, glass);
+
+        // Drag to resize functionality:
+        container.setOnMouseMoved(e -> {
+            FXUtility.mouse(this).updatePossibleDragPos(e);
+            container.setCursor((midResizeDrag || dragPossible) ? Cursor.H_RESIZE : null);
+        });
+        container.setOnMousePressed(e -> {
+            FXUtility.mouse(this).updatePossibleDragPos(e);
+            if (dragPossible)
+            {
+                midResizeDrag = true;
+            }
+            e.consume();
+        });
+        container.setOnMouseDragged(e -> {
+            // Should be true:
+            if (midResizeDrag)
+            {
+                grid.setColumnWidth(resizingHeader, Math.max(MIN_COLUMN_WIDTH, e.getX() + dragOffset - FXUtility.mouse(this).calculatePositionOfColumnLHS(resizingHeader)));
+            }
+            e.consume();
+        });
+        container.setOnMouseReleased(e -> {
+            midResizeDrag = false;
+            e.consume();
+        });
+    }
+
+    /**
+     * Calculates the X position, in container's local coords, to
+     * the left hand side of the given header index.  Note that
+     * the position may not actually be visible on-screen,
+     * i.e. it may be <= 0 or >= container.getWidth()
+     */
+    private double calculatePositionOfColumnLHS(int headerIndex)
+    {
+        // If off to left, count backwards from there:
+        if (headerIndex <= grid.getFirstVisibleColIndex())
+            return grid.getFirstVisibleColOffset() - grid.sumColumnWidths(headerIndex, grid.getFirstVisibleColIndex());
+
+        return grid.getFirstVisibleColOffset() + grid.sumColumnWidths(grid.getFirstVisibleColIndex(), headerIndex);
+    }
+
+    private void updatePossibleDragPos(MouseEvent e)
+    {
+        int candidateIndex = grid.getFirstVisibleColIndex() - 1;
+        double x = grid.getFirstVisibleColOffset();
+        while (x < container.getWidth() + EDGE_DRAG_TOLERANCE && candidateIndex < grid.getNumColumns())
+        {
+            if (candidateIndex >= 0 && Math.abs(x - e.getX()) <= EDGE_DRAG_TOLERANCE)
+                break;
+
+            candidateIndex += 1;
+            if (candidateIndex < grid.getNumColumns())
+                x += grid.getColumnWidth(candidateIndex);
+        }
+
+        dragPossible = candidateIndex < grid.getNumColumns();
+        if (!midResizeDrag)
+        {
+            resizingHeader = candidateIndex;
+            dragOffset = e.getX() - x;
+        }
     }
 
     @Override
@@ -71,6 +158,12 @@ public class VirtColHeaders implements ScrollBindable
 
     }
 
+    @Override
+    public void columnWidthsChanged()
+    {
+        container.requestLayout();
+    }
+
     public Region getNode()
     {
         return stackPane;
@@ -78,7 +171,7 @@ public class VirtColHeaders implements ScrollBindable
 
     private class Container extends Region
     {
-        public Container()
+        private Container()
         {
             addEventFilter(ScrollEvent.SCROLL, e -> {
                 grid.smoothScroll(e, ScrollLock.BOTH);
