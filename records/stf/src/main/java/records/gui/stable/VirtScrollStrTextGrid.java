@@ -422,7 +422,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 // Can't scroll above top of first item:
                 rowPixelOffset = 0.0;
             }
-            else if (row > currentKnownRows.get() - 1)
+            else if (currentKnownRows.get() >= 1 && row > currentKnownRows.get() - 1)
             {
                 // Can't scroll beyond showing the last cell at the top of the window:
                 row = currentKnownRows.get() - 1;
