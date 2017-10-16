@@ -432,9 +432,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             }
             this.firstVisibleRowOffset = rowPixelOffset;
             this.firstVisibleRowIndex = row;
-            settingScrollBarVal = true;
-            vBar.setValue(getCurrentScrollY() / getMaxScrollY());
-            settingScrollBarVal = false;
+            updateVBar();
 
             boolean atTop = firstVisibleRowIndex == 0 && firstVisibleRowOffset >= -5;
             FXUtility.setPseudoclass(glass, "top-shadow", !atTop);
@@ -447,9 +445,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
             this.firstVisibleColumnOffset = colAndPixelOffset.getSecond();
             this.firstVisibleColumnIndex = col;
-            settingScrollBarVal = true;
-            hBar.setValue(getCurrentScrollX() / getMaxScrollX());
-            settingScrollBarVal = false;
+            updateHBar();
 
             boolean atLeft = firstVisibleColumnIndex == 0 && firstVisibleColumnOffset >= -5;
             FXUtility.setPseudoclass(glass, "left-shadow", !atLeft);
@@ -470,6 +466,22 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         });
         updateKnownRows();
         container.requestLayout();
+    }
+
+    private void updateVBar()
+    {
+        settingScrollBarVal = true;
+        vBar.setValue(getCurrentScrollY() / getMaxScrollY());
+        vBar.setVisibleAmount(container.getHeight() / (getMaxScrollY() + container.getHeight()));
+        settingScrollBarVal = false;
+    }
+
+    private void updateHBar()
+    {
+        settingScrollBarVal = true;
+        hBar.setValue(getCurrentScrollX() / getMaxScrollX());
+        hBar.setVisibleAmount(container.getWidth() / (getMaxScrollX() + container.getWidth()));
+        settingScrollBarVal = false;
     }
 
     // Binds this item's scroll to src, so that when src changes, this does too.
@@ -578,7 +590,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     public void columnWidthsChanged()
     {
-        // TODO change hBar scroll.  Anything else?
+        // Fix hBar:
+        updateHBar();
+
         container.requestLayout();
         for (ScrollBindable scrollBindable : scrollDependents.keySet())
         {
@@ -617,6 +631,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         settingScrollBarVal = true;
         hBar.setValue(0.0);
         vBar.setValue(0.0);
+        hBar.setVisibleAmount(1.0);
+        vBar.setVisibleAmount(1.0);
         settingScrollBarVal = false;
 
         // Empty previous:
@@ -800,6 +816,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
             clip = new Rectangle();
             setClip(clip);
+
+            FXUtility.addChangeListenerPlatformNN(widthProperty(), w -> updateHBar());
+            FXUtility.addChangeListenerPlatformNN(heightProperty(), h -> updateVBar());
 
 
             EventHandler<? super @UnknownKeyFor MouseEvent> clickHandler = mouseEvent -> {
