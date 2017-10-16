@@ -159,7 +159,7 @@ public class VirtColHeaders implements ScrollBindable
     }
 
     @Override
-    public void columnWidthsChanged()
+    public void columnWidthChanged(int columnWidth, double newWidth)
     {
         container.requestLayout();
     }

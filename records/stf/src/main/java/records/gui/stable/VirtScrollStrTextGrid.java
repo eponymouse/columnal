@@ -584,11 +584,15 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     public void setColumnWidth(int columnIndex, double width)
     {
-        columnWidths[columnIndex] = width;
-        columnWidthsChanged();
+        if (columnIndex >= 0 && columnIndex < columnWidths.length)
+        {
+            columnWidths[columnIndex] = width;
+            columnWidthChanged(columnIndex, width);
+        }
     }
 
-    public void columnWidthsChanged()
+    @Override
+    public void columnWidthChanged(int columnIndex, double newWidth)
     {
         // Fix hBar:
         updateHBar();
@@ -596,7 +600,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         container.requestLayout();
         for (ScrollBindable scrollBindable : scrollDependents.keySet())
         {
-            scrollBindable.columnWidthsChanged();
+            scrollBindable.columnWidthChanged(columnIndex, newWidth);
         }
     }
 

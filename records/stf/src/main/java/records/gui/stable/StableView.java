@@ -1,6 +1,7 @@
 package records.gui.stable;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Doubles;
 import com.sun.javafx.scene.control.skin.ScrollBarSkin;
 import javafx.application.Platform;
@@ -36,6 +37,7 @@ import org.jetbrains.annotations.NotNull;
 import org.reactfx.collection.LiveArrayList;
 import org.reactfx.collection.LiveList;
 import org.reactfx.value.Val;
+import records.data.ColumnId;
 import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
 import records.error.InternalException;
@@ -106,12 +108,12 @@ import java.util.stream.Stream;
 @OnThread(Tag.FXPlatform)
 public class StableView
 {
+    public static final double DEFAULT_COLUMN_WIDTH = 100.0;
     private final VirtRowLabels lineNumbers;
     private final VirtColHeaders headerItemsContainer;
     private final VirtScrollStrTextGrid grid;
     private final Label placeholder;
     private final StackPane stackPane; // has grid and placeholder as its children
-    private final ObservableValue<Double> columnSizeTotal;
     private final DoubleProperty widthEstimate;
     private final DoubleProperty heightEstimate;
 
@@ -122,7 +124,6 @@ public class StableView
     private final BooleanProperty showingRowNumbers = new SimpleBooleanProperty(true);
     // Contents can't change, but whole list can:
     private ImmutableList<Pair<String, ColumnHandler>> columns = ImmutableList.of();
-    private final LiveList<DoubleProperty> columnSizes;
     private static final double EDGE_DRAG_TOLERANCE = 8;
     private static final double MIN_COLUMN_WIDTH = 30;
     // A column is only editable if it is marked editable AND the table is editable:
@@ -153,7 +154,21 @@ public class StableView
                     columns.get(colIndex).getSecond().fetchValue(rowIndex, b -> {}, relinquishFocus, setEditorKit, -1, -1);
                 }
             }
-        }, pos -> tableEditable && columns.get(pos.columnIndex).getSecond().isEditable(), hbar, vbar);
+        }, pos -> tableEditable && columns.get(pos.columnIndex).getSecond().isEditable(), hbar, vbar) {
+
+            @Override
+            public void columnWidthChanged(int columnIndex, double newWidth)
+            {
+                super.columnWidthChanged(columnIndex, newWidth);
+                if (columns != null)
+                {
+                    ColumnHandler colHandler = columns.get(columnIndex).getSecond();
+                    colHandler.columnResized(newWidth);
+                    updateWidthEstimate();
+                    StableView.this.columnWidthChanged(columnIndex, newWidth);
+                }
+            }
+        };
         /*
         scrollPane.getStyleClass().add("stable-view-scroll-pane");
         scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
@@ -210,7 +225,6 @@ public class StableView
         //headerItemsContainer.layoutXProperty().bind(virtualFlow.breadthOffsetProperty().map(d -> -d));
         placeholder.managedProperty().bind(placeholder.visibleProperty());
         stackPane.getStyleClass().add("stable-view");
-        columnSizes = new LiveArrayList<>();
 
         // Need to clip, otherwise scrolled-out part can still show up:
         Rectangle headerClip = new Rectangle();
@@ -224,15 +238,25 @@ public class StableView
         lineNumberWrapper.setClip(sideClip);
 
 
-        columnSizeTotal = new DeepListBinding<Number, Double>(columnSizes, ds -> ds.stream().mapToDouble(Number::doubleValue).sum());
         widthEstimate = new SimpleDoubleProperty();
-        FXPlatformConsumer<Number> widthListener = x -> widthEstimate.set(columnSizeTotal.getValue().doubleValue() + lineNumbers.getNode().getWidth());
-        FXUtility.addChangeListenerPlatformNN(columnSizeTotal, widthListener);
-        FXUtility.addChangeListenerPlatformNN(lineNumbers.getNode().widthProperty(), widthListener);
+        FXUtility.addChangeListenerPlatformNN(lineNumbers.getNode().widthProperty(), x -> updateWidthEstimate());
         heightEstimate = new SimpleDoubleProperty();
         FXPlatformConsumer<Number> heightListener = x -> heightEstimate.set(grid.totalHeightEstimateProperty().getValue() + headerItemsContainer.getNode().getHeight());
         FXUtility.addChangeListenerPlatformNN(grid.totalHeightEstimateProperty(), heightListener);
         FXUtility.addChangeListenerPlatformNN(headerItemsContainer.getNode().heightProperty(), heightListener);
+    }
+
+    // Can be overridden by subclasses
+    protected void columnWidthChanged(int columnIndex, double newWidth)
+    {
+    }
+
+    private void updateWidthEstimate(@UnknownInitialization(Object.class) StableView this)
+    {
+        if (widthEstimate != null && grid != null && lineNumbers != null)
+        {
+            widthEstimate.set(grid.sumColumnWidths(0, grid.getNumColumns()) + lineNumbers.getNode().getWidth());
+        }
     }
 
     private static Button makeScrollEndButton()
@@ -290,19 +314,12 @@ public class StableView
         final int curColumnAndRowSet = this.columnAndRowSet.incrementAndGet();
         this.operations = operations;
         this.columns = columns;
-        this.columnSizes.clear();
-        for (int i = 0; i < columns.size(); i++)
-        {
-            columnSizes.add(new SimpleDoubleProperty(100.0));
-            ColumnHandler colHandler = columns.get(i).getSecond();
-            FXUtility.addChangeListenerPlatformNN(columnSizes.get(i), d -> colHandler.columnResized(d.doubleValue()));
-        }
 
         nonEmptyProperty.set(!columns.isEmpty());
 
         grid.setData(isRowValid,
             operations != null && operations.appendRows != null ? FXUtility.mouse(this)::appendRow : null,
-            Doubles.toArray(columnSizes.stream().map(s -> s.get()).collect(Collectors.toList())));
+            Doubles.toArray(Utility.replicate(columns.size(), DEFAULT_COLUMN_WIDTH)));
 
         scrollToTopLeft();
     }
@@ -354,74 +371,18 @@ public class StableView
         grid.bindScroll(scrollSrc.grid, scrollLock);
     }
 
-    private class HeaderItem extends Label
+    public void loadColumnWidths(double[] newColWidths)
     {
-        private final int itemIndex;
-        private double offsetFromEdge;
-        private boolean draggingLeftEdge;
-        private boolean dragging = false;
-
-        public HeaderItem(String name, int itemIndex)
+        for (int i = 0; i < newColWidths.length; i++)
         {
-            super(name);
-            this.itemIndex = itemIndex;
-            this.getStyleClass().add("stable-view-header-item");
-            this.setMinWidth(Region.USE_PREF_SIZE);
-            this.setMaxWidth(Region.USE_PREF_SIZE);
-            this.prefWidthProperty().bind(columnSizes.get(itemIndex));
-            this.setOnMouseMoved(e -> {
-                boolean nearEdge = e.getX() < EDGE_DRAG_TOLERANCE || e.getX() >= this.getWidth() - EDGE_DRAG_TOLERANCE;
-                this.setCursor(dragging || nearEdge ? Cursor.H_RESIZE : null);
-            });
-            this.setOnMousePressed(e -> {
-                if (this.getCursor() != null)
-                {
-                    // We always prefer to drag the right edge, as if
-                    // you squish all the columns, it gives you a way out of dragging
-                    // all right edges (whereas leftmost edge cannot be dragged):
-                    if (e.getX() >= this.getWidth() - EDGE_DRAG_TOLERANCE)
-                    {
-                        dragging = true;
-                        draggingLeftEdge = false;
-                        // Positive offset:
-                        offsetFromEdge = getWidth() - e.getX();
-                    }
-                    else if (itemIndex > 0 && e.getX() < EDGE_DRAG_TOLERANCE)
-                    {
-                        dragging = true;
-                        draggingLeftEdge = true;
-                        offsetFromEdge = e.getX();
-                    }
-                }
-                e.consume();
-            });
-            this.setOnMouseDragged(e -> {
-                // Should be true:
-                if (dragging)
-                {
-                    if (draggingLeftEdge)
-                    {
-                        // Have to adjust size of column to our left
-                        // TODO
-                        //headerItems.get(itemIndex - 1).setRightEdgeToSceneX(e.getSceneX() - offsetFromEdge);
-                    }
-                    else
-                    {
-                        columnSizes.get(itemIndex).set(Math.max(MIN_COLUMN_WIDTH, e.getX() + offsetFromEdge));
-                    }
-                }
-                e.consume();
-            });
-            this.setOnMouseReleased(e -> {
-                dragging = false;
-                e.consume();
-            });
+            grid.setColumnWidth(i, newColWidths[i]);
         }
 
-        private void setRightEdgeToSceneX(double sceneX)
-        {
-            columnSizes.get(itemIndex).set(Math.max(MIN_COLUMN_WIDTH, sceneX - localToScene(getBoundsInLocal()).getMinX()));
-        }
+    }
+
+    public double getColumnWidth(int columnIndex)
+    {
+        return grid.getColumnWidth(columnIndex);
     }
 
     @OnThread(Tag.FXPlatform)
@@ -477,10 +438,5 @@ public class StableView
             }
         }
         return r;
-    }
-
-    public void resizeColumn(int columnIndex, double size)
-    {
-        columnSizes.get(columnIndex).set(size);
     }
 }

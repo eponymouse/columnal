@@ -1,6 +1,8 @@
 package records.gui;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.primitives.Doubles;
 import javafx.application.Platform;
 import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.ObjectProperty;
@@ -48,6 +50,7 @@ import records.data.Transformation;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.stable.VirtScrollStrTextGrid;
 import records.gui.stf.TableDisplayUtility;
 import records.importers.ClipboardUtils;
 import records.transformations.HideColumnsPanel;
@@ -73,6 +76,7 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalDouble;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
@@ -103,6 +107,8 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     private boolean resizeBottom;
     @OnThread(Tag.Any)
     private final AtomicReference<Bounds> mostRecentBounds;
+    @OnThread(Tag.Any)
+    private final AtomicReference<ImmutableMap<ColumnId, Double>> mostRecentColumnWidths;
     private final HBox header;
     private final ObjectProperty<Pair<Display, ImmutableList<ColumnId>>> columnDisplay = new SimpleObjectProperty<>(new Pair<>(Display.ALL, ImmutableList.of()));
 
@@ -205,6 +211,24 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
         {
             setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), recordSet::indexValid);
+        }
+
+        public void loadColumnWidths(Map<ColumnId, Double> columnWidths)
+        {
+            super.loadColumnWidths(Doubles.toArray(Utility.mapList(recordSet.getColumnIds(), c -> columnWidths.getOrDefault(c, DEFAULT_COLUMN_WIDTH))));
+        }
+
+        @Override
+        protected void columnWidthChanged(int changedColIndex, double newWidth)
+        {
+            super.columnWidthChanged(changedColIndex, newWidth);
+            ImmutableMap.Builder<ColumnId, Double> m = ImmutableMap.builder();
+            for (int columnIndex = 0; columnIndex < recordSet.getColumnIds().size(); columnIndex++)
+            {
+                m.put(recordSet.getColumnIds().get(columnIndex), getColumnWidth(columnIndex));
+            }
+            mostRecentColumnWidths.set(m.build());
+            parent.tableMovedOrResized(TableDisplay.this);
         }
     }
 
@@ -359,6 +383,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
         mostRecentBounds = new AtomicReference<>();
         updateMostRecentBounds();
+        mostRecentColumnWidths = new AtomicReference<>(ImmutableMap.of());
 
         if (tableDataDisplay != null)
         {
@@ -577,6 +602,24 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     {
         // Header in parent is our local coords, so localToParent that to get our parent:
         return localToParent(header.getBoundsInParent());
+    }
+
+    @OnThread(Tag.Any)
+    @Override
+    public void loadColumnWidths(Map<ColumnId, Double> columnWidths)
+    {
+        mostRecentColumnWidths.set(ImmutableMap.copyOf(columnWidths));
+        Platform.runLater(() -> {
+            if (tableDataDisplay != null)
+                tableDataDisplay.loadColumnWidths(columnWidths);
+        });
+    }
+
+    @OnThread(Tag.Any)
+    @Override
+    public ImmutableMap<ColumnId, Double> getColumnWidths()
+    {
+        return mostRecentColumnWidths.get();
     }
 
     @Override

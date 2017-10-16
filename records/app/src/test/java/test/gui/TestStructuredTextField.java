@@ -250,7 +250,7 @@ public class TestStructuredTextField extends ApplicationTest
                 DisplayCache<?> cacheSTF = TableDisplayUtility.makeField(fut.get(2000, TimeUnit.MILLISECONDS), true, () -> {});
                 stableView.setColumnsAndRows(Collections.singletonList(new Pair<>("C", cacheSTF)), null, i -> i == 0);
                 */
-                stableView.resizeColumn(0, 600);
+                stableView.loadColumnWidths(new double[]{600.0});
             } finally
             {
 

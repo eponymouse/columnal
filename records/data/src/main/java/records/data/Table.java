@@ -1,6 +1,7 @@
 package records.data;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableMap;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -13,6 +14,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;
 import records.grammar.MainParser.DisplayContext;
+import records.grammar.MainParser.ItemContext;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -23,7 +25,10 @@ import javax.validation.constraints.NotNull;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -51,6 +56,8 @@ public abstract class Table
     private @MonotonicNonNull TableDisplayBase display;
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private Bounds prevPosition = new BoundingBox(0, 0, 100, 400);
+    @OnThread(value = Tag.Any, requireSynchronized = true)
+    private ImmutableMap<ColumnId, Double> prevColumnWidths = ImmutableMap.of();
 
     // The list is the blacklist, only applicable if first is CUSTOM:
     @OnThread(value = Tag.Any, requireSynchronized = true)
@@ -194,34 +201,45 @@ public abstract class Table
         }
         this.display = display;
         display.loadPosition(prevPosition, showColumns);
+        display.loadColumnWidths(prevColumnWidths);
     }
 
     public synchronized final void loadPosition(DisplayContext display) throws UserException
     {
         try
         {
-            double x = Double.parseDouble(display.item(0).getText());
-            double y = Double.parseDouble(display.item(1).getText());
-            double mx = Double.parseDouble(display.item(2).getText());
-            double my = Double.parseDouble(display.item(3).getText());
+            double x = Double.parseDouble(display.displayTablePosition().item(0).getText());
+            double y = Double.parseDouble(display.displayTablePosition().item(1).getText());
+            double mx = Double.parseDouble(display.displayTablePosition().item(2).getText());
+            double my = Double.parseDouble(display.displayTablePosition().item(3).getText());
             prevPosition = new BoundingBox(x, y, mx - x, my - y);
 
             // Now handle the show-columns:
-            if (display.ALL() != null)
+            if (display.displayShowColumns().ALL() != null)
                 showColumns = new Pair<>(Display.ALL, ImmutableList.of());
-            else if (display.ALTERED() != null)
+            else if (display.displayShowColumns().ALTERED() != null)
                 showColumns = new Pair<>(Display.ALTERED, ImmutableList.of());
-            else if (display.COLLAPSED() != null)
+            else if (display.displayShowColumns().COLLAPSED() != null)
                 showColumns = new Pair<>(Display.COLLAPSED, ImmutableList.of());
             else
             {
-                ImmutableList<ColumnId> blackList = display.item().subList(4, display.item().size()).stream().map(itemContext -> new ColumnId(itemContext.getText())).collect(ImmutableList.toImmutableList());
+                ImmutableList<ColumnId> blackList = display.displayShowColumns().item().stream().map(itemContext -> new ColumnId(itemContext.getText())).collect(ImmutableList.toImmutableList());
                 showColumns = new Pair<>(Display.CUSTOM, blackList);
             }
+
+            Map<ColumnId, Double> columnWidths = new HashMap<>();
+            List<ItemContext> columnWidthContexts = display.displayColumnWidths().item();
+            for (int i = 0; i < columnWidthContexts.size(); i += 2)
+            {
+                ColumnId columnId = new ColumnId(columnWidthContexts.get(i).getText());
+                Utility.parseDoubleOpt(columnWidthContexts.get(i + 1).getText()).ifPresent(w -> columnWidths.put(columnId, w));
+            }
+            prevColumnWidths = ImmutableMap.copyOf(columnWidths);
 
             if (this.display != null)
             {
                 this.display.loadPosition(prevPosition, showColumns);
+                this.display.loadColumnWidths(columnWidths);
             }
         }
         catch (Exception e)
@@ -250,6 +268,17 @@ public abstract class Table
                 // TODO output the list;
                 break;
         }
+        out.nl();
+
+        if (display != null)
+        {
+            prevColumnWidths = display.getColumnWidths();
+        }
+        out.t(MainLexer.COLUMNWIDTHS);
+        prevColumnWidths.entrySet().stream().sorted(Comparator.comparing(e -> e.getKey())).forEach(e -> {
+            out.id(e.getKey()).d(e.getValue());
+        });
+
         out.nl();
     }
 
@@ -339,5 +368,11 @@ public abstract class Table
 
         @OnThread(Tag.FXPlatform)
         public Bounds getHeaderBoundsInParent();
+
+        @OnThread(Tag.Any)
+        public void loadColumnWidths(Map<ColumnId, Double> columnWidths);
+
+        @OnThread(Tag.Any)
+        public ImmutableMap<ColumnId, Double> getColumnWidths();
     }
 }

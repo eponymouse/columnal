@@ -14,17 +14,7 @@ import java.math.MathContext;
 import java.nio.charset.Charset;
 import java.nio.file.*;
 import java.time.temporal.TemporalAccessor;
-import java.util.AbstractList;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.OptionalInt;
-import java.util.Properties;
-import java.util.WeakHashMap;
+import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -469,16 +459,29 @@ public class Utility
         }
     }
 
-    public static Optional<Integer> parseIntegerOpt(String number)
+    public static OptionalInt parseIntegerOpt(String number)
     {
         // First try as an integer:
         try
         {
-            return Optional.of(Integer.valueOf(number));
+            return OptionalInt.of(Integer.valueOf(number));
         }
         catch (NumberFormatException ex)
         {
-            return Optional.empty();
+            return OptionalInt.empty();
+        }
+    }
+
+    public static OptionalDouble parseDoubleOpt(String number)
+    {
+        // First try as a double:
+        try
+        {
+            return OptionalDouble.of(Double.valueOf(number));
+        }
+        catch (NumberFormatException ex)
+        {
+            return OptionalDouble.empty();
         }
     }
 

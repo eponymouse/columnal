@@ -31,7 +31,11 @@ dataFormat : FORMAT (SKIPROWS numRows)? detail FORMAT NEWLINE;
 
 blank : NEWLINE;
 
-display : POSITION item item item item NEWLINE SHOWCOLUMNS (ALL | ALTERED | COLLAPSED | EXCEPT item*) NEWLINE;
+displayTablePosition : POSITION item item item item NEWLINE;
+displayShowColumns : SHOWCOLUMNS (ALL | ALTERED | COLLAPSED | EXCEPT item*) NEWLINE;
+// items should be in pairs, but we don't make that a parse error:
+displayColumnWidths : COLUMNWIDTHS item* NEWLINE;
+display : displayTablePosition displayShowColumns displayColumnWidths;
 
 table : (dataSource | transformation) display END tableId NEWLINE;
 

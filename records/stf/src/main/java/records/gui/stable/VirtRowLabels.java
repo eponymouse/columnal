@@ -69,7 +69,7 @@ public class VirtRowLabels implements ScrollBindable
     }
 
     @Override
-    public void columnWidthsChanged()
+    public void columnWidthChanged(int columnIndex, double newWidth)
     {
         // Doesn't affect us
     }
