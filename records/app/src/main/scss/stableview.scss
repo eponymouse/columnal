@@ -107,11 +107,14 @@ $stable-view-header-border: hsb(0, 0%, 40%);
     }
 }
 
-.stable-view-row-cell, .stable-view-matched .paragraph-text {
-    -fx-background-color: gray(95%);
+.virt-grid-cell {
+    -fx-background-color: gray(96%);
     -fx-border-style: solid inside;
     -fx-border-width: 0 1 1 0;
     -fx-border-color: gray(60%);
+    &:hover {
+        -fx-background-color: gray(98%);
+    }
 }
 
 /* focused-cell means the cell wrapper has focus (cell selected) */

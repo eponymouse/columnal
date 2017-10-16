@@ -15,6 +15,7 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableDoubleValue;
 import javafx.beans.value.ObservableValue;
 import javafx.event.Event;
+import javafx.event.EventHandler;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -35,6 +36,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import org.fxmisc.wellbehaved.event.EventPattern;
 import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
@@ -784,7 +786,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             setClip(clip);
 
 
-            addEventFilter(MouseEvent.ANY, mouseEvent -> {
+            EventHandler<? super @UnknownKeyFor MouseEvent> clickHandler = mouseEvent -> {
+
                 @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
                 StructuredTextField cell = visibleCells.get(cellPosition);
                 boolean positionIsFocusedCellWrapper = Objects.equals(focusedCell.get(), cellPosition);
@@ -804,9 +807,12 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 // AND the STF is not focused
                 if (cell != null && !cell.isFocused() && !(isFocused() && positionIsFocusedCellWrapper))
                     mouseEvent.consume();
-            });
+            };
+            addEventFilter(MouseEvent.MOUSE_CLICKED, clickHandler);
+            addEventFilter(MouseEvent.MOUSE_PRESSED, clickHandler);
+            addEventFilter(MouseEvent.MOUSE_RELEASED, clickHandler);
 
-            // Filter because we want to steal it from the cells themselves:
+                // Filter because we want to steal it from the cells themselves:
             addEventFilter(ScrollEvent.ANY, scrollEvent -> {
                 smoothScroll(scrollEvent, ScrollLock.BOTH);
                 scrollEvent.consume();
@@ -973,6 +979,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                         else
                         {
                             cell = new StructuredTextField();
+                            cell.getStyleClass().add("virt-grid-cell");
                             getChildren().add(cell);
                         }
 
