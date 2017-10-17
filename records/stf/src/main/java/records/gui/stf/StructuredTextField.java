@@ -566,21 +566,6 @@ public final class StructuredTextField extends StyleClassedTextArea
 
     }
 */
-    private int maxLength(ItemVariant style)
-    {
-        switch (style)
-        {
-            case EDITABLE_TEXT:
-                return 10000;
-            case EDITABLE_NUMBER:
-                return 100;
-            case EDITABLE_SECOND:
-                return 2 + 1 + 9;
-            default:
-                return 12;
-        }
-    }
-
     public void edit(@Nullable Point2D scenePoint)
     {
         if (!isEditable())
@@ -608,7 +593,10 @@ public final class StructuredTextField extends StyleClassedTextArea
     public static enum ItemVariant
     {
         EDITABLE_TEXT,
-        EDITABLE_NUMBER,
+        // Part before decimal point:
+        EDITABLE_NUMBER_INT,
+        // Part after decimal point:
+        EDITABLE_NUMBER_FRAC,
         EDITABLE_BOOLEAN,
 
         EDITABLE_DAY,
@@ -639,8 +627,10 @@ public final class StructuredTextField extends StyleClassedTextArea
                     return Character.isAlphabetic(c) || c == '_' || (!before.isEmpty() && c >= '0' && c <= '9');
                 case EDITABLE_TEXT:
                     return c != '\"' || endsWithEscapeStart(before);
-                case EDITABLE_NUMBER:
-                    return (before.isEmpty() && c == '-') || (c >= '0' && c <= '9') || (!before.contains(".") && c == '.');
+                case EDITABLE_NUMBER_INT:
+                    return (before.isEmpty() && c == '-') || (c >= '0' && c <= '9');
+                case EDITABLE_NUMBER_FRAC:
+                    return (c >= '0' && c <= '9');
                 case TIMEZONE_PLUS_MINUS:
                     return before.isEmpty() && (c == '+' || c == '-');
                 case EDITABLE_HOUR:
@@ -684,6 +674,7 @@ public final class StructuredTextField extends StyleClassedTextArea
         private final ItemVariant itemVariant;
         private final @Localized String prompt;
         private final List<Integer> otherEntryOptions = new ArrayList<>();
+        private final ArrayList<String> styleClasses = new ArrayList<>();
 
         // Divider:
         public Item(ImmutableList<Component<?>> parent, String divider, String... otherEntryOptions)
@@ -712,7 +703,7 @@ public final class StructuredTextField extends StyleClassedTextArea
 
         public Collection<String> toStyles()
         {
-            return Collections.emptyList();
+            return styleClasses;
         }
 
         public int getLength()
@@ -759,6 +750,12 @@ public final class StructuredTextField extends StyleClassedTextArea
         public Item replaceContent(String newContent)
         {
             return new Item(parent, newContent, itemVariant, prompt);
+        }
+
+        public Item withStyleClasses(String... styleClasses)
+        {
+            this.styleClasses.addAll(Arrays.asList(styleClasses));
+            return this;
         }
     }
 

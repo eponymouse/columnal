@@ -117,7 +117,12 @@
     }
 }
 
-
+.stf-number-int, .stf-number-dot, .stf-number-frac {
+    /*-fx-font-family: "Droid Sans Mono";*/
+}
+.stf-number-frac {
+    -fx-font-size: 85%;
+}
 
 .number-display {
     /* -fx-spacing: 2; */

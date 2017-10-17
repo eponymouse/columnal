@@ -15,6 +15,9 @@
 }
 .virt-grid-row-number {
     -fx-border-color: transparent $table-header-border $table-header-divider transparent;
+    -fx-alignment: baseline-right;
+    -fx-font-family: "Droid Sans Mono";
+    -fx-font-size: 10pt;
 }
 .stable-view-top-left {
     -fx-border-color: transparent $table-header-border $table-header-border transparent;
@@ -168,22 +171,6 @@
         -fx-border-width:
             0.5em 0 0 0, 0 0 0 0.5em;
     }
-}
-
-.stable-view-row-cell:focused-row-col {
-    -fx-background-color: $focus-color-row-col;
-}
-.stable-view-row-cell .structured-text-field {
-    -fx-background-color: transparent;
-}
-.stable-view-matched .paragraph-text .selected-cell {
-    -rtfx-background-color: pink;
-}
-
-.stable-view-row-cell, .stable-view-row-number,
-   .stable-view-matched .paragraph-text {
-    -fx-pref-height: 25px;
-    /*-fx-snap-to-pixel: true;*/
 }
 
 /* The colors should be overridden by the hover pseudo-class, which is intended */

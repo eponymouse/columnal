@@ -24,7 +24,10 @@ public class NumberEntry extends TerminalComponent<@Value Number>
     public NumberEntry(ImmutableList<Component<?>> parents, @Nullable Number initial)
     {
         super(parents);
-        items.add(new Item(getItemParents(), initial == null ? "" : (initial instanceof BigDecimal ? ((BigDecimal) initial).toPlainString() : initial.toString()), ItemVariant.EDITABLE_NUMBER, TranslationUtility.getString("entry.prompt.number")));
+        items.add(new Item(getItemParents(), initial == null ? "" : (initial instanceof BigDecimal ? ((BigDecimal) initial).toBigInteger().toString() : initial.toString()), ItemVariant.EDITABLE_NUMBER_INT, TranslationUtility.getString("entry.prompt.number")).withStyleClasses("stf-number-int"));
+        // TODO make this a special optional divider
+        items.add(new Item(getItemParents(), ".").withStyleClasses("stf-number-dot"));
+        items.add(new Item(getItemParents(), initial == null ? "" : Utility.getFracPartAsString(initial, 0, Integer.MAX_VALUE), ItemVariant.EDITABLE_NUMBER_FRAC, "").withStyleClasses("stf-number-frac"));
     }
 
     @Override
@@ -32,7 +35,7 @@ public class NumberEntry extends TerminalComponent<@Value Number>
     {
         try
         {
-            return Either.right(DataTypeUtility.value(Utility.parseNumber(getItem(ItemVariant.EDITABLE_NUMBER))));
+            return Either.right(DataTypeUtility.value(Utility.parseNumber(getItem(ItemVariant.EDITABLE_NUMBER_INT) + "." + getItem(ItemVariant.EDITABLE_NUMBER_FRAC))));
         }
         catch (UserException e)
         {

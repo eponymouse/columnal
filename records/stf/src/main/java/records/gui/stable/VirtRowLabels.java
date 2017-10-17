@@ -92,7 +92,7 @@ public class VirtRowLabels implements ScrollBindable
         @Override
         protected double computePrefWidth(double height)
         {
-            return 37.0;
+            return 25.0;
         }
 
         @Override
