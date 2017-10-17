@@ -98,11 +98,6 @@ public final class StructuredTextField extends StyleClassedTextArea
         setPrefHeight(FXUtility.measureNotoSansHeight());
 
         FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
-            if (focused)
-                Utility.logStackTrace("Got focus: " + getText());
-            else
-                Utility.logStackTrace("Lost focus: " + getText());
-
             if (editorKit == null || editorKit.store == null)
                 return;
 

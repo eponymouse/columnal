@@ -220,7 +220,7 @@ public class VirtColHeaders implements ScrollBindable
                     else
                     {
                         cell = new VBox();
-                        cell.getStyleClass().add("col-header");
+                        cell.getStyleClass().add("virt-grid-col-header");
                         VBox newCellFinal = cell;
                         int colIndexFinal = colIndex;
                         cell.setOnContextMenuRequested(e -> {
@@ -235,7 +235,7 @@ public class VirtColHeaders implements ScrollBindable
                 }
                 cell.setVisible(true);
                 cell.resizeRelocate(x, 0, grid.getColumnWidth(colIndex), getHeight());
-                x += grid.getColumnWidth(colIndex) + grid.GAP;
+                x += grid.getColumnWidth(colIndex);
             }
 
             // Don't let spare cells be more than two visible rows or columns:

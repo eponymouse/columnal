@@ -116,7 +116,7 @@ public class VirtRowLabels implements ScrollBindable
                 }
             }
 
-            double y = grid.getFirstVisibleRowOffset() - (grid.getFirstVisibleRowIndex() - firstDisplayRow) * (grid.rowHeight + grid.GAP);
+            double y = grid.getFirstVisibleRowOffset() - (grid.getFirstVisibleRowIndex() - firstDisplayRow) * grid.rowHeight;
             for (int rowIndex = firstDisplayRow; rowIndex < lastDisplayRowExcl; rowIndex++)
             {
                 Label cell = visibleCells.get(rowIndex);
@@ -132,7 +132,7 @@ public class VirtRowLabels implements ScrollBindable
                     else
                     {
                         cell = new Label();
-                        cell.getStyleClass().add("row-number");
+                        cell.getStyleClass().add("virt-grid-row-number");
                         Label newCellFinal = cell;
                         int rowIndexFinal = rowIndex;
                         cell.setOnContextMenuRequested(e -> {
@@ -148,7 +148,7 @@ public class VirtRowLabels implements ScrollBindable
                 }
                 cell.setVisible(true);
                 cell.resizeRelocate(0, y, getWidth(), grid.rowHeight);
-                y += grid.rowHeight + grid.GAP;
+                y += grid.rowHeight;
             }
 
             // Don't let spare cells be more than two visible rows or columns:

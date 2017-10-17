@@ -3,12 +3,14 @@
     -fx-border-color: gray;
     -fx-border-radius: 5;
     -fx-background-color: lightgray;
+    -fx-background-radius: 5;
 }
 .table-body {
     -fx-padding: 6 6 6 6;
     -fx-background-color: transparent;
 }
 .table-header {
+    -fx-background-radius: 5 5 0 0;
     -fx-background-color: steelblue;
     -fx-padding: 6 6 0 6;
     & .button {

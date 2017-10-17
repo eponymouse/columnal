@@ -82,8 +82,7 @@ import java.util.Objects;
 @OnThread(Tag.FXPlatform)
 public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 {
-    // Package visible to let sidebars access it
-    static final double GAP = 1;
+    // Package visible to let sidebars access it:
     static final int MAX_EXTRA_ROW_COLS = 12;
     private final ScrollBar hBar;
     private final ScrollBar vBar;
@@ -156,7 +155,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         rowHeight = 24;
         columnWidths = new double[0];
         this.loadSave = loadSave;
-        this.totalHeightEstimate = FXUtility.<@NonNull Number, Double>mapBindingEagerNN(currentKnownRows, rows -> rows.doubleValue() * (rowHeight + GAP));
+        this.totalHeightEstimate = FXUtility.<@NonNull Number, Double>mapBindingEagerNN(currentKnownRows, rows -> rows.doubleValue() * rowHeight);
 
         container = new Container();
         glass = new Pane();
@@ -207,7 +206,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 return col - startCol;
             }
         });
-        scrollY = new SmoothScroller(container.translateYProperty(), extraRows, FXUtility.mouse(this)::scrollLayoutYBy, y -> (int)(Math.signum(-y) * Math.ceil(Math.abs(y) / (rowHeight + GAP))));
+        scrollY = new SmoothScroller(container.translateYProperty(), extraRows, FXUtility.mouse(this)::scrollLayoutYBy, y -> (int)(Math.signum(-y) * Math.ceil(Math.abs(y) / rowHeight)));
 
         this.hBar = hBar;
         hBar.setMin(0.0);
@@ -255,7 +254,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     private double getMaxScrollY()
     {
-        return (currentKnownRows.get() - 1) * (rowHeight + GAP);
+        return (currentKnownRows.get() - 1) * rowHeight;
     }
 
     public ObjectExpression<@Nullable CellPosition> focusedCellProperty()
@@ -275,8 +274,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         // If y < 2*rowHeight, second cell, and offset == rowHeight - y
         // General pattern: divide by rowHeight and round down to get topCell
         // Then offset is topCell*rowHeight - y
-        int topCell = (int) Math.floor(y / (rowHeight + GAP));
-        double rowPixelOffset = (topCell * (rowHeight + GAP)) - y;
+        int topCell = (int) Math.floor(y / rowHeight);
+        double rowPixelOffset = (topCell * rowHeight) - y;
         showAtOffset(new Pair<>(topCell, rowPixelOffset), null);
     }
 
@@ -339,7 +338,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 showAtOffset(null, new Pair<>(col, -x));
                 break;
             }
-            x -= columnWidths[col] + GAP;
+            x -= columnWidths[col];
         }
     }
 
@@ -400,7 +399,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // rowHeight+GAP means top of first row showing, etc
     private double getCurrentScrollY()
     {
-        return firstVisibleRowIndex * (rowHeight + GAP) - firstVisibleRowOffset;
+        return firstVisibleRowIndex * rowHeight - firstVisibleRowOffset;
     }
 
     private double getCurrentScrollX()
@@ -572,7 +571,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         double total = 0;
         for (int i = startColIndexIncl; i < endColIndexExcl; i++)
         {
-            total += getColumnWidth(i) + GAP;
+            total += getColumnWidth(i);
         }
         return total;
     }
@@ -681,7 +680,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         if (x > 0.0)
             return null;
         y -= firstVisibleRowOffset;
-        rowIndex = (int) Math.floor(y / (rowHeight + GAP)) + firstVisibleRowIndex;
+        rowIndex = (int) Math.floor(y / rowHeight) + firstVisibleRowIndex;
         if (rowIndex >= currentKnownRows.get())
             return null;
         return new CellPosition(rowIndex, colIndex);
@@ -963,12 +962,12 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             double y = firstVisibleRowOffset;
 
             // We may not need the +1, but play safe:
-            int newNumVisibleRows = Math.min(currentKnownRows.get() - firstVisibleRowIndex, (int)Math.ceil(getHeight() / (rowHeight + GAP)) + 1);
+            int newNumVisibleRows = Math.min(currentKnownRows.get() - firstVisibleRowIndex, (int)Math.ceil(getHeight() / rowHeight) + 1);
             int newNumVisibleCols = 0;
             for (int column = firstVisibleColumnIndex; x < getWidth() && column < columnWidths.length; column++)
             {
                 newNumVisibleCols += 1;
-                x += columnWidths[column] + GAP;
+                x += columnWidths[column];
             }
             VirtScrollStrTextGrid.this.visibleRowCount = newNumVisibleRows;
             VirtScrollStrTextGrid.this.visibleColumnCount = newNumVisibleCols;
@@ -997,7 +996,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 }
             }
 
-            y = firstVisibleRowOffset - (firstVisibleRowIndex - firstDisplayRow) * (rowHeight + GAP);
+            y = firstVisibleRowOffset - (firstVisibleRowIndex - firstDisplayRow) * rowHeight;
             for (int rowIndex = firstDisplayRow; rowIndex < lastDisplayRowExcl; rowIndex++)
             {
                 x = firstVisibleColumnOffset - sumColumnWidths(firstDisplayCol, firstVisibleColumnIndex);
@@ -1019,6 +1018,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                         {
                             cell = new StructuredTextField();
                             cell.getStyleClass().add("virt-grid-cell");
+                            StructuredTextField cellFinal = cell;
+                            FXUtility.addChangeListenerPlatformNN(cell.focusedProperty(), b -> cellFocusChanged(cellFinal, b));
                             getChildren().add(cell);
                         }
 
@@ -1029,9 +1030,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                     }
                     cell.setVisible(true);
                     cell.resizeRelocate(x, y, columnWidths[columnIndex], rowHeight);
-                    x += columnWidths[columnIndex] + GAP;
+                    x += columnWidths[columnIndex];
                 }
-                y += rowHeight + GAP;
+                y += rowHeight;
             }
             if (y < getHeight() && appendRow != null && currentKnownRowsIsFinal && currentKnownRows.get() == lastDisplayRowExcl)
             {
@@ -1052,9 +1053,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                         return newButton;
                     });
                     appendButton.setVisible(true);
-                    appendButton.resizeRelocate(x, y, columnWidths[columnIndex], rowHeight + GAP);
-                    // TODO add the highlight-all-on-hover effect
-                    x += columnWidths[columnIndex] + GAP;
+                    appendButton.resizeRelocate(x, y, columnWidths[columnIndex], rowHeight);
+                    // TODO add the highlight-all-buttons-on-hover effect
+                    x += columnWidths[columnIndex];
                 }
             }
             else
@@ -1093,6 +1094,28 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 scrollBindable.updateClip();
             }
         }
+    }
+
+    private void cellFocusChanged(StructuredTextField cell, boolean focused)
+    {
+        @MonotonicNonNull CellPosition cellPosition = null;
+        for (Entry<CellPosition, StructuredTextField> vis : visibleCells.entrySet())
+        {
+            if (vis.getValue().equals(cell))
+            {
+                cellPosition = vis.getKey();
+                break;
+            }
+        }
+        @Nullable CellPosition cellPositionFinal = cellPosition;
+        visibleCells.forEach((visPos, visCell) -> {
+            boolean correctRow = cellPositionFinal != null && cellPositionFinal.rowIndex == visPos.rowIndex;
+            boolean correctColumn = cellPositionFinal != null && cellPositionFinal.columnIndex == visPos.columnIndex;
+            // XOR; don't want to set it for actually focused cell:
+            boolean showAsCross = correctRow != correctColumn;
+            FXUtility.setPseudoclass(visCell, "editing-row-col", focused && showAsCross);
+
+        });
     }
 
     // The last actual display column (exclusive), including any needed for displaying smooth scrolling
@@ -1174,7 +1197,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private Bounds getPixelPosition(CellPosition target)
     {
         double minX = sumColumnWidths(0, target.columnIndex);
-        double minY = (rowHeight + GAP) * target.rowIndex;
+        double minY = rowHeight * target.rowIndex;
         return new BoundingBox(minX, minY, columnWidths[target.columnIndex], rowHeight);
     }
 

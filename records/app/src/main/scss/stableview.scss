@@ -1,22 +1,23 @@
 @import 'colors';
 
-.stable-view-header-item, .stable-view-row-number, .stable-view-top-left {
-    -fx-background-color: hsb(0, 0%, 80%);
+/* Headers */
+
+.virt-grid-col-header, .virt-grid-row-number, .stable-view-top-left {
+    -fx-background-color: $table-header;
     -fx-border-style: solid inside;
     -fx-border-width: 0 1 1 0;
 }
-$stable-view-header-border: hsb(0, 0%, 40%);
 
-.stable-view-header-item {
-    -fx-border-color: transparent hsb(0, 0%, 60%) $stable-view-header-border transparent;
+.virt-grid-col-header {
+    -fx-border-color: transparent $table-header-divider $table-header-border transparent;
     -fx-text-alignment: center;
     -fx-alignment: top-center;
 }
-.stable-view-row-number {
-    -fx-border-color: transparent $stable-view-header-border hsb(0, 0%, 60%) transparent;
+.virt-grid-row-number {
+    -fx-border-color: transparent $table-header-border $table-header-divider transparent;
 }
 .stable-view-top-left {
-    -fx-border-color: transparent $stable-view-header-border $stable-view-header-border transparent;
+    -fx-border-color: transparent $table-header-border $table-header-border transparent;
 }
 
 
@@ -86,6 +87,8 @@ $stable-view-header-border: hsb(0, 0%, 40%);
     -fx-rotate: 180;
 }
 .stable-view {
+    -fx-background-color: $table-empty-background;
+
     & .stable-view-scroll-bar .thumb {
         -fx-background-radius: 0;
     }
@@ -108,24 +111,40 @@ $stable-view-header-border: hsb(0, 0%, 40%);
 }
 
 .virt-grid-cell {
-    -fx-background-color: gray(96%);
+    -fx-background-color: $table-cell;
     -fx-border-style: solid inside;
     -fx-border-width: 0 1 1 0;
-    -fx-border-color: gray(60%);
+    -fx-border-color: $table-divider;
     &:hover {
-        -fx-background-color: gray(98%);
+        /* Must take priority over focused-row-col: */
+        -fx-background-color: $table-cell-hover !important;
+    }
+    &:focused {
+        /* Chained important: must beat hover, above */
+        -fx-background-color: $focus-color, $table-cell-editing !important;
+        -fx-background-insets: 0, 2;
+        -fx-border-color: $focus-color;
+        & .text {
+            -fx-fill: black;
+        }
     }
 }
 
 /* focused-cell means the cell wrapper has focus (cell selected) */
 .virt-grid:focused {
     & .structured-text-field:focused-cell {
-        -fx-background-color: $focus-color;
+        /* Must beat hover, above */
+        -fx-background-color: $focus-color !important;
         & .text {
             -fx-fill: $focus-color-text;
         }
     }
-    & .structured-text-field:focused-row-col {
+    & .virt-grid-cell:focused-row-col {
+        -fx-background-color: $focus-color-row-col;
+    }
+}
+.virt-grid {
+    & .virt-grid-cell:editing-row-col {
         -fx-background-color: $focus-color-row-col;
     }
 }
@@ -151,15 +170,6 @@ $stable-view-header-border: hsb(0, 0%, 40%);
     }
 }
 
-
-/* editing-cell means the cell inside the wrapper has focus (cell being edited) */
-.stable-view-row-cell:editing-cell {
-    -fx-background-color: $focus-color, white;
-    -fx-background-insets: 0, 2;
-    & .styled-text-area .text {
-        -fx-fill: black;
-    }
-}
 .stable-view-row-cell:focused-row-col {
     -fx-background-color: $focus-color-row-col;
 }

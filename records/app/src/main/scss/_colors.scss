@@ -8,7 +8,7 @@
 
 /* General: */
 $focus-color: rgb(75, 54, 150);
-$focus-color-row-col: rgb(241, 238, 255);
+$focus-color-row-col: rgb(237, 236, 243);
 $focus-color-text: white;
 $faint-focus-color: rgba($focus-color, 0.25);
 
@@ -20,3 +20,12 @@ $list-selection-focused: $focus-color;
 $list-selection-unfocused: rgb(120, 118, 128);
 $list-selection-text: white;
 
+/* Table: */
+$table-empty-background: grey(85%);
+$table-cell: grey(95%);
+$table-cell-hover: rgb(140, 122, 203);
+$table-cell-editing: white;
+$table-divider: grey(85%);
+$table-header: grey(85%);
+$table-header-divider: grey(60%);
+$table-header-border: grey(60%);
