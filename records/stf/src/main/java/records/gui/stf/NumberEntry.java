@@ -25,9 +25,9 @@ public class NumberEntry extends TerminalComponent<@Value Number>
     {
         super(parents);
         items.add(new Item(getItemParents(), initial == null ? "" : (initial instanceof BigDecimal ? ((BigDecimal) initial).toBigInteger().toString() : initial.toString()), ItemVariant.EDITABLE_NUMBER_INT, TranslationUtility.getString("entry.prompt.number")).withStyleClasses("stf-number-int"));
-        // TODO make this a special optional divider
-        items.add(new Item(getItemParents(), ".").withStyleClasses("stf-number-dot"));
-        items.add(new Item(getItemParents(), initial == null ? "" : Utility.getFracPartAsString(initial, 0, Integer.MAX_VALUE), ItemVariant.EDITABLE_NUMBER_FRAC, "").withStyleClasses("stf-number-frac"));
+        String fracPart = initial == null ? "" : Utility.getFracPartAsString(initial, 0, Integer.MAX_VALUE);
+        items.add(new Item(getItemParents(), fracPart.isEmpty() ? "" : ".", ItemVariant.NUMBER_DOT, "").withStyleClasses("stf-number-dot"));
+        items.add(new Item(getItemParents(), fracPart, ItemVariant.EDITABLE_NUMBER_FRAC, "").withStyleClasses("stf-number-frac"));
     }
 
     @Override

@@ -613,6 +613,7 @@ public final class StructuredTextField extends StyleClassedTextArea
         TAG_NAME,
 
         DIVIDER,
+        NUMBER_DOT,
         EXPANDABLE_LIST_DIVIDER, // Comma in a list that lets you add and remove items
         EXPANDABLE_LIST_END, // Closing square bracket on a list that lets you add more.
         EMPTY_LIST_PROMPT; // Empty item saying List as a prompt, where lists are optional
@@ -623,6 +624,8 @@ public final class StructuredTextField extends StyleClassedTextArea
             {
                 case EMPTY_LIST_PROMPT:
                     return c == '[';
+                case NUMBER_DOT:
+                    return c == '.' && before.isEmpty();
                 case TAG_NAME:
                     return Character.isAlphabetic(c) || c == '_' || (!before.isEmpty() && c >= '0' && c <= '9');
                 case EDITABLE_TEXT:
