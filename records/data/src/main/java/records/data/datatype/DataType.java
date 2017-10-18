@@ -1761,7 +1761,13 @@ public class DataType
                         .thenComparing((TemporalAccessor t) -> t.get(ChronoField.SECOND_OF_MINUTE))
                         .thenComparing((TemporalAccessor t) -> t.get(ChronoField.NANO_OF_SECOND));
                 case DATETIMEZONED:
-                    return Comparator.comparing((TemporalAccessor t) -> ZonedDateTime.from(t).withZoneSameInstant(ZoneOffset.UTC),
+                    return Comparator.comparing((TemporalAccessor t) -> {
+                            if (pool)
+                                return ZonedDateTime.from(t);
+                            else
+                                return ZonedDateTime.from(t).withZoneSameInstant(ZoneOffset.UTC);
+
+                        },
                         Comparator.comparing((TemporalAccessor t) -> t.get(ChronoField.YEAR))
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.MONTH_OF_YEAR))
                             .thenComparing((TemporalAccessor t) -> t.get(ChronoField.DAY_OF_MONTH))
