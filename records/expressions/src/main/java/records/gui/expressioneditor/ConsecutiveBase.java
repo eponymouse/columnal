@@ -21,6 +21,7 @@ import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
 import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.transformations.expression.*;
 import records.transformations.expression.AddSubtractExpression.Op;
+import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -884,6 +885,18 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             {
                 if (expressionExps.size() == 2)
                     return errorDisplayers.record(displayer, new NotEqualExpression(expressionExps.get(0), expressionExps.get(1)));
+            }
+            else if (ops.stream().allMatch(op -> op.equals(">") || op.equals(">=")) || ops.stream().allMatch(op -> op.equals("<") || op.equals("<=")))
+            {
+                try
+                {
+                    return errorDisplayers.record(displayer, new ComparisonExpression(expressionExps, Utility.mapListExI(ops, ComparisonOperator::parse)));
+                }
+                catch (UserException | InternalException e)
+                {
+                    Utility.log(e);
+                    // Fall-through...
+                }
             }
             else if (ops.stream().allMatch(op -> op.equals(",")))
             {
