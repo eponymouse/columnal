@@ -16,7 +16,7 @@ import java.util.List;
 
 public class SquareBracketedExpression extends BracketedExpression
 {
-    public SquareBracketedExpression(OperandOps<Expression, ExpressionNodeParent> operations, ConsecutiveBase<Expression, ExpressionNodeParent> parent, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, OperandNode<Expression>>>, List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, OperatorEntry<Expression, ExpressionNodeParent>>>> content)
+    public SquareBracketedExpression(OperandOps<Expression, ExpressionNodeParent> operations, ConsecutiveBase<Expression, ExpressionNodeParent> parent, @Nullable ConsecutiveStartContent<Expression, ExpressionNodeParent> content)
     {
         super(operations, parent, new Label("["), new Label("]"), content, ']');
     }

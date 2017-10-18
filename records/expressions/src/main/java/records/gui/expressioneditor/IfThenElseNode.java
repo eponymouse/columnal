@@ -20,6 +20,7 @@ import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.transformations.expression.ErrorRecorder;
 import records.transformations.expression.Expression;
+import records.transformations.expression.Expression.SingleLoader;
 import records.transformations.expression.IfThenElseExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -50,7 +51,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     private final VBox elseLabel;
 
     @SuppressWarnings("initialization") // because of Consecutive
-    public IfThenElseNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent)
+    public IfThenElseNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, @Nullable Expression startingCondition, @Nullable Expression startingThen,  @Nullable Expression startingElse)
     {
         this.parent = parent;
         this.semanticParent = semanticParent;
@@ -59,7 +60,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
         thenLabel = ExpressionEditorUtil.keyword("then", "if-keyword", this, getParentStyles());
         elseLabel = ExpressionEditorUtil.keyword("else", "if-keyword", this, getParentStyles());
 
-        condition = new SubConsecutive(ifLabel, "if-condition") {
+        condition = new SubConsecutive(ifLabel, "if-condition", startingCondition) {
             @Override
             public OperatorOutcome addOperandToRight(OperatorEntry<Expression, ExpressionNodeParent> rightOf, String operatorEntered, String initialContent, boolean focus)
             {
@@ -78,7 +79,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
 
             }
         };
-        thenPart = new SubConsecutive(thenLabel, "if-then") {
+        thenPart = new SubConsecutive(thenLabel, "if-then", startingThen) {
             @Override
             public OperatorOutcome addOperandToRight(OperatorEntry<Expression, ExpressionNodeParent> rightOf, String operatorEntered, String initialContent, boolean focus)
             {
@@ -97,7 +98,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
 
             }
         };
-        elsePart = new SubConsecutive(elseLabel, "if-else") {
+        elsePart = new SubConsecutive(elseLabel, "if-else", startingElse) {
             @Override
             public ImmutableSet<Character> terminatedByChars()
             {
@@ -285,9 +286,9 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
 
     private class SubConsecutive extends Consecutive<Expression, ExpressionNodeParent>
     {
-        public SubConsecutive(Node label, String style)
+        public SubConsecutive(Node label, String style, @Nullable Expression startingContent)
         {
-            super(ConsecutiveBase.EXPRESSION_OPS, IfThenElseNode.this, label, null, style, null);
+            super(ConsecutiveBase.EXPRESSION_OPS, IfThenElseNode.this, label, null, style, startingContent == null ? null : SingleLoader.withSemanticParent(startingContent.loadAsConsecutive(), IfThenElseNode.this));
         }
 
         @Override

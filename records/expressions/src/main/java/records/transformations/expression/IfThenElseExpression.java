@@ -12,6 +12,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.IfThenElseNode;
 import records.gui.expressioneditor.OperandNode;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -102,7 +103,7 @@ public class IfThenElseExpression extends NonOperatorExpression
     @Override
     public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        throw new RuntimeException("TODO");
+        return (p, s) -> new IfThenElseNode(p, s, condition, thenExpression, elseExpression);
     }
 
     @Override

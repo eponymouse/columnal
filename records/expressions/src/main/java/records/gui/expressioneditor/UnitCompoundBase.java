@@ -15,7 +15,7 @@ public class UnitCompoundBase extends Consecutive<UnitExpression, UnitNodeParent
 {
     public UnitCompoundBase(EEDisplayNodeParent parent, boolean topLevel)
     {
-        super(UNIT_OPS, parent, new Label(topLevel ? "{" : "("), new Label(topLevel ? "}" : ")"), "unit-compound", new Pair<List<FXPlatformFunction<ConsecutiveBase<UnitExpression, UnitNodeParent>, OperandNode<UnitExpression>>>, List<FXPlatformFunction<ConsecutiveBase<UnitExpression, UnitNodeParent>, OperatorEntry<UnitExpression, UnitNodeParent>>>>(Collections.singletonList((ConsecutiveBase<UnitExpression, UnitNodeParent> p) -> new UnitEntry(p, "", false)), Collections.emptyList()), topLevel ? '}' : ')');
+        super(UNIT_OPS, parent, new Label(topLevel ? "{" : "("), new Label(topLevel ? "}" : ")"), "unit-compound", new ConsecutiveStartContent<UnitExpression, UnitNodeParent>(Collections.singletonList((ConsecutiveBase<UnitExpression, UnitNodeParent> p) -> new UnitEntry(p, "", false)), Collections.emptyList()), topLevel ? '}' : ')');
     }
 
     @Override

@@ -50,6 +50,7 @@ import records.grammar.ExpressionParser.TimesExpressionContext;
 import records.grammar.ExpressionParser.TupleExpressionContext;
 import records.grammar.ExpressionParser.VarRefContext;
 import records.grammar.ExpressionParserBaseVisitor;
+import records.gui.expressioneditor.Consecutive.ConsecutiveStartContent;
 import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
@@ -158,10 +159,13 @@ public abstract class Expression
         public R load(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent);
 
         @OnThread(Tag.FXPlatform)
-        public static <A, B> Pair<List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, A>>, List<FXPlatformFunction<ConsecutiveBase<Expression, ExpressionNodeParent>, B>>>
-            withSemanticParent(Pair<List<SingleLoader<A>>, List<SingleLoader<B>>> operandsAndOps, ExpressionNodeParent semanticParent)
+        public static ConsecutiveStartContent<Expression, ExpressionNodeParent>
+            withSemanticParent(Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> operandsAndOps, ExpressionNodeParent semanticParent)
         {
-            return operandsAndOps.map(l -> Utility.mapList(l, x -> c -> x.load(c, semanticParent)), l -> Utility.mapList(l, x -> c -> x.load(c, semanticParent)));
+            return new ConsecutiveStartContent<>(
+                Utility.mapList(operandsAndOps.getFirst(), x -> c -> x.load(c, semanticParent)),
+                Utility.mapList(operandsAndOps.getSecond(), x -> c -> x.load(c, semanticParent))
+            );
         }
     }
 

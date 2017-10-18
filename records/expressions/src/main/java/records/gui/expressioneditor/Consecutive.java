@@ -22,7 +22,7 @@ public abstract class Consecutive<EXPRESSION extends @NonNull Object, SEMANTIC_P
     private final ImmutableSet<Character> endCharacters;
 
     @SuppressWarnings("initialization") // Because of loading
-    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, EEDisplayNodeParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable Pair<List<FXPlatformFunction<ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>, OperandNode<EXPRESSION>>>, List<FXPlatformFunction<ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>, OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>>> content, char... endCharacters)
+    public Consecutive(OperandOps<EXPRESSION, SEMANTIC_PARENT> operations, EEDisplayNodeParent parent, @Nullable Node prefixNode, @Nullable Node suffixNode, String style, @Nullable ConsecutiveStartContent<EXPRESSION, SEMANTIC_PARENT> content, char... endCharacters)
     {
         super(operations, prefixNode, suffixNode, style);
         this.parent = parent;
@@ -30,8 +30,8 @@ public abstract class Consecutive<EXPRESSION extends @NonNull Object, SEMANTIC_P
         if (content != null)
         {
             atomicEdit.set(true);
-            operands.addAll(Utility.mapList(content.getFirst(), f -> f.apply(this)));
-            operators.addAll(Utility.mapList(content.getSecond(), f -> f.apply(this)));
+            operands.addAll(Utility.mapList(content.startingOperands, f -> f.apply(this)));
+            operators.addAll(Utility.mapList(content.startingOperators, f -> f.apply(this)));
             atomicEdit.set(false);
             // Get rid of anything which would go if you got focus and lost it again:
             focusChanged();
@@ -85,5 +85,17 @@ public abstract class Consecutive<EXPRESSION extends @NonNull Object, SEMANTIC_P
     public ImmutableSet<Character> terminatedByChars()
     {
         return endCharacters;
+    }
+
+    public static class ConsecutiveStartContent<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT>
+    {
+        private final List<FXPlatformFunction<ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>, OperandNode<EXPRESSION>>> startingOperands;
+        private final List<FXPlatformFunction<ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>, OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>> startingOperators;
+
+        public ConsecutiveStartContent(List<FXPlatformFunction<ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>, OperandNode<EXPRESSION>>> startingOperands, List<FXPlatformFunction<ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT>, OperatorEntry<EXPRESSION, SEMANTIC_PARENT>>> startingOperators)
+        {
+            this.startingOperands = startingOperands;
+            this.startingOperators = startingOperators;
+        }
     }
 }
