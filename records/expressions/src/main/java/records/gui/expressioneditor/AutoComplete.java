@@ -147,7 +147,8 @@ public class AutoComplete extends PopupControl
                         // No completions feature the character and it is in the following alphabet, so
                         // complete the top one (if any are available) and move character to next slot
                         List<Completion> completionsWithoutLast = calculateCompletions.apply(withoutLast, CompletionQuery.LEAVING_SLOT);
-                        change.setText(onSelect.nonAlphabetCharacter(withoutLast, completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.get(0), "" + last));
+                        @Nullable Completion completion = completionsWithoutLast.isEmpty() ? null : completionsWithoutLast.stream().filter(c -> c.completesOnExactly(withoutLast, true) == CompletionAction.COMPLETE_IMMEDIATELY).findFirst().orElse(completionsWithoutLast.get(0));
+                        change.setText(onSelect.nonAlphabetCharacter(withoutLast, completion, "" + last));
                         change.setRange(0, textField.getLength());
                         return change;
                     }
