@@ -67,9 +67,8 @@ public class PropLoadSaveTransformation
     @OnThread(Tag.Simulation)
     private static String save(TableManager original) throws ExecutionException, InterruptedException, InvocationTargetException
     {
-        // This thread is only pretend running on FXPlatform, but sets off some
-        // code which actually runs on the fx platform thread:
-        CompletableFuture<String> f = new CompletableFuture<>();
+        // This whole bit is single-threaded:
+        String[] r = new String[] {""};
         try
         {
             original.save(null, new FullSaver() {
@@ -77,15 +76,15 @@ public class PropLoadSaveTransformation
                 public @OnThread(Tag.Simulation) void saveTable(String tableSrc)
                 {
                     super.saveTable(tableSrc);
-                    f.complete(getCompleteFile());
+                    // May be called multiple times, but that's fine, we just need last one:
+                    r[0] = getCompleteFile();
                 }
             });
         }
         catch (Throwable t)
         {
-            f.complete("");
         }
-        return f.get();
+        return r[0];
     }
 
     @Property
