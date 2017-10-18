@@ -38,7 +38,7 @@ import static org.junit.Assert.assertTrue;
 public class PropInsertRemoveRows
 {
     @BeforeClass
-    public void initFX() throws InvocationTargetException, InterruptedException
+    public static void initFX() throws InvocationTargetException, InterruptedException
     {
         // Initialise JavaFX:
         SwingUtilities.invokeAndWait(() -> new JFXPanel());
