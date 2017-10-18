@@ -760,6 +760,8 @@ public class TestStructuredTextField extends ApplicationTest
         push(KeyCode.HOME);
         type("", "$" + numAsString);
         type("", numAsString, num);
+
+        fail("TODO Test number entry more extensively, especially entering and deleting the dot");
     }
 
     @Property(trials = 15)

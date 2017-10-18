@@ -15,6 +15,7 @@ import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
 import org.apache.commons.io.FileUtils;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
@@ -31,6 +32,7 @@ import utility.Utility;
 import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
+import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -58,10 +60,10 @@ public class ImporterManager
     public void chooseAndImportFile(Window parent, TableManager tableManager, FXPlatformConsumer<DataSource> onLoad)
     {
         ArrayList<ExtensionFilter> filters = new ArrayList<>();
-        filters.add(new ExtensionFilter("All Known Types", registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream().flatMap(p -> p.getSecond().stream())).collect(Collectors.toList())));
+        filters.add(new ExtensionFilter(TranslationUtility.getString("importer.all.known"), registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream().flatMap((Pair<@Localized String, ImmutableList<String>> p) -> p.getSecond().stream())).collect(Collectors.toList())));
         filters.addAll(registeredImporters.stream().flatMap(imp -> imp.getSupportedFileTypes().stream())
                 .map(p -> new ExtensionFilter(p.getFirst(), p.getSecond())).collect(Collectors.toList()));
-        filters.add(new ExtensionFilter("All files", "*.*"));
+        filters.add(new ExtensionFilter(TranslationUtility.getString("importer.all.files"), "*.*"));
 
         @Nullable File chosen = FXUtility.chooseFileOpen("data.import.dialogTitle", "dataImport", parent,
                 filters.toArray(new ExtensionFilter[0])
@@ -105,7 +107,7 @@ public class ImporterManager
         // Work out which importer will handle it:
         for (Importer importer : registeredImporters)
         {
-            if (importer.getSupportedFileTypes().stream().anyMatch(p -> p.getSecond().stream().anyMatch(ext -> matches(file, ext))))
+            if (importer.getSupportedFileTypes().stream().anyMatch((Pair<@Localized String, ImmutableList<String>> p) -> p.getSecond().stream().anyMatch(ext -> matches(file, ext))))
             {
                 importer.importFile(parent, tableManager, file, onLoad);
                 return;
@@ -137,7 +139,7 @@ public class ImporterManager
         public ImportLinkDialog()
         {
             linkField = new ErrorableTextField<>(ImporterManager::checkURL);
-            Node linkPane = GUI.labelled("import.link", linkField.getNode());
+            Node linkPane = GUI.labelled("importer.link", linkField.getNode());
             pickImporterPane = new PickImporterPane();
             getDialogPane().setContent(new VBox(linkPane, pickImporterPane, getErrorLabel()));
             setResizable(true);
@@ -146,15 +148,15 @@ public class ImporterManager
 
         @Override
         @OnThread(Tag.FXPlatform)
-        protected Either<String, Pair<File, Importer>> calculateResult()
+        protected Either<@Localized String, Pair<File, Importer>> calculateResult()
         {
             @Nullable URL url = linkField.valueProperty().get();
             if (url == null)
-                return Either.left("Invalid link");
+                return Either.left(TranslationUtility.getString("importer.link.invalid"));
 
             @Nullable Importer importer = pickImporterPane.get();
             if (importer == null)
-                return Either.left("Must pick an importer");
+                return Either.left(TranslationUtility.getString("importer.noimporter"));
 
             try
             {
@@ -163,7 +165,7 @@ public class ImporterManager
             }
             catch (Exception e)
             {
-                return Either.left("Problem downloading: " + e.getLocalizedMessage());
+                return Either.left(TranslationUtility.getString("importer.download.error", e.getLocalizedMessage()));
             }
 
 
@@ -174,7 +176,7 @@ public class ImporterManager
     private static ConversionResult<URL> checkURL(String src)
     {
         if (src.isEmpty())
-            return ConversionResult.error("URL cannot be blank");
+            return ConversionResult.error(TranslationUtility.getString("importer.error.url.blank"));
 
         Exception originalException = null;
         try
@@ -226,7 +228,7 @@ public class ImporterManager
                         super.updateItem(item, empty);
                         if (item != null && !empty)
                         {
-                            setText(item.getName() + "\n" + item.getSupportedFileTypes().stream().map(p -> p.getFirst() + "(" + p.getSecond().stream().collect(Collectors.joining(", ")) + ")").collect(Collectors.joining("; ")));
+                            setText(item.getName() + "\n" + item.getSupportedFileTypes().stream().map((Pair<@Localized String, ImmutableList<String>> p) -> p.getFirst() + "(" + p.getSecond().stream().collect(Collectors.joining(", ")) + ")").collect(Collectors.joining("; ")));
                         }
                     }
                 };
@@ -255,13 +257,13 @@ public class ImporterManager
         }
 
         @Override
-        protected Either<String, Importer> calculateResult()
+        protected Either<@Localized String, Importer> calculateResult()
         {
             @Nullable Importer sel = pickImporterPane.get();
             if (sel != null)
                 return Either.right(sel);
             else
-                return Either.left("Pick an importer");
+                return Either.left(TranslationUtility.getString("importer.error.nopick"));
         }
     }
 }

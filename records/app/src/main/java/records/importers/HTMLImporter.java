@@ -28,6 +28,7 @@ import threadchecker.Tag;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
+import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -109,13 +110,13 @@ public class HTMLImporter implements Importer
     @Override
     public @Localized String getName()
     {
-        return "HTML Import";
+        return TranslationUtility.getString("importer.html.files");
     }
 
     @Override
     public @OnThread(Tag.Any) ImmutableList<Pair<@Localized String, ImmutableList<String>>> getSupportedFileTypes()
     {
-        return ImmutableList.of(new Pair<>("HTML", ImmutableList.of("*.html", "*.htm")));
+        return ImmutableList.of(new Pair<@Localized String, ImmutableList<String>>(TranslationUtility.getString("importer.html.files"), ImmutableList.of("*.html", "*.htm")));
     }
 
     @Override

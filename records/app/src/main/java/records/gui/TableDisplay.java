@@ -149,6 +149,8 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     {
         private final FXPlatformRunnable onModify;
         private final RecordSet recordSet;
+        // Not final because it changes if user changes the display item:
+        private ImmutableList<Pair<String, ColumnHandler>> displayColumns;
 
         @SuppressWarnings("initialization")
         @UIEffect
@@ -158,7 +160,8 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             this.recordSet = recordSet;
             this.onModify = onModify;
             recordSet.setListener(this);
-            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), recordSet::indexValid);
+            displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify);
+            setColumnsAndRows(displayColumns, table.getOperations(), recordSet::indexValid);
             //TODO restore editability
             //setEditable(getColumns().stream().anyMatch(TableColumn::isEditable));
             //boolean expandable = getColumns().stream().allMatch(TableColumn::isEditable);
@@ -188,7 +191,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
 
             FXUtility.addChangeListenerPlatformNN(columnDisplay, newDisplay -> {
-                setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), onModify), table.getOperations(), recordSet::indexValid);
+                setColumnsAndRows(displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, newDisplay.mapSecond(blackList -> s -> !blackList.contains(s)), onModify), table.getOperations(), recordSet::indexValid);
             });
         }
 
@@ -210,12 +213,12 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         @Override
         public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
         {
-            setColumnsAndRows(TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), recordSet::indexValid);
+            setColumnsAndRows(displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), recordSet::indexValid);
         }
 
         public void loadColumnWidths(Map<ColumnId, Double> columnWidths)
         {
-            super.loadColumnWidths(Doubles.toArray(Utility.mapList(recordSet.getColumnIds(), c -> columnWidths.getOrDefault(c, DEFAULT_COLUMN_WIDTH))));
+            super.loadColumnWidths(Doubles.toArray(Utility.mapList(displayColumns, c -> columnWidths.getOrDefault(new ColumnId(c.getFirst()), DEFAULT_COLUMN_WIDTH))));
         }
 
         @Override
@@ -223,9 +226,9 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         {
             super.columnWidthChanged(changedColIndex, newWidth);
             ImmutableMap.Builder<ColumnId, Double> m = ImmutableMap.builder();
-            for (int columnIndex = 0; columnIndex < recordSet.getColumnIds().size(); columnIndex++)
+            for (int columnIndex = 0; columnIndex < displayColumns.size(); columnIndex++)
             {
-                m.put(recordSet.getColumnIds().get(columnIndex), getColumnWidth(columnIndex));
+                m.put(new ColumnId(displayColumns.get(columnIndex).getFirst()), getColumnWidth(columnIndex));
             }
             mostRecentColumnWidths.set(m.build());
             parent.tableMovedOrResized(TableDisplay.this);

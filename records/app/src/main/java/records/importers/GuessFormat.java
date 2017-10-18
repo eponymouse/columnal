@@ -56,6 +56,7 @@ import utility.Utility.IndexRange;
 import utility.Workers;
 import utility.Workers.Priority;
 import records.gui.stable.StableView;
+import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.io.IOException;
@@ -130,7 +131,7 @@ public class GuessFormat
         {
             int n = Integer.parseInt(input);
             if (n < 0)
-                return Either.left("Negative numbers not allowed");
+                return Either.left(TranslationUtility.getString("error.number.negative"));
             else
                 return Either.right(new HeaderRowChoice(n));
         }
@@ -183,9 +184,9 @@ public class GuessFormat
         }
 
         @Override
-        public String toString()
+        public @Localized String toString()
         {
-            return charsetName;
+            return Utility.universal(charsetName);
         }
 
         public static ChoiceType<CharsetChoice> getType()
@@ -223,7 +224,7 @@ public class GuessFormat
         }
 
         @Override
-        public String toString()
+        public @Localized String toString()
         {
             return Integer.toString(numHeaderRows);
         }
@@ -263,15 +264,16 @@ public class GuessFormat
         }
 
         @Override
-        public String toString()
+        public @Localized String toString()
         {
             if (separator == null)
-                return "<None>";
+                return TranslationUtility.getString("importer.sep.none");
             if (separator.equals(" "))
-                return "<Space>";
+                return TranslationUtility.getString("importer.sep.space");
             if (separator.equals("\t"))
-                return "<Tab (\u27FE)>";
-            return separator;
+                return TranslationUtility.getString("importer.sep.tab");
+            else
+                return Utility.universal(separator);
         }
 
         public static ChoiceType<SeparatorChoice> getType()
@@ -310,9 +312,9 @@ public class GuessFormat
         }
 
         @Override
-        public String toString()
+        public @Localized String toString()
         {
-            return quote == null ? "<None>" : quote;
+            return quote == null ? TranslationUtility.getString("importer.quote.none") : Utility.universal(quote);
         }
 
         public static ChoiceType<QuoteChoice> getType()
@@ -350,7 +352,7 @@ public class GuessFormat
         }
 
         @Override
-        public String toString()
+        public @Localized String toString()
         {
             return Integer.toString(columnCount);
         }
@@ -437,7 +439,7 @@ public class GuessFormat
         }
         catch (Exception e)
         {
-            return Either.left("Charset not available: " + s);
+            return Either.left(TranslationUtility.getString("charset.not.available", s));
         }
     }
 
@@ -447,7 +449,7 @@ public class GuessFormat
             if (s.length() == 1)
                 return Either.right(make.apply(s));
             else
-                return Either.left("Must be single character");
+                return Either.left(TranslationUtility.getString("error.single.char.only"));
         };
     }
 

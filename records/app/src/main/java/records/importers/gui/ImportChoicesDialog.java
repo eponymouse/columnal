@@ -261,7 +261,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             final @Nullable @Initialized ObjectExpression<@Nullable C> fieldValue;
             if (options.stringEntry != null)
             {
-                final @NonNull Function<String, Either<String, C>> stringEntry = options.stringEntry;
+                final @NonNull Function<String, Either<@Localized String, C>> stringEntry = options.stringEntry;
                 ErrorableTextField<C> field = new ErrorableTextField<>(s -> {
                     return stringEntry.apply(s).either(e -> ConversionResult.error(e), v -> ConversionResult.success(v));
                 });
@@ -294,7 +294,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             if (item == null)
             {
                 tableView.clear(null);
-                tableView.setPlaceholderText("Enter a valid option");
+                tableView.setPlaceholderText(TranslationUtility.getString("need.valid.option"));
                 return;
             }
             try
@@ -321,7 +321,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
     }
 
     // Either a value of type C, or an "Other" item
-    private static class PickOrOther<C>
+    private static class PickOrOther<C extends Choice>
     {
         private final @Nullable C value;
 

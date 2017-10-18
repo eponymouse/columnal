@@ -32,6 +32,7 @@ import utility.SimulationSupplier;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
+import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -46,13 +47,13 @@ public class ExcelImporter implements Importer
     @Override
     public @Localized String getName()
     {
-        return "Excel Files";
+        return TranslationUtility.getString("importer.excel.files");
     }
 
     @Override
     public @OnThread(Tag.Any) ImmutableList<Pair<@Localized String, ImmutableList<String>>> getSupportedFileTypes()
     {
-        return ImmutableList.of(new Pair<>("Excel files", ImmutableList.of("*.xls", "*.xlsx", "*.xlsm")));
+        return ImmutableList.of(new Pair<@Localized String, ImmutableList<String>>(TranslationUtility.getString("importer.excel.files"), ImmutableList.of("*.xls", "*.xlsx", "*.xlsm")));
     }
 
     @SuppressWarnings("deprecation")

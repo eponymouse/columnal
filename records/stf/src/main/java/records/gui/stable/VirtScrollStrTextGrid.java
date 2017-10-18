@@ -1,5 +1,8 @@
 package records.gui.stable;
 
+import annotation.help.qual.UnknownIfHelp;
+import annotation.qual.UnknownIfValue;
+import annotation.userindex.qual.UnknownIfUserIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.animation.AnimationTimer;
 import javafx.animation.Interpolator;
@@ -57,6 +60,7 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
+import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -824,7 +828,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             FXUtility.addChangeListenerPlatformNN(heightProperty(), h -> updateVBar());
 
 
-            EventHandler<? super @UnknownKeyFor MouseEvent> clickHandler = mouseEvent -> {
+            EventHandler<? super @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp MouseEvent> clickHandler = mouseEvent -> {
 
                 @Nullable CellPosition cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
                 StructuredTextField cell = visibleCells.get(cellPosition);
@@ -1025,7 +1029,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
                         visibleCells.put(cellPosition, cell);
                         // Blank then queue fetch:
-                        cell.resetContent(new EditorKitSimpleLabel<>("Loading..."));
+                        cell.resetContent(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
                         loadSave.fetchEditorKit(rowIndex, columnIndex, VirtScrollStrTextGrid.this::focusCell, VirtScrollStrTextGrid.this);
                     }
                     cell.setVisible(true);

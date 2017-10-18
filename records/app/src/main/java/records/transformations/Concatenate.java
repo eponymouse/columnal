@@ -340,7 +340,7 @@ public class Concatenate extends TransformationEditable
         @Override
         public Pair<@LocalizableKey String, @LocalizableKey String> getDescriptionKeys()
         {
-            return new Pair<>("TODO", "TODO");
+            return new Pair<>("todo", "todo");
         }
 
         @Override

@@ -27,6 +27,7 @@ import utility.Workers;
 import utility.Workers.Priority;
 import utility.Workers.Worker;
 import records.gui.stable.StableView.ColumnHandler;
+import utility.gui.TranslationUtility;
 
 import java.util.OptionalInt;
 import java.util.concurrent.ExecutionException;
@@ -298,7 +299,7 @@ public final class EditorKitCache<V> implements ColumnHandler
                     public void run()
                     {
                         String msg = e.getLocalizedMessage();
-                        displayCacheItem.error(msg == null ? "ERROR" : ("ERR:" + msg));
+                        displayCacheItem.error(msg == null ? TranslationUtility.getString("loading.error.nodetail") : TranslationUtility.getString("loading.error.detail", msg));
                     }
                 });
             }

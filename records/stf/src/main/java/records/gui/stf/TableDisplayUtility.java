@@ -62,19 +62,20 @@ public class TableDisplayUtility
     public static ImmutableList<Pair<String, ColumnHandler>> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, @Nullable FXPlatformRunnable onModify)
     {
         ImmutableList.Builder<Pair<String, ColumnHandler>> r = ImmutableList.builder();
-        for (int columnIndex = 0; columnIndex < recordSet.getColumns().size(); columnIndex++)
+        int displayColumnIndex = 0;
+        for (int origColIndex = 0; origColIndex < recordSet.getColumns().size(); origColIndex++)
         {
-            Column col = recordSet.getColumns().get(columnIndex);
+            Column col = recordSet.getColumns().get(origColIndex);
             if (col.shouldShow(columnSelection))
             {
                 Pair<String, ColumnHandler> item;
                 try
                 {
-                    item = getDisplay(columnIndex, col, onModify != null ? onModify : FXPlatformRunnable.EMPTY);
+                    item = getDisplay(displayColumnIndex, col, onModify != null ? onModify : FXPlatformRunnable.EMPTY);
                 }
                 catch (InternalException | UserException e)
                 {
-                    final int columnIndexFinal = columnIndex;
+                    final int columnIndexFinal = displayColumnIndex;
                     // Show a dummy column with an error message:
                     item = new Pair<>(col.getName().getRaw(), new ColumnHandler()
                     {
@@ -98,6 +99,7 @@ public class TableDisplayUtility
                     });
                 }
                 r.add(item);
+                displayColumnIndex += 1;
             }
         }
         return r.build();

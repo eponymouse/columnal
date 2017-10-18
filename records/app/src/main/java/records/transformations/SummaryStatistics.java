@@ -15,6 +15,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
@@ -50,6 +51,7 @@ import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
 import utility.gui.FXUtility;
+import utility.gui.TranslationUtility;
 
 import javax.validation.constraints.NotNull;
 import java.io.File;
@@ -369,7 +371,7 @@ public class SummaryStatistics extends TransformationEditable
         @Override
         public Pair<@LocalizableKey String, @LocalizableKey String> getDescriptionKeys()
         {
-            return new Pair<>("TODO", "TODO");
+            return new Pair<>("todo", "todo");
         }
 
         @Override
@@ -385,9 +387,9 @@ public class SummaryStatistics extends TransformationEditable
         }
 
         @Override
-        public String getDisplayTitle()
+        public @Localized String getDisplayTitle()
         {
-            return "Basic Statistics";
+            return TranslationUtility.getString("transform.summary.title");
         }
 
         @Override

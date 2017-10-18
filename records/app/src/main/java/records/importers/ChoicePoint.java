@@ -47,6 +47,9 @@ public class ChoicePoint<C extends Choice, R>
 
         @Override
         public abstract boolean equals(@Nullable Object obj);
+
+        @Override
+        public abstract @Localized String toString();
     }
 
     /**

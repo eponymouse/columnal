@@ -1,6 +1,6 @@
 grammar Accelerator;
 
-KEY : ('a'..'z');
+KEY : ('a'..'z') | 'Esc';
 SHORTCUT_MODIFIER : 'C-';
 ALT_MODIFIER : 'A-';
 SHIFT_MODIFIER : 'S-';

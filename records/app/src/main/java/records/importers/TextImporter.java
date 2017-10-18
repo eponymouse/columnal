@@ -92,7 +92,7 @@ public class TextImporter implements Importer
     @Override
     public @Localized String getName()
     {
-        return "Text files [CSV]";
+        return TranslationUtility.getString("importer.files.text");
     }
 
     @OnThread(Tag.Simulation)

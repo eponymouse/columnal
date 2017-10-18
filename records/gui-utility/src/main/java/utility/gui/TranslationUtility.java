@@ -10,6 +10,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
 import javafx.scene.input.KeyCharacterCombination;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCodeCombination;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyCombination.Modifier;
 import javafx.scene.text.Text;
@@ -56,7 +58,8 @@ public class TranslationUtility
                     ResourceBundle.getBundle("function"),
                     ResourceBundle.getBundle("main"),
                     ResourceBundle.getBundle("newcolumn"),
-                    ResourceBundle.getBundle("dataentry")
+                    ResourceBundle.getBundle("dataentry"),
+                    ResourceBundle.getBundle("import")
                 );
             }
             catch (MissingResourceException e)
@@ -132,7 +135,10 @@ public class TranslationUtility
                                 modifiers.add(KeyCombination.ALT_DOWN);
                             if (ctx.SHIFT_MODIFIER() != null)
                                 modifiers.add(KeyCombination.SHIFT_DOWN);
-                            return new KeyCharacterCombination(ctx.KEY().getText(), modifiers.toArray(new Modifier[0]));
+                            if (ctx.KEY().getText().equals("Esc"))
+                                return new KeyCodeCombination(KeyCode.ESCAPE, modifiers.toArray(new Modifier[0]));
+                            else
+                                return new KeyCharacterCombination(ctx.KEY().getText(), modifiers.toArray(new Modifier[0]));
                         }
                     }.visit(p.accelerator());
                 });

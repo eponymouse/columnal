@@ -19,12 +19,12 @@ import java.util.List;
 // An uneditable EditorKit that displays a simple label (e.g. error message)
 public class EditorKitSimpleLabel<T> extends EditorKit<T>
 {
-    public EditorKitSimpleLabel(@Localized String errorMessage)
+    public EditorKitSimpleLabel(String message)
     {
         super(new TerminalComponent<T>(ImmutableList.of())
         {
             {
-                items.add(new Item(getItemParents(), errorMessage, ItemVariant.DIVIDER, ""));
+                items.add(new Item(getItemParents(), message, ItemVariant.DIVIDER, ""));
             }
             @Override
             public Either<List<ErrorFix>, T> endEdit(StructuredTextField field)

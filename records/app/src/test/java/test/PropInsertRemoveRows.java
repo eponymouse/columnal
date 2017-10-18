@@ -4,7 +4,9 @@ import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.embed.swing.JFXPanel;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.junit.BeforeClass;
 import org.junit.runner.RunWith;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
@@ -18,6 +20,8 @@ import threadchecker.Tag;
 import utility.SimulationRunnable;
 import utility.Utility;
 
+import javax.swing.SwingUtilities;
+import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
@@ -33,6 +37,13 @@ import static org.junit.Assert.assertTrue;
 @RunWith(JUnitQuickcheck.class)
 public class PropInsertRemoveRows
 {
+    @BeforeClass
+    public void initFX() throws InvocationTargetException, InterruptedException
+    {
+        // Initialise JavaFX:
+        SwingUtilities.invokeAndWait(() -> new JFXPanel());
+    }
+
     @Property(trials = 100)
     @OnThread(Tag.Simulation)
     public void insertRows(@From(GenEditableColumn.class) EditableColumn column, @From(GenRandom.class) Random r) throws InternalException, UserException
