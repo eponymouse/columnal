@@ -16,9 +16,11 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
+import records.gui.expressioneditor.SquareBracketedExpression;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -27,6 +29,7 @@ import utility.Utility.ListEx;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -164,13 +167,15 @@ public class ArrayExpression extends Expression
     @Override
     public Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive()
     {
-        throw new RuntimeException("TODO");
+        return new Pair<>(Collections.singletonList(loadAsSingle()), Collections.emptyList());
     }
 
     @Override
     public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        throw new RuntimeException("TODO");
+        List<SingleLoader<OperandNode<Expression>>> loadOperands = Utility.mapList(items, x -> x.loadAsSingle());
+        List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>> loadCommas = Utility.replicate(items.size() - 1, (p, s) -> new OperatorEntry<>(Expression.class, ",", false, p));
+        return (p, s) -> new SquareBracketedExpression(ConsecutiveBase.EXPRESSION_OPS, p, SingleLoader.withSemanticParent(new Pair<>(loadOperands, loadCommas), s));
     }
 
     @Override
