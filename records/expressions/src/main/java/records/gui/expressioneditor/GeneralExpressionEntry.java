@@ -773,7 +773,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             else if (c instanceof TagCompletion)
             {
                 TagCompletion tc = (TagCompletion)c;
-                TagExpressionNode tagExpressionNode = new TagExpressionNode(parent, semanticParent, tc.typeName, tc.tagType);
+                TagExpressionNode tagExpressionNode = new TagExpressionNode(parent, semanticParent, tc.typeName.getRaw(), tc.tagType.getName(), tc.tagType.getInner() == null ? null : new UnfinishedExpression(""));
                 if (tc.tagType.getInner() != null)
                 {
                     tagExpressionNode.focusWhenShown();

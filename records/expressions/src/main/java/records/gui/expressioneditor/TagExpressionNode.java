@@ -22,15 +22,15 @@ import java.util.List;
  */
 public class TagExpressionNode extends SurroundNode implements ExpressionNodeParent
 {
-    private final TypeId typeName;
-    private final TagType<DataType> tagType;
+    private final String typeName;
+    private final String tagName;
 
     @SuppressWarnings({"initialization", "i18n"}) // Because LeaveableTextField gets marked uninitialized, and because of header
-    public TagExpressionNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, TypeId typeName, TagType<DataType> tagType)
+    public TagExpressionNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, String typeName, String tagName, @Nullable Expression innerContent)
     {
-        super(parent, semanticParent, "tag", TranslationUtility.getString("tag") + " " + typeName.getRaw(), tagType.getName(), tagType.getInner() != null, null);
+        super(parent, semanticParent, "tag", TranslationUtility.getString("tag") + " " + typeName, tagName, innerContent != null, innerContent);
         this.typeName = typeName;
-        this.tagType = tagType;
+        this.tagName = tagName;
     }
 
     @Override
@@ -41,10 +41,10 @@ public class TagExpressionNode extends SurroundNode implements ExpressionNodePar
         {
             try
             {
-                if (option.getFirst().isTagged() && option.getFirst().getTaggedTypeName().equals(typeName))
+                if (option.getFirst().isTagged() && option.getFirst().getTaggedTypeName().getRaw().equals(typeName))
                 {
                     // It matches us, so the item inside will be for us
-                    @Nullable DataType inner = tagType.getInner();
+                    @Nullable DataType inner = option.getFirst().getTagTypes().stream().filter(tt -> tt.getName().equals(tagName)).<@Nullable DataType>map(tt -> tt.getInner()).findFirst().orElse(null);
                     if (inner != null) // Shouldn't be null if our child is asking for context...
                         return Collections.singletonList(new Pair<>(inner, option.getSecond()));
                 }
@@ -86,6 +86,6 @@ public class TagExpressionNode extends SurroundNode implements ExpressionNodePar
         {
             innerExp = contents.save(errorDisplayer, onError);
         }
-        return errorDisplayer.record(this, new TagExpression(new Pair<>(typeName.getRaw(), tagType.getName()), innerExp));
+        return errorDisplayer.record(this, new TagExpression(new Pair<>(typeName, tagName), innerExp));
     }
 }

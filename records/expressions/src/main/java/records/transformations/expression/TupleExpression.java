@@ -15,6 +15,9 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.gui.expressioneditor.BracketedExpression;
+import records.gui.expressioneditor.ConsecutiveBase;
+import records.gui.expressioneditor.ConsecutiveBase.OperandOps;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
@@ -142,13 +145,13 @@ public class TupleExpression extends Expression
     @Override
     public Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive()
     {
-        throw new RuntimeException("TODO");
+        return new Pair<>(Utility.mapList(members, m -> m.loadAsSingle()), Utility.replicate(members.size()  - 1, (p, s) -> new OperatorEntry<>(Expression.class, ",", false, p)));
     }
 
     @Override
     public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        throw new RuntimeException("TODO");
+        return (p, s) -> new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, p, null, null, SingleLoader.withSemanticParent(loadAsConsecutive(), s), ')');
     }
 
     @Override
