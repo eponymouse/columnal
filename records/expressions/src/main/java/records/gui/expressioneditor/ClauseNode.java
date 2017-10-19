@@ -129,7 +129,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     @SuppressWarnings("initialization") // Because of Consecutive
     private Consecutive<Expression, ExpressionNodeParent> makeConsecutive(@UnknownInitialization(Object.class)ClauseNode this, SubType subType, @Nullable Expression startingContent)
     {
-        return new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, ExpressionEditorUtil.keyword(subType.getPrefixKeyword(), "match", parent, getParentStyles()), null, "match", startingContent == null ? null : SingleLoader.withSemanticParent(startingContent.loadAsConsecutive(), this)) {
+        return new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, ExpressionEditorUtil.keyword(subType.getPrefixKeyword(), "match", parent, getParentStyles()), null, "match", startingContent == null ? null : SingleLoader.withSemanticParent(startingContent.loadAsConsecutive(false), this)) {
 
             @Override
             public OperatorOutcome addOperandToRight(OperatorEntry<Expression, ExpressionNodeParent> rightOf, String operatorEntered, String initialContent, boolean focus)

@@ -288,7 +288,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     {
         public SubConsecutive(Node label, String style, @Nullable Expression startingContent)
         {
-            super(ConsecutiveBase.EXPRESSION_OPS, IfThenElseNode.this, label, null, style, startingContent == null ? null : SingleLoader.withSemanticParent(startingContent.loadAsConsecutive(), IfThenElseNode.this));
+            super(ConsecutiveBase.EXPRESSION_OPS, IfThenElseNode.this, label, null, style, startingContent == null ? null : SingleLoader.withSemanticParent(startingContent.loadAsConsecutive(false), IfThenElseNode.this));
         }
 
         @Override

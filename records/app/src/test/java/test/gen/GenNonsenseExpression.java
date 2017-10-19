@@ -106,7 +106,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 },
                 () -> new DivideExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
                 () -> new RaiseExpression(genDepth(r, depth + 1, gs), genDepth(r, depth + 1, gs)),
-                () -> new CallExpression(TestUtil.generateVarName(r), TestUtil.makeList(r.nextInt(0, 2), new GenUnit(), r, gs), genDepth(true, r, depth + 1, gs)),
+                () -> new CallExpression(TestUtil.generateVarName(r), null, TestUtil.makeList(r.nextInt(0, 2), new GenUnit(), r, gs), genDepth(true, r, depth + 1, gs)),
                 () -> new MatchExpression(genDepth(false, r, depth + 1, gs), TestUtil.makeList(r, 1, 5, () -> genClause(r, gs, depth + 1))),
                 () -> new ArrayExpression(ImmutableList.<Expression>copyOf(TestUtil.makeList(r, 0, 6, () -> genDepth(r, depth + 1, gs)))),
                 () -> new TupleExpression(ImmutableList.<Expression>copyOf(TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs)))),
@@ -129,7 +129,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 new StringLiteral(TestUtil.generateColumnId(r).getOutput()),
                 new ColumnReference(TestUtil.generateColumnId(r), ColumnReferenceType.CORRESPONDING_ROW),
                 new VarUseExpression(TestUtil.generateVarName(r)),
-                new UnfinishedExpression(TestUtil.makeString(r, null))
+                new UnfinishedExpression(TestUtil.makeString(r, null).trim())
             ));
         }
         catch (UserException e)

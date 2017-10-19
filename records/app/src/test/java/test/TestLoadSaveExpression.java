@@ -14,6 +14,7 @@ import records.transformations.expression.Expression;
 import records.transformations.expression.NotEqualExpression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.StringLiteral;
+import records.transformations.function.FunctionList;
 
 import java.math.BigDecimal;
 import java.util.Arrays;

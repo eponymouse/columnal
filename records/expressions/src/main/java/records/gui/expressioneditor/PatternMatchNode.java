@@ -53,7 +53,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     {
         this.parent = parent;
         this.matchLabel = ExpressionEditorUtil.keyword("match", "match", this, getParentStyles());
-        this.source = new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, matchLabel, null, "match", sourceAndClauses == null ? null : SingleLoader.withSemanticParent(sourceAndClauses.getFirst().loadAsConsecutive(), this), ')') {
+        this.source = new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, matchLabel, null, "match", sourceAndClauses == null ? null : SingleLoader.withSemanticParent(sourceAndClauses.getFirst().loadAsConsecutive(false), this), ')') {
             @Override
             public boolean isFocused()
             {

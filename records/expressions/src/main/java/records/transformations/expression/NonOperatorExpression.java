@@ -15,7 +15,7 @@ import java.util.List;
 public abstract class NonOperatorExpression extends Expression
 {
     @Override
-    public final Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive()
+    public final Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
     {
         return new Pair<>(Collections.singletonList(loadAsSingle()), Collections.emptyList());
     }

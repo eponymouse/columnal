@@ -134,7 +134,7 @@ public abstract class NaryOpExpression extends Expression
     }
 
     @Override
-    public Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive()
+    public Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
     {
         List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>> ops = new ArrayList<>();
         for (int i = 0; i < expressions.size() - 1; i++) // TODO length is wrong for unfinished
@@ -148,7 +148,7 @@ public abstract class NaryOpExpression extends Expression
     @Override
     public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        return (p, s) -> new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, p, null, null, SingleLoader.withSemanticParent(loadAsConsecutive(), s), ')');
+        return (p, s) -> new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, p, null, null, SingleLoader.withSemanticParent(loadAsConsecutive(true), s), ')');
     }
 
     // Can be overriden by subclasses if needed:

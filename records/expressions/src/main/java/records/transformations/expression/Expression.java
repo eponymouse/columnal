@@ -61,6 +61,7 @@ import records.transformations.expression.ComparisonExpression.ComparisonOperato
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
@@ -151,7 +152,12 @@ public abstract class Expression
         return Optional.empty();
     }
 
-    public abstract Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive();
+    /**
+     * Loads this expression as the contents of an outer Consecutive.
+     * @param implicitlyRoundBracketed Is this implicitly in a round bracket?  True for function arguments and [round] bracketed expression, false elsewhere
+     * @return
+     */
+    public abstract Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed);
 
     public static interface SingleLoader<R>
     {
@@ -344,7 +350,8 @@ public abstract class Expression
                 args = visitTopLevelExpression(ctx.topLevelExpression());
             else
                 args = new TupleExpression(ImmutableList.copyOf(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), e -> visitExpression(e))));
-            return new CallExpression(ctx.functionName().getText(), Collections.emptyList(), args);
+            String functionName = ctx.functionName().getText();
+            return new CallExpression(functionName, FunctionList.lookup(functionName), Collections.emptyList(), args);
         }
 
         /*

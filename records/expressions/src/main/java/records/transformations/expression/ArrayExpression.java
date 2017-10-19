@@ -165,7 +165,7 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive()
+    public Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
     {
         return new Pair<>(Collections.singletonList(loadAsSingle()), Collections.emptyList());
     }

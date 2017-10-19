@@ -309,7 +309,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
 
         private ContentConsecutive(VBox vBox, OpenBracketShape openBracket, OpenBracketShape closeBracket, @Nullable Expression args)
         {
-            super(ConsecutiveBase.EXPRESSION_OPS, SurroundNode.this, new HBox(vBox, openBracket), closeBracket, cssClass, args == null ? null : SingleLoader.withSemanticParent(args.loadAsConsecutive(), SurroundNode.this), ')');
+            super(ConsecutiveBase.EXPRESSION_OPS, SurroundNode.this, new HBox(vBox, openBracket), closeBracket, cssClass, args == null ? null : SingleLoader.withSemanticParent(args.loadAsConsecutive(true), SurroundNode.this), ')');
             this.openBracket = openBracket;
             this.closeBracket = closeBracket;
             closeBracket.prefHeightProperty().bind(openBracket.heightProperty());

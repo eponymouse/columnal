@@ -39,6 +39,7 @@ import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import records.transformations.function.FunctionType;
+import utility.Either;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -768,7 +769,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             {
                 // What to do with rest != "" here? Don't allow? Skip to after args?
                 FunctionCompletion fc = (FunctionCompletion)c;
-                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new FunctionNode(fc.function, semanticParent,null, parent)));
+                parent.replace(GeneralExpressionEntry.this, focusWhenShown(new FunctionNode(Either.right(fc.function), semanticParent,null, parent)));
             }
             else if (c instanceof TagCompletion)
             {

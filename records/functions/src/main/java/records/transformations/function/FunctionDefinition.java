@@ -27,7 +27,7 @@ public abstract class FunctionDefinition
     private final String name;
     private final @LocalizableKey String shortDescriptionKey;
 
-    public FunctionDefinition(String name, @LocalizableKey String shortDescriptionKey)
+    FunctionDefinition(String name, @LocalizableKey String shortDescriptionKey)
     {
         this.name = name;
         this.shortDescriptionKey = shortDescriptionKey;

@@ -20,8 +20,10 @@ import records.gui.expressioneditor.FunctionNode;
 import records.gui.expressioneditor.OperandNode;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionInstance;
+import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 
 import java.util.ArrayList;
@@ -40,30 +42,31 @@ public class CallExpression extends NonOperatorExpression
     private final String functionName;
     private final Expression param;
     private final List<Unit> units;
-    @MonotonicNonNull
-    private FunctionDefinition definition;
+    // If null, function doesn't exist
+    private final @Nullable FunctionDefinition definition;
     @MonotonicNonNull
     private FunctionInstance instance;
 
-    public CallExpression(String functionName, List<Unit> units, Expression arg)
+    public CallExpression(String functionName, @Nullable FunctionDefinition functionDefinition, List<Unit> units, Expression arg)
     {
         this.functionName = functionName;
+        this.definition = functionDefinition;
         this.units = new ArrayList<>(units);
         this.param = arg;
     }
 
+    // For testing:
     public CallExpression(String functionName, Expression... args)
     {
-        this(functionName, Collections.emptyList(), args.length == 1 ? args[0] : new TupleExpression(ImmutableList.copyOf(args)));
+        this(functionName, FunctionList.lookup(functionName), Collections.emptyList(), args.length == 1 ? args[0] : new TupleExpression(ImmutableList.copyOf(args)));
     }
 
     @Override
     public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
-        @Nullable FunctionDefinition def = state.findFunction(functionName).orElse(null);
-        if (def == null)
-            throw new UserException("Unknown function: " + functionName);
-        this.definition = def;
+        if (definition == null)
+            return null;
+
         @Nullable DataType paramType = param.check(data, state, onError);
         if (paramType == null)
             return null;
@@ -111,16 +114,16 @@ public class CallExpression extends NonOperatorExpression
         if (definition != null)
         {
             @NonNull FunctionDefinition definitionFinal = definition;
-            return (p, s) -> new FunctionNode(definitionFinal, s, param, p);
+            return (p, s) -> new FunctionNode(Either.right(definitionFinal), s, param, p);
         }
         else
-            throw new RuntimeException("TODO bad function (" + functionName + ")");
+            return (p, s) -> new FunctionNode(Either.left(functionName), s, param, p);
     }
 
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()
     {
-        return param._test_allMutationPoints().map(p -> new Pair<>(p.getFirst(), newParam -> new CallExpression(functionName, units, newParam)));
+        return param._test_allMutationPoints().map(p -> new Pair<>(p.getFirst(), newParam -> new CallExpression(functionName, definition, units, newParam)));
     }
 
     @Override
@@ -129,7 +132,7 @@ public class CallExpression extends NonOperatorExpression
         if (definition == null)
             throw new InternalException("Calling _test_typeFailure after type check failure");
         Pair<List<Unit>, Expression> badParams = definition._test_typeFailure(r, newExpressionOfDifferentType, unitManager);
-        return new CallExpression(functionName, badParams.getFirst(), badParams.getSecond());
+        return new CallExpression(functionName, definition, badParams.getFirst(), badParams.getSecond());
     }
 
     @Override

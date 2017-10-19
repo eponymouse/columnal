@@ -26,6 +26,7 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -143,15 +144,20 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive()
+    public Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
     {
-        return new Pair<>(Utility.mapList(members, m -> m.loadAsSingle()), Utility.replicate(members.size()  - 1, (p, s) -> new OperatorEntry<>(Expression.class, ",", false, p)));
+        if (implicitlyRoundBracketed)
+        {
+            return new Pair<>(Utility.mapList(members, m -> m.loadAsSingle()), Utility.replicate(members.size() - 1, (p, s) -> new OperatorEntry<>(Expression.class, ",", false, p)));
+        }
+        else
+            return new Pair<>(Collections.singletonList(loadAsSingle()), Collections.emptyList());
     }
 
     @Override
     public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
-        return (p, s) -> new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, p, null, null, SingleLoader.withSemanticParent(loadAsConsecutive(), s), ')');
+        return (p, s) -> new BracketedExpression(ConsecutiveBase.EXPRESSION_OPS, p, null, null, SingleLoader.withSemanticParent(loadAsConsecutive(true), s), ')');
     }
 
     @Override

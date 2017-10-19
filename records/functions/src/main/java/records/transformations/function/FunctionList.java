@@ -1,5 +1,7 @@
 package records.transformations.function;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+
 import java.util.Arrays;
 import java.util.List;
 
@@ -23,4 +25,9 @@ public class FunctionList
         new ToTimeAndZone(),
         new ToYearMonth()
     );
+
+    public static @Nullable FunctionDefinition lookup(String functionName)
+    {
+        return FUNCTIONS.stream().filter(f -> f.getName().equals(functionName)).findFirst().orElse(null);
+    }
 }
