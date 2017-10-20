@@ -202,7 +202,8 @@ public class TableManager
                     for (TableId srcId : ((Transformation) table).getSources())
                     {
                         TablesWithSameId dest = values.get(srcId);
-                        if (dest != null)
+                        // Avoid any that have a circular edge:
+                        if (dest != null && !srcId.equals(tablesWithSameId.id))
                         {
                             List<TablesWithSameId> incoming = incomingEdges.computeIfAbsent(dest, k -> new ArrayList<>());
                             incoming.add(tablesWithSameId);

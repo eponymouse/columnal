@@ -80,13 +80,13 @@ public class TestLoadSaveExpression
         );
 
         assertBothWays(
-            new NotEqualExpression(new NumericLiteral(new BigDecimal("1403426927672136511427478267571691349056738827396"), null),
+            new NotEqualExpression(new NumericLiteral(new BigDecimal("140342692767213651142747826757169"), null),
                 new NotEqualExpression(
-                    new NotEqualExpression(new BooleanLiteral(false), new NumericLiteral(new BigDecimal("807027098579703254931175241526980987544176732399"), null)),
+                    new NotEqualExpression(new BooleanLiteral(false), new NumericLiteral(new BigDecimal("8070270985797032549311752415269"), null)),
                     new BooleanLiteral(false)
                 )
             ),
-            "1403426927672136511427478267571691349056738827396 <> ((false <> 807027098579703254931175241526980987544176732399) <> false)"
+            "140342692767213651142747826757169 <> ((false <> 8070270985797032549311752415269) <> false)"
         );
 
         assertBothWays(

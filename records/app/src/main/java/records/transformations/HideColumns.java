@@ -69,6 +69,7 @@ import java.util.List;
 @OnThread(Tag.Simulation)
 public class HideColumns extends TransformationEditable
 {
+    public static final String NAME = "drop.columns";
     @OnThread(Tag.Any)
     private final TableId srcTableId;
     private final @Nullable Table src;
@@ -173,7 +174,7 @@ public class HideColumns extends TransformationEditable
     @Override
     protected @OnThread(Tag.Any) String getTransformationName()
     {
-        return "hide";
+        return NAME;
     }
 
     @Override
@@ -256,7 +257,7 @@ public class HideColumns extends TransformationEditable
     {
         public Info()
         {
-            super("drop.columns", "Drop columns", "preview-hide.png", Arrays.asList("collapse"));
+            super(NAME, "Drop columns", "preview-hide.png", Arrays.asList("collapse"));
         }
 
         @Override

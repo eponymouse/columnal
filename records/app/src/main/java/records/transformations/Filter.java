@@ -81,6 +81,7 @@ import java.util.Map.Entry;
 public class Filter extends TransformationEditable
 {
     private static final String PREFIX = "KEEPIF";
+    public static final String NAME = "keep";
     private final TableId srcTableId;
     private final @Nullable Table src;
     // Not actually a column by itself, but holds a list of integers so reasonable to re-use:
@@ -213,7 +214,7 @@ public class Filter extends TransformationEditable
     @Override
     protected @OnThread(Tag.Any) String getTransformationName()
     {
-        return "filter";
+        return NAME;
     }
 
     @Override
@@ -491,7 +492,7 @@ public class Filter extends TransformationEditable
     {
         public Info()
         {
-            super("keep", "Filter rows", "preview-filter.png", Arrays.asList("remove", "delete"));
+            super(NAME, "Filter rows", "preview-filter.png", Arrays.asList("remove", "delete"));
         }
 
         @Override

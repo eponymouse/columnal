@@ -2,6 +2,7 @@ package test;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.application.Platform;
 import javafx.embed.swing.JFXPanel;
@@ -40,7 +41,11 @@ public class PropLoadSaveTransformation
 {
     @Property(trials = 1000)
     @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public void testLoadSaveTransformation(@From(GenTableManager.class) TableManager mgr1, @From(GenTableManager.class) TableManager mgr2, @From(GenNonsenseTransformation.class) TestUtil.Transformation_Mgr original) throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
+    public void testLoadSaveTransformation(
+        @From(GenTableManager.class) TableManager mgr1,
+        @From(GenTableManager.class) TableManager mgr2,
+        @From(GenNonsenseTransformation.class) TestUtil.Transformation_Mgr original)
+        throws ExecutionException, InterruptedException, UserException, InternalException, InvocationTargetException
     {
         String saved = save(original.mgr);
         try

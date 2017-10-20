@@ -71,9 +71,9 @@ public class TestExportToCSV extends ApplicationTest implements ScrollToTrait
     /**
      * Generates a file with some raw data and a transform, then loads it and exports to CSV
      */
-    @Property(trials = 10)
+    @Property(trials = 5)
     @OnThread(Tag.Simulation)
-    public void testCalculateToCSV(@When(seed=1L) @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
+    public void testCalculateToCSV(@From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
     {
         TableManager manager = new DummyManager();
         manager.getTypeManager()._test_copyTaggedTypesFrom(expressionValue.typeManager);

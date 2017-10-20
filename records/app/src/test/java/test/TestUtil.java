@@ -887,10 +887,12 @@ public class TestUtil
         public final TableManager mgr;
         public final Transformation transformation;
 
+        @OnThread(Tag.Simulation)
         public Transformation_Mgr(TableManager mgr, Transformation transformation)
         {
             this.mgr = mgr;
             this.transformation = transformation;
+            mgr.record(transformation);
         }
 
         @Override
