@@ -198,7 +198,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
         else if (c == TagExpression.class)
         {
             TagExpression tag = (TagExpression)expression;
-            write(tag._test_getTagName().getFirst() + ":" + tag._test_getTagName().getSecond());
+            write(tag._test_getQualifiedTagName());
             push(KeyCode.TAB);
             if (tag.getInner() != null)
             {

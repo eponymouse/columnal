@@ -320,7 +320,7 @@ public abstract class Expression
 
             String typeName = ctx.constructor().typeName().getText();
 
-            return new TagExpression(new Pair<>(typeName, constructorName), ctx.expression() == null ? null : visitExpression(ctx.expression()));
+            return new TagExpression(typeManager.lookupTag(typeName, constructorName), ctx.expression() == null ? null : visitExpression(ctx.expression()));
         }
 
         @Override

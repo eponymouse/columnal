@@ -123,6 +123,7 @@ public class TypeState
         return Optional.ofNullable(functions.get(name));
     }
 
+    /*
     public static class TypeAndTagInfo
     {
         public final DataType wholeType;
@@ -157,6 +158,7 @@ public class TypeState
 
         return new TypeAndTagInfo(type, tagDetail.getFirst(), tagDetail.getSecond());
     }
+    */
 
     public UnitManager getUnitManager()
     {

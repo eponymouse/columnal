@@ -358,7 +358,7 @@ public class TestUtil
         {
             s = makeString(r, gs);
         }
-        while (s.isEmpty());
+        while (s.trim().isEmpty());
         return s;
     }
 

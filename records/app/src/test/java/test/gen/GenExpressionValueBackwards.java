@@ -19,6 +19,8 @@ import records.data.MemoryTemporalColumn;
 import records.data.MemoryTupleColumn;
 import records.data.RecordSet;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TypeManager.TagInfo;
+import utility.Either;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
@@ -30,9 +32,7 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
-import records.error.FunctionInt;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
 import records.transformations.expression.AddSubtractExpression.Op;
@@ -466,12 +466,13 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             {
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
-                TagType<DataType> tag = tags.get((Integer)((TaggedValue)targetValue).getTagIndex());
-                Pair<String, String> name = new Pair<>(typeName.getRaw(), tag.getName());
+                int tagIndex = ((TaggedValue) targetValue).getTagIndex();
+                TagType<DataType> tag = tags.get(tagIndex);
+                TagInfo tagInfo = new TagInfo(type, tagIndex, tag);
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {
-                    terminals.add(() -> new TagExpression(name, null));
+                    terminals.add(() -> new TagExpression(Either.right(tagInfo), null));
                 }
                 else
                 {
@@ -481,7 +482,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         @Nullable Object innerValue = ((TaggedValue) targetValue).getInner();
                         if (innerValue == null)
                             throw new InternalException("Type says inner value but is null");
-                        return new TagExpression(name, make(nonNullInner, innerValue, maxLevels - 1));
+                        return new TagExpression(Either.right(tagInfo), make(nonNullInner, innerValue, maxLevels - 1));
                     });
                 }
                 terminals.add(() -> columnRef(type, targetValue));
@@ -765,12 +766,12 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         TagType<DataType> tagType = tagTypes.get(p.getTagIndex());
                         @Nullable DataType inner = tagType.getInner();
                         if (inner == null)
-                            return new Pair<>(new TagExpression(new Pair<>(typeName.getRaw(), tagType.getName()), null), null);
+                            return new Pair<>(new TagExpression(Either.right(new TagInfo(t, p.getTagIndex(), tagType)), null), null);
                         @Nullable Object innerValue = p.getInner();
                         if (innerValue == null)
                             throw new InternalException("Type says inner value but is null");
                         Pair<Expression, @Nullable Expression> subPattern = makePatternMatch(maxLevels, inner, innerValue);
-                        return new Pair<>(new TagExpression(new Pair<>(typeName.getRaw(), tagType.getName()), subPattern.getFirst()), subPattern.getSecond());
+                        return new Pair<>(new TagExpression(Either.right(new TagInfo(t, p.getTagIndex(), tagType)), subPattern.getFirst()), subPattern.getSecond());
                     }
                 });
 

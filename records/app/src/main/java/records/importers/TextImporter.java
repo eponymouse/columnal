@@ -28,7 +28,6 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.error.FetchException;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.MainLexer;

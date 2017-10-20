@@ -21,7 +21,6 @@ import records.data.TableManager;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeValue;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.DataLexer;

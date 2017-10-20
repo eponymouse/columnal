@@ -18,7 +18,6 @@ import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.function.UnaryOperator;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
@@ -57,7 +56,6 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.*;
 import org.checkerframework.dataflow.qual.Pure;
 import org.sosy_lab.common.rationals.Rational;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.ParseException;
 import records.error.UserException;
@@ -1041,6 +1039,11 @@ public class Utility
             list.add(makeNew.apply(list.size()));
         while (list.size() > newSize)
             disposeOld.accept(list.remove(list.size() - 1));
+    }
+
+    public static <T> Stream<Pair<Integer, T>> streamIndexed(List<T> list)
+    {
+        return IntStream.range(0, list.size()).mapToObj(i -> new Pair<>(i, list.get(i)));
     }
 
     public static class ReadState

@@ -8,7 +8,6 @@ import records.data.EditableColumn;
 import records.data.EditableRecordSet;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;

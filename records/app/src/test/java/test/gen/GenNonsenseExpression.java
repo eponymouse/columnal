@@ -34,6 +34,7 @@ import records.transformations.expression.UnfinishedExpression;
 import records.transformations.expression.VarDeclExpression;
 import records.transformations.expression.VarUseExpression;
 import test.TestUtil;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
@@ -96,7 +97,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> new AndExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new OrExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new TimesExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
-                () -> !tagAllowed ? genTerminal(r) : TagExpression._testMake(TestUtil.makeString(r, gs), TestUtil.makeString(r, gs), genDepth(r, depth + 1, gs)),
+                () -> !tagAllowed ? genTerminal(r) : new TagExpression(Either.left(TestUtil.makeString(r, gs).trim()), genDepth(r, depth + 1, gs)),
                 () ->
                 {
                     List<Expression> expressions = TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
@@ -155,9 +156,8 @@ public class GenNonsenseExpression extends Generator<Expression>
             () -> new VarDeclExpression(TestUtil.makeUnquotedIdent(r, gs)),
             () ->
             {
-                String typeName = TestUtil.makeNonEmptyString(r, gs);
-                String constructorName = TestUtil.makeNonEmptyString(r, gs);
-                return new TagExpression(new Pair<>(typeName, constructorName), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1));
+                String constructorName = TestUtil.makeNonEmptyString(r, gs).trim();
+                return new TagExpression(Either.left(constructorName), r.nextInt(0, 3 - depth) == 0 ? null : genPatternMatch(e, r, gs, depth + 1));
             }
         )).get();
     }

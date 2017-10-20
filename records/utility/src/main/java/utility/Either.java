@@ -1,6 +1,5 @@
 package utility;
 
-import javafx.scene.layout.Region;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 
@@ -37,6 +36,15 @@ public class Either<A, B>
 
     @SuppressWarnings("nullness") // No annotation to explain this is safe
     public <R> R either(Function<? super A, R> withLeft, Function<? super B, R> withRight)
+    {
+        if (isA)
+            return withLeft.apply(a);
+        else
+            return withRight.apply(b);
+    }
+
+    @SuppressWarnings("nullness") // No annotation to explain this is safe
+    public <R> R eitherInt(FunctionInt<? super A, R> withLeft, FunctionInt<? super B, R> withRight) throws InternalException
     {
         if (isA)
             return withLeft.apply(a);

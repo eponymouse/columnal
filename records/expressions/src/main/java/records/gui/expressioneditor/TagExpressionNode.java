@@ -3,15 +3,14 @@ package records.gui.expressioneditor;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.TagType;
-import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager.TagInfo;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TagExpression;
+import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
-import utility.Utility;
 import utility.gui.TranslationUtility;
 
 import java.util.Collections;
@@ -22,20 +21,20 @@ import java.util.List;
  */
 public class TagExpressionNode extends SurroundNode implements ExpressionNodeParent
 {
-    private final String typeName;
-    private final String tagName;
+    // Left means its unknown
+    private Either<String, TagInfo> tag;
 
     @SuppressWarnings({"initialization", "i18n"}) // Because LeaveableTextField gets marked uninitialized, and because of header
-    public TagExpressionNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, String typeName, String tagName, @Nullable Expression innerContent)
+    public TagExpressionNode(ConsecutiveBase<Expression, ExpressionNodeParent> parent, ExpressionNodeParent semanticParent, Either<String, TagInfo> tag, @Nullable Expression innerContent)
     {
-        super(parent, semanticParent, "tag", TranslationUtility.getString("tag") + " " + typeName, tagName, innerContent != null, innerContent);
-        this.typeName = typeName;
-        this.tagName = tagName;
+        super(parent, semanticParent, "tag", TranslationUtility.getString("tag") + " " + tag.either(s -> "<unknown>", t -> t.wholeTypeName), tag.either(s -> s, t -> t.tagInfo.getName()), innerContent != null, innerContent);
+        this.tag = tag;
     }
 
     @Override
     public List<Pair<DataType, List<String>>> getSuggestedContext(EEDisplayNode child) throws InternalException, UserException
     {
+        /*
         List<Pair<DataType, List<String>>> context = parent.getThisAsSemanticParent().getSuggestedContext(this);
         for (Pair<DataType, List<String>> option : context)
         {
@@ -55,6 +54,7 @@ public class TagExpressionNode extends SurroundNode implements ExpressionNodePar
                 Utility.log(e);
             }
         }
+        */
         return Collections.emptyList();
     }
 
@@ -86,6 +86,6 @@ public class TagExpressionNode extends SurroundNode implements ExpressionNodePar
         {
             innerExp = contents.save(errorDisplayer, onError);
         }
-        return errorDisplayer.record(this, new TagExpression(new Pair<>(typeName, tagName), innerExp));
+        return errorDisplayer.record(this, new TagExpression(tag, innerExp));
     }
 }

@@ -3,7 +3,6 @@ package records.data.datatype;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.Table.Saver;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -24,7 +23,9 @@ import records.grammar.MainParser.TypesContext;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.GraphUtility;
+import utility.Pair;
 import utility.UnitType;
 import utility.Utility;
 
@@ -35,6 +36,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static records.data.datatype.DataType.BOOLEAN;
@@ -300,5 +302,43 @@ public class TypeManager
     public void _test_copyTaggedTypesFrom(TypeManager typeManager)
     {
         knownTypes.putAll(typeManager.knownTypes);
+    }
+
+    public Either<String, TagInfo> lookupTag(String typeName, String constructorName)
+    {
+        @Nullable DataType type = lookupType(typeName);
+        if (type == null || !type.isTagged())
+            return Either.left(constructorName);
+
+        try
+        {
+            @NonNull DataType typeFinal = type;
+            Optional<Pair<Integer, TagType<DataType>>> matchingTag = Utility.streamIndexed(type.getTagTypes()).filter(tt -> tt.getSecond().getName().equals(constructorName)).findFirst();
+            if (matchingTag.isPresent())
+                return Either.<String, TagInfo>right(new TagInfo(typeFinal, matchingTag.get().getFirst(), matchingTag.get().getSecond()));
+            else
+                return Either.left(typeName);
+        }
+        catch (InternalException e)
+        {
+            Utility.log(e);
+            return Either.left(constructorName);
+        }
+    }
+
+    public static class TagInfo
+    {
+        public final DataType wholeType;
+        public final TypeId wholeTypeName;
+        public final int tagIndex;
+        public final TagType<DataType> tagInfo;
+
+        public TagInfo(DataType wholeType, int tagIndex, TagType<DataType> tagInfo) throws InternalException
+        {
+            this.wholeType = wholeType;
+            this.wholeTypeName = wholeType.getTaggedTypeName();
+            this.tagIndex = tagIndex;
+            this.tagInfo = tagInfo;
+        }
     }
 }

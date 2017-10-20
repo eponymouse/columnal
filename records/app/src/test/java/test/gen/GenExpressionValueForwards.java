@@ -12,6 +12,8 @@ import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TypeManager.TagInfo;
+import utility.Either;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
@@ -22,7 +24,6 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.TypeId;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
@@ -518,11 +519,11 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 TagType<DataType> tag = tags.get(tagIndex);
-                Pair<String, String> name = new Pair<>(typeName.getRaw(), tag.getName());
+                TagInfo tagInfo = new TagInfo(type, tagIndex, tag);
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {
-                    terminals.add(() -> literal(new TaggedValue(tagIndex, null), new TagExpression(name, null)));
+                    terminals.add(() -> literal(new TaggedValue(tagIndex, null), new TagExpression(Either.right(tagInfo), null)));
                 }
                 else
                 {
@@ -530,7 +531,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                     nonTerm.add(() ->
                     {
                         Pair<List<@Value Object>, Expression> innerVal = make(nonNullInner, maxLevels - 1);
-                        return map(innerVal, v -> new TaggedValue(tagIndex, v), e -> new TagExpression(name, e));
+                        return map(innerVal, v -> new TaggedValue(tagIndex, v), e -> new TagExpression(Either.right(tagInfo), e));
                     });
                 }
                 return termDeep(maxLevels, type, terminals, nonTerm);

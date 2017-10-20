@@ -1,6 +1,5 @@
 package records.data;
 
-import records.error.FunctionInt;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.ExFunction;
