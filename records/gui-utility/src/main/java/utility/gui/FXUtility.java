@@ -484,8 +484,7 @@ public class FXUtility
     public static void logAndShowError(@LocalizableKey String actionKey, Exception ex)
     {
         @OnThread(Tag.Any) @Localized String actionString = TranslationUtility.getString(actionKey);
-        Utility.log(actionString, ex);
-        FXPlatformRunnable runAlert = () -> new Alert(AlertType.ERROR, actionString + "\n" + (ex.getLocalizedMessage() == null ? "" : ex.getLocalizedMessage()), ButtonType.OK).showAndWait();
+        FXPlatformRunnable runAlert = () -> Utility.showError(s -> actionString + ": " + s, ex);
         if (Platform.isFxApplicationThread())
             ((Runnable)runAlert::run).run();
         else

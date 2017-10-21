@@ -1295,13 +1295,34 @@ public class Utility
         else
         {
             log(e);
-            String localizedMessage = errWrap.apply(e.getLocalizedMessage());
-            Alert alert = new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK);
-            alert.initModality(Modality.APPLICATION_MODAL);
-            showingError = true;
-            alert.showAndWait();
-            showingError = false;
+            // Don't show dialog which would interrupt a JUnit test:
+            if (!isJUnitTest())
+            {
+                String localizedMessage = errWrap.apply(e.getLocalizedMessage());
+                Alert alert = new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK);
+                alert.initModality(Modality.APPLICATION_MODAL);
+                showingError = true;
+                alert.showAndWait();
+                showingError = false;
+            }
         }
+    }
+
+    // From https://stackoverflow.com/a/12717377/412908 but tweaked to check all threads
+    private static boolean isJUnitTest()
+    {
+        for (StackTraceElement[] stackTrace : ((Supplier<Map<Thread, StackTraceElement[]>>)Thread::getAllStackTraces).get().values())
+        {
+            List<StackTraceElement> list = Arrays.asList(stackTrace);
+            for (StackTraceElement element : list)
+            {
+                if (element.getClassName().startsWith("org.junit."))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     @OnThread(Tag.Simulation)
