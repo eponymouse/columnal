@@ -351,7 +351,7 @@ public class TableDisplayUtility
             public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
                 GetValue<TaggedValue> getTagged = DataTypeUtility.toTagged(g, tagTypes);
-                return new GetValueAndComponent<TaggedValue>(getTagged, (parents, v) -> new TaggedComponent(parents, tagTypes, v));
+                return new GetValueAndComponent<TaggedValue>(getTagged, (parents, v) -> (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, v));
             }
 
             @Override
@@ -498,7 +498,7 @@ public class TableDisplayUtility
             @OnThread(Tag.FXPlatform)
             public Component<@NonNull @Value ?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
             {
-                return new TaggedComponent(parents, tagTypes, (TaggedValue)value);
+                return (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, (TaggedValue)value);
             }
 
             @Override
