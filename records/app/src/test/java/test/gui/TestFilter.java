@@ -7,6 +7,7 @@ import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
+import org.junit.Ignore;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import records.data.Column;
@@ -57,7 +58,7 @@ public class TestFilter extends ApplicationTest implements ListUtilTrait, Scroll
         // Save the table, then open GUI and load it, then add a filter transformation (rename to keeprows)
         TestUtil.openDataAsTable(windowToUse, original.mgr);
         clickOn(".id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-addTransformation");
-        selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getDisplayName().toLowerCase().matches("keep.?rows"));
+        selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getDisplayName().toLowerCase().matches("filter.*"));
         // Then enter filter condition.
         // Find numeric column:
         Column srcColumn = original.data().getData().getColumns().stream().filter(c -> TestUtil.checkedToRuntime(() -> c.getType().isNumber())).findFirst().orElseGet((Supplier<Column>)(() -> {throw new AssertionError("No numeric column");}));
