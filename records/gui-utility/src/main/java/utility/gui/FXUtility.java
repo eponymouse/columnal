@@ -483,7 +483,15 @@ public class FXUtility
     @OnThread(Tag.Any)
     public static void logAndShowError(@LocalizableKey String actionKey, Exception ex)
     {
-        @OnThread(Tag.Any) @Localized String actionString = TranslationUtility.getString(actionKey);
+        _logAndShowError(actionKey, ex);
+    }
+
+    // I have no idea why, but this function causes an error if called directly from another module
+    // but the proxy above does not:
+    @OnThread(Tag.Any)
+    public static void _logAndShowError(@LocalizableKey String actionKey, Exception ex)
+    {
+        @Localized String actionString = TranslationUtility.getString(actionKey);
         FXPlatformRunnable runAlert = () -> Utility.showError((@Localized String s) -> Utility.universal(actionString + ": " + s), ex);
         if (Platform.isFxApplicationThread())
             ((Runnable)runAlert::run).run();
