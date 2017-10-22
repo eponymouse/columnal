@@ -53,7 +53,7 @@ public class PropStorageSet
             vals.put(rowIndex, value);
         }
         // Test all at end, helps test post overwrites:
-        for (Entry<Integer, Object> entry : vals.entrySet())
+        for (Entry<Integer, @Value Object> entry : vals.entrySet())
         {
             TestUtil.assertValueEqual("Type: " + typeAndValueGen.getType() + " index " + entry.getKey(), entry.getValue(), c.getType().getCollapsed(entry.getKey()));
         }

@@ -233,7 +233,8 @@ public class TestStructuredTextField extends ApplicationTest
         {
             try
             {
-                EditableRecordSet rs = new EditableRecordSet(Collections.singletonList(dataType.makeImmediateColumn(new ColumnId("C"), Collections.singletonList(value), "")), () -> 1);
+                @SuppressWarnings("value")
+                EditableRecordSet rs = new EditableRecordSet(Collections.singletonList(dataType.makeImmediateColumn(new ColumnId("C"), Collections.<@Value Object>singletonList(value), "")), () -> 1);
                 fut.complete(rs.getColumns().get(0).getType());
             }
             catch (InternalException | UserException e)
@@ -803,7 +804,7 @@ public class TestStructuredTextField extends ApplicationTest
             @OnThread(Tag.Simulation)
             public String get() throws InternalException, UserException
             {
-                return DataTypeUtility.valueToString(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), zonedDateTime, null);
+                return DataTypeUtility.valueToString(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), Utility.valueTemporal(zonedDateTime), null);
             }
         });
         targetF();
@@ -1230,7 +1231,7 @@ public class TestStructuredTextField extends ApplicationTest
         if (endEditAndCompareTo != null)
         {
             CompletableFuture<Either<Exception, Integer>> fut = new CompletableFuture<Either<Exception, Integer>>();
-            Object value = new Object(); // TODO f.get().getCompletedValue();
+            Object value = new @Value Object(); // TODO f.get().getCompletedValue();
             Workers.onWorkerThread("", Priority.LOAD_FROM_DISK, () -> {
                 try
                 {
