@@ -795,7 +795,7 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
     @Property(trials = 15)
-    public void propDateTimeZoned(@From(GenDateTimeZoned.class) ZonedDateTime zonedDateTime) throws InternalException, UserException
+    public void propDateTimeZoned(@From(GenDateTimeZoned.class) @Value ZonedDateTime zonedDateTime) throws InternalException, UserException
     {
         f.set(dateField(new DateTimeInfo(DateTimeType.DATETIMEZONED), ZonedDateTime.from(DateTimeInfo.DEFAULT_VALUE)));
         String timeVal = sim(new SimulationSupplier<String>()
@@ -804,7 +804,7 @@ public class TestStructuredTextField extends ApplicationTest
             @OnThread(Tag.Simulation)
             public String get() throws InternalException, UserException
             {
-                return DataTypeUtility.valueToString(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), Utility.valueTemporal(zonedDateTime), null);
+                return DataTypeUtility.valueToString(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), zonedDateTime, null);
             }
         });
         targetF();
@@ -1231,11 +1231,14 @@ public class TestStructuredTextField extends ApplicationTest
         if (endEditAndCompareTo != null)
         {
             CompletableFuture<Either<Exception, Integer>> fut = new CompletableFuture<Either<Exception, Integer>>();
-            Object value = new @Value Object(); // TODO f.get().getCompletedValue();
+            @SuppressWarnings("value")
+            @Value Object value = new Object(); // TODO f.get().getCompletedValue();
+            @SuppressWarnings("value")
+            @Value Object eeco = endEditAndCompareTo;
             Workers.onWorkerThread("", Priority.LOAD_FROM_DISK, () -> {
                 try
                 {
-                    fut.complete(Either.right(Utility.compareValues(endEditAndCompareTo, value)));
+                    fut.complete(Either.right(Utility.compareValues(eeco, value)));
                 }
                 catch (InternalException | UserException e)
                 {
@@ -1244,7 +1247,7 @@ public class TestStructuredTextField extends ApplicationTest
             });
             try
             {
-                fut.get().either_(e -> fail(e.getLocalizedMessage()), x -> assertEquals(f.get().getText() + " " + DataTypeUtility._test_valueToString(endEditAndCompareTo) + " vs " + DataTypeUtility._test_valueToString(value), 0, x.intValue()));
+                fut.get().either_(e -> fail(e.getLocalizedMessage()), x -> assertEquals(f.get().getText() + " " + DataTypeUtility._test_valueToString(eeco) + " vs " + DataTypeUtility._test_valueToString(value), 0, x.intValue()));
             }
             catch (InterruptedException | ExecutionException e)
             {

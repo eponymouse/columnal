@@ -115,7 +115,7 @@ public class TestExpressionEditor extends ApplicationTest implements ListUtilTra
             assertTrue(clip.isPresent());
             // Need to fish out first column from clip, then compare item:
             //TestUtil.checkType(expressionValue.type, clip.get().get(0));
-            List<@Value Object> actual = clip.get().stream().filter(p -> p.getFirst().equals(new ColumnId("DestCol"))).findFirst().orElseThrow(RuntimeException::new).getSecond();
+            List<@Value Object> actual = clip.get().stream().filter((Pair<ColumnId, List<@Value Object>> p) -> p.getFirst().equals(new ColumnId("DestCol"))).findFirst().orElseThrow(RuntimeException::new).getSecond();
             TestUtil.assertValueListEqual("Transformed", expressionValue.value, actual);
         }
         finally

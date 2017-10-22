@@ -661,6 +661,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             }
 
             @Override
+            @SuppressWarnings("value")
             @OnThread(Tag.Simulation)
             public Column tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {

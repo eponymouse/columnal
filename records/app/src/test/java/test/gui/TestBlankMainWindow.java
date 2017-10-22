@@ -384,7 +384,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             for (int j = 0; j < values.size(); j++)
             {
                 int jFinal = j;
-                TestUtil.assertValueEqual("Index " + j, values.get(j), TestUtil.sim(() -> column.getCollapsed(jFinal)));
+                TestUtil.assertValueEqual("Index " + j, values.get(j), TestUtil.<@Value Object>sim(() -> column.getCollapsed(jFinal)));
             }
         }
     }
@@ -439,7 +439,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         for (int i = 0; i < values.size(); i++)
         {
             int iFinal = i;
-            TestUtil.assertValueEqual("Index " + i, values.get(i), TestUtil.sim(() -> column.getCollapsed(iFinal)));
+            TestUtil.assertValueEqual("Index " + i, values.get(i), TestUtil.<@Value Object>sim(() -> column.getCollapsed(iFinal)));
         }
     }
 

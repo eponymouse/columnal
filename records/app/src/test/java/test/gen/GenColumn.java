@@ -1,5 +1,6 @@
 package test.gen;
 
+import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.jetbrains.annotations.NotNull;
@@ -65,6 +66,6 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public ExBiFunction<Integer, RecordSet, Column> columnForType(DataType type)
     {
-        return (len, rs) -> type.makeImmediateColumn(nextCol.get(), Utility.makeListEx(len, i -> makeValue(type)), makeValue(type)).apply(rs);
+        return (len, rs) -> type.makeImmediateColumn(nextCol.get(), Utility.<@Value Object>makeListEx(len, i -> makeValue(type)), makeValue(type)).apply(rs);
     }
 }

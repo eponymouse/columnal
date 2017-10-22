@@ -490,7 +490,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                                     break;
                             }
                         }
-                        return new Pair<>(Utility.<Boolean, @Value Object>mapList(result, b -> DataTypeUtility.value(b)), new ComparisonExpression(Utility.mapList(args, p -> p.getSecond()), ImmutableList.copyOf(ops)));
+                        return new Pair<>(Utility.<Boolean, @Value Object>mapList(result, b -> DataTypeUtility.value(b)), new ComparisonExpression(Utility.mapList(args, (Pair<List<@Value Object>, Expression> p) -> p.getSecond()), ImmutableList.copyOf(ops)));
                     },
                     () -> {
                         int size = r.nextInt(2, 5);

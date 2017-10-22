@@ -491,7 +491,7 @@ public class TestUtil
 
     public static @Value LocalTime generateTime(SourceOfRandomness r, GenerationStatus gs)
     {
-        @Value LocalTime localTime = (LocalTime) DataTypeUtility.value(new DateTimeInfo(DateTimeType.TIMEOFDAY), new LocalTimeGenerator().generate(r, gs));
+        LocalTime localTime = (LocalTime) DataTypeUtility.value(new DateTimeInfo(DateTimeType.TIMEOFDAY), new LocalTimeGenerator().generate(r, gs));
         // Produce half the dates without partial seconds (and perhaps seconds set to zero): common case
         if (r.nextBoolean())
         {
@@ -499,7 +499,9 @@ public class TestUtil
             if (r.nextBoolean())
                 localTime = localTime.minusSeconds(localTime.getSecond());
         }
-        return localTime;
+        @SuppressWarnings("value")
+        @Value LocalTime ret = localTime;
+        return ret;
     }
 
     public static @Value LocalDateTime generateDateTime(SourceOfRandomness r, GenerationStatus gs)
