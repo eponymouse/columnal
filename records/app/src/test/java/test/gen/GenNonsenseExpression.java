@@ -5,6 +5,7 @@ import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.internal.generator.EnumGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
@@ -38,9 +39,11 @@ import utility.Either;
 import utility.Pair;
 import utility.Utility;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -72,7 +75,7 @@ public class GenNonsenseExpression extends Generator<Expression>
         if (r.nextInt(0, 3 - depth) == 0)
         {
             // Terminal:
-            return genTerminal(r);
+            return genTerminal(r, gs);
         }
         else
         {
@@ -97,7 +100,7 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> new AndExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new OrExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
                 () -> new TimesExpression(TestUtil.makeList(r, 2, 5, () -> genDepth(r, depth + 1, gs))),
-                () -> !tagAllowed ? genTerminal(r) : new TagExpression(Either.left(TestUtil.makeString(r, gs).trim()), genDepth(r, depth + 1, gs)),
+                () -> !tagAllowed ? genTerminal(r, gs) : new TagExpression(Either.left(TestUtil.makeString(r, gs).trim()), genDepth(r, depth + 1, gs)),
                 () ->
                 {
                     List<Expression> expressions = TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
@@ -113,24 +116,24 @@ public class GenNonsenseExpression extends Generator<Expression>
                 () -> new TupleExpression(ImmutableList.<Expression>copyOf(TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs)))),
                 () ->
                 {
-                    List<Expression> expressions = TestUtil.makeList(r, 2, 6, () -> genDepth(r, depth + 1, gs));
+                    List<Expression> expressions = TestUtil.makeList(r, 3, 6, () -> genDepth(r, depth + 1, gs));
                     return new InvalidOperatorExpression(expressions, TestUtil.makeList(expressions.size() - 1, new GenRandomOp(), r, gs));
                 }
             )).get();
         }
     }
 
-    private Expression genTerminal(SourceOfRandomness r)
+    private Expression genTerminal(SourceOfRandomness r, GenerationStatus gs)
     {
         try
         {
             return r.<Expression>choose(Arrays.asList(
                 new NumericLiteral(Utility.parseNumber(r.nextBigInteger(160).toString()), null), // TODO gen unit
                 new BooleanLiteral(r.nextBoolean()),
-                new StringLiteral(TestUtil.generateColumnId(r).getOutput()),
+                new StringLiteral(TestUtil.makeStringV(r, gs)),
                 new ColumnReference(TestUtil.generateColumnId(r), ColumnReferenceType.CORRESPONDING_ROW),
                 new VarUseExpression(TestUtil.generateVarName(r)),
-                new UnfinishedExpression(TestUtil.makeString(r, null).trim())
+                new UnfinishedExpression(TestUtil.makeUnfinished(r))
             ));
         }
         catch (UserException e)
@@ -169,8 +172,14 @@ public class GenNonsenseExpression extends Generator<Expression>
         return larger._test_childMutationPoints().map(p -> p.getFirst()).collect(Collectors.<Expression>toList());
     }
 
+    /**
+     * Note: this generator is stateful, to make sure it doesn't accidentally generate a series of of operators
+     * which are valid!
+     */
     private class GenRandomOp extends Generator<String>
     {
+        int indexOfFirstOp = -1;
+
         public GenRandomOp()
         {
             super(String.class);
@@ -179,9 +188,28 @@ public class GenNonsenseExpression extends Generator<Expression>
         @Override
         public String generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
         {
-            return sourceOfRandomness.<@NonNull String>choose(Arrays.asList(
-                "<", ">", "+", "-", "*", "/", "<=", ">=", "=", "<>", "&", "|", "^", ","
+            // To be invalid, can't pick only same group, so we just avoid picking first group again:
+            List<List<String>> opGroups = new ArrayList<>(ImmutableList.of(
+                ImmutableList.of("<", "<="),
+                ImmutableList.of(">", ">="),
+                ImmutableList.of("+", "-"),
+                ImmutableList.of("*"),
+                ImmutableList.of("/"),
+                ImmutableList.of("<>"),
+                ImmutableList.of("="),
+                ImmutableList.of("&"),
+                ImmutableList.of("|"),
+                ImmutableList.of("^"),
+                ImmutableList.of(",")
             ));
+            if (indexOfFirstOp >= 0)
+                opGroups.remove(indexOfFirstOp);
+
+            int group = sourceOfRandomness.nextInt(opGroups.size());
+            if (indexOfFirstOp < 0)
+                indexOfFirstOp = group;
+
+            return sourceOfRandomness.<@NonNull String>choose(opGroups.get(group));
         }
     }
 }

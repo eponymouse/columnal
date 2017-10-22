@@ -13,10 +13,15 @@ import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
 import records.grammar.GrammarUtility;
+import records.gui.expressioneditor.ExpressionNodeParent;
+import records.gui.expressioneditor.OperandNode;
+import records.gui.expressioneditor.OperatorEntry;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -64,6 +69,18 @@ public class InvalidOperatorExpression extends NaryOpExpression
     protected String saveOp(int index)
     {
         return "\"" + GrammarUtility.escapeChars(operators.get(index)) + "\"";
+    }
+
+    @Override
+    public Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
+    {
+        List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>> ops = new ArrayList<>();
+        for (int i = 0; i < operators.size(); i++)
+        {
+            int iFinal = i;
+            ops.add((p, s) -> new OperatorEntry<>(Expression.class, operators.get(iFinal), false, p));
+        }
+        return new Pair<>(Utility.mapList(expressions, e -> e.loadAsSingle()), ops);
     }
 
     @Override

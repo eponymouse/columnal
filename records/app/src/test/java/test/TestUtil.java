@@ -338,7 +338,7 @@ public class TestUtil
 
     public static @Value String makeStringV(SourceOfRandomness r, GenerationStatus gs)
     {
-        return DataTypeUtility.value(makeString(r, gs));
+        return DataTypeUtility.value(makeString(r, gs).replaceAll("\"", ""));
     }
 
     public static String makeString(SourceOfRandomness r, @Nullable GenerationStatus gs)
@@ -346,7 +346,10 @@ public class TestUtil
         // Makes either totally random String from generator, or "awkward" string
         // with things likely to trip up parser
         if (r.nextBoolean() && gs != null)
-            return new StringGenerator().generate(r, gs).replaceAll("[\\\\x00-\\\\x31]", "");
+        {
+            String generated = new StringGenerator().generate(r, gs);
+            return generated.replaceAll("[\\x00-\\x1F]", "");
+        }
         else
             return generateIdent(r);
     }
@@ -837,6 +840,19 @@ public class TestUtil
             manager.getTypeManager()._test_copyTaggedTypesFrom(typeManager);
         }
         openDataAsTable(windowToUse, manager);
+    }
+
+    // Makes something which could be an unfinished expression.  Can't have operators, can't start with a number.
+    public static String makeUnfinished(SourceOfRandomness r)
+    {
+        StringBuilder s = new StringBuilder();
+        s.append(r.nextChar('a', 'z'));
+        int len = r.nextInt(0, 10);
+        for (int i = 0; i < len; i++)
+        {
+            s.append(r.nextBoolean() ? r.nextChar('a', 'z') : r.nextChar('0', '9'));
+        }
+        return s.toString();
     }
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>

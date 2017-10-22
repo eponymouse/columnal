@@ -67,6 +67,12 @@ public class BracketedExpression extends Consecutive<Expression, ExpressionNodeP
     }
 
     @Override
+    protected BracketedStatus getChildrenBracketedStatus()
+    {
+        return BracketedStatus.DIRECT_ROUND_BRACKETED;
+    }
+
+    @Override
     public <C> @Nullable Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
         return Utility.streamNullable(ConsecutiveChild.closestDropSingle(this, operations.getOperandClass(), nodes().get(0), loc, forType), super.findClosestDrop(loc, forType)).min(Comparator.comparing(p -> p.getSecond())).orElse(null);

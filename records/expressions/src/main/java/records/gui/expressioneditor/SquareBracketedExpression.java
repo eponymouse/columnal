@@ -22,6 +22,12 @@ public class SquareBracketedExpression extends BracketedExpression
     }
 
     @Override
+    protected BracketedStatus getChildrenBracketedStatus()
+    {
+        return BracketedStatus.DIRECT_SQUARE_BRACKETED;
+    }
+
+    @Override
     public Expression save(ErrorDisplayerRecord errorDisplayers, FXPlatformConsumer<Object> onError, OperandNode<@NonNull Expression> first, OperandNode<@NonNull Expression> last)
     {
         int firstIndex = operands.indexOf(first);

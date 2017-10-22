@@ -174,7 +174,7 @@ public class ArrayExpression extends Expression
     public SingleLoader<OperandNode<Expression>> loadAsSingle()
     {
         List<SingleLoader<OperandNode<Expression>>> loadOperands = Utility.mapList(items, x -> x.loadAsSingle());
-        List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>> loadCommas = Utility.replicate(items.size() - 1, (p, s) -> new OperatorEntry<>(Expression.class, ",", false, p));
+        List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>> loadCommas = Utility.replicate(Math.max(items.size() - 1, 0), (p, s) -> new OperatorEntry<>(Expression.class, ",", false, p));
         return (p, s) -> new SquareBracketedExpression(ConsecutiveBase.EXPRESSION_OPS, p, SingleLoader.withSemanticParent(new Pair<>(loadOperands, loadCommas), s));
     }
 

@@ -137,7 +137,7 @@ public abstract class NaryOpExpression extends Expression
     public Pair<List<SingleLoader<OperandNode<Expression>>>, List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>>> loadAsConsecutive(boolean implicitlyRoundBracketed)
     {
         List<SingleLoader<OperatorEntry<Expression, ExpressionNodeParent>>> ops = new ArrayList<>();
-        for (int i = 0; i < expressions.size() - 1; i++) // TODO length is wrong for unfinished
+        for (int i = 0; i < expressions.size() - 1; i++)
         {
             int iFinal = i;
             ops.add((p, s) -> new OperatorEntry<>(Expression.class, saveOp(iFinal), false, p));

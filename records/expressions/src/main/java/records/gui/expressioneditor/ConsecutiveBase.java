@@ -360,14 +360,22 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
     public EXPRESSION save(ErrorDisplayerRecord errorDisplayers, FXPlatformConsumer<Object> onError)
     {
-        return save(errorDisplayers, onError, operands.get(0), operands.get(operands.size() - 1));
+        if (operands.isEmpty())
+            return operations.makeExpression(this, errorDisplayers, ImmutableList.of(), ImmutableList.of(), getChildrenBracketedStatus());
+        else
+            return save(errorDisplayers, onError, operands.get(0), operands.get(operands.size() - 1));
+    }
+
+    protected BracketedStatus getChildrenBracketedStatus()
+    {
+        return BracketedStatus.MISC;
     }
 
     public EXPRESSION save(ErrorDisplayerRecord errorDisplayers, FXPlatformConsumer<Object> onError, OperandNode<@NonNull EXPRESSION> first, OperandNode<@NonNull EXPRESSION> last)
     {
         int firstIndex = operands.indexOf(first);
         int lastIndex = operands.indexOf(last);
-        boolean roundBracketed = false;
+        BracketedStatus bracketedStatus = BracketedStatus.MISC;
         if (firstIndex == -1 || lastIndex == -1 || lastIndex < firstIndex)
         {
             firstIndex = 0;
@@ -376,8 +384,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         // May be because it was -1, or just those values were passed directly:
         if (firstIndex == 0 && lastIndex == operands.size() - 1)
         {
-            // Bit of a hack:
-            roundBracketed = this instanceof BracketedExpression;
+            bracketedStatus = getChildrenBracketedStatus();
         }
 
         List<@NonNull EXPRESSION> expressionExps = Utility.<OperandNode<@NonNull EXPRESSION>, @NonNull EXPRESSION>mapList(operands.subList(firstIndex, lastIndex + 1), (OperandNode<@NonNull EXPRESSION> n) -> n.save(errorDisplayers, onError));
@@ -390,7 +397,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             return expressionExps.get(0);
         }
 
-        return operations.makeExpression(this, errorDisplayers, expressionExps, ops, roundBracketed);
+        return operations.makeExpression(this, errorDisplayers, expressionExps, ops, bracketedStatus);
     }
 
     public @Nullable DataType inferType()
@@ -767,6 +774,17 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         operands.get(0).showError(error, quickFixes);
     }
 
+    public static enum BracketedStatus
+    {
+        /** Direct round brackets, i.e. if there's only commas, this can be a tuple expression */
+        DIRECT_ROUND_BRACKETED,
+        /** Direct square brackets, i.e. this has to be an array expression */
+        DIRECT_SQUARE_BRACKETED,
+        /* Normal state: the others above don't apply */
+        MISC;
+    }
+
+
     public static interface OperandOps<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT>
     {
         public OperandNode<EXPRESSION> makeGeneral(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, SEMANTIC_PARENT semanticParent, @Nullable String initialContent);
@@ -779,7 +797,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
         @NonNull EXPRESSION makeUnfinished(String s);
 
-        EXPRESSION makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<EXPRESSION> expressionExps, List<String> ops, boolean directlyRoundBracketed);
+        EXPRESSION makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<EXPRESSION> expressionExps, List<String> ops, BracketedStatus bracketedStatus);
 
         String save(EXPRESSION expression);
 
@@ -842,7 +860,8 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             return new UnfinishedExpression(s);
         }
 
-        public Expression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<Expression> expressionExps, List<String> ops, boolean directlyRoundBracketed)
+        @Override
+        public Expression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<Expression> expressionExps, List<String> ops, BracketedStatus bracketedStatus)
         {
             // Make copy for editing:
             expressionExps = new ArrayList<>(expressionExps);
@@ -853,7 +872,10 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
             if (ops.isEmpty())
             {
-                return expressionExps.get(0);
+                if (bracketedStatus == BracketedStatus.MISC && !expressionExps.isEmpty())
+                    return expressionExps.get(0);
+                else if (bracketedStatus == BracketedStatus.DIRECT_SQUARE_BRACKETED && expressionExps.size() <= 1)
+                    return new ArrayExpression(ImmutableList.copyOf(expressionExps));
             }
             else if (ops.stream().allMatch(op -> op.equals("+") || op.equals("-")))
             {
@@ -875,6 +897,11 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             {
                 if (expressionExps.size() == 2)
                     return errorDisplayers.record(displayer, new DivideExpression(expressionExps.get(0), expressionExps.get(1)));
+            }
+            else if (ops.stream().allMatch(op -> op.equals("^")))
+            {
+                if (expressionExps.size() == 2)
+                    return errorDisplayers.record(displayer, new RaiseExpression(expressionExps.get(0), expressionExps.get(1)));
             }
             else if (ops.stream().allMatch(op -> op.equals("=")))
             {
@@ -900,8 +927,15 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
             }
             else if (ops.stream().allMatch(op -> op.equals(",")))
             {
-                if (directlyRoundBracketed)
-                    return errorDisplayers.record(displayer, new TupleExpression(ImmutableList.copyOf(expressionExps)));
+                switch (bracketedStatus)
+                {
+                    case DIRECT_ROUND_BRACKETED:
+                        return errorDisplayers.record(displayer, new TupleExpression(ImmutableList.copyOf(expressionExps)));
+                    case DIRECT_SQUARE_BRACKETED:
+                        return errorDisplayers.record(displayer, new ArrayExpression(ImmutableList.copyOf(expressionExps)));
+                    default:
+                        break; // Invalid: fall-through....
+                }
                 // TODO offer fix to bracket this?
             }
 
@@ -966,7 +1000,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         }
 
         @Override
-        public UnitExpression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<UnitExpression> operands, List<String> ops, boolean directlyRoundBracketed)
+        public UnitExpression makeExpression(ErrorDisplayer displayer, ErrorDisplayerRecord errorDisplayers, List<UnitExpression> operands, List<String> ops, BracketedStatus bracketedStatus)
         {
             // Make copy for editing:
             operands = new ArrayList<>(operands);
