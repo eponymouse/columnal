@@ -57,10 +57,10 @@ public class TestUnit
         assertEquals("s^-1", Unit._test_make(s, -1).toString());
         assertEquals("m/s", Unit._test_make(m, 1, s, -1).toString());
         assertEquals("m/s^2", Unit._test_make(m, 1, s, -2).toString());
-        assertEquals("m/(g^3 s^2)", Unit._test_make(m, 1, s, -2, g, -3).toString());
-        assertEquals("m/(g^3 l s^2)", Unit._test_make(m, 1, s, -2, l, -1, g, -3).toString());
-        assertEquals("(l m)/(g^3 s^2)", Unit._test_make(m, 1, s, -2, l, 1, g, -3).toString());
-        assertEquals("m/(USD s^2)", Unit._test_make(m, 1, d, -1, s, -2).toString());
+        assertEquals("m/(g^3*s^2)", Unit._test_make(m, 1, s, -2, g, -3).toString());
+        assertEquals("m/(g^3*l*s^2)", Unit._test_make(m, 1, s, -2, l, -1, g, -3).toString());
+        assertEquals("(l*m)/(g^3*s^2)", Unit._test_make(m, 1, s, -2, l, 1, g, -3).toString());
+        assertEquals("m/(USD*s^2)", Unit._test_make(m, 1, d, -1, s, -2).toString());
     }
 
     @Test
@@ -72,31 +72,29 @@ public class TestUnit
         SingleUnit s = mgr.getDeclared("s");
         assertEquals(Unit._test_make(m, 1), mgr.loadUse("m"));
         assertEquals(Unit._test_make(m, 2), mgr.loadUse("m^2"));
-        assertEquals(Unit._test_make(m, 2), mgr.loadUse("m m"));
         assertEquals(Unit._test_make(m, 2), mgr.loadUse("m*m"));
         assertEquals(Unit._test_make(m, 3), mgr.loadUse("m^3"));
-        assertEquals(Unit._test_make(m, 3), mgr.loadUse("m m*m"));
-        assertEquals(Unit._test_make(m, 3), mgr.loadUse("m*m m"));
-        assertEquals(Unit._test_make(m, 3), mgr.loadUse("m^2 m"));
-        assertEquals(Unit._test_make(m, 3), mgr.loadUse("m m^2"));
+        assertEquals(Unit._test_make(m, 3), mgr.loadUse("m*m*m"));
+        assertEquals(Unit._test_make(m, 3), mgr.loadUse("m^2*m"));
+        assertEquals(Unit._test_make(m, 3), mgr.loadUse("m*m^2"));
         assertEquals(Unit._test_make(), mgr.loadUse("m^0"));
         assertEquals(Unit._test_make(), mgr.loadUse("m/m"));
 
         assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("m/s^2"));
         assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("(m/s^2)"));
-        assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("m s^-2"));
+        assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("m*s^-2"));
         assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("(m/s)/s"));
-        assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("m/(s s)"));
+        assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("m/(s*s)"));
         assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("m/(s^2)"));
         assertEquals(Unit._test_make(m, 1, s, -2), mgr.loadUse("m*(s^-2)"));
         assertEquals(Unit._test_make(m, 2, s, -2), mgr.loadUse("m*(m/s^2)"));
 
-        assertEquals(Unit._test_make(m, 1, s, -2, l, 1, g, -3), mgr.loadUse("(m l)/(g^3 s^2)"));
-        assertEquals(Unit._test_make(m, 1, s, -2, l, 1, g, -3), mgr.loadUse("((m l)/(g^3 s)) / s"));
-        assertEquals(Unit._test_make(m, 1, s, -2, l, 1, g, -3), mgr.loadUse("((m l)/(g^3*s))/s"));
-        assertEquals(Unit._test_make(m, 1, s, -2, l, -1, g, -3), mgr.loadUse("m/(g^3 l s^2)"));
-        assertEquals(Unit._test_make(m, 1, s, -2, l, -1, g, -3), mgr.loadUse("m/(g l g s g s)"));
-        assertEquals(Unit._test_make(m, 1, s, -2, l, -1, g, -3), mgr.loadUse("m/(g l g^2*s s)"));
+        assertEquals(Unit._test_make(m, 1, s, -2, l, 1, g, -3), mgr.loadUse("(m*l)/(g^3*s^2)"));
+        assertEquals(Unit._test_make(m, 1, s, -2, l, 1, g, -3), mgr.loadUse("((m*l)/(g^3*s)) / s"));
+        assertEquals(Unit._test_make(m, 1, s, -2, l, 1, g, -3), mgr.loadUse("((m*l)/(g^3*s))/s"));
+        assertEquals(Unit._test_make(m, 1, s, -2, l, -1, g, -3), mgr.loadUse("m/(g^3*l*s^2)"));
+        assertEquals(Unit._test_make(m, 1, s, -2, l, -1, g, -3), mgr.loadUse("m/(g * l * g * s * g*s)"));
+        assertEquals(Unit._test_make(m, 1, s, -2, l, -1, g, -3), mgr.loadUse("m/(g * l * g^2*s * s)"));
     }
 
     @Test
@@ -143,11 +141,11 @@ public class TestUnit
         test("3.2808399", "foot", "1000", "mm");
         test("6.63655303", "mile", "420492", "inch");
         test("26.8224", "m/s", "60", "mile/hour");
-        test("2682.24", "cm s^-1", "60", "mile/hour");
+        test("2682.24", "cm*s^-1", "60", "mile/hour");
         test("45645.2419", "mile/hour^2", "5.6681247", "m/(s*s)");
         test("817684.876315", "inch^3/min", "223.32424", "l/s");
         test("817684.876315", "inch^3/min", "223324.24", "ml/s");
-        test("817684.876315", "(inch*inch*inch)/min", "223.32424", "l s^-1");
+        test("817684.876315", "(inch*inch*inch)/min", "223.32424", "l*s^-1");
 
         //TODO add failure tests, like converting scalar to/from units, or unrelated units, or m/s to m/s^2 etc
     }
