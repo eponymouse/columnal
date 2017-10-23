@@ -67,8 +67,8 @@ public class PropLoadSaveExpression
     private void testLoadSave(@From(GenNonsenseExpression.class) Expression expression) throws UserException, InternalException
     {
         String saved = expression.save(true);
-        // Use same manage to load so that types are preserved:
-        Expression reloaded = Expression.parse(null, saved, new TypeManager(new UnitManager()));
+        // Use same manager to load so that types are preserved:
+        Expression reloaded = Expression.parse(null, saved, DummyManager.INSTANCE.getTypeManager());
         assertEquals("Saved version: " + saved, expression, reloaded);
         String resaved = reloaded.save(true);
         assertEquals(saved, resaved);

@@ -119,4 +119,26 @@ public class Either<A, B>
     {
         return !isA;
     }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        Either<?, ?> either = (Either<?, ?>) o;
+
+        if (isA != either.isA) return false;
+        if (a != null ? !a.equals(either.a) : either.a != null) return false;
+        return b != null ? b.equals(either.b) : either.b == null;
+    }
+
+    @Override
+    public int hashCode()
+    {
+        int result = a != null ? a.hashCode() : 0;
+        result = 31 * result + (b != null ? b.hashCode() : 0);
+        result = 31 * result + (isA ? 1 : 0);
+        return result;
+    }
 }

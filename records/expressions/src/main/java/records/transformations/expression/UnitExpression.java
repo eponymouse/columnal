@@ -80,7 +80,7 @@ public abstract class UnitExpression
         {
             return new UnitDivideExpression(loadUnit(ctx.unit()), loadUnit(ctx.divideBy().unit()));
         }
-        else if (ctx.timesBy() != null)
+        else if (ctx.timesBy() != null && ctx.timesBy().size() > 0)
         {
             return new UnitTimesExpression(Stream.concat(Stream.of(ctx.unit()), ctx.timesBy().stream().map(t -> t.unit())).map(c -> loadUnit(c)).collect(ImmutableList.toImmutableList()));
         }

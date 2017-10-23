@@ -64,6 +64,7 @@ import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.ExFunction;
 import utility.FXPlatformFunction;
 import utility.Pair;
@@ -317,10 +318,16 @@ public abstract class Expression
         public Expression visitTagExpression(TagExpressionContext ctx)
         {
             String constructorName = ctx.constructor().constructorName().getText();
+            if (ctx.constructor().UNKNOWNCONSTRUCTOR() != null)
+            {
+                return new TagExpression(Either.left(constructorName), ctx.expression() == null ? null : visitExpression(ctx.expression()));
+            }
+            else
+            {
+                String typeName = ctx.constructor().typeName().getText();
 
-            String typeName = ctx.constructor().typeName().getText();
-
-            return new TagExpression(typeManager.lookupTag(typeName, constructorName), ctx.expression() == null ? null : visitExpression(ctx.expression()));
+                return new TagExpression(typeManager.lookupTag(typeName, constructorName), ctx.expression() == null ? null : visitExpression(ctx.expression()));
+            }
         }
 
         @Override

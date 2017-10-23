@@ -39,6 +39,7 @@ ANY : '@any';
 UNFINISHED : '@unfinished';
 INVALIDOPS : '@invalidops';
 CONSTRUCTOR : '@tag';
+UNKNOWNCONSTRUCTOR : '@unknowntag';
 RAISEDTO : '^';
 COMMA: ',';
 

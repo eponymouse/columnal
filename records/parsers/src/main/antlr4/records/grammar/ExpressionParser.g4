@@ -41,7 +41,7 @@ anyOperator : ADD_OR_SUBTRACT | TIMES | DIVIDE | RAISEDTO | EQUALITY | NON_EQUAL
 invalidOpExpression : INVALIDOPS expression (STRING expression)+;
 compoundExpression : addSubtractExpression | timesExpression | divideExpression | raisedExpression | equalExpression | notEqualExpression | lessThanExpression | greaterThanExpression | andExpression | orExpression | matchesExpression | plusMinusPattern | ifThenElseExpression | invalidOpExpression;
 
-constructor : CONSTRUCTOR typeName BACKSLASH constructorName;
+constructor : CONSTRUCTOR typeName BACKSLASH constructorName | UNKNOWNCONSTRUCTOR constructorName;
 tagExpression : constructor (COLON expression)?;
 
 functionName : UNQUOTED_IDENT;

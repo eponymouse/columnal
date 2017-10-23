@@ -340,5 +340,25 @@ public class TypeManager
             this.tagIndex = tagIndex;
             this.tagInfo = tagInfo;
         }
+
+        @Override
+        public boolean equals(@Nullable Object o)
+        {
+            if (this == o) return true;
+            if (o == null || getClass() != o.getClass()) return false;
+
+            TagInfo tagInfo = (TagInfo) o;
+
+            if (tagIndex != tagInfo.tagIndex) return false;
+            return wholeType.equals(tagInfo.wholeType);
+        }
+
+        @Override
+        public int hashCode()
+        {
+            int result = wholeType.hashCode();
+            result = 31 * result + tagIndex;
+            return result;
+        }
     }
 }
