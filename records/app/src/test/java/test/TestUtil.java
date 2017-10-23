@@ -183,9 +183,13 @@ public class TestUtil
         else
         {
             // These should be escaped, but would be blown away on load: "\n", "\r", "\t"
-            return TestUtil.<@NonNull String>makeList(sourceOfRandomness, 1, 10, () -> sourceOfRandomness.<@NonNull String>choose(Arrays.asList(
+            String trimmed = TestUtil.<@NonNull String>makeList(sourceOfRandomness, 1, 10, () -> sourceOfRandomness.<@NonNull String>choose(Arrays.asList(
                 "a", "r", "n", "Z", "0", "9", "-", "=", "+", " ", "^", "@", "\"", "'"
-            ))).stream().collect(Collectors.joining());
+            ))).stream().collect(Collectors.joining()).trim();
+            if (trimmed.isEmpty())
+                return "a";
+            else
+                return trimmed;
         }
     }
 
@@ -348,7 +352,7 @@ public class TestUtil
         if (r.nextBoolean() && gs != null)
         {
             String generated = new StringGenerator().generate(r, gs);
-            return generated.replaceAll("[\\x00-\\x1F]", "");
+            return generated.replaceAll("[\\x00-\\x1F\\x7F]", "");
         }
         else
             return generateIdent(r);

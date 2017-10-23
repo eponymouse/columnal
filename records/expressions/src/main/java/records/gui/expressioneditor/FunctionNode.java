@@ -43,7 +43,6 @@ public class FunctionNode extends SurroundNode implements ExpressionNodeParent
     @Override
     public Expression save(ErrorDisplayerRecord errorDisplayer, FXPlatformConsumer<Object> onError)
     {
-        // TODO keep track of whether function is known
         // TODO allow units (second optional consecutive)
         Expression argExp = contents.save(errorDisplayer, onError);
         return errorDisplayer.record(this, new CallExpression(head.getText(), function.either(n -> null, f -> f), Collections.emptyList(), argExp));

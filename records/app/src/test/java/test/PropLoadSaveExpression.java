@@ -42,9 +42,9 @@ public class PropLoadSaveExpression
         testLoadSave(expression);
     }
 
-    @Property(trials = 2000)
+    @Property(trials = 1000)
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
-    public void testEditNonsense(@When(seed=-533694247408751559L) @From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
+    public void testEditNonsense(@From(GenNonsenseExpression.class) Expression expression) throws InternalException, UserException
     {
         Expression edited = new ExpressionEditor(expression, new ReadOnlyObjectWrapper<@Nullable Table>(null), new ReadOnlyObjectWrapper<@Nullable DataType>(null), DummyManager.INSTANCE, e -> {}).save(new ErrorDisplayerRecord(), e -> {});
         assertEquals(expression, edited);

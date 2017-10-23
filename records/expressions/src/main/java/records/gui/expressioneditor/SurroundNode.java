@@ -86,7 +86,16 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
         this.showError = vBoxAndErrorShow.getSecond();
         noInnerNodes = FXCollections.observableArrayList();
         if (hasInner)
-            contents = new ContentConsecutive(vBox, startingContent);
+        {
+            contents = new ContentConsecutive(vBox, startingContent) {
+                @Override
+                @OnThread(Tag.FXPlatform)
+                protected BracketedStatus getChildrenBracketedStatus()
+                {
+                    return BracketedStatus.DIRECT_ROUND_BRACKETED;
+                }
+            };
+        }
         else
         {
             contents = null;
