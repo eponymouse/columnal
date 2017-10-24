@@ -1,6 +1,7 @@
 package test.gui;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
@@ -40,9 +41,12 @@ import records.data.datatype.NumberInfo;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.stable.EditorKitCache;
 import records.gui.stable.StableView;
 import records.gui.stf.STFAutoCompleteCell;
 import records.gui.stf.StructuredTextField;
+import records.gui.stf.StructuredTextField.EditorKit;
+import records.gui.stf.TableDisplayUtility;
 import test.gen.GenDate;
 import test.gen.GenDateTime;
 import test.gen.GenDateTimeZoned;
@@ -58,6 +62,7 @@ import test.gen.GenYearMonth;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.Pair;
 import utility.SimulationSupplier;
 import utility.TaggedValue;
 import utility.Utility;
@@ -90,6 +95,8 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -234,7 +241,7 @@ public class TestStructuredTextField extends ApplicationTest
             try
             {
                 @SuppressWarnings("value")
-                EditableRecordSet rs = new EditableRecordSet(Collections.singletonList(dataType.makeImmediateColumn(new ColumnId("C"), Collections.<@Value Object>singletonList(value), "")), () -> 1);
+                EditableRecordSet rs = new EditableRecordSet(Collections.singletonList(dataType.makeImmediateColumn(new ColumnId("C"), Collections.<@Value Object>singletonList(value), DataTypeUtility.makeDefaultValue(dataType))), () -> 1);
                 fut.complete(rs.getColumns().get(0).getType());
             }
             catch (InternalException | UserException e)
@@ -247,26 +254,25 @@ public class TestStructuredTextField extends ApplicationTest
         {
             try
             {
-                /*TODO
-                DisplayCache<?> cacheSTF = TableDisplayUtility.makeField(fut.get(2000, TimeUnit.MILLISECONDS), true, () -> {});
-                stableView.setColumnsAndRows(Collections.singletonList(new Pair<>("C", cacheSTF)), null, i -> i == 0);
-                */
+                EditorKitCache<?> cacheSTF = TableDisplayUtility.makeField(0, fut.get(2000, TimeUnit.MILLISECONDS), true, () -> {});
+                stableView.setColumnsAndRows(ImmutableList.of(new Pair<>("C", cacheSTF)), null, i -> i == 0);
                 stableView.loadColumnWidths(new double[]{600.0});
-            } finally
-            {
-
-            }/*
+            }
             catch (InterruptedException | ExecutionException | TimeoutException | InternalException e)
             {
                 throw new RuntimeException(e);
-            }*/
+            }
         });
+        delay(500);
 
         for (int i = 0; i < 5; i++)
         {
             @Nullable StructuredTextField stf = fx(() -> {
                 stableView.getNode().applyCss();
-                return (@Nullable StructuredTextField) stableView.getNode().lookup(".structured-text-field");
+                @Nullable StructuredTextField structuredTextField = (@Nullable StructuredTextField) stableView.getNode().lookup(".structured-text-field");
+                if (structuredTextField != null)
+                    structuredTextField.requestFocus();
+                return structuredTextField;
             });
             if (stf != null)
                 return stf;
@@ -1231,8 +1237,9 @@ public class TestStructuredTextField extends ApplicationTest
         if (endEditAndCompareTo != null)
         {
             CompletableFuture<Either<Exception, Integer>> fut = new CompletableFuture<Either<Exception, Integer>>();
+            EditorKit<?> ed = f.get().getEditorKit();
             @SuppressWarnings("value")
-            @Value Object value = new Object(); // TODO f.get().getCompletedValue();
+            @Value Object value = ed._test_getLastCompletedValue();
             @SuppressWarnings("value")
             @Value Object eeco = endEditAndCompareTo;
             Workers.onWorkerThread("", Priority.LOAD_FROM_DISK, () -> {

@@ -505,13 +505,18 @@ public final class StructuredTextField extends StyleClassedTextArea
      * member so that we can properly parameterise the type
      * of this method.
      */
-    public <T> Either<List<ErrorFix>, T> endEdit(EditorKit<T> editorKit)
+    private <T> Either<List<ErrorFix>, T> endEdit(EditorKit<T> editorKit)
     {
         Either<List<ErrorFix>, T> errorOrValue = editorKit.contentComponent.endEdit(this);
         // May have been changed by errors or fixes:
         updateDocument(editorKit);
         lineEnd(SelectionPolicy.CLEAR);
         return errorOrValue;
+    }
+
+    public @Nullable EditorKit<?> getEditorKit()
+    {
+        return editorKit;
     }
 
     public static class CharEntryResult
@@ -972,6 +977,11 @@ public final class StructuredTextField extends StyleClassedTextArea
         public void relinquishFocus()
         {
             relinquishFocus.run();
+        }
+
+        public @Nullable T _test_getLastCompletedValue()
+        {
+            return completedValue;
         }
     }
 }

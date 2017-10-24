@@ -303,7 +303,10 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         Workers.onWorkerThread("Calculating number of rows", Priority.FETCH, () -> {
             int knownRows;
             boolean reachedEnd = false;
-            for (knownRows = prevKnownRows + 1; knownRows < searchMax; knownRows++)
+            // If we have say knownRows = 5, that's the total number, but last valid row is 4
+            // So we start by checking if row 5 (same as knownRows) is valid, which would
+            // actually be one more row than before.
+            for (knownRows = prevKnownRows; knownRows < searchMax; knownRows++)
             {
                 try
                 {
@@ -321,7 +324,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                     break;
                 }
             }
-            int knownRowsFinal = knownRows - 1;
+            int knownRowsFinal = knownRows;
             boolean reachedEndFinal = reachedEnd;
             Platform.runLater(() -> {
                 currentKnownRows.set(knownRowsFinal);
