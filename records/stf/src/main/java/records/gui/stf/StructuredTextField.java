@@ -277,7 +277,7 @@ public final class StructuredTextField extends StyleClassedTextArea
         if (editorKit == null)
             return;
 
-        System.err.println("Replacing: \"" + getText(start, end) + "\" with \"" + replacement.getText() + "\"");
+        //System.err.println("Replacing: \"" + getText(start, end) + "\" with \"" + replacement.getText() + "\"");
 
         hidePopup();
         int insertPos = start;
