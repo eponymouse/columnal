@@ -3,6 +3,7 @@ package test;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.generator.Ctor;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
@@ -189,9 +190,9 @@ public class PropTypecheck
     public void checkBlankArray(@From(GenDataType.class) DataType original, @From(GenRandom.class) Random r) throws UserException, InternalException
     {
         // We make a list with the original type, and N duplicates of that type
-        // with arrays randomly swapped to blank.  No matter what order you
+        // with arrays randomly swapped to blank (and other types left unchanged).  No matter what order you
         // put them in and feed them to checkAllSameType, you should get back
-        // the original.
+        // the original, because we add a single unmodified copy back in.
 
         ArrayList<DataType> types = new ArrayList<>();
 
@@ -239,7 +240,10 @@ public class PropTypecheck
             @Override
             public DataType tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return typeManager.registerTaggedType(typeName.getRaw(), Utility.mapListEx(tags, tt -> new TagType<DataType>(tt.getName(), tt.getInner() == null  ? null : blankArray(tt.getInner(), r))));
+                @Nullable DataType dataType = typeManager.lookupType(typeName);
+                if (dataType == null)
+                    return typeManager.registerTaggedType(typeName.getRaw(), Utility.mapListEx(tags, tt -> new TagType<DataType>(tt.getName(), tt.getInner())));
+                return dataType;
             }
 
             @Override
