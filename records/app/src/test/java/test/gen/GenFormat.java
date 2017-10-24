@@ -24,6 +24,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 /**
@@ -70,7 +71,11 @@ public class GenFormat extends Generator<TextFormat>
             ColumnType type = sourceOfRandomness.choose(Arrays.asList(
                 ColumnType.BLANK,
                 new TextColumnType(),
-                new NumericColumnType(sourceOfRandomness.nextBoolean() ? Unit.SCALAR : sourceOfRandomness.choose(currencies), sourceOfRandomness.nextInt(0, 6), null),
+                sourceOfRandomness.nextBoolean() ?
+                new NumericColumnType(Unit.SCALAR, sourceOfRandomness.nextInt(0, 6), null) :
+                ((Supplier<ColumnType>)() -> {
+                    Unit curr = sourceOfRandomness.choose(currencies);
+                    return new NumericColumnType(curr, sourceOfRandomness.nextInt(0, 6), curr.getDisplayPrefix());}).get(),
                 new CleanDateColumnType(sourceOfRandomness.choose(dateFormats), LocalDate::from)));
                 //TODO tag?, boolean
             // Don't end with blank:
