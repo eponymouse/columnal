@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.geometry.BoundingBox;
@@ -343,7 +344,7 @@ public abstract class Table
     /**
      * Add the given new column to the table.
      */
-    public abstract void addColumn(String newColumnName, DataType newColumnType, String defaultValueUnparsed) throws InternalException, UserException;
+    public abstract void addColumn(String newColumnName, DataType newColumnType, @Value Object defaultValue) throws InternalException, UserException;
 
     @OnThread(Tag.Any)
     public abstract TableOperations getOperations();

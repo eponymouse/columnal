@@ -74,7 +74,7 @@ public class LinkedDataSource extends DataSource
     }
 
     @Override
-    public void addColumn(String newColumnName, DataType newColumnType, String newColumnValue) throws InternalException
+    public void addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException
     {
         throw new InternalException("Should not try to add column to linked data source");
     }

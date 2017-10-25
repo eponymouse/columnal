@@ -44,8 +44,8 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
     private final TextField name;
     private final VBox contents;
     private final TypeSelectionPane typeSelectionPane;
-    private StructuredTextField defaultValueEditor;
-    private String defaultValueAsString = "";
+    private final StructuredTextField defaultValueEditor;
+    private @Value Object defaultValue;
 
     @OnThread(Tag.FXPlatform)
     public NewColumnDialog(TableManager tableManager) throws InternalException
@@ -56,7 +56,8 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
         name = new TextField();
         name.getStyleClass().add("new-column-name");
         typeSelectionPane = new TypeSelectionPane(tableManager.getTypeManager());
-        defaultValueEditor = makeField(DataType.NUMBER);
+        defaultValue = (Integer)0;
+        defaultValueEditor = new StructuredTextField(makeEditorKit(DataType.NUMBER));
         defaultValueEditor.getStyleClass().add("new-column-value");
         Label nameLabel = new Label(TranslationUtility.getString("newcolumn.name"));
         BorderPane defaultValueEditorWrapper = new BorderPane(defaultValueEditor);
@@ -89,7 +90,7 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
                 @NonNull DataType dataType = optDataType.get();
                 Utility.alertOnErrorFX_(() ->
                 {
-                    defaultValueEditor = makeField(dataType);
+                    defaultValueEditor.resetContent(makeEditorKit(dataType));
                     defaultValueEditor.getStyleClass().add("new-column-value");
                     defaultValueEditorWrapper.setCenter(defaultValueEditor);
                     getDialogPane().layout();
@@ -98,14 +99,15 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
         });
     }
 
-    private StructuredTextField makeField(@UnknownInitialization(Object.class) NewColumnDialog this, DataType dataType) throws InternalException
+    private EditorKit<?> makeEditorKit(@UnknownInitialization(Object.class) NewColumnDialog this, DataType dataType) throws InternalException
     {
-        return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, DataTypeUtility.makeDefaultValue(dataType)));
+        defaultValue = DataTypeUtility.makeDefaultValue(dataType);
+        return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, defaultValue));
     }
 
-    private <@NonNull @Value T extends @NonNull @Value Object> StructuredTextField fieldFromComponent(@UnknownInitialization(Object.class) NewColumnDialog this, Component<T> component) throws InternalException
+    private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> fieldFromComponent(@UnknownInitialization(Object.class) NewColumnDialog this, Component<T> component) throws InternalException
     {
-        return new StructuredTextField(new EditorKit<T>(component, (Pair<String, @NonNull @Value T> v) -> {defaultValueAsString = v.getFirst();}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus()));
+        return new EditorKit<T>(component, (Pair<String, @NonNull @Value T> v) -> {defaultValue = v.getSecond();}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
     }
 
     @RequiresNonNull({"typeSelectionPane"})
@@ -130,7 +132,7 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
         }
         else
         {
-            return Either.right(new NewColumnDetails(name.getText(), selectedType, defaultValueAsString));
+            return Either.right(new NewColumnDetails(name.getText(), selectedType, defaultValue));
         }
     }
 
@@ -138,13 +140,13 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
     {
         public final String name;
         public final DataType type;
-        public final String defaultValueUnparsed;
+        public final @Value Object defaultValue;
 
-        public NewColumnDetails(String name, DataType type, String defaultValueUnparsed)
+        public NewColumnDetails(String name, DataType type, @Value Object defaultValue)
         {
             this.name = name;
             this.type = type;
-            this.defaultValueUnparsed = defaultValueUnparsed;
+            this.defaultValue = defaultValue;
         }
     }
 

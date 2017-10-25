@@ -453,15 +453,20 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             public boolean test(Node node)
             {
                 // Don't click on the last row which has the append button:
-                return node.getStyleClass().contains("stable-view-row-cell") && node.lookup(".stable-view-row-append-button") == null;
+                return node.getStyleClass().contains("virt-grid-cell") && node.lookup(".stable-view-row-append-button") == null;
             }
 
             ;
         }).<Node>query();
         if (row != null)
+        {
             targetWindow(row);
+            clickOn(row);
+        }
         //TODO check colour of focused cell (either check background, or take snapshot)
         Node prevFocused = TestUtil.fx(() -> targetWindow().getScene().getFocusOwner());
+        // Go to last row:
+        push(KeyCode.END);
         // Enter to start editing:
         push(KeyCode.ENTER);
         WaitForAsyncUtils.waitForFxEvents();

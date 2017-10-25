@@ -101,9 +101,9 @@ public class ImmediateDataSource extends DataSource
     }
 
     @Override
-    public void addColumn(String newColumnName, DataType newColumnType, String defaultValueUnparsed) throws InternalException, UserException
+    public void addColumn(String newColumnName, DataType newColumnType, @Value Object defaultValue) throws InternalException, UserException
     {
-        data.addColumn(newColumnType.makeImmediateColumn(new ColumnId(newColumnName), defaultValueUnparsed));
+        data.addColumn(newColumnType.makeImmediateColumn(new ColumnId(newColumnName), defaultValue));
     }
 
     @Override

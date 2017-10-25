@@ -1023,12 +1023,12 @@ public class DataType
         private final V defaultValue;
         private @Nullable C column;
 
-        private ColumnMaker(String defaultValueUnparsed, BiFunctionInt<RecordSet, V, C> makeColumn, ExBiConsumer<C, V> addToColumn, ExFunction<DataParser, V> parseValue) throws UserException, InternalException
+        private ColumnMaker(@Value Object defaultValue, Class<V> valueClass, BiFunctionInt<RecordSet, V, C> makeColumn, ExBiConsumer<C, V> addToColumn, ExFunction<DataParser, V> parseValue) throws UserException, InternalException
         {
             this.makeColumn = makeColumn;
             this.addToColumn = addToColumn;
             this.parseValue = parseValue;
-            this.defaultValue = parseValue.apply(Utility.parseAsOne(defaultValueUnparsed, DataLexer::new, DataParser::new, p -> p));
+            this.defaultValue = Utility.cast(defaultValue, valueClass);
         }
 
         public final EditableColumn apply(RecordSet rs) throws InternalException
@@ -1106,7 +1106,7 @@ public class DataType
     }
 
     @OnThread(Tag.Simulation)
-    public ColumnMaker<?, ?> makeImmediateColumn(ColumnId columnId, String defaultValueUnparsed) throws InternalException, UserException
+    public ColumnMaker<?, ?> makeImmediateColumn(ColumnId columnId, @Value Object defaultValue) throws InternalException, UserException
     {
         return apply(new DataTypeVisitor<ColumnMaker<?, ?>>()
         {
@@ -1114,7 +1114,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?, ?> number(NumberInfo displayInfo) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryNumericColumn, Number>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryNumericColumn(rs, columnId, displayInfo, Collections.emptyList(), defaultValue), (c, n) -> c.add(n), p -> {
+                return new ColumnMaker<MemoryNumericColumn, Number>(defaultValue, Number.class, (rs, defaultValue) -> new MemoryNumericColumn(rs, columnId, displayInfo, Collections.emptyList(), defaultValue), (c, n) -> c.add(n), p -> {
                     return loadNumber(p);
                 });
             }
@@ -1123,7 +1123,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?, ?> text() throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryStringColumn, String>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryStringColumn(rs, columnId, Collections.emptyList(), defaultValue), (c, s) -> c.add(s), p -> {
+                return new ColumnMaker<MemoryStringColumn, String>(defaultValue, String.class, (rs, defaultValue) -> new MemoryStringColumn(rs, columnId, Collections.emptyList(), defaultValue), (c, s) -> c.add(s), p -> {
                     return loadString(p);
                 });
             }
@@ -1132,7 +1132,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?, ?> date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTemporalColumn, TemporalAccessor>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), p ->
+                return new ColumnMaker<MemoryTemporalColumn, TemporalAccessor>(defaultValue, TemporalAccessor.class, (rs, defaultValue) -> new MemoryTemporalColumn(rs, columnId, dateTimeInfo, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), p ->
                 {
                     return dateTimeInfo.parse(p);
                 });
@@ -1142,7 +1142,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?, ?> bool() throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryBooleanColumn, Boolean>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryBooleanColumn(rs, columnId, Collections.emptyList(), defaultValue), (c, b) -> c.add(b), p -> {
+                return new ColumnMaker<MemoryBooleanColumn, Boolean>(defaultValue, Boolean.class, (rs, defaultValue) -> new MemoryBooleanColumn(rs, columnId, Collections.emptyList(), defaultValue), (c, b) -> c.add(b), p -> {
                     return loadBool(p);
                 });
             }
@@ -1151,7 +1151,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?, ?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTaggedColumn, TaggedValue>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), p -> {
+                return new ColumnMaker<MemoryTaggedColumn, TaggedValue>(defaultValue, TaggedValue.class, (rs, defaultValue) -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), p -> {
                     return loadTaggedValue(tags, p);
                 });
             }
@@ -1160,7 +1160,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?, ?> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTupleColumn, @Value Object @Value[]>(defaultValueUnparsed, (RecordSet rs, @Value Object @Value[] defaultValue) -> new MemoryTupleColumn(rs, columnId, inner, defaultValue), (c, t) -> c.add(t), p -> {
+                return new ColumnMaker<MemoryTupleColumn, @Value Object @Value[]>(defaultValue, Object[].class, (RecordSet rs, @Value Object @Value[] defaultValue) -> new MemoryTupleColumn(rs, columnId, inner, defaultValue), (c, t) -> c.add(t), p -> {
                     return loadTuple(inner, p, false);
                 });
             }
@@ -1173,7 +1173,7 @@ public class DataType
                     throw new UserException("Cannot have column with type of empty array");
 
                 DataType innerFinal = inner;
-                return new ColumnMaker<MemoryArrayColumn, ListEx>(defaultValueUnparsed, (rs, defaultValue) -> new MemoryArrayColumn(rs, columnId, innerFinal, Collections.emptyList(), defaultValue), (c, v) -> c.add(v), p -> {
+                return new ColumnMaker<MemoryArrayColumn, ListEx>(defaultValue, ListEx.class, (rs, defaultValue) -> new MemoryArrayColumn(rs, columnId, innerFinal, Collections.emptyList(), defaultValue), (c, v) -> c.add(v), p -> {
                     return loadArray(innerFinal, p);
                 });
             }
@@ -1566,7 +1566,7 @@ public class DataType
                 return null;
             });
             if (c == null)
-                throw new ParseException("Date value", p);
+                throw new ParseException("Date value ", p);
             DateTimeFormatter formatter = getFormatter();
             try
             {
