@@ -17,6 +17,7 @@ import records.error.UserException;
 import records.transformations.function.Count;
 import records.transformations.function.FunctionInstance;
 import records.transformations.function.StringLeft;
+import records.transformations.function.StringLength;
 import records.transformations.function.StringRight;
 import test.gen.GenValueList;
 import threadchecker.OnThread;
@@ -41,6 +42,25 @@ public class PropStringFunctions
         catch (InternalException | UserException e)
         {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Property
+    @OnThread(Tag.Simulation)
+    public void propTextLength(@From(StringGenerator.class) String str) throws Throwable
+    {
+        StringLength function = new StringLength();
+        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.TEXT, s -> {}, mgr);
+        if (checked == null)
+        {
+            fail("Type check failure");
+        }
+        else
+        {
+            assertEquals(DataType.NUMBER, checked.getSecond());
+            @Value Number actual = (Number)checked.getFirst().getValue(0, DataTypeUtility.value(str));
+            assertEquals(str.codePointCount(0, str.length()), actual.intValue());
+            assertTrue(actual.doubleValue() == (double)actual.intValue());
         }
     }
 
