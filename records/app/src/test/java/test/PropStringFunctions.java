@@ -17,6 +17,7 @@ import records.error.UserException;
 import records.transformations.function.Count;
 import records.transformations.function.FunctionInstance;
 import records.transformations.function.StringLeft;
+import records.transformations.function.StringRight;
 import test.gen.GenValueList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -63,6 +64,33 @@ public class PropStringFunctions
                 @Value String actual = (String)checked.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, i}));
                 assertTrue(str.startsWith(actual));
                 assertEquals(new String(strCodepoints, 0, Math.min(i, strCodepoints.length)), actual);
+            }
+
+            @Nullable Pair<FunctionInstance, DataType> checkedFinal = checked;
+            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, -1})));
+        }
+    }
+
+    @Property
+    @OnThread(Tag.Simulation)
+    public void propRight(@From(StringGenerator.class) String str) throws Throwable
+    {
+        StringRight function = new StringRight();
+        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER), s -> {}, mgr);
+        if (checked == null)
+        {
+            fail("Type check failure");
+        }
+        else
+        {
+            assertEquals(DataType.TEXT, checked.getSecond());
+            int[] strCodepoints = str.codePoints().toArray();
+            // Going beyond length should just return whole string, so go 5 beyond to check:
+            for (int i = 0; i <= strCodepoints.length + 5; i++)
+            {
+                @Value String actual = (String)checked.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, i}));
+                assertTrue(str.endsWith(actual));
+                assertEquals(new String(strCodepoints, Math.max(0, strCodepoints.length - i), Math.min(i, strCodepoints.length)), actual);
             }
 
             @Nullable Pair<FunctionInstance, DataType> checkedFinal = checked;
