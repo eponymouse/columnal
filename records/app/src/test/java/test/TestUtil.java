@@ -859,6 +859,26 @@ public class TestUtil
         return s.toString();
     }
 
+    @OnThread(Tag.Simulation)
+    public static void assertUserException(SimulationRunnable simulationRunnable)
+    {
+        try
+        {
+            simulationRunnable.run();
+            // If we reach here, didn't throw:
+            fail("Expected UserException but no exception thrown");
+        }
+        catch (UserException e)
+        {
+            // As expected:
+            return;
+        }
+        catch (InternalException e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+
     public static interface FXPlatformSupplierEx<T> extends Callable<T>
     {
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)

@@ -36,7 +36,18 @@ public class StringLeft extends FunctionDefinition
             if (params.length != 2)
                 throw new InternalException("Wrong number of params in left arguments: " + params.length);
             String src = Utility.cast(params[0], String.class);
-            return src.substring(0, src.offsetByCodePoints(0, Utility.cast(params[1], Integer.class)));
+            int codePointCount = Utility.cast(params[1], Integer.class);
+            if (codePointCount < 0)
+                throw new UserException("Invalid count when calling left function: " + codePointCount);
+            try
+            {
+                return src.substring(0, src.offsetByCodePoints(0, codePointCount));
+            }
+            catch (IndexOutOfBoundsException e)
+            {
+                // Just return whole string:
+                return src;
+            }
         }
     }
 }

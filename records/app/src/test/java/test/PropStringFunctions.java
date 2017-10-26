@@ -57,13 +57,16 @@ public class PropStringFunctions
         {
             assertEquals(DataType.TEXT, checked.getSecond());
             int[] strCodepoints = str.codePoints().toArray();
-            for (int i = 0; i <= strCodepoints.length; i++)
+            // Going beyond length should just return whole string, so go 5 beyond to check:
+            for (int i = 0; i <= strCodepoints.length + 5; i++)
             {
                 @Value String actual = (String)checked.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, i}));
                 assertTrue(str.startsWith(actual));
-                assertEquals(new String(strCodepoints, 0, i), actual);
+                assertEquals(new String(strCodepoints, 0, Math.min(i, strCodepoints.length)), actual);
             }
 
+            @Nullable Pair<FunctionInstance, DataType> checkedFinal = checked;
+            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, -1})));
         }
     }
 }
