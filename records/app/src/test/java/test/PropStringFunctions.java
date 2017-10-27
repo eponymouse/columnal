@@ -19,6 +19,7 @@ import records.transformations.function.StringLeft;
 import records.transformations.function.StringLength;
 import records.transformations.function.StringMid;
 import records.transformations.function.StringRight;
+import records.transformations.function.StringTrim;
 import records.transformations.function.StringWithin;
 import records.transformations.function.StringWithinIndex;
 import test.gen.GenRandom;
@@ -73,6 +74,39 @@ public class PropStringFunctions
             assertTrue(actual.doubleValue() == (double)actual.intValue());
         }
     }
+
+    @Property
+    @OnThread(Tag.Simulation)
+    public void propTrim(@From(UnicodeStringGenerator.class) String orig, @From(GenRandom.class) Random r) throws Throwable
+    {
+        StringTrim function = new StringTrim();
+        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.TEXT, s -> {}, mgr);
+        if (checked == null)
+        {
+            fail("Type check failure");
+        }
+        else
+        {
+            assertEquals(DataType.TEXT, checked.getSecond());
+            String SPACES = " \n\t\r\u00A0\u1680\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A";
+            String withSpaces = orig;
+            int before = r.nextInt(4);
+            int after = r.nextInt(4);
+            for (int i = 0; i < before; i++)
+            {
+                withSpaces = "" + SPACES.charAt(r.nextInt(SPACES.length())) + withSpaces;
+            }
+            for (int i = 0; i < after; i++)
+            {
+                withSpaces = withSpaces + SPACES.charAt(r.nextInt(SPACES.length()));
+            }
+
+            @Value String actual = (String)checked.getFirst().getValue(0, DataTypeUtility.value(withSpaces));
+                assertEquals(orig, actual);
+
+        }
+    }
+
 
     @Property
     @OnThread(Tag.Simulation)
