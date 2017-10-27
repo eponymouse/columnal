@@ -20,12 +20,17 @@ import records.transformations.function.StringLeft;
 import records.transformations.function.StringLength;
 import records.transformations.function.StringMid;
 import records.transformations.function.StringRight;
+import records.transformations.function.StringWithin;
+import test.gen.GenRandom;
 import test.gen.GenValueList;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
+import java.util.Random;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -149,6 +154,34 @@ public class PropStringFunctions
             TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, -1, 0})));
             TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, 0, -1})));
             TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, -1, -1})));
+        }
+    }
+
+    @Property
+    @OnThread(Tag.Simulation)
+    public void propContains(@From(StringGenerator.class) String target, @From(StringGenerator.class) String distractor, @From(GenRandom.class) Random r) throws Throwable
+    {
+        if (distractor.contains(target))
+            return;
+        List<Boolean> targets = new ArrayList<>();
+        StringBuilder s = new StringBuilder();
+        for (int i = 0; i < r.nextInt(8); i++)
+        {
+            boolean t = r.nextBoolean();
+            targets.add(t);
+            s.append(t ? target : distractor);
+        }
+        StringWithin function = new StringWithin();
+        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT), _s -> {}, mgr);
+        if (checked == null)
+        {
+            fail("Type check failure");
+        }
+        else
+        {
+            assertEquals(DataType.BOOLEAN, checked.getSecond());
+            @Value Boolean actual = (Boolean) checked.getFirst().getValue(0, DataTypeUtility.value(new Object[]{target, s.toString()}));
+            assertEquals(targets.stream().anyMatch(b -> b), actual);
         }
     }
 }

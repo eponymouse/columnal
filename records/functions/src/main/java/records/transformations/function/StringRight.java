@@ -31,9 +31,7 @@ public class StringRight extends FunctionDefinition
         @Override
         public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
         {
-            Object @Value [] params = Utility.cast(param, Object[].class);
-            if (params.length != 2)
-                throw new InternalException("Wrong number of params in right arguments: " + params.length);
+            Object @Value [] params = Utility.castTuple(param, 2);
             String src = Utility.cast(params[0], String.class);
             int codePointCount = Utility.cast(params[1], Integer.class);
             if (codePointCount < 0)
