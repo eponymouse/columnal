@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.When;
-import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
@@ -47,18 +46,8 @@ import records.gui.stf.STFAutoCompleteCell;
 import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
 import records.gui.stf.TableDisplayUtility;
-import test.gen.GenDate;
-import test.gen.GenDateTime;
-import test.gen.GenDateTimeZoned;
-import test.gen.GenNumber;
-import test.gen.GenNumberAsString;
-import test.gen.GenOffsetTime;
-import test.gen.GenRandom;
-import test.gen.GenTaggedTypeAndValueGen;
-import test.gen.GenTime;
-import test.gen.GenTypeAndValueGen;
+import test.gen.*;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
-import test.gen.GenYearMonth;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -651,7 +640,7 @@ public class TestStructuredTextField extends ApplicationTest
     }
 
     @Property(trials = 20)
-    public void propString(@From(StringGenerator.class) String s) throws InternalException
+    public void propString(@From(UnicodeStringGenerator.class) String s) throws InternalException
     {
         int[] cs = s.codePoints().filter(c -> c <= 0x7dff && !Character.isISOControl(c) && c != '\"').toArray();
         s = new String(cs, 0, cs.length);

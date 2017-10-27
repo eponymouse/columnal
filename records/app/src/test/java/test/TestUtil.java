@@ -6,7 +6,6 @@ import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
-import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
 import com.pholser.junit.quickcheck.generator.java.time.LocalTimeGenerator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import com.sun.javafx.PlatformUtil;
@@ -42,6 +41,7 @@ import records.transformations.TransformationManager;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.MustIncludeNumber;
 import test.gen.GenImmediateData.NumTables;
+import test.gen.UnicodeStringGenerator;
 import utility.ExRunnable;
 import utility.FXPlatformRunnable;
 import utility.SimulationRunnable;
@@ -351,7 +351,7 @@ public class TestUtil
         // with things likely to trip up parser
         if (r.nextBoolean() && gs != null)
         {
-            String generated = new StringGenerator().generate(r, gs);
+            String generated = new UnicodeStringGenerator().generate(r, gs);
             return generated.replaceAll("[\\x00-\\x1F\\x7F]", "");
         }
         else

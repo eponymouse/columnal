@@ -3,7 +3,6 @@ package test;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
-import com.pholser.junit.quickcheck.generator.java.lang.StringGenerator;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -21,11 +20,16 @@ import records.transformations.function.StringLength;
 import records.transformations.function.StringMid;
 import records.transformations.function.StringRight;
 import records.transformations.function.StringWithin;
+import records.transformations.function.StringWithinIndex;
 import test.gen.GenRandom;
 import test.gen.GenValueList;
+import test.gen.UnicodeStringGenerator;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
+import utility.Utility.ListEx;
+import utility.Utility.ListExList;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -53,7 +57,7 @@ public class PropStringFunctions
 
     @Property
     @OnThread(Tag.Simulation)
-    public void propTextLength(@From(StringGenerator.class) String str) throws Throwable
+    public void propTextLength(@From(UnicodeStringGenerator.class) String str) throws Throwable
     {
         StringLength function = new StringLength();
         @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.TEXT, s -> {}, mgr);
@@ -72,7 +76,7 @@ public class PropStringFunctions
 
     @Property
     @OnThread(Tag.Simulation)
-    public void propLeft(@From(StringGenerator.class) String str) throws Throwable
+    public void propLeft(@From(UnicodeStringGenerator.class) String str) throws Throwable
     {
         StringLeft function = new StringLeft();
         @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER), s -> {}, mgr);
@@ -99,7 +103,7 @@ public class PropStringFunctions
 
     @Property
     @OnThread(Tag.Simulation)
-    public void propRight(@From(StringGenerator.class) String str) throws Throwable
+    public void propRight(@From(UnicodeStringGenerator.class) String str) throws Throwable
     {
         StringRight function = new StringRight();
         @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER), s -> {}, mgr);
@@ -126,7 +130,7 @@ public class PropStringFunctions
 
     @Property
     @OnThread(Tag.Simulation)
-    public void propMid(@From(StringGenerator.class) String str) throws Throwable
+    public void propMid(@From(UnicodeStringGenerator.class) String str) throws Throwable
     {
         StringMid function = new StringMid();
         @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER, DataType.NUMBER), s -> {}, mgr);
@@ -159,7 +163,7 @@ public class PropStringFunctions
 
     @Property
     @OnThread(Tag.Simulation)
-    public void propContains(@From(StringGenerator.class) String target, @From(StringGenerator.class) String distractor, @From(GenRandom.class) Random r) throws Throwable
+    public void propContains(@From(UnicodeStringGenerator.class) String target, @From(UnicodeStringGenerator.class) String distractor, @From(GenRandom.class) Random r) throws Throwable
     {
         if (distractor.contains(target))
             return;
@@ -172,16 +176,30 @@ public class PropStringFunctions
             s.append(t ? target : distractor);
         }
         StringWithin function = new StringWithin();
+        StringWithinIndex functionIndex = new StringWithinIndex();
         @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT), _s -> {}, mgr);
-        if (checked == null)
+        @Nullable Pair<FunctionInstance, DataType> checkedIndex = functionIndex.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT), _s -> {}, mgr);
+        if (checked == null || checkedIndex == null)
         {
             fail("Type check failure");
         }
         else
         {
             assertEquals(DataType.BOOLEAN, checked.getSecond());
-            @Value Boolean actual = (Boolean) checked.getFirst().getValue(0, DataTypeUtility.value(new Object[]{target, s.toString()}));
-            assertEquals(targets.stream().anyMatch(b -> b), actual);
+            @Value Boolean actualContained = (Boolean) checked.getFirst().getValue(0, DataTypeUtility.value(new Object[]{target, s.toString()}));
+            assertEquals(targets.stream().anyMatch(b -> b), actualContained);
+
+            assertEquals(DataType.array(DataType.NUMBER), checkedIndex.getSecond());
+            ListEx actualIndexes = (ListEx) checkedIndex.getFirst().getValue(0, DataTypeUtility.value(new Object[]{target, s.toString()}));
+            List<Integer> expectedIndexes = new ArrayList<>();
+            int index = 0;
+            for (Boolean match : targets)
+            {
+                if (match)
+                    expectedIndexes.add(index);
+                index += match ? target.codePointCount(0, target.length()) : distractor.codePointCount(0, distractor.length());
+            }
+            assertEquals(new ListExList(expectedIndexes), actualIndexes);
         }
     }
 }

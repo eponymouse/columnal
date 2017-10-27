@@ -723,10 +723,17 @@ public class Utility
     @OnThread(Tag.Simulation)
     public static @Value Object getAtIndex(@Value ListEx objects, @UserIndex int userIndex) throws UserException, InternalException
     {
-        if (userIndex < 1 || userIndex > objects.size())
+        if (userIndex < 1)
             throw new UserException("List index " + userIndex + " out of bounds, should be between 1 and " + objects.size() + " (inclusive)");
-        // User index is one-based:
-        return objects.get(userIndex - 1);
+        try
+        {
+            // User index is one-based:
+            return objects.get(userIndex - 1);
+        }
+        catch (IndexOutOfBoundsException e)
+        {
+            throw new UserException("List index " + userIndex + " out of bounds, should be between 1 and " + objects.size() + " (inclusive)");
+        }
     }
 
     public static @Value Number valueNumber(@Value Object o) throws InternalException
@@ -1468,9 +1475,9 @@ public class Utility
 
     public static @Value class ListExList extends ListEx
     {
-        private final List<@Value Object> items;
+        private final List<? extends @Value Object> items;
 
-        public @Value ListExList(List<@Value Object> items)
+        public @Value ListExList(List<? extends @Value Object> items)
         {
             this.items = items;
         }
