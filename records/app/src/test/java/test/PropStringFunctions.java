@@ -18,6 +18,7 @@ import records.transformations.function.Count;
 import records.transformations.function.FunctionInstance;
 import records.transformations.function.StringLeft;
 import records.transformations.function.StringLength;
+import records.transformations.function.StringMid;
 import records.transformations.function.StringRight;
 import test.gen.GenValueList;
 import threadchecker.OnThread;
@@ -115,6 +116,39 @@ public class PropStringFunctions
 
             @Nullable Pair<FunctionInstance, DataType> checkedFinal = checked;
             TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, -1})));
+        }
+    }
+
+    @Property
+    @OnThread(Tag.Simulation)
+    public void propMid(@From(StringGenerator.class) String str) throws Throwable
+    {
+        StringMid function = new StringMid();
+        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER, DataType.NUMBER), s -> {}, mgr);
+        if (checked == null)
+        {
+            fail("Type check failure");
+        }
+        else
+        {
+            assertEquals(DataType.TEXT, checked.getSecond());
+            int[] strCodepoints = str.codePoints().toArray();
+            // Going beyond length should just return whole string, so go 5 beyond to check:
+            for (int start = 0; start <= strCodepoints.length + 5; start++)
+            {
+                for (int length = 0; length <= strCodepoints.length + 5 - start; length++)
+                {
+                    // Start should be one-based, so we add one when making the call:
+                    @Value String actual = (String) checked.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, start + 1, length}));
+                    assertTrue(str.contains(actual));
+                    assertEquals("From #" + (start + 1) + " for " + length + " in " + strCodepoints.length, new String(strCodepoints, Math.min(start, strCodepoints.length), Math.min(length, Math.max(0, strCodepoints.length - start))), actual);
+                }
+            }
+
+            @Nullable Pair<FunctionInstance, DataType> checkedFinal = checked;
+            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, -1, 0})));
+            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, 0, -1})));
+            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, -1, -1})));
         }
     }
 }
