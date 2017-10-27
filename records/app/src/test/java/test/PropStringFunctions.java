@@ -235,5 +235,14 @@ public class PropStringFunctions
             }
             assertEquals(new ListExList(expectedIndexes), actualIndexes);
         }
+
+        fail("TODO: test replace(first|all) here, too");
+    }
+
+    @Property
+    @OnThread(Tag.Simulation)
+    public void propShow()
+    {
+        fail("TODO: test anything->string show function");
     }
 }

@@ -44,6 +44,13 @@ public class PropListFunctions
         mgr = new UnitManager();
     }
 
+    @Property
+    @OnThread(Tag.Simulation)
+    public void propMinMax(@From(GenValueList.class) GenValueList.ListAndType src) throws Throwable
+    {
+        fail("TODO");
+    }
+
 
     @Property
     @OnThread(Tag.Simulation)
