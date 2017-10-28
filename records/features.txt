@@ -13,7 +13,6 @@ Target Initial Set
    - String concatenation
    - Date manipulation
  - Date/time and time as well as just date
- - Saving/loading pipelines
  - Display operations: auto-arrange, show only changed columns
  - Operations:
    - Manual data entry (entirely new table, adding columns to existing).  Allow freezing?
@@ -35,8 +34,16 @@ Professional Version
  - HTML import
  - Excel import (both data, and data+formulae)
  - Excel export (both data, and data+formulae)
- - Graphing
  - Multi-source operations (e.g. lookup, merge) -- or should this be free?
- - Tuples and arrays of data -- or should this be free? or importing is only in pro version?
+ - Importing arrays of data from variable length tables
 
 
+Future Version
+===
+
+ - Linked data sources, including auto reload
+ - More generally, effectful sources such as databases, random numbers, time now
+ - PRO?: Saveable pipelines of operations
+ - Lambda functions
+ - PRO: More complex Excel import and export
+ - PRO: Graphing

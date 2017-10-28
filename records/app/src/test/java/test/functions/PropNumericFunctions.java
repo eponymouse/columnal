@@ -1,4 +1,4 @@
-package test;
+package test.functions;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;

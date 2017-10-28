@@ -1,4 +1,4 @@
-package test;
+package test.functions;
 
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;

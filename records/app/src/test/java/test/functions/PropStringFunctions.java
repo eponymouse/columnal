@@ -1,4 +1,4 @@
-package test;
+package test.functions;
 
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
@@ -22,6 +22,7 @@ import records.transformations.function.StringRight;
 import records.transformations.function.StringTrim;
 import records.transformations.function.StringWithin;
 import records.transformations.function.StringWithinIndex;
+import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.GenValueList;
 import test.gen.UnicodeStringGenerator;
