@@ -679,12 +679,12 @@ public class GuessFormat
     public static class ImportInfo
     {
         public final TableId tableName;
-        public final boolean linkFile;
+        //public final boolean linkFile;
 
-        public ImportInfo(TableId tableName, boolean linkFile)
+        public ImportInfo(TableId tableName/*, boolean linkFile*/)
         {
             this.tableName = tableName;
-            this.linkFile = linkFile;
+            //this.linkFile = linkFile;
         }
     }
 

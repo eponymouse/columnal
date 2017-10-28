@@ -60,7 +60,7 @@ public class PropFormat
         File tempFile = File.createTempFile("test", "txt");
         tempFile.deleteOnExit();
         FileUtils.writeStringToFile(tempFile, content, formatAndData.format.charset);
-        DataSource ds = TestUtil.pick(TextImporter._test_importTextFile(new DummyManager(), tempFile, link), picks);
+        DataSource ds = TestUtil.pick(TextImporter._test_importTextFile(new DummyManager(), tempFile/*, link*/), picks);
         assertEquals("Right column length", formatAndData.loadedContent.size(), ds.getData().getLength());
         for (int i = 0; i < formatAndData.loadedContent.size(); i++)
         {

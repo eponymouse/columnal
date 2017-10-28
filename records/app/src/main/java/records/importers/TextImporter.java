@@ -114,13 +114,13 @@ public class TextImporter implements Importer
     }
 
     @OnThread(Tag.Simulation)
-    public static ChoicePoint<?, DataSource> _test_importTextFile(TableManager mgr, File textFile, boolean link) throws IOException, InternalException, UserException
+    public static ChoicePoint<?, DataSource> _test_importTextFile(TableManager mgr, File textFile/*, boolean link*/) throws IOException, InternalException, UserException
     {
         Map<Charset, List<String>> initial = getInitial(textFile);
         return GuessFormat.guessTextFormat(mgr.getUnitManager(), initial).then(format -> {
             try
             {
-                return makeDataSource(mgr, textFile, new ImportInfo(new TableId(textFile.getName()), link), format);
+                return makeDataSource(mgr, textFile, new ImportInfo(new TableId(textFile.getName())/*, link*/), format);
             }
             catch (IOException e)
             {
@@ -133,9 +133,9 @@ public class TextImporter implements Importer
     private static DataSource makeDataSource(TableManager mgr, final File textFile, final ImportInfo importInfo, final TextFormat format) throws IOException, InternalException, UserException
     {
         RecordSet rs = makeRecordSet(mgr.getTypeManager(), textFile, format, null);
-        if (importInfo.linkFile)
-            return new LinkedDataSource(mgr, importInfo.tableName, rs, MainLexer.TEXTFILE, textFile);
-        else
+        //if (importInfo.linkFile)
+            //return new LinkedDataSource(mgr, importInfo.tableName, rs, MainLexer.TEXTFILE, textFile);
+        //else
             return new ImmediateDataSource(mgr, importInfo.tableName, new EditableRecordSet(rs));
     }
 

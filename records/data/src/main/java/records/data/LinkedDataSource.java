@@ -15,7 +15,7 @@ import java.nio.file.Path;
 /**
  * Created by neil on 09/11/2016.
  */
-public class LinkedDataSource extends DataSource
+public abstract class LinkedDataSource extends DataSource
 {
     private final RecordSet data;
     private final int typeToken;
@@ -97,4 +97,6 @@ public class LinkedDataSource extends DataSource
         result = 31 * result + path.hashCode();
         return result;
     }
+
+    public abstract void notInTheFirstVersion();
 }

@@ -104,10 +104,10 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         LabelledGrid choices = new LabelledGrid();
         choices.getStyleClass().add("choice-grid");
         TableNameTextField nameField = new TableNameTextField(mgr, new TableId(suggestedName));
-        @SuppressWarnings("unchecked")
-        SegmentedButtonValue<Boolean> linkCopyButtons = new SegmentedButtonValue<>(new Pair<@LocalizableKey String, Boolean>("table.copy", false), new Pair<@LocalizableKey String, Boolean>("table.link", true));
+        //@SuppressWarnings("unchecked")
+        //SegmentedButtonValue<Boolean> linkCopyButtons = new SegmentedButtonValue<>(new Pair<@LocalizableKey String, Boolean>("table.copy", false), new Pair<@LocalizableKey String, Boolean>("table.link", true));
         choices.addRow(GUI.labelledGridRow("table.name", "guess-format/tableName", nameField.getNode()));
-        choices.addRow(GUI.labelledGridRow("table.linkCopy", "guess-format/linkCopy", linkCopyButtons));
+        //choices.addRow(GUI.labelledGridRow("table.linkCopy", "guess-format/linkCopy", linkCopyButtons));
 
         SimpleObjectProperty<@Nullable FORMAT> formatProperty = new SimpleObjectProperty<>(null);
         FXUtility.addChangeListenerPlatform(formatProperty, format -> {
@@ -190,7 +190,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             @Nullable FORMAT format = formatProperty.get();
             if (bt == ButtonType.OK && tableId != null && format != null)
             {
-                return new Pair<>(new ImportInfo(tableId, linkCopyButtons.valueProperty().get()), format);
+                return new Pair<>(new ImportInfo(tableId/*, linkCopyButtons.valueProperty().get()*/), format);
             }
             return null;
         });
