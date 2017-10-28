@@ -13,15 +13,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.function.Count;
-import records.transformations.function.FunctionInstance;
-import records.transformations.function.StringLeft;
-import records.transformations.function.StringLength;
-import records.transformations.function.StringMid;
-import records.transformations.function.StringRight;
-import records.transformations.function.StringTrim;
-import records.transformations.function.StringWithin;
-import records.transformations.function.StringWithinIndex;
+import records.transformations.function.*;
 import test.TestUtil;
 import test.gen.GenRandom;
 import test.gen.GenValueList;
@@ -198,23 +190,28 @@ public class PropStringFunctions
 
     @Property
     @OnThread(Tag.Simulation)
-    public void propContains(@From(UnicodeStringGenerator.class) String target, @From(UnicodeStringGenerator.class) String distractor, @From(GenRandom.class) Random r) throws Throwable
+    public void propContains(@From(UnicodeStringGenerator.class) String target, @From(UnicodeStringGenerator.class) String distractor, @From(UnicodeStringGenerator.class) String replacement, @From(GenRandom.class) Random r) throws Throwable
     {
         if (distractor.contains(target))
             return;
         List<Boolean> targets = new ArrayList<>();
         StringBuilder s = new StringBuilder();
+        StringBuilder replaced = new StringBuilder();
         for (int i = 0; i < r.nextInt(8); i++)
         {
             boolean t = r.nextBoolean();
             targets.add(t);
             s.append(t ? target : distractor);
+            replaced.append(t ? replacement : distractor);
         }
         StringWithin function = new StringWithin();
         StringWithinIndex functionIndex = new StringWithinIndex();
+        FunctionDefinition replaceFunction = new StringReplaceAll();
         @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT), _s -> {}, mgr);
         @Nullable Pair<FunctionInstance, DataType> checkedIndex = functionIndex.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT), _s -> {}, mgr);
-        if (checked == null || checkedIndex == null)
+        @Nullable Pair<FunctionInstance, DataType> checkedReplace = replaceFunction.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT, DataType.TEXT), _s -> {}, mgr);
+
+        if (checked == null || checkedIndex == null || checkedReplace == null)
         {
             fail("Type check failure");
         }
@@ -235,9 +232,11 @@ public class PropStringFunctions
                 index += match ? target.codePointCount(0, target.length()) : distractor.codePointCount(0, distractor.length());
             }
             assertEquals(new ListExList(expectedIndexes), actualIndexes);
-        }
 
-        fail("TODO: test replace(first|all) here, too");
+
+            assertEquals(DataType.TEXT, checkedReplace.getSecond());
+            assertEquals(replaced.toString(), checkedReplace.getFirst().getValue(0, new Object[]{target, replacement, s.toString()}));
+        }
     }
 
     @Property
