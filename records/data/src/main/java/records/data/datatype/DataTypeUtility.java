@@ -34,6 +34,7 @@ import utility.Utility.ListEx;
 import utility.Workers;
 import utility.Workers.Priority;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -298,7 +299,17 @@ public class DataTypeUtility
             @Override
             public String number(NumberInfo numberInfo) throws InternalException, UserException
             {
-                return item.toString();
+                if (item instanceof BigDecimal)
+                {
+                    if (Utility.isIntegral(item))
+                    {
+                        return ((BigDecimal) item).toBigInteger().toString();
+                    }
+                    else
+                        return ((BigDecimal) item).toPlainString();
+                }
+                else
+                    return item.toString();
             }
 
             @Override
