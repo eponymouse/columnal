@@ -138,7 +138,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         assertFalse(dialog.isShowing());
     }
 
-    @Property(trials = 10)
+    @Property(trials = 5)
     @OnThread(Tag.Any)
     public void propAddColumnToEntryTable(@From(GenDataType.class) DataType dataType) throws UserException, InternalException
     {
@@ -366,7 +366,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
         assertFalse(TestUtil.fx(() -> window.isShowing()));
     }
 
-    @Property(trials = 10)
+    @Property(trials = 5)
     @OnThread(Tag.Any)
     public void propDefaultValue(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws InternalException, UserException
     {

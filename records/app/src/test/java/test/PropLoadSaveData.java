@@ -2,6 +2,7 @@ package test;
 
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.junit.runner.RunWith;
 import records.data.Table;
@@ -30,7 +31,7 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class PropLoadSaveData
 {
-    @Property(trials = 30)
+    @Property(trials = 20)
     @OnThread(value = Tag.Simulation, ignoreParent = true)
     public void testImmediate(
             @From(GenTableManager.class) TableManager mgr1,

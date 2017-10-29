@@ -1,5 +1,6 @@
 package records.data;
 
+import annotation.qual.Value;
 import org.antlr.v4.runtime.tree.TerminalNode;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
@@ -8,6 +9,8 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.grammar.DataLexer;
+import records.grammar.DataParser;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
 import records.grammar.FormatParser.ColumnContext;
@@ -66,7 +69,8 @@ public abstract class DataSource extends Table
                 {
                     throw new InternalException("Null default value even though we are editable; should have thrown earlier.");
                 }
-                columns.add(t.makeImmediateColumn(columnId, defaultValueUnparsed));
+                @Value Object defaultValue = Utility.parseAsOne(defaultValueUnparsed, DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(t, p, false));
+                columns.add(t.makeImmediateColumn(columnId, defaultValue));
             }
             LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
             ImmediateDataSource immediateDataSource = new ImmediateDataSource(manager, new TableId(immed.tableId().getText()), recordSet);
