@@ -879,6 +879,19 @@ public class TestUtil
         }
     }
 
+    // Wait.  Useful to stop multiple consecutive clicks turning into double clicks
+    public static void delay(int millis)
+    {
+        try
+        {
+            Thread.sleep(millis);
+        }
+        catch (InterruptedException e)
+        {
+
+        }
+    }
+
     public static interface FXPlatformSupplierEx<T> extends Callable<T>
     {
         @OnThread(value = Tag.FXPlatform, ignoreParent = true)

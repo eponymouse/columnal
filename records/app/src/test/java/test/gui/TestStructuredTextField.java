@@ -46,6 +46,7 @@ import records.gui.stf.STFAutoCompleteCell;
 import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
 import records.gui.stf.TableDisplayUtility;
+import test.TestUtil;
 import test.gen.*;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
@@ -252,7 +253,7 @@ public class TestStructuredTextField extends ApplicationTest
                 throw new RuntimeException(e);
             }
         });
-        delay(500);
+        TestUtil.delay(500);
 
         for (int i = 0; i < 5; i++)
         {
@@ -265,7 +266,7 @@ public class TestStructuredTextField extends ApplicationTest
             });
             if (stf != null)
                 return stf;
-            delay(200);
+            TestUtil.delay(200);
         }
         throw new RuntimeException("Couldn't find STF");
     }
@@ -486,19 +487,6 @@ public class TestStructuredTextField extends ApplicationTest
             {
                 return positions[major][0];
             }
-        }
-    }
-
-    // Wait.  Useful to stop multiple consecutive clicks turning into double clicks
-    private static void delay(int millis)
-    {
-        try
-        {
-            Thread.sleep(millis);
-        }
-        catch (InterruptedException e)
-        {
-
         }
     }
 

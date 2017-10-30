@@ -95,7 +95,12 @@ public class ImmediateDataSource extends DataSource
             {
                 data.insertRows(data.getLength(), appendRowCount);
             });
-        }, null /*TODO*/, (deleteRowFrom, deleteRowCount) -> {
+        }, (rowIndex, insertRowCount) -> {
+            Utility.alertOnError_(() ->
+            {
+                data.insertRows(rowIndex, insertRowCount);
+            });
+        }, (deleteRowFrom, deleteRowCount) -> {
             Utility.alertOnError_(() -> data.removeRows(deleteRowFrom, deleteRowCount));
         });
     }

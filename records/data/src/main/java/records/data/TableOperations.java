@@ -41,8 +41,9 @@ public class TableOperations
         @OnThread(Tag.Simulation)
         public void insertRows(int rowIndex, int count);
 
-        @OnThread(Tag.Simulation)
-        public void pasteRows(int rowIndex, List<Map<ColumnId, String>> content);
+        // TODO
+        //@OnThread(Tag.Simulation)
+        //public void pasteRows(int rowIndex, List<Map<ColumnId, String>> content);
     }
 
     public static interface DeleteRows

@@ -40,6 +40,7 @@ import org.reactfx.value.Val;
 import records.data.ColumnId;
 import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
+import records.data.TableOperations.InsertRows;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
@@ -418,9 +419,42 @@ public class StableView
         List<RowOperation> r = new ArrayList<>();
         if (operations != null)
         {
-            if (operations.deleteRows != null)
+            @NonNull TableOperations ops = this.operations;
+            if (ops.insertRows != null)
             {
-                TableOperations.@NonNull DeleteRows deleteRows = operations.deleteRows;
+                @NonNull InsertRows insertRows = ops.insertRows;
+                r.add(new RowOperation()
+                {
+                    @Override
+                    public @OnThread(Tag.FXPlatform) @LocalizableKey String getNameKey()
+                    {
+                        return "stableView.row.insertBefore";
+                    }
+
+                    @Override
+                    public @OnThread(Tag.Simulation) void execute()
+                    {
+                        insertRows.insertRows(rowIndex, 1);
+                    }
+                });
+                r.add(new RowOperation()
+                {
+                    @Override
+                    public @OnThread(Tag.FXPlatform) @LocalizableKey String getNameKey()
+                    {
+                        return "stableView.row.insertAfter";
+                    }
+
+                    @Override
+                    public @OnThread(Tag.Simulation) void execute()
+                    {
+                        insertRows.insertRows(rowIndex + 1, 1);
+                    }
+                });
+            }
+            if (ops.deleteRows != null)
+            {
+                TableOperations.@NonNull DeleteRows deleteRows = ops.deleteRows;
                 r.add(new RowOperation()
                 {
                     @Override
@@ -438,5 +472,11 @@ public class StableView
             }
         }
         return r;
+    }
+
+
+    public VirtScrollStrTextGrid _test_getGrid()
+    {
+        return grid;
     }
 }

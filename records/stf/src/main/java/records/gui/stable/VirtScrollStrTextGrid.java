@@ -610,6 +610,16 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         }
     }
 
+    public int _test_getFirstLogicalVisibleRowIncl()
+    {
+        return firstVisibleRowIndex;
+    }
+
+    public int _test_getLastLogicalVisibleRowExcl()
+    {
+        return firstVisibleRowIndex + visibleRowCount;
+    }
+
     public static enum ScrollLock
     {
         HORIZONTAL, VERTICAL, BOTH;

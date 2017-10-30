@@ -144,6 +144,14 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         return table;
     }
 
+    public VirtScrollStrTextGrid _test_getGrid()
+    {
+        if (tableDataDisplay != null)
+            return tableDataDisplay._test_getGrid();
+        else
+            throw new RuntimeException("Table "+ getTable().getId() + " is empty");
+    }
+
     @OnThread(Tag.FXPlatform)
     private class TableDataDisplay extends StableView implements RecordSet.RecordSetListener
     {
