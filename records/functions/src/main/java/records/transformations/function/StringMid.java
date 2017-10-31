@@ -3,6 +3,7 @@ package records.transformations.function;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -30,7 +31,7 @@ public class StringMid extends FunctionDefinition
         @Override
         public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
         {
-            Object @Value [] params = Utility.castTuple(param, 3);
+            @Value Object @Value [] params = Utility.castTuple(param, 3);
             String src = Utility.cast(params[0], String.class);
             int codePointStart = Utility.cast(params[1], Integer.class);
             if (codePointStart <= 0)
@@ -44,18 +45,18 @@ public class StringMid extends FunctionDefinition
                 int startIndex = src.offsetByCodePoints(0, codePointStart - 1);
                 try
                 {
-                    return src.substring(startIndex, src.offsetByCodePoints(startIndex, codePointCount));
+                    return DataTypeUtility.value(src.substring(startIndex, src.offsetByCodePoints(startIndex, codePointCount)));
                 }
                 catch (IndexOutOfBoundsException e)
                 {
                     // Failed to find end, just return all chars from startIndex:
-                    return src.substring(startIndex);
+                    return DataTypeUtility.value(src.substring(startIndex));
                 }
             }
             catch (IndexOutOfBoundsException e)
             {
                 // Searching for start index failed, so just return empty string:
-                return "";
+                return DataTypeUtility.value("");
             }
         }
     }

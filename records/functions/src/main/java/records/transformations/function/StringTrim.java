@@ -3,6 +3,7 @@ package records.transformations.function;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -33,7 +34,7 @@ public class StringTrim extends FunctionDefinition
         {
             String src = Utility.cast(param, String.class);
             // From https://stackoverflow.com/a/28295733
-            return src.replaceAll("(^(\\h|[\r\n])*)|((\\h|[\n\r])*$)","");
+            return DataTypeUtility.value(src.replaceAll("(^(\\h|[\r\n])*)|((\\h|[\n\r])*$)",""));
         }
     }
 }

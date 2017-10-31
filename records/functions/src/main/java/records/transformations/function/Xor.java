@@ -32,7 +32,7 @@ public class Xor extends FunctionDefinition
         @Override
         public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
         {
-            Object[] params = Utility.castTuple(param, 2);
+            @Value Object[] params = Utility.castTuple(param, 2);
             return DataTypeUtility.value(Utility.cast(params[0], Boolean.class) ^ Utility.cast(params[1], Boolean.class));
         }
     }

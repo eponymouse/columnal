@@ -3,6 +3,7 @@ package records.transformations.function;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -32,7 +33,7 @@ public class StringLength extends FunctionDefinition
         public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
         {
             @Value String str = Utility.cast(param, String.class);
-            return str.codePointCount(0, str.length());
+            return DataTypeUtility.value(str.codePointCount(0, str.length()));
         }
     }
 }

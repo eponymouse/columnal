@@ -948,7 +948,8 @@ public class Utility
         throw new InternalException("Cannot cast " + x.getClass() + " into " + cls);
     }
 
-    public static Object[] castTuple(@Value Object x, int tupleSize) throws InternalException
+    @SuppressWarnings("value")
+    public static @Value Object @Value [] castTuple(@Value Object x, int tupleSize) throws InternalException
     {
         Object[] tuple = cast(x, Object[].class);
         if (tuple.length != tupleSize)

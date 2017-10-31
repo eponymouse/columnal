@@ -3,6 +3,7 @@ package records.transformations.function;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
+import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -33,10 +34,10 @@ public class StringWithinIndex extends FunctionDefinition
         @Override
         public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
         {
-            Object[] params = Utility.castTuple(param, 2);
+            @Value Object[] params = Utility.castTuple(param, 2);
             @Value String big = Utility.cast(params[1], String.class);
             @Value String small = Utility.cast(params[0], String.class);
-            return new ListEx()
+            return DataTypeUtility.value(new ListEx()
             {
                 private final List<Integer> charIndexes = new ArrayList<>();
                 private final List<Integer> codepointIndexes = new ArrayList<>();
@@ -70,9 +71,9 @@ public class StringWithinIndex extends FunctionDefinition
                     while (index < codepointIndexes.size() && calcNext())
                     {
                     }
-                    return codepointIndexes.get(index);
+                    return DataTypeUtility.value(codepointIndexes.get(index));
                 }
-            };
+            });
         }
     }
 }
