@@ -1019,11 +1019,11 @@ public class DataType
     {
         private final ExBiConsumer<C, V> addToColumn;
         private final ExFunction<DataParser, V> parseValue;
-        private final BiFunctionInt<RecordSet, V, C> makeColumn;
-        private final V defaultValue;
+        private final BiFunctionInt<RecordSet, @Value V, C> makeColumn;
+        private final @Value V defaultValue;
         private @Nullable C column;
 
-        private ColumnMaker(@Value Object defaultValue, Class<V> valueClass, BiFunctionInt<RecordSet, V, C> makeColumn, ExBiConsumer<C, V> addToColumn, ExFunction<DataParser, V> parseValue) throws UserException, InternalException
+        private ColumnMaker(@Value Object defaultValue, Class<V> valueClass, BiFunctionInt<RecordSet, @Value V, C> makeColumn, ExBiConsumer<C, V> addToColumn, ExFunction<DataParser, V> parseValue) throws UserException, InternalException
         {
             this.makeColumn = makeColumn;
             this.addToColumn = addToColumn;
@@ -1160,7 +1160,7 @@ public class DataType
             @OnThread(Tag.Simulation)
             public ColumnMaker<?, ?> tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTupleColumn, @Value Object @Value[]>(defaultValue, Object[].class, (RecordSet rs, @Value Object @Value[] defaultValue) -> new MemoryTupleColumn(rs, columnId, inner, defaultValue), (c, t) -> c.add(t), p -> {
+                return new ColumnMaker<MemoryTupleColumn, @Value Object @Value[]>(defaultValue, (Class<@Value Object @Value[]>)Object[].class, (RecordSet rs, @Value Object @Value[] defaultValue) -> new MemoryTupleColumn(rs, columnId, inner, defaultValue), (c, t) -> c.add(t), p -> {
                     return loadTuple(inner, p, false);
                 });
             }

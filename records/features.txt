@@ -47,3 +47,4 @@ Future Version
  - Lambda functions
  - PRO: More complex Excel import and export
  - PRO: Graphing
+ - PRO: Find and merge similar string items in a column

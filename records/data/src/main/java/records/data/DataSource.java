@@ -69,7 +69,7 @@ public abstract class DataSource extends Table
                 {
                     throw new InternalException("Null default value even though we are editable; should have thrown earlier.");
                 }
-                @Value Object defaultValue = Utility.parseAsOne(defaultValueUnparsed, DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(t, p, false));
+                @Value Object defaultValue = Utility.<@Value Object, DataParser>parseAsOne(defaultValueUnparsed, DataLexer::new, DataParser::new, p -> DataType.loadSingleItem(t, p, false));
                 columns.add(t.makeImmediateColumn(columnId, defaultValue));
             }
             LoadedRecordSet recordSet = new LoadedRecordSet(columns, immed);
