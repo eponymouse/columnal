@@ -111,6 +111,7 @@ public class TestRowOps extends ApplicationTest
         rightClickRowLabel(srcData.getId(), randomRow);
         clickOn(".id-stableView-row-delete");
         TestUtil.delay(500);
+        scrollToRow(calculated.getId(), randomRow);
 
         // There's now several aspects to check:
         // - The row is immediately no longer visible in srcData.
@@ -122,13 +123,15 @@ public class TestRowOps extends ApplicationTest
         {
             // Row should be gone:
             assertNull(findRowLabel(srcData.getId(), randomRow));
+            assertNull(findRowLabel(calculated.getId(), randomRow));
         }
         else
         {
             // Row still there, but data from the row after it:
             checkVisibleRowData(srcData.getId(), randomRow, getRowVals(expressionValue.recordSet, randomRow + 1));
+            checkVisibleRowData(calculated.getId(), randomRow, getRowVals(expressionValue.recordSet, randomRow + 1));
         }
-        //checkVisibleRowData(calculated.getId(), randomRow, getRowVals(expressionValue.recordSet, randomRow + 1));
+        // TODO test the export
     }
 
     @OnThread(Tag.Simulation)
@@ -140,11 +143,11 @@ public class TestRowOps extends ApplicationTest
         // Find the row label.  Should be visible based on previous actions:
         Node rowLabel = findRowLabel(tableId, targetRow);
         if (rowLabel == null)
-            throw new RuntimeException("No row label " + findVisRowLabels(tableId));
+            throw new RuntimeException("No row label " + targetRow + " in " + findVisRowLabels(tableId));
         @NonNull Node rowLabelFinal = rowLabel;
         double rowLabelTop = TestUtil.fx(() -> rowLabelFinal.localToScene(rowLabelFinal.getBoundsInLocal()).getMinY());
-        List<Node> rowCells = lookup(".virt-grid-cell").match(n -> Math.abs(TestUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinY()) - rowLabelTop) <= 3).queryAll().stream().sorted(Comparator.comparing(n -> TestUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinX()))).collect(Collectors.toList());
-        for (int i = 0; i < rowCells.size(); i++)
+        List<Node> rowCells = queryTableDisplay(tableId).lookup(".virt-grid-cell").match(n -> Math.abs(TestUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinY()) - rowLabelTop) <= 3).queryAll().stream().sorted(Comparator.comparing(n -> TestUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinX()))).collect(Collectors.toList());
+        for (int i = 0; i < expected.size(); i++)
         {
             int iFinal = i;
             assertEquals("" + i, DataTypeUtility.valueToString(expected.get(i).getFirst(), expected.get(i).getSecond(), null), TestUtil.fx(() -> ((StructuredTextField)rowCells.get(iFinal)).getText()));
@@ -178,15 +181,21 @@ public class TestRowOps extends ApplicationTest
     @OnThread(Tag.Any)
     private String findVisRowLabels(TableId id)
     {
-        NodeQuery tableDisplay = lookup(".tableDisplay").match(t -> t instanceof TableDisplay && ((TableDisplay) t).getTable().getId().equals(id));
+        NodeQuery tableDisplay = queryTableDisplay(id);
         return tableDisplay.lookup((Node l) -> l instanceof Label).<Label>queryAll().stream().map(l -> TestUtil.fx(() -> l.getText())).sorted().collect(Collectors.joining(", "));
     }
 
     @OnThread(Tag.Any)
     private @Nullable Node findRowLabel(TableId id, int targetRow)
     {
-        NodeQuery tableDisplay = lookup(".tableDisplay").match(t -> t instanceof TableDisplay && ((TableDisplay) t).getTable().getId().equals(id));
+        NodeQuery tableDisplay = queryTableDisplay(id);
         return tableDisplay.lookup((Node l) -> l instanceof Label && TestUtil.fx(() -> ((Label)l).getText()).equals(Integer.toString(targetRow))).query();
+    }
+
+    @OnThread(Tag.Any)
+    private NodeQuery queryTableDisplay(TableId id)
+    {
+        return lookup(".tableDisplay").match(t -> t instanceof TableDisplay && ((TableDisplay) t).getTable().getId().equals(id));
     }
 
     @OnThread(Tag.Any)
