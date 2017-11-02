@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
@@ -58,6 +59,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 @RunWith(JUnitQuickcheck.class)
 public class TestRowOps extends ApplicationTest
@@ -80,10 +82,14 @@ public class TestRowOps extends ApplicationTest
      */
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
-    public void propTestDeleteRow(@From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue, @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
+    public void propTestDeleteRow(
+        @When(seed=-5355460200260233164L) @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue,
+        @When(seed=7745846878156322529L) @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
     {
         if (expressionValue.recordSet.getLength() == 0)
             return; // Can't delete if there's no rows!
+        if (expressionValue.recordSet.getColumns().isEmpty())
+            return; // Likewise if there's no rows
 
         TableManager manager = new DummyManager();
         manager.getTypeManager()._test_copyTaggedTypesFrom(expressionValue.typeManager);
@@ -104,6 +110,7 @@ public class TestRowOps extends ApplicationTest
         scrollToRow(srcData.getId(), randomRow);
         rightClickRowLabel(srcData.getId(), randomRow);
         clickOn(".id-stableView-row-delete");
+        TestUtil.delay(500);
 
         // There's now several aspects to check:
         // - The row is immediately no longer visible in srcData.
@@ -111,7 +118,16 @@ public class TestRowOps extends ApplicationTest
         // - Ditto for calculated
         // - Exporting srcData does not feature the data.
         // - Ditto for calculated
-        checkVisibleRowData(srcData.getId(), randomRow, getRowVals(expressionValue.recordSet, randomRow + 1));
+        if (randomRow == expressionValue.recordSet.getLength() - 1)
+        {
+            // Row should be gone:
+            assertNull(findRowLabel(srcData.getId(), randomRow));
+        }
+        else
+        {
+            // Row still there, but data from the row after it:
+            checkVisibleRowData(srcData.getId(), randomRow, getRowVals(expressionValue.recordSet, randomRow + 1));
+        }
         //checkVisibleRowData(calculated.getId(), randomRow, getRowVals(expressionValue.recordSet, randomRow + 1));
     }
 
@@ -124,7 +140,7 @@ public class TestRowOps extends ApplicationTest
         // Find the row label.  Should be visible based on previous actions:
         Node rowLabel = findRowLabel(tableId, targetRow);
         if (rowLabel == null)
-            throw new RuntimeException("No row label");
+            throw new RuntimeException("No row label " + findVisRowLabels(tableId));
         @NonNull Node rowLabelFinal = rowLabel;
         double rowLabelTop = TestUtil.fx(() -> rowLabelFinal.localToScene(rowLabelFinal.getBoundsInLocal()).getMinY());
         List<Node> rowCells = lookup(".virt-grid-cell").match(n -> Math.abs(TestUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinY()) - rowLabelTop) <= 3).queryAll().stream().sorted(Comparator.comparing(n -> TestUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinX()))).collect(Collectors.toList());
@@ -155,8 +171,15 @@ public class TestRowOps extends ApplicationTest
     {
         Node rowLabel = findRowLabel(id, targetRow);
         if (rowLabel == null)
-            throw new RuntimeException("Row label "+ targetRow + " not found");
+            throw new RuntimeException("Row label "+ targetRow + " not found.  Labels: " + findVisRowLabels(id));
         rightClickOn(rowLabel);
+    }
+
+    @OnThread(Tag.Any)
+    private String findVisRowLabels(TableId id)
+    {
+        NodeQuery tableDisplay = lookup(".tableDisplay").match(t -> t instanceof TableDisplay && ((TableDisplay) t).getTable().getId().equals(id));
+        return tableDisplay.lookup((Node l) -> l instanceof Label).<Label>queryAll().stream().map(l -> TestUtil.fx(() -> l.getText())).sorted().collect(Collectors.joining(", "));
     }
 
     @OnThread(Tag.Any)

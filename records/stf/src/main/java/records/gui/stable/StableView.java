@@ -386,6 +386,15 @@ public class StableView
         return grid.getColumnWidth(columnIndex);
     }
 
+    public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
+    {
+        if (removedRowsCount > 0)
+            grid.removedRows(startRowIncl, removedRowsCount);
+
+        if (addedRowsCount > 0)
+            grid.addedRows(startRowIncl, addedRowsCount);
+    }
+
     @OnThread(Tag.FXPlatform)
     public static interface ColumnHandler
     {
@@ -474,6 +483,28 @@ public class StableView
         return r;
     }
 
+    public static class ScrollPosition
+    {
+        private final int visRow;
+        private final double offset;
+
+        private ScrollPosition(int visRow, double offset)
+        {
+            this.visRow = visRow;
+            this.offset = offset;
+        }
+
+    }
+
+    public ScrollPosition saveScrollPositionFromTop()
+    {
+        return new ScrollPosition(grid.getFirstDisplayRow(), grid.getFirstVisibleRowOffset());
+    }
+
+    public void restoreScrollPositionFromTop(ScrollPosition pos)
+    {
+        grid.showAtOffset(new Pair<>(pos.visRow, pos.offset), null);
+    }
 
     public VirtScrollStrTextGrid _test_getGrid()
     {

@@ -43,6 +43,8 @@ public class VirtRowLabels implements ScrollBindable
         // Declaration only so we can suppress warnings:
         @SuppressWarnings("initialization")
         ScrollLock prev = grid.scrollDependents.put(this, ScrollLock.VERTICAL);
+        FXUtility.addChangeListenerPlatformNN(grid.currentKnownRows(), r -> container.requestLayout());
+        FXUtility.addChangeListenerPlatformNN(grid.heightProperty(), r -> container.requestLayout());
         container.translateYProperty().bind(grid.container.translateYProperty());
         glass = new Pane();
         glass.setMouseTransparent(true);

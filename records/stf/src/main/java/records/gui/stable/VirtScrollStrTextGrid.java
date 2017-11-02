@@ -12,6 +12,7 @@ import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
+import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -612,12 +613,57 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     public int _test_getFirstLogicalVisibleRowIncl()
     {
-        return firstVisibleRowIndex;
+        // This is first row with middle visible, so check for that:
+        if (firstVisibleRowOffset < -rowHeight / 2.0)
+            return firstVisibleRowIndex + 1;
+        else
+            return firstVisibleRowIndex;
     }
 
     public int _test_getLastLogicalVisibleRowExcl()
     {
-        return firstVisibleRowIndex + visibleRowCount;
+        int numVisible = (int)Math.round((double)container.getHeight() / rowHeight);
+        return firstVisibleRowIndex + numVisible;
+    }
+
+    public ObservableValue<Number> currentKnownRows()
+    {
+        return currentKnownRows;
+    }
+
+    public ReadOnlyDoubleProperty heightProperty()
+    {
+        return container.heightProperty();
+    }
+
+    public void removedRows(int startRow, int removedRowsCount)
+    {
+        HashMap<CellPosition, StructuredTextField> oldVis = new HashMap<>(visibleCells);
+        visibleCells.clear();
+        oldVis.forEach((pos, stf) -> {
+            if (pos.rowIndex < startRow)
+                visibleCells.put(pos, stf);
+            else if (pos.rowIndex < startRow + removedRowsCount)
+                spareCells.add(stf);
+            else
+                visibleCells.put(new CellPosition(pos.rowIndex - removedRowsCount, pos.columnIndex), stf);
+        });
+        currentKnownRows.set(currentKnownRows.getValue() - removedRowsCount);
+        container.requestLayout();
+    }
+
+    public void addedRows(int startRow, int addedRowsCount)
+    {
+        HashMap<CellPosition, StructuredTextField> oldVis = new HashMap<>(visibleCells);
+        visibleCells.clear();
+        oldVis.forEach((pos, stf) -> {
+            if (pos.rowIndex < startRow)
+                visibleCells.put(pos, stf);
+            else
+                visibleCells.put(new CellPosition(pos.rowIndex + addedRowsCount, pos.columnIndex), stf);
+        });
+        currentKnownRows.set(currentKnownRows.getValue() + addedRowsCount);
+        container.requestLayout();
     }
 
     public static enum ScrollLock
