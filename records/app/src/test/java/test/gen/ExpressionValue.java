@@ -9,7 +9,7 @@ import records.transformations.expression.Expression;
 import java.util.List;
 
 /**
- * Created by neil on 12/12/2016.
+ * A tuple of: original data, new-expression, new-type and expected-new-value for a record set + calculate-new-column
  */
 public class ExpressionValue
 {

@@ -13,6 +13,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
+import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.hamcrest.Matcher;
@@ -20,6 +21,7 @@ import org.hamcrest.Matchers;
 import org.junit.runner.RunWith;
 import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.service.query.NodeQuery;
+import records.data.Column;
 import records.data.ColumnId;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
@@ -50,6 +52,7 @@ import utility.gui.FXUtility;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +65,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestRowOps extends ApplicationTest
+public class TestRowOps extends ApplicationTest implements CheckCSVTrait
 {
     @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
@@ -131,7 +134,13 @@ public class TestRowOps extends ApplicationTest
             checkVisibleRowData(srcData.getId(), randomRow, getRowVals(expressionValue.recordSet, randomRow + 1));
             checkVisibleRowData(calculated.getId(), randomRow, getRowVals(expressionValue.recordSet, randomRow + 1));
         }
-        // TODO test the export
+        List<Pair<String, List<String>>> expectedSrcContent = new ArrayList<>();
+        for (Column column : srcData.getData().getColumns())
+        {
+            expectedSrcContent.add(new Pair<>(column.getName().getRaw(), CheckCSVTrait.collapse(expressionValue.recordSet.getLength(), column.getType(), randomRow)));
+        }
+        exportToCSVAndCheck(expectedSrcContent, srcData.getId());
+        // TODO check calculated version too
     }
 
     @OnThread(Tag.Simulation)
@@ -157,7 +166,7 @@ public class TestRowOps extends ApplicationTest
     @OnThread(Tag.Simulation)
     private List<Pair<DataType, @Value Object>> getRowVals(RecordSet recordSet, int targetRow)
     {
-        return recordSet.getColumns().stream().map(c -> {
+        return recordSet.getColumns().stream().<Pair<DataType, @Value Object>>map(c -> {
             try
             {
                 return new Pair<DataType, @Value Object>(c.getType(), c.getType().getCollapsed(targetRow));
@@ -219,7 +228,7 @@ public class TestRowOps extends ApplicationTest
         }
         for (int scrolls = 0; targetRow >= TestUtil.fx(() -> grid._test_getLastLogicalVisibleRowExcl()) && scrolls < 100; scrolls++)
         {
-            scroll(VerticalDirection.UP);
+            scroll(VerticalDirection.DOWN);
         }
         // Wait for animated scroll to finish:
         TestUtil.delay(500);

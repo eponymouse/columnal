@@ -56,7 +56,7 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
         name = new TextField();
         name.getStyleClass().add("new-column-name");
         typeSelectionPane = new TypeSelectionPane(tableManager.getTypeManager());
-        defaultValue = (Integer)0;
+        defaultValue = DataTypeUtility.value((Integer)0);
         defaultValueEditor = new StructuredTextField(makeEditorKit(DataType.NUMBER));
         defaultValueEditor.getStyleClass().add("new-column-value");
         Label nameLabel = new Label(TranslationUtility.getString("newcolumn.name"));

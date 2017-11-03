@@ -143,7 +143,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private final SmoothScroller scrollX;
     private final SmoothScroller scrollY;
     private final Pane glass;
-    private StackPane stackPane;
+    private final StackPane stackPane;
     // null if you can't append to this grid:
     private @Nullable FXPlatformConsumer<Integer> appendRow;
 

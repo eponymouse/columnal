@@ -53,7 +53,7 @@ import java.util.stream.Collectors;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(JUnitQuickcheck.class)
-public class TestExportToCSV extends ApplicationTest implements ScrollToTrait
+public class TestExportToCSV extends ApplicationTest implements ScrollToTrait, CheckCSVTrait
 {
     @OnThread(Tag.Any)
     @SuppressWarnings("nullness")
@@ -86,96 +86,13 @@ public class TestExportToCSV extends ApplicationTest implements ScrollToTrait
 
         TestUtil.openDataAsTable(windowToUse, manager);
 
-        // Bring table to front:
-        clickOn("#id-menu-view").clickOn(".id-menu-view-find");
-        write(calculated.getId().getRaw());
-        push(KeyCode.ENTER);
-
-        NodeQuery tableMenuButton = lookup(".tableDisplay").match(t -> t instanceof TableDisplay && ((TableDisplay)t).getTable().getId().equals(calculated.getId())).lookup(".id-tableDisplay-menu-button");
-        scrollTo(tableMenuButton);
-        @SuppressWarnings("nullness") // Will throw if null and fail test, which is fine
-        @NonNull Node button = tableMenuButton.<Node>query();
-        clickOn(button).clickOn(".id-tableDisplay-menu-exportToCSV");
-        WaitForAsyncUtils.waitForFxEvents();
-
-        File destCSV = File.createTempFile("dest", "csv");
-        destCSV.deleteOnExit();
-
-        // Enter file name into first dialog:
-        write(destCSV.getAbsolutePath());
-        push(KeyCode.ENTER);
-
-        /* TODO add and handle options dialog
-        // Press ENTER on second dialog:
-        TestUtil.sleep(200);
-        push(KeyCode.ENTER);
-
-        // Dialog vanishes when export complete:
-        while(lookup(".export-options-window") != null)
-        {
-            TestUtil.sleep(500);
-        }
-        */
-        TestUtil.sleep(2000);
-
-        // Now load CSV and check it:
-        String actualCSV = FileUtils.readFileToString(destCSV, Charset.forName("UTF-8"));
         List<Pair<String, List<String>>> expectedContent = new ArrayList<>();
         for (Column column : expressionValue.recordSet.getColumns())
         {
-            expectedContent.add(new Pair<>(column.getName().getRaw(), collapse(expressionValue.recordSet.getLength(), column.getType())));
+            expectedContent.add(new Pair<>(column.getName().getRaw(), CheckCSVTrait.collapse(expressionValue.recordSet.getLength(), column.getType())));
         }
         expectedContent.add(new Pair<>("Result", Utility.mapListEx(expressionValue.value, o -> DataTypeUtility.valueToString(expressionValue.type, o, null))));
-        assertEquals(toCSV(expectedContent), actualCSV);
-    }
 
-    @OnThread(Tag.Simulation)
-    private List<String> collapse(int length, DataTypeValue type) throws UserException, InternalException
-    {
-        List<String> r = new ArrayList<>();
-        for (int i = 0; i < length; i++)
-        {
-            r.add(DataTypeUtility.valueToString(type, type.getCollapsed(i), null));
-        }
-        return r;
-    }
-
-    @OnThread(Tag.Any)
-    private static String toCSV(List<Pair<String, List<String>>> csvColumns)
-    {
-        Set<Integer> columnLengths = csvColumns.stream().map(p -> p.getSecond().size()).collect(Collectors.toSet());
-        assertEquals("Column length set size (num columns: " + csvColumns.size() + ")", 1, columnLengths.size());
-
-        int length = columnLengths.iterator().next();
-
-        StringBuilder s = new StringBuilder();
-        for (int i = 0; i < csvColumns.size(); i++)
-        {
-            Pair<String, List<String>> csvColumn = csvColumns.get(i);
-            s.append(quoteCSV(csvColumn.getFirst()));
-            if (i < csvColumns.size() - 1)
-                s.append(",");
-        }
-        s.append("\n");
-
-        for (int row = 0; row < length; row++)
-        {
-            for (int i = 0; i < csvColumns.size(); i++)
-            {
-                Pair<String, List<String>> csvColumn = csvColumns.get(i);
-                s.append(quoteCSV(csvColumn.getSecond().get(row)));
-                if (i < csvColumns.size() - 1)
-                    s.append(",");
-            }
-            s.append("\n");
-        }
-
-        return s.toString();
-    }
-
-    @OnThread(Tag.Any)
-    private static String quoteCSV(String original)
-    {
-        return "\"" + original.replace("\"", "\"\"\"") + "\"";
+        exportToCSVAndCheck(expectedContent, calculated.getId());
     }
 }

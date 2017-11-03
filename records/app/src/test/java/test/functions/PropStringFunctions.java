@@ -100,6 +100,16 @@ public class PropStringFunctions
         }
     }
 
+    // Shortcut method
+    private static @Value String v(String s)
+    {
+        return DataTypeUtility.value(s);
+    }
+
+    private static @Value Integer v(int n)
+    {
+        return DataTypeUtility.value(n);
+    }
 
     @Property
     @OnThread(Tag.Simulation)
@@ -118,13 +128,13 @@ public class PropStringFunctions
             // Going beyond length should just return whole string, so go 5 beyond to check:
             for (int i = 0; i <= strCodepoints.length + 5; i++)
             {
-                @Value String actual = (String)checked.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, i}));
+                @Value String actual = (String)checked.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{v(str), v(i)}));
                 assertTrue(str.startsWith(actual));
                 assertEquals(new String(strCodepoints, 0, Math.min(i, strCodepoints.length)), actual);
             }
 
             @Nullable Pair<FunctionInstance, DataType> checkedFinal = checked;
-            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, -1})));
+            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{v(str), v(-1)})));
         }
     }
 
@@ -145,13 +155,13 @@ public class PropStringFunctions
             // Going beyond length should just return whole string, so go 5 beyond to check:
             for (int i = 0; i <= strCodepoints.length + 5; i++)
             {
-                @Value String actual = (String)checked.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, i}));
+                @Value String actual = (String)checked.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{v(str), v(i)}));
                 assertTrue(str.endsWith(actual));
                 assertEquals(new String(strCodepoints, Math.max(0, strCodepoints.length - i), Math.min(i, strCodepoints.length)), actual);
             }
 
             @Nullable Pair<FunctionInstance, DataType> checkedFinal = checked;
-            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, -1})));
+            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{v(str), v(-1)})));
         }
     }
 
@@ -175,16 +185,16 @@ public class PropStringFunctions
                 for (int length = 0; length <= strCodepoints.length + 5 - start; length++)
                 {
                     // Start should be one-based, so we add one when making the call:
-                    @Value String actual = (String) checked.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, start + 1, length}));
+                    @Value String actual = (String) checked.getFirst().getValue(0, DataTypeUtility.value(new Object[]{v(str), v(start + 1), v(length)}));
                     assertTrue(str.contains(actual));
                     assertEquals("From #" + (start + 1) + " for " + length + " in " + strCodepoints.length, new String(strCodepoints, Math.min(start, strCodepoints.length), Math.min(length, Math.max(0, strCodepoints.length - start))), actual);
                 }
             }
 
             @Nullable Pair<FunctionInstance, DataType> checkedFinal = checked;
-            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, -1, 0})));
-            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, 0, -1})));
-            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{str, -1, -1})));
+            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{v(str), v(-1), v(0)})));
+            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{v(str), v(0), v(-1)})));
+            TestUtil.assertUserException(() -> checkedFinal.getFirst().getValue(0, DataTypeUtility.value(new Object[]{v(str), v(-1), v(-1)})));
         }
     }
 
@@ -218,24 +228,24 @@ public class PropStringFunctions
         else
         {
             assertEquals(DataType.BOOLEAN, checked.getSecond());
-            @Value Boolean actualContained = (Boolean) checked.getFirst().getValue(0, DataTypeUtility.value(new Object[]{target, s.toString()}));
+            @Value Boolean actualContained = (Boolean) checked.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{v(target), v(s.toString())}));
             assertEquals(targets.stream().anyMatch(b -> b), actualContained);
 
             assertEquals(DataType.array(DataType.NUMBER), checkedIndex.getSecond());
-            ListEx actualIndexes = (ListEx) checkedIndex.getFirst().getValue(0, DataTypeUtility.value(new Object[]{target, s.toString()}));
-            List<Integer> expectedIndexes = new ArrayList<>();
+            ListEx actualIndexes = (ListEx) checkedIndex.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{v(target), v(s.toString())}));
+            List<@Value Integer> expectedIndexes = new ArrayList<>();
             int index = 0;
             for (Boolean match : targets)
             {
                 if (match)
-                    expectedIndexes.add(index);
+                    expectedIndexes.add(v(index));
                 index += match ? target.codePointCount(0, target.length()) : distractor.codePointCount(0, distractor.length());
             }
             assertEquals(new ListExList(expectedIndexes), actualIndexes);
 
 
             assertEquals(DataType.TEXT, checkedReplace.getSecond());
-            assertEquals(replaced.toString(), checkedReplace.getFirst().getValue(0, new Object[]{target, replacement, s.toString()}));
+            assertEquals(replaced.toString(), checkedReplace.getFirst().getValue(0, DataTypeUtility.value(new @Value Object[]{v(target), v(replacement), v(s.toString())})));
         }
     }
 
