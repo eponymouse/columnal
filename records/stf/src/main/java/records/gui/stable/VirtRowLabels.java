@@ -135,20 +135,21 @@ public class VirtRowLabels implements ScrollBindable
                     {
                         cell = new Label();
                         cell.getStyleClass().add("virt-grid-row-number");
-                        Label newCellFinal = cell;
-                        int rowIndexFinal = rowIndex;
-                        cell.setOnContextMenuRequested(e -> {
-                            ContextMenu menu = new ContextMenu();
-                            menu.getStyleClass().add("virt-grid-menu");
-                            List<MenuItem> menuItems = makeContextMenuItems.apply(rowIndexFinal);
-                            if (!menuItems.isEmpty())
-                            {
-                                menu.getItems().addAll(menuItems);
-                                menu.show(newCellFinal, e.getScreenX(), e.getScreenY());
-                            }
-                        });
                         getChildren().add(cell);
                     }
+
+                    int rowIndexFinal = rowIndex;
+                    Label cellFinal = cell;
+                    cell.setOnContextMenuRequested(e -> {
+                        ContextMenu menu = new ContextMenu();
+                        menu.getStyleClass().add("virt-grid-menu");
+                        List<MenuItem> menuItems = makeContextMenuItems.apply(rowIndexFinal);
+                        if (!menuItems.isEmpty())
+                        {
+                            menu.getItems().addAll(menuItems);
+                            menu.show(cellFinal, e.getScreenX(), e.getScreenY());
+                        }
+                    });
 
                     visibleCells.put(rowIndex, cell);
                     cell.setText("" + rowIndex);

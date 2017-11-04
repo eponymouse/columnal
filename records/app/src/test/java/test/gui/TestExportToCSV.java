@@ -93,6 +93,6 @@ public class TestExportToCSV extends ApplicationTest implements ScrollToTrait, C
         }
         expectedContent.add(new Pair<>("Result", Utility.mapListEx(expressionValue.value, o -> DataTypeUtility.valueToString(expressionValue.type, o, null))));
 
-        exportToCSVAndCheck(expectedContent, calculated.getId());
+        exportToCSVAndCheck("", expectedContent, calculated.getId());
     }
 }

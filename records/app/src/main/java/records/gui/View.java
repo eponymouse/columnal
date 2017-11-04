@@ -398,7 +398,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     private void bringTableDisplayToFront(TableDisplay tableDisplay)
     {
         int index = Utility.indexOfRef(mainPane.getChildren(), tableDisplay);
-        if (index < mainPane.getChildren().size() - 1)
+        if (index >= 0 && index < mainPane.getChildren().size() - 1)
         {
             // The only way to do a re-order in Java 8 is to rearrange the children.
             // Simple thing would be to move the node to the end of the list -- but if a drag has begun

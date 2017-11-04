@@ -19,6 +19,7 @@ import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 
 import java.io.File;
 import java.io.IOException;
@@ -33,7 +34,7 @@ import static org.junit.Assert.assertEquals;
 public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait
 {
     @OnThread(Tag.Simulation)
-    default void exportToCSVAndCheck(List<Pair<String, List<String>>> expected, TableId tableId) throws IOException, UserException, InternalException
+    default void exportToCSVAndCheck(String prefix, List<Pair<String, List<String>>> expected, TableId tableId) throws IOException, UserException, InternalException
     {
         // Bring table to front:
         clickOn("#id-menu-view").clickOn(".id-menu-view-find");
@@ -69,14 +70,14 @@ public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait
 
         // Now load CSV and check it:
         String actualCSV = FileUtils.readFileToString(destCSV, Charset.forName("UTF-8"));
-        assertEquals(toCSV(expected), actualCSV);
+        assertEquals(prefix, toCSV(expected), actualCSV);
     }
 
     @OnThread(Tag.Any)
     static String toCSV(List<Pair<String, List<String>>> csvColumns)
     {
         Set<Integer> columnLengths = csvColumns.stream().map(p -> p.getSecond().size()).collect(Collectors.toSet());
-        assertEquals("Column length set size (num columns: " + csvColumns.size() + ")", 1, columnLengths.size());
+        assertEquals("Column lengths differ (column lengths: " + Utility.listToString(new ArrayList<>(columnLengths)) + ")", 1, columnLengths.size());
 
         int length = columnLengths.iterator().next();
 

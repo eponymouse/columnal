@@ -47,10 +47,12 @@ import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Array;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -60,6 +62,7 @@ import java.util.Random;
 import java.util.Set;
 import java.util.concurrent.ExecutionException;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
@@ -86,8 +89,8 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
     public void propTestDeleteRow(
-        @When(seed=-5355460200260233164L) @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue,
-        @When(seed=7745846878156322529L) @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
+        @From(GenExpressionValueForwards.class) @From(GenExpressionValueBackwards.class) ExpressionValue expressionValue,
+        @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
     {
         if (expressionValue.recordSet.getLength() == 0)
             return; // Can't delete if there's no rows!
@@ -135,12 +138,24 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
             checkVisibleRowData(calculated.getId(), randomRow, getRowVals(expressionValue.recordSet, randomRow + 1));
         }
         List<Pair<String, List<String>>> expectedSrcContent = new ArrayList<>();
+        List<Pair<String, List<String>>> expectedCalcContent = new ArrayList<>();
         for (Column column : srcData.getData().getColumns())
         {
-            expectedSrcContent.add(new Pair<>(column.getName().getRaw(), CheckCSVTrait.collapse(expressionValue.recordSet.getLength(), column.getType(), randomRow)));
+            Pair<String, List<String>> colData = new Pair<>(column.getName().getRaw(), CheckCSVTrait.collapse(expressionValue.recordSet.getLength(), column.getType(), randomRow));
+            expectedSrcContent.add(colData);
+            expectedCalcContent.add(colData);
         }
-        exportToCSVAndCheck(expectedSrcContent, srcData.getId());
-        // TODO check calculated version too
+        ArrayList<String> calcValuesFiltered = new ArrayList<>();
+        for (int i = 0; i < expressionValue.value.size(); i++)
+        {
+            if (i != randomRow)
+            {
+                calcValuesFiltered.add(DataTypeUtility.valueToString(expressionValue.type, expressionValue.value.get(i), null));
+            }
+        }
+        expectedCalcContent.add(new Pair<>("Result", calcValuesFiltered));
+        exportToCSVAndCheck("After deleting " + randomRow, expectedSrcContent, srcData.getId());
+        exportToCSVAndCheck("After deleting " + randomRow, expectedCalcContent, calculated.getId());
     }
 
     @OnThread(Tag.Simulation)
