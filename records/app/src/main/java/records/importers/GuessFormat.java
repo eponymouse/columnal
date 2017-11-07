@@ -18,6 +18,7 @@ import org.fxmisc.richtext.StyleClassedTextArea;
 import org.fxmisc.richtext.model.Paragraph;
 import org.fxmisc.richtext.model.StyleSpans;
 import org.fxmisc.richtext.model.StyledText;
+import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table.Display;
@@ -696,6 +697,21 @@ public class GuessFormat
         {
             ColumnHandler columnHandler = new ColumnHandler()
             {
+                @Override
+                public @OnThread(Tag.FXPlatform) void modifiedDataItems(int startRowIncl, int endRowIncl)
+                {
+                }
+
+                @Override
+                public @OnThread(Tag.FXPlatform) void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
+                {
+                }
+
+                @Override
+                public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
+                {
+                }
+
                 @Override
                 public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
                 {

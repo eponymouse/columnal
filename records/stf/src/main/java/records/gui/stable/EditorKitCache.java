@@ -8,6 +8,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.Column;
 import records.data.Column.ProgressListener;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
@@ -29,7 +30,10 @@ import utility.Workers.Worker;
 import records.gui.stable.StableView.ColumnHandler;
 import utility.gui.TranslationUtility;
 
+import java.util.HashMap;
+import java.util.Map.Entry;
 import java.util.OptionalInt;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 
 /**
@@ -178,6 +182,47 @@ public final class EditorKitCache<V> implements ColumnHandler
             formatVisibleCells.consume(new VisibleDetails(rowIndexUpdated, firstVisibleRowIndexIncl, lastVisibleRowIndexIncl, latestWidth));
         */
     }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) void modifiedDataItems(int startRowIncl, int endRowIncl)
+    {
+        for (int row = startRowIncl; row <= endRowIncl; row++)
+            displayCacheItems.invalidate(row);
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
+    {
+        if (removedRowsCount == 0 && addedRowsCount == 0)
+            return; // Shouldn't be called like this, but if so, nothing to do
+
+        // Take copy:
+        TreeMap<Integer, DisplayCacheItem> prev = new TreeMap<>(displayCacheItems.asMap());
+        @Nullable Entry<Integer, DisplayCacheItem> maxEntry = prev.lastEntry();
+        if (maxEntry == null)
+            return; // If nothing in the map, nothing to do anyway
+        int maxPresent = maxEntry.getKey();
+        // Now we must invalidate/modify previous entries:
+        for (int row = startRowIncl; row < maxPresent; row++)
+        {
+            // Row is invalid at old key, for sure:
+            displayCacheItems.invalidate(row);
+
+            @Nullable DisplayCacheItem prevAtRow = prev.get(row);
+            // We can add back at new pos if it wasn't in the removed section:
+            if (row >= startRowIncl + removedRowsCount && prevAtRow != null)
+            {
+                displayCacheItems.put(row - removedRowsCount + addedRowsCount, prevAtRow);
+            }
+        }
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
+    {
+
+    }
+
 
 
     @OnThread(Tag.Simulation)

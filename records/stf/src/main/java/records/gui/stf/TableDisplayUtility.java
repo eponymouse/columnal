@@ -80,6 +80,21 @@ public class TableDisplayUtility
                     item = new Pair<>(col.getName().getRaw(), new ColumnHandler()
                     {
                         @Override
+                        public @OnThread(Tag.FXPlatform) void modifiedDataItems(int startRowIncl, int endRowIncl)
+                        {
+                        }
+
+                        @Override
+                        public @OnThread(Tag.FXPlatform) void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
+                        {
+                        }
+
+                        @Override
+                        public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
+                        {
+                        }
+
+                        @Override
                         public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
                         {
                             setCellContent.loadedValue(columnIndexFinal, rowIndex, new EditorKitSimpleLabel("Error: " + e.getLocalizedMessage()));

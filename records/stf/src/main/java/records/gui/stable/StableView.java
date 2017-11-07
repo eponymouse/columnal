@@ -38,6 +38,7 @@ import org.reactfx.collection.LiveArrayList;
 import org.reactfx.collection.LiveList;
 import org.reactfx.value.Val;
 import records.data.ColumnId;
+import records.data.RecordSet.RecordSetListener;
 import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
 import records.data.TableOperations.InsertRows;
@@ -388,6 +389,11 @@ public class StableView
 
     public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
     {
+        for (Pair<String, ColumnHandler> column : columns)
+        {
+            column.getSecond().removedAddedRows(startRowIncl, removedRowsCount, addedRowsCount);
+        }
+
         if (removedRowsCount > 0)
             grid.removedRows(startRowIncl, removedRowsCount);
 
@@ -396,7 +402,7 @@ public class StableView
     }
 
     @OnThread(Tag.FXPlatform)
-    public static interface ColumnHandler
+    public static interface ColumnHandler extends RecordSetListener
     {
         // Called to fetch a value.  Once available, receiver should be called.
         // Until then it will be blank.  You can call receiver multiple times though,

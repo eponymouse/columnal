@@ -1,5 +1,6 @@
 package records.gui.stable;
 
+import records.data.Column;
 import records.gui.stable.StableView.ColumnHandler;
 import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
 import records.gui.stf.EditorKitSimpleLabel;
@@ -29,7 +30,21 @@ public abstract class ReadOnlyStringColumnHandler implements ColumnHandler
     @Override
     public void columnResized(double width)
     {
+    }
 
+    @Override
+    public @OnThread(Tag.FXPlatform) void modifiedDataItems(int startRowIncl, int endRowIncl)
+    {
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
+    {
+    }
+
+    @Override
+    public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
+    {
     }
 
     @Override
