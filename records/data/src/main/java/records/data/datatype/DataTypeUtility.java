@@ -315,7 +315,6 @@ public class DataTypeUtility
             @Override
             public String text() throws InternalException, UserException
             {
-                System.err.println("Unescaped:\n" + item.toString());
                 return "\"" + GrammarUtility.escapeChars(item.toString()) + "\"";
             }
 

@@ -31,18 +31,22 @@ import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.DataTypeValue;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.MainWindow;
 import records.gui.TableDisplay;
 import records.gui.stable.VirtScrollStrTextGrid;
 import records.gui.stf.StructuredTextField;
+import records.transformations.Sort;
 import records.transformations.Transform;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.ExpressionValue;
 import test.gen.GenExpressionValueBackwards;
 import test.gen.GenExpressionValueForwards;
+import test.gen.GenImmediateData;
+import test.gen.GenImmediateData.ImmediateData_Mgr;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -66,6 +70,7 @@ import java.util.stream.IntStream;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.fail;
 
 @RunWith(JUnitQuickcheck.class)
 public class TestRowOps extends ApplicationTest implements CheckCSVTrait
@@ -95,7 +100,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         if (expressionValue.recordSet.getLength() == 0)
             return; // Can't delete if there's no rows!
         if (expressionValue.recordSet.getColumns().isEmpty())
-            return; // Likewise if there's no rows
+            return; // Likewise if there's no columns
 
         TableManager manager = new DummyManager();
         manager.getTypeManager()._test_copyTaggedTypesFrom(expressionValue.typeManager);
@@ -158,6 +163,124 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         exportToCSVAndCheck("After deleting " + randomRow, expectedCalcContent, calculated.getId());
     }
 
+    @Property(trials = 10)
+    @OnThread(Tag.Simulation)
+    public void propTestInsertRow(
+        @When(seed=2L) @From(GenImmediateData.class)ImmediateData_Mgr srcDataAndMgr,
+        @When(seed=2L) @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
+    {
+        if (srcDataAndMgr.data.isEmpty() || srcDataAndMgr.data.get(0).getData().getColumns().isEmpty())
+            return; // Can't insert if there's no table or no columns
+
+        TableManager manager = srcDataAndMgr.mgr;
+        Table srcData = srcDataAndMgr.data.get(0);
+        srcData.loadPosition(new BoundingBox(0, 0, 200, 600));
+
+        Column sortBy = srcData.getData().getColumns().get(r.nextInt(srcData.getData().getColumns().size()));
+        Table calculated = new Sort(manager, null, srcData.getId(), ImmutableList.of(sortBy.getName()));
+        calculated.loadPosition(new BoundingBox(250, 0, 200, 600));
+        manager.record(calculated);
+
+        TestUtil.openDataAsTable(windowToUse, manager);
+
+        int targetNewRow = r.nextInt(srcData.getData().getLength() + 1);
+
+        // Can't do insert-after if target is first row. Can't do insert-before if it's last row
+        if (targetNewRow < srcData.getData().getLength() && (targetNewRow == 0 || r.nextBoolean()))
+        {
+            // Let's do insert-before to get the new row
+            scrollToRow(calculated.getId(), targetNewRow);
+            scrollToRow(srcData.getId(), targetNewRow);
+            rightClickRowLabel(srcData.getId(), targetNewRow);
+            clickOn(".id-stableView-row-insertBefore");
+            TestUtil.delay(500);
+        }
+        else
+        {
+            // Insert-after:
+            scrollToRow(calculated.getId(), targetNewRow - 1);
+            scrollToRow(srcData.getId(), targetNewRow - 1);
+            rightClickRowLabel(srcData.getId(), targetNewRow - 1);
+            clickOn(".id-stableView-row-insertAfter");
+            TestUtil.delay(500);
+        }
+
+        // There's now several aspects to check:
+        // - The row now has the default data in srcData.
+        // - Ditto for calculated
+        // - The row after in both cases has the old data
+        // - Exporting srcData does features the new data and the other data moved.
+        // - Ditto for calculated
+
+        // Work out positions in sorted data:
+        int beforeDefault = 0;
+        @Nullable Pair<Integer, @Value Object> firstAfterDefault = null;
+        @Nullable @Value Object sortDefault = sortBy.getDefaultValue();
+        if (sortDefault == null)
+        {
+            fail("Default value null for sortBy column: " + sortBy.getName() + " " + sortBy.getType());
+            return;
+        }
+        for (int i = 0; i < srcData.getData().getLength(); i++)
+        {
+            @Value Object value = sortBy.getType().getCollapsed(i);
+            if (Utility.compareValues(value, sortDefault) < 0)
+            {
+                beforeDefault += 1;
+            }
+            else if (firstAfterDefault == null || Utility.compareValues(value, firstAfterDefault.getSecond()) < 0)
+            {
+                firstAfterDefault = new Pair<>(i, value);
+            }
+        }
+        // Position when sorted is simply the number before it in sort order:
+        int positionPostSort = beforeDefault;
+
+        // TODO check for default data in inserted spot
+
+        scrollToRow(srcData.getId(), targetNewRow - 1);
+        // Row still there, but data from the row after it:
+        checkVisibleRowData(srcData.getId(), targetNewRow + 1, getRowVals(srcData.getData(), targetNewRow));
+        if (firstAfterDefault != null)
+        {
+            scrollToRow(calculated.getId(), beforeDefault + 1);
+            checkVisibleRowData(calculated.getId(), beforeDefault + 1, getRowVals(srcData.getData(), firstAfterDefault.getFirst()));
+        }
+
+
+
+        List<Pair<String, List<String>>> expectedSrcContent = new ArrayList<>();
+        List<Pair<String, List<String>>> expectedCalcContent = new ArrayList<>();
+        for (Column column : srcData.getData().getColumns())
+        {
+            DataTypeValue columnType = column.getType();
+            Pair<String, List<String>> colData = new Pair<>(column.getName().getRaw(), CheckCSVTrait.collapse(srcData.getData().getLength(), columnType));
+            // Add new default data at right point:
+            @Nullable @Value Object defaultValue = column.getDefaultValue();
+            if (defaultValue == null)
+            {
+                fail("Null default value for column " + column.getName().getRaw());
+            }
+            else
+            {
+                String defaultAsString = DataTypeUtility.valueToString(columnType, defaultValue, null);
+                expectedSrcContent.add(colData.mapSecond(d -> {
+                    ArrayList<String> xs = new ArrayList<>(d);
+                    xs.add(targetNewRow, defaultAsString);
+                    return xs;
+                }));
+                expectedCalcContent.add(colData.mapSecond(d -> {
+                    ArrayList<String> xs = new ArrayList<>(d);
+                    xs.add(positionPostSort, defaultAsString);
+                    return xs;
+                }));
+            }
+        }
+        exportToCSVAndCheck("After inserting " + targetNewRow, expectedSrcContent, srcData.getId());
+        // TODO sort expected output
+        //exportToCSVAndCheck("After inserting " + targetNewRow, expectedCalcContent, calculated.getId());
+    }
+
     @OnThread(Tag.Simulation)
     private void checkVisibleRowData(TableId tableId, int targetRow, List<Pair<DataType, @Value Object>> expected) throws InternalException, UserException
     {
@@ -171,10 +294,10 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         @NonNull Node rowLabelFinal = rowLabel;
         double rowLabelTop = TestUtil.fx(() -> rowLabelFinal.localToScene(rowLabelFinal.getBoundsInLocal()).getMinY());
         List<Node> rowCells = queryTableDisplay(tableId).lookup(".virt-grid-cell").match(n -> Math.abs(TestUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinY()) - rowLabelTop) <= 3).queryAll().stream().sorted(Comparator.comparing(n -> TestUtil.fx(() -> n.localToScene(n.getBoundsInLocal()).getMinX()))).collect(Collectors.toList());
-        for (int i = 0; i < expected.size(); i++)
+        for (int i = 0; i < rowCells.size(); i++)
         {
             int iFinal = i;
-            assertEquals("" + i, DataTypeUtility.valueToString(expected.get(i).getFirst(), expected.get(i).getSecond(), null), TestUtil.fx(() -> ((StructuredTextField)rowCells.get(iFinal)).getText()));
+            assertEquals("" + i + ": ", DataTypeUtility.valueToString(expected.get(i).getFirst(), expected.get(i).getSecond(), null), TestUtil.fx(() -> ((StructuredTextField)rowCells.get(iFinal)).getText()));
         }
     }
 
@@ -236,12 +359,12 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         @NonNull Node tableDisplayFinal = tableDisplay;
         VirtScrollStrTextGrid grid = TestUtil.fx(() -> ((TableDisplay)tableDisplayFinal)._test_getGrid());
         moveTo(TestUtil.fx(() -> grid.getNode()));
-        // Avoid infinite loop in case of test failure:
-        for (int scrolls = 0; targetRow < TestUtil.fx(() -> grid._test_getFirstLogicalVisibleRowIncl()) && scrolls < 100; scrolls++)
+        // Avoid infinite loop in case of test failure -- limit amount of scrolls:
+        for (int scrolls = 0; targetRow < TestUtil.fx(() -> grid._test_getFirstLogicalVisibleRowIncl()) && scrolls < targetRow; scrolls++)
         {
             scroll(VerticalDirection.UP);
         }
-        for (int scrolls = 0; targetRow >= TestUtil.fx(() -> grid._test_getLastLogicalVisibleRowExcl()) && scrolls < 100; scrolls++)
+        for (int scrolls = 0; targetRow >= TestUtil.fx(() -> grid._test_getLastLogicalVisibleRowExcl()) && scrolls < targetRow; scrolls++)
         {
             scroll(VerticalDirection.DOWN);
         }
