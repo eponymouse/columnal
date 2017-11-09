@@ -41,6 +41,7 @@ import records.transformations.TransformationManager;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.MustIncludeNumber;
 import test.gen.GenImmediateData.NumTables;
+import test.gen.GenString;
 import test.gen.UnicodeStringGenerator;
 import utility.ExRunnable;
 import utility.FXPlatformRunnable;
@@ -351,8 +352,7 @@ public class TestUtil
         // with things likely to trip up parser
         if (r.nextBoolean() && gs != null)
         {
-            String generated = new UnicodeStringGenerator().generate(r, gs);
-            return generated.replaceAll("[\\x00-\\x1F\\x7F]", "");
+            return new GenString().generate(r, gs);
         }
         else
             return generateIdent(r);
@@ -890,6 +890,16 @@ public class TestUtil
         {
 
         }
+    }
+
+    public static void assertEqualsText(String prefix, String expected, String actual)
+    {
+        assertEquals(prefix + "\nExpected: " + stringAsHexChars(expected) + "\nActual: " + stringAsHexChars(actual), expected, actual);
+    }
+
+    private static String stringAsHexChars(String str)
+    {
+        return str.chars().mapToObj(c -> Integer.toHexString(c) + (c == 10 ? "\n" : "")).collect(Collectors.joining(" "));
     }
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>

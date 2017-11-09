@@ -70,7 +70,7 @@ public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait
 
         // Now load CSV and check it:
         String actualCSV = FileUtils.readFileToString(destCSV, Charset.forName("UTF-8"));
-        assertEquals(prefix, toCSV(expected), actualCSV);
+        TestUtil.assertEqualsText(prefix, toCSV(expected), actualCSV);
     }
 
     @OnThread(Tag.Any)
