@@ -139,8 +139,8 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         else
         {
             // Row still there, but data from the row after it:
-            checkVisibleRowData(srcData.getId(), randomRow, getRowVals(expressionValue.recordSet, randomRow + 1));
-            checkVisibleRowData(calculated.getId(), randomRow, getRowVals(expressionValue.recordSet, randomRow + 1));
+            checkVisibleRowData("", srcData.getId(), randomRow, getRowVals(expressionValue.recordSet, randomRow + 1));
+            checkVisibleRowData("", calculated.getId(), randomRow, getRowVals(expressionValue.recordSet, randomRow + 1));
         }
         List<Pair<String, List<String>>> expectedSrcContent = new ArrayList<>();
         List<Pair<String, List<String>>> expectedCalcContent = new ArrayList<>();
@@ -174,16 +174,17 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
 
         TableManager manager = srcDataAndMgr.mgr;
         Table srcData = srcDataAndMgr.data.get(0);
-        srcData.loadPosition(new BoundingBox(0, 0, 200, 600));
+        srcData.loadPosition(new BoundingBox(0, 0, 300, 600));
 
         Column sortBy = srcData.getData().getColumns().get(r.nextInt(srcData.getData().getColumns().size()));
         Table calculated = new Sort(manager, null, srcData.getId(), ImmutableList.of(sortBy.getName()));
-        calculated.loadPosition(new BoundingBox(250, 0, 200, 600));
+        calculated.loadPosition(new BoundingBox(350, 0, 300, 600));
         manager.record(calculated);
 
         TestUtil.openDataAsTable(windowToUse, manager);
 
         int targetNewRow = r.nextInt(srcData.getData().getLength() + 1);
+        boolean originalWasEmpty = false;
 
         // Can't do insert-after if target is first row. Can't do insert-before if it's last row
         if (targetNewRow < srcData.getData().getLength() && (targetNewRow == 0 || r.nextBoolean()))
@@ -195,7 +196,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
             clickOn(".id-stableView-row-insertBefore");
             TestUtil.delay(500);
         }
-        else
+        else if (targetNewRow > 0)
         {
             // Insert-after:
             scrollToRow(calculated.getId(), targetNewRow - 1);
@@ -203,6 +204,14 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
             rightClickRowLabel(srcData.getId(), targetNewRow - 1);
             clickOn(".id-stableView-row-insertAfter");
             TestUtil.delay(500);
+        }
+        else
+        {
+            TestUtil.delay(2000);
+            // No rows at all: need to click append button
+            clickOn(".id-stableView-append" /*".stable-view-row-append-button"*/);
+            TestUtil.delay(500);
+            originalWasEmpty = true;
         }
 
         // There's now several aspects to check:
@@ -224,7 +233,10 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         for (int i = 0; i < srcData.getData().getLength(); i++)
         {
             @Value Object value = sortBy.getType().getCollapsed(i);
-            if (Utility.compareValues(value, sortDefault) < 0)
+            int cmp = Utility.compareValues(value, sortDefault);
+            // It will be before us if either it is strictly lower, or it is equal
+            // and it started before us.
+            if (cmp < 0 || (i < targetNewRow && cmp == 0))
             {
                 beforeDefault += 1;
             }
@@ -240,11 +252,15 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
 
         scrollToRow(srcData.getId(), targetNewRow - 1);
         // Row still there, but data from the row after it:
-        checkVisibleRowData(srcData.getId(), targetNewRow + 1, getRowVals(srcData.getData(), targetNewRow));
-        if (firstAfterDefault != null)
+        if (!originalWasEmpty)
         {
-            scrollToRow(calculated.getId(), beforeDefault + 1);
-            checkVisibleRowData(calculated.getId(), beforeDefault + 1, getRowVals(srcData.getData(), firstAfterDefault.getFirst()));
+            String prefix = "Sorted by " + sortBy.getName().getRaw() + " inserted at " + targetNewRow + " before default is " + beforeDefault + " first after default " + (firstAfterDefault == null ? "null" : Integer.toString(firstAfterDefault.getFirst())) + ";";
+            checkVisibleRowData(prefix, srcData.getId(), targetNewRow + 1, getRowVals(srcData.getData(), targetNewRow));
+            if (firstAfterDefault != null)
+            {
+                scrollToRow(calculated.getId(), beforeDefault + 1);
+                checkVisibleRowData(prefix, calculated.getId(), positionPostSort + 1, getRowVals(srcData.getData(), firstAfterDefault.getFirst()));
+            }
         }
 
 
@@ -282,7 +298,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
     }
 
     @OnThread(Tag.Simulation)
-    private void checkVisibleRowData(TableId tableId, int targetRow, List<Pair<DataType, @Value Object>> expected) throws InternalException, UserException
+    private void checkVisibleRowData(String prefix, TableId tableId, int targetRow, List<Pair<DataType, @Value Object>> expected) throws InternalException, UserException
     {
         // This is deliberately low-tech.  We really do want to
         // check the visible data on screen, not what the internals
@@ -297,7 +313,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         for (int i = 0; i < rowCells.size(); i++)
         {
             int iFinal = i;
-            assertEquals("" + i + ": ", DataTypeUtility.valueToString(expected.get(i).getFirst(), expected.get(i).getSecond(), null), TestUtil.fx(() -> ((StructuredTextField)rowCells.get(iFinal)).getText()));
+            assertEquals(prefix + " " + i + ": ", DataTypeUtility.valueToString(expected.get(i).getFirst(), expected.get(i).getSecond(), null), TestUtil.fx(() -> ((StructuredTextField)rowCells.get(iFinal)).getText()));
         }
     }
 
