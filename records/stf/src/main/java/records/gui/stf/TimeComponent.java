@@ -36,7 +36,7 @@ public class TimeComponent extends TerminalComponent<@Value TemporalAccessor/*Lo
             int nano = value.get(ChronoField.NANO_OF_SECOND);
             if (nano != 0)
             {
-                initialSecond += "." + String.format("%09d", nano);
+                initialSecond += "." + String.format("%09d", nano).replaceAll("0+$", "");
             }
         }
         else
@@ -87,7 +87,7 @@ public class TimeComponent extends TerminalComponent<@Value TemporalAccessor/*Lo
                 String canonicalSecondText = String.format("%02d", second);
                 if (nano != 0)
                 {
-                    canonicalSecondText += "." + String.format("%09d", nano);
+                    canonicalSecondText += "." + String.format("%09d", nano).replaceAll("0+$", "");
                 }
                 items.set(4, items.get(4).replaceContent(canonicalSecondText));
                 return Either.right(LocalTime.of(hour, minute, second, nano));
