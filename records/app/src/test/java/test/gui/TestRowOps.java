@@ -166,8 +166,8 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
     @Property(trials = 10)
     @OnThread(Tag.Simulation)
     public void propTestInsertRow(
-        @When(seed=2L) @From(GenImmediateData.class)ImmediateData_Mgr srcDataAndMgr,
-        @When(seed=2L) @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
+        @When(seed=3L) @From(GenImmediateData.class)ImmediateData_Mgr srcDataAndMgr,
+        @When(seed=3L) @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
     {
         if (srcDataAndMgr.data.isEmpty() || srcDataAndMgr.data.get(0).getData().getColumns().isEmpty())
             return; // Can't insert if there's no table or no columns
@@ -365,24 +365,26 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
     private void scrollToRow(TableId id, int targetRow)
     {
         // Bring table to front:
-        clickOn("#id-menu-view").clickOn(".id-menu-view-find");
-        write(id.getRaw());
-        push(KeyCode.ENTER);
+        //clickOn("#id-menu-view").clickOn(".id-menu-view-find");
+        //write(id.getRaw());
+        //push(KeyCode.ENTER);
 
         Node tableDisplay = lookup(".tableDisplay").match(t -> t instanceof TableDisplay && ((TableDisplay) t).getTable().getId().equals(id)).query();
         if (tableDisplay == null)
             throw new RuntimeException("Table " + id + " not found");
         @NonNull Node tableDisplayFinal = tableDisplay;
         VirtScrollStrTextGrid grid = TestUtil.fx(() -> ((TableDisplay)tableDisplayFinal)._test_getGrid());
-        moveTo(TestUtil.fx(() -> grid.getNode()));
+        Node cell = from(TestUtil.fx(() -> grid.getNode())).lookup(".virt-grid-cell").<Node>query();
+        if (cell != null)
+            clickOn(cell);
         // Avoid infinite loop in case of test failure -- limit amount of scrolls:
         for (int scrolls = 0; targetRow < TestUtil.fx(() -> grid._test_getFirstLogicalVisibleRowIncl()) && scrolls < targetRow; scrolls++)
         {
-            scroll(VerticalDirection.UP);
+            push(KeyCode.PAGE_UP);
         }
         for (int scrolls = 0; targetRow >= TestUtil.fx(() -> grid._test_getLastLogicalVisibleRowExcl()) && scrolls < targetRow; scrolls++)
         {
-            scroll(VerticalDirection.DOWN);
+            push(KeyCode.PAGE_DOWN);
         }
         // Wait for animated scroll to finish:
         TestUtil.delay(500);

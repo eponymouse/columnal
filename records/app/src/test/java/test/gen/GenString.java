@@ -7,7 +7,7 @@ public class GenString extends AbstractStringGenerator
 {
     protected int nextCodePoint(SourceOfRandomness random) {
         int n = random.nextInt(0x20, 0x10FFFF);
-        if (n == 0x7F || !Character.isDefined(n))
+        if (n == 0x7F || !Character.isDefined(n) || (n >= 0xD800 && n < 0xE0000))
             n = random.nextInt(0x20, 0x7F);
         return n;
     }

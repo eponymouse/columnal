@@ -894,7 +894,17 @@ public class TestUtil
 
     public static void assertEqualsText(String prefix, String expected, String actual)
     {
-        assertEquals(prefix + "\nExpected: " + stringAsHexChars(expected) + "\nActual: " + stringAsHexChars(actual), expected, actual);
+        if (!expected.equals(actual))
+        {
+            String[] expectedLines = expected.split("\n");
+            String[] actualLines = actual.split("\n");
+            for (int i = 0; i < Math.max(expectedLines.length, actualLines.length); i++)
+            {
+                String expectedLine = i < expectedLines.length ? expectedLines[i] : null;
+                String actualLine = i < actualLines.length ? actualLines[i] : null;
+                assertEquals(prefix + "\nExpected line " + i + ": " + (expectedLine == null ? "null" : stringAsHexChars(expectedLine)) + "\nActual: " + (actualLine == null ? "null" : stringAsHexChars(actualLine)), expectedLine, actualLine);
+            }
+        }
     }
 
     private static String stringAsHexChars(String str)

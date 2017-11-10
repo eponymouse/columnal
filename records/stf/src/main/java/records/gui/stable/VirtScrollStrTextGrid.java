@@ -931,6 +931,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 bind(KeyCode.DOWN, c -> c.move(1, 0)),
                 bind(KeyCode.LEFT, c -> c.move(0, -1)),
                 bind(KeyCode.RIGHT, c -> c.move(0, 1)),
+                bind(KeyCode.PAGE_UP, c -> c.move(-((int)Math.floor(c.getHeight() / rowHeight) - 1), 0)),
+                bind(KeyCode.PAGE_DOWN, c -> c.move((int)Math.floor(c.getHeight() / rowHeight) - 1, 0)),
                 InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
                     @Nullable CellPosition focusedCellPosition = focusedCell.get();
                     if (focusedCellPosition != null)
