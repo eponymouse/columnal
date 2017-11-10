@@ -166,8 +166,8 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
     @Property(trials = 10)
     @OnThread(Tag.Any)
     public void propTestInsertRow(
-        @When(seed=3L) @From(GenImmediateData.class)ImmediateData_Mgr srcDataAndMgr,
-        @When(seed=3L) @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
+        @From(GenImmediateData.class)ImmediateData_Mgr srcDataAndMgr,
+        @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
     {
         if (srcDataAndMgr.data.isEmpty() || srcDataAndMgr.data.get(0).getData().getColumns().isEmpty())
             return; // Can't insert if there's no table or no columns
