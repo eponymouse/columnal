@@ -261,4 +261,61 @@ public class Workers
     {
         return Stream.concat(currentlyRunning.stream(), workQueue.stream()).map(WorkInfo::new).collect(ImmutableList.toImmutableList());
     }
+
+    @OnThread(Tag.Any)
+    public static String _test_getCurrentTaskName()
+    {
+        synchronized (currentlyRunning)
+        {
+            if (!currentlyRunning.isEmpty())
+                return currentlyRunning.peek().title;
+        }
+        return "<NONE>";
+    }
+
+    public static boolean _test_isOnWorkerThread()
+    {
+        return Thread.currentThread() == thread;
+    }
+
+    // Runs work until the work queue is empty
+    public static void _test_yield()
+    {
+        while (true)
+        {
+            @Nullable WorkChunk next = null;
+            synchronized (Workers.class)
+            {
+                do
+                {
+                    @Nullable WorkChunk work = workQueue.peek();
+                    if (work == null)
+                    {
+                        return; // Nothing to run
+                    }
+                    else
+                    {
+                        long now = System.currentTimeMillis();
+                        if (now < work.timeReady)
+                        {
+                            try
+                            {
+                                Workers.class.wait(work.timeReady - now);
+                            }
+                            catch (InterruptedException e)
+                            {
+                            }
+                        }
+                        else
+                        {
+                            workQueue.poll();
+                            next = work;
+                        }
+                    }
+                }
+                while (next == null);
+            }
+            run(next);
+        }
+    }
 }

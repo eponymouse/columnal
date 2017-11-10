@@ -113,7 +113,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         calculated.loadPosition(new BoundingBox(250, 0, 200, 600));
         manager.record(calculated);
 
-        TestUtil.openDataAsTable(windowToUse, manager);
+        TestUtil.openDataAsTable(windowToUse, manager).run();
 
         int randomRow = r.nextInt(expressionValue.recordSet.getLength());
 
@@ -164,7 +164,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
     }
 
     @Property(trials = 10)
-    @OnThread(Tag.Simulation)
+    @OnThread(Tag.Any)
     public void propTestInsertRow(
         @When(seed=3L) @From(GenImmediateData.class)ImmediateData_Mgr srcDataAndMgr,
         @When(seed=3L) @From(GenRandom.class) Random r) throws UserException, InternalException, InterruptedException, ExecutionException, InvocationTargetException, IOException
@@ -174,20 +174,29 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
 
         TableManager manager = srcDataAndMgr.mgr;
         Table srcData = srcDataAndMgr.data.get(0);
-        srcData.loadPosition(new BoundingBox(0, 0, 300, 600));
+        TestUtil.sim_(() -> srcData.loadPosition(new BoundingBox(0, 0, 300, 600)));
 
         Column sortBy = srcData.getData().getColumns().get(r.nextInt(srcData.getData().getColumns().size()));
-        Table calculated = new Sort(manager, null, srcData.getId(), ImmutableList.of(sortBy.getName()));
-        calculated.loadPosition(new BoundingBox(350, 0, 300, 600));
-        manager.record(calculated);
+        Table calculated = TestUtil.sim(() -> new Sort(manager, null, srcData.getId(), ImmutableList.of(sortBy.getName())));
+        TestUtil.sim(() -> {
+            calculated.loadPosition(new BoundingBox(350, 0, 300, 600));
+            manager.record(calculated);
+            try
+            {
+                return TestUtil.openDataAsTable(windowToUse, manager);
+            }
+            catch (Exception e)
+            {
+                throw new RuntimeException(e);
+            }
+        }).run();
 
-        TestUtil.openDataAsTable(windowToUse, manager);
-
-        int targetNewRow = r.nextInt(srcData.getData().getLength() + 1);
+        int srcLength = TestUtil.sim(() -> srcData.getData().getLength());
+        int targetNewRow = r.nextInt(srcLength + 1);
         boolean originalWasEmpty = false;
 
         // Can't do insert-after if target is first row. Can't do insert-before if it's last row
-        if (targetNewRow < srcData.getData().getLength() && (targetNewRow == 0 || r.nextBoolean()))
+        if (targetNewRow < srcLength && (targetNewRow == 0 || r.nextBoolean()))
         {
             // Let's do insert-before to get the new row
             scrollToRow(calculated.getId(), targetNewRow);
@@ -224,25 +233,33 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         // Work out positions in sorted data:
         int beforeDefault = 0;
         @Nullable Pair<Integer, @Value Object> firstAfterDefault = null;
-        @Nullable @Value Object sortDefault = sortBy.getDefaultValue();
-        if (sortDefault == null)
+        @Nullable @Value Object sortDefault_ = TestUtil.<@Nullable @Value Object>sim(() -> sortBy.getDefaultValue());
+        if (sortDefault_ == null)
         {
             fail("Default value null for sortBy column: " + sortBy.getName() + " " + sortBy.getType());
             return;
         }
-        for (int i = 0; i < srcData.getData().getLength(); i++)
+        @NonNull @Value Object sortDefault = sortDefault_;
+
+        int newSrcLength = TestUtil.sim(() -> srcData.getData().getLength());
+        for (int i = 0; i < newSrcLength; i++)
         {
-            @Value Object value = sortBy.getType().getCollapsed(i);
-            int cmp = Utility.compareValues(value, sortDefault);
+            int iFinal = i;
+            @Value Object value = TestUtil.sim(() -> sortBy.getType().getCollapsed(iFinal));
+            int cmp = TestUtil.sim(() -> Utility.compareValues(value, sortDefault));
             // It will be before us if either it is strictly lower, or it is equal
             // and it started before us.
             if (cmp < 0 || (i < targetNewRow && cmp == 0))
             {
                 beforeDefault += 1;
             }
-            else if (firstAfterDefault == null || Utility.compareValues(value, firstAfterDefault.getSecond()) < 0)
+            else
             {
-                firstAfterDefault = new Pair<>(i, value);
+                @Nullable Pair<Integer, Object> curFirstAfterDefault = firstAfterDefault;
+                if (TestUtil.sim(() -> curFirstAfterDefault == null || Utility.compareValues(value, curFirstAfterDefault.getSecond()) < 0))
+                {
+                    firstAfterDefault = new Pair<>(i, value);
+                }
             }
         }
         // Position when sorted is simply the number before it in sort order:
@@ -251,15 +268,17 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         // TODO check for default data in inserted spot
 
         scrollToRow(srcData.getId(), targetNewRow - 1);
+        TestUtil.sleep(1000);
         // Row still there, but data from the row after it:
-        if (!originalWasEmpty)
+        if (targetNewRow < newSrcLength)
         {
             String prefix = "Sorted by " + sortBy.getName().getRaw() + " inserted at " + targetNewRow + " before default is " + beforeDefault + " first after default " + (firstAfterDefault == null ? "null" : Integer.toString(firstAfterDefault.getFirst())) + ";";
-            checkVisibleRowData(prefix, srcData.getId(), targetNewRow + 1, getRowVals(srcData.getData(), targetNewRow));
+            TestUtil.sim_(() -> checkVisibleRowData(prefix, srcData.getId(), targetNewRow + 1, getRowVals(srcData.getData(), targetNewRow)));
             if (firstAfterDefault != null)
             {
                 scrollToRow(calculated.getId(), beforeDefault + 1);
-                checkVisibleRowData(prefix, calculated.getId(), positionPostSort + 1, getRowVals(srcData.getData(), firstAfterDefault.getFirst()));
+                Pair<Integer, Object> firstAfterDefaultFinal = firstAfterDefault;
+                TestUtil.sim_(() -> checkVisibleRowData(prefix, calculated.getId(), positionPostSort + 1, getRowVals(srcData.getData(), firstAfterDefaultFinal.getFirst())));
             }
         }
 
@@ -270,16 +289,17 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         for (Column column : srcData.getData().getColumns())
         {
             DataTypeValue columnType = column.getType();
-            Pair<String, List<String>> colData = new Pair<>(column.getName().getRaw(), CheckCSVTrait.collapse(srcData.getData().getLength(), columnType));
+            Pair<String, List<String>> colData = new Pair<>(column.getName().getRaw(), TestUtil.sim(() -> CheckCSVTrait.collapse(srcData.getData().getLength(), columnType)));
             // Add new default data at right point:
-            @Nullable @Value Object defaultValue = column.getDefaultValue();
-            if (defaultValue == null)
+            @Nullable @Value Object defaultValue_ = TestUtil.<@Nullable @Value Object>sim(() -> column.getDefaultValue());
+            if (defaultValue_ == null)
             {
                 fail("Null default value for column " + column.getName().getRaw());
             }
             else
             {
-                String defaultAsString = DataTypeUtility.valueToString(columnType, defaultValue, null);
+                @NonNull @Value Object defaultValue = defaultValue_;
+                String defaultAsString = TestUtil.sim(() -> DataTypeUtility.valueToString(columnType, defaultValue, null));
                 expectedSrcContent.add(colData.mapSecond(d -> {
                     ArrayList<String> xs = new ArrayList<>(d);
                     xs.add(targetNewRow, defaultAsString);
@@ -292,9 +312,19 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
                 }));
             }
         }
-        exportToCSVAndCheck("After inserting " + targetNewRow, expectedSrcContent, srcData.getId());
-        // TODO sort expected output
-        //exportToCSVAndCheck("After inserting " + targetNewRow, expectedCalcContent, calculated.getId());
+        TestUtil.sim_(() -> {
+            try
+            {
+                exportToCSVAndCheck("After inserting " + targetNewRow, expectedSrcContent, srcData.getId());
+            }
+            catch (IOException e)
+            {
+                throw new RuntimeException(e);
+            }
+        });
+                // TODO sort expected output
+                //exportToCSVAndCheck("After inserting " + targetNewRow, expectedCalcContent, calculated.getId());
+
     }
 
     @OnThread(Tag.Simulation)

@@ -84,7 +84,7 @@ public class TestExportToCSV extends ApplicationTest implements ScrollToTrait, C
         Table calculated = new Transform(manager, null, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
         manager.record(calculated);
 
-        TestUtil.openDataAsTable(windowToUse, manager);
+        TestUtil.openDataAsTable(windowToUse, manager).run();
 
         List<Pair<String, List<String>>> expectedContent = new ArrayList<>();
         for (Column column : expressionValue.recordSet.getColumns())

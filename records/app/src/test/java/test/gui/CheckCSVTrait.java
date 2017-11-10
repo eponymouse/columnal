@@ -20,6 +20,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.Workers;
 
 import java.io.File;
 import java.io.IOException;
@@ -66,7 +67,13 @@ public interface CheckCSVTrait extends FxRobotInterface, ScrollToTrait
             TestUtil.sleep(500);
         }
         */
-        TestUtil.sleep(2000);
+        if (Workers._test_isOnWorkerThread())
+        {
+            WaitForAsyncUtils.waitForFxEvents();
+            Workers._test_yield();
+        }
+        else
+            TestUtil.sleep(2000);
 
         // Now load CSV and check it:
         String actualCSV = FileUtils.readFileToString(destCSV, Charset.forName("UTF-8"));

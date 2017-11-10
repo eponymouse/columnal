@@ -56,7 +56,7 @@ public class TestFilter extends ApplicationTest implements ListUtilTrait, Scroll
             @When(seed=9064559552451687290L) @From(GenRandom.class) Random r) throws IOException, InterruptedException, ExecutionException, InvocationTargetException, InternalException, UserException
     {
         // Save the table, then open GUI and load it, then add a filter transformation (rename to keeprows)
-        TestUtil.openDataAsTable(windowToUse, original.mgr);
+        TestUtil.openDataAsTable(windowToUse, original.mgr).run();
         clickOn(".id-tableDisplay-menu-button").clickOn(".id-tableDisplay-menu-addTransformation");
         selectGivenListViewItem(lookup(".transformation-list").query(), (TransformationInfo ti) -> ti.getDisplayName().toLowerCase().matches("filter.*"));
         // Then enter filter condition.

@@ -43,11 +43,7 @@ import test.gen.GenImmediateData.MustIncludeNumber;
 import test.gen.GenImmediateData.NumTables;
 import test.gen.GenString;
 import test.gen.UnicodeStringGenerator;
-import utility.ExRunnable;
-import utility.FXPlatformRunnable;
-import utility.SimulationRunnable;
-import utility.SimulationSupplier;
-import utility.TaggedValue;
+import utility.*;
 import records.data.Transformation;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -68,11 +64,7 @@ import test.gen.GenNumber;
 import test.gen.GenZoneId;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.ExSupplier;
-import utility.Pair;
-import utility.Utility;
 import utility.Utility.ListEx;
-import utility.Workers;
 import utility.Workers.Priority;
 
 import java.io.File;
@@ -89,6 +81,7 @@ import java.util.concurrent.Callable;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.TimeoutException;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -619,18 +612,22 @@ public class TestUtil
     {
         try
         {
-            CompletableFuture<T> f = new CompletableFuture<>();
-            Workers.onWorkerThread("Test.sim", Priority.FETCH, () -> {
+            CompletableFuture<Either<Throwable, T>> f = new CompletableFuture<>();
+            Workers.onWorkerThread("Test.sim " + Thread.currentThread().getStackTrace()[2].getClassName() + "." + Thread.currentThread().getStackTrace()[2].getMethodName() + ":" + Thread.currentThread().getStackTrace()[2].getLineNumber(), Priority.FETCH, () -> {
                 try
                 {
-                    f.complete(action.get());
+                    f.complete(Either.right(action.get()));
                 }
-                catch (Exception e)
+                catch (Throwable e)
                 {
-                    Utility.log(e);
+                    f.complete(Either.left(e));
                 }
             });
-            return f.get(10, TimeUnit.SECONDS);
+            return f.get(60, TimeUnit.SECONDS).either(e -> {throw new RuntimeException(e);}, x -> x);
+        }
+        catch (TimeoutException e)
+        {
+            throw new RuntimeException(Workers._test_getCurrentTaskName(), e);
         }
         catch (Exception e)
         {
@@ -643,19 +640,23 @@ public class TestUtil
     {
         try
         {
-            CompletableFuture<Object> f = new CompletableFuture<>();
-            Workers.onWorkerThread("Test.sim", Priority.FETCH, () -> {
+            CompletableFuture<Either<Throwable, Object>> f = new CompletableFuture<>();
+            Workers.onWorkerThread("Test.sim_ " + Thread.currentThread().getStackTrace()[2].getClassName() + "." + Thread.currentThread().getStackTrace()[2].getMethodName() + ":" + Thread.currentThread().getStackTrace()[2].getLineNumber(), Priority.FETCH, () -> {
                 try
                 {
                     action.run();
-                    f.complete(new Object());
+                    f.complete(Either.right(new Object()));
                 }
-                catch (Exception e)
+                catch (Throwable e)
                 {
-                    Utility.log(e);
+                    f.complete(Either.left(e));
                 }
             });
-            f.get(3, TimeUnit.SECONDS);
+            f.get(60, TimeUnit.SECONDS).either_(e -> {throw new RuntimeException(e);}, x -> {});
+        }
+        catch (TimeoutException e)
+        {
+            throw new RuntimeException(Workers._test_getCurrentTaskName(), e);
         }
         catch (Exception e)
         {
@@ -797,6 +798,7 @@ public class TestUtil
      * IMPORTANT: we say Simulation thread to satisfy thread-checker, but don't call it from the actual
      * simultation thread or it will time out!  Just tag yours as simulation, too.
      *
+     * Returns a runnable which will wait for the table to load
      *
      * @param windowToUse
      * @param mgr
@@ -806,19 +808,21 @@ public class TestUtil
      * @throws InvocationTargetException
      */
     @OnThread(Tag.Simulation)
-    public static void openDataAsTable(Stage windowToUse, TableManager mgr) throws IOException, InterruptedException, ExecutionException, InvocationTargetException
+    public static Runnable openDataAsTable(Stage windowToUse, TableManager mgr) throws IOException, InterruptedException, ExecutionException, InvocationTargetException
     {
         File temp = File.createTempFile("srcdata", "tables");
         temp.deleteOnExit();
         String saved = save(mgr);
         System.out.println("Saving: {{{" + saved + "}}}");
         Platform.runLater(() -> checkedToRuntime_(() -> MainWindow.show(windowToUse, temp, new Pair<>(temp, saved))));
-        do
-        {
-            //System.err.println("Waiting for main window");
-            sleep(1000);
-        }
-        while (fx(() -> windowToUse.getScene().lookup(".id-tableDisplay-menu-button")) == null);
+        return () -> {
+            do
+            {
+                //System.err.println("Waiting for main window");
+                sleep(1000);
+            }
+            while (fx(() -> windowToUse.getScene().lookup(".id-tableDisplay-menu-button")) == null);
+        };
     }
 
     // WOuld be nice to get this working, but doesn't currently work
@@ -843,7 +847,7 @@ public class TestUtil
         {
             manager.getTypeManager()._test_copyTaggedTypesFrom(typeManager);
         }
-        openDataAsTable(windowToUse, manager);
+        openDataAsTable(windowToUse, manager).run();
     }
 
     // Makes something which could be an unfinished expression.  Can't have operators, can't start with a number.
