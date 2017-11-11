@@ -33,7 +33,7 @@ public class DummyManager extends TableManager
         super(TransformationManager.getInstance(), new TableManagerListener()
         {
             @Override
-            public void removeTable(Table t)
+            public void removeTable(Table t, int remainingCount)
             {
 
             }

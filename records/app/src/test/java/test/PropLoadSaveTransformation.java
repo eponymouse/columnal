@@ -105,7 +105,7 @@ public class PropLoadSaveTransformation
             {
                 File tempFile = File.createTempFile("rec", "tmp");
                 tempFile.deleteOnExit();
-                view = new View(() -> {}, tempFile);
+                view = new View(() -> {}, tempFile, empty -> {});
             }
             catch (InternalException | UserException | IOException e)
             {

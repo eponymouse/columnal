@@ -105,6 +105,8 @@ public class View extends StackPane implements TableManager.TableManagerListener
     private @Nullable EditTransformationDialog currentlyShowingEditTransformationDialog;
 
     private final ObservableList<Line> snapGuides = FXCollections.observableArrayList();
+    // Pass true when empty
+    private final FXPlatformConsumer<Boolean> emptyListener;
 
     private void save()
     {
@@ -171,13 +173,14 @@ public class View extends StackPane implements TableManager.TableManagerListener
 
     @Override
     @OnThread(Tag.Simulation)
-    public void removeTable(Table t)
+    public void removeTable(Table t, int remainingCount)
     {
         Platform.runLater(() ->
         {
             save();
             overlays.remove(t); // Listener removes them from display
             mainPane.getChildren().remove(t.getDisplay());
+            emptyListener.consume(remainingCount == 0);
         });
     }
 
@@ -491,8 +494,9 @@ public class View extends StackPane implements TableManager.TableManagerListener
 
     // The type of the listener really throws off the checkers so suppress them all:
     @SuppressWarnings({"initialization", "keyfor", "interning", "userindex", "valuetype", "helpfile"})
-    public View(FXPlatformRunnable adjustParent, File location) throws InternalException, UserException
+    public View(FXPlatformRunnable adjustParent, File location, FXPlatformConsumer<Boolean> emptyListener) throws InternalException, UserException
     {
+        this.emptyListener = emptyListener;
         this.adjustParent = adjustParent;
         diskFile = new SimpleObjectProperty<>(location);
         tableManager = new TableManager(TransformationManager.getInstance(), this);
@@ -584,6 +588,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     public void addSource(DataSource data)
     {
         Platform.runLater(() -> {
+            emptyListener.consume(false);
             addDisplay(new TableDisplay(this, data), null);
             save();
         });
@@ -595,6 +600,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     {
         Platform.runLater(() ->
         {
+            emptyListener.consume(false);
             TableDisplay tableDisplay = new TableDisplay(this, transformation);
             addDisplay(tableDisplay, getTableDisplayOrNull(transformation.getSources().get(0)));
 

@@ -1,3 +1,5 @@
+@import 'colors';
+
 /* The window-like wrapper around a table view */
 .table-wrapper {
     -fx-border-color: gray;
@@ -40,4 +42,8 @@
     -fx-stroke-width: 5;
     -fx-stroke-dash-array: 12 16;
     -fx-stroke-line-cap: round;
+}
+.main-empty-hint {
+    -fx-text-fill: grey(40%);
+    -fx-font-size: 20pt;
 }

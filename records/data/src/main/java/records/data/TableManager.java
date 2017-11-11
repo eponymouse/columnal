@@ -331,6 +331,7 @@ public class TableManager
     private void removeAndSerialise(TableId tableId, Saver then)
     {
         Table removed = null;
+        int remainingCount;
         synchronized (this)
         {
             for (Iterator<DataSource> iterator = sources.iterator(); iterator.hasNext(); )
@@ -344,6 +345,7 @@ public class TableManager
                 }
             }
             if (removed == null)
+            {
                 for (Iterator<Transformation> iterator = transformations.iterator(); iterator.hasNext(); )
                 {
                     Transformation t = iterator.next();
@@ -355,10 +357,13 @@ public class TableManager
                         break;
                     }
                 }
+            }
+
+            remainingCount = sources.size() + transformations.size();
         }
         if (removed != null)
         {
-            listener.removeTable(removed);
+            listener.removeTable(removed, remainingCount);
             removed.save(null, then);
         }
     }
@@ -403,7 +408,7 @@ public class TableManager
 
     public static interface TableManagerListener
     {
-        public void removeTable(Table t);
+        public void removeTable(Table t, int tablesRemaining);
 
         public void addSource(DataSource dataSource);
 

@@ -9,6 +9,7 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.control.ScrollPane.ScrollBarPolicy;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.apache.commons.io.FileUtils;
@@ -59,7 +60,12 @@ public class MainWindow
     {
         ScrollPaneFill scrollPane = new ScrollPaneFill();
 
-        View v = new View(scrollPane::fillWidth, destinationFile);
+        Label emptyMessage = new Label(TranslationUtility.getString("main.emptyHint"));
+        emptyMessage.getStyleClass().add("main-empty-hint");
+        emptyMessage.setWrapText(true);
+        emptyMessage.setMaxWidth(400.0);
+
+        View v = new View(scrollPane::fillWidth, destinationFile, emptyMessage::setVisible);
         stage.titleProperty().bind(v.titleProperty());
         views.put(v, stage);
         stage.setOnHidden(e -> {
@@ -83,8 +89,8 @@ public class MainWindow
             ),
             GUI.menu("menu.data",
                 GUI.menuItem("menu.data.new", () -> newTable(v)),
-                GUI.menuItem("menu.data.import.file", () -> chooseAndImportFile(v, stage)),
-                GUI.menuItem("menu.data.import.link", () -> chooseAndImportLink(v, stage))
+                GUI.menuItem("menu.data.import.file", () -> chooseAndImportFile(v, stage))
+                //GUI.menuItem("menu.data.import.link", () -> chooseAndImportLink(v, stage))
             ),
             GUI.menu("menu.view",
                 GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait()),
@@ -120,7 +126,7 @@ public class MainWindow
         scrollPane.setHbarPolicy(ScrollBarPolicy.AS_NEEDED);
         scrollPane.setVbarPolicy(ScrollBarPolicy.AS_NEEDED);
 
-        BorderPane root = new BorderPane(scrollPane, menuBar, null, null, null);
+        BorderPane root = new BorderPane(new StackPane(scrollPane, emptyMessage), menuBar, null, null, null);
         Scene scene = new Scene(root);
         scene.getStylesheets().addAll(FXUtility.getSceneStylesheets("mainview.css"));
         stage.setScene(scene);
