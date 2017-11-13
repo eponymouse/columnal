@@ -521,4 +521,11 @@ public class Filter extends TransformationEditable
         result = 31 * result + filterExpression.hashCode();
         return result;
     }
+
+    @Override
+    @OnThread(Tag.Any)
+    public Table.MessageWhenEmpty getDisplayMessageWhenEmpty()
+    {
+        return new MessageWhenEmpty("table.transformation.noColumns", "table.filter.noRows");
+    }
 }

@@ -39,6 +39,7 @@ import org.reactfx.collection.LiveList;
 import org.reactfx.value.Val;
 import records.data.ColumnId;
 import records.data.RecordSet.RecordSetListener;
+import records.data.Table.MessageWhenEmpty;
 import records.data.TableOperations;
 import records.data.TableOperations.AppendRows;
 import records.data.TableOperations.InsertRows;
@@ -130,6 +131,7 @@ public class StableView
     private static final double MIN_COLUMN_WIDTH = 30;
     // A column is only editable if it is marked editable AND the table is editable:
     private boolean tableEditable = true;
+    private final MessageWhenEmpty messageWhenEmpty;
     private final ScrollBar hbar;
     private final ScrollBar vbar;
 
@@ -137,8 +139,10 @@ public class StableView
     private final SimpleBooleanProperty nonEmptyProperty = new SimpleBooleanProperty(false);
 
 
-    public StableView()
+    public StableView(MessageWhenEmpty messageWhenEmpty)
     {
+        this.messageWhenEmpty = messageWhenEmpty;
+
         hbar = new ScrollBar();
         hbar.setOrientation(Orientation.HORIZONTAL);
         hbar.getStyleClass().add("stable-view-scroll-bar");
@@ -191,9 +195,10 @@ public class StableView
         lineNumberWrapper.setPickOnBounds(false);
         lineNumberWrapper.getStyleClass().add("stable-view-side");
         lineNumberWrapper.visibleProperty().bind(nonEmptyProperty);
-        placeholder = new Label("<Empty>");
+        placeholder = new Label(messageWhenEmpty.getDisplayMessageNoColumns());
         placeholder.getStyleClass().add(".stable-view-placeholder");
         placeholder.visibleProperty().bind(nonEmptyProperty.not());
+        placeholder.setWrapText(true);
         
         Button topButton = makeScrollEndButton();
         topButton.getStyleClass().addAll("stable-view-button", "stable-view-button-top");
@@ -316,6 +321,8 @@ public class StableView
         final int curColumnAndRowSet = this.columnAndRowSet.incrementAndGet();
         this.operations = operations;
         this.columns = columns;
+
+        placeholder.setText(columns.isEmpty() ? messageWhenEmpty.getDisplayMessageNoColumns() : messageWhenEmpty.getDisplayMessageNoRows());
 
         nonEmptyProperty.set(!columns.isEmpty());
 

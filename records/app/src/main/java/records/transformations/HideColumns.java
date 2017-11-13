@@ -291,4 +291,11 @@ public class HideColumns extends TransformationEditable
         result = 31 * result + hideIds.hashCode();
         return result;
     }
+
+    @Override
+    @OnThread(Tag.Any)
+    public Table.MessageWhenEmpty getDisplayMessageWhenEmpty()
+    {
+        return new MessageWhenEmpty("table.hideColumns.noColumns", "table.transformation.noRows");
+    }
 }

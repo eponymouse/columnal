@@ -5,6 +5,8 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -21,6 +23,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
+import utility.gui.TranslationUtility;
 
 import javax.validation.constraints.NotNull;
 import java.io.File;
@@ -348,6 +351,35 @@ public abstract class Table
 
     @OnThread(Tag.Any)
     public abstract TableOperations getOperations();
+
+    /** Message to show when the table has no columns or no rows */
+    @OnThread(Tag.Any)
+    public abstract MessageWhenEmpty getDisplayMessageWhenEmpty();
+
+    @OnThread(Tag.Any)
+    public static class MessageWhenEmpty
+    {
+        private final @Localized String noColumns;
+        private final @Localized String noRows;
+
+        public MessageWhenEmpty(@LocalizableKey String noColumnsKey, @LocalizableKey String noRowsKey)
+        {
+            this.noColumns = TranslationUtility.getString(noColumnsKey);
+            this.noRows = TranslationUtility.getString(noRowsKey);
+        }
+
+        /** Message to show when the table has no columns */
+        public @Localized String getDisplayMessageNoColumns()
+        {
+            return noColumns;
+        }
+
+        /** Message to show when the table has no rows */
+        public @Localized String getDisplayMessageNoRows()
+        {
+            return noRows;
+        }
+    }
 
     @OnThread(Tag.Any)
     protected TableManager getManager()

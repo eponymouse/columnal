@@ -30,6 +30,7 @@ import org.testfx.framework.junit.ApplicationTest;
 import org.testfx.util.WaitForAsyncUtils;
 import records.data.ColumnId;
 import records.data.EditableRecordSet;
+import records.data.Table.MessageWhenEmpty;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -118,7 +119,7 @@ public class TestStructuredTextField extends ApplicationTest
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void start(Stage stage) throws Exception
     {
-        stableView = new StableView();
+        stableView = new StableView(new MessageWhenEmpty("", ""));
         dummy = new TextField();
         Scene scene = new Scene(new VBox(dummy, stableView.getNode()));
         stage.setScene(scene);

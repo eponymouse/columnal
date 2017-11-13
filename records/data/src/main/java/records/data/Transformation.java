@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -120,5 +121,12 @@ public abstract class Transformation extends Table
     public void addColumn(String newColumnName, DataType newColumnType, @Value Object newColumnValue) throws InternalException
     {
         throw new InternalException("Called addColumn despite showAddColumnButton returning false for type " + getClass());
+    }
+
+    @Override
+    @OnThread(Tag.Any)
+    public Table.MessageWhenEmpty getDisplayMessageWhenEmpty()
+    {
+        return new MessageWhenEmpty("table.transformation.noColumns", "table.transformation.noRows");
     }
 }

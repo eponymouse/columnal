@@ -33,6 +33,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.RecordSet;
 import records.data.Table.Display;
+import records.data.Table.MessageWhenEmpty;
 import records.data.TableId;
 import records.data.TableManager;
 import records.data.datatype.TypeManager;
@@ -90,9 +91,9 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
 
     public ImportChoicesDialog(TableManager mgr, String suggestedName, ChoicePoint<?, FORMAT> choicePoints, SimulationFunction<FORMAT, ? extends @Nullable RecordSet> loadData, SimulationFunction<Choices, @Nullable SourceInfo> srcData)
     {
-        StableView tableView = new StableView();
+        StableView tableView = new StableView(new MessageWhenEmpty("import.noColumnsDest", "import.noRowsDest"));
         tableView.setEditable(false);
-        StableView srcTableView = new StableView();
+        StableView srcTableView = new StableView(new MessageWhenEmpty("import.noColumnsSrc", "import.noRowsSrc"));
         srcTableView.getNode().addEventFilter(ScrollEvent.ANY, se -> {
             tableView.forwardedScrollEvent(se, ScrollLock.VERTICAL);
             srcTableView.forwardedScrollEvent(se, ScrollLock.HORIZONTAL);

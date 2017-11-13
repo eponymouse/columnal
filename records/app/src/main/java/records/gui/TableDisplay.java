@@ -43,6 +43,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.Table.Display;
+import records.data.Table.MessageWhenEmpty;
 import records.data.Table.TableDisplayBase;
 import records.data.TableId;
 import records.data.TableManager;
@@ -162,9 +163,9 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
         @SuppressWarnings("initialization")
         @UIEffect
-        public TableDataDisplay(RecordSet recordSet, FXPlatformRunnable onModify)
+        public TableDataDisplay(RecordSet recordSet, MessageWhenEmpty messageNoColumns, FXPlatformRunnable onModify)
         {
-            super();
+            super(messageNoColumns);
             this.recordSet = recordSet;
             this.onModify = onModify;
             recordSet.setListener(this);
@@ -258,7 +259,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         }
         this.recordSetOrError = recordSetOrError;
         StackPane body = new StackPane(this.recordSetOrError.<Node>either(err -> new Label(err),
-            recordSet -> (tableDataDisplay = new TableDataDisplay(recordSet, () -> {
+            recordSet -> (tableDataDisplay = new TableDataDisplay(recordSet, table.getDisplayMessageWhenEmpty(), () -> {
                 parent.modified();
                 Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH,() -> Utility.alertOnError_(() -> parent.getManager().edit(table.getId(), null)));
             })).getNode()));

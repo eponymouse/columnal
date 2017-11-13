@@ -124,4 +124,11 @@ public class ImmediateDataSource extends DataSource
     {
         return data.hashCode();
     }
+
+    @Override
+    @OnThread(Tag.Any)
+    public MessageWhenEmpty getDisplayMessageWhenEmpty()
+    {
+        return new MessageWhenEmpty("table.immediate.noColumns", "table.immediate.noRows");
+    }
 }
