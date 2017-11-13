@@ -56,7 +56,7 @@ public abstract class Table
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private @MonotonicNonNull TableDisplayBase display;
     @OnThread(value = Tag.Any, requireSynchronized = true)
-    private Bounds prevPosition = new BoundingBox(0, 0, 100, 400);
+    private Bounds prevPosition = new BoundingBox(10, 10, 400, 600);
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private ImmutableMap<ColumnId, Double> prevColumnWidths = ImmutableMap.of();
 
