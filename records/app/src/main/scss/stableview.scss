@@ -1,4 +1,5 @@
 @import 'colors';
+@import 'fonts';
 
 /* Headers */
 
@@ -19,7 +20,7 @@
     -fx-font-family: "Droid Sans Mono";
     -fx-font-size: 10pt;
     .virt-grid-menu {
-        -fx-font-family: "Noto Sans";
+        -fx-font-family: $font-main;
         -fx-font-size: 12pt;
     }
 }

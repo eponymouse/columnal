@@ -1,4 +1,5 @@
 @import 'colors';
+@import 'fonts';
 
 $selected-expression-border-color: $focus-color;
 $function-color: paleturquoise;
@@ -8,7 +9,7 @@ $column-color: lightsteelblue;
 $default-color: rgb(240, 240, 240);
 
 .expression-editor {
-    -fx-font-family: "Noto Sans";
+    -fx-font-family: $font-main;
     -fx-font-size: 12pt;
 
     -fx-alignment: bottom-left;

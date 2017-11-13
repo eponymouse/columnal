@@ -1,7 +1,8 @@
 @import 'colors';
+@import 'fonts';
 
 .root {
-    -fx-font-family: "Noto Sans";
+    -fx-font-family: $font-main;
     -fx-font-size: 13pt;
 
     -fx-focus-color: $focus-color;
@@ -138,7 +139,7 @@
     -fx-font-size: 85%;
 }
 .number-display-dot {
-    -fx-font-family: "Noto Sans";
+    -fx-font-family: $font-main;
     -fx-font-size: 85%;
 }
 .number-display-dot-invisible {
