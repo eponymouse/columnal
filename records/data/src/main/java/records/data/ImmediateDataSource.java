@@ -1,6 +1,7 @@
 package records.data;
 
 import annotation.qual.Value;
+import javafx.application.Platform;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.error.InternalException;
@@ -11,8 +12,10 @@ import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
+import utility.Workers;
 
 import java.io.File;
+import java.util.Optional;
 
 /**
  * Created by neil on 09/11/2016.
@@ -82,15 +85,13 @@ public class ImmediateDataSource extends DataSource
     }
 
     @Override
-    public @OnThread(Tag.FXPlatform) boolean showAddColumnButton()
-    {
-        return true;
-    }
-
-    @Override
     public @OnThread(Tag.Any) TableOperations getOperations()
     {
-        return new TableOperations(appendRowCount -> {
+        return new TableOperations((newColumnName, newColumnType, defaultValue) -> {
+            Utility.alertOnError_(() -> {
+                data.addColumn(newColumnType.makeImmediateColumn(new ColumnId(newColumnName), defaultValue));
+            });
+        }, appendRowCount -> {
             Utility.alertOnError_(() ->
             {
                 data.insertRows(data.getLength(), appendRowCount);
@@ -108,7 +109,7 @@ public class ImmediateDataSource extends DataSource
     @Override
     public void addColumn(String newColumnName, DataType newColumnType, @Value Object defaultValue) throws InternalException, UserException
     {
-        data.addColumn(newColumnType.makeImmediateColumn(new ColumnId(newColumnName), defaultValue));
+
     }
 
     @Override

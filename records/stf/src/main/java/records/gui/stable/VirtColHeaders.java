@@ -3,6 +3,7 @@ package records.gui.stable;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
+import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
 import javafx.scene.input.MouseEvent;
@@ -11,13 +12,16 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformFunction;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -61,6 +65,13 @@ public class VirtColHeaders implements ScrollBindable
     private double dragOffset;
 
     //package-visible
+
+    /**
+     *
+     * @param grid The grid these column headers are for
+     * @param makeContextMenuItems Make context menu for that column index (in displayed columns)
+     * @param getContent Gets the content of the column header for that column index (in displayed columns)
+     */
     VirtColHeaders(VirtScrollStrTextGrid grid, FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems, FXPlatformFunction<Integer, ImmutableList<Node>> getContent)
     {
         this.grid = grid;
@@ -75,6 +86,8 @@ public class VirtColHeaders implements ScrollBindable
         glass.setMouseTransparent(true);
         glass.getStyleClass().add("virt-grid-glass");
         stackPane = new StackPane(container, glass);
+
+
 
         // Drag to resize functionality:
         container.setOnMouseMoved(e -> {
@@ -171,8 +184,14 @@ public class VirtColHeaders implements ScrollBindable
 
     private class Container extends Region
     {
+        private final Button addColumnButton;
+
+        @OnThread(Tag.FXPlatform)
         private Container()
         {
+            addColumnButton = GUI.button("virtGrid.addColumn", () -> {}, "virt-grid-add-column");
+            getChildren().add(addColumnButton);
+
             addEventFilter(ScrollEvent.SCROLL, e -> {
                 grid.smoothScroll(e, ScrollLock.BOTH);
                 e.consume();
@@ -237,6 +256,21 @@ public class VirtColHeaders implements ScrollBindable
                 cell.resizeRelocate(x, 0, grid.getColumnWidth(colIndex), getHeight());
                 x += grid.getColumnWidth(colIndex);
             }
+
+            @Nullable FXPlatformRunnable addColumn = grid.getAddColumn();
+            if (addColumn != null)
+            {
+                @NonNull FXPlatformRunnable addColumnFinal = addColumn;
+                addColumnButton.setVisible(true);
+                addColumnButton.resizeRelocate(x, 0, 200.0, getHeight());
+                addColumnButton.setOnAction(e -> addColumnFinal.run());
+            }
+            else
+            {
+                addColumnButton.setVisible(false);
+                addColumnButton.relocate(-1000, -1000);
+            }
+
 
             // Don't let spare cells be more than two visible rows or columns:
             int maxSpareCells = grid.MAX_EXTRA_ROW_COLS * (lastDisplayColExcl - firstDisplayCol);

@@ -47,6 +47,7 @@ import records.data.Table.MessageWhenEmpty;
 import records.data.Table.TableDisplayBase;
 import records.data.TableId;
 import records.data.TableManager;
+import records.data.TableOperations.AppendColumn;
 import records.data.Transformation;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
@@ -212,6 +213,27 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         }
 
         @Override
+        protected void withNewColumnDetails(AppendColumn appendColumn)
+        {
+            Utility.alertOnErrorFX_(() -> {
+                // Show a dialog to prompt for the name and type:
+                NewColumnDialog dialog = new NewColumnDialog(parent.getManager());
+                Optional<NewColumnDialog.NewColumnDetails> choice = dialog.showAndWait();
+                if (choice.isPresent())
+                {
+                    Workers.onWorkerThread("Adding column", Workers.Priority.SAVE_ENTRY, () ->
+                    {
+                        Utility.alertOnError_(() ->
+                        {
+                            appendColumn.appendColumn(choice.get().name, choice.get().type, choice.get().defaultValue);
+                            Platform.runLater(() -> parent.modified());
+                        });
+                    });
+                }
+            });
+        }
+
+        @Override
         public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
         {
             super.removedAddedRows(startRowIncl, removedRowsCount, addedRowsCount);
@@ -279,26 +301,6 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         Label title = new Label(table.getId().getOutput());
         Utility.addStyleClass(title, "table-title");
         header = new HBox(actionsButton, title, spacer);
-        if (table.showAddColumnButton())
-        {
-            Button addColumnButton = GUI.button("tableDisplay.addColumn", () -> Utility.alertOnErrorFX_(() -> {
-                // Show a dialog to prompt for the name and type:
-                NewColumnDialog dialog = new NewColumnDialog(parent.getManager());
-                Optional<NewColumnDialog.NewColumnDetails> choice = dialog.showAndWait();
-                if (choice.isPresent())
-                {
-                    Workers.onWorkerThread("Adding column", Workers.Priority.SAVE_ENTRY, () ->
-                    {
-                        Utility.alertOnError_(() ->
-                        {
-                            table.addColumn(choice.get().name, choice.get().type, choice.get().defaultValue);
-                            Platform.runLater(() -> parent.modified());
-                        });
-                    });
-                }
-            }), "add-column");
-            header.getChildren().add(addColumnButton);
-        }
         header.getChildren().add(addButton);
         Utility.addStyleClass(header, "table-header");
         setTop(header);

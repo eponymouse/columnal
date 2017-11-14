@@ -41,6 +41,7 @@ import records.data.ColumnId;
 import records.data.RecordSet.RecordSetListener;
 import records.data.Table.MessageWhenEmpty;
 import records.data.TableOperations;
+import records.data.TableOperations.AppendColumn;
 import records.data.TableOperations.AppendRows;
 import records.data.TableOperations.InsertRows;
 import records.error.InternalException;
@@ -52,6 +53,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.DeepListBinding;
 import utility.FXPlatformConsumer;
+import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
@@ -298,6 +300,19 @@ public class StableView
         placeholder.setText(text);
     }
 
+    private void appendColumn()
+    {
+        if (operations == null || operations.appendColumn == null)
+            return; // Shouldn't happen, but if it does, append no longer valid
+
+        withNewColumnDetails(operations.appendColumn);
+    }
+
+    protected void withNewColumnDetails(AppendColumn appendColumn)
+    {
+        // Default behaviour is to do nothing
+    }
+
     private void appendRow(int newRowIndex)
     {
         if (operations == null || operations.appendRows == null)
@@ -327,6 +342,7 @@ public class StableView
         nonEmptyProperty.set(!columns.isEmpty());
 
         grid.setData(isRowValid,
+            operations != null && operations.appendColumn != null ? FXUtility.mouse(this)::appendColumn : null,
             operations != null && operations.appendRows != null ? FXUtility.mouse(this)::appendRow : null,
             Doubles.toArray(Utility.replicate(columns.size(), DEFAULT_COLUMN_WIDTH)));
 

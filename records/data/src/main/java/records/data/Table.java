@@ -337,14 +337,6 @@ public abstract class Table
     }
 
     /**
-     * If this returns true, show the add column button.  Before
-     * a column is added, addColumn() will be called, where you
-     * can prompt the user if needed.
-     */
-    @OnThread(Tag.FXPlatform)
-    public abstract boolean showAddColumnButton();
-
-    /**
      * Add the given new column to the table.
      */
     public abstract void addColumn(String newColumnName, DataType newColumnType, @Value Object defaultValue) throws InternalException, UserException;

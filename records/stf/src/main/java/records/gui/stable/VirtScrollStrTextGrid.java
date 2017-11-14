@@ -53,6 +53,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
+import utility.FXPlatformRunnable;
 import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.SimulationFunction;
@@ -146,6 +147,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private final StackPane stackPane;
     // null if you can't append to this grid:
     private @Nullable FXPlatformConsumer<Integer> appendRow;
+    private @Nullable FXPlatformRunnable addColumn;
 
     public VirtScrollStrTextGrid(ValueLoadSave loadSave, FXPlatformFunction<CellPosition, Boolean> canEdit, ScrollBar hBar, ScrollBar vBar)
     {
@@ -666,6 +668,11 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         container.requestLayout();
     }
 
+    public @Nullable FXPlatformRunnable getAddColumn()
+    {
+        return addColumn;
+    }
+
     public static enum ScrollLock
     {
         HORIZONTAL, VERTICAL, BOTH;
@@ -687,7 +694,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         void fetchEditorKit(int rowIndex, int colIndex, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setEditorKit);
     }
 
-    public void setData(SimulationFunction<Integer, Boolean> isRowValid, @Nullable FXPlatformConsumer<Integer> appendRow, double[] columnWidths)
+    public void setData(SimulationFunction<Integer, Boolean> isRowValid, @Nullable FXPlatformRunnable addColumn, @Nullable FXPlatformConsumer<Integer> appendRow, double[] columnWidths)
     {
         // Snap to top left:
         firstVisibleRowIndex = 0;
@@ -709,6 +716,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         // and then layout actually rejigs the display:
         this.isRowValid = isRowValid;
         this.appendRow = appendRow;
+        this.addColumn = addColumn;
         this.currentKnownRows.set(0);
         this.currentKnownRowsIsFinal = false;
         updateKnownRows();
