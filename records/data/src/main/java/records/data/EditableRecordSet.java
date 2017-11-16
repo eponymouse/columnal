@@ -280,4 +280,16 @@ public class EditableRecordSet extends RecordSet
         //Re-run dependents:
         modified(col.getName(), null);
     }
+
+    public void deleteColumn(ColumnId deleteColumnName)
+    {
+        columns.removeIf(c -> c.getName().equals(deleteColumnName));
+        editableColumns.removeIf(c -> c.getName().equals(deleteColumnName));
+        Platform.runLater(() -> {
+            if (listener != null)
+                listener.removedColumn(deleteColumnName);
+        });
+        //Re-run dependents:
+        modified(deleteColumnName, null);
+    }
 }

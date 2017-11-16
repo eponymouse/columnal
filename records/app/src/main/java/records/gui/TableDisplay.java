@@ -246,6 +246,12 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             setColumnsAndRows(displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), recordSet::indexValid);
         }
 
+        @Override
+        public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
+        {
+            setColumnsAndRows(displayColumns = TableDisplayUtility.makeStableViewColumns(recordSet, table.getShowColumns(), onModify), table.getOperations(), recordSet::indexValid);
+        }
+
         public void loadColumnWidths(Map<ColumnId, Double> columnWidths)
         {
             super.loadColumnWidths(Doubles.toArray(Utility.mapList(displayColumns, c -> columnWidths.getOrDefault(new ColumnId(c.getFirst()), DEFAULT_COLUMN_WIDTH))));

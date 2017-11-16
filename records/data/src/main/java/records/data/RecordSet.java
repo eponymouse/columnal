@@ -321,5 +321,8 @@ public abstract class RecordSet
 
         @OnThread(Tag.FXPlatform)
         public void addedColumn(Column newColumn);
+
+        @OnThread(Tag.FXPlatform)
+        public void removedColumn(ColumnId oldColumnId);
     }
 }

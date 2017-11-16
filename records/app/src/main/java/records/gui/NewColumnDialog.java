@@ -15,6 +15,7 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
+import records.data.ColumnId;
 import records.data.TableManager;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
@@ -132,17 +133,17 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
         }
         else
         {
-            return Either.right(new NewColumnDetails(name.getText(), selectedType, defaultValue));
+            return Either.right(new NewColumnDetails(new ColumnId(name.getText()), selectedType, defaultValue));
         }
     }
 
     public static class NewColumnDetails
     {
-        public final String name;
+        public final ColumnId name;
         public final DataType type;
         public final @Value Object defaultValue;
 
-        public NewColumnDetails(String name, DataType type, @Value Object defaultValue)
+        public NewColumnDetails(ColumnId name, DataType type, @Value Object defaultValue)
         {
             this.name = name;
             this.type = type;

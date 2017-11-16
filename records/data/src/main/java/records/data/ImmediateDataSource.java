@@ -3,6 +3,7 @@ package records.data;
 import annotation.qual.Value;
 import javafx.application.Platform;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.TableOperations.DeleteColumn;
 import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
@@ -94,7 +95,16 @@ public class ImmediateDataSource extends DataSource
             // All columns in ImmediateDataSource can be renamed:
         }, _c -> null /*((oldColumnName, newColumnName) -> {
             data.renameColumn(oldColumnName, newColumnName);
-        })*/, appendRowCount -> {
+        })*/, _c -> new DeleteColumn()
+        {
+            @Override
+            public @OnThread(Tag.Simulation) void deleteColumn(ColumnId deleteColumnName)
+            {
+                Utility.alertOnError_(() -> {
+                    data.deleteColumn(deleteColumnName);
+                });
+            }
+        }, appendRowCount -> {
             Utility.alertOnError_(() ->
             {
                 data.insertRows(data.getLength(), appendRowCount);

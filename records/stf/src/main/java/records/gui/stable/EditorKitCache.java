@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.Column.ProgressListener;
+import records.data.ColumnId;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
@@ -220,10 +221,12 @@ public final class EditorKitCache<V> implements ColumnHandler
     @Override
     public @OnThread(Tag.FXPlatform) void addedColumn(Column newColumn)
     {
-
     }
 
-
+    @Override
+    public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
+    {
+    }
 
     @OnThread(Tag.Simulation)
     protected final void store(int rowIndex, V v) throws UserException, InternalException

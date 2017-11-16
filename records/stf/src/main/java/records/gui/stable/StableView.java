@@ -29,12 +29,14 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.ColumnId;
 import records.data.RecordSet.RecordSetListener;
 import records.data.Table.MessageWhenEmpty;
 import records.data.TableOperations;
 import records.data.TableOperations.AppendColumn;
 import records.data.TableOperations.AppendRows;
+import records.data.TableOperations.DeleteColumn;
 import records.data.TableOperations.InsertRows;
 import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
 import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
@@ -120,6 +122,7 @@ public class StableView
     private final ScrollBar hbar;
     private final ScrollBar vbar;
 
+    @OnThread(Tag.FXPlatform)
     private @Nullable TableOperations operations;
     private final SimpleBooleanProperty nonEmptyProperty = new SimpleBooleanProperty(false);
 
@@ -242,7 +245,7 @@ public class StableView
     {
         // TODO add before/after?
         List<ColumnOperation> r = new ArrayList<>();
-        if (operations.renameColumn.apply(columnId) != null)
+        if (operations != null && operations.renameColumn.apply(columnId) != null)
         {
             r.add(new ColumnOperation("stableView.column.rename")
             {
@@ -254,32 +257,35 @@ public class StableView
             });
         }
 
-        if (operations.deleteColumn.apply(columnId) != null)
+        if (operations != null && operations.deleteColumn.apply(columnId) != null)
         {
             r.add(new ColumnOperation("stableView.column.delete")
             {
                 @Override
                 public @OnThread(Tag.Simulation) void execute()
                 {
-                    operations.deleteColumn.apply(columnId).deleteColumn(columnId);
+                    if (operations != null)
+                    {
+                        @Nullable DeleteColumn deleteColumn = operations.deleteColumn.apply(columnId);
+                        if (deleteColumn != null)
+                            deleteColumn.deleteColumn(columnId);
+                    }
                 }
             });
         }
 
         if (hideColumnOperation() != null)
         {
-            r.add(new ColumnOperation()
+            r.add(new ColumnOperation("stableView.column.hide")
             {
-                @Override
-                public @OnThread(Tag.FXPlatform) @LocalizableKey String getNameKey()
-                {
-                    return "stableView.column.hide";
-                }
-
                 @Override
                 public @OnThread(Tag.Simulation) void execute()
                 {
-                    Platform.runLater(() -> hideColumnOperation().hide(columnId));
+                    Platform.runLater(() -> {
+                        @Nullable FXPlatformConsumer<ColumnId> hideColumnOperation = hideColumnOperation();
+                        if (hideColumnOperation != null)
+                            hideColumnOperation.consume(columnId);
+                    });
                 }
             });
         }
@@ -302,6 +308,12 @@ public class StableView
         // TODO: quick transforms, e.g. sort-by, filter, summarise
 
         return r;
+    }
+
+    @Pure
+    private @Nullable FXPlatformConsumer<ColumnId> hideColumnOperation()
+    {
+        return null;
     }
 
     // Can be overridden by subclasses

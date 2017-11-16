@@ -95,6 +95,11 @@ public class TableDisplayUtility
                         }
 
                         @Override
+                        public @OnThread(Tag.FXPlatform) void removedColumn(ColumnId oldColumnId)
+                        {
+                        }
+
+                        @Override
                         public void fetchValue(int rowIndex, FXPlatformConsumer<Boolean> focusListener, FXPlatformConsumer<CellPosition> relinquishFocus, EditorKitCallback setCellContent, int firstVisibleRowIndexIncl, int lastVisibleRowIndexIncl)
                         {
                             setCellContent.loadedValue(columnIndexFinal, rowIndex, new EditorKitSimpleLabel("Error: " + e.getLocalizedMessage()));

@@ -1130,6 +1130,13 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                     // TODO add the highlight-all-buttons-on-hover effect
                     x += columnWidths[columnIndex];
                 }
+                visibleRowAppendButtons.forEach((col, button) -> {
+                    if (col < firstDisplayCol || col >= lastDisplayColExcl)
+                    {
+                        button.relocate(-1000, -1000);
+                        button.setVisible(false);
+                    }
+                });
             }
             else
             {
