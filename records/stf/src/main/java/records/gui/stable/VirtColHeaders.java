@@ -1,6 +1,7 @@
 package records.gui.stable;
 
 import com.google.common.collect.ImmutableList;
+import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -38,8 +39,9 @@ import java.util.Map.Entry;
 @OnThread(Tag.FXPlatform)
 public class VirtColHeaders implements ScrollBindable
 {
-    private final Map<Integer, VBox> visibleCells = new HashMap<>();
-    private final List<VBox> spareCells = new ArrayList<>();
+    // Each StackPane will have a VBox as first child.
+    private final Map<Integer, StackPane> visibleCells = new HashMap<>();
+    private final List<StackPane> spareCells = new ArrayList<>();
     private final Region container;
     private final VirtScrollStrTextGrid grid;
     private final FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems;
@@ -220,9 +222,9 @@ public class VirtColHeaders implements ScrollBindable
             int lastDisplayColExcl = grid.getLastDisplayColExcl();
 
             // Remove not-visible cells and put them in spare cells:
-            for (Iterator<Entry<Integer, VBox>> iterator = visibleCells.entrySet().iterator(); iterator.hasNext(); )
+            for (Iterator<Entry<Integer, StackPane>> iterator = visibleCells.entrySet().iterator(); iterator.hasNext(); )
             {
-                Entry<Integer, VBox> vis = iterator.next();
+                Entry<Integer, StackPane> vis = iterator.next();
                 boolean shouldBeVisible = vis.getKey() >= firstDisplayCol && vis.getKey() < lastDisplayColExcl;
                 if (!shouldBeVisible)
                 {
@@ -234,7 +236,7 @@ public class VirtColHeaders implements ScrollBindable
             double x = grid.getFirstVisibleColOffset() - grid.sumColumnWidths(firstDisplayCol, grid.getFirstVisibleColIndex());
             for (int colIndex = firstDisplayCol; colIndex < lastDisplayColExcl; colIndex++)
             {
-                VBox cell = visibleCells.get(colIndex);
+                StackPane cell = visibleCells.get(colIndex);
                 // If cell isn't present, grab from spareCells:
                 if (cell == null)
                 {
@@ -246,9 +248,9 @@ public class VirtColHeaders implements ScrollBindable
                     }
                     else
                     {
-                        cell = new VBox();
+                        cell = GUI.withRightClickHint(new VBox(), Pos.TOP_RIGHT);
                         cell.getStyleClass().add("virt-grid-col-header");
-                        VBox newCellFinal = cell;
+                        StackPane newCellFinal = cell;
                         int colIndexFinal = colIndex;
                         cell.setOnContextMenuRequested(e -> {
                             ContextMenu menu = new ContextMenu();
@@ -258,7 +260,7 @@ public class VirtColHeaders implements ScrollBindable
                         getChildren().add(cell);
                     }
                     visibleCells.put(colIndex, cell);
-                    cell.getChildren().setAll(getContent.apply(colIndex));
+                    ((VBox)cell.getChildren().get(0)).getChildren().setAll(getContent.apply(colIndex));
                 }
                 cell.setVisible(true);
                 cell.resizeRelocate(x, 0, grid.getColumnWidth(colIndex), getHeight());
@@ -286,7 +288,7 @@ public class VirtColHeaders implements ScrollBindable
             while (spareCells.size() > maxSpareCells)
                 getChildren().remove(spareCells.remove(spareCells.size() - 1));
 
-            for (VBox spareCell : spareCells)
+            for (StackPane spareCell : spareCells)
             {
                 spareCell.relocate(-1000, -1000);
                 spareCell.setVisible(false);

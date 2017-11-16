@@ -12,12 +12,16 @@ import javafx.geometry.Pos;
 import javafx.geometry.Side;
 import javafx.scene.Node;
 import javafx.scene.control.*;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCombination;
+import javafx.scene.input.MouseEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
+import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
@@ -25,6 +29,7 @@ import javafx.util.Callback;
 import javafx.util.StringConverter;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.controlsfx.control.SegmentedButton;
 import org.fxmisc.wellbehaved.event.EventPattern;
@@ -39,6 +44,7 @@ import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.Utility;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,6 +55,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 @OnThread(Tag.FXPlatform)
 public class GUI
 {
+    private static @MonotonicNonNull Image rightClickImage = null;
+
     public static Button button(@LocalizableKey String msgKey, FXPlatformRunnable onAction, String... styleClasses)
     {
         Button button = new Button(TranslationUtility.getString(msgKey));
@@ -281,5 +289,39 @@ public class GUI
         TableColumn<ROW, VALUE> column = new TableColumn<>(columnTitle);
         column.setCellValueFactory(d -> new ReadOnlyObjectWrapper<>(getValue.apply(d.getValue())));
         return column;
+    }
+
+    public static StackPane withRightClickHint(Node node, Pos position)
+    {
+        StackPane stackPane;
+        if (node instanceof StackPane)
+            stackPane = (StackPane) node;
+        else
+            stackPane = new StackPane(node);
+
+        if (rightClickImage == null)
+        {
+            ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+            if (systemClassLoader != null)
+            {
+                URL imageURL = systemClassLoader.getResource("right-click.png");
+                if (imageURL != null)
+                    rightClickImage = new Image(imageURL.toExternalForm());
+            }
+        }
+
+        if (rightClickImage != null)
+        {
+            ImageView imageView = new ImageView(rightClickImage);
+            // Image is mostly transparent, so pick just on our overall bounds:
+            imageView.setPickOnBounds(true);
+            imageView.setVisible(false);
+            StackPane.setAlignment(imageView, position);
+            Tooltip.install(imageView, new Tooltip("Right-click menu available"));
+            stackPane.getChildren().add(imageView);
+            stackPane.addEventFilter(MouseEvent.MOUSE_ENTERED, e -> imageView.setVisible(true));
+            stackPane.addEventFilter(MouseEvent.MOUSE_EXITED, e -> imageView.setVisible(false));
+        }
+        return stackPane;
     }
 }

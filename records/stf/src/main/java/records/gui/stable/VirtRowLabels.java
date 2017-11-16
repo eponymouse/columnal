@@ -1,5 +1,6 @@
 package records.gui.stable;
 
+import javafx.geometry.Pos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
@@ -14,6 +15,7 @@ import threadchecker.Tag;
 import utility.FXPlatformFunction;
 import utility.Pair;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -26,8 +28,9 @@ import java.util.Map.Entry;
 @OnThread(Tag.FXPlatform)
 public class VirtRowLabels implements ScrollBindable
 {
-    private final Map<Integer, Label> visibleCells = new HashMap<>();
-    private final List<Label> spareCells = new ArrayList<>();
+    // Each StackPane will have a Label as first child
+    private final Map<Integer, StackPane> visibleCells = new HashMap<>();
+    private final List<StackPane> spareCells = new ArrayList<>();
     private final Region container;
     private final VirtScrollStrTextGrid grid;
     private final FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems;
@@ -111,9 +114,9 @@ public class VirtRowLabels implements ScrollBindable
             int lastDisplayRowExcl = grid.getLastDisplayRowExcl();
 
             // Remove not-visible cells and put them in spare cells:
-            for (Iterator<Entry<Integer, Label>> iterator = visibleCells.entrySet().iterator(); iterator.hasNext(); )
+            for (Iterator<Entry<Integer, StackPane>> iterator = visibleCells.entrySet().iterator(); iterator.hasNext(); )
             {
-                Entry<Integer, Label> vis = iterator.next();
+                Entry<Integer, StackPane> vis = iterator.next();
                 boolean shouldBeVisible =
                     vis.getKey() >= firstDisplayRow &&
                     vis.getKey() < lastDisplayRowExcl;
@@ -127,7 +130,7 @@ public class VirtRowLabels implements ScrollBindable
             double y = grid.getFirstVisibleRowOffset() - (grid.getFirstVisibleRowIndex() - firstDisplayRow) * grid.rowHeight;
             for (int rowIndex = firstDisplayRow; rowIndex < lastDisplayRowExcl; rowIndex++)
             {
-                Label cell = visibleCells.get(rowIndex);
+                StackPane cell = visibleCells.get(rowIndex);
                 // If cell isn't present, grab from spareCells:
                 if (cell == null)
                 {
@@ -139,13 +142,13 @@ public class VirtRowLabels implements ScrollBindable
                     }
                     else
                     {
-                        cell = new Label();
+                        cell = GUI.withRightClickHint(new Label(), Pos.TOP_LEFT);
                         cell.getStyleClass().add("virt-grid-row-number");
                         getChildren().add(cell);
                     }
 
                     int rowIndexFinal = rowIndex;
-                    Label cellFinal = cell;
+                    StackPane cellFinal = cell;
                     cell.setOnContextMenuRequested(e -> {
                         ContextMenu menu = new ContextMenu();
                         menu.getStyleClass().add("virt-grid-menu");
@@ -158,7 +161,7 @@ public class VirtRowLabels implements ScrollBindable
                     });
 
                     visibleCells.put(rowIndex, cell);
-                    cell.setText("" + rowIndex);
+                    ((Label)cell.getChildren().get(0)).setText("" + rowIndex);
                 }
                 cell.setVisible(true);
                 cell.resizeRelocate(0, y, getWidth(), grid.rowHeight);
@@ -171,7 +174,7 @@ public class VirtRowLabels implements ScrollBindable
             while (spareCells.size() > maxSpareCells)
                 getChildren().remove(spareCells.remove(spareCells.size() - 1));
 
-            for (Label spareCell : spareCells)
+            for (StackPane spareCell : spareCells)
             {
                 spareCell.relocate(-1000, -1000);
                 spareCell.setVisible(false);
