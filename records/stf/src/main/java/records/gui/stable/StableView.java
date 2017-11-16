@@ -1,7 +1,6 @@
 package records.gui.stable;
 
 import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableMap;
 import com.google.common.primitives.Doubles;
 import com.sun.javafx.scene.control.skin.ScrollBarSkin;
 import javafx.application.Platform;
@@ -12,14 +11,13 @@ import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.value.ObservableDoubleValue;
-import javafx.beans.value.ObservableValue;
 import javafx.geometry.Orientation;
-import javafx.geometry.Pos;
-import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
+import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollBar;
+import javafx.scene.control.SeparatorMenuItem;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.Pane;
@@ -29,14 +27,8 @@ import javafx.scene.shape.Rectangle;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
-import org.checkerframework.checker.nullness.qual.EnsuresNonNullIf;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import org.jetbrains.annotations.NotNull;
-import org.reactfx.collection.LiveArrayList;
-import org.reactfx.collection.LiveList;
-import org.reactfx.value.Val;
 import records.data.ColumnId;
 import records.data.RecordSet.RecordSetListener;
 import records.data.Table.MessageWhenEmpty;
@@ -44,31 +36,22 @@ import records.data.TableOperations;
 import records.data.TableOperations.AppendColumn;
 import records.data.TableOperations.AppendRows;
 import records.data.TableOperations.InsertRows;
-import records.error.InternalException;
-import records.error.UserException;
 import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
 import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import records.gui.stable.VirtScrollStrTextGrid.ValueLoadSave;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.DeepListBinding;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
-import utility.gui.GUI;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.OptionalInt;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * A customised equivalent of TableView
@@ -189,7 +172,7 @@ public class StableView
         vbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.VERTICAL).findFirst().get();
         */
 
-        headerItemsContainer = grid.makeColumnHeaders(n -> Collections.emptyList(), col -> ImmutableList.of(new Label(columns.get(col).getFirst())));
+        headerItemsContainer = grid.makeColumnHeaders(colIndex -> Utility.mapList(FXUtility.mouse(this).getColumnOperations(new ColumnId(columns.get(colIndex).getFirst())), ColumnOperation::makeMenuItem), col -> ImmutableList.of(new Label(columns.get(col).getFirst())));
         final Pane header = new BorderPane(headerItemsContainer.getNode());
         header.getStyleClass().add("stable-view-header");
         lineNumbers = grid.makeLineNumbers(rowIndex -> Utility.mapList(FXUtility.mouse(this).getRowOperationsForSingleRow(rowIndex), RowOperation::makeMenuItem));
@@ -253,6 +236,72 @@ public class StableView
         FXPlatformConsumer<Number> heightListener = x -> heightEstimate.set(grid.totalHeightEstimateProperty().getValue() + headerItemsContainer.getNode().getHeight());
         FXUtility.addChangeListenerPlatformNN(grid.totalHeightEstimateProperty(), heightListener);
         FXUtility.addChangeListenerPlatformNN(headerItemsContainer.getNode().heightProperty(), heightListener);
+    }
+
+    private List<ColumnOperation> getColumnOperations(ColumnId columnId)
+    {
+        // TODO add before/after?
+        List<ColumnOperation> r = new ArrayList<>();
+        if (operations.renameColumn.apply(columnId) != null)
+        {
+            r.add(new ColumnOperation("stableView.column.rename")
+            {
+                @Override
+                public @OnThread(Tag.Simulation) void execute()
+                {
+                    //TODO
+                }
+            });
+        }
+
+        if (operations.deleteColumn.apply(columnId) != null)
+        {
+            r.add(new ColumnOperation("stableView.column.delete")
+            {
+                @Override
+                public @OnThread(Tag.Simulation) void execute()
+                {
+                    operations.deleteColumn.apply(columnId).deleteColumn(columnId);
+                }
+            });
+        }
+
+        if (hideColumnOperation() != null)
+        {
+            r.add(new ColumnOperation()
+            {
+                @Override
+                public @OnThread(Tag.FXPlatform) @LocalizableKey String getNameKey()
+                {
+                    return "stableView.column.hide";
+                }
+
+                @Override
+                public @OnThread(Tag.Simulation) void execute()
+                {
+                    Platform.runLater(() -> hideColumnOperation().hide(columnId));
+                }
+            });
+        }
+
+        // Heavy-handed way to add a divider:
+        r.add(new ColumnOperation("")
+        {
+            @Override
+            public @OnThread(Tag.Simulation) void execute()
+            {
+            }
+
+            @Override
+            public @OnThread(Tag.FXPlatform) MenuItem makeMenuItem()
+            {
+                return new SeparatorMenuItem();
+            }
+        });
+
+        // TODO: quick transforms, e.g. sort-by, filter, summarise
+
+        return r;
     }
 
     // Can be overridden by subclasses
@@ -461,28 +510,16 @@ public class StableView
             if (ops.insertRows != null)
             {
                 @NonNull InsertRows insertRows = ops.insertRows;
-                r.add(new RowOperation()
+                r.add(new RowOperation("stableView.row.insertBefore")
                 {
-                    @Override
-                    public @OnThread(Tag.FXPlatform) @LocalizableKey String getNameKey()
-                    {
-                        return "stableView.row.insertBefore";
-                    }
-
                     @Override
                     public @OnThread(Tag.Simulation) void execute()
                     {
                         insertRows.insertRows(rowIndex, 1);
                     }
                 });
-                r.add(new RowOperation()
+                r.add(new RowOperation("stableView.row.insertAfter")
                 {
-                    @Override
-                    public @OnThread(Tag.FXPlatform) @LocalizableKey String getNameKey()
-                    {
-                        return "stableView.row.insertAfter";
-                    }
-
                     @Override
                     public @OnThread(Tag.Simulation) void execute()
                     {
@@ -493,14 +530,8 @@ public class StableView
             if (ops.deleteRows != null)
             {
                 TableOperations.@NonNull DeleteRows deleteRows = ops.deleteRows;
-                r.add(new RowOperation()
+                r.add(new RowOperation("stableView.row.delete")
                 {
-                    @Override
-                    public @OnThread(Tag.FXPlatform) @LocalizableKey String getNameKey()
-                    {
-                        return "stableView.row.delete";
-                    }
-
                     @Override
                     public @OnThread(Tag.Simulation) void execute()
                     {

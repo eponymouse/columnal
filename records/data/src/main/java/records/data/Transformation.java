@@ -107,7 +107,7 @@ public abstract class Transformation extends Table
     @Override
     public @OnThread(Tag.Any) TableOperations getOperations()
     {
-        return new TableOperations(null, null, null, null);
+        return new TableOperations(null, c -> null, c -> null, null, null, null);
     }
 
     @Override

@@ -10,15 +10,18 @@ import utility.FXPlatformRunnable;
 
 import java.util.List;
 import java.util.Map;
+import java.util.function.Function;
 
 /**
  * Created by neil on 29/05/2017.
  */
 public class TableOperations
 {
-    // TODO have a sum type here which allows for a custom GUI operation
+    // TODO have a sum type here for append which allows for a custom GUI operation
     // so that if it's e.g. a linked table, you can click add and get a prompt about converting.
     public final @Nullable AppendColumn appendColumn;
+    public final Function<ColumnId, @Nullable RenameColumn> renameColumn;
+    public final Function<ColumnId, @Nullable DeleteColumn> deleteColumn;
     public final @Nullable AppendRows appendRows;
     // Row index to insert at, count
     public final @Nullable InsertRows insertRows;
@@ -26,9 +29,11 @@ public class TableOperations
     public final @Nullable DeleteRows deleteRows;
 
     @OnThread(Tag.Any)
-    public TableOperations(@Nullable AppendColumn appendColumn, @Nullable AppendRows appendRows, @Nullable InsertRows insertRows, @Nullable DeleteRows deleteRows)
+    public TableOperations(@Nullable AppendColumn appendColumn, Function<ColumnId, @Nullable RenameColumn> renameColumn, Function<ColumnId, @Nullable DeleteColumn> deleteColumn, @Nullable AppendRows appendRows, @Nullable InsertRows insertRows, @Nullable DeleteRows deleteRows)
     {
         this.appendColumn = appendColumn;
+        this.renameColumn = renameColumn;
+        this.deleteColumn = deleteColumn;
         this.appendRows = appendRows;
         this.insertRows = insertRows;
         this.deleteRows = deleteRows;
@@ -39,7 +44,23 @@ public class TableOperations
     public static interface AppendColumn
     {
         @OnThread(Tag.Simulation)
-        public void appendColumn(String newColumnName, DataType newColumnType, @Value Object defaultValue);
+        public void appendColumn(ColumnId newColumnName, DataType newColumnType, @Value Object defaultValue);
+    }
+
+    // Rename column (only available if this is source of the column)
+    @FunctionalInterface
+    public static interface RenameColumn
+    {
+        @OnThread(Tag.Simulation)
+        public void renameColumn(ColumnId oldColumnName, ColumnId newColumnName);
+    }
+
+    // Delete column (only available if this is source of the column)
+    @FunctionalInterface
+    public static interface DeleteColumn
+    {
+        @OnThread(Tag.Simulation)
+        public void deleteColumn(ColumnId columnId);
     }
 
     // Add rows at end

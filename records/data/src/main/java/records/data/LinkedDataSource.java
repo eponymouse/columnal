@@ -63,7 +63,7 @@ public abstract class LinkedDataSource extends DataSource
     public @OnThread(Tag.Any) TableOperations getOperations()
     {
         // TODO prompt to transform to non-linked table
-        return new TableOperations(null, null, null, null);
+        return new TableOperations(null, c -> null, c -> null, null, null, null);
     }
 
     @Override

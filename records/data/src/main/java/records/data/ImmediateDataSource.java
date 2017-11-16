@@ -89,9 +89,12 @@ public class ImmediateDataSource extends DataSource
     {
         return new TableOperations((newColumnName, newColumnType, defaultValue) -> {
             Utility.alertOnError_(() -> {
-                data.addColumn(newColumnType.makeImmediateColumn(new ColumnId(newColumnName), defaultValue));
+                data.addColumn(newColumnType.makeImmediateColumn(newColumnName, defaultValue));
             });
-        }, appendRowCount -> {
+            // All columns in ImmediateDataSource can be renamed:
+        }, _c -> null /*((oldColumnName, newColumnName) -> {
+            data.renameColumn(oldColumnName, newColumnName);
+        })*/, appendRowCount -> {
             Utility.alertOnError_(() ->
             {
                 data.insertRows(data.getLength(), appendRowCount);
