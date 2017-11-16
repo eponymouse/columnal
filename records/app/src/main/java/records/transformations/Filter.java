@@ -126,7 +126,7 @@ public class Filter extends TransformationEditable
                         }
 
                         @Override
-                        protected boolean isAltered()
+                        public boolean isAltered()
                         {
                             return true;
                         }

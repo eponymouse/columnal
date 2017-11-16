@@ -426,12 +426,12 @@ public class Utility
         }
     }
 
-    public static <T> List<T> consList(T header, List<T> data)
+    public static <T> ImmutableList<T> consList(T header, List<T> data)
     {
-        ArrayList<T> r = new ArrayList<T>();
+        ImmutableList.Builder<T> r = ImmutableList.builder();
         r.add(header);
         r.addAll(data);
-        return r;
+        return r.build();
     }
 
     public static void report(InternalException e)

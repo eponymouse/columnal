@@ -41,7 +41,7 @@ public abstract class EditableColumn extends Column
 
     @Override
     @OnThread(Tag.Any)
-    protected boolean isAltered()
+    public boolean isAltered()
     {
         // If we're editable, we must be new:
         return true;

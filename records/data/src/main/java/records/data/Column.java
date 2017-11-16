@@ -152,7 +152,7 @@ public abstract class Column
      * Used to decide whether we show column if display setting is set to ALTERED
      */
     @OnThread(Tag.Any)
-    protected abstract boolean isAltered();
+    public abstract boolean isAltered();
 
     public static interface ProgressListener
     {

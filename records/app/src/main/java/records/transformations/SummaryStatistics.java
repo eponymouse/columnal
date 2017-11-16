@@ -155,7 +155,7 @@ public class SummaryStatistics extends TransformationEditable
                         }
 
                         @Override
-                        protected boolean isAltered()
+                        public boolean isAltered()
                         {
                             return true;
                         }

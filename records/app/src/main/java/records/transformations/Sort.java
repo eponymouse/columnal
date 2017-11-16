@@ -167,7 +167,7 @@ public class Sort extends TransformationEditable
                     }
 
                     @Override
-                    protected boolean isAltered()
+                    public boolean isAltered()
                     {
                         return true;
                     }

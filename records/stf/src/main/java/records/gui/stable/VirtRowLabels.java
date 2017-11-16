@@ -76,6 +76,12 @@ public class VirtRowLabels implements ScrollBindable
         // Doesn't affect us
     }
 
+    @Override
+    public @OnThread(Tag.FXPlatform) void columnsChanged()
+    {
+        // Doesn't affect us
+    }
+
     public Region getNode()
     {
         return stackPane;

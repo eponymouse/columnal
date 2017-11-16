@@ -123,7 +123,7 @@ public class HideColumns extends TransformationEditable
                 }
 
                 @Override
-                protected boolean isAltered()
+                public boolean isAltered()
                 {
                     return false;
                 }

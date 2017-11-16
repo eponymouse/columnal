@@ -14,6 +14,7 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.ColumnId;
 import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -175,6 +176,13 @@ public class VirtColHeaders implements ScrollBindable
     public void columnWidthChanged(int columnWidth, double newWidth)
     {
         container.requestLayout();
+    }
+
+    @Override
+    public void columnsChanged()
+    {
+        spareCells.addAll(visibleCells.values());
+        visibleCells.clear();
     }
 
     public Region getNode()

@@ -60,6 +60,7 @@ import records.transformations.TransformationEditable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
+import utility.FXPlatformConsumer;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
@@ -80,6 +81,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalDouble;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 /**
  * A pane which displays a table.  This includes the faux title bar
@@ -268,6 +270,40 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             }
             mostRecentColumnWidths.set(m.build());
             parent.tableMovedOrResized(TableDisplay.this);
+        }
+
+        @Override
+        protected @Nullable FXPlatformConsumer<ColumnId> hideColumnOperation()
+        {
+            return columnId -> {
+                if (table == null || columnDisplay == null)
+                    return;
+                switch (columnDisplay.get().getFirst())
+                {
+                    case COLLAPSED:
+                        // Leave it collapsed; not sure this can happen then anyway
+                        break;
+                    case ALL:
+                        // Hide just this one:
+                        setDisplay(Display.CUSTOM, ImmutableList.of(columnId), parent);
+                        break;
+                    case ALTERED:
+                        try
+                        {
+                            RecordSet data = table.getData();
+                            setDisplay(Display.CUSTOM, Utility.consList(columnId, data.getColumns().stream().filter(c -> c.isAltered()).map(c -> c.getName()).collect(Collectors.toList())), parent);
+                        }
+                        catch (UserException | InternalException e)
+                        {
+                            Utility.showError(e);
+                        }
+                        break;
+                    case CUSTOM:
+                        // Just tack this one on the blacklist:
+                        setDisplay(Display.CUSTOM, Utility.consList(columnId, columnDisplay.get().getSecond()), parent);
+                        break;
+                }
+            };
         }
     }
 

@@ -311,7 +311,7 @@ public class StableView
     }
 
     @Pure
-    private @Nullable FXPlatformConsumer<ColumnId> hideColumnOperation()
+    protected @Nullable FXPlatformConsumer<ColumnId> hideColumnOperation()
     {
         return null;
     }
