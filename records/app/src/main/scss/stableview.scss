@@ -8,6 +8,23 @@
     -fx-border-style: solid inside;
     -fx-border-width: 0 1 1 0;
 }
+.virt-grid-row-container, .virt-grid-col-container {
+    -fx-background-color: $table-header;
+    -fx-border-style: solid inside;
+}
+.virt-grid-row-container {
+    -fx-border-width: 0 1 0 0;
+    -fx-border-color: $table-header-border;
+}
+.virt-grid-col-container {
+    -fx-border-width: 0 0 1 0;
+    -fx-border-color: $table-header-border;
+}
+
+
+.virt-grid-col-header:hover, .virt-grid-row-number:hover{
+    -fx-background-color: $table-header-hover;
+}
 
 .virt-grid-col-header {
     -fx-border-color: transparent $table-header-divider $table-header-border transparent;

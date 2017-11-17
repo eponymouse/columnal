@@ -202,6 +202,8 @@ public class VirtColHeaders implements ScrollBindable
             addColumnButton = GUI.button("virtGrid.addColumn", () -> {}, "virt-grid-add-column");
             getChildren().add(addColumnButton);
 
+            getStyleClass().add("virt-grid-col-container");
+
             addEventFilter(ScrollEvent.SCROLL, e -> {
                 grid.smoothScroll(e, ScrollLock.BOTH);
                 e.consume();

@@ -94,6 +94,8 @@ public class VirtRowLabels implements ScrollBindable
     {
         public Container()
         {
+            getStyleClass().add("virt-grid-row-container");
+
             addEventFilter(ScrollEvent.SCROLL, e -> {
                 grid.smoothScroll(e, ScrollLock.BOTH);
                 e.consume();
