@@ -2,6 +2,7 @@ package records.gui;
 
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
@@ -54,6 +55,16 @@ public class InitialWindow
             stage.hide();
         });
         ListView<File> mruListView = new ListView<>();
+        mruListView.setOnMouseClicked(e -> {
+            if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 2)
+            {
+                @Nullable File selected = mruListView.getSelectionModel().getSelectedItem();
+                if (selected != null)
+                {
+                    openProject(stage, selected);
+                }
+            }
+        });
         mruListView.setItems(Utility.getRecentFilesList());
         VBox content = GUI.vbox("initial-content",
                 GUI.vbox("initial-section-new", GUI.label("initial.new.title", "initial-heading"), newButton, GUI.labelWrap("initial.new.detail")),
@@ -71,17 +82,22 @@ public class InitialWindow
         File src = FXUtility.chooseFileOpen("project.open.dialogTitle", "projectOpen", parent, FXUtility.getProjectExtensionFilter());
         if (src != null)
         {
-            try
-            {
-                MainWindow.show(new Stage(), src, new Pair<>(src, FileUtils.readFileToString(src, "UTF-8")));
-                Utility.usedFile(src);
-                // Only hide us if the load and show completed successfully:
-                parent.hide();
-            }
-            catch (IOException | InternalException | UserException ex)
-            {
-                FXUtility.logAndShowError("error.readingfile", ex);
-            }
+            openProject(parent, src);
+        }
+    }
+
+    private static void openProject(Stage parent, File src)
+    {
+        try
+        {
+            MainWindow.show(new Stage(), src, new Pair<>(src, FileUtils.readFileToString(src, "UTF-8")));
+            Utility.usedFile(src);
+            // Only hide us if the load and show completed successfully:
+            parent.hide();
+        }
+        catch (IOException | InternalException | UserException ex)
+        {
+            FXUtility.logAndShowError("error.readingfile", ex);
         }
     }
 
