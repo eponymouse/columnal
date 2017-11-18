@@ -235,6 +235,15 @@ public class StableView
         sideClip.heightProperty().bind(lineNumbers.getNode().heightProperty());
         lineNumberWrapper.setClip(sideClip);
 
+        FXUtility.addChangeListenerPlatformNN(hbar.valueProperty(), v -> {
+            FXUtility.setPseudoclass(stackPane, "at-left", v.doubleValue() <= 0.001);
+            FXUtility.setPseudoclass(stackPane, "at-right", v.doubleValue() >= 0.999);
+        });
+        FXUtility.addChangeListenerPlatformNN(vbar.valueProperty(), v -> {
+            FXUtility.setPseudoclass(stackPane, "at-top", v.doubleValue() <= 0.001);
+            FXUtility.setPseudoclass(stackPane, "at-bottom", v.doubleValue() >= 0.999);
+        });
+
 
         widthEstimate = new SimpleDoubleProperty();
         FXUtility.addChangeListenerPlatformNN(lineNumbers.getNode().widthProperty(), x -> updateWidthEstimate());
