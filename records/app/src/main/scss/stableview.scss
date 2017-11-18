@@ -76,7 +76,7 @@
 }
 .stable-view-button, .stable-view-scroll-bar {
     -fx-border-color: hsb(0, 0%, 70%);
-    -fx-border-style: solid outside;
+    -fx-border-style: solid inside;
 }
 .stable-view-scroll-bar:horizontal {
     -fx-border-width: 1 0 1 0;
@@ -86,6 +86,9 @@
 }
 .stable-view-button-left {
     -fx-border-width: 1 0 1 1;
+}
+.stable-view-button-right {
+    -fx-border-width: 1 1 1 0;
 }
 .stable-view-button-top {
     -fx-border-width: 1 1 0 1;
@@ -109,6 +112,9 @@
 .stable-view-button-left > .stable-view-button-arrow {
     -fx-rotate: 270;
 }
+.stable-view-button-right > .stable-view-button-arrow {
+    -fx-rotate: 90;
+}
 .stable-view-button-bottom > .stable-view-button-arrow {
     -fx-rotate: 180;
 }
@@ -131,6 +137,7 @@
     &:at-right .stable-view-scroll-bar:horizontal > .increment-button > .increment-arrow,
     &:at-top .stable-view-button-top > .stable-view-button-arrow,
     &:at-left .stable-view-button-left > .stable-view-button-arrow,
+    &:at-right .stable-view-button-right > .stable-view-button-arrow,
     &:at-bottom .stable-view-button-bottom > .stable-view-button-arrow{
         -fx-background-color: derive(-fx-base, -10%);
     }

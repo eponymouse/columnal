@@ -205,17 +205,20 @@ public class StableView
         Button leftButton = makeScrollEndButton();
         leftButton.getStyleClass().addAll("stable-view-button", "stable-view-button-left");
         leftButton.setOnAction(e -> grid.scrollXToPixel(0));
+        Button rightButton = makeScrollEndButton();
+        rightButton.getStyleClass().addAll("stable-view-button", "stable-view-button-right");
+        rightButton.setOnAction(e -> grid.scrollXToPixel(Double.MAX_VALUE));
 
         Button bottomButton = makeScrollEndButton();
         bottomButton.getStyleClass().addAll("stable-view-button", "stable-view-button-bottom");
         bottomButton.setOnAction(e -> grid.scrollYToPixel(Double.MAX_VALUE));
 
         BorderPane rightVertScroll = new BorderPane(vbar, topButton, null, bottomButton, null);
-        BorderPane bottomHorizScroll = new BorderPane(hbar, null, null, null, leftButton);
+        BorderPane bottomHorizScroll = new BorderPane(hbar, null, rightButton, null, leftButton);
         rightVertScroll.visibleProperty().bind(nonEmptyProperty);
         bottomHorizScroll.visibleProperty().bind(nonEmptyProperty);
 
-        stackPane = new StackPane(placeholder, new BorderPane(grid.getNode(), top, rightVertScroll, bottomHorizScroll, lineNumberWrapper));
+        stackPane = new StackPane(placeholder, new ContentLayout(grid.getNode(), top, rightVertScroll, bottomHorizScroll, lineNumberWrapper));
         // TODO figure out grid equivalent
         //headerItemsContainer.layoutXProperty().bind(virtualFlow.breadthOffsetProperty().map(d -> -d));
         placeholder.managedProperty().bind(placeholder.visibleProperty());
@@ -333,8 +336,8 @@ public class StableView
     {
         Button button = new Button("", makeButtonArrow());
         FXUtility.forcePrefSize(button);
-        button.setPrefWidth(ScrollBarSkin.DEFAULT_WIDTH + 2);
-        button.setPrefHeight(ScrollBarSkin.DEFAULT_WIDTH + 2);
+        button.setPrefWidth(ScrollBarSkin.DEFAULT_WIDTH + 4);
+        button.setPrefHeight(ScrollBarSkin.DEFAULT_WIDTH + 4);
         return button;
     }
 
@@ -581,5 +584,54 @@ public class StableView
     public VirtScrollStrTextGrid _test_getGrid()
     {
         return grid;
+    }
+
+    /**
+     * This is similar to a BorderPane, but not quite.
+     */
+    private static class ContentLayout extends Region
+    {
+        private final Region dataGrid;
+        // Note: colHeaders also includes the top-left item.
+        private final Region colHeaders;
+        private final Region rightVertScroll;
+        private final Region bottomHorizScroll;
+        private final Region rowHeaders;
+
+        public ContentLayout(Region dataGrid, Pane colHeaders, BorderPane rightVertScroll, BorderPane bottomHorizScroll, BorderPane rowHeaders)
+        {
+            this.dataGrid = dataGrid;
+            this.colHeaders = colHeaders;
+            this.rightVertScroll = rightVertScroll;
+            this.bottomHorizScroll = bottomHorizScroll;
+            this.rowHeaders = rowHeaders;
+
+            getChildren().addAll(dataGrid, colHeaders, rightVertScroll, bottomHorizScroll, rowHeaders);
+        }
+
+        @Override
+        protected void layoutChildren()
+        {
+            double width = getWidth();
+            double height = getHeight();
+
+            // Column headers extends all the way across top at
+            // its preferred height:
+            double colHeaderHeight = colHeaders.prefHeight(width);
+
+            colHeaders.resizeRelocate(0, 0, width, colHeaderHeight);
+            // Then row headers is all the way down the left beneath
+            // that, at its preferred width:
+            double rowHeaderWidth = rowHeaders.prefWidth(height - colHeaderHeight);
+
+            rowHeaders.resizeRelocate(0, colHeaderHeight, rowHeaderWidth, height - colHeaderHeight);
+            // Then scroll bars are at far sides, leaving
+            // space in bottom left:
+            double rightScrollWidth = rightVertScroll.prefWidth(height - colHeaderHeight);
+            double bottomScrollHeight = bottomHorizScroll.prefHeight(width - rowHeaderWidth - rightScrollWidth);
+            rightVertScroll.resizeRelocate(width - rightScrollWidth, colHeaderHeight, rightScrollWidth, height - colHeaderHeight - bottomScrollHeight);
+            bottomHorizScroll.resizeRelocate(rowHeaderWidth, height - bottomScrollHeight, width - rowHeaderWidth - rightScrollWidth, bottomScrollHeight);
+            dataGrid.resizeRelocate(rowHeaderWidth, colHeaderHeight, width - rowHeaderWidth - rightScrollWidth, height - colHeaderHeight - bottomScrollHeight);
+        }
     }
 }
