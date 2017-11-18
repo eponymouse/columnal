@@ -163,7 +163,8 @@ public class VirtRowLabels implements ScrollBindable
                     });
 
                     visibleCells.put(rowIndex, cell);
-                    ((Label)cell.getChildren().get(0)).setText("" + rowIndex);
+                    // Our indexes are zero-based, but user's are one-based:
+                    ((Label)cell.getChildren().get(0)).setText("" + (1 + rowIndex));
                 }
                 cell.setVisible(true);
                 cell.resizeRelocate(0, y, getWidth(), grid.rowHeight);
