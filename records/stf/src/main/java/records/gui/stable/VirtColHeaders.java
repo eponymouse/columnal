@@ -1,6 +1,9 @@
 package records.gui.stable;
 
 import com.google.common.collect.ImmutableList;
+import javafx.beans.binding.DoubleExpression;
+import javafx.beans.property.ReadOnlyDoubleWrapper;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Pos;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
@@ -42,7 +45,7 @@ public class VirtColHeaders implements ScrollBindable
     // Each StackPane will have a VBox as first child.
     private final Map<Integer, StackPane> visibleCells = new HashMap<>();
     private final List<StackPane> spareCells = new ArrayList<>();
-    private final Region container;
+    private final Container container;
     private final VirtScrollStrTextGrid grid;
     private final FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems;
     private final FXPlatformFunction<Integer, ImmutableList<Node>> getContent;
@@ -192,6 +195,11 @@ public class VirtColHeaders implements ScrollBindable
         return stackPane;
     }
 
+    public DoubleExpression addColumnButtonWidthProperty()
+    {
+        return container.addColumnButton.isVisible() ? container.addColumnButton.widthProperty() : new ReadOnlyDoubleWrapper(0.0);
+    }
+
     private class Container extends Region
     {
         private final Button addColumnButton;
@@ -274,7 +282,7 @@ public class VirtColHeaders implements ScrollBindable
             {
                 @NonNull FXPlatformRunnable addColumnFinal = addColumn;
                 addColumnButton.setVisible(true);
-                addColumnButton.resizeRelocate(x, 0, 200.0, getHeight());
+                addColumnButton.resizeRelocate(x, 0, addColumnButton.prefWidth(getHeight()), getHeight());
                 addColumnButton.setOnAction(e -> addColumnFinal.run());
             }
             else

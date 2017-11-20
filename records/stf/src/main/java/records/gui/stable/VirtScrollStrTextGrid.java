@@ -16,6 +16,7 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
 import javafx.beans.property.SimpleBooleanProperty;
+import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -153,6 +154,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private @Nullable FXPlatformRunnable addColumn;
     private final BooleanProperty atLeftProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty atRightProperty = new SimpleBooleanProperty(false);
+    private final DoubleProperty extraButtonWidthProperty = new SimpleDoubleProperty(0.0);
 
     public VirtScrollStrTextGrid(ValueLoadSave loadSave, FXPlatformFunction<CellPosition, Boolean> canEdit, ScrollBar hBar, ScrollBar vBar)
     {
@@ -261,7 +263,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     private double getMaxScrollX()
     {
-        return Math.max(0, sumColumnWidths(0, columnWidths.length) - container.getWidth());
+        return Math.max(0, sumColumnWidths(0, columnWidths.length) + extraButtonWidthProperty.get() - container.getWidth());
     }
 
     private double getMaxScrollY()
@@ -350,7 +352,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             if (lhs < columnWidths[lhsCol])
             {
                 // Stop here, possibly clamping to RHS if needed:
-                double clampedLHS = container.getWidth();
+                double clampedLHS = container.getWidth() - extraButtonWidthProperty.get();
                 for (int clampedLHSCol = columnWidths.length - 1; clampedLHSCol >= 0; clampedLHSCol--)
                 {
                     if (clampedLHS < columnWidths[lhsCol])
@@ -600,7 +602,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     public VirtColHeaders makeColumnHeaders(FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems, FXPlatformFunction<Integer, ImmutableList<Node>> getHeaderContent)
     {
-        return new VirtColHeaders(this, makeContextMenuItems, getHeaderContent);
+        VirtColHeaders virtColHeaders = new VirtColHeaders(this, makeContextMenuItems, getHeaderContent);
+        extraButtonWidthProperty.bind(virtColHeaders.addColumnButtonWidthProperty());
+        return virtColHeaders;
     }
 
     /**
