@@ -235,10 +235,9 @@ public class StableView
         sideClip.heightProperty().bind(lineNumbers.getNode().heightProperty());
         lineNumberWrapper.setClip(sideClip);
 
-        FXUtility.addChangeListenerPlatformNN(hbar.valueProperty(), v -> {
-            FXUtility.setPseudoclass(stackPane, "at-left", v.doubleValue() <= 0.001);
-            FXUtility.setPseudoclass(stackPane, "at-right", v.doubleValue() >= 0.999);
-        });
+        FXUtility.bindPseudoclass(stackPane, "at-left", grid.atLeftProperty());
+        FXUtility.bindPseudoclass(stackPane, "at-right", grid.atRightProperty());
+
         FXUtility.addChangeListenerPlatformNN(vbar.valueProperty(), v -> {
             FXUtility.setPseudoclass(stackPane, "at-top", v.doubleValue() <= 0.001);
             FXUtility.setPseudoclass(stackPane, "at-bottom", v.doubleValue() >= 0.999);
@@ -628,16 +627,20 @@ public class StableView
             // its preferred height:
             double colHeaderHeight = colHeaders.prefHeight(width);
 
-            colHeaders.resizeRelocate(0, 0, width, colHeaderHeight);
+            // Right-hand side scroll is at far right, takes room from col header width:
+            double rightScrollWidth = rightVertScroll.prefWidth(height - colHeaderHeight);
+            double colHeaderWidth = width - rightScrollWidth;
+            colHeaders.resizeRelocate(0, 0, colHeaderWidth, colHeaderHeight);
             // Then row headers is all the way down the left beneath
             // that, at its preferred width:
             double rowHeaderWidth = rowHeaders.prefWidth(height - colHeaderHeight);
-
-            rowHeaders.resizeRelocate(0, colHeaderHeight, rowHeaderWidth, height - colHeaderHeight);
-            // Then scroll bars are at far sides, leaving
-            // space in bottom left:
-            double rightScrollWidth = rightVertScroll.prefWidth(height - colHeaderHeight);
             double bottomScrollHeight = bottomHorizScroll.prefHeight(width - rowHeaderWidth - rightScrollWidth);
+            double rowHeaderHeight = height - colHeaderHeight - bottomScrollHeight;
+            rowHeaders.resizeRelocate(0, colHeaderHeight, rowHeaderWidth, rowHeaderHeight);
+            // Then scroll bars are at far sides, leaving
+            // space in bottom left, but they also take space from headers and grid:
+
+
             rightVertScroll.resizeRelocate(width - rightScrollWidth, colHeaderHeight, rightScrollWidth, height - colHeaderHeight - bottomScrollHeight);
             bottomHorizScroll.resizeRelocate(rowHeaderWidth, height - bottomScrollHeight, width - rowHeaderWidth - rightScrollWidth, bottomScrollHeight);
             dataGrid.resizeRelocate(rowHeaderWidth, colHeaderHeight, width - rowHeaderWidth - rightScrollWidth, height - colHeaderHeight - bottomScrollHeight);

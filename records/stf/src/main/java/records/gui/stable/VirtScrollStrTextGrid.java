@@ -7,12 +7,15 @@ import com.google.common.collect.ImmutableList;
 import javafx.animation.AnimationTimer;
 import javafx.animation.Interpolator;
 import javafx.application.Platform;
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.DoubleExpression;
 import javafx.beans.binding.ObjectExpression;
+import javafx.beans.property.BooleanProperty;
 import javafx.beans.property.DoubleProperty;
 import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.ReadOnlyDoubleProperty;
+import javafx.beans.property.SimpleBooleanProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
@@ -148,6 +151,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // null if you can't append to this grid:
     private @Nullable FXPlatformConsumer<Integer> appendRow;
     private @Nullable FXPlatformRunnable addColumn;
+    private final BooleanProperty atLeftProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty atRightProperty = new SimpleBooleanProperty(false);
 
     public VirtScrollStrTextGrid(ValueLoadSave loadSave, FXPlatformFunction<CellPosition, Boolean> canEdit, ScrollBar hBar, ScrollBar vBar)
     {
@@ -256,7 +261,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     private double getMaxScrollX()
     {
-        return sumColumnWidths(0, columnWidths.length) - 20.0;
+        return Math.max(0, sumColumnWidths(0, columnWidths.length) - container.getWidth());
     }
 
     private double getMaxScrollY()
@@ -339,16 +344,37 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     public void scrollXToPixel(double targetX)
     {
-        double x = Math.max(targetX, 0.0);
-        for (int col = 0; col < columnWidths.length; col++)
+        double lhs = Math.max(targetX, 0.0);
+        for (int lhsCol = 0; lhsCol < columnWidths.length; lhsCol++)
         {
-            if (x < columnWidths[col])
+            if (lhs < columnWidths[lhsCol])
             {
-                // Stop here:
-                showAtOffset(null, new Pair<>(col, -x));
-                break;
+                // Stop here, possibly clamping to RHS if needed:
+                double clampedLHS = container.getWidth();
+                for (int clampedLHSCol = columnWidths.length - 1; clampedLHSCol >= 0; clampedLHSCol--)
+                {
+                    if (clampedLHS < columnWidths[lhsCol])
+                    {
+                        // We've found furthest place we could
+                        // scroll to, so go to the leftmost out of
+                        // furthest place, and ideal place:
+
+                        // clampedLHS was from right, make it from left:
+                        clampedLHS = columnWidths[lhsCol] - clampedLHS;
+                        if (clampedLHSCol < lhsCol || (clampedLHSCol == lhsCol && clampedLHS < lhs))
+                            showAtOffset(null, new Pair<>(clampedLHSCol, -clampedLHS));
+                        else
+                            showAtOffset(null, new Pair<>(lhsCol, -lhs));
+                        return;
+                    }
+                    clampedLHS -= columnWidths[clampedLHSCol];
+                }
+                // If we get here, column widths are smaller than
+                // container, so stay at left:
+                showAtOffset(null, new Pair<>(0, 0.0));
+                return;
             }
-            x -= columnWidths[col];
+            lhs -= columnWidths[lhsCol];
         }
     }
 
@@ -488,8 +514,13 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private void updateHBar()
     {
         settingScrollBarVal = true;
-        hBar.setValue(getCurrentScrollX() / getMaxScrollX());
-        hBar.setVisibleAmount(container.getWidth() / (getMaxScrollX() + container.getWidth()));
+        double maxScrollX = getMaxScrollX();
+        double currentScrollX = getCurrentScrollX();
+        hBar.setValue(maxScrollX < 1.0 ? 0.0 : (currentScrollX / maxScrollX));
+        hBar.setVisibleAmount(maxScrollX < 1.0 ? 1.0 : (container.getWidth() / (maxScrollX + container.getWidth())));
+        hBar.setMax(maxScrollX < 1.0 ? 0.0 : 1.0);
+        atLeftProperty.set(currentScrollX < 1.0);
+        atRightProperty.set(currentScrollX >= maxScrollX - 1.0);
         settingScrollBarVal = false;
     }
 
@@ -677,6 +708,18 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     public @Nullable FXPlatformRunnable getAddColumn()
     {
         return addColumn;
+    }
+
+    // True when the grid is scrolled all the way to the left
+    public BooleanExpression atLeftProperty()
+    {
+        return atLeftProperty;
+    }
+
+    // True when the grid is scrolled all the way to the right
+    public BooleanExpression atRightProperty()
+    {
+        return atRightProperty;
     }
 
     public static enum ScrollLock

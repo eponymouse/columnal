@@ -5,6 +5,7 @@ import javafx.animation.Timeline;
 import javafx.application.Platform;
 import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
+import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.DoubleBinding;
 import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.ObjectExpression;
@@ -459,6 +460,12 @@ public class FXUtility
     public static void setPseudoclass(Node node, String className, boolean on)
     {
         node.pseudoClassStateChanged(PseudoClass.getPseudoClass(className), on);
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static void bindPseudoclass(Node node, String className, BooleanExpression onExpression)
+    {
+        addChangeListenerPlatformNN(onExpression, b -> setPseudoclass(node, className, b));
     }
 
     // What's the shortest distance from the point to the left-hand side of the node?
