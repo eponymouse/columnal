@@ -127,9 +127,11 @@
 
     & .stable-view-scroll-bar > .decrement-button > .decrement-arrow,
     & .stable-view-scroll-bar > .increment-button > .increment-arrow,
-    & .stable-view-scroll-bar .thumb,
     & .stable-view-button > .stable-view-button-arrow  {
-        -fx-background-color: derive(-fx-base, -25%);
+        -fx-background-color: derive(-fx-base, -30%);
+    }
+    & .stable-view-scroll-bar .thumb {
+        -fx-background-color: derive(-fx-base, -15%);
     }
     &:at-top .stable-view-scroll-bar:vertical > .decrement-button > .decrement-arrow,
     &:at-bottom .stable-view-scroll-bar:vertical > .increment-button > .increment-arrow,
