@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
+import records.data.ColumnId;
 import records.data.EditableColumn;
 import records.data.EditableRecordSet;
 import records.data.MemoryNumericColumn;
@@ -27,6 +28,7 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stable.ReadOnlyStringColumnHandler;
+import records.gui.stable.StableView.ColumnDetails;
 import records.gui.stable.StableView.ColumnHandler;
 import records.importers.gui.ImportChoicesDialog.SourceInfo;
 import threadchecker.OnThread;
@@ -47,14 +49,14 @@ public class ImporterUtility
     //package-visible
     static SourceInfo makeSourceInfo(List<List<String>> vals)
     {
-        ImmutableList.Builder<Pair<String, ColumnHandler>> columnHandlers = ImmutableList.builder();
+        ImmutableList.Builder<ColumnDetails> columnHandlers = ImmutableList.builder();
         if (!vals.isEmpty())
         {
             int widest = vals.stream().mapToInt(l -> l.size()).max().orElse(0);
             for (int columnIndex = 0; columnIndex < widest; columnIndex++)
             {
                 int columnIndexFinal = columnIndex;
-                columnHandlers.add(new Pair<>("Column " + (columnIndex + 1), new ReadOnlyStringColumnHandler(columnIndexFinal)
+                columnHandlers.add(new ColumnDetails(new ColumnId("Column " + (columnIndex + 1)), new ReadOnlyStringColumnHandler(columnIndexFinal)
                 {
                     @Override
                     @OnThread(Tag.FXPlatform)

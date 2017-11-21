@@ -2,6 +2,8 @@ package records.gui.stf;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import javafx.scene.Node;
+import javafx.scene.control.Label;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
@@ -26,6 +28,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stable.EditorKitCache;
 import records.gui.stable.EditorKitCallback;
+import records.gui.stable.StableView.ColumnDetails;
 import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
 import records.gui.stf.*;
 import records.gui.stf.StructuredTextField.EditorKit;
@@ -36,6 +39,7 @@ import records.gui.stable.StableView.ColumnHandler;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
 import utility.Workers.Priority;
+import utility.gui.GUI;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -59,16 +63,16 @@ import java.util.function.Predicate;
 public class TableDisplayUtility
 {
 
-    public static ImmutableList<Pair<String, ColumnHandler>> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, @Nullable FXPlatformRunnable onModify)
+    public static ImmutableList<ColumnDetails> makeStableViewColumns(RecordSet recordSet, Pair<Display, Predicate<ColumnId>> columnSelection, @Nullable FXPlatformRunnable onModify)
     {
-        ImmutableList.Builder<Pair<String, ColumnHandler>> r = ImmutableList.builder();
+        ImmutableList.Builder<ColumnDetails> r = ImmutableList.builder();
         int displayColumnIndex = 0;
         for (int origColIndex = 0; origColIndex < recordSet.getColumns().size(); origColIndex++)
         {
             Column col = recordSet.getColumns().get(origColIndex);
             if (col.shouldShow(columnSelection))
             {
-                Pair<String, ColumnHandler> item;
+                ColumnDetails item;
                 try
                 {
                     item = getDisplay(displayColumnIndex, col, onModify != null ? onModify : FXPlatformRunnable.EMPTY);
@@ -77,7 +81,7 @@ public class TableDisplayUtility
                 {
                     final int columnIndexFinal = displayColumnIndex;
                     // Show a dummy column with an error message:
-                    item = new Pair<>(col.getName().getRaw(), new ColumnHandler()
+                    item = new ColumnDetails(col.getName(), new ColumnHandler()
                     {
                         @Override
                         public @OnThread(Tag.FXPlatform) void modifiedDataItems(int startRowIncl, int endRowIncl)
@@ -125,9 +129,25 @@ public class TableDisplayUtility
         return r.build();
     }
 
-    private static Pair<String, ColumnHandler> getDisplay(int columnIndex, @NonNull Column column, FXPlatformRunnable onModify) throws UserException, InternalException
+    private static ColumnDetails getDisplay(int columnIndex, @NonNull Column column, FXPlatformRunnable onModify) throws UserException, InternalException
     {
-        return new Pair<>(column.getName().getRaw(), makeField(columnIndex, column.getType(), column.isEditable(), onModify));
+        return new ColumnDetails(column.getName(), makeField(columnIndex, column.getType(), column.isEditable(), onModify)) {
+            @Override
+            protected @OnThread(Tag.FXPlatform) ImmutableList<Node> makeHeaderContent()
+            {
+                Label typeLabel = null;
+                try
+                {
+                    typeLabel = GUI.labelRaw(column.getType().toDisplay(false), "stable-view-column-type");
+                }
+                catch (UserException | InternalException e)
+                {
+                    Utility.log(e);
+                    typeLabel = GUI.label("column.type.unknown", "stable-view-column-type-unknown");
+                }
+                return Utility.concatI(super.makeHeaderContent(), ImmutableList.of(typeLabel));
+            }
+        };
         /*column.getType().<ColumnHandler, UserException>applyGet(new DataTypeVisitorGetEx<ColumnHandler, UserException>()
         {
             @Override

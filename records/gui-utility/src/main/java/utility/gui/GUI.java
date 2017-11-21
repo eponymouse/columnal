@@ -108,9 +108,21 @@ public class GUI
         return "id-" + msgKey.replace(".", "-");
     }
 
+    /**
+     * Looks up key and makes label with it.
+     */
     public static Label label(@LocalizableKey String msgKey, String... styleClasses)
     {
-        Label label = new Label(TranslationUtility.getString(msgKey));
+        @Localized String text = TranslationUtility.getString(msgKey);
+        return labelRaw(text, styleClasses);
+    }
+
+    /**
+     * Makes label with exact given text
+     */
+    public static Label labelRaw(@Localized String text, String... styleClasses)
+    {
+        Label label = new Label(text);
         label.getStyleClass().addAll(styleClasses);
         return label;
     }

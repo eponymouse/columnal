@@ -162,7 +162,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         private final FXPlatformRunnable onModify;
         private final RecordSet recordSet;
         // Not final because it changes if user changes the display item:
-        private ImmutableList<Pair<String, ColumnHandler>> displayColumns;
+        private ImmutableList<ColumnDetails> displayColumns;
 
         @SuppressWarnings("initialization")
         @UIEffect
@@ -256,7 +256,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
         public void loadColumnWidths(Map<ColumnId, Double> columnWidths)
         {
-            super.loadColumnWidths(Doubles.toArray(Utility.mapList(displayColumns, c -> columnWidths.getOrDefault(new ColumnId(c.getFirst()), DEFAULT_COLUMN_WIDTH))));
+            super.loadColumnWidths(Doubles.toArray(Utility.mapList(displayColumns, c -> columnWidths.getOrDefault(c.getColumnId(), DEFAULT_COLUMN_WIDTH))));
         }
 
         @Override
@@ -266,7 +266,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             ImmutableMap.Builder<ColumnId, Double> m = ImmutableMap.builder();
             for (int columnIndex = 0; columnIndex < displayColumns.size(); columnIndex++)
             {
-                m.put(new ColumnId(displayColumns.get(columnIndex).getFirst()), getColumnWidth(columnIndex));
+                m.put(displayColumns.get(columnIndex).getColumnId(), getColumnWidth(columnIndex));
             }
             mostRecentColumnWidths.set(m.build());
             parent.tableMovedOrResized(TableDisplay.this);

@@ -30,6 +30,8 @@ import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import org.jetbrains.annotations.NotNull;
+import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet.RecordSetListener;
 import records.data.Table.MessageWhenEmpty;
@@ -50,6 +52,7 @@ import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
+import utility.gui.GUI;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -113,7 +116,7 @@ public class StableView
     private AtomicInteger columnAndRowSet = new AtomicInteger(0);
     private final BooleanProperty showingRowNumbers = new SimpleBooleanProperty(true);
     // Contents can't change, but whole list can:
-    private ImmutableList<Pair<String, ColumnHandler>> columns = ImmutableList.of();
+    private ImmutableList<ColumnDetails> columns = ImmutableList.of();
     private static final double EDGE_DRAG_TOLERANCE = 8;
     private static final double MIN_COLUMN_WIDTH = 30;
     // A column is only editable if it is marked editable AND the table is editable:
@@ -145,10 +148,12 @@ public class StableView
             {
                 if (columns != null && colIndex < columns.size())
                 {
-                    columns.get(colIndex).getSecond().fetchValue(rowIndex, b -> {}, relinquishFocus, setEditorKit, -1, -1);
+                    columns.get(colIndex).columnHandler.fetchValue(rowIndex, b -> {
+                    }, relinquishFocus, setEditorKit, -1, -1);
                 }
             }
-        }, pos -> tableEditable && columns.get(pos.columnIndex).getSecond().isEditable(), hbar, vbar) {
+        }, pos -> tableEditable && columns.get(pos.columnIndex).columnHandler.isEditable(), hbar, vbar)
+        {
 
             @Override
             public void columnWidthChanged(int columnIndex, double newWidth)
@@ -156,7 +161,7 @@ public class StableView
                 super.columnWidthChanged(columnIndex, newWidth);
                 if (columns != null)
                 {
-                    ColumnHandler colHandler = columns.get(columnIndex).getSecond();
+                    ColumnHandler colHandler = columns.get(columnIndex).columnHandler;
                     colHandler.columnResized(newWidth);
                     updateWidthEstimate();
                     StableView.this.columnWidthChanged(columnIndex, newWidth);
@@ -175,7 +180,7 @@ public class StableView
         vbar = Utility.filterClass(scrollPane.getChildrenUnmodifiable().stream(), ScrollBar.class).filter(s -> s.getOrientation() == Orientation.VERTICAL).findFirst().get();
         */
 
-        headerItemsContainer = grid.makeColumnHeaders(colIndex -> Utility.mapList(FXUtility.mouse(this).getColumnOperations(new ColumnId(columns.get(colIndex).getFirst())), ColumnOperation::makeMenuItem), col -> ImmutableList.of(new Label(columns.get(col).getFirst())));
+        headerItemsContainer = grid.makeColumnHeaders(colIndex -> Utility.mapList(FXUtility.mouse(this).getColumnOperations(columns.get(colIndex).columnId), ColumnOperation::makeMenuItem), col -> columns.get(col).makeHeaderContent());
         final Pane header = new BorderPane(headerItemsContainer.getNode());
         header.getStyleClass().add("stable-view-header");
         lineNumbers = grid.makeLineNumbers(rowIndex -> Utility.mapList(FXUtility.mouse(this).getRowOperationsForSingleRow(rowIndex), RowOperation::makeMenuItem));
@@ -187,7 +192,7 @@ public class StableView
         placeholder.getStyleClass().add(".stable-view-placeholder");
         placeholder.visibleProperty().bind(nonEmptyProperty.not());
         placeholder.setWrapText(true);
-        
+
         Button topButton = makeScrollEndButton();
         topButton.getStyleClass().addAll("stable-view-button", "stable-view-button-top");
         topButton.setOnAction(e -> grid.scrollYToPixel(0));
@@ -400,7 +405,7 @@ public class StableView
 
     // If append is empty, can't append.  If it's present, can append, and run
     // this action after appending.
-    public void setColumnsAndRows(ImmutableList<Pair<String, ColumnHandler>> columns, @Nullable TableOperations operations, SimulationFunction<Integer, Boolean> isRowValid)
+    public void setColumnsAndRows(ImmutableList<ColumnDetails> columns, @Nullable TableOperations operations, SimulationFunction<Integer, Boolean> isRowValid)
     {
         final int curColumnAndRowSet = this.columnAndRowSet.incrementAndGet();
         this.operations = operations;
@@ -481,9 +486,9 @@ public class StableView
 
     public void removedAddedRows(int startRowIncl, int removedRowsCount, int addedRowsCount)
     {
-        for (Pair<String, ColumnHandler> column : columns)
+        for (ColumnDetails column : columns)
         {
-            column.getSecond().removedAddedRows(startRowIncl, removedRowsCount, addedRowsCount);
+            column.columnHandler.removedAddedRows(startRowIncl, removedRowsCount, addedRowsCount);
         }
 
         if (removedRowsCount > 0)
@@ -636,6 +641,31 @@ public class StableView
             rightVertScroll.resizeRelocate(width - rightScrollWidth, colHeaderHeight, rightScrollWidth, height - colHeaderHeight - bottomScrollHeight);
             bottomHorizScroll.resizeRelocate(rowHeaderWidth, height - bottomScrollHeight, width - rowHeaderWidth - rightScrollWidth, bottomScrollHeight);
             dataGrid.resizeRelocate(rowHeaderWidth, colHeaderHeight, width - rowHeaderWidth - rightScrollWidth, height - colHeaderHeight - bottomScrollHeight);
+        }
+    }
+
+    public static class ColumnDetails
+    {
+        private final ColumnHandler columnHandler;
+        private final ColumnId columnId;
+
+        public ColumnDetails(ColumnId columnId, ColumnHandler columnHandler)
+        {
+            this.columnId = columnId;
+            this.columnHandler = columnHandler;
+        }
+
+        @OnThread(Tag.FXPlatform)
+        protected ImmutableList<Node> makeHeaderContent()
+        {
+            return ImmutableList.of(
+                GUI.labelRaw(columnId.getRaw(), "stable-view-column-title")
+            );
+        }
+
+        public final ColumnId getColumnId()
+        {
+            return columnId;
         }
     }
 }

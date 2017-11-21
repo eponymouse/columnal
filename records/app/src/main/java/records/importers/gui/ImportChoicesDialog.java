@@ -41,6 +41,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.ErrorableTextField;
 import records.gui.ErrorableTextField.ConversionResult;
+import records.gui.stable.StableView.ColumnDetails;
 import records.gui.stf.TableDisplayUtility;
 import records.gui.TableNameTextField;
 import records.gui.stable.StableView;
@@ -79,10 +80,10 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
 {
     public static class SourceInfo
     {
-        private final ImmutableList<Pair<String, ColumnHandler>> srcColumns;
+        private final ImmutableList<ColumnDetails> srcColumns;
         private final int numRows;
 
-        public SourceInfo(ImmutableList<Pair<String, ColumnHandler>> srcColumns, int numRows)
+        public SourceInfo(ImmutableList<ColumnDetails> srcColumns, int numRows)
         {
             this.srcColumns = srcColumns;
             this.numRows = numRows;
