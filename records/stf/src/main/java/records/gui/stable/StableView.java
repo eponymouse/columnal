@@ -584,11 +584,6 @@ public class StableView
         return new ScrollPosition(grid.getFirstDisplayRow(), grid.getFirstVisibleRowOffset());
     }
 
-    public void restoreScrollPositionFromTop(ScrollPosition pos)
-    {
-        grid.showAtOffset(new Pair<>(pos.visRow, pos.offset), null);
-    }
-
     public VirtScrollStrTextGrid _test_getGrid()
     {
         return grid;
