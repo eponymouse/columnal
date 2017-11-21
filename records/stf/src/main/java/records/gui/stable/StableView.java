@@ -429,7 +429,7 @@ public class StableView
     }
 
     // Column Index, Row Index
-    public ObjectExpression<@Nullable CellPosition> focusedCellProperty()
+    public ObjectExpression<@Nullable CellSelection> focusedCellProperty()
     {
         return grid.focusedCellProperty();
     }
