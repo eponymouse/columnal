@@ -221,7 +221,7 @@ public class VirtColHeaders implements ScrollBindable
         @Override
         protected double computePrefHeight(double width)
         {
-            return 37.0;
+            return Math.max(visibleCells.values().stream().mapToDouble(s -> s.prefHeight(s.getWidth())).max().orElse(0.0), addColumnButton.prefHeight(addColumnButton.getWidth()));
         }
 
         @Override
