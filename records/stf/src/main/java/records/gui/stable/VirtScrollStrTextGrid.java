@@ -268,7 +268,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     private double getMaxScrollY()
     {
-        return (currentKnownRows.get() - 1) * rowHeight;
+        return Math.max(0, (currentKnownRows.get() - 1) * rowHeight - container.getHeight());
     }
 
     public ObjectExpression<@Nullable CellPosition> focusedCellProperty()
@@ -290,7 +290,17 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         // Then offset is topCell*rowHeight - y
         int topCell = (int) Math.floor(y / rowHeight);
         double rowPixelOffset = (topCell * rowHeight) - y;
-        showAtOffset(new Pair<>(topCell, rowPixelOffset), null);
+
+        int bottomCell = (int)Math.floor((y + container.getHeight()) / rowHeight);
+        int rows = currentKnownRows.get() + (appendRow == null ? 0 : 1);
+        if (bottomCell >= rows)
+        {
+            topCell = rows - 1 - (int)Math.floor(container.getHeight() / rowHeight);
+            rowPixelOffset = container.getHeight() - (rows - topCell) * rowHeight;
+        }
+
+        Pair<Integer, Double> scrollDest = new Pair<>(topCell, rowPixelOffset);
+        showAtOffset(scrollDest, null);
     }
 
     private void updateKnownRows()
@@ -508,8 +518,11 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private void updateVBar()
     {
         settingScrollBarVal = true;
-        vBar.setValue(getCurrentScrollY() / getMaxScrollY());
-        vBar.setVisibleAmount(container.getHeight() / (getMaxScrollY() + container.getHeight()));
+        double maxScrollY = getMaxScrollY();
+        double currentScrollY = getCurrentScrollY();
+        vBar.setValue(maxScrollY < 1.0 ? 0.0 : (currentScrollY / maxScrollY));
+        vBar.setVisibleAmount(maxScrollY < 1.0 ? 1.0 : (container.getHeight() / (maxScrollY + container.getHeight())));
+        vBar.setMax(maxScrollY < 1.0 ? 0.0 : 1.0);
         settingScrollBarVal = false;
     }
 
