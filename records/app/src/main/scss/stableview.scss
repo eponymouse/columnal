@@ -170,15 +170,15 @@
 
 /* focused-cell means the cell wrapper has focus (cell selected) */
 .virt-grid:focused {
-    & .structured-text-field:focused-cell {
+    & .structured-text-field:primary-selected-cell {
         /* Must beat hover, above */
         -fx-background-color: $focus-color !important;
         & .text {
             -fx-fill: $focus-color-text;
         }
     }
-    & .virt-grid-cell:focused-row-col {
-        -fx-background-color: $focus-color-row-col;
+    & .structured-text-field:secondary-selected-cell {
+        -fx-background-color: $focus-color-secondary !important;
     }
 }
 .virt-grid {

@@ -11,25 +11,28 @@ import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
  */
 public interface CellSelection
 {
+    // Primary selection means the single cell being moved around, secondary selection means cells that are also selected but not primary.
+    public static enum SelectionStatus { UNSELECTED, SECONDARY_SELECTION, PRIMARY_SELECTION}
+
     /**
      * Gets a new selection that is the result of pressing home on this one.
      */
-    public CellSelection atHome();
+    public CellSelection atHome(boolean extendSelection);
 
     /**
      * Gets a new selection that is the result of pressing end on this one.
      */
-    public CellSelection atEnd(int maxRows, int maxColumns);
+    public CellSelection atEnd(boolean extendSelection, int maxRows, int maxColumns);
 
     /**
      * If the user was to try to edit (e.g. by pressing enter), which cell would they actually edit?
      */
     public CellPosition editPosition();
 
-    public CellSelection move(int byRows, int byColumns, int maxRows, int maxColumns);
+    public CellSelection move(boolean extendSelection, int byRows, int byColumns, int maxRows, int maxColumns);
 
     /**
      * Does this selection contain the given cell?
      */
-    public boolean contains(CellPosition cellPosition);
+    public SelectionStatus selectionStatus(CellPosition cellPosition);
 }

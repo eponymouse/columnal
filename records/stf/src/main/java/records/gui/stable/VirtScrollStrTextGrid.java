@@ -30,6 +30,8 @@ import javafx.scene.control.Button;
 import javafx.scene.control.MenuItem;
 import javafx.scene.control.ScrollBar;
 import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyCombination;
+import javafx.scene.input.KeyCombination.Modifier;
 import javafx.scene.input.KeyEvent;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
@@ -47,11 +49,13 @@ import org.fxmisc.wellbehaved.event.InputMap;
 import org.fxmisc.wellbehaved.event.Nodes;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.stable.CellSelection.SelectionStatus;
 import records.gui.stf.EditorKitSimpleLabel;
 import records.gui.stf.StructuredTextField;
 import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.FXPlatformBiConsumer;
 import utility.FXPlatformConsumer;
 import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
@@ -391,8 +395,11 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // Focuses cell so that you can navigate around with keyboard
     public void focusCell(@Nullable CellSelection cellSelection)
     {
+        System.err.println("Focusing: " + cellSelection);
         visibleCells.forEach((visPos, visCell) -> {
-            FXUtility.setPseudoclass(visCell, "focused-cell", cellSelection != null && cellSelection.contains(visPos));
+            SelectionStatus status = cellSelection == null ? SelectionStatus.UNSELECTED : cellSelection.selectionStatus(visPos);
+            FXUtility.setPseudoclass(visCell, "primary-selected-cell", status == SelectionStatus.PRIMARY_SELECTION);
+            FXUtility.setPseudoclass(visCell, "secondary-selected-cell", status == SelectionStatus.SECONDARY_SELECTION);
 
             //boolean correctRow = cellSelection != null && cellSelection.rowIndex == visPos.rowIndex;
             //boolean correctColumn = cellSelection != null && cellSelection.columnIndex == visPos.columnIndex;
@@ -1014,14 +1021,14 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             });
 
             Nodes.addInputMap(FXUtility.keyboard(this), InputMap.sequence(
-                bind(KeyCode.HOME, Container::home),
-                bind(KeyCode.END, Container::end),
-                bind(KeyCode.UP, c -> c.move(-1, 0)),
-                bind(KeyCode.DOWN, c -> c.move(1, 0)),
-                bind(KeyCode.LEFT, c -> c.move(0, -1)),
-                bind(KeyCode.RIGHT, c -> c.move(0, 1)),
-                bind(KeyCode.PAGE_UP, c -> c.move(-((int)Math.floor(c.getHeight() / rowHeight) - 1), 0)),
-                bind(KeyCode.PAGE_DOWN, c -> c.move((int)Math.floor(c.getHeight() / rowHeight) - 1, 0)),
+                bindS(KeyCode.HOME, (shift, c) -> c.home(shift)),
+                bindS(KeyCode.END, (shift, c) -> c.end(shift)),
+                bindS(KeyCode.UP, (shift, c) -> c.move(shift, -1, 0)),
+                bindS(KeyCode.DOWN, (shift, c) -> c.move(shift, 1, 0)),
+                bindS(KeyCode.LEFT, (shift, c) -> c.move(shift, 0, -1)),
+                bindS(KeyCode.RIGHT, (shift, c) -> c.move(shift, 0, 1)),
+                bindS(KeyCode.PAGE_UP, (shift, c) -> c.move(shift, -((int)Math.floor(c.getHeight() / rowHeight) - 1), 0)),
+                bindS(KeyCode.PAGE_DOWN, (shift, c) -> c.move(shift, (int)Math.floor(c.getHeight() / rowHeight) - 1, 0)),
                 InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
                     @Nullable CellSelection focusedCellPosition = focusedCell.get();
                     if (focusedCellPosition != null)
@@ -1041,24 +1048,38 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             ));
         }
 
-        private void move(int rows, int columns)
+        private void move(boolean extendSelection, int rows, int columns)
         {
             @Nullable CellSelection focusedCellPos = focusedCell.get();
             if (focusedCellPos != null)
             {
-                focusCell(focusedCellPos.move(rows, columns, currentKnownRows.get(), getNumColumns()));
+                focusCell(focusedCellPos.move(extendSelection, rows, columns, currentKnownRows.get(), getNumColumns()));
             }
         }
 
-        private InputMap<KeyEvent> bind(@UnknownInitialization(Region.class) Container this, KeyCode keyCode, FXPlatformConsumer<Container> action)
+        private InputMap<KeyEvent> bind(@UnknownInitialization(Region.class) Container this, KeyCode keyCode, FXPlatformConsumer<Container> action, Modifier... modifiers)
         {
-            return InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(keyCode), e -> {
+            return InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(keyCode, modifiers), e -> {
                 action.consume(FXUtility.keyboard(this));
                 e.consume();
             });
         }
 
-        private void home()
+        /**
+         * Like bind, but binds with and without shift held, passing a boolean for shift state to the lambda
+         * @param keyCode
+         * @param action
+         * @return
+         */
+        private InputMap<KeyEvent> bindS(@UnknownInitialization(Region.class) Container this, KeyCode keyCode, FXPlatformBiConsumer<Boolean, Container> action)
+        {
+            return InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(keyCode, KeyCombination.SHIFT_ANY), e -> {
+                action.consume(e.isShiftDown(), FXUtility.keyboard(this));
+                e.consume();
+            });
+        }
+
+        private void home(boolean extendSelection)
         {
             @Nullable CellSelection focusedCellPos = focusedCell.get();
             scrollYToPixel(0.0);
@@ -1066,11 +1087,11 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             layout();
             if (focusedCellPos != null)
             {
-                focusCell(focusedCellPos.atHome());
+                focusCell(focusedCellPos.atHome(extendSelection));
             }
         }
 
-        private void end()
+        private void end(boolean extendSelection)
         {
             @Nullable CellSelection focusedCellPos = focusedCell.get();
             scrollYToPixel(Double.MAX_VALUE);
@@ -1078,7 +1099,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             layout();
             if (focusedCellPos != null)
             {
-                focusCell(focusedCellPos.atEnd(currentKnownRows.get(), getNumColumns()));
+                focusCell(focusedCellPos.atEnd(extendSelection, currentKnownRows.get(), getNumColumns()));
             }
         }
 
@@ -1154,7 +1175,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                         {
                             cell = spareCells.remove(spareCells.size() - 1);
                             // Reset state:
-                            FXUtility.setPseudoclass(cell, "focused-cell", false);
+                            FXUtility.setPseudoclass(cell, "primary-selected-cell", false);
+                            FXUtility.setPseudoclass(cell, "secondary-selected-cell", false);
                         }
                         else
                         {
@@ -1352,6 +1374,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     public static class CellPosition
     {
+        // Both are zero-based:
         public final int rowIndex;
         public final int columnIndex;
 

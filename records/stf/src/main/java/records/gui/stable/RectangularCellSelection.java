@@ -5,85 +5,64 @@ import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
 
 public class RectangularCellSelection implements CellSelection
 {
-    // Row and column index are zero-based
-    private final int rowIndex;
-    private final int columnIndex;
-    // Counts guaranteed to be >= 1, and valid for table size
-    private final int rowCount;
-    private final int columnCount;
+    private final CellPosition startAnchor;
+    private final CellPosition curFocus;
 
     // Selects a single cell:
     public RectangularCellSelection(int rowIndex, int columnIndex)
     {
-        this.rowIndex = rowIndex;
-        this.columnIndex = columnIndex;
-        rowCount = 1;
-        columnCount = 1;
+        startAnchor = curFocus = new CellPosition(rowIndex, columnIndex);
+    }
+
+    private RectangularCellSelection(CellPosition anchor, CellPosition focus)
+    {
+        this.startAnchor = anchor;
+        this.curFocus = focus;
     }
 
     @Override
-    public CellSelection atHome()
+    public CellSelection atHome(boolean extendSelection)
     {
-        if (rowCount == 1 && columnCount == 1)
-            return new RectangularCellSelection(0, columnIndex);
-        else
-            return new RectangularCellSelection(rowIndex, columnIndex); // Top-left
+        CellPosition dest = new CellPosition(0, curFocus.columnIndex);
+        return new RectangularCellSelection(extendSelection ? startAnchor : dest, dest);
     }
 
     @Override
-    public CellSelection atEnd(int maxRows, int maxColumns)
+    public CellSelection atEnd(boolean extendSelection, int maxRows, int maxColumns)
     {
-        if (rowCount == 1 && columnCount == 1)
-            return new RectangularCellSelection(maxRows - 1, columnIndex);
-        else
-            return new RectangularCellSelection(rowIndex + rowCount - 1, columnIndex + columnCount - 1);
+        CellPosition dest = new CellPosition(maxRows - 1, curFocus.columnIndex);
+        return new RectangularCellSelection(extendSelection ? startAnchor : dest, dest);
     }
 
     @Override
     public CellPosition editPosition()
     {
         // Top-left
-        return new CellPosition(rowIndex, columnIndex);
+        return curFocus;
     }
 
     @Override
-    public CellSelection move(int byRows, int byColumns, int maxRows, int maxColumns)
+    public CellSelection move(boolean extendSelection, int byRows, int byColumns, int maxRows, int maxColumns)
     {
+        CellPosition dest = new CellPosition(Math.max(0, Math.min(maxRows - 1, curFocus.rowIndex + byRows)),
+            Math.max(0, Math.min(maxColumns - 1, curFocus.columnIndex + byColumns)));
         // Move from top-left:
-        return new RectangularCellSelection(
-            Math.max(0, Math.min(maxRows - 1, rowIndex + byRows)),
-            Math.max(0, Math.min(maxColumns - 1, columnIndex + byColumns))
-        );
+        return new RectangularCellSelection(extendSelection ? startAnchor : dest, dest);
     }
 
     @Override
-    public boolean contains(CellPosition cellPosition)
+    public SelectionStatus selectionStatus(CellPosition cellPosition)
     {
-        return rowIndex <= cellPosition.rowIndex && cellPosition.rowIndex < rowIndex + rowCount
-            && columnIndex <= cellPosition.columnIndex && cellPosition.columnIndex < columnIndex + columnCount;
+        if (cellPosition.equals(curFocus))
+            return SelectionStatus.PRIMARY_SELECTION;
+
+        int minRow = Math.min(startAnchor.rowIndex, curFocus.rowIndex);
+        int maxRow = Math.max(startAnchor.rowIndex, curFocus.rowIndex);
+        int minColumn = Math.min(startAnchor.columnIndex, curFocus.columnIndex);
+        int maxColumn = Math.max(startAnchor.columnIndex, curFocus.columnIndex);
+        
+        return (minRow <= cellPosition.rowIndex && cellPosition.rowIndex <= maxRow
+            && minColumn <= cellPosition.columnIndex && cellPosition.columnIndex <= maxColumn) ? SelectionStatus.SECONDARY_SELECTION : SelectionStatus.UNSELECTED;
     }
 
-    @Override
-    public boolean equals(@Nullable Object o)
-    {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
-
-        RectangularCellSelection that = (RectangularCellSelection) o;
-
-        if (rowIndex != that.rowIndex) return false;
-        if (columnIndex != that.columnIndex) return false;
-        if (rowCount != that.rowCount) return false;
-        return columnCount == that.columnCount;
-    }
-
-    @Override
-    public int hashCode()
-    {
-        int result = rowIndex;
-        result = 31 * result + columnIndex;
-        result = 31 * result + rowCount;
-        result = 31 * result + columnCount;
-        return result;
-    }
 }
