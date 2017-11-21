@@ -154,6 +154,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private @Nullable FXPlatformRunnable addColumn;
     private final BooleanProperty atLeftProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty atRightProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty atTopProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty atBottomProperty = new SimpleBooleanProperty(false);
     private final DoubleProperty extraButtonWidthProperty = new SimpleDoubleProperty(0.0);
 
     public VirtScrollStrTextGrid(ValueLoadSave loadSave, FXPlatformFunction<CellPosition, Boolean> canEdit, ScrollBar hBar, ScrollBar vBar)
@@ -523,6 +525,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         vBar.setValue(maxScrollY < 1.0 ? 0.0 : (currentScrollY / maxScrollY));
         vBar.setVisibleAmount(maxScrollY < 1.0 ? 1.0 : (container.getHeight() / (maxScrollY + container.getHeight())));
         vBar.setMax(maxScrollY < 1.0 ? 0.0 : 1.0);
+        atTopProperty.set(currentScrollY < 1.0);
+        atBottomProperty.set(currentScrollY >= maxScrollY - 1.0);
+
         settingScrollBarVal = false;
     }
 
@@ -737,6 +742,18 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     public BooleanExpression atRightProperty()
     {
         return atRightProperty;
+    }
+
+    // True when the grid is scrolled all the way to the top
+    public BooleanExpression atTopProperty()
+    {
+        return atTopProperty;
+    }
+
+    // True when the grid is scrolled all the way to the bottom
+    public BooleanExpression atBottomProperty()
+    {
+        return atBottomProperty;
     }
 
     public static enum ScrollLock

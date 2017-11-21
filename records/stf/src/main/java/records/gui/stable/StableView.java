@@ -237,11 +237,8 @@ public class StableView
 
         FXUtility.bindPseudoclass(stackPane, "at-left", grid.atLeftProperty());
         FXUtility.bindPseudoclass(stackPane, "at-right", grid.atRightProperty());
-
-        FXUtility.addChangeListenerPlatformNN(vbar.valueProperty(), v -> {
-            FXUtility.setPseudoclass(stackPane, "at-top", v.doubleValue() <= 0.001);
-            FXUtility.setPseudoclass(stackPane, "at-bottom", v.doubleValue() >= 0.999);
-        });
+        FXUtility.bindPseudoclass(stackPane, "at-top", grid.atTopProperty());
+        FXUtility.bindPseudoclass(stackPane, "at-bottom", grid.atBottomProperty());
 
 
         widthEstimate = new SimpleDoubleProperty();
