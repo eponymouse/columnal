@@ -341,6 +341,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         });
 
         Label title = new Label(table.getId().getOutput());
+        GUI.showTooltipWhenAbbrev(title);
         Utility.addStyleClass(title, "table-title");
         header = new HBox(actionsButton, title, spacer);
         header.getChildren().add(addButton);

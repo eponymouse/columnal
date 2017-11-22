@@ -336,4 +336,27 @@ public class GUI
         }
         return stackPane;
     }
+
+    /**
+     * Whenever this label is abbreviated (i.e. has an ellipsis that hides some text),
+     * add a tooltip
+     * @param label
+     */
+    public static void showTooltipWhenAbbrev(Label label)
+    {
+        Tooltip tooltip = new Tooltip(label.getText());
+        FXPlatformRunnable update = () -> {
+            if (label.prefWidth(label.getHeight()) > label.getWidth())
+            {
+                Tooltip.install(label, tooltip);
+            }
+            else
+            {
+                Tooltip.uninstall(label, tooltip);
+            }
+        };
+        FXUtility.addChangeListenerPlatformNN(label.prefWidthProperty(), w -> update.run());
+        FXUtility.addChangeListenerPlatformNN(label.widthProperty(), w -> update.run());
+        FXUtility.addChangeListenerPlatformNN(label.textProperty(), w -> update.run());
+    }
 }
