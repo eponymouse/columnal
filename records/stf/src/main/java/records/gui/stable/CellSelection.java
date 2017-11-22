@@ -38,7 +38,12 @@ public interface CellSelection
     public SelectionStatus selectionStatus(CellPosition cellPosition);
 
     /**
-     * Does the selection contain the given row?
+     * Does the selection contain the given row header?
      */
     public SelectionStatus rowSelectionStatus(int rowIndex);
+
+    /**
+     * Does the selection contain the given column header?
+     */
+    public SelectionStatus columnSelectionStatus(int columnIndex);
 }

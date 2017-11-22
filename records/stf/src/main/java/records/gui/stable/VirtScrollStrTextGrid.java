@@ -757,6 +757,11 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         select(new RowSelection(rowIndex, rowIndex));
     }
 
+    public void selectColumn(int columnIndex)
+    {
+        select(new ColumnSelection(columnIndex, columnIndex));
+    }
+
     public static enum ScrollLock
     {
         HORIZONTAL, VERTICAL, BOTH;

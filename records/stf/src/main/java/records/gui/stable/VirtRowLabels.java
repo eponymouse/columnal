@@ -157,7 +157,7 @@ public class VirtRowLabels implements ScrollBindable
                         cell.getStyleClass().add("virt-grid-row-number");
                         getChildren().add(cell);
                     }
-
+                    // Must go out here because if we repurpose a cell, we need to update handlers:
                     int rowIndexFinal = rowIndex;
                     StackPane cellFinal = cell;
                     cell.setOnContextMenuRequested(e -> {

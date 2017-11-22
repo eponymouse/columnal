@@ -65,4 +65,10 @@ public class RowSelection implements CellSelection
         else
             return SelectionStatus.UNSELECTED;
     }
+
+    @Override
+    public SelectionStatus columnSelectionStatus(int columnIndex)
+    {
+        return SelectionStatus.UNSELECTED;
+    }
 }

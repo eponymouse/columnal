@@ -10,6 +10,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.MenuItem;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.MouseEvent;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
@@ -19,6 +20,7 @@ import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
+import records.gui.stable.CellSelection.SelectionStatus;
 import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -88,6 +90,13 @@ public class VirtColHeaders implements ScrollBindable
         @SuppressWarnings("initialization")
         ScrollLock prev = grid.scrollDependents.put(this, ScrollLock.HORIZONTAL);
         container.translateXProperty().bind(grid.container.translateXProperty());
+        FXUtility.addChangeListenerPlatform(grid.selectionProperty(), (@Nullable CellSelection sel) -> {
+            for (Entry<Integer, StackPane> entry : visibleCells.entrySet())
+            {
+                FXUtility.setPseudoclass(entry.getValue(), "primary-selected-cell", sel != null && sel.columnSelectionStatus(entry.getKey()) == SelectionStatus.PRIMARY_SELECTION);
+                FXUtility.setPseudoclass(entry.getValue(), "secondary-selected-cell", sel != null && sel.columnSelectionStatus(entry.getKey()) == SelectionStatus.SECONDARY_SELECTION);
+            }
+        });
         glass = new Pane();
         glass.setMouseTransparent(true);
         glass.getStyleClass().add("virt-grid-glass");
@@ -260,15 +269,23 @@ public class VirtColHeaders implements ScrollBindable
                     {
                         cell = GUI.withRightClickHint(new VBox(), Pos.TOP_RIGHT);
                         cell.getStyleClass().add("virt-grid-col-header");
-                        StackPane newCellFinal = cell;
-                        int colIndexFinal = colIndex;
-                        cell.setOnContextMenuRequested(e -> {
-                            ContextMenu menu = new ContextMenu();
-                            menu.getItems().addAll(makeContextMenuItems.apply(colIndexFinal));
-                            menu.show(newCellFinal, e.getScreenX(), e.getScreenY());
-                        });
                         getChildren().add(cell);
                     }
+                    // Must go out here because if we repurpose a cell, we need to update handlers:
+                    StackPane newCellFinal = cell;
+                    int colIndexFinal = colIndex;
+                    cell.setOnContextMenuRequested(e -> {
+                        ContextMenu menu = new ContextMenu();
+                        menu.getItems().addAll(makeContextMenuItems.apply(colIndexFinal));
+                        menu.show(newCellFinal, e.getScreenX(), e.getScreenY());
+                    });
+                    cell.setOnMouseClicked(e -> {
+                        if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 1)
+                        {
+                            grid.selectColumn(colIndexFinal);
+                            e.consume();
+                        }
+                    });
                     visibleCells.put(colIndex, cell);
                     ((VBox)cell.getChildren().get(0)).getChildren().setAll(getContent.apply(colIndex));
                 }

@@ -71,4 +71,9 @@ public class RectangularCellSelection implements CellSelection
         return SelectionStatus.UNSELECTED;
     }
 
+    @Override
+    public SelectionStatus columnSelectionStatus(int rowIndex)
+    {
+        return SelectionStatus.UNSELECTED;
+    }
 }
