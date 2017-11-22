@@ -52,7 +52,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.Utility;
 import utility.Utility.IndexRange;
@@ -804,7 +803,7 @@ public class GuessFormat
             this.numHeaderRows = numHeaderRows;
             this.usedRanges = new int[100000];
             Arrays.fill(usedRanges, -1);
-            tableView.focusedCellProperty().addListener(this);
+            tableView.selectionProperty().addListener(this);
         }
 
 

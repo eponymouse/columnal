@@ -65,4 +65,10 @@ public class RectangularCellSelection implements CellSelection
             && minColumn <= cellPosition.columnIndex && cellPosition.columnIndex <= maxColumn) ? SelectionStatus.SECONDARY_SELECTION : SelectionStatus.UNSELECTED;
     }
 
+    @Override
+    public SelectionStatus rowSelectionStatus(int rowIndex)
+    {
+        return SelectionStatus.UNSELECTED;
+    }
+
 }

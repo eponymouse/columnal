@@ -4,11 +4,13 @@ import javafx.geometry.Pos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.input.MouseButton;
 import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.gui.stable.CellSelection.SelectionStatus;
 import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -48,6 +50,13 @@ public class VirtRowLabels implements ScrollBindable
         ScrollLock prev = grid.scrollDependents.put(this, ScrollLock.VERTICAL);
         FXUtility.addChangeListenerPlatformNN(grid.currentKnownRows(), r -> container.requestLayout());
         FXUtility.addChangeListenerPlatformNN(grid.heightProperty(), r -> container.requestLayout());
+        FXUtility.addChangeListenerPlatform(grid.selectionProperty(), (@Nullable CellSelection sel) -> {
+            for (Entry<Integer, StackPane> entry : visibleCells.entrySet())
+            {
+                FXUtility.setPseudoclass(entry.getValue(), "primary-selected-cell", sel != null && sel.rowSelectionStatus(entry.getKey()) == SelectionStatus.PRIMARY_SELECTION);
+                FXUtility.setPseudoclass(entry.getValue(), "secondary-selected-cell", sel != null && sel.rowSelectionStatus(entry.getKey()) == SelectionStatus.SECONDARY_SELECTION);
+            }
+        });
         container.translateYProperty().bind(grid.container.translateYProperty());
         glass = new Pane();
         glass.setMouseTransparent(true);
@@ -159,6 +168,13 @@ public class VirtRowLabels implements ScrollBindable
                         {
                             menu.getItems().addAll(menuItems);
                             menu.show(cellFinal, e.getScreenX(), e.getScreenY());
+                        }
+                    });
+                    cell.setOnMouseClicked(e -> {
+                        if (e.getButton() == MouseButton.PRIMARY && e.getClickCount() == 1)
+                        {
+                            grid.selectRow(rowIndexFinal);
+                            e.consume();
                         }
                     });
 

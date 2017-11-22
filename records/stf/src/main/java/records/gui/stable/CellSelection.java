@@ -11,7 +11,8 @@ import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
  */
 public interface CellSelection
 {
-    // Primary selection means the single cell being moved around, secondary selection means cells that are also selected but not primary.
+    // Primary selection means the single cell/row/column being moved around,
+    // secondary selection means cells that are also selected but not primary.
     public static enum SelectionStatus { UNSELECTED, SECONDARY_SELECTION, PRIMARY_SELECTION}
 
     /**
@@ -35,4 +36,9 @@ public interface CellSelection
      * Does this selection contain the given cell?
      */
     public SelectionStatus selectionStatus(CellPosition cellPosition);
+
+    /**
+     * Does the selection contain the given row?
+     */
+    public SelectionStatus rowSelectionStatus(int rowIndex);
 }

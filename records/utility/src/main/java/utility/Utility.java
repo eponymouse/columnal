@@ -1063,6 +1063,16 @@ public class Utility
         return IntStream.range(0, list.size()).mapToObj(i -> new Pair<>(i, list.get(i)));
     }
 
+    public static int clampIncl(int lowBoundIncl, int value, int highBoundIncl)
+    {
+        if (value < lowBoundIncl)
+            return lowBoundIncl;
+        else if (value > highBoundIncl)
+            return highBoundIncl;
+        else
+            return value;
+    }
+
     public static class ReadState
     {
         private final File file;

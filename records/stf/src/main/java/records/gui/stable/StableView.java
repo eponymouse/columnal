@@ -24,14 +24,11 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
-import org.jetbrains.annotations.NotNull;
-import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet.RecordSetListener;
 import records.data.Table.MessageWhenEmpty;
@@ -46,7 +43,6 @@ import records.gui.stable.VirtScrollStrTextGrid.ValueLoadSave;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
-import utility.Pair;
 import utility.SimulationFunction;
 import utility.Utility;
 import utility.Workers;
@@ -429,9 +425,9 @@ public class StableView
     }
 
     // Column Index, Row Index
-    public ObjectExpression<@Nullable CellSelection> focusedCellProperty()
+    public ObjectExpression<@Nullable CellSelection> selectionProperty()
     {
-        return grid.focusedCellProperty();
+        return grid.selectionProperty();
     }
 
     public int getColumnCount()

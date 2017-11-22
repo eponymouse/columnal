@@ -132,7 +132,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private @Nullable SimulationFunction<Integer, Boolean> isRowValid;
     private double[] columnWidths;
 
-    private final ObjectProperty<@Nullable CellSelection> focusedCell = new SimpleObjectProperty<>(null);
+    private final ObjectProperty<@Nullable CellSelection> selection = new SimpleObjectProperty<>(null);
 
     private final ValueLoadSave loadSave;
 
@@ -273,9 +273,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         return Math.max(0, (currentKnownRows.get() - 1) * rowHeight - container.getHeight());
     }
 
-    public ObjectExpression<@Nullable CellSelection> focusedCellProperty()
+    public ObjectExpression<@Nullable CellSelection> selectionProperty()
     {
-        return focusedCell;
+        return selection;
     }
 
     // Immediately scrolls with no animation
@@ -393,22 +393,14 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     }
 
     // Focuses cell so that you can navigate around with keyboard
-    public void focusCell(@Nullable CellSelection cellSelection)
+    public void select(@Nullable CellSelection cellSelection)
     {
-        System.err.println("Focusing: " + cellSelection);
         visibleCells.forEach((visPos, visCell) -> {
             SelectionStatus status = cellSelection == null ? SelectionStatus.UNSELECTED : cellSelection.selectionStatus(visPos);
             FXUtility.setPseudoclass(visCell, "primary-selected-cell", status == SelectionStatus.PRIMARY_SELECTION);
             FXUtility.setPseudoclass(visCell, "secondary-selected-cell", status == SelectionStatus.SECONDARY_SELECTION);
-
-            //boolean correctRow = cellSelection != null && cellSelection.rowIndex == visPos.rowIndex;
-            //boolean correctColumn = cellSelection != null && cellSelection.columnIndex == visPos.columnIndex;
-            // XOR; don't want to set it for actually focused cell:
-            //boolean showAsCross = correctRow != correctColumn;
-            //FXUtility.setPseudoclass(visCell, "focused-row-col", showAsCross);
-
         });
-        focusedCell.set(cellSelection);
+        selection.set(cellSelection);
         if (cellSelection != null)
             container.requestFocus();
     }
@@ -760,6 +752,11 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         return atBottomProperty;
     }
 
+    public void selectRow(int rowIndex)
+    {
+        select(new RowSelection(rowIndex, rowIndex));
+    }
+
     public static enum ScrollLock
     {
         HORIZONTAL, VERTICAL, BOTH;
@@ -987,10 +984,10 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 @Nullable CellSelection cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
                 @Nullable StructuredTextField cell = cellPosition == null ? null : visibleCells.get(cellPosition.editPosition());
                 // This check may not be right now we have selections larger than one cell
-                boolean positionIsFocusedCellWrapper = Objects.equals(focusedCell.get(), cellPosition);
+                boolean positionIsFocusedCellWrapper = Objects.equals(selection.get(), cellPosition);
                 if (cell != null && cellPosition != null && mouseEvent.getClickCount() == 1 && !cell.isFocused() && !positionIsFocusedCellWrapper && mouseEvent.getEventType() == MouseEvent.MOUSE_CLICKED && mouseEvent.isStillSincePress())
                 {
-                    focusCell(cellPosition);
+                    select(cellPosition);
                 }
                 if (cell != null && cellPosition != null && mouseEvent.getClickCount() == 2 && !cell.isFocused() && isFocused() && positionIsFocusedCellWrapper && mouseEvent.getEventType() == MouseEvent.MOUSE_CLICKED && mouseEvent.isStillSincePress())
                 {
@@ -1017,7 +1014,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
             FXUtility.addChangeListenerPlatformNN(focusedProperty(), focused -> {
                 if (!focused)
-                    focusCell(null);
+                    select(null);
             });
 
             Nodes.addInputMap(FXUtility.keyboard(this), InputMap.sequence(
@@ -1030,7 +1027,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 bindS(KeyCode.PAGE_UP, (shift, c) -> c.move(shift, -((int)Math.floor(c.getHeight() / rowHeight) - 1), 0)),
                 bindS(KeyCode.PAGE_DOWN, (shift, c) -> c.move(shift, (int)Math.floor(c.getHeight() / rowHeight) - 1, 0)),
                 InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.ENTER), e -> {
-                    @Nullable CellSelection focusedCellPosition = focusedCell.get();
+                    @Nullable CellSelection focusedCellPosition = selection.get();
                     if (focusedCellPosition != null)
                     {
                         editCell(focusedCellPosition);
@@ -1038,7 +1035,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                     e.consume();
                 }),
                 InputMap.<Event, KeyEvent>consume(EventPattern.keyPressed(KeyCode.SPACE), e -> {
-                    @Nullable CellSelection focusedCellPosition = focusedCell.get();
+                    @Nullable CellSelection focusedCellPosition = selection.get();
                     if (focusedCellPosition != null)
                     {
                         editCell(focusedCellPosition);
@@ -1050,10 +1047,10 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
         private void move(boolean extendSelection, int rows, int columns)
         {
-            @Nullable CellSelection focusedCellPos = focusedCell.get();
+            @Nullable CellSelection focusedCellPos = selection.get();
             if (focusedCellPos != null)
             {
-                focusCell(focusedCellPos.move(extendSelection, rows, columns, currentKnownRows.get(), getNumColumns()));
+                select(focusedCellPos.move(extendSelection, rows, columns, currentKnownRows.get(), getNumColumns()));
             }
         }
 
@@ -1081,25 +1078,25 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
         private void home(boolean extendSelection)
         {
-            @Nullable CellSelection focusedCellPos = focusedCell.get();
+            @Nullable CellSelection focusedCellPos = selection.get();
             scrollYToPixel(0.0);
             // Force layout before attempting to focus cell as it may not have been visible:
             layout();
             if (focusedCellPos != null)
             {
-                focusCell(focusedCellPos.atHome(extendSelection));
+                select(focusedCellPos.atHome(extendSelection));
             }
         }
 
         private void end(boolean extendSelection)
         {
-            @Nullable CellSelection focusedCellPos = focusedCell.get();
+            @Nullable CellSelection focusedCellPos = selection.get();
             scrollYToPixel(Double.MAX_VALUE);
             // Force layout before attempting to focus cell as it may not have been visible:
             layout();
             if (focusedCellPos != null)
             {
-                focusCell(focusedCellPos.atEnd(extendSelection, currentKnownRows.get(), getNumColumns()));
+                select(focusedCellPos.atEnd(extendSelection, currentKnownRows.get(), getNumColumns()));
             }
         }
 
@@ -1190,7 +1187,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                         visibleCells.put(cellPosition, cell);
                         // Blank then queue fetch:
                         cell.resetContent(new EditorKitSimpleLabel<>(TranslationUtility.getString("data.loading")));
-                        loadSave.fetchEditorKit(rowIndex, columnIndex, c -> focusCell(new RectangularCellSelection(c.rowIndex, c.columnIndex)), VirtScrollStrTextGrid.this);
+                        loadSave.fetchEditorKit(rowIndex, columnIndex, c -> select(new RectangularCellSelection(c.rowIndex, c.columnIndex)), VirtScrollStrTextGrid.this);
                     }
                     cell.setVisible(true);
                     cell.resizeRelocate(x, y, columnWidths[columnIndex], rowHeight);

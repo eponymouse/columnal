@@ -25,6 +25,12 @@
 .virt-grid-col-header:hover, .virt-grid-row-number:hover{
     -fx-background-color: $table-header-hover;
 }
+.virt-grid-col-header:primary-selected-cell, .virt-grid-row-number:primary-selected-cell {
+    -fx-background-color: $focus-color;
+}
+.virt-grid-col-header:secondary-selected-cell, .virt-grid-row-number:secondary-selected-cell {
+    -fx-background-color: $focus-color-secondary;
+}
 
 .virt-grid-col-header {
     -fx-border-color: transparent $table-header-divider $table-header-border transparent;
