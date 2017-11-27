@@ -52,6 +52,7 @@ import records.data.Transformation;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import records.gui.View.SnapDetails;
 import records.gui.stable.VirtScrollStrTextGrid;
 import records.gui.stf.TableDisplayUtility;
 import records.importers.ClipboardUtils;
@@ -366,11 +367,12 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 double newX = Math.max(0, pos.getX() - offsetDrag.getX());
                 double newY = Math.max(0, pos.getY() - offsetDrag.getY());
 
-                @SuppressWarnings("initialization") // Due to passing this
-                Point2D snapped = parent.snapTableDisplayPositionWhileDragging(this, e.isShiftDown(), new Point2D(newX, newY), new Dimension2D(getBoundsInLocal().getWidth(), getBoundsInLocal().getHeight()));
+                SnapDetails snapDetails = parent.snapTableDisplayPositionWhileDragging(FXUtility.mouse(this), e.isShiftDown(), new Point2D(newX, newY), new Dimension2D(getBoundsInLocal().getWidth(), getBoundsInLocal().getHeight()));
+                Point2D snapped = snapDetails.snapToPos;
                 setLayoutX(snapped.getX());
                 setLayoutY(snapped.getY());
                 FXUtility.mouse(this).updateMostRecentBounds();
+                FXUtility.mouse(this).setSnapped(snapDetails.snapToTable == null ? null : snapDetails.snapToTable.getSecond());
             }
         });
         header.setOnMouseReleased(e -> {
@@ -454,6 +456,19 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         // Must be done as last item:
         @SuppressWarnings("initialization") @Initialized TableDisplay usInit = this;
         this.table.setDisplay(usInit);
+    }
+
+    private void setSnapped(@Nullable TableDisplay snappedTo)
+    {
+        if (tableDataDisplay == null)
+            return; // If we're not shown, can't do anything
+
+        tableDataDisplay.setRowLabelsVisible(snappedTo == null);
+        if (snappedTo != null)
+        {
+            //tableDataDisplay.setColumnVisibility();
+            //snappedTo.tableDataDisplay.setVerticalScrollVisible(false);
+        }
     }
 
     @RequiresNonNull("mostRecentBounds")

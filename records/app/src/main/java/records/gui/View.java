@@ -1,5 +1,6 @@
 package records.gui;
 
+import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
@@ -16,7 +17,7 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
-import javafx.geometry.Rectangle2D;
+import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -24,7 +25,6 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
@@ -51,7 +51,6 @@ import records.data.Transformation;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.TransformationEditable;
-import records.transformations.TransformationEditor;
 import records.transformations.TransformationManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -67,7 +66,6 @@ import java.util.Comparator;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -231,7 +229,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
 
     // Basically a pair of a double value for snapping to (X or Y determined by context),
     // and a guide line to draw (if any) to help the user understand the origin of the snap
-    class SnapToAndLine
+    private static class SnapToAndLine
     {
         private final double snapTo;
         private final @Nullable Line guideLine;
@@ -249,15 +247,31 @@ public class View extends StackPane implements TableManager.TableManagerListener
         }
     }
 
+    public static class SnapDetails
+    {
+        // Always present and valid:
+        public final Point2D snapToPos;
+        // Side is relative to the table being moved, so LEFT means snapping to a table on the left
+        // (and thus the snap-ee's right).  Only valid when snapping is directly to side of table.
+        public final @Nullable Pair<Side, TableDisplay> snapToTable;
+
+        public SnapDetails(Point2D snapToPos, @Nullable Pair<Side, TableDisplay> snapToTable)
+        {
+            this.snapToPos = snapToPos;
+            this.snapToTable = snapToTable;
+        }
+    }
+
     /**
      * Snaps the table display position.  There are three types of snapping:
      *  - One is snapping to the nearest N pixels.  This is always in force.
      *  - The second is snapping to avoid table headers overlapping.
      *  - The third is snapping to adjoin nearby tables.  This can be disabled by
      *    passing true as the second parameter (usually in response to the user
-     *    holding a modifier key while dragging).
+     *    holding a modifier key while dragging).  If this third form is used,
+     *    the details are included in the snap details.
      */
-    public Point2D snapTableDisplayPositionWhileDragging(TableDisplay tableDisplay, boolean suppressSnapTogether, Point2D position, Dimension2D size)
+    public SnapDetails snapTableDisplayPositionWhileDragging(TableDisplay tableDisplay, boolean suppressSnapTogether, Point2D position, Dimension2D size)
     {
         bringTableDisplayToFront(tableDisplay);
         snapGuides.clear();
@@ -271,6 +285,21 @@ public class View extends StackPane implements TableManager.TableManagerListener
 
         if (!suppressSnapTogether)
         {
+            // First, check if we are over an existing table which is our only ancestor,
+            // in which case we will snap to its right:
+            ImmutableList<Table> sources = getSources(tableDisplay.getTable());
+            if (sources.size() == 1 && sources.get(0).getDisplay() != null)
+            {
+                TableDisplay sourceDisplay = (TableDisplay)sources.get(0).getDisplay();
+                Bounds sourceBounds = sourceDisplay.getPosition();
+                if (sourceBounds.contains(x, y))
+                {
+                    snapGuides.add(new Line(sourceBounds.getMaxX(), sourceBounds.getMinY(), sourceBounds.getMaxX(), sourceBounds.getMaxY()));
+                    return new SnapDetails(new Point2D(x, y), new Pair<>(Side.LEFT, sourceDisplay));
+                }
+            }
+
+
             // This snap is itself subdivided into two kinds:
             //  - One is an adjacency snap: our left side can snap to nearby right sides
             //    (and our bottom side to nearby top sides, top to bottom, right to left),
@@ -366,7 +395,19 @@ public class View extends StackPane implements TableManager.TableManagerListener
             iterations += 1;
         }
 
-        return new Point2D(x, y);
+        return new SnapDetails(new Point2D(x, y), null);
+    }
+
+    // If any sources are invalid, they are skipped
+    private ImmutableList<Table> getSources(Table table)
+    {
+        if (table instanceof Transformation)
+        {
+            List<TableId> sourceIds = ((Transformation) table).getSources();
+            return sourceIds.stream().flatMap(id -> Utility.streamNullable(tableManager.getSingleTableOrNull(id))).collect(ImmutableList.toImmutableList());
+        }
+        else
+            return ImmutableList.of();
     }
 
     /**

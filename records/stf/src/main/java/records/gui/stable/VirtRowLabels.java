@@ -1,5 +1,6 @@
 package records.gui.stable;
 
+import javafx.beans.property.BooleanProperty;
 import javafx.geometry.Pos;
 import javafx.scene.control.ContextMenu;
 import javafx.scene.control.Label;
@@ -11,6 +12,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stable.CellSelection.SelectionStatus;
+import records.gui.stable.VirtScrollStrTextGrid.Container;
 import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -97,6 +99,11 @@ public class VirtRowLabels implements ScrollBindable
     public Region getNode()
     {
         return stackPane;
+    }
+
+    public BooleanProperty visibleProperty()
+    {
+        return stackPane.visibleProperty();
     }
 
     private class Container extends Region

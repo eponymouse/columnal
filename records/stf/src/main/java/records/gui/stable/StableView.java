@@ -105,6 +105,7 @@ public class StableView
     private final StackPane stackPane; // has grid and placeholder as its children
     private final DoubleProperty widthEstimate;
     private final DoubleProperty heightEstimate;
+    private final ContentLayout contentLayout;
 
     // An integer counter which tracks which instance of setColumnsAndRows we are on.  Used to
     // effectively cancel some queued run-laters if the method is called twice in quick succession.
@@ -124,6 +125,7 @@ public class StableView
     @OnThread(Tag.FXPlatform)
     private @Nullable TableOperations operations;
     private final SimpleBooleanProperty nonEmptyProperty = new SimpleBooleanProperty(false);
+    private final BooleanProperty lineNumberShowing = new SimpleBooleanProperty(true);
 
 
     public StableView(MessageWhenEmpty messageWhenEmpty)
@@ -219,7 +221,8 @@ public class StableView
         rightVertScroll.visibleProperty().bind(nonEmptyProperty);
         bottomHorizScroll.visibleProperty().bind(nonEmptyProperty);
 
-        stackPane = new StackPane(placeholder, new ContentLayout(grid.getNode(), top, rightVertScroll, bottomHorizScroll, lineNumberWrapper));
+        contentLayout = new ContentLayout(grid.getNode(), top, rightVertScroll, bottomHorizScroll, lineNumberWrapper);
+        stackPane = new StackPane(placeholder, contentLayout);
         // TODO figure out grid equivalent
         //headerItemsContainer.layoutXProperty().bind(virtualFlow.breadthOffsetProperty().map(d -> -d));
         placeholder.managedProperty().bind(placeholder.visibleProperty());
@@ -494,6 +497,12 @@ public class StableView
             grid.addedRows(startRowIncl, addedRowsCount);
     }
 
+    public void setRowLabelsVisible(boolean visible)
+    {
+        lineNumberShowing.set(visible);
+        contentLayout.requestLayout();
+    }
+
     @OnThread(Tag.FXPlatform)
     public static interface ColumnHandler extends RecordSetListener
     {
@@ -590,7 +599,7 @@ public class StableView
     /**
      * This is similar to a BorderPane, but not quite.
      */
-    private static class ContentLayout extends Region
+    private class ContentLayout extends Region
     {
         private final Region dataGrid;
         // Note: colHeaders also includes the top-left item.
@@ -626,7 +635,7 @@ public class StableView
             colHeaders.resizeRelocate(0, 0, colHeaderWidth, colHeaderHeight);
             // Then row headers is all the way down the left beneath
             // that, at its preferred width:
-            double rowHeaderWidth = rowHeaders.prefWidth(height - colHeaderHeight);
+            double rowHeaderWidth = lineNumberShowing.get() ? rowHeaders.prefWidth(height - colHeaderHeight) : 0.0;
             double bottomScrollHeight = bottomHorizScroll.prefHeight(width - rowHeaderWidth - rightScrollWidth);
             double rowHeaderHeight = height - colHeaderHeight - bottomScrollHeight;
             rowHeaders.resizeRelocate(0, colHeaderHeight, rowHeaderWidth, rowHeaderHeight);
