@@ -277,7 +277,8 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         protected @Nullable FXPlatformConsumer<ColumnId> hideColumnOperation()
         {
             return columnId -> {
-                if (table == null || columnDisplay == null)
+                // Do null checks at run-time:
+                if (table == null || columnDisplay == null || parent == null)
                     return;
                 switch (columnDisplay.get().getFirst())
                 {
@@ -286,13 +287,13 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                         break;
                     case ALL:
                         // Hide just this one:
-                        setDisplay(Display.CUSTOM, ImmutableList.of(columnId), parent);
+                        setDisplay(Display.CUSTOM, ImmutableList.of(columnId));
                         break;
                     case ALTERED:
                         try
                         {
                             RecordSet data = table.getData();
-                            setDisplay(Display.CUSTOM, Utility.consList(columnId, data.getColumns().stream().filter(c -> c.isAltered()).map(c -> c.getName()).collect(Collectors.toList())), parent);
+                            setDisplay(Display.CUSTOM, Utility.consList(columnId, data.getColumns().stream().filter(c -> c.isAltered()).map(c -> c.getName()).collect(Collectors.toList())));
                         }
                         catch (UserException | InternalException e)
                         {
@@ -301,7 +302,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                         break;
                     case CUSTOM:
                         // Just tack this one on the blacklist:
-                        setDisplay(Display.CUSTOM, Utility.consList(columnId, columnDisplay.get().getSecond()), parent);
+                        setDisplay(Display.CUSTOM, Utility.consList(columnId, columnDisplay.get().getSecond()));
                         break;
                 }
             };
@@ -335,7 +336,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         Pane spacer = new Pane();
         spacer.setVisible(false);
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        Button actionsButton = GUI.buttonMenu("tableDisplay.menu.button", () -> makeTableContextMenu(parent));
+        Button actionsButton = GUI.buttonMenu("tableDisplay.menu.button", () -> makeTableContextMenu());
 
         Button addButton = GUI.button("tableDisplay.addTransformation", () -> {
             parent.newTransformFromSrc(table);
@@ -502,8 +503,8 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         }
     }
 
-    @RequiresNonNull({"columnDisplay", "table"})
-    private ContextMenu makeTableContextMenu(@UnknownInitialization(Object.class) TableDisplay this, View parent)
+    @RequiresNonNull({"columnDisplay", "table", "parent"})
+    private ContextMenu makeTableContextMenu(@UnknownInitialization(Object.class) TableDisplay this)
     {
         List<MenuItem> items = new ArrayList<>();
 
@@ -515,10 +516,10 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         ToggleGroup show = new ToggleGroup();
         Map<Display, RadioMenuItem> showItems = new EnumMap<>(Display.class);
 
-        showItems.put(Display.COLLAPSED, GUI.radioMenuItem("tableDisplay.menu.show.collapse", () -> setDisplay(Display.COLLAPSED, ImmutableList.of(), parent)));
-        showItems.put(Display.ALL, GUI.radioMenuItem("tableDisplay.menu.show.all", () -> setDisplay(Display.ALL, ImmutableList.of(), parent)));
-        showItems.put(Display.ALTERED, GUI.radioMenuItem("tableDisplay.menu.show.altered", () -> setDisplay(Display.ALTERED, ImmutableList.of(), parent)));
-        showItems.put(Display.CUSTOM, GUI.radioMenuItem("tableDisplay.menu.show.custom", () -> editCustomDisplay(parent)));
+        showItems.put(Display.COLLAPSED, GUI.radioMenuItem("tableDisplay.menu.show.collapse", () -> setDisplay(Display.COLLAPSED, ImmutableList.of())));
+        showItems.put(Display.ALL, GUI.radioMenuItem("tableDisplay.menu.show.all", () -> setDisplay(Display.ALL, ImmutableList.of())));
+        showItems.put(Display.ALTERED, GUI.radioMenuItem("tableDisplay.menu.show.altered", () -> setDisplay(Display.ALTERED, ImmutableList.of())));
+        showItems.put(Display.CUSTOM, GUI.radioMenuItem("tableDisplay.menu.show.custom", () -> editCustomDisplay()));
 
         items.addAll(Arrays.asList(
             GUI.menu("tableDisplay.menu.showColumns",
@@ -539,17 +540,17 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         return new ContextMenu(items.toArray(new MenuItem[0]));
     }
 
-    @RequiresNonNull({"columnDisplay", "table"})
-    private void editCustomDisplay(@UnknownInitialization(Object.class) TableDisplay this, View parent)
+    @RequiresNonNull({"columnDisplay", "table", "parent"})
+    private void editCustomDisplay(@UnknownInitialization(Object.class) TableDisplay this)
     {
         ImmutableList<ColumnId> blackList = new CustomColumnDisplayDialog(parent.getManager(), table.getId(), columnDisplay.get().getSecond()).showAndWait().orElse(null);
         // Only switch if they didn't cancel, otherwise use previous view mode:
         if (blackList != null)
-            setDisplay(Display.CUSTOM, blackList, parent);
+            setDisplay(Display.CUSTOM, blackList);
     }
 
-    @RequiresNonNull({"columnDisplay", "table"})
-    private void setDisplay(@UnknownInitialization(Object.class) TableDisplay this, Display newState, ImmutableList<ColumnId> blackList, View parent)
+    @RequiresNonNull({"columnDisplay", "table", "parent"})
+    private void setDisplay(@UnknownInitialization(Object.class) TableDisplay this, Display newState, ImmutableList<ColumnId> blackList)
     {
         this.columnDisplay.set(new Pair<>(newState, blackList));
         table.setShowColumns(newState, blackList);
