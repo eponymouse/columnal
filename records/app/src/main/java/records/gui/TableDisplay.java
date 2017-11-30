@@ -467,7 +467,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         tableDataDisplay.setRowLabelsVisible(snappedTo == null);
         if (snappedTo != null)
         {
-            //tableDataDisplay.setColumnVisibility();
+            setDisplay(Display.ALTERED, columnDisplay.get().getSecond());
             //snappedTo.tableDataDisplay.setVerticalScrollVisible(false);
         }
     }
