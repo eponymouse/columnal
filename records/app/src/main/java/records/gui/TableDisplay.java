@@ -80,7 +80,6 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.OptionalDouble;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 
@@ -121,6 +120,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     // but a double-click will return to automatic resizing.
     private final BooleanProperty sizedToFitHorizontal = new SimpleBooleanProperty(false);
     private final BooleanProperty sizedToFitVertical = new SimpleBooleanProperty(false);
+    private @Nullable TableDisplay snappedToRightOf;
 
     @OnThread(Tag.FX)
     public Point2D closestPointTo(double parentX, double parentY)
@@ -373,7 +373,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 setLayoutX(snapped.getX());
                 setLayoutY(snapped.getY());
                 FXUtility.mouse(this).updateMostRecentBounds();
-                FXUtility.mouse(this).setSnapped(snapDetails.snapToTable == null ? null : snapDetails.snapToTable.getSecond());
+                FXUtility.mouse(this).snapToRightOf(snapDetails.snapToTable == null ? null : snapDetails.snapToTable.getSecond());
             }
         });
         header.setOnMouseReleased(e -> {
@@ -459,16 +459,30 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         this.table.setDisplay(usInit);
     }
 
-    private void setSnapped(@Nullable TableDisplay snappedTo)
+    private void snapToRightOf(@Nullable TableDisplay newSnap)
     {
-        if (tableDataDisplay == null)
-            return; // If we're not shown, can't do anything
-
-        tableDataDisplay.setRowLabelsVisible(snappedTo == null);
-        if (snappedTo != null)
+        if (tableDataDisplay != null)
+        {
+            tableDataDisplay.setRowLabelsVisible(newSnap == null);
+        }
+        
+        if (newSnap == null)
+        {
+            if (this.snappedToRightOf != null)
+            {
+                if (this.snappedToRightOf.tableDataDisplay != null)
+                    this.snappedToRightOf.tableDataDisplay.setVerticalScrollVisible(true);
+                this.snappedToRightOf = null;
+            }
+        }
+        else
         {
             setDisplay(Display.ALTERED, columnDisplay.get().getSecond());
-            //snappedTo.tableDataDisplay.setVerticalScrollVisible(false);
+            if (newSnap.tableDataDisplay != null)
+            {
+                newSnap.tableDataDisplay.setVerticalScrollVisible(false);
+            }
+            this.snappedToRightOf = newSnap;
         }
     }
 

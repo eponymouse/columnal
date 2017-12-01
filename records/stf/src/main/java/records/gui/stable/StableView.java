@@ -126,6 +126,7 @@ public class StableView
     private @Nullable TableOperations operations;
     private final SimpleBooleanProperty nonEmptyProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty lineNumberShowing = new SimpleBooleanProperty(true);
+    private final BorderPane rightVertScroll;
 
 
     public StableView(MessageWhenEmpty messageWhenEmpty)
@@ -185,7 +186,6 @@ public class StableView
         final BorderPane lineNumberWrapper = new BorderPane(lineNumbers.getNode());
         lineNumberWrapper.setPickOnBounds(false);
         lineNumberWrapper.getStyleClass().add("stable-view-side");
-        lineNumberWrapper.visibleProperty().bind(nonEmptyProperty);
         placeholder = new Label(messageWhenEmpty.getDisplayMessageNoColumns());
         placeholder.getStyleClass().add(".stable-view-placeholder");
         placeholder.visibleProperty().bind(nonEmptyProperty.not());
@@ -200,7 +200,6 @@ public class StableView
         FXUtility.forcePrefSize(topLeft);
         topLeft.setMaxHeight(Double.MAX_VALUE);
         topLeft.prefWidthProperty().bind(lineNumberWrapper.widthProperty());
-        topLeft.visibleProperty().bind(nonEmptyProperty);
 
         Pane top = new BorderPane(header, null, null, null, topLeft);
         top.getStyleClass().add("stable-view-top");
@@ -216,12 +215,11 @@ public class StableView
         bottomButton.getStyleClass().addAll("stable-view-button", "stable-view-button-bottom");
         bottomButton.setOnAction(e -> grid.scrollYToPixel(Double.MAX_VALUE));
 
-        BorderPane rightVertScroll = new BorderPane(vbar, topButton, null, bottomButton, null);
+        rightVertScroll = new BorderPane(vbar, topButton, null, bottomButton, null);
         BorderPane bottomHorizScroll = new BorderPane(hbar, null, rightButton, null, leftButton);
-        rightVertScroll.visibleProperty().bind(nonEmptyProperty);
-        bottomHorizScroll.visibleProperty().bind(nonEmptyProperty);
-
+        
         contentLayout = new ContentLayout(grid.getNode(), top, rightVertScroll, bottomHorizScroll, lineNumberWrapper);
+        contentLayout.visibleProperty().bind(nonEmptyProperty);
         stackPane = new StackPane(placeholder, contentLayout);
         // TODO figure out grid equivalent
         //headerItemsContainer.layoutXProperty().bind(virtualFlow.breadthOffsetProperty().map(d -> -d));
@@ -503,6 +501,12 @@ public class StableView
         contentLayout.requestLayout();
     }
 
+    public void setVerticalScrollVisible(boolean visible)
+    {
+        rightVertScroll.setVisible(visible);
+        contentLayout.requestLayout();
+    }
+
     @OnThread(Tag.FXPlatform)
     public static interface ColumnHandler extends RecordSetListener
     {
@@ -630,7 +634,7 @@ public class StableView
             double colHeaderHeight = colHeaders.prefHeight(width);
 
             // Right-hand side scroll is at far right, takes room from col header width:
-            double rightScrollWidth = rightVertScroll.prefWidth(height - colHeaderHeight);
+            double rightScrollWidth = rightVertScroll.isVisible() ? rightVertScroll.prefWidth(height - colHeaderHeight) : 0.0;
             double colHeaderWidth = width - rightScrollWidth;
             colHeaders.resizeRelocate(0, 0, colHeaderWidth, colHeaderHeight);
             // Then row headers is all the way down the left beneath
