@@ -14,6 +14,7 @@ import javafx.geometry.BoundingBox;
 import javafx.geometry.Bounds;
 import javafx.geometry.Dimension2D;
 import javafx.geometry.Point2D;
+import javafx.geometry.Side;
 import javafx.scene.Cursor;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
@@ -358,6 +359,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 originalSize = getBoundsInParent();
         };
         header.setOnMousePressed(onPressed);
+        SimpleObjectProperty<@Nullable TableDisplay> prospectiveSnapToRightOf = new SimpleObjectProperty<>(null);
         header.setOnMouseDragged(e -> {
             double sceneX = e.getSceneX();
             double sceneY = e.getSceneY();
@@ -374,10 +376,27 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 setLayoutY(snapped.getY());
                 FXUtility.mouse(this).updateMostRecentBounds();
                 FXUtility.mouse(this).snapToRightOf(snapDetails.snapToTable == null ? null : snapDetails.snapToTable.getSecond());
+                if (snapDetails.snapToTable != null && snapDetails.snapToTable.getFirst() == Side.LEFT)
+                {
+                    prospectiveSnapToRightOf.set(snapDetails.snapToTable.getSecond());
+                }
+                else
+                {
+                    prospectiveSnapToRightOf.set(null);
+                }
             }
         });
         header.setOnMouseReleased(e -> {
             parent.tableDragEnded();
+            // We call this even if null, because that will unsnap us:
+            @Nullable TableDisplay snapRightOf = prospectiveSnapToRightOf.get();
+            FXUtility.mouse(this).snapToRightOf(snapRightOf);
+            if (snapRightOf != null)
+            {
+                setLayoutX(snapRightOf.getBoundsInParent().getMaxX());
+                setLayoutY(snapRightOf.getLayoutY());
+                setPrefHeight(snapRightOf.getHeight());
+            }
             FXUtility.mouse(this).updateMostRecentBounds();
             parent.tableMovedOrResized(this);
         });

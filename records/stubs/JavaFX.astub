@@ -65,7 +65,7 @@ class Node
     double getLayoutY() @UnknownInitialization;
     void setLayoutX(double x) @UnknownInitialization;
     void setLayoutY(double y) @UnknownInitialization;
-
+    
     WritableImage snapshot(@Nullable SnapshotParameters params, @Nullable WritableImage image);
 }
 class Scene
@@ -221,6 +221,9 @@ class Region
 
     double getWidth() @UnknownInitialization;
     double getHeight() @UnknownInitialization;
+    void setHeight(double height) @UnknownInitialization;
+    void setWidth(double width) @UnknownInitialization;
+
 
     void setTranslateY(double y) @UnknownInitialization;
 
