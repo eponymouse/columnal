@@ -16,7 +16,7 @@ abstract class ColumnOperation
     @OnThread(Tag.Any)
     private final @LocalizableKey String nameKey;
 
-    protected ColumnOperation(String nameKey)
+    protected ColumnOperation(@LocalizableKey String nameKey)
     {
         this.nameKey = nameKey;
     }

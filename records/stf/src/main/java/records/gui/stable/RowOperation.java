@@ -16,7 +16,7 @@ abstract class RowOperation
     @OnThread(Tag.Any)
     private final @LocalizableKey String nameKey;
 
-    protected RowOperation(String nameKey)
+    protected RowOperation(@LocalizableKey String nameKey)
     {
         this.nameKey = nameKey;
     }

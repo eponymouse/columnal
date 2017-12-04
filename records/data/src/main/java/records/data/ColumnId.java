@@ -1,8 +1,10 @@
 package records.data;
 
+import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Utility;
 
 import java.io.Serializable;
 
@@ -51,9 +53,9 @@ public class ColumnId implements Comparable<ColumnId>, Serializable
         return columnId;
     }
 
-    public String getRaw()
+    public @Localized String getRaw()
     {
-        return columnId;
+        return Utility.universal(columnId);
     }
 
     @Override

@@ -24,6 +24,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -301,7 +302,7 @@ public class StableView
         }
 
         // Heavy-handed way to add a divider:
-        r.add(new ColumnOperation("")
+        r.add(new ColumnOperation(/* Just need something valid: */ "stableView.column.hide")
         {
             @Override
             public @OnThread(Tag.Simulation) void execute()
