@@ -96,6 +96,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     static final int MAX_EXTRA_ROW_COLS = 12;
     private final ScrollBar hBar;
     private final ScrollBar vBar;
+    private final ScrollGroup scrollGroup;
 
     private boolean settingScrollBarVal = false;
 
@@ -139,7 +140,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // Package visible to let sidebars access it
     final Container container;
     // The items which are dependent on us.  Package-visible to allow sidebars to access it
-    final Map<ScrollBindable, ScrollLock> scrollDependents = new IdentityHashMap<>();
+    //final Map<ScrollBindable, ScrollLock> scrollDependents = new IdentityHashMap<>();
     // How many extra rows to show off-screen, to account for scrolling (when actual display can lag logical display).
     // Negative means we need them left/above, positive means we need them below/right:
     private final IntegerProperty extraRows = new SimpleIntegerProperty(0);
@@ -160,6 +161,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     public VirtScrollStrTextGrid(ValueLoadSave loadSave, FXPlatformFunction<CellPosition, Boolean> canEdit, ScrollBar hBar, ScrollBar vBar)
     {
+        this.scrollGroup = (evt, _src) -> FXUtility.mouse(this).smoothScroll(evt, ScrollLock.BOTH);
         this.canEdit = canEdit;
         visibleCells = new HashMap<>();
         visibleRowAppendButtons = new HashMap<>();
@@ -1013,7 +1015,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
                 // Filter because we want to steal it from the cells themselves:
             addEventFilter(ScrollEvent.ANY, scrollEvent -> {
-                smoothScroll(scrollEvent, ScrollLock.BOTH);
+                //smoothScroll(scrollEvent, ScrollLock.BOTH);
+                scrollGroup.scroll(scrollEvent, VirtScrollStrTextGrid.this);
                 scrollEvent.consume();
             });
 

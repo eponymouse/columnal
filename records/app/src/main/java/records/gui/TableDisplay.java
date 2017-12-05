@@ -55,6 +55,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.gui.View.SnapDetails;
 import records.gui.stable.VirtScrollStrTextGrid;
+import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import records.gui.stf.TableDisplayUtility;
 import records.importers.ClipboardUtils;
 import records.transformations.HideColumnsPanel;
@@ -500,6 +501,10 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             if (newSnap.tableDataDisplay != null)
             {
                 newSnap.tableDataDisplay.setVerticalScrollVisible(false);
+                if (tableDataDisplay != null)
+                {
+                    tableDataDisplay.bindScroll(newSnap.tableDataDisplay, ScrollLock.VERTICAL);
+                }
             }
             this.snappedToRightOf = newSnap;
         }
