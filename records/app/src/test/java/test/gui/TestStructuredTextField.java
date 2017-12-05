@@ -120,7 +120,7 @@ public class TestStructuredTextField extends ApplicationTest
     @OnThread(value = Tag.FXPlatform, ignoreParent = true)
     public void start(Stage stage) throws Exception
     {
-        stableView = new StableView(new MessageWhenEmpty("", ""));
+        stableView = new StableView(new MessageWhenEmpty(TestUtil.EMPTY_KEY, TestUtil.EMPTY_KEY));
         dummy = new TextField();
         Scene scene = new Scene(new VBox(dummy, stableView.getNode()));
         stage.setScene(scene);

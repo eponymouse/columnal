@@ -245,7 +245,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         for (int i = 0; i < newSrcLength; i++)
         {
             int iFinal = i;
-            @Value Object value = TestUtil.sim(() -> sortBy.getType().getCollapsed(iFinal));
+            @Value Object value = TestUtil.<@Value Object>sim(() -> sortBy.getType().getCollapsed(iFinal));
             int cmp = TestUtil.sim(() -> Utility.compareValues(value, sortDefault));
             // It will be before us if either it is strictly lower, or it is equal
             // and it started before us.
@@ -255,7 +255,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
             }
             else
             {
-                @Nullable Pair<Integer, Object> curFirstAfterDefault = firstAfterDefault;
+                @Nullable Pair<Integer, @Value Object> curFirstAfterDefault = firstAfterDefault;
                 if (TestUtil.sim(() -> curFirstAfterDefault == null || Utility.compareValues(value, curFirstAfterDefault.getSecond()) < 0))
                 {
                     firstAfterDefault = new Pair<>(i, value);
@@ -277,7 +277,7 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
             if (firstAfterDefault != null)
             {
                 scrollToRow(calculated.getId(), beforeDefault + 1);
-                Pair<Integer, Object> firstAfterDefaultFinal = firstAfterDefault;
+                Pair<Integer, @Value Object> firstAfterDefaultFinal = firstAfterDefault;
                 TestUtil.sim_(() -> checkVisibleRowData(prefix, calculated.getId(), positionPostSort + 1, getRowVals(srcData.getData(), firstAfterDefaultFinal.getFirst())));
             }
         }

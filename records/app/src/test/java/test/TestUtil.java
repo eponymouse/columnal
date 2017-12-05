@@ -16,6 +16,7 @@ import javafx.scene.input.KeyCode;
 import javafx.stage.Stage;
 import one.util.streamex.StreamEx;
 import one.util.streamex.StreamEx.Emitter;
+import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.testfx.api.FxRobotInterface;
@@ -95,6 +96,14 @@ import static org.junit.Assert.fail;
  */
 public class TestUtil
 {
+    public static final @LocalizableKey String EMPTY_KEY = makeEmptyKey();
+
+    private static @LocalizableKey String makeEmptyKey()
+    {
+        // I cannot seem to get the checker to suppress warnings, so instead give a key that is valid:
+        return "menu.exit";
+    }
+
     @OnThread(Tag.Any)
     public static void assertValueEqual(String prefix, @Value Object a, @Value Object b) throws UserException, InternalException
     {
