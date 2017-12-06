@@ -86,9 +86,6 @@ public class VirtColHeaders implements ScrollBindable
         this.makeContextMenuItems = makeContextMenuItems;
         this.getContent = getContent;
         this.container = new Container();
-        // Declaration only so we can suppress warnings:
-        @SuppressWarnings("initialization")
-        ScrollLock prev = grid.scrollDependents.put(this, ScrollLock.HORIZONTAL);
         container.translateXProperty().bind(grid.container.translateXProperty());
         FXUtility.addChangeListenerPlatform(grid.selectionProperty(), (@Nullable CellSelection sel) -> {
             for (Entry<Integer, StackPane> entry : visibleCells.entrySet())
@@ -186,7 +183,6 @@ public class VirtColHeaders implements ScrollBindable
 
     }
 
-    @Override
     public void columnWidthChanged(int columnWidth, double newWidth)
     {
         container.requestLayout();
@@ -222,7 +218,7 @@ public class VirtColHeaders implements ScrollBindable
             getStyleClass().add("virt-grid-col-container");
 
             addEventFilter(ScrollEvent.SCROLL, e -> {
-                grid.smoothScroll(e, ScrollLock.BOTH);
+                grid.scrollGroup.requestScroll(e);
                 e.consume();
             });
         }

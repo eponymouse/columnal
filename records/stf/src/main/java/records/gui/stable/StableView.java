@@ -194,7 +194,7 @@ public class StableView
 
         Button topButton = makeScrollEndButton();
         topButton.getStyleClass().addAll("stable-view-button", "stable-view-button-top");
-        topButton.setOnAction(e -> grid.scrollYToPixel(0));
+        topButton.setOnAction(e -> grid.scrollGroup.requestScrollBy(0.0, -Double.MAX_VALUE));
 
         Region topLeft = new Region();
         topLeft.getStyleClass().add("stable-view-top-left");
@@ -207,14 +207,14 @@ public class StableView
 
         Button leftButton = makeScrollEndButton();
         leftButton.getStyleClass().addAll("stable-view-button", "stable-view-button-left");
-        leftButton.setOnAction(e -> grid.scrollXToPixel(0));
+        leftButton.setOnAction(e -> grid.scrollGroup.requestScrollBy(-Double.MAX_VALUE, 0.0));
         Button rightButton = makeScrollEndButton();
         rightButton.getStyleClass().addAll("stable-view-button", "stable-view-button-right");
-        rightButton.setOnAction(e -> grid.scrollXToPixel(Double.MAX_VALUE));
+        rightButton.setOnAction(e -> grid.scrollGroup.requestScrollBy(-Double.MAX_VALUE, 0.0));
 
         Button bottomButton = makeScrollEndButton();
         bottomButton.getStyleClass().addAll("stable-view-button", "stable-view-button-bottom");
-        bottomButton.setOnAction(e -> grid.scrollYToPixel(Double.MAX_VALUE));
+        bottomButton.setOnAction(e -> grid.scrollGroup.requestScrollBy(0.0, Double.MAX_VALUE));
 
         rightVertScroll = new BorderPane(vbar, topButton, null, bottomButton, null);
         BorderPane bottomHorizScroll = new BorderPane(hbar, null, rightButton, null, leftButton);
@@ -351,8 +351,7 @@ public class StableView
 
     public void scrollToTopLeft()
     {
-        grid.scrollYToPixel(0);
-        grid.scrollXToPixel(0);
+        grid.scrollGroup.requestScrollBy(-Double.MAX_VALUE, -Double.MAX_VALUE);
     }
 
     private static Node makeButtonArrow()
@@ -435,11 +434,6 @@ public class StableView
     public int getColumnCount()
     {
         return columns.size();
-    }
-
-    public void forwardedScrollEvent(ScrollEvent se, ScrollLock axis)
-    {
-        grid.smoothScroll(se, axis);
     }
 
     /**

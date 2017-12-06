@@ -47,9 +47,6 @@ public class VirtRowLabels implements ScrollBindable
         this.grid = grid;
         this.makeContextMenuItems = makeContextMenuItems;
         this.container = new Container();
-        // Declaration only so we can suppress warnings:
-        @SuppressWarnings("initialization")
-        ScrollLock prev = grid.scrollDependents.put(this, ScrollLock.VERTICAL);
         FXUtility.addChangeListenerPlatformNN(grid.currentKnownRows(), r -> container.requestLayout());
         FXUtility.addChangeListenerPlatformNN(grid.heightProperty(), r -> container.requestLayout());
         FXUtility.addChangeListenerPlatform(grid.selectionProperty(), (@Nullable CellSelection sel) -> {
@@ -85,12 +82,6 @@ public class VirtRowLabels implements ScrollBindable
     }
 
     @Override
-    public void columnWidthChanged(int columnIndex, double newWidth)
-    {
-        // Doesn't affect us
-    }
-
-    @Override
     public @OnThread(Tag.FXPlatform) void columnsChanged()
     {
         // Doesn't affect us
@@ -113,7 +104,7 @@ public class VirtRowLabels implements ScrollBindable
             getStyleClass().add("virt-grid-row-container");
 
             addEventFilter(ScrollEvent.SCROLL, e -> {
-                grid.smoothScroll(e, ScrollLock.BOTH);
+                grid.scrollGroup.requestScroll(e);
                 e.consume();
             });
         }

@@ -43,6 +43,7 @@ import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import org.checkerframework.dataflow.qual.Pure;
 import org.controlsfx.validation.ValidationResult;
 import org.jetbrains.annotations.NotNull;
@@ -266,7 +267,7 @@ public class FXUtility
     @OnThread(Tag.FXPlatform)
     @SuppressWarnings("nullness")
     // NN = Not Null
-    public static <T> void addChangeListenerPlatformNN(ObservableValue<@NonNull ? extends T> property, FXPlatformConsumer<@NonNull T> listener)
+    public static <T> void addChangeListenerPlatformNN(ObservableValue<@NonNull T> property, FXPlatformConsumer<@NonNull ? super T> listener)
     {
         // Defeat thread checker:
         property.addListener(new ChangeListener<T>()
@@ -590,7 +591,7 @@ public class FXUtility
         FXPlatformConsumer<@NonNull T> listener = x -> dest.setValue(calculate.apply(srcs.stream().<@NonNull T>map((ObservableValue<@NonNull ? extends @NonNull T> e) -> e.getValue())));
         for (ObservableValue<@NonNull ? extends T> src : srcs)
         {
-            FXUtility.<T>addChangeListenerPlatformNN(src, listener);
+            //FXUtility.addChangeListenerPlatformNN(src, listener);
         }
     }
 }

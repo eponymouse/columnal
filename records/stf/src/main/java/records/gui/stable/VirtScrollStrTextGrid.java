@@ -96,7 +96,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     static final int MAX_EXTRA_ROW_COLS = 12;
     private final ScrollBar hBar;
     private final ScrollBar vBar;
-    private final ScrollGroup scrollGroup;
+    // Package visible to let sidebars access it:
+    final ScrollGroup scrollGroup;
 
     private boolean settingScrollBarVal = false;
 
@@ -122,7 +123,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private final ArrayList<StructuredTextField> spareCells;
 
     // Package visible to let sidebars access it
-    final double rowHeight;
+    static final double rowHeight = 24;
     // This is a minimum number of rows known to be in the table:
     @OnThread(Tag.FXPlatform)
     private IntegerProperty currentKnownRows = new SimpleIntegerProperty(0);
@@ -145,9 +146,6 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // Negative means we need them left/above, positive means we need them below/right:
     private final IntegerProperty extraRows = new SimpleIntegerProperty(0);
     private final IntegerProperty extraCols = new SimpleIntegerProperty(0);
-    private @MonotonicNonNull Pair<VirtScrollStrTextGrid, ScrollLock> scrollLockedTo;
-    private final SmoothScroller scrollX;
-    private final SmoothScroller scrollY;
     private final Pane glass;
     private final StackPane stackPane;
     // null if you can't append to this grid:
@@ -158,10 +156,64 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     private final BooleanProperty atTopProperty = new SimpleBooleanProperty(false);
     private final BooleanProperty atBottomProperty = new SimpleBooleanProperty(false);
     private final DoubleProperty extraButtonWidthProperty = new SimpleDoubleProperty(0.0);
+    private @Nullable VirtColHeaders virtColHeaders;
 
     public VirtScrollStrTextGrid(ValueLoadSave loadSave, FXPlatformFunction<CellPosition, Boolean> canEdit, ScrollBar hBar, ScrollBar vBar)
     {
-        this.scrollGroup = (evt, _src) -> FXUtility.mouse(this).smoothScroll(evt, ScrollLock.BOTH);
+        container = new Container();
+        columnWidths = new double[0];
+        this.scrollGroup = new ScrollGroup(
+            FXUtility.mouse(this)::scrollLayoutXBy, targetX -> {
+                // Count column widths in that direction until we reach target:
+                double curX;
+                int startCol;
+                if (targetX < 0)
+                {
+                    // If it's negative, we're scrolling left, and we need to show extra
+                    // rows to the right until they scroll out of view.
+                    double w = 0;
+                    for (startCol = firstVisibleColumnIndex; startCol < columnWidths.length; startCol++)
+                    {
+                        w += columnWidths[startCol];
+                        if (w >= container.getWidth())
+                        {
+                            break;
+                        }
+                    }
+                    curX = w + firstVisibleColumnOffset - container.getWidth();
+                    int col;
+                    for (col = startCol + 1; curX < -targetX; col++)
+                    {
+                        if (col >= columnWidths.length)
+                            return columnWidths.length - startCol;
+                        curX += columnWidths[col];
+                    }
+                    // Will be 0 or positive:
+                    return col - startCol;
+                }
+                else
+                {
+                    // Opposite: scrolling right, need extra rows left until scroll out of view:
+                    startCol = firstVisibleColumnIndex;
+                    int col;
+                    curX = firstVisibleColumnOffset;
+                    for (col = startCol - 1; curX > -targetX; col--)
+                    {
+                        if (col < 0)
+                            return -startCol;
+                        curX -= columnWidths[col];
+                    }
+                    // Will be 0 or negative:
+                    return col - startCol;
+                }
+            }
+            , FXUtility.mouse(this)::scrollLayoutYBy
+            , y -> (int)(Math.signum(-y) * Math.ceil(Math.abs(y) / VirtScrollStrTextGrid.rowHeight)));
+        container.translateXProperty().bind(scrollGroup.translateXProperty);
+        container.translateYProperty().bind(scrollGroup.translateYProperty);
+        extraRows.bind(scrollGroup.extraRows);
+        extraCols.bind(scrollGroup.extraCols);
+        this.scrollGroup.add(FXUtility.mouse(this), ScrollLock.BOTH);
         this.canEdit = canEdit;
         visibleCells = new HashMap<>();
         visibleRowAppendButtons = new HashMap<>();
@@ -170,61 +222,13 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         firstVisibleColumnOffset = 0;
         firstVisibleRowOffset = 0;
         spareCells = new ArrayList<>();
-        rowHeight = 24;
-        columnWidths = new double[0];
         this.loadSave = loadSave;
         this.totalHeightEstimate = FXUtility.<@NonNull Number, Double>mapBindingEagerNN(currentKnownRows, rows -> rows.doubleValue() * rowHeight);
 
-        container = new Container();
         glass = new Pane();
         glass.setMouseTransparent(true);
         glass.getStyleClass().add("virt-grid-glass");
         stackPane = new StackPane(container, glass);
-        scrollX = new SmoothScroller(container.translateXProperty(), extraCols, FXUtility.mouse(this)::scrollLayoutXBy, targetX -> {
-            // Count column widths in that direction until we reach target:
-            double curX;
-            int startCol;
-            if (targetX < 0)
-            {
-                // If it's negative, we're scrolling left, and we need to show extra
-                // rows to the right until they scroll out of view.
-                double w = 0;
-                for (startCol = firstVisibleColumnIndex; startCol < columnWidths.length; startCol++)
-                {
-                    w += columnWidths[startCol];
-                    if (w >= container.getWidth())
-                    {
-                        break;
-                    }
-                }
-                curX = w + firstVisibleColumnOffset - container.getWidth();
-                int col;
-                for (col = startCol + 1; curX < -targetX; col++)
-                {
-                    if (col >= columnWidths.length)
-                        return columnWidths.length - startCol;
-                    curX += columnWidths[col];
-                }
-                // Will be 0 or positive:
-                return col - startCol;
-            }
-            else
-            {
-                // Opposite: scrolling right, need extra rows left until scroll out of view:
-                startCol = firstVisibleColumnIndex;
-                int col;
-                curX = firstVisibleColumnOffset;
-                for (col = startCol - 1; curX > -targetX; col--)
-                {
-                    if (col < 0)
-                        return -startCol;
-                    curX -= columnWidths[col];
-                }
-                // Will be 0 or negative:
-                return col - startCol;
-            }
-        });
-        scrollY = new SmoothScroller(container.translateYProperty(), extraRows, FXUtility.mouse(this)::scrollLayoutYBy, y -> (int)(Math.signum(-y) * Math.ceil(Math.abs(y) / rowHeight)));
 
         this.hBar = hBar;
         hBar.setMin(0.0);
@@ -240,7 +244,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 if (!settingScrollBarVal)
                 {
                     double delta = getMaxScrollX() * (newScrollBarVal.doubleValue() - oldScrollBarVal.doubleValue());
-                    scrollX.smoothScroll(delta);
+                    scrollGroup.requestScrollBy(delta, 0.0);
                 }
             }
         });
@@ -259,7 +263,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 if (!settingScrollBarVal)
                 {
                     double delta = getMaxScrollY() * (newScrollBarVal.doubleValue() - oldScrollBarVal.doubleValue());
-                    scrollY.smoothScroll(delta);
+                    scrollGroup.requestScrollBy(0.0, delta);
                 }
             }
         });
@@ -280,8 +284,9 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         return selection;
     }
 
+    // This method should only be called by ScrollGroup, hence the magic token:
     // Immediately scrolls with no animation
-    public void scrollYToPixel(double y)
+    public Pair<Integer, Double> scrollYToPixel(double y, ScrollGroup.Token token)
     {
         // Can't scroll to negative:
         if (y < 0)
@@ -304,7 +309,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         }
 
         Pair<Integer, Double> scrollDest = new Pair<>(topCell, rowPixelOffset);
-        showAtOffset(scrollDest, null);
+        return scrollDest;
     }
 
     private void updateKnownRows()
@@ -358,12 +363,19 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         });
     }
 
-    public void scrollXToPixel(double targetX)
+    // This method should only be called by ScrollGroup, hence the magic token:
+    public Pair<Integer, Double> scrollXToPixel(double targetX, ScrollGroup.Token token)
     {
         double lhs = Math.max(targetX, 0.0);
         for (int lhsCol = 0; lhsCol < columnWidths.length; lhsCol++)
         {
-            if (lhs < columnWidths[lhsCol])
+            if (lhsCol == columnWidths.length - 1 && lhs > columnWidths[lhsCol])
+            {
+                // Clamp:
+                lhs = columnWidths[lhsCol];
+            }
+            
+            if (lhs <= columnWidths[lhsCol])
             {
                 // Stop here, possibly clamping to RHS if needed:
                 double clampedLHS = container.getWidth() - extraButtonWidthProperty.get();
@@ -378,20 +390,20 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                         // clampedLHS was from right, make it from left:
                         clampedLHS = columnWidths[lhsCol] - clampedLHS;
                         if (clampedLHSCol < lhsCol || (clampedLHSCol == lhsCol && clampedLHS < lhs))
-                            showAtOffset(null, new Pair<>(clampedLHSCol, -clampedLHS));
+                            return new Pair<>(clampedLHSCol, -clampedLHS);
                         else
-                            showAtOffset(null, new Pair<>(lhsCol, -lhs));
-                        return;
+                            return new Pair<>(lhsCol, -lhs);
                     }
                     clampedLHS -= columnWidths[clampedLHSCol];
                 }
                 // If we get here, column widths are smaller than
                 // container, so stay at left:
-                showAtOffset(null, new Pair<>(0, 0.0));
-                return;
+                return new Pair<>(0, 0.0);
             }
             lhs -= columnWidths[lhsCol];
         }
+        // Should be impossible to reach here unless there are no columns:
+        return new Pair<>(0, 0.0);
     }
 
     // Focuses cell so that you can navigate around with keyboard
@@ -425,34 +437,36 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     }
 
     // This scrolls just the layout, without smooth scrolling
-    private double scrollLayoutXBy(double x)
+    private ScrollResult scrollLayoutXBy(double x, ScrollGroup.Token token)
     {
-        double prevScroll = getCurrentScrollX();
-        scrollXToPixel(getCurrentScrollX() + x);
-        return getCurrentScrollX() - prevScroll;
+        double prevScroll = getCurrentScrollX(null);
+        Pair<Integer, Double> pos = scrollXToPixel(prevScroll + x, token);
+        return new ScrollResult(getCurrentScrollX(pos) - prevScroll, pos);
     }
 
     // This scrolls just the layout, without smooth scrolling
     // Returns the amount that we actually scrolled by, which will either
     // be given parameter, or otherwise it will have been clamped because we tried
     // to scroll at the very top or very bottom
-    private double scrollLayoutYBy(double y)
+    private ScrollResult scrollLayoutYBy(double y, ScrollGroup.Token token)
     {
-        double prevScroll = getCurrentScrollY();
-        scrollYToPixel(prevScroll + y);
-        return getCurrentScrollY() - prevScroll;
+        double prevScroll = getCurrentScrollY(null);
+        Pair<Integer, Double> pos = scrollYToPixel(prevScroll + y, token);
+        return new ScrollResult(getCurrentScrollY(pos) - prevScroll, pos);
     }
 
     // Gets current scroll Y, where 0 is scrolled all the way to the top,
     // rowHeight+GAP means top of first row showing, etc
-    private double getCurrentScrollY()
+    // If param is non-null, overrides our own data
+    private double getCurrentScrollY(@Nullable Pair<Integer, Double> pos)
     {
-        return firstVisibleRowIndex * rowHeight - firstVisibleRowOffset;
+        return (pos == null ? firstVisibleRowIndex : pos.getFirst()) * rowHeight - (pos == null ? firstVisibleRowOffset : pos.getSecond());
     }
 
-    private double getCurrentScrollX()
+    // If param is non-null, overrides our own data
+    private double getCurrentScrollX(@Nullable Pair<Integer, Double> pos)
     {
-        return sumColumnWidths(0, firstVisibleColumnIndex) - firstVisibleColumnOffset;
+        return sumColumnWidths(0, pos == null ? firstVisibleColumnIndex : pos.getFirst()) - (pos == null ? firstVisibleColumnOffset : pos.getSecond());
     }
 
     // This is the canonical scroll method which all scroll
@@ -497,20 +511,6 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             boolean atLeft = firstVisibleColumnIndex == 0 && firstVisibleColumnOffset >= -5;
             FXUtility.setPseudoclass(glass, "left-shadow", !atLeft);
         }
-        scrollDependents.forEach((grid, lock) -> {
-            @Nullable Pair<Integer, Double> targetRow = null;
-            @Nullable Pair<Integer, Double> targetCol = null;
-            if (lock.includesVertical())
-            {
-                targetRow = new Pair<>(firstVisibleRowIndex, firstVisibleRowOffset);
-            }
-
-            if (lock.includesHorizontal())
-            {
-                targetCol = new Pair<>(firstVisibleColumnIndex, firstVisibleColumnOffset);
-            }
-            grid.showAtOffset(targetRow, targetCol);
-        });
         updateKnownRows();
         container.requestLayout();
     }
@@ -519,7 +519,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     {
         settingScrollBarVal = true;
         double maxScrollY = getMaxScrollY();
-        double currentScrollY = getCurrentScrollY();
+        double currentScrollY = getCurrentScrollY(null);
         vBar.setValue(maxScrollY < 1.0 ? 0.0 : (currentScrollY / maxScrollY));
         vBar.setVisibleAmount(maxScrollY < 1.0 ? 1.0 : (container.getHeight() / (maxScrollY + container.getHeight())));
         vBar.setMax(maxScrollY < 1.0 ? 0.0 : 1.0);
@@ -533,7 +533,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     {
         settingScrollBarVal = true;
         double maxScrollX = getMaxScrollX();
-        double currentScrollX = getCurrentScrollX();
+        double currentScrollX = getCurrentScrollX(null);
         hBar.setValue(maxScrollX < 1.0 ? 0.0 : (currentScrollX / maxScrollX));
         hBar.setVisibleAmount(maxScrollX < 1.0 ? 1.0 : (container.getWidth() / (maxScrollX + container.getWidth())));
         hBar.setMax(maxScrollX < 1.0 ? 0.0 : 1.0);
@@ -545,24 +545,8 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
     // Binds this item's scroll to src, so that when src changes, this does too.
     public void bindScroll(VirtScrollStrTextGrid src, ScrollLock lock)
     {
-        // We actually primarily keep track in src of dependents, not in dest of things we depend on
-        src.scrollDependents.put(this, lock);
-        // But we also keep track ourselves:
-        scrollLockedTo = new Pair<>(src, lock);
-
-        if (lock.includesVertical())
-        {
-            scrollYToPixel(src.getCurrentScrollY());
-            container.translateYProperty().bind(src.container.translateYProperty());
-            extraRows.bind(src.extraRows);
-        }
-
-        if (lock.includesHorizontal())
-        {
-            scrollXToPixel(src.getCurrentScrollX());
-            container.translateXProperty().bind(src.container.translateXProperty());
-            extraCols.bind(src.extraCols);
-        }
+        // We keep track by adding our scroll group to theirs:
+        src.scrollGroup.add(scrollGroup, lock);
     }
 
     // Various package-visible items used by sidebars:
@@ -613,14 +597,17 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
     public VirtRowLabels makeLineNumbers(FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems)
     {
-        return new VirtRowLabels(this, makeContextMenuItems);
+        VirtRowLabels virtRowLabels = new VirtRowLabels(this, makeContextMenuItems);
+        scrollGroup.add(virtRowLabels, ScrollLock.VERTICAL);
+        return virtRowLabels;
     }
 
     public VirtColHeaders makeColumnHeaders(FXPlatformFunction<Integer, List<MenuItem>> makeContextMenuItems, FXPlatformFunction<Integer, ImmutableList<Node>> getHeaderContent)
     {
-        VirtColHeaders virtColHeaders = new VirtColHeaders(this, makeContextMenuItems, getHeaderContent);
+        VirtColHeaders vch = virtColHeaders = new VirtColHeaders(this, makeContextMenuItems, getHeaderContent);
+        scrollGroup.add(virtColHeaders, ScrollLock.HORIZONTAL);
         extraButtonWidthProperty.bind(virtColHeaders.addColumnButtonWidthProperty());
-        return virtColHeaders;
+        return vch;
     }
 
     /**
@@ -651,16 +638,15 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         }
     }
 
-    @Override
     public void columnWidthChanged(int columnIndex, double newWidth)
     {
         // Fix hBar:
         updateHBar();
 
         container.requestLayout();
-        for (ScrollBindable scrollBindable : scrollDependents.keySet())
+        if (virtColHeaders != null)
         {
-            scrollBindable.columnWidthChanged(columnIndex, newWidth);
+            virtColHeaders.columnWidthChanged(columnIndex, newWidth);
         }
     }
 
@@ -853,28 +839,15 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         return stackPane;
     }
 
+    @Override
     public void updateClip()
     {
         container.updateClip();
     }
 
-
-    public void smoothScroll(ScrollEvent scrollEvent, ScrollLock axis)
-    {
-        smoothScroll(axis.includesHorizontal() ? -scrollEvent.getDeltaX() : 0.0, axis.includesVertical() ? -scrollEvent.getDeltaY() : 0.0);
-    }
-
-    public void smoothScroll(double deltaX, double deltaY)
-    {
-        if (deltaX != 0.0)
-            scrollX.smoothScroll(deltaX);
-        if (deltaY != 0.0)
-            scrollY.smoothScroll(deltaY);
-    }
-
     // Smooth scrolling class.  Handles smooth scrolling on a single axis:
     @OnThread(Tag.FXPlatform)
-    class SmoothScroller
+    static class SmoothScroller
     {
         // AnimationTimer is run every frame, and so lets us do smooth scrolling:
         private @MonotonicNonNull AnimationTimer scroller;
@@ -897,13 +870,15 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         private final FXPlatformFunction<Double, Double> scrollLayoutBy;
         // Given a scroll offset, works out how many extra rows/cols we need:
         private final FXPlatformFunction<Double, Integer> calcExtraRowCols;
+        private final FXPlatformRunnable updateClip;
 
-        SmoothScroller(DoubleProperty translateProperty, IntegerProperty extraRowCols, FXPlatformFunction<Double, Double> scrollLayoutBy, FXPlatformFunction<Double, Integer> calcExtraRowCols)
+        SmoothScroller(DoubleProperty translateProperty, IntegerProperty extraRowCols, FXPlatformFunction<Double, Double> scrollLayoutBy, FXPlatformFunction<Double, Integer> calcExtraRowCols, FXPlatformRunnable updateClip)
         {
             this.translateProperty = translateProperty;
             this.extraRowCols = extraRowCols;
             this.scrollLayoutBy = scrollLayoutBy;
             this.calcExtraRowCols = calcExtraRowCols;
+            this.updateClip = updateClip;
         }
 
         public void smoothScroll(double delta)
@@ -928,7 +903,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                             extraRowCols.set(0);
                             stop();
                         }
-                        container.updateClip();
+                        updateClip.run();
                     }
                 };
             }
@@ -1015,8 +990,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
                 // Filter because we want to steal it from the cells themselves:
             addEventFilter(ScrollEvent.ANY, scrollEvent -> {
-                //smoothScroll(scrollEvent, ScrollLock.BOTH);
-                scrollGroup.scroll(scrollEvent, VirtScrollStrTextGrid.this);
+                scrollGroup.requestScroll(scrollEvent);
                 scrollEvent.consume();
             });
 
@@ -1087,7 +1061,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         private void home(boolean extendSelection)
         {
             @Nullable CellSelection focusedCellPos = selection.get();
-            scrollYToPixel(0.0);
+            scrollGroup.requestScrollBy(0.0, -Double.MAX_VALUE);
             // Force layout before attempting to focus cell as it may not have been visible:
             layout();
             if (focusedCellPos != null)
@@ -1099,7 +1073,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         private void end(boolean extendSelection)
         {
             @Nullable CellSelection focusedCellPos = selection.get();
-            scrollYToPixel(Double.MAX_VALUE);
+            scrollGroup.requestScrollBy(0.0, Double.MAX_VALUE);
             // Force layout before attempting to focus cell as it may not have been visible:
             layout();
             if (focusedCellPos != null)
@@ -1265,10 +1239,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             clip.setY(-getTranslateY());
             clip.setWidth(getWidth());
             clip.setHeight(getHeight());
-            for (ScrollBindable scrollBindable : scrollDependents.keySet())
-            {
-                scrollBindable.updateClip();
-            }
+            scrollGroup.updateClip();
         }
     }
 
@@ -1318,6 +1289,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         return Math.max(0, firstVisibleRowIndex + Math.min(0, extraRows.get()));
     }
 
+    /*
     private void smoothScrollToEnsureVisible(CellPosition target)
     {
         Point2D currentXY = new Point2D(getCurrentScrollX(), getCurrentScrollY());
@@ -1369,6 +1341,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
         if (deltaX != 0.0 || deltaY != 0.0)
             smoothScroll(deltaX, deltaY);
     }
+    */
 
     private Bounds getPixelPosition(CellPosition target)
     {

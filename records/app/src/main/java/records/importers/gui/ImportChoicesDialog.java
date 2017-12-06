@@ -29,6 +29,7 @@ import javafx.stage.Modality;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
+import org.checkerframework.checker.nullness.qual.KeyForBottom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.RecordSet;
@@ -95,11 +96,6 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         StableView tableView = new StableView(new MessageWhenEmpty("import.noColumnsDest", "import.noRowsDest"));
         tableView.setEditable(false);
         StableView srcTableView = new StableView(new MessageWhenEmpty("import.noColumnsSrc", "import.noRowsSrc"));
-        srcTableView.getNode().addEventFilter(ScrollEvent.ANY, se -> {
-            tableView.forwardedScrollEvent(se, ScrollLock.VERTICAL);
-            srcTableView.forwardedScrollEvent(se, ScrollLock.HORIZONTAL);
-            se.consume();
-        });
         srcTableView.bindScroll(tableView, ScrollLock.VERTICAL);
 
 
@@ -289,7 +285,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                         return fieldValue.get();
                     else
                         return null;
-            }, fieldValue == null ? new ObservableValue<?>[0] : new ObservableValue<?>[] {fieldValue});
+            }, fieldValue == null ? new ObservableValue<?> @KeyForBottom [0] : new ObservableValue<?> @KeyForBottom [] {fieldValue});
         }
         int rowNumber = controlGrid.addRow(GUI.labelledGridRow(options.choiceType.getLabelKey(), options.choiceType.getHelpId(), choiceNode));
         FXPlatformConsumer<@Nullable C> pick = item -> {
