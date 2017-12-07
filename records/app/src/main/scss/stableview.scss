@@ -88,7 +88,7 @@
 }
 .stable-view-button, .stable-view-scroll-bar {
     -fx-border-color: hsb(0, 0%, 70%);
-    -fx-border-style: solid inside;
+    -fx-border-style: solid outside;
 }
 .stable-view-scroll-bar:horizontal {
     -fx-border-width: 1 0 1 0;
@@ -97,16 +97,18 @@
     -fx-border-width: 0 1 0 1;
 }
 .stable-view-button-left {
-    -fx-border-width: 1 0 1 0;
+    -fx-border-width: 1 0 1 1;
 }
 .stable-view-button-right {
     -fx-border-width: 1 1 1 0;
+    -fx-border-radius: 0 5 0 0;
 }
 .stable-view-button-top {
-    -fx-border-width: 0 1 0 1;
+    -fx-border-width: 1 1 0 1;
 }
 .stable-view-button-bottom {
     -fx-border-width: 0 1 1 1;
+    -fx-border-radius: 0 0 0 5;
 }
 
 .stable-view-button {
@@ -148,6 +150,11 @@
             -fx-background-color: derive(-fx-base, -25%);
         }
     }
+    &:at-top:at-bottom .stable-view-scroll-bar:vertical .thumb,
+    &:at-left:at-right .stable-view-scroll-bar:horizontal .thumb {
+        -fx-background-color: derive(-fx-base, +5%);
+    } 
+    
     &:at-top .stable-view-scroll-bar:vertical > .decrement-button > .decrement-arrow,
     &:at-bottom .stable-view-scroll-bar:vertical > .increment-button > .increment-arrow,
     &:at-left .stable-view-scroll-bar:horizontal > .decrement-button > .decrement-arrow,

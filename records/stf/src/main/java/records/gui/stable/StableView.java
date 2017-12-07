@@ -344,8 +344,8 @@ public class StableView
     {
         Button button = new Button("", makeButtonArrow());
         FXUtility.forcePrefSize(button);
-        button.setPrefWidth(ScrollBarSkin.DEFAULT_WIDTH + 4);
-        button.setPrefHeight(ScrollBarSkin.DEFAULT_WIDTH + 4);
+        button.setPrefWidth(ScrollBarSkin.DEFAULT_WIDTH + 2);
+        button.setPrefHeight(ScrollBarSkin.DEFAULT_WIDTH + 2);
         return button;
     }
 
