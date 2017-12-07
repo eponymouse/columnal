@@ -5,6 +5,7 @@ import javafx.beans.property.IntegerProperty;
 import javafx.beans.property.SimpleDoubleProperty;
 import javafx.beans.property.SimpleIntegerProperty;
 import javafx.scene.input.ScrollEvent;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import records.gui.stable.VirtScrollStrTextGrid.SmoothScroller;
@@ -30,7 +31,7 @@ import java.util.IdentityHashMap;
 @OnThread(Tag.FXPlatform)
 public class ScrollGroup
 {
-    private @Nullable ScrollGroup parent;
+    private @Nullable Pair<ScrollGroup, ScrollLock> parent;
     private VirtScrollStrTextGrid.SmoothScroller smoothScrollX;
 
     private VirtScrollStrTextGrid.SmoothScroller smoothScrollY;
@@ -67,16 +68,23 @@ public class ScrollGroup
         // If we're not the root group, forward up the chain:
         if (parent != null)
         {
-            parent.requestScrollBy(deltaX, deltaY);
-        }
-        else
-        {
-            if (deltaX != 0.0)
-                smoothScrollX.smoothScroll(deltaX);
+            @NonNull Pair<ScrollGroup, ScrollLock> parentFinal = parent;
+            // Forward what's applicable up to parent:
+            parentFinal.getFirst().requestScrollBy(parentFinal.getSecond().includesHorizontal() ? deltaX : 0.0, parentFinal.getSecond().includesVertical() ? deltaY : 0.0);
             
-            if (deltaY != 0.0)
-                smoothScrollY.smoothScroll(deltaY);
+            if (parentFinal.getSecond().includesHorizontal())
+                deltaX = 0.0;
+            if (parentFinal.getSecond().includesVertical())
+                deltaY = 0.0;
+            
+            // Do the rest ourselves, if any:
         }
+        
+        if (deltaX != 0.0)
+            smoothScrollX.smoothScroll(deltaX);
+        
+        if (deltaY != 0.0)
+            smoothScrollY.smoothScroll(deltaY);
     }
 
     void add(ScrollBindable scrollBindable, ScrollLock scrollLock)
@@ -88,6 +96,7 @@ public class ScrollGroup
     void add(ScrollGroup scrollGroup, ScrollLock scrollLock)
     {
         dependentGroups.put(scrollGroup, scrollLock);
+        scrollGroup.parent = new Pair<>(this, scrollLock);
         // TODO we need to set the scroll to right place immediately
     }
 
@@ -109,7 +118,7 @@ public class ScrollGroup
     {
         if (parent != null)
         {
-            parent.updateClip();
+            parent.getFirst().updateClip();
         }
         // Members may call back this same method, so need to avoid an infinite loop:
         if (!inUpdateClip)
