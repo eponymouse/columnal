@@ -74,6 +74,7 @@ import utility.gui.TranslationUtility;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 
 @OnThread(Tag.FXPlatform)
@@ -184,11 +185,11 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         });
         //TODO disable ok button if name isn't valid
         setResultConverter(bt -> {
-            @Nullable TableId tableId = nameField.valueProperty().get();
+            @Nullable Optional<TableId> tableId = nameField.valueProperty().get();
             @Nullable FORMAT format = formatProperty.get();
             if (bt == ButtonType.OK && tableId != null && format != null)
             {
-                return new Pair<>(new ImportInfo(tableId/*, linkCopyButtons.valueProperty().get()*/), format);
+                return new Pair<>(new ImportInfo(tableId.orElse(null)/*, linkCopyButtons.valueProperty().get()*/), format);
             }
             return null;
         });

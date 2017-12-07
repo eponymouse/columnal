@@ -177,10 +177,10 @@ public class EditTransformationDialog
                     Optional<TransformationEditor> ed = editor.get();
                     if (ed.isPresent())
                     {
-                        @Nullable TableId destId = tableNameTextField.valueProperty().get();
+                        @Nullable Optional<TableId> destId = tableNameTextField.valueProperty().get();
                         if (destId != null)
                         {
-                            return ed.get().getTransformation(parentView.getManager(), destId);
+                            return ed.get().getTransformation(parentView.getManager(), destId.orElse(null));
                         }
                     }
                 }

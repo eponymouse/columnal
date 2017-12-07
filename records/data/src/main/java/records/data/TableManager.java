@@ -35,6 +35,8 @@ import java.util.stream.Stream;
 @OnThread(Tag.Any)
 public class TableManager
 {
+    private static final Random RANDOM = new Random();
+    
     // We use a TreeMap here to have reliable ordering for tables, especially when saving:
     @OnThread(value = Tag.Any,requireSynchronized = true)
     private final Map<TableId, Set<Table>> usedIds = new TreeMap<>();
@@ -82,7 +84,7 @@ public class TableManager
         // So GUID is very unlikely to be in use already, but no harm in checking:
         do
         {
-            id = new TableId("Auto-" + UUID.randomUUID().toString());
+            id = new TableId("T" + RANDOM.nextInt(1_000_000));
         }
         while (usedIds.containsKey(id));
         // Reserve the spot for now:

@@ -37,6 +37,7 @@ import utility.ExFunction;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.greaterThan;
@@ -99,8 +100,8 @@ public class TestExpressionEditDialog extends ApplicationTest implements ScrollT
         assertRedBorder(field, true);
         assertErrorPopupShowing(true);
         write(" Test  Spaces\u00A0And\u2000Tabs \u00A0 (incl \u2001\u2002 \u2003 \u3000 Multiple)\u00A0");
-        assertEquals(new TableId("Test Spaces And Tabs (incl Multiple)"),
-            TestUtil.<@Nullable TableId>fx(() -> {
+        assertEquals(Optional.of(new TableId("Test Spaces And Tabs (incl Multiple)")),
+            TestUtil.<@Nullable Optional<TableId>>fx(() -> {
                 @Nullable EditTransformationDialog editTransformationDialog = MainWindow._test_getViews().keySet().iterator().next()._test_getCurrentlyShowingEditTransformationDialog();
                 if (editTransformationDialog != null)
                     return editTransformationDialog._test_getDestTableNameField().valueProperty().get();

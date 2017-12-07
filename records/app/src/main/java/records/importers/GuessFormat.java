@@ -680,10 +680,11 @@ public class GuessFormat
 
     public static class ImportInfo
     {
-        public final TableId tableName;
+        // Null means auto-assign
+        public final @Nullable TableId tableName;
         //public final boolean linkFile;
 
-        public ImportInfo(TableId tableName/*, boolean linkFile*/)
+        public ImportInfo(@Nullable TableId tableName/*, boolean linkFile*/)
         {
             this.tableName = tableName;
             //this.linkFile = linkFile;
