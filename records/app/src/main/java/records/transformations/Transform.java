@@ -302,7 +302,7 @@ public class Transform extends TransformationEditable
         }
 
         @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, TableId ourId)
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId ourId)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             // They were only allowed to press OK if all columns were non-null:

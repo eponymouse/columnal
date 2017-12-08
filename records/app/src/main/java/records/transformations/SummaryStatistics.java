@@ -512,7 +512,7 @@ public class SummaryStatistics extends TransformationEditable
         }
 
         @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, TableId thisTableId)
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId thisTableId)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             return () -> {

@@ -472,7 +472,7 @@ public class Filter extends TransformationEditable
         }
 
         @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, TableId thisTableId)
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId thisTableId)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             return () -> new Filter(mgr, thisTableId, srcId.get(), expression);

@@ -239,7 +239,7 @@ public class HideColumns extends TransformationEditable
         }
 
         @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, TableId tableId)
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId tableId)
         {
             SimulationSupplier<TableId> srcId = srcControl.getTableIdSupplier();
             ImmutableList<ColumnId> hiddenCols = columnsPanel.getHiddenColumns();

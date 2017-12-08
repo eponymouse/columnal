@@ -355,7 +355,7 @@ public class Concatenate extends TransformationEditable
         }
 
         @Override
-        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, TableId tableId)
+        public SimulationSupplier<Transformation> getTransformation(TableManager mgr, @Nullable TableId tableId)
         {
             return () -> new Concatenate(mgr, tableId, srcTableIds, missingVals);
         }

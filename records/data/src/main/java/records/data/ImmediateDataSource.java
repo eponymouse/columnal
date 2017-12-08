@@ -31,7 +31,7 @@ public class ImmediateDataSource extends DataSource
         this.data = data;
     }
 
-    public ImmediateDataSource(TableManager mgr, TableId tableId, EditableRecordSet data)
+    public ImmediateDataSource(TableManager mgr, @Nullable TableId tableId, EditableRecordSet data)
     {
         super(mgr, tableId);
         this.data = data;
