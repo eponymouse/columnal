@@ -8,6 +8,7 @@ import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableObjectValue;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ListChangeListener;
 import javafx.collections.MapChangeListener;
@@ -38,6 +39,7 @@ import javafx.stage.Window;
 import javafx.util.Duration;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -183,6 +185,13 @@ public class View extends StackPane implements TableManager.TableManagerListener
     private synchronized List<Table> getAllTables()
     {
         return tableManager.getAllTables();
+    }
+
+    @OnThread(Tag.Any)
+    @NonNull
+    private synchronized Stream<Table> streamAllTables()
+    {
+        return tableManager.streamAllTables();
     }
 
     @OnThread(Tag.Any)
@@ -487,40 +496,72 @@ public class View extends StackPane implements TableManager.TableManagerListener
     }
 
     @OnThread(Tag.FXPlatform)
-    private static class Overlays
+    private class Overlays
     {
         private final QuadCurve arrowFrom;
         private final HBox name;
         private final QuadCurve arrowTo;
+        private final TableDisplay dest;
+        private @MonotonicNonNull TableDisplay source;
 
+        @OnThread(Tag.FXPlatform)
         public Overlays(List<TableDisplay> sources, String text, TableDisplay dest, FXPlatformRunnable edit)
         {
-            Button button = new Button("Edit");
+            this.dest = dest;
+            Button button = new Button(text);
             button.setOnAction(e -> edit.run());
-            name = new HBox(new Label(text), button);
+            name = new HBox(button);
             arrowFrom = new QuadCurve();
             arrowTo = new QuadCurve();
             Utility.addStyleClass(arrowFrom, "transformation-arrow");
             Utility.addStyleClass(arrowTo, "transformation-arrow");
+
+            ChangeListener<Object> recalculate = new RecalcListener();
             
             if (!sources.isEmpty())
             {
-                TableDisplay source = sources.get(0);
-                // Find midpoint:
-                ChangeListener<Object> recalculate = (a, b, c) -> {
-                    // ((minXA + maxXA)/2 + (minXB + maxXB)/2)/2
-                    // = (minXA + maxXA + minXB + maxXB)/4
-                    double midX = 0.25 * (
-                            source.getBoundsInParent().getMinX() +
-                                    source.getBoundsInParent().getMaxX() +
-                                    dest.getBoundsInParent().getMinX() +
-                                    dest.getBoundsInParent().getMaxX());
-                    double midY = 0.25 * (
-                            source.getBoundsInParent().getMinY() +
-                                    source.getBoundsInParent().getMaxY() +
-                                    dest.getBoundsInParent().getMinY() +
-                                    dest.getBoundsInParent().getMaxY());
-                    // TODO should be midpoint between edges really, not centres:
+                this.source = sources.get(0);  
+                source.layoutXProperty().addListener(recalculate);
+                source.layoutYProperty().addListener(recalculate);
+                source.widthProperty().addListener(recalculate);
+                source.heightProperty().addListener(recalculate);
+            }
+            
+            dest.layoutXProperty().addListener(recalculate);
+            dest.layoutYProperty().addListener(recalculate);
+            dest.widthProperty().addListener(recalculate);
+            dest.heightProperty().addListener(recalculate);
+
+            recalculate.changed(new ReadOnlyBooleanWrapper(false), false, false);
+        }
+
+        @OnThread(Tag.FXPlatform)
+        private void recalculatePosition()
+        {
+            double namePrefWidth = name.prefWidth(Double.MAX_VALUE);
+            double namePrefHeight = name.prefHeight(Double.MAX_VALUE);
+            
+            if (source != null)
+            {
+                // TODO should be midpoint between edges really, not centres:
+                // ((minXA + maxXA)/2 + (minXB + maxXB)/2)/2
+                // = (minXA + maxXA + minXB + maxXB)/4
+                double midX = 0.25 * (
+                        source.getBoundsInParent().getMinX() +
+                                source.getBoundsInParent().getMaxX() +
+                                dest.getBoundsInParent().getMinX() +
+                                dest.getBoundsInParent().getMaxX());
+                double midY = 0.25 * (
+                        source.getBoundsInParent().getMinY() +
+                                source.getBoundsInParent().getMaxY() +
+                                dest.getBoundsInParent().getMinY() +
+                                dest.getBoundsInParent().getMaxY());
+
+                Bounds predictedBounds = new BoundingBox(midX - namePrefWidth, midY - namePrefHeight, namePrefWidth, namePrefHeight);
+                
+                if (!streamAllTables().<@Nullable TableDisplayBase>map(t -> t.getDisplay()).anyMatch(d -> d != null && d.getBoundsInParent().intersects(predictedBounds)))
+                {
+                    
                     name.layoutXProperty().unbind();
                     name.layoutXProperty().bind(name.widthProperty().multiply(-0.5).add(midX));
                     name.layoutYProperty().unbind();
@@ -543,18 +584,45 @@ public class View extends StackPane implements TableManager.TableManagerListener
                     arrowTo.setEndX(to.getX() - arrowTo.getLayoutX());
                     arrowTo.setEndY(to.getY() - arrowTo.getLayoutY());
 
-                };
-                source.layoutXProperty().addListener(recalculate);
-                source.layoutYProperty().addListener(recalculate);
-                source.widthProperty().addListener(recalculate);
-                source.heightProperty().addListener(recalculate);
+                    return;
+                }
+            }
+            
+            // if we reach here, snap to top of table:
+            double midX = dest.getBoundsInParent().getMinX() + namePrefWidth / 2.0;
+            double midY = dest.getBoundsInParent().getMinY() - namePrefHeight * 0.7;
+            
+            
+            arrowTo.setVisible(false);
+            if (source != null)
+            {
+                Point2D from = source.closestPointTo(midX, midY - 100);
+                arrowFrom.setLayoutX(from.getX());
+                arrowFrom.setLayoutY(from.getY());
+                arrowFrom.setControlX(midX - arrowFrom.getLayoutX());
+                arrowFrom.setControlY(midY - 100 - arrowFrom.getLayoutY());
+                arrowFrom.setEndX(midX - arrowFrom.getLayoutX());
+                arrowFrom.setEndY(midY - 50 - arrowFrom.getLayoutY());
+            }
+            else
+            {
+                arrowFrom.setVisible(false);
+            }
+                
+            name.layoutXProperty().unbind();
+            name.layoutXProperty().bind(name.widthProperty().multiply(-0.5).add(midX));
+            name.layoutYProperty().unbind();
+            name.layoutYProperty().bind(name.heightProperty().multiply(-0.5).add(midY));
+        }
 
-                dest.layoutXProperty().addListener(recalculate);
-                dest.layoutYProperty().addListener(recalculate);
-                dest.widthProperty().addListener(recalculate);
-                dest.heightProperty().addListener(recalculate);
-
-                recalculate.changed(new ReadOnlyBooleanWrapper(false), false, false);
+        @OnThread(Tag.FXPlatform)
+        private class RecalcListener implements ChangeListener<Object>
+        {
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<?> a, Object b, Object c)
+            {
+                Overlays.this.recalculatePosition();
             }
         }
     }

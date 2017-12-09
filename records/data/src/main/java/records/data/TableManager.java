@@ -229,6 +229,12 @@ public class TableManager
         }
     }
 
+    // Faster than getAllTables if you only need to process a stream.
+    public synchronized Stream<Table> streamAllTables()
+    {
+        return Stream.<Table>concat(sources.stream(), transformations.stream());
+    }
+
     public synchronized List<Table> getAllTables()
     {
         return Stream.<Table>concat(sources.stream(), transformations.stream()).collect(Collectors.<Table>toList());

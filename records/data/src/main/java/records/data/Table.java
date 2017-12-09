@@ -399,5 +399,8 @@ public abstract class Table
 
         @OnThread(Tag.Any)
         public ImmutableMap<ColumnId, Double> getColumnWidths();
+
+        @OnThread(Tag.FXPlatform)
+        public Bounds getBoundsInParent();
     }
 }
