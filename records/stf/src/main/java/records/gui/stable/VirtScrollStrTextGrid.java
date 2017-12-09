@@ -302,10 +302,19 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
 
         int bottomCell = (int)Math.floor((y + container.getHeight()) / rowHeight);
         int rows = currentKnownRows.get() + (appendRow == null ? 0 : 1);
+        // Don't let them scroll beyond bottom:
         if (bottomCell >= rows)
         {
             topCell = rows - 1 - (int)Math.floor(container.getHeight() / rowHeight);
             rowPixelOffset = container.getHeight() - (rows - topCell) * rowHeight;
+            
+            // But if whole table is visible, can't avoid scrolling beyond bottom;
+            // avoid over-compensating by scrolling above top:
+            if (topCell < 0)
+            {
+                topCell = 0;
+                rowPixelOffset = 0.0;
+            }
         }
 
         Pair<Integer, Double> scrollDest = new Pair<>(topCell, rowPixelOffset);
