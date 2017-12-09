@@ -546,18 +546,12 @@ public class View extends StackPane implements TableManager.TableManagerListener
                 // TODO should be midpoint between edges really, not centres:
                 // ((minXA + maxXA)/2 + (minXB + maxXB)/2)/2
                 // = (minXA + maxXA + minXB + maxXB)/4
-                double midX = 0.25 * (
-                        source.getBoundsInParent().getMinX() +
-                                source.getBoundsInParent().getMaxX() +
-                                dest.getBoundsInParent().getMinX() +
-                                dest.getBoundsInParent().getMaxX());
-                double midY = 0.25 * (
-                        source.getBoundsInParent().getMinY() +
-                                source.getBoundsInParent().getMaxY() +
-                                dest.getBoundsInParent().getMinY() +
-                                dest.getBoundsInParent().getMaxY());
-
-                Bounds predictedBounds = new BoundingBox(midX - namePrefWidth, midY - namePrefHeight, namePrefWidth, namePrefHeight);
+                Pair<Point2D, Point2D> closestSrcDest = source.closestPointTo(dest.getBoundsInParent());
+                double midX = 0.5 * (closestSrcDest.getFirst().getX() + closestSrcDest.getSecond().getX());
+                double midY = 0.5 * (closestSrcDest.getFirst().getY() + closestSrcDest.getSecond().getY());
+                
+                Bounds predictedBounds = new BoundingBox(midX - namePrefWidth * 0.5, midY - namePrefHeight  * 0.5, namePrefWidth, namePrefHeight);
+                System.err.println("Pred bounds: " + predictedBounds);
                 
                 if (!streamAllTables().<@Nullable TableDisplayBase>map(t -> t.getDisplay()).anyMatch(d -> d != null && d.getBoundsInParent().intersects(predictedBounds)))
                 {
@@ -577,12 +571,14 @@ public class View extends StackPane implements TableManager.TableManagerListener
                     arrowFrom.setControlY(midY - 100 - arrowFrom.getLayoutY());
                     arrowFrom.setEndX(midX - arrowFrom.getLayoutX());
                     arrowFrom.setEndY(midY - 50 - arrowFrom.getLayoutY());
+                    arrowFrom.setVisible(true);
                     arrowTo.setLayoutX(midX);
                     arrowTo.setLayoutY(midY + 50);
                     arrowTo.setControlX(midX - arrowTo.getLayoutX());
                     arrowTo.setControlY(midY + 100 - arrowTo.getLayoutY());
                     arrowTo.setEndX(to.getX() - arrowTo.getLayoutX());
                     arrowTo.setEndY(to.getY() - arrowTo.getLayoutY());
+                    arrowTo.setVisible(true);
 
                     return;
                 }

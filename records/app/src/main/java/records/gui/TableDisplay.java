@@ -124,6 +124,11 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     private final BooleanProperty sizedToFitVertical = new SimpleBooleanProperty(false);
     private @Nullable TableDisplay snappedToRightOf;
 
+    /**
+     * Finds the closest point on the edge of this rectangle to the given point.
+     * 
+     * If the point is inside our rectangular bounds, still locates a point on our edge.
+     */
     @OnThread(Tag.FX)
     public Point2D closestPointTo(double parentX, double parentY)
     {
@@ -143,6 +148,82 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
 
         return new Point2D(middle.getX() + Math.max(-halfWidth, Math.min(1.0/Math.tan(angle) * ((angle >= 0) ? halfHeight : -halfHeight), halfWidth)),
             middle.getY() + Math.max(-halfHeight, Math.min(Math.tan(angle) * ((angle >= deg90 || angle <= -deg90) ? -halfWidth : halfWidth), halfHeight)));
+    }
+
+    /**
+     * Treating the given bounds as a simple rectangle, finds the point
+     * on the edge of our bounds and the edge of their bounds
+     * that give the minimum distance between the two points. 
+     * 
+     * @return The pair of (point-on-our-bounds, point-on-their-bounds)
+     * that give shortest bounds between the two.
+     */
+    @OnThread(Tag.FXPlatform)
+    public Pair<Point2D, Point2D> closestPointTo(Bounds them)
+    {
+        // If we overlap in horizontal or vertical line, then
+        // the minimum distance is automatically along that line
+        // or shortest of the two.  Otherwise the shortest line
+        // connects two of the corners.
+
+        Bounds us = getBoundsInParent();
+        // Pairs distance with the points:
+        List<Pair<Double, Pair<Point2D, Point2D>>> candidates = new ArrayList<>(); 
+        if (us.getMinX() <= them.getMaxX() && them.getMinX() <= us.getMaxX())
+        {
+            // Overlap horizontally
+            double midOverlapX = 0.5 * (Math.max(us.getMinX(), them.getMinX()) + Math.min(us.getMaxX(), them.getMaxX()));
+            
+            // Four options: our top/bottom, combined with their top/bottom
+            for (double theirY : Arrays.asList(them.getMinY(), them.getMaxY()))
+            {
+                for (double usY : Arrays.asList(us.getMinY(), us.getMaxY()))
+                {
+                    candidates.add(new Pair<>(Math.abs(usY - theirY), new Pair<>(
+                        new Point2D(midOverlapX, usY), new Point2D(midOverlapX, theirY)
+                    )));
+                }
+            }
+        }
+        
+        //vertical overlap:
+        if (us.getMinY() <= them.getMaxY() && them.getMinY() <= us.getMaxY())
+        {
+            double midOverlapY = 0.5 * (Math.max(us.getMinY(), them.getMinY()) + Math.min(us.getMaxY(), them.getMaxY()));
+            
+            // Four options: our left/right, combined with their left/right
+            for (double theirX : Arrays.asList(them.getMinX(), them.getMaxX()))
+            {
+                for (double usX : Arrays.asList(us.getMinX(), us.getMaxX()))
+                {
+                    candidates.add(new Pair<>(Math.abs(usX - theirX), new Pair<>(
+                            new Point2D(usX, midOverlapY), new Point2D(theirX, midOverlapY)
+                    )));
+                }
+
+            }
+        }
+        
+        if (candidates.isEmpty())
+        {
+            // No overlap in either dimension, do corners:
+            for (double theirY : Arrays.asList(them.getMinY(), them.getMaxY()))
+            {
+                for (double usY : Arrays.asList(us.getMinY(), us.getMaxY()))
+                {
+                    for (double theirX : Arrays.asList(them.getMinX(), them.getMaxX()))
+                    {
+                        for (double usX : Arrays.asList(us.getMinX(), us.getMaxX()))
+                        {
+                            candidates.add(new Pair<>(Math.hypot(theirX - usX, theirY - usY), new Pair<>(new Point2D(usX, usY), new Point2D(theirX, theirY))));
+                        }
+
+                    }
+                }
+            }
+        }
+
+        return candidates.stream().min(Pair.<Double, Pair<Point2D, Point2D>>comparatorFirst()).orElseThrow(() -> new RuntimeException("Impossible!")).getSecond();
     }
 
     @OnThread(Tag.Any)

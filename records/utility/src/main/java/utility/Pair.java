@@ -92,4 +92,9 @@ public final class Pair<A, B>
         return Comparator.<Pair<A, B>, A>comparing(p -> p.getFirst()).thenComparing(p -> p.getSecond());
     }
 
+    public static <A extends Comparable<A>, B> Comparator<Pair<A, B>> comparatorFirst()
+    {
+        return Comparator.<Pair<A, B>, A>comparing(p -> p.getFirst());
+    }
+
 }
