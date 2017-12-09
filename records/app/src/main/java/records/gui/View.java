@@ -62,10 +62,14 @@ import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -151,7 +155,25 @@ public class View extends StackPane implements TableManager.TableManagerListener
         //Exception e = new Exception();
         Workers.onWorkerThread("Saving", Priority.SAVE_TO_DISK, () ->
         {
-            new Fetcher(getAllTables()).getNext();
+            List<Table> allTablesUnordered = getAllTables();
+
+            Map<TableId, Table> getById = new HashMap<>();
+            Map<TableId, List<TableId>> edges = new HashMap<>();
+            HashSet<TableId> allIds = new HashSet<>();
+            for (Table t : allTablesUnordered)
+            {
+                allIds.add(t.getId());
+                getById.put(t.getId(), t);
+                if (t instanceof Transformation)
+                {
+                    edges.put(t.getId(), ((Transformation)t).getSources());
+                }
+            }
+            List<TableId> linearised = GraphUtility.lineariseDAG(allIds, edges, Collections.emptyList());
+
+            @SuppressWarnings("nullness")
+            List<@NonNull Table> linearTables = Utility.mapList(linearised, id -> getById.get(id));
+            new Fetcher(linearTables).getNext();
 
         });
     }
@@ -480,56 +502,60 @@ public class View extends StackPane implements TableManager.TableManagerListener
             arrowTo = new QuadCurve();
             Utility.addStyleClass(arrowFrom, "transformation-arrow");
             Utility.addStyleClass(arrowTo, "transformation-arrow");
-            TableDisplay source = sources.get(0);
-            // Find midpoint:
-            ChangeListener<Object> recalculate = (a, b, c) -> {
-                // ((minXA + maxXA)/2 + (minXB + maxXB)/2)/2
-                // = (minXA + maxXA + minXB + maxXB)/4
-                double midX = 0.25 * (
-                    source.getBoundsInParent().getMinX() +
-                    source.getBoundsInParent().getMaxX() +
-                    dest.getBoundsInParent().getMinX() +
-                    dest.getBoundsInParent().getMaxX());
-                double midY = 0.25 * (
-                    source.getBoundsInParent().getMinY() +
-                        source.getBoundsInParent().getMaxY() +
-                        dest.getBoundsInParent().getMinY() +
-                        dest.getBoundsInParent().getMaxY());
-                // TODO should be midpoint between edges really, not centres:
-                name.layoutXProperty().unbind();
-                name.layoutXProperty().bind(name.widthProperty().multiply(-0.5).add(midX));
-                name.layoutYProperty().unbind();
-                name.layoutYProperty().bind(name.heightProperty().multiply(-0.5).add(midY));
+            
+            if (!sources.isEmpty())
+            {
+                TableDisplay source = sources.get(0);
+                // Find midpoint:
+                ChangeListener<Object> recalculate = (a, b, c) -> {
+                    // ((minXA + maxXA)/2 + (minXB + maxXB)/2)/2
+                    // = (minXA + maxXA + minXB + maxXB)/4
+                    double midX = 0.25 * (
+                            source.getBoundsInParent().getMinX() +
+                                    source.getBoundsInParent().getMaxX() +
+                                    dest.getBoundsInParent().getMinX() +
+                                    dest.getBoundsInParent().getMaxX());
+                    double midY = 0.25 * (
+                            source.getBoundsInParent().getMinY() +
+                                    source.getBoundsInParent().getMaxY() +
+                                    dest.getBoundsInParent().getMinY() +
+                                    dest.getBoundsInParent().getMaxY());
+                    // TODO should be midpoint between edges really, not centres:
+                    name.layoutXProperty().unbind();
+                    name.layoutXProperty().bind(name.widthProperty().multiply(-0.5).add(midX));
+                    name.layoutYProperty().unbind();
+                    name.layoutYProperty().bind(name.heightProperty().multiply(-0.5).add(midY));
 
-                Point2D from = source.closestPointTo(midX, midY - 100);
-                Point2D to = dest.closestPointTo(midX, midY + 100);
+                    Point2D from = source.closestPointTo(midX, midY - 100);
+                    Point2D to = dest.closestPointTo(midX, midY + 100);
 
-                // Should use nearest point, not top-left:
-                arrowFrom.setLayoutX(from.getX());
-                arrowFrom.setLayoutY(from.getY());
-                arrowFrom.setControlX(midX - arrowFrom.getLayoutX());
-                arrowFrom.setControlY(midY - 100 - arrowFrom.getLayoutY());
-                arrowFrom.setEndX(midX - arrowFrom.getLayoutX());
-                arrowFrom.setEndY(midY - 50 - arrowFrom.getLayoutY());
-                arrowTo.setLayoutX(midX);
-                arrowTo.setLayoutY(midY + 50);
-                arrowTo.setControlX(midX - arrowTo.getLayoutX());
-                arrowTo.setControlY(midY + 100 - arrowTo.getLayoutY());
-                arrowTo.setEndX(to.getX() - arrowTo.getLayoutX());
-                arrowTo.setEndY(to.getY() - arrowTo.getLayoutY());
+                    // Should use nearest point, not top-left:
+                    arrowFrom.setLayoutX(from.getX());
+                    arrowFrom.setLayoutY(from.getY());
+                    arrowFrom.setControlX(midX - arrowFrom.getLayoutX());
+                    arrowFrom.setControlY(midY - 100 - arrowFrom.getLayoutY());
+                    arrowFrom.setEndX(midX - arrowFrom.getLayoutX());
+                    arrowFrom.setEndY(midY - 50 - arrowFrom.getLayoutY());
+                    arrowTo.setLayoutX(midX);
+                    arrowTo.setLayoutY(midY + 50);
+                    arrowTo.setControlX(midX - arrowTo.getLayoutX());
+                    arrowTo.setControlY(midY + 100 - arrowTo.getLayoutY());
+                    arrowTo.setEndX(to.getX() - arrowTo.getLayoutX());
+                    arrowTo.setEndY(to.getY() - arrowTo.getLayoutY());
 
-            };
-            source.layoutXProperty().addListener(recalculate);
-            source.layoutYProperty().addListener(recalculate);
-            source.widthProperty().addListener(recalculate);
-            source.heightProperty().addListener(recalculate);
+                };
+                source.layoutXProperty().addListener(recalculate);
+                source.layoutYProperty().addListener(recalculate);
+                source.widthProperty().addListener(recalculate);
+                source.heightProperty().addListener(recalculate);
 
-            dest.layoutXProperty().addListener(recalculate);
-            dest.layoutYProperty().addListener(recalculate);
-            dest.widthProperty().addListener(recalculate);
-            dest.heightProperty().addListener(recalculate);
+                dest.layoutXProperty().addListener(recalculate);
+                dest.layoutYProperty().addListener(recalculate);
+                dest.widthProperty().addListener(recalculate);
+                dest.heightProperty().addListener(recalculate);
 
-            recalculate.changed(new ReadOnlyBooleanWrapper(false), false, false);
+                recalculate.changed(new ReadOnlyBooleanWrapper(false), false, false);
+            }
         }
     }
 
