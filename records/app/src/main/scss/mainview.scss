@@ -39,9 +39,17 @@
 }
 
 .line-snap-guide {
+    -fx-stroke: black;
     -fx-stroke-width: 5;
     -fx-stroke-dash-array: 12 16;
     -fx-stroke-line-cap: round;
+}
+.rectangle-snap-guide {
+    -fx-fill: hsba(0, 0%, 60%, 0.6);
+    -fx-arc-height: 15;
+    -fx-arc-width: 15;
+    -fx-stroke: grey(40%);
+    -fx-stroke-width: 4;
 }
 .main-empty-hint {
     -fx-text-fill: grey(40%);

@@ -108,7 +108,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     // Currently only used for testing:
     private @Nullable EditTransformationDialog currentlyShowingEditTransformationDialog;
 
-    private final ObservableList<Line> snapGuides = FXCollections.observableArrayList();
+    private final ObservableList<Shape> snapGuides = FXCollections.observableArrayList();
     // Pass true when empty
     private final FXPlatformConsumer<Boolean> emptyListener;
 
@@ -325,7 +325,9 @@ public class View extends StackPane implements TableManager.TableManagerListener
                 Bounds sourceBounds = sourceDisplay.getPosition();
                 if (sourceBounds.contains(x, y))
                 {
-                    snapGuides.add(new Line(sourceBounds.getMaxX(), sourceBounds.getMinY(), sourceBounds.getMaxX(), sourceBounds.getMaxY()));
+                    Rectangle rectangle = new Rectangle(sourceBounds.getMaxX(), sourceBounds.getMinY(), tableDisplay.getBoundsInLocal().getWidth(), tableDisplay.getBoundsInLocal().getHeight());
+                    rectangle.getStyleClass().add("rectangle-snap-guide");
+                    snapGuides.add(rectangle);
                     return new SnapDetails(new Point2D(x, y), new Pair<>(Side.LEFT, sourceDisplay));
                 }
             }
@@ -543,9 +545,6 @@ public class View extends StackPane implements TableManager.TableManagerListener
             
             if (source != null)
             {
-                // TODO should be midpoint between edges really, not centres:
-                // ((minXA + maxXA)/2 + (minXB + maxXB)/2)/2
-                // = (minXA + maxXA + minXB + maxXB)/4
                 Pair<Point2D, Point2D> closestSrcDest = source.closestPointTo(dest.getBoundsInParent());
                 double midX = 0.5 * (closestSrcDest.getFirst().getX() + closestSrcDest.getSecond().getX());
                 double midY = 0.5 * (closestSrcDest.getFirst().getY() + closestSrcDest.getSecond().getY());
@@ -689,7 +688,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
             }
         });
 
-        snapGuides.addListener((ListChangeListener<Line>) c -> {
+        snapGuides.addListener((ListChangeListener<Shape>) c -> {
             while (c.next())
             {
                 snapGuidePane.getChildren().removeAll(c.getRemoved());

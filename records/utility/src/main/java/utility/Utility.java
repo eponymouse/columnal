@@ -886,6 +886,11 @@ public class Utility
                 return Stream.<@NonNull T>empty();
         });
     }
+    
+    public static <T> ImmutableList<T> filterList(List<T> src, Predicate<T> filterBy)
+    {
+        return src.stream().filter(filterBy).collect(ImmutableList.toImmutableList());
+    }
 
     @SuppressWarnings("nullness")
     public static <T> Stream<@NonNull T> filterOutNulls(Stream<@Nullable T> stream)
