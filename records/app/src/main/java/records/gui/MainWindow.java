@@ -1,6 +1,5 @@
 package records.gui;
 
-import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.StringBinding;
 import javafx.beans.property.ObjectProperty;
@@ -12,15 +11,12 @@ import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.StackPane;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
-import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.DataSource;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.error.InternalException;
 import records.error.UserException;
-import records.importers.HTMLImporter;
 import records.importers.manager.ImporterManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -34,7 +30,6 @@ import utility.gui.ScrollPaneFill;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
-import java.io.IOException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
@@ -89,8 +84,8 @@ public class MainWindow
             ),
             GUI.menu("menu.data",
                 GUI.menuItem("menu.data.new", () -> newTable(v)),
-                GUI.menuItem("menu.data.import.file", () -> chooseAndImportFile(v, stage))
-                //GUI.menuItem("menu.data.import.link", () -> chooseAndImportLink(v, stage))
+                GUI.menuItem("menu.data.import.file", () -> chooseAndImportFile(v, stage)),
+                GUI.menuItem("menu.data.import.link", () -> chooseAndImportURL(v, stage))
             ),
             GUI.menu("menu.view",
                 GUI.menuItem("menu.view.find", () -> v.new FindEverywhereDialog().showAndWait()),
@@ -156,9 +151,9 @@ public class MainWindow
         ImporterManager.getInstance().chooseAndImportFile(stage, v.getManager(), ds -> v.addSource(ds));
     }
 
-    private static void chooseAndImportLink(View v, Stage stage)
+    private static void chooseAndImportURL(View v, Stage stage)
     {
-        ImporterManager.getInstance().chooseAndImportLink(stage, v.getManager(), ds -> v.addSource(ds));
+        ImporterManager.getInstance().chooseAndImportURL(stage, v.getManager(), ds -> v.addSource(ds));
     }
 
     public static void closeAll()

@@ -3,20 +3,16 @@ package records.importers.manager;
 import com.google.common.collect.ImmutableList;
 import javafx.collections.FXCollections;
 import javafx.scene.Node;
-import javafx.scene.control.ButtonType;
-import javafx.scene.control.Dialog;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
 import javafx.scene.control.SelectionMode;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser.ExtensionFilter;
 import javafx.stage.Window;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.DataSource;
 import records.data.TableManager;
@@ -28,7 +24,6 @@ import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
-import utility.Utility;
 import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
@@ -36,13 +31,10 @@ import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.io.IOException;
-import java.net.MalformedURLException;
-import java.net.URISyntaxException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class ImporterManager
 {
@@ -75,9 +67,9 @@ public class ImporterManager
     }
 
     @OnThread(Tag.FXPlatform)
-    public void chooseAndImportLink(Window parent, TableManager tableManager, FXPlatformConsumer<DataSource> onLoad)
+    public void chooseAndImportURL(Window parent, TableManager tableManager, FXPlatformConsumer<DataSource> onLoad)
     {
-        @Nullable Pair<File, Importer> choice = new ImportLinkDialog().showAndWait().orElse(null);
+        @Nullable Pair<File, Importer> choice = new ImportURLDialog().showAndWait().orElse(null);
         if (choice != null)
         {
             choice.getSecond().importFile(parent, tableManager, choice.getFirst(), onLoad);
@@ -130,13 +122,13 @@ public class ImporterManager
         return SINGLETON;
     }
 
-    private class ImportLinkDialog extends ErrorableDialog<Pair<File, Importer>>
+    private class ImportURLDialog extends ErrorableDialog<Pair<File, Importer>>
     {
         private final ErrorableTextField<URL> linkField;
         private final PickImporterPane pickImporterPane;
 
         @OnThread(Tag.FXPlatform)
-        public ImportLinkDialog()
+        public ImportURLDialog()
         {
             linkField = new ErrorableTextField<>(ImporterManager::checkURL);
             Node linkPane = GUI.labelled("importer.link", linkField.getNode());
