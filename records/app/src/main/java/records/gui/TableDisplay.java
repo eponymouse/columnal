@@ -112,7 +112,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     private boolean resizeTop;
     private boolean resizeBottom;
     @OnThread(Tag.Any)
-    private final AtomicReference<Bounds> mostRecentBounds;
+    private final AtomicReference<Pair<Bounds, @Nullable Pair<TableId, Double>>> mostRecentBounds;
     @OnThread(Tag.Any)
     private final AtomicReference<ImmutableMap<ColumnId, Double>> mostRecentColumnWidths;
     private final HBox header;
@@ -595,7 +595,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     private void updateMostRecentBounds(@UnknownInitialization(BorderPane.class) TableDisplay this)
     {
         BoundingBox bounds = new BoundingBox(getLayoutX(), getLayoutY(), getPrefWidth(), getPrefHeight());
-        mostRecentBounds.set(bounds);
+        mostRecentBounds.set(new Pair<>(bounds, snappedToRightOf == null ? null : new Pair<>(snappedToRightOf.getTable().getId(), bounds.getWidth())));
     }
 
     private void updateSnappedFitWidth()
@@ -766,13 +766,32 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         return false;
     }
 
+    @OnThread(Tag.Any)
     @Override
-    public @OnThread(Tag.Any) void loadPosition(Bounds bounds, Pair<Display, ImmutableList<ColumnId>> display)
+    public void loadPosition(Either<Bounds, Pair<TableId, Double>> boundsOrSnap, Pair<Display, ImmutableList<ColumnId>> display)
     {
+        BoundingBox defaultPos = new BoundingBox(0, 0, 400, 800);
         // Important we do this now, not in runLater, as if we then save,
         // it will be valid:
-        mostRecentBounds.set(bounds);
+        mostRecentBounds.set(boundsOrSnap.<Pair<Bounds, @Nullable Pair<TableId, Double>>>either(b -> new Pair<>(b, null), s -> new Pair<>(defaultPos, s)));
+        
         Platform.runLater(() -> {
+            Bounds bounds = boundsOrSnap.either(b -> b, snappedTo -> {
+                @Nullable Table snapSrc = parent.getManager().getSingleTableOrNull(snappedTo.getFirst());
+                if (snapSrc != null)
+                {
+                    TableDisplay snapSrcDisplay = (TableDisplay)snapSrc.getDisplay();
+                    if (snapSrcDisplay != null)
+                    {
+                        snapToRightOf(snapSrcDisplay);
+                        Bounds snapSrcBounds = snapSrcDisplay.getIntendedBounds();
+                        return new BoundingBox(snapSrcBounds.getMaxX(), snapSrcBounds.getMinY(), snappedTo.getSecond(), snapSrcBounds.getHeight());
+                    }
+                }
+
+                return defaultPos;
+            });
+            
             setLayoutX(bounds.getMinX());
             setLayoutY(bounds.getMinY());
             setPrefWidth(bounds.getWidth());
@@ -781,11 +800,22 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         });
     }
 
+    // Gets intended bounds.  Useful while loading, when we have set intended bounds,
+    // but layout pass may not have happened yet.
+    private Bounds getIntendedBounds()
+    {
+        return new BoundingBox(getLayoutX(), getLayoutY(), getPrefWidth(), getPrefHeight());
+    }
+
     @OnThread(Tag.Any)
     @Override
-    public Bounds getPosition()
+    public Either<Bounds, Pair<TableId, Double>> getPositionOrSnap()
     {
-        return mostRecentBounds.get();
+        Pair<Bounds, @Nullable Pair<TableId, Double>> recent = mostRecentBounds.get();
+        if (recent.getSecond() != null)
+            return Either.right(recent.getSecond());
+        else
+            return Either.left(recent.getFirst());
     }
 
     @Override

@@ -322,7 +322,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
             if (sources.size() == 1 && sources.get(0).getDisplay() != null)
             {
                 TableDisplay sourceDisplay = (TableDisplay)sources.get(0).getDisplay();
-                Bounds sourceBounds = sourceDisplay.getPosition();
+                Bounds sourceBounds = sourceDisplay.getBoundsInParent();
                 if (sourceBounds.contains(x, y))
                 {
                     Rectangle rectangle = new Rectangle(sourceBounds.getMaxX(), sourceBounds.getMinY(), tableDisplay.getBoundsInLocal().getWidth(), tableDisplay.getBoundsInLocal().getHeight());
@@ -356,7 +356,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
                     if (display == null)
                         return Stream.empty();
 
-                    Bounds b = display.getPosition();
+                    Bounds b = ((TableDisplay)display).getBoundsInParent();
                     // Candidate points and distance.  We will pick lowest distance.
                     // The snap values are either an X candidate (Left) or a Y candidate (Right).
                     List<Pair<Double, Either<SnapToAndLine, SnapToAndLine>>> snaps = new ArrayList<>();
@@ -773,7 +773,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
     public void editTransform(TransformationEditable existing)
     {
         EditTransformationDialog dialog = new EditTransformationDialog(getWindow(), this, existing.getId(), existing.edit(this));
-        showEditDialog(dialog, existing, existing.getPosition());
+        showEditDialog(dialog, existing, existing.getPositionOrSnap());
     }
 
     @SuppressWarnings("nullness") // Can't be a View without an actual window
@@ -788,7 +788,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
         showEditDialog(dialog, null, null);
     }
 
-    private void showEditDialog(EditTransformationDialog dialog, @Nullable TransformationEditable replaceOnOK, @Nullable Bounds position)
+    private void showEditDialog(EditTransformationDialog dialog, @Nullable TransformationEditable replaceOnOK, @Nullable Either<Bounds, Pair<TableId, Double>> position)
     {
         currentlyShowingEditTransformationDialog = dialog;
         // add will re-run any dependencies:

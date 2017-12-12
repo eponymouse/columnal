@@ -21,6 +21,7 @@ import records.grammar.MainParser.ItemContext;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.TranslationUtility;
@@ -59,7 +60,7 @@ public abstract class Table
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private @MonotonicNonNull TableDisplayBase display;
     @OnThread(value = Tag.Any, requireSynchronized = true)
-    private Bounds prevPosition = new BoundingBox(10, 10, 400, 600);
+    private Either<Bounds, Pair<TableId, Double>> prevPosition = Either.left(new BoundingBox(10, 10, 400, 600));
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private ImmutableMap<ColumnId, Double> prevColumnWidths = ImmutableMap.of();
 
@@ -93,7 +94,7 @@ public abstract class Table
     @OnThread(Tag.Any)
     public abstract RecordSet getData() throws UserException, InternalException;
 
-    public final synchronized Table loadPosition(@Nullable Bounds position)
+    public final synchronized Table loadPosition(@Nullable Either<Bounds, Pair<TableId, Double>> position)
     {
         if (position != null)
         {
@@ -105,10 +106,10 @@ public abstract class Table
     }
 
     @OnThread(Tag.Any)
-    public synchronized Bounds getPosition()
+    public synchronized Either<Bounds, Pair<TableId, Double>> getPositionOrSnap()
     {
         if (display != null)
-            return display.getPosition();
+            return display.getPositionOrSnap();
         else
             return prevPosition;
     }
@@ -212,11 +213,20 @@ public abstract class Table
     {
         try
         {
-            double x = Double.parseDouble(display.displayTablePosition().item(0).getText());
-            double y = Double.parseDouble(display.displayTablePosition().item(1).getText());
-            double mx = Double.parseDouble(display.displayTablePosition().item(2).getText());
-            double my = Double.parseDouble(display.displayTablePosition().item(3).getText());
-            prevPosition = new BoundingBox(x, y, mx - x, my - y);
+            if (display.displayTablePosition().POSITION() != null)
+            {
+                double x = Double.parseDouble(display.displayTablePosition().item(0).getText());
+                double y = Double.parseDouble(display.displayTablePosition().item(1).getText());
+                double mx = Double.parseDouble(display.displayTablePosition().item(2).getText());
+                double my = Double.parseDouble(display.displayTablePosition().item(3).getText());
+                prevPosition = Either.left(new BoundingBox(x, y, mx - x, my - y));
+            }
+            else
+            {
+                TableId id = new TableId(display.displayTablePosition().item(0).getText());
+                double width = Double.parseDouble(display.displayTablePosition().item(1).getText());
+                prevPosition = Either.right(new Pair<>(id, width));
+            }
 
             // Now handle the show-columns:
             if (display.displayShowColumns().ALL() != null)
@@ -257,10 +267,11 @@ public abstract class Table
     {
         if (display != null)
         {
-            prevPosition = display.getPosition();
+            prevPosition = display.getPositionOrSnap();
         }
-        Bounds b = prevPosition;
-        out.t(MainLexer.POSITION).d(b.getMinX()).d(b.getMinY()).d(b.getMaxX()).d(b.getMaxY()).nl();
+        prevPosition.either_(b -> 
+            out.t(MainLexer.POSITION).d(b.getMinX()).d(b.getMinY()).d(b.getMaxX()).d(b.getMaxY()).nl(),
+            s -> out.t(MainLexer.SNAPPEDTO).id(s.getFirst()).d(s.getSecond()).nl());
         out.t(MainLexer.SHOWCOLUMNS);
         switch (showColumns.getFirst())
         {
@@ -386,10 +397,11 @@ public abstract class Table
     public static interface TableDisplayBase
     {
         @OnThread(Tag.Any)
-        public void loadPosition(Bounds bounds, Pair<Display, ImmutableList<ColumnId>> display);
+        public void loadPosition(Either<Bounds, Pair<TableId, Double>> bounds, Pair<Display, ImmutableList<ColumnId>> display);
 
+        // Either standalone bounds, or snapped-to table id and width
         @OnThread(Tag.Any)
-        public Bounds getPosition();
+        public Either<Bounds, Pair<TableId, Double>> getPositionOrSnap();
 
         @OnThread(Tag.FXPlatform)
         public Bounds getHeaderBoundsInParent();

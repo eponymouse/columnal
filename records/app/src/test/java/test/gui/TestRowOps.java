@@ -50,6 +50,7 @@ import test.gen.GenImmediateData.ImmediateData_Mgr;
 import test.gen.GenRandom;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 import utility.gui.FXUtility;
@@ -106,11 +107,11 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
         manager.getTypeManager()._test_copyTaggedTypesFrom(expressionValue.typeManager);
 
         Table srcData = new ImmediateDataSource(manager, new EditableRecordSet(expressionValue.recordSet));
-        srcData.loadPosition(new BoundingBox(0, 0, 200, 600));
+        srcData.loadPosition(Either.left(new BoundingBox(0, 0, 200, 600)));
         manager.record(srcData);
 
         Table calculated = new Transform(manager, null, srcData.getId(), ImmutableList.of(new Pair<>(new ColumnId("Result"), expressionValue.expression)));
-        calculated.loadPosition(new BoundingBox(250, 0, 200, 600));
+        calculated.loadPosition(Either.left(new BoundingBox(250, 0, 200, 600)));
         manager.record(calculated);
 
         TestUtil.openDataAsTable(windowToUse, manager).run();
@@ -174,12 +175,12 @@ public class TestRowOps extends ApplicationTest implements CheckCSVTrait
 
         TableManager manager = srcDataAndMgr.mgr;
         Table srcData = srcDataAndMgr.data.get(0);
-        TestUtil.sim_(() -> srcData.loadPosition(new BoundingBox(0, 0, 300, 600)));
+        TestUtil.sim_(() -> srcData.loadPosition(Either.left(new BoundingBox(0, 0, 300, 600))));
 
         Column sortBy = srcData.getData().getColumns().get(r.nextInt(srcData.getData().getColumns().size()));
         Table calculated = TestUtil.sim(() -> new Sort(manager, null, srcData.getId(), ImmutableList.of(sortBy.getName())));
         TestUtil.sim(() -> {
-            calculated.loadPosition(new BoundingBox(350, 0, 300, 600));
+            calculated.loadPosition(Either.left(new BoundingBox(350, 0, 300, 600)));
             manager.record(calculated);
             try
             {

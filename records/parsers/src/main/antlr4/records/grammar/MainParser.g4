@@ -31,7 +31,8 @@ dataFormat : FORMAT (SKIPROWS numRows)? detail FORMAT NEWLINE;
 
 blank : NEWLINE;
 
-displayTablePosition : POSITION item item item item NEWLINE;
+// Position is X, Y, Width, Height.  Snapped to is Table ID, width
+displayTablePosition : POSITION item item item item NEWLINE | SNAPPEDTO item item NEWLINE;
 displayShowColumns : SHOWCOLUMNS (ALL | ALTERED | COLLAPSED | EXCEPT item*) NEWLINE;
 // items should be in pairs, but we don't make that a parse error:
 displayColumnWidths : COLUMNWIDTHS item* NEWLINE;
