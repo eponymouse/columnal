@@ -175,7 +175,12 @@ public class Utility
         {
             List<String> row = vals.get(i);
             if (!row.isEmpty() && !row.stream().allMatch(String::isEmpty))
-                items.add(row.get(columnIndex));
+            {
+                if (columnIndex < row.size())
+                    items.add(row.get(columnIndex));
+                else if (!row.isEmpty())
+                    items.add(row.get(row.size() - 1));
+            }
         }
         return items;
     }
