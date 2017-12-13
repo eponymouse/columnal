@@ -30,6 +30,7 @@ import utility.gui.ScrollPaneFill;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
+import java.net.MalformedURLException;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.HashMap;
@@ -141,7 +142,14 @@ public class MainWindow
             @Override
             public void importFile(File file)
             {
-                ImporterManager.getInstance().importFile(stage, v.getManager(), file, ds -> v.addSource(ds));
+                try
+                {
+                    ImporterManager.getInstance().importFile(stage, v.getManager(), file, file.toURI().toURL(), ds -> v.addSource(ds));
+                }
+                catch (MalformedURLException e)
+                {
+                    FXUtility.logAndShowError("Error in file path", e);
+                }
             }
         };
     }

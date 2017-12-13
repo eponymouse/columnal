@@ -37,6 +37,7 @@ import utility.gui.TranslationUtility;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
@@ -58,7 +59,7 @@ public class ExcelImporter implements Importer
 
     @SuppressWarnings("deprecation")
     @Override
-    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager mgr, File src, FXPlatformConsumer<DataSource> onLoad)
+    public @OnThread(Tag.FXPlatform) void importFile(Window parent, TableManager mgr, File src, URL origin, FXPlatformConsumer<DataSource> onLoad)
     {
         try
         {

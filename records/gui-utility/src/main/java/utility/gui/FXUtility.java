@@ -212,6 +212,7 @@ public class FXUtility
         return new ExtensionFilter(TranslationUtility.getString("extension.projects"), "*.rec");
     }
 
+    @OnThread(Tag.Any)
     public static String getStylesheet(String stylesheetName)
     {
         try
@@ -497,7 +498,7 @@ public class FXUtility
     // I have no idea why, but this function causes an error if called directly from another module
     // but the proxy above does not:
     @OnThread(Tag.Any)
-    public static void _logAndShowError(@LocalizableKey String actionKey, Exception ex)
+    private static void _logAndShowError(@LocalizableKey String actionKey, Exception ex)
     {
         @Localized String actionString = TranslationUtility.getString(actionKey);
         FXPlatformRunnable runAlert = () -> Utility.showError((@Localized String s) -> Utility.universal(actionString + ": " + s), ex);

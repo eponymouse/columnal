@@ -12,6 +12,7 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 
 import java.io.File;
+import java.net.URL;
 
 public interface Importer
 {
@@ -28,12 +29,13 @@ public interface Importer
      * @param parent The window parent, in case you need to show any dialogs
      * @param tableManager The destination table manager
      * @param src The file to read from
+     * @param origin The path that the file comes from (in case of resolving relative links from file)
      * @param onLoad The callback to call if the load is successful.  If you
      *               have multiple tables to import, calling this multiple times
      *               is safe.
      */
     @OnThread(Tag.FXPlatform)
-    public void importFile(Window parent, TableManager tableManager, File src, FXPlatformConsumer<DataSource> onLoad);
+    public void importFile(Window parent, TableManager tableManager, File src, URL origin, FXPlatformConsumer<DataSource> onLoad);
 
     /**
      * The name of the importer to display to the user when picking an importer

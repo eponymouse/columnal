@@ -31,6 +31,7 @@ import utility.gui.TranslationUtility;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
@@ -62,17 +63,24 @@ public class ImporterManager
         );
         if (chosen != null)
         {
-            importFile(parent, tableManager, chosen, onLoad);
+            try
+            {
+                importFile(parent, tableManager, chosen, chosen.toURI().toURL(), onLoad);
+            }
+            catch (MalformedURLException e)
+            {
+                FXUtility.logAndShowError("Error in file path", e);
+            }
         }
     }
 
     @OnThread(Tag.FXPlatform)
     public void chooseAndImportURL(Window parent, TableManager tableManager, FXPlatformConsumer<DataSource> onLoad)
     {
-        @Nullable Pair<File, Importer> choice = new ImportURLDialog().showAndWait().orElse(null);
+        @Nullable URLImportDetails choice = new ImportURLDialog().showAndWait().orElse(null);
         if (choice != null)
         {
-            choice.getSecond().importFile(parent, tableManager, choice.getFirst(), onLoad);
+            choice.chosenImporter.importFile(parent, tableManager, choice.downloadedFile, choice.source, onLoad);
         }
     }
 
@@ -94,20 +102,20 @@ public class ImporterManager
 
 
     @OnThread(Tag.FXPlatform)
-    public void importFile(Window parent, TableManager tableManager, File file, FXPlatformConsumer<DataSource> onLoad)
+    public void importFile(Window parent, TableManager tableManager, File file, URL source, FXPlatformConsumer<DataSource> onLoad)
     {
         // Work out which importer will handle it:
         for (Importer importer : registeredImporters)
         {
             if (importer.getSupportedFileTypes().stream().anyMatch((Pair<@Localized String, ImmutableList<String>> p) -> p.getSecond().stream().anyMatch(ext -> matches(file, ext))))
             {
-                importer.importFile(parent, tableManager, file, onLoad);
+                importer.importFile(parent, tableManager, file, source, onLoad);
                 return;
             }
         }
 
         // If none match, give user free choice of importers:
-        new PickImporterDialog(file).showAndWait().ifPresent(importer -> importer.importFile(parent, tableManager, file, onLoad));
+        new PickImporterDialog(file).showAndWait().ifPresent(importer -> importer.importFile(parent, tableManager, file, source, onLoad));
     }
 
     private static boolean matches(File file, String wildcard)
@@ -122,7 +130,21 @@ public class ImporterManager
         return SINGLETON;
     }
 
-    private class ImportURLDialog extends ErrorableDialog<Pair<File, Importer>>
+    private static class URLImportDetails
+    {
+        private final File downloadedFile;
+        private final URL source;
+        private final Importer chosenImporter;
+
+        private URLImportDetails(File downloadedFile, URL source, Importer chosenImporter)
+        {
+            this.downloadedFile = downloadedFile;
+            this.source = source;
+            this.chosenImporter = chosenImporter;
+        }
+    }
+    
+    private class ImportURLDialog extends ErrorableDialog<URLImportDetails>
     {
         private final ErrorableTextField<URL> linkField;
         private final PickImporterPane pickImporterPane;
@@ -140,7 +162,7 @@ public class ImporterManager
 
         @Override
         @OnThread(Tag.FXPlatform)
-        protected Either<@Localized String, Pair<File, Importer>> calculateResult()
+        protected Either<@Localized String, URLImportDetails> calculateResult()
         {
             @Nullable URL url = linkField.valueProperty().get();
             if (url == null)
@@ -153,7 +175,7 @@ public class ImporterManager
             try
             {
                 // TODO show progress while downloading
-                return Either.right(new Pair<>(download(url), importer));
+                return Either.right(new URLImportDetails(download(url), url, importer));
             }
             catch (Exception e)
             {
