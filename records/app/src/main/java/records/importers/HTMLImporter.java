@@ -82,7 +82,6 @@ public class HTMLImporter implements Importer
         
         FXPlatformConsumer<Integer> importTable = tableIndex -> {
             Element table = tables.get(tableIndex);
-            // TODO pick the header section out for column titles
             // vals is a list of rows:
             final List<List<String>> vals = new ArrayList<>();
             for (Element tableBit : table.children())
@@ -98,7 +97,7 @@ public class HTMLImporter implements Importer
                     vals.add(rowVals);
                     for (Element cell : row.children())
                     {
-                        if (!cell.tagName().equals("td"))
+                        if (!cell.tagName().equals("td") && !cell.tagName().equals("th"))
                             continue;
                         rowVals.add(cell.text());
                     }
