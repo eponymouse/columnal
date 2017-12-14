@@ -600,25 +600,33 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         if (tableDataDisplay != null)
         {
             tableDataDisplay.setRowLabelsVisible(newSnap == null);
+            FXUtility.setPseudoclass(this, "has-left-snap", newSnap != null);
         }
         
+        // We can only snap if there's nothing already snapped to its right.
+        // First, check for the unsnap condition:
         if (newSnap == null || newSnap.displayThatIsSnappedToOurRight != null)
         {
             if (this.displayThatWeAreSnappedToTheRightOf != null)
             {
+                FXUtility.setPseudoclass(this.displayThatWeAreSnappedToTheRightOf, "has-right-snap", false);
                 if (displayThatWeAreSnappedToTheRightOf.displayThatIsSnappedToOurRight == this)
                     displayThatWeAreSnappedToTheRightOf.displayThatIsSnappedToOurRight = null;
                 if (this.displayThatWeAreSnappedToTheRightOf.tableDataDisplay != null)
+                {
                     this.displayThatWeAreSnappedToTheRightOf.tableDataDisplay.setVerticalScrollVisible(true);
+                }
                 this.displayThatWeAreSnappedToTheRightOf = null;
             }
         }
         else
         {
+            // Ok to snap:
             setDisplay(Display.ALTERED, columnDisplay.get().getSecond());
             if (newSnap.tableDataDisplay != null)
             {
                 newSnap.tableDataDisplay.setVerticalScrollVisible(false);
+                FXUtility.setPseudoclass(newSnap, "has-right-snap", true);
                 if (tableDataDisplay != null)
                 {
                     tableDataDisplay.bindScroll(newSnap.tableDataDisplay, ScrollLock.VERTICAL);

@@ -4,21 +4,49 @@
 .table-wrapper {
     -fx-border-color: gray;
     -fx-border-radius: 5;
+    -fx-border-width: 1;
     -fx-background-color: lightgray;
     -fx-background-radius: 5;
+    
+    .table-header {
+        -fx-background-radius: 5 5 0 0;
+        -fx-background-color: steelblue;
+        -fx-padding: 6 6 0 6;
+        & .button {
+            -fx-cursor: default;
+        }
+    }
+    
+    &:has-right-snap {
+        -fx-border-width: 1 0 1 1;
+        -fx-border-radius: 5 0 0 5;
+        -fx-background-radius: 5 0 0 5;
+        .table-header {
+            -fx-background-radius: 5 0 0 0;
+        }
+    }
+    &:has-left-snap {
+        -fx-border-width: 1 1 1 0;
+        -fx-border-radius: 0 5 5 0;
+        -fx-background-radius: 0 5 5 0;
+        .table-header {
+            -fx-background-radius: 0 5 0 0;
+        }
+    }
+    &:has-left-snap:has-right-snap {
+        -fx-border-width: 1 0 1 0;
+        -fx-border-radius: 0;
+        -fx-background-radius: 0;
+        .table-header {
+            -fx-background-radius: 0;
+        }
+    }
 }
 .table-body {
     -fx-padding: 6 6 6 6;
     -fx-background-color: transparent;
 }
-.table-header {
-    -fx-background-radius: 5 5 0 0;
-    -fx-background-color: steelblue;
-    -fx-padding: 6 6 0 6;
-    & .button {
-        -fx-cursor: default;
-    }
-}
+
 .table-title {
     -fx-text-fill: white;
     -fx-font-weight: bold;
