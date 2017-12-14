@@ -36,6 +36,7 @@ import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.checkerframework.dataflow.qual.Pure;
@@ -78,6 +79,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
@@ -122,7 +124,8 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     // but a double-click will return to automatic resizing.
     private final BooleanProperty sizedToFitHorizontal = new SimpleBooleanProperty(false);
     private final BooleanProperty sizedToFitVertical = new SimpleBooleanProperty(false);
-    private @Nullable TableDisplay snappedToRightOf;
+    private @Nullable TableDisplay displayThatWeAreSnappedToTheRightOf;
+    private @Nullable TableDisplay displayThatIsSnappedToOurRight;
 
     /**
      * Finds the closest point on the edge of this rectangle to the given point.
@@ -446,19 +449,30 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             double sceneX = e.getSceneX();
             double sceneY = e.getSceneY();
             // If it is a resize, that will be taken care of in the called method.  Otherwise, we do a drag-move:
-            if (offsetDrag != null && !FXUtility.mouse(this).dragResize(parent, sceneX, sceneY))
+            @Nullable Point2D offset = offsetDrag;
+            if (offset != null && !FXUtility.mouse(this).dragResize(parent, sceneX, sceneY))
             {
-                Point2D pos = localToParent(sceneToLocal(sceneX, sceneY));
-                double newX = Math.max(0, pos.getX() - offsetDrag.getX());
-                double newY = Math.max(0, pos.getY() - offsetDrag.getY());
+                List<TableDisplay> dragGroup = e.isShiftDown() ? Collections.<@NonNull TableDisplay>singletonList(FXUtility.mouse(this)) : FXUtility.mouse(this).getDragGroup();
+                
+                Point2D pos = dragGroup.get(0).localToParent(dragGroup.get(0).sceneToLocal(sceneX, sceneY));
+                // Become relative to dragGroup.get(0):
+                offset = dragGroup.get(0).sceneToLocal(FXUtility.mouse(this).localToScene(offset));
+                double newX = Math.max(0, pos.getX() - offset.getX());
+                double newY = Math.max(0, pos.getY() - offset.getY());
+                
+                
 
-                SnapDetails snapDetails = parent.snapTableDisplayPositionWhileDragging(FXUtility.mouse(this), e.isShiftDown(), new Point2D(newX, newY), new Dimension2D(getBoundsInLocal().getWidth(), getBoundsInLocal().getHeight()));
-                Point2D snapped = snapDetails.snapToPos;
-                setLayoutX(snapped.getX());
-                setLayoutY(snapped.getY());
+                SnapDetails snapDetails = parent.snapTableDisplayPositionWhileDragging(dragGroup, e.isShiftDown(), new Point2D(newX, newY), new Dimension2D(getBoundsInLocal().getWidth(), getBoundsInLocal().getHeight()));
+                snapDetails.positionGroup(dragGroup);
                 FXUtility.mouse(this).updateMostRecentBounds();
-                FXUtility.mouse(this).snapToRightOf(snapDetails.snapToTable == null ? null : snapDetails.snapToTable.getSecond());
-                if (snapDetails.snapToTable != null && snapDetails.snapToTable.getFirst() == Side.LEFT)
+                //FXUtility.mouse(this).snapToRightOf(snapDetails.snapToTable == null ? null : snapDetails.snapToTable.getSecond());
+                if (displayThatWeAreSnappedToTheRightOf != null)
+                {
+                    // If we are already snapped, options are only to decouple (via holding shift)
+                    // or to remain coupled:
+                    prospectiveSnapToRightOf.set(e.isShiftDown() ? null : displayThatWeAreSnappedToTheRightOf);
+                }
+                else if (snapDetails.snapToTable != null && snapDetails.snapToTable.getFirst() == Side.LEFT)
                 {
                     prospectiveSnapToRightOf.set(snapDetails.snapToTable.getSecond());
                 }
@@ -472,12 +486,15 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             parent.tableDragEnded();
             // We call this even if null, because that will unsnap us:
             @Nullable TableDisplay snapRightOf = prospectiveSnapToRightOf.get();
-            FXUtility.mouse(this).snapToRightOf(snapRightOf);
-            if (snapRightOf != null)
+            if (snapRightOf != displayThatWeAreSnappedToTheRightOf)
             {
-                setLayoutX(snapRightOf.getBoundsInParent().getMaxX());
-                setLayoutY(snapRightOf.getLayoutY());
-                setPrefHeight(snapRightOf.getHeight());
+                FXUtility.mouse(this).snapToRightOf(snapRightOf);
+                if (snapRightOf != null)
+                {
+                    setLayoutX(snapRightOf.getBoundsInParent().getMaxX());
+                    setLayoutY(snapRightOf.getLayoutY());
+                    setPrefHeight(snapRightOf.getHeight());
+                }
             }
             FXUtility.mouse(this).updateMostRecentBounds();
             parent.tableMovedOrResized(this);
@@ -560,6 +577,24 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         this.table.setDisplay(usInit);
     }
 
+    private List<TableDisplay> getDragGroup()
+    {
+        // We go all the way to the left and build from there:
+        if (displayThatWeAreSnappedToTheRightOf != null)
+            return displayThatWeAreSnappedToTheRightOf.getDragGroup();
+        else
+        {
+            @Nullable TableDisplay t = this;
+            List<TableDisplay> r = new ArrayList<>();
+            while (t != null)
+            {
+                r.add(t);
+                t = t.displayThatIsSnappedToOurRight;
+            }
+            return r;
+        }
+    }
+
     private void snapToRightOf(@Nullable TableDisplay newSnap)
     {
         if (tableDataDisplay != null)
@@ -567,13 +602,15 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             tableDataDisplay.setRowLabelsVisible(newSnap == null);
         }
         
-        if (newSnap == null)
+        if (newSnap == null || newSnap.displayThatIsSnappedToOurRight != null)
         {
-            if (this.snappedToRightOf != null)
+            if (this.displayThatWeAreSnappedToTheRightOf != null)
             {
-                if (this.snappedToRightOf.tableDataDisplay != null)
-                    this.snappedToRightOf.tableDataDisplay.setVerticalScrollVisible(true);
-                this.snappedToRightOf = null;
+                if (displayThatWeAreSnappedToTheRightOf.displayThatIsSnappedToOurRight == this)
+                    displayThatWeAreSnappedToTheRightOf.displayThatIsSnappedToOurRight = null;
+                if (this.displayThatWeAreSnappedToTheRightOf.tableDataDisplay != null)
+                    this.displayThatWeAreSnappedToTheRightOf.tableDataDisplay.setVerticalScrollVisible(true);
+                this.displayThatWeAreSnappedToTheRightOf = null;
             }
         }
         else
@@ -587,7 +624,8 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                     tableDataDisplay.bindScroll(newSnap.tableDataDisplay, ScrollLock.VERTICAL);
                 }
             }
-            this.snappedToRightOf = newSnap;
+            this.displayThatWeAreSnappedToTheRightOf = newSnap;
+            newSnap.displayThatIsSnappedToOurRight = this;
         }
     }
 
@@ -595,7 +633,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
     private void updateMostRecentBounds(@UnknownInitialization(BorderPane.class) TableDisplay this)
     {
         BoundingBox bounds = new BoundingBox(getLayoutX(), getLayoutY(), getPrefWidth(), getPrefHeight());
-        mostRecentBounds.set(new Pair<>(bounds, snappedToRightOf == null ? null : new Pair<>(snappedToRightOf.getTable().getId(), bounds.getWidth())));
+        mostRecentBounds.set(new Pair<>(bounds, displayThatWeAreSnappedToTheRightOf == null ? null : new Pair<>(displayThatWeAreSnappedToTheRightOf.getTable().getId(), bounds.getWidth())));
     }
 
     private void updateSnappedFitWidth()
@@ -715,7 +753,6 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         return "\"" + original.replace("\"", "\"\"\"") + "\"";
     }
 
-    @Pure // It does changes position, but doesn't alter fields which is what matters
     private boolean dragResize(View parent, double sceneX, double sceneY)
     {
         if (resizing && originalSize != null && offsetDrag != null)

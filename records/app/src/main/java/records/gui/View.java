@@ -63,15 +63,7 @@ import utility.gui.FXUtility;
 import java.io.File;
 import java.io.IOException;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -291,6 +283,18 @@ public class View extends StackPane implements TableManager.TableManagerListener
             this.snapToPos = snapToPos;
             this.snapToTable = snapToTable;
         }
+
+        @OnThread(Tag.FXPlatform)
+        public void positionGroup(List<TableDisplay> group)
+        {
+            double x = snapToPos.getX();
+            for (TableDisplay tableDisplay : group)
+            {
+                tableDisplay.setLayoutX(x);
+                x += tableDisplay.getPrefWidth();
+                tableDisplay.setLayoutY(snapToPos.getY());
+            }
+        }
     }
 
     /**
@@ -301,10 +305,13 @@ public class View extends StackPane implements TableManager.TableManagerListener
      *    passing true as the second parameter (usually in response to the user
      *    holding a modifier key while dragging).  If this third form is used,
      *    the details are included in the snap details.
+     *    
+     * @param tableDisplayGroup The group of snapped-together tables to drag.
+     *                          The first one is the leftmost table in the chain.  If suppressSnapTogether is true, this should be a single item.
      */
-    public SnapDetails snapTableDisplayPositionWhileDragging(TableDisplay tableDisplay, boolean suppressSnapTogether, Point2D position, Dimension2D size)
+    public SnapDetails snapTableDisplayPositionWhileDragging(List<TableDisplay> tableDisplayGroup, boolean suppressSnapTogether, Point2D position, Dimension2D size)
     {
-        bringTableDisplayToFront(tableDisplay);
+        bringTableDisplayToFront(new HashSet<>(tableDisplayGroup));
         snapGuides.clear();
 
         double x = position.getX();
@@ -318,14 +325,14 @@ public class View extends StackPane implements TableManager.TableManagerListener
         {
             // First, check if we are over an existing table which is our only ancestor,
             // in which case we will snap to its right:
-            ImmutableList<Table> sources = getSources(tableDisplay.getTable());
+            ImmutableList<Table> sources = getSources(tableDisplayGroup.get(0).getTable());
             if (sources.size() == 1 && sources.get(0).getDisplay() != null)
             {
                 TableDisplay sourceDisplay = (TableDisplay)sources.get(0).getDisplay();
                 Bounds sourceBounds = sourceDisplay.getBoundsInParent();
                 if (sourceBounds.contains(x, y))
                 {
-                    Rectangle rectangle = new Rectangle(sourceBounds.getMaxX(), sourceBounds.getMinY(), tableDisplay.getBoundsInLocal().getWidth(), tableDisplay.getBoundsInLocal().getHeight());
+                    Rectangle rectangle = new Rectangle(sourceBounds.getMaxX(), sourceBounds.getMinY(), tableDisplayGroup.get(0).getBoundsInLocal().getWidth(), tableDisplayGroup.get(0).getBoundsInLocal().getHeight());
                     rectangle.getStyleClass().add("rectangle-snap-guide");
                     snapGuides.add(rectangle);
                     return new SnapDetails(new Point2D(x, y), new Pair<>(Side.LEFT, sourceDisplay));
@@ -350,7 +357,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
             final double ALIGNMENT_THRESHOLD = 20;
 
             Pair<@Nullable SnapToAndLine, @Nullable SnapToAndLine> pos = findFirstLeftAndFirstRight(getAllTables().stream()
-                .filter(t -> t != tableDisplay.getTable())
+                .filter(t -> !tableDisplayGroup.stream().anyMatch(g -> t == g.getTable()))
                 .flatMap(t -> {
                     @Nullable TableDisplayBase display = t.getDisplay();
                     if (display == null)
@@ -421,7 +428,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
 
         // Prevent infinite loop:
         int iterations = 0;
-        while (overlapsAnyExcept(tableDisplay, x, y) && iterations < 200)
+        while (overlapsAnyExcept(tableDisplayGroup, x, y) && iterations < 200)
         {
             x += 5;
             y += 5;
@@ -472,29 +479,39 @@ public class View extends StackPane implements TableManager.TableManagerListener
         return new Pair<>(left.get(), right.get());
     }
 
-    private void bringTableDisplayToFront(TableDisplay tableDisplay)
+    private void bringTableDisplayToFront(Set<TableDisplay> toFront)
     {
-        int index = Utility.indexOfRef(mainPane.getChildren(), tableDisplay);
-        if (index >= 0 && index < mainPane.getChildren().size() - 1)
+        // The only way to do a re-order in Java 8 is to rearrange the children.
+        // Simple thing would be to move the node to the end of the list -- but if a drag has begun
+        // on this node (one of the ways we might be called), the remove/add interrupts the drag.
+        // So instead, we take all those items ahead of any of us in the list and move them behind us:
+        boolean foundToFront = false;
+        List<Node> toBack = new ArrayList<>();
+        for (int i = 0; i < mainPane.getChildren().size(); i++)
         {
-            // The only way to do a re-order in Java 8 is to rearrange the children.
-            // Simple thing would be to move the node to the end of the list -- but if a drag has begun
-            // on this node (one of the ways we might be called), the remove/add interrupts the drag.
-            // So instead, we take all those items ahead of us in the list and move them behind us:
-            List<Node> ahead = new ArrayList<>(mainPane.getChildren().subList(index + 1, mainPane.getChildren().size()));
-            mainPane.getChildren().remove(index + 1, mainPane.getChildren().size());
-            mainPane.getChildren().addAll(index, ahead);
+            Node item = mainPane.getChildren().get(i);
+            if (toFront.contains(item))
+            {
+                foundToFront = true;
+            }
+            else if (foundToFront)
+            {
+                // One that we should move:
+                toBack.add(item);
+            }
         }
+        mainPane.getChildren().removeAll(toBack);
+        mainPane.getChildren().addAll(0, toBack);
     }
 
-    private boolean overlapsAnyExcept(TableDisplay except, double x, double y)
+    private boolean overlapsAnyExcept(List<TableDisplay> except, double x, double y)
     {
-        Bounds exceptHeader = new BoundingBox(x, y, except.getHeaderBoundsInParent().getWidth(), except.getHeaderBoundsInParent().getHeight());
+        List<Bounds> exceptHeaders = Utility.mapList(except, e -> new BoundingBox(x, y, e.getHeaderBoundsInParent().getWidth(), e.getHeaderBoundsInParent().getHeight()));
         return tableManager.getAllTables().stream()
                 .flatMap(t -> Utility.streamNullable(t.getDisplay()))
-                .filter(d -> d != except)
+                .filter(d -> !except.contains(d))
                 .map(t -> t.getHeaderBoundsInParent())
-                .anyMatch(r -> r.intersects(exceptHeader));
+                .anyMatch(r -> exceptHeaders.stream().anyMatch(e -> r.intersects(e)));
     }
 
     @OnThread(Tag.FXPlatform)
@@ -550,7 +567,6 @@ public class View extends StackPane implements TableManager.TableManagerListener
                 double midY = 0.5 * (closestSrcDest.getFirst().getY() + closestSrcDest.getSecond().getY());
                 
                 Bounds predictedBounds = new BoundingBox(midX - namePrefWidth * 0.5, midY - namePrefHeight  * 0.5, namePrefWidth, namePrefHeight);
-                System.err.println("Pred bounds: " + predictedBounds);
                 
                 if (!streamAllTables().<@Nullable TableDisplayBase>map(t -> t.getDisplay()).anyMatch(d -> d != null && d.getBoundsInParent().intersects(predictedBounds)))
                 {
@@ -901,7 +917,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
             r.addAll(Utility.mapList(getAllTables(), t -> new Result(t.getId().getRaw(), () -> {
                 TableDisplay tableDisplay = (TableDisplay) t.getDisplay();
                 if (tableDisplay != null)
-                    bringTableDisplayToFront(tableDisplay);
+                    bringTableDisplayToFront(Collections.singleton(tableDisplay));
             })));
 
             return r;
