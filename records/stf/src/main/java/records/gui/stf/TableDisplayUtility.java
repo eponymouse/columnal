@@ -4,6 +4,8 @@ import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
+import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
@@ -145,7 +147,8 @@ public class TableDisplayUtility
                     Utility.log(e);
                     typeLabel = GUI.label("column.type.unknown", "stable-view-column-type-unknown");
                 }
-                return Utility.concatI(super.makeHeaderContent(), ImmutableList.of(typeLabel));
+                // Wrap typeLabel in a BorderPane so that it can centre-align:
+                return Utility.concatI(super.makeHeaderContent(), ImmutableList.of(new BorderPane(typeLabel)));
             }
         };
         /*column.getType().<ColumnHandler, UserException>applyGet(new DataTypeVisitorGetEx<ColumnHandler, UserException>()
