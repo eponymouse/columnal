@@ -17,6 +17,7 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table.Display;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeUtility;
@@ -323,12 +324,12 @@ public class TableDisplayUtility
             this.makeComponent = makeComponent;
         }
 
-        public EditorKitCache<T> makeDisplayCache(int columnIndex, boolean isEditable, FXPlatformRunnable onModify)
+        public EditorKitCache<T> makeDisplayCache(int columnIndex, boolean isEditable, ImmutableList<String> stfStyles, FXPlatformRunnable onModify)
         {
             return new EditorKitCache<T>(columnIndex, g, vis -> {}, (rowIndex, value, relinquishFocus) -> {
                 return new EditorKit<T>(makeComponent.makeComponent(ImmutableList.of(), value), isEditable ? (Pair<String, T> p) -> {
                     Workers.onWorkerThread("Saving", Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> g.set(rowIndex, p.getSecond())));
-                    onModify.run();} : null, () -> relinquishFocus.consume(new CellPosition(rowIndex, columnIndex)));
+                    onModify.run();} : null, () -> relinquishFocus.consume(new CellPosition(rowIndex, columnIndex)), stfStyles);
             });
         }
     }
@@ -337,7 +338,55 @@ public class TableDisplayUtility
     @OnThread(Tag.FXPlatform)
     public static EditorKitCache<?> makeField(int columnIndex, DataTypeValue dataTypeValue, boolean isEditable, FXPlatformRunnable onModify) throws InternalException
     {
-        return valueAndComponent(dataTypeValue).makeDisplayCache(columnIndex, isEditable, onModify);
+        return valueAndComponent(dataTypeValue).makeDisplayCache(columnIndex, isEditable, stfStylesFor(dataTypeValue), onModify);
+    }
+
+    public static ImmutableList<String> stfStylesFor(DataType dataType) throws InternalException
+    {
+        return dataType.apply(new DataTypeVisitorEx<ImmutableList<String>, InternalException>()
+        {
+            @Override
+            public ImmutableList<String> number(NumberInfo numberInfo) throws InternalException
+            {
+                return ImmutableList.of("stf-cell-number");
+            }
+
+            @Override
+            public ImmutableList<String> text() throws InternalException
+            {
+                return ImmutableList.of("stf-cell-text");
+            }
+
+            @Override
+            public ImmutableList<String> date(DateTimeInfo dateTimeInfo) throws InternalException
+            {
+                return ImmutableList.of("stf-cell-datetime");
+            }
+
+            @Override
+            public ImmutableList<String> bool() throws InternalException
+            {
+                return ImmutableList.of("stf-cell-bool");
+            }
+
+            @Override
+            public ImmutableList<String> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException
+            {
+                return ImmutableList.of("stf-cell-tagged");
+            }
+
+            @Override
+            public ImmutableList<String> tuple(ImmutableList<DataType> inner) throws InternalException
+            {
+                return ImmutableList.of("stf-cell-tuple");
+            }
+
+            @Override
+            public ImmutableList<String> array(@Nullable DataType inner) throws InternalException
+            {
+                return ImmutableList.of("stf-cell-array");
+            }
+        });
     }
 
     @OnThread(Tag.FXPlatform)

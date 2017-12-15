@@ -103,12 +103,12 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
     private EditorKit<?> makeEditorKit(@UnknownInitialization(Object.class) NewColumnDialog this, DataType dataType) throws InternalException
     {
         defaultValue = DataTypeUtility.makeDefaultValue(dataType);
-        return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, defaultValue));
+        return fieldFromComponent(TableDisplayUtility.component(ImmutableList.of(), dataType, defaultValue), TableDisplayUtility.stfStylesFor(dataType));
     }
 
-    private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> fieldFromComponent(@UnknownInitialization(Object.class) NewColumnDialog this, Component<T> component) throws InternalException
+    private <@NonNull @Value T extends @NonNull @Value Object> EditorKit<T> fieldFromComponent(@UnknownInitialization(Object.class) NewColumnDialog this, Component<T> component, ImmutableList<String> stfStyles) throws InternalException
     {
-        return new EditorKit<T>(component, (Pair<String, @NonNull @Value T> v) -> {defaultValue = v.getSecond();}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus());
+        return new EditorKit<T>(component, (Pair<String, @NonNull @Value T> v) -> {defaultValue = v.getSecond();}, () -> getDialogPane().lookupButton(ButtonType.OK).requestFocus(), stfStyles);
     }
 
     @RequiresNonNull({"typeSelectionPane"})

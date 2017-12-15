@@ -161,7 +161,13 @@ public final class StructuredTextField extends StyleClassedTextArea
 
     public <T> void resetContent(EditorKit<T> editorKit)
     {
+        if (this.editorKit != null)
+        {
+            getStyleClass().removeAll(this.editorKit.stfStyles);
+        }
+        
         this.editorKit = editorKit;
+        getStyleClass().addAll(editorKit.stfStyles);
         List<Item> initialItems = editorKit.contentComponent.getItems();
         curValue.addAll(initialItems);
         suggestions = editorKit.contentComponent.getSuggestions();
@@ -947,12 +953,14 @@ public final class StructuredTextField extends StyleClassedTextArea
         private @Nullable T completedValue;
         private final @Nullable FXPlatformConsumer<Pair<String, T>> store;
         private @Nullable State<T> lastValidValue;
+        public final ImmutableList<String> stfStyles;
 
-        public EditorKit(Component<T> contentComponent, @Nullable FXPlatformConsumer<Pair<String, T>> store, FXPlatformRunnable relinquishFocus)
+        public EditorKit(Component<T> contentComponent, @Nullable FXPlatformConsumer<Pair<String, T>> store, FXPlatformRunnable relinquishFocus, ImmutableList<String> stfStyles)
         {
             this.contentComponent = contentComponent;
             this.store = store;
             this.relinquishFocus = relinquishFocus;
+            this.stfStyles = stfStyles;
         }
 
         private @Nullable State<T> captureState(List<Item> curValue, StyledDocument<Collection<String>, StyledText<Collection<String>>, Collection<String>> document)
