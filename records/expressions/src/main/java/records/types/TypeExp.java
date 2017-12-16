@@ -1,5 +1,9 @@
 package records.types;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+import records.error.InternalException;
+import utility.Either;
+
 /**
  * We have the following concrete/terminal types:
  *  - Boolean
@@ -20,22 +24,33 @@ package records.types;
  *   -- construct, deconstruct, Type
  *   Cons :: (b -> a) -> (a -> Maybe b) -> Type b -> Constructor a 
  * 
+ * data ConcreteComposite a where
+ *   Concrete :: [(String, Maybe (Constructor a))] -> CompositeDef a
+ * 
+ * data CompositeDef a where
+ *   -- End version, with no type args:
+ *   Conc :: ConcreteComposite a -> CompositeDef a 
+ *   -- Type variable:
+ *   Poly :: (Type b -> CompositeDef a) -> CompositeDef (Type b -> a)
+ * 
  * data TupleElem a where
  *   -- deconstruct, setter
  *   Elem :: (a -> b) -> (b -> a -> a) -> Type b -> TupleElem a
- *   
+ * 
+ * data TypeArg where
+ *   TypeArg :: Type a -> TypeArg
+ * 
  * data Type a where
  *   Num :: Type Number
  *   Bool :: Type Boolean
  *   Text :: Type String
  *   Date :: Type Date (etc -- several of these)
  *   -- Tagged data types: 
- *   Composite :: [(String, Maybe (Constructor a))] -> Type a
+ *   CompositeConcrete :: ConcreteComposite a -> Type a
+ *   CompositeApp :: CompositeDef (Type b -> a) -> Type b -> Type a
  *   List :: Type a -> Type [a]
  *   Tuple :: [TupleElem a] -> Type a
  *   
- * TODO Composite will be able to take type variables, now.
- * TODO And we'll thus need some sort of Type-Application to pass params
  *   
  *   
  * Meanwhile, we need a prospective type while doing type inference.  That is similar to the above
@@ -45,16 +60,14 @@ package records.types;
  * -- need a type argument. 
  * 
  * data TypeExp where
- *   -- Note, in the Sheard paper that Ptr is a custom type, not an in-built one!
+ *   -- Note, in the Sheard paper that Ptr is a custom type, not an in-built one!  Unfolded here:
  *   MutVar :: IORef (Maybe TypeExp) -> TypeExp
  *   -- Don't really understand GenVar, yet:
  *   GenVar :: Int -> TypeExp
  *   -- We need a special case for numbers due to units:
  *   NumType :: Unit -> TypeExp
- *   -- We have special case for primitives although original algorithm doesn't:
- *   PrimType :: String -> TypeExp
- *   AlgType :: String -> Maybe (TypeExp a) -> TypeExp
- *   ListType :: TypeExp -> TypeExp
+ *   -- Includes non-numeric primitives, lists, algebraic:
+ *   TypeCons :: String -> [TypeExp] -> TypeExp
  *   -- Tuples are difficult primarily due to type of functions like "first":
  *   TupleType :: Tuple -> TypeExp
  *   -- Overloaded operators and functions:
@@ -68,6 +81,44 @@ package records.types;
  *   TCons :: TypeExp -> Tuple -> Tuple
  */
 
-public class ProspectiveType
+public abstract class TypeExp
 {
+    public final Either<String, TypeExp> unifyWith(TypeExp b) throws InternalException
+    {
+        TypeExp aPruned = prune();
+        TypeExp bPruned = b.prune();
+        // Make sure param isn't a MutVar unless it has to be:
+        if (bPruned instanceof MutVar && !(aPruned instanceof MutVar))
+        {
+            return bPruned._unify(aPruned);
+        }
+        else
+        {
+            return aPruned._unify(bPruned);
+        }
+    }
+
+    /**
+     * You can assume that b is pruned, and is not a MutVar unless
+     * this is also a MutVar.
+     */
+    public abstract Either<String, TypeExp> _unify(TypeExp b) throws InternalException;
+    
+    // Prunes any MutVars at the outermost level.
+    public TypeExp prune()
+    {
+        return this;
+    }
+
+    /**
+     * If possible, return a variant of this type without the containing
+     * MutVar (basically, if you are a disjunction, eliminate those possibilities).  If null is returned, that wasn't possible: a cycle
+     * is inevitable.
+     */
+    public abstract @Nullable TypeExp withoutMutVar(MutVar mutVar);
+    
+    protected final Either<String, TypeExp> typeMismatch(TypeExp other)
+    {
+        return Either.left("Type mismatch: " + toString() + " versus " + other.toString());
+    }
 }
