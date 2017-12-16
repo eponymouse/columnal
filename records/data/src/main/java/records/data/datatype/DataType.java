@@ -96,6 +96,7 @@ import static java.time.temporal.ChronoField.YEAR;
  *      not a user-visible difference.
  *    - A string.
  *    - A date.
+ *    - A boolean
  *  - A composite type:
  *    - A set of 2+ tags.  Each tag may have 0 or 1 arguments (think Haskell's
  *      ADTs, but where you either have a tuple as an arg or nothing).
@@ -103,7 +104,7 @@ import static java.time.temporal.ChronoField.YEAR;
  *    - An array (i.e. variable-length list) of items of a single type.
  *
  *  Written in pseudo-Haskell:
- *  data Type = N Number | T String | D Date
+ *  data Type = N Number | T String | D Date | B Boolean
  *            | Tags [(TagName, Maybe Type)]
  *            | Tuple [Type]
  *            | Array Type
