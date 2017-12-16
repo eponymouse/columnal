@@ -34,6 +34,9 @@ package records.types;
  *   List :: Type a -> Type [a]
  *   Tuple :: [TupleElem a] -> Type a
  *   
+ * TODO Composite will be able to take type variables, now.
+ * TODO And we'll thus need some sort of Type-Application to pass params
+ *   
  *   
  * Meanwhile, we need a prospective type while doing type inference.  That is similar to the above
  * but has some different fields ready for unification:
@@ -54,6 +57,8 @@ package records.types;
  *   ListType :: TypeExp -> TypeExp
  *   -- Tuples are difficult primarily due to type of functions like "first":
  *   TupleType :: Tuple -> TypeExp
+ *   -- Overloaded operators and functions:
+ *   Or :: [TypeExp] -> TypeExp
  *   
  * -- This is like a list type, but distinguishes don't-care (used by "first" for the
  * rest of the tuple) from empty.
