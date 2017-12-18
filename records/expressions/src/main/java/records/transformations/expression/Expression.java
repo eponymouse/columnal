@@ -62,6 +62,7 @@ import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
+import records.types.ExpressionBase;
 import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -84,7 +85,7 @@ import java.util.stream.Stream;
 /**
  * Created by neil on 24/11/2016.
  */
-public abstract class Expression
+public abstract class Expression extends ExpressionBase
 {
     public static final int MAX_STRING_SOLVER_LENGTH = 8;
 

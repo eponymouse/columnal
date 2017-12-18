@@ -94,6 +94,16 @@
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="expressions" />
       </profile>
+      <profile name="Annotation profile for types" enabled="true">
+        <sourceOutputDir name="target/generated-sources/annotations" />
+        <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
+        <outputRelativeToContentRoot value="true" />
+        <option name="printErrorStack" value="" />
+        <option name="skipDefs" value="records.grammar.|one.util." />
+        <option name="stubs" value="$PROJECT_DIR$/records/types/../stubs" />
+        <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
+        <module name="types" />
+      </profile>
       <profile name="Annotation profile for records" enabled="true">
         <sourceOutputDir name="target/generated-sources/annotations" />
         <sourceTestOutputDir name="target/generated-test-sources/test-annotations" />
@@ -115,6 +125,7 @@
       <module name="parsers" target="1.8" />
       <module name="records" target="1.8" />
       <module name="stf" target="1.8" />
+      <module name="types" target="1.8" />
       <module name="utility" target="1.8" />
     </bytecodeTargetLevel>
   </component>

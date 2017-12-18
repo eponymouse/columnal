@@ -5,14 +5,13 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
-import records.transformations.expression.Expression;
 import utility.Either;
 
 public class NumTypeExp extends TypeExp
 {
     public final Unit unit;
 
-    public NumTypeExp(Expression src, Unit unit)
+    public NumTypeExp(ExpressionBase src, Unit unit)
     {
         super(src);
         this.unit = unit;

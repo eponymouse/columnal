@@ -10,7 +10,6 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
-import records.transformations.expression.Expression;
 import utility.Either;
 import utility.Utility;
 
@@ -100,9 +99,9 @@ public abstract class TypeExp
     public static final String CONS_BOOLEAN = "Boolean";
     public static final String CONS_LIST = "List";
     // For recording errors:
-    protected final Expression src;
+    protected final ExpressionBase src;
     
-    protected TypeExp(Expression src)
+    protected TypeExp(ExpressionBase src)
     {
         this.src = src;
     }
@@ -173,7 +172,7 @@ public abstract class TypeExp
         return Either.left("Type mismatch: " + toString() + " versus " + other.toString());
     }
 
-    public static TypeExp fromConcrete(Expression src, DataType dataType) throws InternalException
+    public static TypeExp fromConcrete(ExpressionBase src, DataType dataType) throws InternalException
     {
         return dataType.apply(new DataTypeVisitorEx<TypeExp, InternalException>()
         {

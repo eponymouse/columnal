@@ -5,7 +5,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
-import records.transformations.expression.Expression;
 import utility.Either;
 
 public class TupleTypeExp extends TypeExp
@@ -15,7 +14,7 @@ public class TupleTypeExp extends TypeExp
     // e.g. "first" uses this, has single knownMembers and complete==false
     public final boolean complete;
 
-    public TupleTypeExp(Expression src, ImmutableList<TypeExp> knownMembers, boolean complete)
+    public TupleTypeExp(ExpressionBase src, ImmutableList<TypeExp> knownMembers, boolean complete)
     {
         super(src);
         this.knownMembers = knownMembers;

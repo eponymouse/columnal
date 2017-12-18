@@ -2,13 +2,11 @@ package records.types;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
-import records.transformations.expression.Expression;
 import utility.Either;
 
 public class TypeCons extends TypeExp
@@ -17,14 +15,14 @@ public class TypeCons extends TypeExp
     // Can be size 0+:
     public final ImmutableList<TypeExp> operands;
 
-    public TypeCons(Expression src, String name, TypeExp... operands)
+    public TypeCons(ExpressionBase src, String name, TypeExp... operands)
     {
         super(src);
         this.name = name;
         this.operands = ImmutableList.copyOf(operands);
     }
     
-    public TypeCons(Expression src, String name, ImmutableList<TypeExp> operands)
+    public TypeCons(ExpressionBase src, String name, ImmutableList<TypeExp> operands)
     {
         super(src);
         this.name = name;

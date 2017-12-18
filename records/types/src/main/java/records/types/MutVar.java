@@ -4,7 +4,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
-import records.transformations.expression.Expression;
 import utility.Either;
 
 /**
@@ -23,7 +22,7 @@ public class MutVar extends TypeExp
     // mutable reference:
     @Nullable TypeExp pointer;
 
-    public MutVar(Expression src, @Nullable TypeExp pointTo)
+    public MutVar(ExpressionBase src, @Nullable TypeExp pointTo)
     {
         super(src);
         this.pointer = pointTo;

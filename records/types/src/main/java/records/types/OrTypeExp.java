@@ -5,7 +5,6 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
-import records.transformations.expression.Expression;
 import utility.Either;
 
 import java.util.stream.Collectors;
@@ -16,7 +15,7 @@ public class OrTypeExp extends TypeExp
     // Should always be size 2+:
     public final ImmutableList<TypeExp> options;
 
-    public OrTypeExp(Expression src, ImmutableList<TypeExp> options)
+    public OrTypeExp(ExpressionBase src, ImmutableList<TypeExp> options)
     {
         super(src);
         this.options = options;
