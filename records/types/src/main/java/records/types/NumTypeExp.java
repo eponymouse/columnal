@@ -1,17 +1,19 @@
 package records.types;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
+import records.types.units.UnitExp;
 import utility.Either;
 
 public class NumTypeExp extends TypeExp
 {
-    public final Unit unit;
+    public final UnitExp unit;
 
-    public NumTypeExp(ExpressionBase src, Unit unit)
+    public NumTypeExp(ExpressionBase src, UnitExp unit)
     {
         super(src);
         this.unit = unit;
@@ -31,17 +33,22 @@ public class NumTypeExp extends TypeExp
 
         NumTypeExp bn = (NumTypeExp) b;
         
-        if (!unit.equals(bn.unit))
+        UnitExp unifiedUnit = unit.unifyWith(bn.unit);
+        if (unifiedUnit == null)
             return typeMismatch(b);
         
-        // We are both the same, so just return us:
-        return Either.right(this);
+        // I guess we take an arbitrary pick of our src, and theirs:
+        return Either.right(new NumTypeExp(src, unifiedUnit));
     }
 
 
     @Override
     protected Either<String, DataType> _concrete(TypeManager typeManager)
     {
-        return Either.right(DataType.number(new NumberInfo(unit, null)));
+        @Nullable Unit concreteUnit = this.unit.toConcreteUnit();
+        if (concreteUnit == null)
+            return Either.left("Ambiguous unit");
+        else
+            return Either.right(DataType.number(new NumberInfo(concreteUnit, null)));
     }
 }

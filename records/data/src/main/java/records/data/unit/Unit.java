@@ -5,6 +5,8 @@ import org.sosy_lab.common.rationals.Rational;
 import records.error.UserException;
 import utility.Pair;
 
+import java.util.Collections;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.StringJoiner;
@@ -187,9 +189,9 @@ public class Unit
             return Optional.of(thisCanon.getFirst().divides(otherCanon.getFirst()));
     }
 
-    public TreeMap<SingleUnit, Integer> getDetails()
+    public Map<SingleUnit, Integer> getDetails()
     {
-        return units;
+        return Collections.unmodifiableMap(units);
     }
 
     public static Unit _test_make(Object... params)

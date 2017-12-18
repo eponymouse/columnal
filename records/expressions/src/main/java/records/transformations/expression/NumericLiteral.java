@@ -15,7 +15,9 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.ErrorRecorder.QuickFix;
+import records.types.NumTypeExp;
 import records.types.TypeExp;
+import records.types.units.UnitExp;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -41,16 +43,16 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError)
+    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws InternalException
     {
         if (unit == null)
-            return DataType.NUMBER;
+            return TypeExp.fromConcrete(this, DataType.NUMBER);
 
-        Either<Pair<String, List<UnitExpression>>, Unit> errOrUnit = unit.asUnit(state.getUnitManager());
-        return errOrUnit.<@Nullable DataType>either(err -> {
+        Either<Pair<String, List<UnitExpression>>, UnitExp> errOrUnit = unit.asUnit(state.getUnitManager());
+        return errOrUnit.<@Nullable TypeExp>either(err -> {
             onError.recordError(this, err.getFirst(), Utility.mapList(err.getSecond(), u -> new QuickFix(TranslationUtility.getString("quick.fix.unit"), () -> new NumericLiteral(value, u))));
             return null;
-        }, u -> DataType.number(new NumberInfo(u, null)));
+        }, u -> new NumTypeExp(this, u));
     }
 
     @Override

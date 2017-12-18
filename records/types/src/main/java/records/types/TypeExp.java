@@ -10,6 +10,7 @@ import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
+import records.types.units.UnitExp;
 import utility.Either;
 import utility.Utility;
 
@@ -179,7 +180,7 @@ public abstract class TypeExp
             @Override
             public TypeExp number(NumberInfo numberInfo) throws InternalException, InternalException
             {
-                return new NumTypeExp(src, numberInfo.getUnit());
+                return new NumTypeExp(src, UnitExp.fromConcrete(numberInfo.getUnit()));
             }
 
             @Override
