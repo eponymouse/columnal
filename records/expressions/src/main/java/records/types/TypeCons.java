@@ -72,7 +72,7 @@ public class TypeCons extends TypeExp
     }
 
     @Override
-    protected Either<String, DataType> _concrete(TypeManager typeManager)
+    protected Either<String, DataType> _concrete(TypeManager typeManager) throws InternalException
     {
         switch (name)
         {
@@ -81,7 +81,7 @@ public class TypeCons extends TypeExp
             case CONS_BOOLEAN:
                 return Either.right(DataType.BOOLEAN);
             case CONS_LIST:
-                return operands.get(0).toConcreteType().map(t -> DataType.array(t));
+                return operands.get(0).toConcreteType(typeManager).map(t -> DataType.array(t));
             default:
                 try
                 {

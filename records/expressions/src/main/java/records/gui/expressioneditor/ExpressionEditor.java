@@ -300,7 +300,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
                         }
                     };
                     @Nullable TypeExp dataType = expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), errorRecorder);
-                    latestType.set(errorRecorder.recordError(expression, dataType.toConcreteType()));
+                    latestType.set(errorRecorder.recordError(expression, dataType.toConcreteType(tableManager.getTypeManager())));
                 }
             }
             catch (InternalException | UserException e)

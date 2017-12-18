@@ -16,7 +16,7 @@ public class OrTypeExp extends TypeExp
     // Should always be size 2+:
     public final ImmutableList<TypeExp> options;
 
-    public OrTypeExp(@Nullable Expression src, ImmutableList<TypeExp> options)
+    public OrTypeExp(Expression src, ImmutableList<TypeExp> options)
     {
         super(src);
         this.options = options;

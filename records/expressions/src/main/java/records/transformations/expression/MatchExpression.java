@@ -22,6 +22,7 @@ import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -34,6 +35,9 @@ import java.util.stream.Stream;
  */
 public class MatchExpression extends NonOperatorExpression
 {
+    /**
+     * A clause is a list of patterns, and an outcome expression
+     */
     public class MatchClause
     {
         private final List<Pattern> patterns;
@@ -55,24 +59,36 @@ public class MatchExpression extends NonOperatorExpression
             return outcome;
         }
 
-        public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError, DataType srcType) throws InternalException, UserException
+        /**
+         * Returns pattern match type, outcome type
+         */
+        public @Nullable Pair<TypeExp, TypeExp> check(RecordSet data, TypeState state, ErrorRecorder onError) throws InternalException, UserException
         {
-            List<TypeState> rhsStates = new ArrayList<>();
+            TypeExp[] patternTypes = new TypeExp[patterns.size()];
+            TypeState[] rhsStates = new TypeState[patterns.size()];
             if (patterns.isEmpty())
             {
                 // Probably a test generation error:
                 onError.recordError(MatchExpression.this, "Clause with no patterns");
                 return null;
             }
-            for (Pattern p : patterns)
+            for (int i = 0; i < patterns.size(); i++)
             {
-                @Nullable TypeState ts = p.check(data, state, onError, srcType);
+                @Nullable Pair<TypeExp, TypeState> ts = patterns.get(i).check(data, state, onError);
                 if (ts == null)
                     return null;
-                rhsStates.add(ts);
+                patternTypes[i] = ts.getFirst();
+                rhsStates[i] = ts.getSecond();
             }
-            TypeState rhsState = TypeState.intersect(rhsStates);
-            return outcome.check(data, rhsState, onError);
+            @Nullable TypeExp patternType = onError.recordError(MatchExpression.this, TypeExp.unifyTypes(patternTypes));
+            if (patternType == null)
+                return null;
+            TypeState rhsState = TypeState.intersect(Arrays.asList(rhsStates));
+            @Nullable TypeExp outcomeType = outcome.check(data, rhsState, onError);
+            if (outcomeType == null)
+                return null;
+            else
+                return new Pair<>(patternType, outcomeType);
         }
 
         //Returns null if no match
@@ -126,6 +142,9 @@ public class MatchExpression extends NonOperatorExpression
         }
     }
 
+    /**
+     * A pattern is an expression, plus an optional guard
+     */
     public static class Pattern
     {
         private final Expression pattern;
@@ -137,23 +156,24 @@ public class MatchExpression extends NonOperatorExpression
             this.guard = guard;
         }
 
-        public @Nullable TypeState check(RecordSet data, TypeState state, ErrorRecorder onError, TypeExp srcType) throws InternalException, UserException
+        /**
+         * Returns pattern type, and resulting type state (including any declared vars)
+         */
+        public @Nullable Pair<TypeExp, TypeState> check(RecordSet data, TypeState state, ErrorRecorder onError) throws InternalException, UserException
         {
-            @Nullable Pair<TypeExp, TypeState> rhsState = pattern.checkAsPattern(true, srcType, data, state, onError);
+            @Nullable Pair<TypeExp, TypeState> rhsState = pattern.checkAsPattern(true, data, state, onError);
             if (rhsState == null)
                 return null;
-            if (DataType.checkSame(rhsState.getFirst(), srcType, onError.recordError(pattern)) == null)
-                return null;
-
+            
             if (guard != null)
             {
-                @Nullable DataType type = guard.check(data, rhsState.getSecond(), onError);
-                if (type == null || !DataType.BOOLEAN.equals(type))
+                @Nullable TypeExp type = guard.check(data, rhsState.getSecond(), onError);
+                if (type == null || onError.recordError(guard, TypeExp.unifyTypes(TypeExp.fromConcrete(guard, DataType.BOOLEAN), type)) == null)
                 {
-                    onError.recordError(guard, "Pattern guards must have boolean type, found: " + (type == null ? " error" : type));
+                    return null;
                 }
             }
-            return rhsState.getSecond();
+            return rhsState;
         }
 
         // Returns non-null if it matched, null if it didn't match.
@@ -260,27 +280,33 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         // Need to check several things:
         //   - That all of the patterns have the same type as the expression being matched
         //   - That all of the pattern guards have boolean type
         //   - That all of the outcome expressions have the same type as each other (and is what we will return)
 
-        @Nullable DataType srcType = expression.check(data, state, onError);
+        @Nullable TypeExp srcType = expression.check(data, state, onError);
         if (srcType == null)
             return null;
 
-        List<DataType> outcomeTypes = new ArrayList<>();
-        for (MatchClause c : clauses)
+        // Add one extra for the srcType:
+        TypeExp[] patternTypes = new TypeExp[1 + clauses.size()];
+        patternTypes[0] = srcType;
+        TypeExp[] outcomeTypes = new TypeExp[clauses.size()];
+        for (int i = 0; i < clauses.size(); i++)
         {
-            @Nullable DataType type = c.check(data, state, onError, srcType);
-            if (type == null)
+            @Nullable Pair<TypeExp, TypeExp> patternAndOutcomeType = clauses.get(i).check(data, state, onError);
+            if (patternAndOutcomeType == null)
                 return null;
-            outcomeTypes.add(type);
+            patternTypes[i + 1] = patternAndOutcomeType.getFirst();
+            outcomeTypes[i] = patternAndOutcomeType.getSecond();
         }
+        if (onError.recordError(this, TypeExp.unifyTypes(patternTypes)) == null)
+            return null;
 
-        return DataType.checkAllSame(outcomeTypes, onError.recordError(this));
+        return onError.recordError(this, TypeExp.unifyTypes(outcomeTypes));
     }
 
     @Override

@@ -20,6 +20,7 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
+import java.util.ArrayList;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -48,12 +49,8 @@ public class VarUseExpression extends NonOperatorExpression
             onError.recordError(this, "Undeclared variable: \"" + varName + "\"");
             return null;
         }
-        if (varType.size() > 1)
-        {
-            onError.recordError(this, "Variable \"" + varName + "\" cannot be used because it may have different types: " + varType.stream().map(DataType::toString).collect(Collectors.toList()));
-            return null;
-        }
-        return varType.iterator().next();
+        // If they're trying to use it, it justifies us trying to unify all the types:
+        return onError.recordError(this, TypeExp.unifyTypes(new ArrayList<>(varType)));
     }
 
     @Override
