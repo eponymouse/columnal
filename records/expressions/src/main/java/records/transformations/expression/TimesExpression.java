@@ -17,6 +17,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -65,13 +66,13 @@ public class TimesExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         Unit runningUnit = Unit.SCALAR;
         @Nullable NumberDisplayInfo displayInfo = null;
         for (Expression expression : expressions)
         {
-            @Nullable DataType expType = expression.check(data, state, onError);
+            @Nullable TypeExp expType = expression.check(data, state, onError);
             if (expType == null)
                 return null;
             if (!expType.isNumber())

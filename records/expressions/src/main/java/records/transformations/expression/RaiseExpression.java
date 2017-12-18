@@ -16,6 +16,7 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -49,9 +50,9 @@ public class RaiseExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    protected @Nullable TypeExp checkBinaryOp(RecordSet data, ErrorRecorder onError) throws UserException, InternalException
     {
-        final @NonNull DataType lhsTypeFinal = lhsType;
+        final @NonNull TypeExp lhsTypeFinal = lhsType;
         if (lhsType.equals(DataType.NUMBER) && rhsType.equals(DataType.NUMBER))
             // Scalar both sides, no problem
             return lhsType;

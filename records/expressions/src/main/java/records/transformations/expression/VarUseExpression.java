@@ -15,6 +15,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.gui.expressioneditor.OperandNode;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -39,9 +40,9 @@ public class VarUseExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
-        Set<DataType> varType = state.findVarType(varName);
+        Set<TypeExp> varType = state.findVarType(varName);
         if (varType == null)
         {
             onError.recordError(this, "Undeclared variable: \"" + varName + "\"");

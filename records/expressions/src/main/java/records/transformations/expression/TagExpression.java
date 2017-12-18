@@ -11,6 +11,7 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.TypeManager.TagInfo;
 import records.gui.expressioneditor.TagExpressionNode;
+import records.types.TypeExp;
 import utility.Either;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
@@ -49,7 +50,7 @@ public class TagExpression extends NonOperatorExpression
      * During type-checking, if we have an inner expression, we store the type
      * which we figured out for it
      */
-    private @Nullable DataType innerDerivedType;
+    private @Nullable TypeExp innerDerivedType;
 
     /**
      *
@@ -65,7 +66,7 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         @Nullable TagInfo typeAndIndex = tag.<@Nullable TagInfo>either(s -> null, x -> x);
         // Not valid tag; nothing more we can do:
@@ -105,7 +106,7 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         @Nullable TagInfo typeAndIndex = tag.<@Nullable TagInfo>either(s -> null, x -> x);
         if (typeAndIndex == null)

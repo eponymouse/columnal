@@ -21,6 +21,9 @@ import records.gui.expressioneditor.ConsecutiveBase.OperandOps;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
+import records.types.MutVar;
+import records.types.TupleTypeExp;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -41,7 +44,8 @@ import java.util.stream.Stream;
 public class TupleExpression extends Expression
 {
     private final ImmutableList<Expression> members;
-    private @Nullable ImmutableList<DataType> types;
+    private @Nullable ImmutableList<TypeExp> memberTypes;
+    private @Nullable TypeExp tupleType;
 
     public TupleExpression(ImmutableList<Expression> members)
     {
@@ -49,49 +53,40 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
-        @NonNull DataType[] typeArray = new DataType[members.size()];
+        @NonNull TypeExp[] typeArray = new TypeExp[members.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable DataType t = members.get(i).check(data, state, onError);
+            @Nullable TypeExp t = members.get(i).check(data, state, onError);
             if (t == null)
                 return null;
             typeArray[i] = t;
         }
-        types = ImmutableList.copyOf(typeArray);
-        return DataType.tuple(types);
+        memberTypes = ImmutableList.copyOf(typeArray);
+        tupleType = new TupleTypeExp(this, memberTypes, true);
+        return tupleType;
     }
 
     @Override
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, final TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, final TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
-        if (!srcType.isTuple())
-        {
-            onError.recordError(this, "Cannot match non-tuple type " + srcType + " against a tuple pattern");
-            return null;
-        }
-        if (srcType.getMemberType().size() != members.size())
-        {
-            onError.recordError(this, "Cannot match tuple of size " + srcType.getMemberType().size() + " against tuple pattern of size " + members.size());
-            return null;
-        }
-
-        @NonNull DataType[] typeArray = new DataType[members.size()];
+        @NonNull TypeExp[] typeArray = new TypeExp[members.size()];
         @NonNull TypeState[] typeStates = new TypeState[members.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable Pair<DataType, TypeState> t = members.get(i).checkAsPattern(varAllowed, srcType.getMemberType().get(i), data, state, onError);
+            @Nullable Pair<TypeExp, TypeState> t = members.get(i).checkAsPattern(varAllowed, data, state, onError);
             if (t == null)
                 return null;
             typeArray[i] = t.getFirst();
             typeStates[i] = t.getSecond();
         }
-        types = ImmutableList.copyOf(typeArray);
+        memberTypes = ImmutableList.copyOf(typeArray);
+        tupleType = new TupleTypeExp(this, memberTypes, true);        
         @Nullable TypeState endState = TypeState.union(state, onError.recordError(this), typeStates);
         if (endState == null)
             return null;
-        return new Pair<>(DataType.tuple(types), endState);
+        return new Pair<>(tupleType, endState);
     }
 
     @Override

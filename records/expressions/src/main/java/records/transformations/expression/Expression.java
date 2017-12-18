@@ -62,6 +62,7 @@ import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -99,19 +100,21 @@ public abstract class Expression
 
     // Checks that all used variable names and column references are defined,
     // and that types check.  Return null if any problems
-    public abstract @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException;
+    public abstract @Nullable TypeExp check(RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException;
 
     // Like check, but for patterns.  For many expressions this is same as check,
     // unless you are a new-variable declaration or can have one beneath you.
     // If you override this, you should also override matchAsPattern
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varDeclAllowed, DataType srcType, RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varDeclAllowed, RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
     {
         // By default, check as normal, and return same TypeState:
-        @Nullable DataType type = check(data, state, onError);
-        if (type == null || DataType.checkSame(srcType, type, s -> onError.recordError(this, s)) == null)
+        @Nullable TypeExp type = check(data, typeState, onError);
+        if (type == null)
             return null;
         else
-            return new Pair<>(type, state);
+        {
+            return new Pair<>(type, typeState);
+        }
     }
 
     @OnThread(Tag.Simulation)
@@ -470,7 +473,7 @@ public abstract class Expression
     // Only for testing:
     public static interface _test_TypeVary extends FunctionDefinition._test_TypeVary<Expression>
     {
-        public Expression getDifferentType(@Nullable DataType type) throws InternalException, UserException;
+        public Expression getDifferentType(@Nullable TypeExp type) throws InternalException, UserException;
         public Expression getAnyType() throws UserException, InternalException;
         public Expression getNonNumericType() throws InternalException, UserException;
 

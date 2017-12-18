@@ -25,6 +25,7 @@ import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.gui.expressioneditor.OperandNode;
 import records.loadsave.OutputBuilder;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -80,15 +81,15 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
     {
         column = data.getColumn(columnName);
         switch (referenceType)
         {
             case CORRESPONDING_ROW:
-                return column.getType();
+                return TypeExp.fromConcrete(this, column.getType());
             case WHOLE_COLUMN:
-                return DataType.array(column.getType());
+                return TypeExp.fromConcrete(this, DataType.array(column.getType()));
         }
         throw new InternalException("Unknown reference type: " + referenceType);
     }

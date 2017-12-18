@@ -15,6 +15,7 @@ import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.ErrorRecorder.QuickFix;
+import records.types.TypeExp;
 import utility.Either;
 import utility.Pair;
 import utility.Utility;
@@ -40,7 +41,7 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError)
+    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError)
     {
         if (unit == null)
             return DataType.NUMBER;

@@ -22,9 +22,11 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
+import records.transformations.expression.ErrorRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.SingleLoader;
 import records.transformations.expression.TypeState;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
@@ -289,15 +291,16 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
             {
                 if (srcTable != null && tableManager != null)
                 {
-                    @Nullable DataType dataType = expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), (e, s, q) ->
+                    ErrorRecorder errorRecorder = (e, s, q) ->
                     {
                         if (!errorDisplayers.showError(e, s, q))
                         {
                             // Show it on us, then:
                             showError(s, q);
                         }
-                    });
-                    latestType.set(dataType);
+                    };
+                    @Nullable TypeExp dataType = expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), errorRecorder);
+                    latestType.set(errorRecorder.recordError(expression, dataType.toConcreteType()));
                 }
             }
             catch (InternalException | UserException e)

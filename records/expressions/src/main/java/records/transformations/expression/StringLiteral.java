@@ -14,6 +14,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.StringLiteralNode;
 import records.loadsave.OutputBuilder;
+import records.types.TypeExp;
 import utility.Pair;
 
 import java.math.BigInteger;
@@ -32,9 +33,9 @@ public class StringLiteral extends Literal
     }
 
     @Override
-    public DataType check(RecordSet data, TypeState state, ErrorRecorder onError)
+    public TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws InternalException
     {
-        return DataType.TEXT;
+        return TypeExp.fromConcrete(this, DataType.TEXT);
     }
 
     @Override

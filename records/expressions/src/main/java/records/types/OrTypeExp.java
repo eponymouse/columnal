@@ -2,9 +2,13 @@ package records.types;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
+import records.transformations.expression.Expression;
 import utility.Either;
 
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class OrTypeExp extends TypeExp
@@ -12,15 +16,16 @@ public class OrTypeExp extends TypeExp
     // Should always be size 2+:
     public final ImmutableList<TypeExp> options;
 
-    public OrTypeExp(ImmutableList<TypeExp> options)
+    public OrTypeExp(@Nullable Expression src, ImmutableList<TypeExp> options)
     {
+        super(src);
         this.options = options;
     }
 
     @Override
     public TypeExp prune()
     {
-        return new OrTypeExp(options.stream().flatMap(t -> {
+        return new OrTypeExp(src, options.stream().flatMap(t -> {
             t = t.prune();
             if (t instanceof OrTypeExp)
                 return ((OrTypeExp)t).options.stream();
@@ -46,7 +51,13 @@ public class OrTypeExp extends TypeExp
         else if (remainingOptions.size() == 1)
             return remainingOptions.get(0);
         else
-            return new OrTypeExp(remainingOptions);
+            return new OrTypeExp(src, remainingOptions);
+    }
+
+    @Override
+    protected Either<String, DataType> _concrete(TypeManager typeManager)
+    {
+        return Either.left("Ambiguous type - could be any of: " + options.stream().limit(5).map(o -> o.toString()).collect(Collectors.joining(" or ")) + (options.size() > 5 ? (" or " + (options.size() + 5) + " more") : ""));
     }
 
     // Note: this is potentially explosive in the number of
@@ -81,6 +92,6 @@ public class OrTypeExp extends TypeExp
         else if (remainingOptions.size() == 1)
             return Either.right(remainingOptions.get(0));
         else
-            return Either.right(new OrTypeExp(remainingOptions));
+            return Either.right(new OrTypeExp(src, remainingOptions));
     }
 }

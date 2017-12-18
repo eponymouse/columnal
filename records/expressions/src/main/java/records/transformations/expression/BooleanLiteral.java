@@ -11,6 +11,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UserException;
+import records.types.TypeExp;
 import utility.Pair;
 
 import java.util.Map;
@@ -28,9 +29,9 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    public DataType check(RecordSet data, TypeState state, ErrorRecorder onError)
+    public TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws InternalException
     {
-        return DataType.BOOLEAN;
+        return TypeExp.fromConcrete(this, DataType.BOOLEAN);
     }
 
     @Override

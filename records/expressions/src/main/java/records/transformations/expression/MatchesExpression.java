@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -12,6 +13,7 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -47,25 +49,30 @@ public class MatchesExpression extends BinaryOpExpression
 
     // Must use checkAsPattern on RHS, not check:
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
     {
-        lhsType = lhs.check(data, state, onError);
+        lhsType = lhs.check(data, typeState, onError);
         if (lhsType == null)
             return null;
-        @Nullable Pair<DataType, TypeState> rhsPatType = rhs.checkAsPattern(false, lhsType, data, state, onError);
+        @NonNull TypeExp lhsFinal = lhsType;
+        @Nullable Pair<TypeExp, TypeState> rhsPatType = rhs.checkAsPattern(false, data, typeState, onError);
         if (rhsPatType == null)
             return null;
         // We can just discard the RHS type state because it can't introduce any new variables
         rhsType = rhsPatType.getFirst();
-        return checkBinaryOp(data, state, onError);
+        
+        if (onError.recordError(this, TypeExp.unifyTypes(lhsFinal, rhsType)) != null)
+            return checkBinaryOp(data, typeState, onError);
+        else
+            return null;
     }
 
     @Override
-    protected @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    protected @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
     {
         // If we get this far, the RHS pattern must have matched the LHS expression
         // So we just return our type, which is boolean:
-        return DataType.BOOLEAN;
+        return TypeExp.fromConcrete(this, DataType.BOOLEAN);
     }
 
     @Override

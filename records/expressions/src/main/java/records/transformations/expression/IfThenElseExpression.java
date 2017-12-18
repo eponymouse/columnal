@@ -14,6 +14,7 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.IfThenElseNode;
 import records.gui.expressioneditor.OperandNode;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -47,28 +48,21 @@ public class IfThenElseExpression extends NonOperatorExpression
 
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
-        @Nullable DataType conditionType = condition.check(data, state, onError);
+        @Nullable TypeExp conditionType = condition.check(data, state, onError);
         if (conditionType == null)
             return null;
-        if (DataType.checkSame(DataType.BOOLEAN, conditionType, onError.recordError(this)) == null)
+        if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, DataType.BOOLEAN), conditionType)) == null)
         {
-            onError.recordError(condition, "Expected boolean type in condition but was " + conditionType);
             return null;
         }
-        @Nullable DataType thenType = thenExpression.check(data, state, onError);
-        @Nullable DataType elseType = elseExpression.check(data, state, onError);
+        @Nullable TypeExp thenType = thenExpression.check(data, state, onError);
+        @Nullable TypeExp elseType = elseExpression.check(data, state, onError);
         if (thenType == null || elseType == null)
             return null;
 
-        @Nullable DataType jointType = DataType.checkSame(thenType, elseType, onError.recordError(this));
-        if (jointType == null)
-        {
-            onError.recordError(elseExpression, "Expected same type in then and else, but was " + thenType + " and " + elseType);
-            return null;
-        }
-        return jointType;
+        return onError.recordError(this, TypeExp.unifyTypes(thenType, elseType));
     }
 
     @Override

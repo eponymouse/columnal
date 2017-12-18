@@ -85,13 +85,12 @@ public class Utility
         return r;
     }
 
-    @OnThread(Tag.Simulation)
-    public static <T, R> List<@NonNull R> mapListInt(List<@NonNull T> list, FunctionInt<@NonNull T, @NonNull R> func) throws InternalException
+    public static <T, R> ImmutableList<@NonNull R> mapListInt(List<@NonNull T> list, FunctionInt<@NonNull T, @NonNull R> func) throws InternalException
     {
-        ArrayList<@NonNull R> r = new ArrayList<>(list.size());
+        ImmutableList.Builder<@NonNull R> r = ImmutableList.builder();
         for (T t : list)
             r.add(func.apply(t));
-        return r;
+        return r.build();
     }
 
     public static <T, R> List<@NonNull R> mapListEx(List<@NonNull T> list, ExFunction<@NonNull T, @NonNull R> func) throws InternalException, UserException

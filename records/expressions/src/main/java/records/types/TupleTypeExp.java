@@ -2,7 +2,10 @@ package records.types;
 
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
+import records.transformations.expression.Expression;
 import utility.Either;
 
 public class TupleTypeExp extends TypeExp
@@ -12,8 +15,9 @@ public class TupleTypeExp extends TypeExp
     // e.g. "first" uses this, has single knownMembers and complete==false
     public final boolean complete;
 
-    public TupleTypeExp(ImmutableList<TypeExp> knownMembers, boolean complete)
+    public TupleTypeExp(Expression src, ImmutableList<TypeExp> knownMembers, boolean complete)
     {
+        super(src);
         this.knownMembers = knownMembers;
         this.complete = complete;
     }
@@ -29,7 +33,15 @@ public class TupleTypeExp extends TypeExp
                 return null;
             members.add(t);
         }
-        return new TupleTypeExp(members.build(), complete);
+        return new TupleTypeExp(src, members.build(), complete);
+    }
+
+    @Override
+    protected Either<String, DataType> _concrete(TypeManager typeManager) throws InternalException
+    {
+        if (!complete)
+            return Either.left("Error: tuple of indeterminate size");
+        return Either.mapMInt(knownMembers, (TypeExp t) -> t.toConcreteType(typeManager)).map(ts -> DataType.tuple(ts));
     }
 
     @Override
@@ -77,7 +89,7 @@ public class TupleTypeExp extends TypeExp
                 unified.add(bt.knownMembers.get(i));
             }
         }
-        return Either.right(new TupleTypeExp(unified.build(), complete || bt.complete));
+        return Either.right(new TupleTypeExp(src, unified.build(), complete || bt.complete));
     }
 }
 

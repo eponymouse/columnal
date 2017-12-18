@@ -3,6 +3,7 @@ package utility;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiFunction;
 import java.util.function.Consumer;
@@ -69,6 +70,21 @@ public class Either<A, B>
         return ea.either(errsA -> eb.either(errsB -> Either.left(Utility.concat(errsA, errsB)), bx -> Either.left(errsA)),
                   ax -> eb.either(errsB -> Either.left(errsB), bx -> Either.right(combine.apply(ax, bx))));
     }
+    
+    @SuppressWarnings("nullness")
+    public static <E, R, T> Either<E, List<R>> mapMInt(List<T> xs, FunctionInt<? super T, Either<E, R>> applyOne) throws InternalException
+    {
+        List<R> r = new ArrayList<>(xs.size());
+        for (T x : xs)
+        {
+            Either<E, R> y = applyOne.apply(x);
+            if (y.a != null)
+                return Either.left(y.a);
+            else
+                r.add(y.b);
+        }
+        return Either.right(r);
+    }
 
     // Equivalent to either(Either::left, Either.right . applyRight)
     @SuppressWarnings("nullness")
@@ -80,9 +96,29 @@ public class Either<A, B>
             return Either.right(applyRight.apply(b));
     }
 
+    // Equivalent to either(Either::left, Either.right . applyRight)
+    @SuppressWarnings("nullness")
+    public <R> Either<A, R> mapInt(FunctionInt<? super B, R> applyRight) throws InternalException
+    {
+        if (isA)
+            return Either.left(a);
+        else
+            return Either.right(applyRight.apply(b));
+    }
+
     // Equivalent to either(Either::left, applyRight)
     @SuppressWarnings("nullness")
     public <R> Either<A, R> flatMap(Function<? super B, Either<A, R>> bind)
+    {
+        if (isA)
+            return Either.left(a);
+        else
+            return bind.apply(b);
+    }
+
+    // Equivalent to either(Either::left, applyRight)
+    @SuppressWarnings("nullness")
+    public <R> Either<A, R> flatMapInt(FunctionInt<? super B, Either<A, R>> bind) throws InternalException
     {
         if (isA)
             return Either.left(a);

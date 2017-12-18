@@ -14,6 +14,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -84,7 +85,7 @@ public class ComparisonExpression extends NaryOpExpression
     }
 
     private final ImmutableList<ComparisonOperator> operators;
-    private @Nullable DataType type;
+    private @Nullable TypeExp type;
 
     public ComparisonExpression(List<Expression> expressions, ImmutableList<ComparisonOperator> operators)
     {
@@ -105,12 +106,12 @@ public class ComparisonExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         type = checkAllOperandsSameType(data, state, onError);
         if (type == null)
             return null;
-        return DataType.BOOLEAN;
+        return TypeExp.fromConcrete(this, DataType.BOOLEAN);
     }
 
     @Override

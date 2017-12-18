@@ -21,6 +21,9 @@ import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
 import records.gui.expressioneditor.SquareBracketedExpression;
+import records.types.MutVar;
+import records.types.TypeCons;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -47,8 +50,8 @@ import java.util.stream.Stream;
 public class ArrayExpression extends Expression
 {
     private final ImmutableList<Expression> items;
-    private @Nullable DataType type;
-    private @MonotonicNonNull List<DataType> _test_originalTypes;
+    private @Nullable TypeExp elementType;
+    private @MonotonicNonNull List<TypeExp> _test_originalTypes;
 
     public ArrayExpression(ImmutableList<Expression> items)
     {
@@ -56,63 +59,50 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         // Empty array - special case:
         if (items.isEmpty())
-            return DataType.array();
-        @NonNull DataType[] typeArray = new DataType[items.size()];
+            return new TypeCons(this, TypeExp.CONS_LIST, new MutVar(this, null));
+        TypeExp[] typeArray = new TypeExp[items.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable DataType t = items.get(i).check(data, state, onError);
+            @Nullable TypeExp t = items.get(i).check(data, state, onError);
             if (t == null)
                 return null;
             typeArray[i] = t;
         }
-        this.type = DataType.checkAllSame(Arrays.asList(typeArray), onError.recordError(this));
+        this.elementType = onError.recordError(this, TypeExp.unifyTypes(ImmutableList.copyOf(typeArray)));
         _test_originalTypes = Arrays.asList(typeArray);
-        if (type == null)
+        if (elementType == null)
             return null;
-        return DataType.array(type);
+        return new TypeCons(this, TypeExp.CONS_LIST, elementType);
     }
 
     @Override
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, final TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, final TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
-        if (!srcType.isArray())
-        {
-            onError.recordError(this, "Cannot match non-list type " + srcType + " against a list");
-            return null;
-        }
         // Empty array - special case:
         if (items.isEmpty())
-            return new Pair<>(DataType.array(), state);
-
-        if (srcType.getMemberType().isEmpty())
-        {
-            onError.recordError(this, "Cannot match empty list against non-empty list");
-            return null;
-        }
-
-        DataType innerType = srcType.getMemberType().get(0);
-        @NonNull DataType[] typeArray = new DataType[items.size()];
-        @NonNull TypeState[] typeStates = new TypeState[items.size()];
+            return new Pair<>(new TypeCons(this, TypeExp.CONS_LIST, new MutVar(this, null)), state);
+        TypeExp[] typeArray = new TypeExp[items.size()];
+        TypeState[] typeStates = new TypeState[items.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable Pair<DataType, TypeState> t = items.get(i).checkAsPattern(varAllowed, innerType, data, state, onError);
+            @Nullable Pair<TypeExp, TypeState> t = items.get(i).checkAsPattern(varAllowed, data, state, onError);
             if (t == null)
                 return null;
             typeArray[i] = t.getFirst();
             typeStates[i] = t.getSecond();
         }
+        this.elementType = onError.recordError(this, TypeExp.unifyTypes(ImmutableList.copyOf(typeArray)));
         _test_originalTypes = Arrays.asList(typeArray);
-        this.type = DataType.checkAllSame(Arrays.asList(typeArray), onError.recordError(this));
-        if (type == null)
+        if (elementType == null)
             return null;
         @Nullable TypeState endState = TypeState.union(state, onError.recordError(this), typeStates);
         if (endState == null)
             return null;
-        return new Pair<>(DataType.array(type), endState);
+        return new Pair<>(new TypeCons(this, TypeExp.CONS_LIST, elementType), endState);
     }
 
     @Override
@@ -191,7 +181,7 @@ public class ArrayExpression extends Expression
         if (items.size() <= 1)
             return null; // Can't cause a failure with 1 or less items; need 2+ to have a mismatch
         int index = r.nextInt(items.size());
-        if (type == null || _test_originalTypes == null)
+        if (elementType == null || _test_originalTypes == null)
             throw new InternalException("Calling _test_typeFailure despite type-check failure");
         // If all items other than this one are blank arrays, won't cause type error:
         boolean hasOtherNonBlank = false;
@@ -202,7 +192,7 @@ public class ArrayExpression extends Expression
         }
         if (!hasOtherNonBlank)
             return null; // Won't make a failure
-        return new ArrayExpression(Utility.replaceList(items, index, newExpressionOfDifferentType.getDifferentType(type)));
+        return new ArrayExpression(Utility.replaceList(items, index, newExpressionOfDifferentType.getDifferentType(elementType)));
     }
 
     @Override

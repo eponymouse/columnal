@@ -1,8 +1,21 @@
 package records.types;
 
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitorEx;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.TagType;
+import records.data.datatype.NumberInfo;
+import records.data.datatype.TypeId;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
+import records.transformations.expression.Expression;
 import utility.Either;
+import utility.Utility;
+
+import java.util.Arrays;
+import java.util.List;
 
 /**
  * We have the following concrete/terminal types:
@@ -83,7 +96,45 @@ import utility.Either;
 
 public abstract class TypeExp
 {
-    public final Either<String, TypeExp> unifyWith(TypeExp b) throws InternalException
+    public static final String CONS_TEXT = "Text";
+    public static final String CONS_BOOLEAN = "Boolean";
+    public static final String CONS_LIST = "List";
+    // For recording errors:
+    protected final Expression src;
+    
+    protected TypeExp(Expression src)
+    {
+        this.src = src;
+    }
+    
+    public static Either<String, TypeExp> unifyTypes(TypeExp... types) throws InternalException
+    {
+        return unifyTypes(Arrays.asList(types));
+    }
+    
+    public static Either<String, TypeExp> unifyTypes(List<TypeExp> types) throws InternalException
+    {
+        if (types.isEmpty())
+            return Either.left("Error: no types available");
+        else if (types.size() == 1)
+            return Either.right(types.get(0));
+        else
+        {
+            Either<String, TypeExp> r = types.get(0).unifyWith(types.get(1));
+            for (int i = 2; i < types.size(); i++)
+            {
+                if (r.isLeft())
+                    return r;
+                TypeExp next = types.get(i);
+                r = r.getRight().unifyWith(next);
+            }
+            return r;
+        }
+        
+    }
+    
+    // package-protected:
+    final Either<String, TypeExp> unifyWith(TypeExp b) throws InternalException
     {
         TypeExp aPruned = prune();
         TypeExp bPruned = b.prune();
@@ -121,4 +172,60 @@ public abstract class TypeExp
     {
         return Either.left("Type mismatch: " + toString() + " versus " + other.toString());
     }
+
+    public static TypeExp fromConcrete(Expression src, DataType dataType) throws InternalException
+    {
+        return dataType.apply(new DataTypeVisitorEx<TypeExp, InternalException>()
+        {
+            @Override
+            public TypeExp number(NumberInfo numberInfo) throws InternalException, InternalException
+            {
+                return new NumTypeExp(src, numberInfo.getUnit());
+            }
+
+            @Override
+            public TypeExp text() throws InternalException, InternalException
+            {
+                return new TypeCons(src, CONS_TEXT);
+            }
+
+            @Override
+            public TypeExp date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+            {
+                return new TypeCons(src, dateTimeInfo.getType().toString());
+            }
+
+            @Override
+            public TypeExp bool() throws InternalException, InternalException
+            {
+                return new TypeCons(src, CONS_BOOLEAN);
+            }
+
+            @Override
+            public TypeExp tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+            {
+                return new TypeCons(src, typeName.getRaw());
+            }
+
+            @Override
+            public TypeExp tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+            {
+                return new TupleTypeExp(src, Utility.mapListInt(inner, t -> fromConcrete(src, t)), true);
+            }
+
+            @Override
+            public TypeExp array(@Nullable DataType inner) throws InternalException, InternalException
+            {
+                return new TypeCons(src, CONS_LIST, inner == null ? new MutVar(src, null) : fromConcrete(src, inner));
+            }
+        });
+    }
+
+    public Either<String, DataType> toConcreteType(TypeManager typeManager) throws InternalException
+    {
+        return prune()._concrete(typeManager);
+        
+    }
+
+    protected abstract Either<String,DataType> _concrete(TypeManager typeManager) throws InternalException;
 }

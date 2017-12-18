@@ -1,7 +1,9 @@
 package records.transformations.expression;
 
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import utility.Either;
 import utility.ExConsumer;
 
 import java.util.Collections;
@@ -20,6 +22,17 @@ public interface ErrorRecorder
     public default void recordError(Expression src, String error)
     {
         recordError(src, error, Collections.emptyList());
+    }
+
+    /**
+     * Records an error source and error message, with no available quick fixes
+     */
+    public default <T> @Nullable T recordError(Expression src, Either<String, T> errorOrVal)
+    {
+        return errorOrVal.<@Nullable T>either(err -> {
+            recordError(src, err);
+            return null;
+        }, val -> val);
     }
 
     /**

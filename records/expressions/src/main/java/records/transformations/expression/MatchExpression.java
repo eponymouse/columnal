@@ -15,6 +15,7 @@ import records.error.UserException;
 import records.gui.expressioneditor.ClauseNode;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.PatternMatchNode;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -136,9 +137,9 @@ public class MatchExpression extends NonOperatorExpression
             this.guard = guard;
         }
 
-        public @Nullable TypeState check(RecordSet data, TypeState state, ErrorRecorder onError, DataType srcType) throws InternalException, UserException
+        public @Nullable TypeState check(RecordSet data, TypeState state, ErrorRecorder onError, TypeExp srcType) throws InternalException, UserException
         {
-            @Nullable Pair<DataType, TypeState> rhsState = pattern.checkAsPattern(true, srcType, data, state, onError);
+            @Nullable Pair<TypeExp, TypeState> rhsState = pattern.checkAsPattern(true, srcType, data, state, onError);
             if (rhsState == null)
                 return null;
             if (DataType.checkSame(rhsState.getFirst(), srcType, onError.recordError(pattern)) == null)

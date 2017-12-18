@@ -21,6 +21,7 @@ import records.gui.expressioneditor.OperandNode;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionInstance;
 import records.transformations.function.FunctionList;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -62,12 +63,12 @@ public class CallExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         if (definition == null)
             return null;
 
-        @Nullable DataType paramType = param.check(data, state, onError);
+        @Nullable TypeExp paramType = param.check(data, state, onError);
         if (paramType == null)
             return null;
         @Nullable Pair<FunctionInstance, DataType> checked = definition.typeCheck(units, paramType, onError.recordError(this), state.getUnitManager());

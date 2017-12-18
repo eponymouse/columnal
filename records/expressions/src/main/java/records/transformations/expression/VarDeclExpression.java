@@ -15,6 +15,8 @@ import records.error.UserException;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.gui.expressioneditor.OperandNode;
+import records.types.MutVar;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -37,7 +39,7 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern
@@ -46,16 +48,17 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varDeclAllowed, DataType srcType, RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varDeclAllowed, RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
     {
         if (!varDeclAllowed)
             return null; // We are a variable declaration, so clearly not allowed!
 
-        @Nullable TypeState newState = state.add(varName, srcType, onError.recordError(this));
+        MutVar type = new MutVar(this, null);
+        @Nullable TypeState newState = typeState.add(varName, type, onError.recordError(this));
         if (newState == null)
             return null;
         else
-            return new Pair<>(srcType, newState);
+            return new Pair<>(type, newState);
     }
 
     @Override

@@ -11,6 +11,8 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionList;
+import records.types.MutVar;
+import records.types.TypeExp;
 import utility.Pair;
 
 import java.util.Collections;
@@ -33,7 +35,7 @@ import java.util.stream.Collectors;
 public class TypeState
 {
     // If variable is in there but > size 1, means it is known but cannot be used because it has multiple types in different guards
-    private final Map<String, Set<DataType>> variables;
+    private final Map<String, Set<TypeExp>> variables;
     private final Map<String, FunctionDefinition> functions;
     private final TypeManager typeManager;
     private final UnitManager unitManager;
@@ -43,7 +45,7 @@ public class TypeState
         this(new HashMap<>(), typeManager, unitManager);
     }
 
-    private TypeState(Map<String, Set<DataType>> variables, TypeManager typeManager, UnitManager unitManager)
+    private TypeState(Map<String, Set<TypeExp>> variables, TypeManager typeManager, UnitManager unitManager)
     {
         this.variables = Collections.unmodifiableMap(variables);
         this.typeManager = typeManager;
@@ -51,9 +53,9 @@ public class TypeState
         this.unitManager = unitManager;
     }
 
-    public @Nullable TypeState add(String varName, DataType type, Consumer<String> error)
+    public @Nullable TypeState add(String varName, MutVar type, Consumer<String> error)
     {
-        HashMap<String, Set<DataType>> copy = new HashMap<>(variables);
+        HashMap<String, Set<TypeExp>> copy = new HashMap<>(variables);
         if (copy.containsKey(varName))
         {
             error.accept("Duplicate variable name: " + varName);
@@ -77,10 +79,10 @@ public class TypeState
 
     public static TypeState intersect(List<TypeState> typeStates)
     {
-        Map<String, Set<DataType>> mergedVars = new HashMap<>(typeStates.get(0).variables);
+        Map<String, Set<TypeExp>> mergedVars = new HashMap<>(typeStates.get(0).variables);
         for (int i = 1; i < typeStates.size(); i++)
         {
-            for (Entry<String, Set<DataType>> entry : typeStates.get(i).variables.entrySet())
+            for (Entry<String, Set<TypeExp>> entry : typeStates.get(i).variables.entrySet())
             {
                 // If it's present in both sets, only keep if same type, otherwise mask:
                 mergedVars.merge(entry.getKey(), entry.getValue(), (a, b) -> {
@@ -113,7 +115,7 @@ public class TypeState
 
     // If it's null, it's totally unknown
     // If it's > size 1, it should count as masked because it has different types in different guards
-    public @Nullable Set<DataType> findVarType(String varName)
+    public @Nullable Set<TypeExp> findVarType(String varName)
     {
         return variables.get(varName);
     }

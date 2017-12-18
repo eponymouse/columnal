@@ -1,7 +1,10 @@
 package records.types;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
+import records.transformations.expression.Expression;
 import utility.Either;
 
 /**
@@ -17,12 +20,13 @@ import utility.Either;
 public class MutVar extends TypeExp
 {
     //package-visible:
-    // One element array to implement mutable reference:
-    final @Nullable TypeExp pointer[];
+    // mutable reference:
+    @Nullable TypeExp pointer;
 
-    public MutVar(@Nullable TypeExp pointTo)
+    public MutVar(Expression src, @Nullable TypeExp pointTo)
     {
-        this.pointer = new TypeExp[] {pointTo};
+        super(src);
+        this.pointer = pointTo;
     }
 
     @Override
@@ -31,7 +35,7 @@ public class MutVar extends TypeExp
         // If the other item is a MutVar, we just unify ourselves to them:
         if (b instanceof MutVar)
         {
-            pointer[0] = b;
+            pointer = b;
             return Either.right(this);
         }
         else
@@ -45,7 +49,7 @@ public class MutVar extends TypeExp
             }
             else
             {
-                pointer[0] = without;
+                pointer = without;
                 return Either.right(this);
             }
         }
@@ -58,12 +62,19 @@ public class MutVar extends TypeExp
     }
 
     @Override
+    protected Either<String, DataType> _concrete(TypeManager typeManager)
+    {
+        // Will have been pruned, so error here
+        return Either.left("Error: cannot determine type");
+    }
+
+    @Override
     public TypeExp prune()
     {
-        if (pointer[0] != null)
+        if (pointer != null)
         {
-            pointer[0] = pointer[0].prune();
-            return pointer[0];
+            pointer = pointer.prune();
+            return pointer;
         }
         return this;
     }

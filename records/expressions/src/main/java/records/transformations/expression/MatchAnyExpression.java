@@ -15,6 +15,8 @@ import records.error.UserException;
 import records.gui.expressioneditor.GeneralExpressionEntry;
 import records.gui.expressioneditor.GeneralExpressionEntry.Status;
 import records.gui.expressioneditor.OperandNode;
+import records.types.MutVar;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -30,12 +32,18 @@ import java.util.stream.Stream;
 public class MatchAnyExpression extends NonOperatorExpression
 {
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern
         onError.recordError(this, "Any cannot be declared outside pattern match");
         return null;
+    }
+
+    @Override
+    public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varDeclAllowed, RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
+    {
+        return new Pair<>(new MutVar(this, null), typeState);
     }
 
     @Override

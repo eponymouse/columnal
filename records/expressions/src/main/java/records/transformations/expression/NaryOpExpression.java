@@ -11,6 +11,7 @@ import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
+import records.types.TypeExp;
 import utility.Pair;
 import utility.Utility;
 
@@ -119,18 +120,17 @@ public abstract class NaryOpExpression extends Expression
         return Collections.unmodifiableList(expressions);
     }
 
-    @Nullable
-    protected DataType checkAllOperandsSameType(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    protected @Nullable TypeExp checkAllOperandsSameType(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
-        List<DataType> types = new ArrayList<>();
+        List<TypeExp> types = new ArrayList<>();
         for (Expression expression : expressions)
         {
-            @Nullable DataType expType = expression.check(data, state, onError);
+            @Nullable TypeExp expType = expression.check(data, state, onError);
             if (expType == null)
                 return null;
             types.add(expType);
         }
-        return DataType.checkAllSame(types, onError.recordError(this));
+        return onError.recordError(this, TypeExp.unifyTypes(types));
     }
 
     @Override

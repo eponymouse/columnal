@@ -14,6 +14,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -33,7 +34,7 @@ public class AddSubtractExpression extends NaryOpExpression
 {
     public static enum Op { ADD, SUBTRACT };
     private final List<Op> ops;
-    private @Nullable DataType type;
+    private @Nullable TypeExp type;
 
     public AddSubtractExpression(List<Expression> expressions, List<Op> ops)
     {
@@ -71,7 +72,7 @@ public class AddSubtractExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         type = checkAllOperandsSameType(data, state, onError);
         return type;

@@ -3,7 +3,12 @@ package records.types;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
+import records.data.datatype.DataType;
+import records.data.datatype.DataType.DateTimeInfo;
+import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
+import records.transformations.expression.Expression;
 import utility.Either;
 
 public class TypeCons extends TypeExp
@@ -12,8 +17,16 @@ public class TypeCons extends TypeExp
     // Can be size 0+:
     public final ImmutableList<TypeExp> operands;
 
-    public TypeCons(String name, ImmutableList<TypeExp> operands)
+    public TypeCons(Expression src, String name, TypeExp... operands)
     {
+        super(src);
+        this.name = name;
+        this.operands = ImmutableList.copyOf(operands);
+    }
+    
+    public TypeCons(Expression src, String name, ImmutableList<TypeExp> operands)
+    {
+        super(src);
         this.name = name;
         this.operands = operands;
     }
@@ -41,7 +54,7 @@ public class TypeCons extends TypeExp
                 return sub;
             unifiedOperands.add(sub.getRight());
         }
-        return Either.right(new TypeCons(name, unifiedOperands.build()));
+        return Either.right(new TypeCons(src, name, unifiedOperands.build()));
     }
 
     @Override
@@ -55,6 +68,35 @@ public class TypeCons extends TypeExp
                 return null;
             without.add(t);
         }
-        return new TypeCons(name, without.build());
+        return new TypeCons(src, name, without.build());
+    }
+
+    @Override
+    protected Either<String, DataType> _concrete(TypeManager typeManager)
+    {
+        switch (name)
+        {
+            case CONS_TEXT:
+                return Either.right(DataType.TEXT);
+            case CONS_BOOLEAN:
+                return Either.right(DataType.BOOLEAN);
+            case CONS_LIST:
+                return operands.get(0).toConcreteType().map(t -> DataType.array(t));
+            default:
+                try
+                {
+                    return Either.right(DataType.date(new DateTimeInfo(DateTimeType.valueOf(name))));
+                }
+                catch (IllegalArgumentException e)
+                {
+                    // Not a date type, continue...
+                }
+                @Nullable DataType tagged =  typeManager.lookupType(name);
+                if (tagged != null)
+                {
+                    return Either.right(tagged);
+                }
+                return Either.left("Unknown type constructor: " + name);
+        }
     }
 }

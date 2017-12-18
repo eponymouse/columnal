@@ -2,6 +2,7 @@ package records.transformations.expression;
 
 import annotation.qual.Value;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.sosy_lab.java_smt.api.BitvectorFormula;
 import org.sosy_lab.java_smt.api.BitvectorFormulaManager;
 import org.sosy_lab.java_smt.api.Formula;
@@ -14,6 +15,7 @@ import records.data.datatype.DataTypeUtility;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.types.TypeExp;
 import utility.Pair;
 import utility.Utility;
 
@@ -36,11 +38,12 @@ public class NotEqualExpression extends BinaryOpExpression
     }
 
     @Override
-    public @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    @RequiresNonNull({"lhsType", "rhsType"})
+    public @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
-        if (DataType.checkSame(lhsType, rhsType, onError.recordError(this)) == null)
+        if (onError.recordError(this, TypeExp.unifyTypes(lhsType, rhsType)) == null)
             return null;
-        return DataType.BOOLEAN;
+        return TypeExp.fromConcrete(this, DataType.BOOLEAN);
     }
 
     @Override

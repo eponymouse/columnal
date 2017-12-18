@@ -13,6 +13,7 @@ import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
+import records.types.TypeExp;
 import utility.Pair;
 
 import java.util.Arrays;
@@ -51,8 +52,8 @@ public abstract class BinaryOpExpression extends Expression
     private final Op op;*/
     protected final Expression lhs;
     protected final Expression rhs;
-    protected @Nullable DataType lhsType;
-    protected @Nullable DataType rhsType;
+    protected @Nullable TypeExp lhsType;
+    protected @Nullable TypeExp rhsType;
 
     protected BinaryOpExpression(Expression lhs, Expression rhs)
     {
@@ -103,17 +104,17 @@ public abstract class BinaryOpExpression extends Expression
     public abstract BinaryOpExpression copy(@Nullable Expression replaceLHS, @Nullable Expression replaceRHS);
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
     {
-        lhsType = lhs.check(data, state, onError);
-        rhsType = rhs.check(data, state, onError);
+        lhsType = lhs.check(data, typeState, onError);
+        rhsType = rhs.check(data, typeState, onError);
         if (lhsType == null || rhsType == null)
             return null;
-        return checkBinaryOp(data, state, onError);
+        return checkBinaryOp(data, typeState, onError);
     }
 
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected abstract @Nullable DataType checkBinaryOp(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException;
+    protected abstract @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException;
 
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()

@@ -13,6 +13,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.types.TypeExp;
 import utility.Pair;
 
 import java.util.List;
@@ -42,15 +43,16 @@ public class AndExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
+        TypeExp bool = TypeExp.fromConcrete(this, DataType.BOOLEAN);
         for (Expression expression : expressions)
         {
-            DataType type = expression.check(data, state, onError);
-            if (DataType.checkSame(DataType.BOOLEAN, type, onError.recordError(expression)) == null)
+            @Nullable TypeExp type = expression.check(data, state, onError);
+            if (type == null || onError.recordError(this, TypeExp.unifyTypes(bool, type)) == null)
                 return null;
         }
-        return DataType.BOOLEAN;
+        return bool;
     }
 
     @Override
