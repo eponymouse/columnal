@@ -15,17 +15,16 @@ import utility.Utility.ListEx;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StringWithinIndex extends FunctionGroup
+public class StringWithinIndex extends FunctionType
 {
     public StringWithinIndex()
     {
-        super("within.indexes", "within.indexes.short");
+        super("within.indexes", Instance::new, DataType.array(DataType.NUMBER), DataType.tuple(DataType.TEXT, DataType.TEXT));
     }
 
-    @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    public static FunctionGroup group()
     {
-        return ImmutableList.of(new FunctionType(Instance::new, DataType.array(DataType.NUMBER), DataType.tuple(DataType.TEXT, DataType.TEXT), null));
+        return new FunctionGroup("within.indexes", "within.indexes.short", new StringWithinIndex());
     }
 
     private static class Instance extends FunctionInstance

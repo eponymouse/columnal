@@ -17,22 +17,23 @@ import utility.Utility.ListEx;
 import java.util.Collections;
 import java.util.List;
 
-public class Max extends FunctionGroup
+public class Max extends FunctionType
 {
     public Max()
     {
-        super("max", "max.short");
+        super("max", Instance::new, Max::listOfAny);
     }
 
-    @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    public static FunctionGroup group()
     {
-        TypeMatcher listOfAny = () -> {
-            TypeExp any = new MutVar(null);
-            return new FunctionTypes(any, new TypeCons(null, TypeExp.CONS_LIST, any));
-        };
-        return Collections.singletonList(new FunctionType(Instance::new, listOfAny, null));
+        return new FunctionGroup("max", "max.short", new Max());
     }
+    
+    private static FunctionTypes listOfAny()
+    {
+        TypeExp any = new MutVar(null);
+        return new FunctionTypes(any, new TypeCons(null, TypeExp.CONS_LIST, any));
+    }    
 
     private static class Instance extends FunctionInstance
     {

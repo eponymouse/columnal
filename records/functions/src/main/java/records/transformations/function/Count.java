@@ -19,19 +19,18 @@ import java.util.Random;
 /**
  * Created by neil on 14/01/2017.
  */
-public class Count extends FunctionGroup
+public class Count extends FunctionType
 {
     public Count()
     {
-        super("count", "count.short");
+        super("count", Instance::new, DataType.NUMBER, DataType.array());
     }
 
-    @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    public static FunctionGroup group()
     {
-        return Collections.singletonList(new FunctionType(Instance::new, DataType.NUMBER, DataType.array(), null));
+        return new FunctionGroup("count", "count.short", new Count());
     }
-
+    
     @Override
     public <E> Pair<List<Unit>, E> _test_typeFailure(Random r, _test_TypeVary<E> newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {

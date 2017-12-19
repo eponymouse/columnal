@@ -13,17 +13,16 @@ import utility.Utility;
 
 import java.util.List;
 
-public class StringLeft extends FunctionGroup
+public class StringLeft extends FunctionType
 {
     public StringLeft()
     {
-        super("left", "left.short");
+        super("left", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.NUMBER));
     }
-
-    @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    
+    public static FunctionGroup group()
     {
-        return ImmutableList.of(new FunctionType(Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.NUMBER), null));
+        return new FunctionGroup("left", "left.short", new StringLeft());
     }
 
     private static class Instance extends FunctionInstance

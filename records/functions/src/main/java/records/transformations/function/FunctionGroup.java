@@ -22,46 +22,15 @@ import java.util.stream.Collectors;
 /**
  * Created by neil on 11/12/2016.
  */
-public abstract class FunctionGroup
+public class FunctionGroup
 {
     private final String name;
     private final @LocalizableKey String shortDescriptionKey;
 
-    FunctionGroup(String name, @LocalizableKey String shortDescriptionKey)
+    FunctionGroup(String name, @LocalizableKey String shortDescriptionKey, FunctionType... members)
     {
         this.name = name;
         this.shortDescriptionKey = shortDescriptionKey;
-    }
-
-    public @Nullable Pair<FunctionInstance, DataType> typeCheck(List<Unit> units, DataType param, Consumer<String> onError, UnitManager mgr) throws InternalException, UserException
-    {
-        if (!units.isEmpty())
-        {
-            onError.accept("Function \"" + getName() + "\" does not accept unit parameter");
-            return null;
-        }
-
-        List<FunctionType> types = getOverloads(mgr);
-        List<Pair<DataType, FunctionType>> possibilities = new ArrayList<>();
-        List<String> errors = new ArrayList<>();
-        for (FunctionType functionType : types)
-        {
-            DataType t = functionType.checkType(param, e -> errors.add(e));
-            if (t != null)
-            {
-                possibilities.add(new Pair<>(t, functionType));
-            }
-        }
-
-        if (possibilities.size() == 0)
-        {
-            onError.accept("Function " + getName() + " cannot accept parameter of type " + param + "\nOverloads:\n" + errors.stream().collect(Collectors.joining("\n")));
-            return null;
-        }
-        if (possibilities.size() > 1)
-            throw new InternalException("Function " + getName() + " has multiple possible overloads for type " + param);
-
-        return new Pair<>(possibilities.get(0).getSecond().getFunction(), possibilities.get(0).getFirst());
     }
 
     public String getName()

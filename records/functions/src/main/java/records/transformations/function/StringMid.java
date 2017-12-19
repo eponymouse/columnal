@@ -13,17 +13,16 @@ import utility.Utility;
 
 import java.util.List;
 
-public class StringMid extends FunctionGroup
+public class StringMid extends FunctionType
 {
     public StringMid()
     {
-        super("middle", "middle.short");
+        super("middle", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.NUMBER, DataType.NUMBER));
     }
 
-    @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    public static FunctionGroup group()
     {
-        return ImmutableList.of(new FunctionType(Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.NUMBER, DataType.NUMBER), null));
+        return new FunctionGroup("middle", "middle.short", new StringMid());
     }
 
     private static class Instance extends FunctionInstance

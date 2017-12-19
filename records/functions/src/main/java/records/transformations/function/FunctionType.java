@@ -27,21 +27,18 @@ public class FunctionType
     private final String name;
     private final TypeMatcher typeMatcher;
     private final Supplier<FunctionInstance> makeInstance;
-    private final @Nullable @LocalizableKey String overloadDescriptionKey;
 
-    public FunctionType(String name, Supplier<FunctionInstance> makeInstance, TypeMatcher typeMatcher, @Nullable @LocalizableKey String descriptionKey)
+    public FunctionType(String name, Supplier<FunctionInstance> makeInstance, TypeMatcher typeMatcher)
     {
         this.name = name;
         this.makeInstance = makeInstance;
         this.typeMatcher = typeMatcher;
-        this.overloadDescriptionKey = descriptionKey;
     }
 
-    public FunctionType(String name, Supplier<FunctionInstance> makeInstance, DataType returnType, DataType paramType, @Nullable @LocalizableKey String descriptionKey)
+    public FunctionType(String name, Supplier<FunctionInstance> makeInstance, DataType returnType, DataType paramType)
     {
         this.name = name;
         this.makeInstance = makeInstance;
-        this.overloadDescriptionKey = descriptionKey;
         this.typeMatcher = new ExactType(returnType, paramType);
     }
 

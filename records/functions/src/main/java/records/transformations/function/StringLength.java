@@ -13,19 +13,18 @@ import utility.Utility;
 
 import java.util.List;
 
-public class StringLength extends FunctionGroup
+public class StringLength extends FunctionType
 {
     public StringLength()
     {
-        super("length", "length.short");
+        super("length", Instance::new, DataType.NUMBER, DataType.TEXT);
     }
-
-    @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    
+    public static FunctionGroup group()
     {
-        return ImmutableList.of(new FunctionType(Instance::new, DataType.NUMBER, DataType.TEXT, null));
+        return new FunctionGroup("length", "length.short", new StringLength());
     }
-
+    
     private static class Instance extends FunctionInstance
     {
 

@@ -13,17 +13,16 @@ import utility.Utility;
 
 import java.util.List;
 
-public class StringWithin extends FunctionGroup
+public class StringWithin extends FunctionType
 {
     public StringWithin()
     {
-        super("within", "within.short");
+        super("within", Instance::new, DataType.BOOLEAN, DataType.tuple(DataType.TEXT, DataType.TEXT));
     }
 
-    @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    public static FunctionGroup group()
     {
-        return ImmutableList.of(new FunctionType(Instance::new, DataType.BOOLEAN, DataType.tuple(DataType.TEXT, DataType.TEXT), null));
+        return new FunctionGroup("within", "within.short", new StringWithin());
     }
 
     private static class Instance extends FunctionInstance
