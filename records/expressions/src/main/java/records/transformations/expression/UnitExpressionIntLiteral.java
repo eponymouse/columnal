@@ -7,6 +7,7 @@ import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitNodeParent;
+import records.types.units.UnitExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -25,10 +26,10 @@ public class UnitExpressionIntLiteral extends UnitExpression
     }
 
     @Override
-    public Either<Pair<String, List<UnitExpression>>, Unit> asUnit(UnitManager unitManager)
+    public Either<Pair<String, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager)
     {
         if (number == 1)
-            return Either.right(Unit.SCALAR);
+            return Either.right(UnitExp.SCALAR);
         else
             return Either.left(new Pair<>("Expected unit not number", Collections.emptyList()));
     }

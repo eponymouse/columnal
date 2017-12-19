@@ -9,6 +9,7 @@ import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitCompound;
 import records.gui.expressioneditor.UnitNodeParent;
+import records.types.units.UnitExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -26,9 +27,9 @@ public class UnitTimesExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<String, List<UnitExpression>>, Unit> asUnit(UnitManager unitManager)
+    public Either<Pair<String, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager)
     {
-        Either<Pair<String, List<UnitExpression>>, Unit> r = Either.right(Unit.SCALAR);
+        Either<Pair<String, List<UnitExpression>>, UnitExp> r = Either.right(UnitExp.SCALAR);
         for (UnitExpression operand : operands)
         {
             r = r.flatMap(u -> operand.asUnit(unitManager).map(v -> u.times(v)));

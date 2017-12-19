@@ -20,6 +20,7 @@ import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitEntry;
 import records.gui.expressioneditor.UnitNodeParent;
 import records.loadsave.OutputBuilder;
+import records.types.units.UnitExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
@@ -45,7 +46,7 @@ public class UnfinishedUnitExpression extends UnitExpression
     }
 
     @Override
-    public Either<Pair<String, List<UnitExpression>>, Unit> asUnit(UnitManager unitManager)
+    public Either<Pair<String, List<UnitExpression>>, UnitExp> asUnit(UnitManager unitManager)
     {
         // TODO add known similar units:
         return Either.left(new Pair<>("Unknown unit", Collections.emptyList()));

@@ -30,6 +30,52 @@ public class UnitExp
     // scalar if empty.  Maps single unit to power (can be negative, can't be zero)
     // A long is a type variable.
     private final TreeMap<Either<MutSingleUnit, SingleUnit>, Integer> units = new TreeMap<>();
+    
+    private UnitExp()
+    {
+        
+    }
+
+    public static final UnitExp SCALAR = new UnitExp();
+    
+    public UnitExp times(UnitExp rhs)
+    {
+        UnitExp u = new UnitExp();
+        u.units.putAll(units);
+        for (Entry<Either<MutSingleUnit, SingleUnit>, Integer> rhsUnit : rhs.units.entrySet())
+        {
+            // Decl to suppress nullness warnings on remapping function:
+            @SuppressWarnings("nullness")
+            int _dummy = u.units.merge(rhsUnit.getKey(), rhsUnit.getValue(), (l, r) -> (l + r == 0) ? null : l + r);
+        }
+        return u;
+    }
+
+    public UnitExp divide(UnitExp rhs)
+    {
+        return times(rhs.reciprocal());
+    }
+
+
+    public UnitExp reciprocal()
+    {
+        UnitExp u = new UnitExp();
+        for (Entry<Either<MutSingleUnit, SingleUnit>, Integer> entry : units.entrySet())
+        {
+            u.units.put(entry.getKey(), - entry.getValue());
+        }
+        return u;
+    }
+
+    public UnitExp raisedTo(int power)
+    {
+        if (power == 0)
+            return SCALAR;
+        UnitExp u = new UnitExp();
+        u.units.putAll(units);
+        u.units.replaceAll((s, origPower) -> origPower * power);
+        return u;
+    }
 
     public @Nullable UnitExp unifyWith(UnitExp other)
     {

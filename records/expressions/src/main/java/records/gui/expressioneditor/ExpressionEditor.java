@@ -29,6 +29,7 @@ import records.transformations.expression.TypeState;
 import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
@@ -300,7 +301,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
                         }
                     };
                     @Nullable TypeExp dataType = expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), errorRecorder);
-                    latestType.set(errorRecorder.recordError(expression, dataType.toConcreteType(tableManager.getTypeManager())));
+                    latestType.set(dataType == null ? null : errorRecorder.recordError(expression, dataType.toConcreteType(tableManager.getTypeManager())));
                 }
             }
             catch (InternalException | UserException e)

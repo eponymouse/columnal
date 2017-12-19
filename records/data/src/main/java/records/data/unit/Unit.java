@@ -31,19 +31,19 @@ public class Unit
 
     public static Unit SCALAR = new Unit();
 
-    @SuppressWarnings("nullness")
     public Unit times(Unit rhs)
     {
         Unit u = new Unit();
         u.units.putAll(units);
         for (Entry<SingleUnit, Integer> rhsUnit : rhs.units.entrySet())
         {
-            u.units.merge(rhsUnit.getKey(), rhsUnit.getValue(), (l, r) -> (l + r == 0) ? null : l + r);
+            // Decl to suppress nullness warnings on remapping function:
+            @SuppressWarnings("nullness")
+            int _dummy = u.units.merge(rhsUnit.getKey(), rhsUnit.getValue(), (l, r) -> (l + r == 0) ? null : l + r);
         }
         return u;
     }
 
-    @SuppressWarnings("nullness")
     public Unit divide(Unit rhs)
     {
         return times(rhs.reciprocal());

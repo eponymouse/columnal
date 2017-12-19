@@ -50,7 +50,7 @@ public class RaiseExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected @Nullable TypeExp checkBinaryOp(RecordSet data, ErrorRecorder onError) throws UserException, InternalException
+    protected @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
     {
         final @NonNull TypeExp lhsTypeFinal = lhsType;
         if (lhsType.equals(DataType.NUMBER) && rhsType.equals(DataType.NUMBER))
