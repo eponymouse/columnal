@@ -15,7 +15,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.Count;
-import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionInstance;
 import records.transformations.function.GetElement;
 import records.transformations.function.Max;
@@ -60,8 +60,8 @@ public class PropListFunctions
         if (mgr == null)
             throw new RuntimeException();
 
-        FunctionDefinition minFunction = new Min();
-        FunctionDefinition maxFunction = new Max();
+        FunctionGroup minFunction = new Min();
+        FunctionGroup maxFunction = new Max();
         @Nullable Pair<FunctionInstance, DataType> minChecked = minFunction.typeCheck(Collections.emptyList(), src.type, s -> {
         }, mgr);
         @Nullable Pair<FunctionInstance, DataType> maxChecked = maxFunction.typeCheck(Collections.emptyList(), src.type, s -> {

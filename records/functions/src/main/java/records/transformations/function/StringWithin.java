@@ -13,7 +13,7 @@ import utility.Utility;
 
 import java.util.List;
 
-public class StringWithin extends FunctionDefinition
+public class StringWithin extends FunctionGroup
 {
     public StringWithin()
     {

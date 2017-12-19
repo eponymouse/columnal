@@ -15,7 +15,7 @@ import utility.Utility.ListEx;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StringWithinIndex extends FunctionDefinition
+public class StringWithinIndex extends FunctionGroup
 {
     public StringWithinIndex()
     {

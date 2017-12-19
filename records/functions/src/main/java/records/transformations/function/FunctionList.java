@@ -10,7 +10,7 @@ import java.util.List;
  */
 public class FunctionList
 {
-    public static List<FunctionDefinition> FUNCTIONS = Arrays.asList(
+    public static List<FunctionGroup> FUNCTIONS = Arrays.asList(
         new Absolute(),
         new AsUnit(),
         new Count(),
@@ -26,7 +26,7 @@ public class FunctionList
         new ToYearMonth()
     );
 
-    public static @Nullable FunctionDefinition lookup(String functionName)
+    public static @Nullable FunctionGroup lookup(String functionName)
     {
         return FUNCTIONS.stream().filter(f -> f.getName().equals(functionName)).findFirst().orElse(null);
     }

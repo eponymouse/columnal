@@ -16,7 +16,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.Absolute;
-import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionInstance;
 import records.transformations.function.Mean;
 import records.transformations.function.Round;
@@ -120,7 +120,7 @@ public class PropNumericFunctions
 
     // Tests single numeric input, numeric output function
     @OnThread(Tag.Simulation)
-    private Number runNumericFunction(String expectedUnit, Number src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
+    private Number runNumericFunction(String expectedUnit, Number src, String srcUnit, FunctionGroup function) throws InternalException, UserException, Throwable
     {
         if (mgr == null)
             throw new RuntimeException();
@@ -149,7 +149,7 @@ public class PropNumericFunctions
 
     // Tests single numeric input, numeric output function
     @OnThread(Tag.Simulation)
-    private Number runNumericSummaryFunction(String expectedUnit, List<Number> src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
+    private Number runNumericSummaryFunction(String expectedUnit, List<Number> src, String srcUnit, FunctionGroup function) throws InternalException, UserException, Throwable
     {
         if (mgr == null)
             throw new RuntimeException();

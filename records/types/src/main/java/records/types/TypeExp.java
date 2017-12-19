@@ -100,9 +100,9 @@ public abstract class TypeExp
     public static final String CONS_BOOLEAN = "Boolean";
     public static final String CONS_LIST = "List";
     // For recording errors:
-    protected final ExpressionBase src;
+    protected final @Nullable ExpressionBase src;
     
-    protected TypeExp(ExpressionBase src)
+    protected TypeExp(@Nullable ExpressionBase src)
     {
         this.src = src;
     }
@@ -216,7 +216,7 @@ public abstract class TypeExp
             @Override
             public TypeExp array(@Nullable DataType inner) throws InternalException, InternalException
             {
-                return new TypeCons(src, CONS_LIST, inner == null ? new MutVar(src, null) : fromConcrete(src, inner));
+                return new TypeCons(src, CONS_LIST, inner == null ? new MutVar(src) : fromConcrete(src, inner));
             }
         });
     }

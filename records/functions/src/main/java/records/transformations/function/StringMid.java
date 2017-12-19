@@ -13,7 +13,7 @@ import utility.Utility;
 
 import java.util.List;
 
-public class StringMid extends FunctionDefinition
+public class StringMid extends FunctionGroup
 {
     public StringMid()
     {

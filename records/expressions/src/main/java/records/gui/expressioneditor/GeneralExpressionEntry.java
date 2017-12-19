@@ -20,7 +20,6 @@ import records.data.Column;
 import records.data.ColumnId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
-import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -37,7 +36,7 @@ import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
-import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionList;
 import records.transformations.function.FunctionType;
 import utility.Either;
@@ -370,7 +369,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     @RequiresNonNull("parent")
     private void addAllFunctions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, ArrayList<Completion> r)
     {
-        for (FunctionDefinition function : FunctionList.FUNCTIONS)
+        for (FunctionGroup function : FunctionList.FUNCTIONS)
         {
             r.add(new FunctionCompletion(function, parent.getEditor().getTypeManager().getUnitManager()));
         }
@@ -441,10 +440,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
     public static class FunctionCompletion extends Completion
     {
-        private final FunctionDefinition function;
+        private final FunctionGroup function;
         private final UnitManager unitManager;
 
-        public FunctionCompletion(FunctionDefinition function, UnitManager unitManager)
+        public FunctionCompletion(FunctionGroup function, UnitManager unitManager)
         {
             this.function = function;
             this.unitManager = unitManager;

@@ -13,7 +13,7 @@ public class NumTypeExp extends TypeExp
 {
     public final UnitExp unit;
 
-    public NumTypeExp(ExpressionBase src, UnitExp unit)
+    public NumTypeExp(@Nullable ExpressionBase src, UnitExp unit)
     {
         super(src);
         this.unit = unit;
@@ -37,8 +37,7 @@ public class NumTypeExp extends TypeExp
         if (unifiedUnit == null)
             return typeMismatch(b);
         
-        // I guess we take an arbitrary pick of our src, and theirs:
-        return Either.right(new NumTypeExp(src, unifiedUnit));
+        return Either.right(new NumTypeExp(src != null ? src : b.src, unifiedUnit));
     }
 
 

@@ -1,16 +1,20 @@
 package records.transformations.function;
 
-import annotation.userindex.qual.UserIndex;
 import annotation.qual.Value;
-import records.data.datatype.DataType;
+import annotation.userindex.qual.UserIndex;
+import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.function.FunctionType.AnyType;
-import records.transformations.function.FunctionType.ArrayType;
-import records.transformations.function.FunctionType.ExactType;
-import records.transformations.function.FunctionType.TupleType;
+import records.transformations.function.FunctionType.FunctionTypes;
+import records.transformations.function.FunctionType.TypeMatcher;
+import records.types.MutVar;
+import records.types.NumTypeExp;
+import records.types.TupleTypeExp;
+import records.types.TypeCons;
+import records.types.TypeExp;
+import records.types.units.UnitExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
@@ -21,7 +25,7 @@ import java.util.List;
 /**
  * Created by neil on 17/01/2017.
  */
-public class GetElement extends FunctionDefinition
+public class GetElement extends FunctionGroup
 {
     public GetElement()
     {
@@ -32,7 +36,17 @@ public class GetElement extends FunctionDefinition
     @Override
     public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
     {
-        return Collections.singletonList(new FunctionType(Instance::new, new TupleType(0, new ArrayType(new AnyType()), new ExactType(DataType.NUMBER)), null));
+        TypeMatcher listOfAnyAndIndex = () -> {
+            TypeExp any = new MutVar(null);
+            return new FunctionTypes(any, new TupleTypeExp(null,
+                ImmutableList.of(
+                    new TypeCons(null, TypeExp.CONS_LIST, any),
+                    new NumTypeExp(null, UnitExp.SCALAR)
+                ), true
+            ));
+        };
+        
+        return Collections.singletonList(new FunctionType(Instance::new, listOfAnyAndIndex, null));
     }
 
     private static class Instance extends FunctionInstance

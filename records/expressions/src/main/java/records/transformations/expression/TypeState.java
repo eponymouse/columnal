@@ -9,11 +9,10 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
-import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionList;
 import records.types.MutVar;
 import records.types.TypeExp;
-import utility.Pair;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -36,7 +35,7 @@ public class TypeState
 {
     // If variable is in there but > size 1, means it is known but cannot be used because it has multiple types in different guards
     private final Map<String, Set<TypeExp>> variables;
-    private final Map<String, FunctionDefinition> functions;
+    private final Map<String, FunctionGroup> functions;
     private final TypeManager typeManager;
     private final UnitManager unitManager;
 
@@ -49,7 +48,7 @@ public class TypeState
     {
         this.variables = Collections.unmodifiableMap(variables);
         this.typeManager = typeManager;
-        this.functions = FunctionList.FUNCTIONS.stream().collect(Collectors.<@NonNull FunctionDefinition, @NonNull String, @NonNull FunctionDefinition>toMap(FunctionDefinition::getName, Function.<FunctionDefinition>identity()));
+        this.functions = FunctionList.FUNCTIONS.stream().collect(Collectors.<@NonNull FunctionGroup, @NonNull String, @NonNull FunctionGroup>toMap(FunctionGroup::getName, Function.<FunctionGroup>identity()));
         this.unitManager = unitManager;
     }
 
@@ -120,7 +119,7 @@ public class TypeState
         return variables.get(varName);
     }
 
-    public Optional<FunctionDefinition> findFunction(String name)
+    public Optional<FunctionGroup> findFunction(String name)
     {
         return Optional.ofNullable(functions.get(name));
     }

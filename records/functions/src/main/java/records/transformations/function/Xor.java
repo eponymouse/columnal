@@ -13,7 +13,7 @@ import utility.Utility;
 
 import java.util.List;
 
-public class Xor extends FunctionDefinition
+public class Xor extends FunctionGroup
 {
     public Xor()
     {

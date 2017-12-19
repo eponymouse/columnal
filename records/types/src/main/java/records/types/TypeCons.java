@@ -15,14 +15,14 @@ public class TypeCons extends TypeExp
     // Can be size 0+:
     public final ImmutableList<TypeExp> operands;
 
-    public TypeCons(ExpressionBase src, String name, TypeExp... operands)
+    public TypeCons(@Nullable ExpressionBase src, String name, TypeExp... operands)
     {
         super(src);
         this.name = name;
         this.operands = ImmutableList.copyOf(operands);
     }
     
-    public TypeCons(ExpressionBase src, String name, ImmutableList<TypeExp> operands)
+    public TypeCons(@Nullable ExpressionBase src, String name, ImmutableList<TypeExp> operands)
     {
         super(src);
         this.name = name;
@@ -52,7 +52,7 @@ public class TypeCons extends TypeExp
                 return sub;
             unifiedOperands.add(sub.getRight());
         }
-        return Either.right(new TypeCons(src, name, unifiedOperands.build()));
+        return Either.right(new TypeCons(src != null ? src : b.src, name, unifiedOperands.build()));
     }
 
     @Override

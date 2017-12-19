@@ -8,10 +8,9 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionInstance;
 import records.transformations.function.Not;
-import records.transformations.function.StringLength;
 import records.transformations.function.Xor;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -41,7 +40,7 @@ public class TestBooleanFunctions
     @OnThread(Tag.Simulation)
     public void testNot() throws UserException, InternalException
     {
-        FunctionDefinition function = new Not();
+        FunctionGroup function = new Not();
         @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.BOOLEAN, s -> {}, mgr);
         if (checked == null)
         {
@@ -60,7 +59,7 @@ public class TestBooleanFunctions
     @OnThread(Tag.Simulation)
     public void testXor() throws InternalException, UserException
     {
-        FunctionDefinition function = new Xor();
+        FunctionGroup function = new Xor();
         @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(DataType.BOOLEAN, DataType.BOOLEAN), s -> {}, mgr);
         if (checked == null)
         {

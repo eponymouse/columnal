@@ -4,9 +4,7 @@ import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.junit.Before;
 import org.junit.runner.RunWith;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
@@ -16,12 +14,10 @@ import records.error.UserException;
 import records.transformations.function.*;
 import test.TestUtil;
 import test.gen.GenRandom;
-import test.gen.GenValueList;
 import test.gen.UnicodeStringGenerator;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
 
@@ -216,7 +212,7 @@ public class PropStringFunctions
         }
         StringWithin function = new StringWithin();
         StringWithinIndex functionIndex = new StringWithinIndex();
-        FunctionDefinition replaceFunction = new StringReplaceAll();
+        FunctionGroup replaceFunction = new StringReplaceAll();
         @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT), _s -> {}, mgr);
         @Nullable Pair<FunctionInstance, DataType> checkedIndex = functionIndex.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT), _s -> {}, mgr);
         @Nullable Pair<FunctionInstance, DataType> checkedReplace = replaceFunction.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT, DataType.TEXT), _s -> {}, mgr);

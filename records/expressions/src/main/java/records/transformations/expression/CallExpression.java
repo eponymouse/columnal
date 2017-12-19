@@ -18,7 +18,7 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.FunctionNode;
 import records.gui.expressioneditor.OperandNode;
-import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionInstance;
 import records.transformations.function.FunctionList;
 import records.types.TypeExp;
@@ -44,11 +44,11 @@ public class CallExpression extends NonOperatorExpression
     private final Expression param;
     private final List<Unit> units;
     // If null, function doesn't exist
-    private final @Nullable FunctionDefinition definition;
+    private final @Nullable FunctionGroup definition;
     @MonotonicNonNull
     private FunctionInstance instance;
 
-    public CallExpression(String functionName, @Nullable FunctionDefinition functionDefinition, List<Unit> units, Expression arg)
+    public CallExpression(String functionName, @Nullable FunctionGroup functionDefinition, List<Unit> units, Expression arg)
     {
         this.functionName = functionName;
         this.definition = functionDefinition;
@@ -114,7 +114,7 @@ public class CallExpression extends NonOperatorExpression
         // If successfully type-checked:
         if (definition != null)
         {
-            @NonNull FunctionDefinition definitionFinal = definition;
+            @NonNull FunctionGroup definitionFinal = definition;
             return (p, s) -> new FunctionNode(Either.right(definitionFinal), s, param, p);
         }
         else

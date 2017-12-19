@@ -24,7 +24,7 @@ import java.util.function.Consumer;
 /**
  * Created by neil on 11/12/2016.
  */
-public class AsUnit extends FunctionDefinition
+public class AsUnit extends FunctionGroup
 {
     public AsUnit()
     {

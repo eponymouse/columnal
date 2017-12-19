@@ -13,7 +13,7 @@ import utility.Utility;
 
 import java.util.List;
 
-public class StringRight extends FunctionDefinition
+public class StringRight extends FunctionGroup
 {
     public StringRight()
     {

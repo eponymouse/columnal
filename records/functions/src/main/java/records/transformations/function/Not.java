@@ -13,7 +13,7 @@ import utility.Utility;
 
 import java.util.List;
 
-public class Not extends FunctionDefinition
+public class Not extends FunctionGroup
 {
     public Not()
     {

@@ -7,8 +7,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.Expression;
-import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionList;
+import records.transformations.function.FunctionGroup;
 import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -24,12 +23,12 @@ import java.util.List;
 public class FunctionNode extends SurroundNode implements ExpressionNodeParent
 {
     // If it is known, it is Right(definition).  If unknown, Left(name)
-    private Either<String, FunctionDefinition> function;
+    private Either<String, FunctionGroup> function;
 
     @SuppressWarnings("initialization") // Because LeaveableTextField gets marked uninitialized
-    public FunctionNode(Either<String, FunctionDefinition> function, ExpressionNodeParent semanticParent, @Nullable Expression argumentsExpression, ConsecutiveBase<Expression, ExpressionNodeParent> parent)
+    public FunctionNode(Either<String, FunctionGroup> function, ExpressionNodeParent semanticParent, @Nullable Expression argumentsExpression, ConsecutiveBase<Expression, ExpressionNodeParent> parent)
     {
-        super(parent, semanticParent, "function", TranslationUtility.getString("function"), function.either(n -> n, FunctionDefinition::getName), true, argumentsExpression);
+        super(parent, semanticParent, "function", TranslationUtility.getString("function"), function.either(n -> n, FunctionGroup::getName), true, argumentsExpression);
         this.function = function;
     }
 

@@ -6,8 +6,11 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.function.FunctionType.ArrayType;
-import records.transformations.function.FunctionType.NumberAnyUnit;
+import records.transformations.function.FunctionType.FunctionTypes;
+import records.transformations.function.FunctionType.TypeMatcher;
+import records.types.NumTypeExp;
+import records.types.TypeCons;
+import records.types.units.UnitExp;
 import utility.Pair;
 
 import java.util.Collections;
@@ -18,7 +21,7 @@ import java.util.Random;
  * Base class for functions which take a single array of a numeric type
  * (possibly with units) and return a single value of that same type (incl. any units)
  */
-public abstract class SingleNumericSummaryFunction extends FunctionDefinition
+public abstract class SingleNumericSummaryFunction extends FunctionGroup
 {
     public SingleNumericSummaryFunction(String name, @LocalizableKey String shortDescripKey)
     {
@@ -28,7 +31,11 @@ public abstract class SingleNumericSummaryFunction extends FunctionDefinition
     @Override
     public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
     {
-        return Collections.singletonList(new FunctionType(this::makeInstance, new ArrayType(new NumberAnyUnit()), null /* No need if only one overload */));
+        TypeMatcher anyUnit = () -> {
+            NumTypeExp numType = new NumTypeExp(null, UnitExp.makeVariable());
+            return new FunctionTypes(numType, new TypeCons(null, TypeCons.CONS_LIST, numType));
+        };
+        return Collections.singletonList(new FunctionType(this::makeInstance, anyUnit, null /* No need if only one overload */));
     }
 
     protected abstract FunctionInstance makeInstance();

@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 /**
  * Created by neil on 15/12/2016.
  */
-public abstract class ToTemporalFunction extends FunctionDefinition
+public abstract class ToTemporalFunction extends FunctionGroup
 {
     public ToTemporalFunction(String name, @LocalizableKey String shortDescripKey)
     {

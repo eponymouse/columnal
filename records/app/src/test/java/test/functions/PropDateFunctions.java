@@ -14,7 +14,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionInstance;
 import records.transformations.function.ToDate;
 import records.transformations.function.ToDateTime;
@@ -203,7 +203,7 @@ public class PropDateFunctions
     // Tests single numeric input, numeric output function
     @SuppressWarnings("nullness")
     @OnThread(Tag.Simulation)
-    private Object runFunction1(@Value Object src, DataType srcType, FunctionDefinition function) throws InternalException, UserException, Throwable
+    private Object runFunction1(@Value Object src, DataType srcType, FunctionGroup function) throws InternalException, UserException, Throwable
     {
         try
         {

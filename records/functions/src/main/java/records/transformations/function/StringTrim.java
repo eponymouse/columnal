@@ -13,7 +13,7 @@ import utility.Utility;
 
 import java.util.List;
 
-public class StringTrim extends FunctionDefinition
+public class StringTrim extends FunctionGroup
 {
     public StringTrim()
     {

@@ -2,7 +2,6 @@ package records.transformations.function;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
@@ -14,7 +13,7 @@ import utility.Utility;
 
 import java.util.List;
 
-public class StringReplaceAll extends FunctionDefinition
+public class StringReplaceAll extends FunctionGroup
 {
     public StringReplaceAll()
     {

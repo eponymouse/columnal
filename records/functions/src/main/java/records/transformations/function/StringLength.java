@@ -13,7 +13,7 @@ import utility.Utility;
 
 import java.util.List;
 
-public class StringLength extends FunctionDefinition
+public class StringLength extends FunctionGroup
 {
     public StringLength()
     {

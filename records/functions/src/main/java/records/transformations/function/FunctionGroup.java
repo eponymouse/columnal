@@ -22,12 +22,12 @@ import java.util.stream.Collectors;
 /**
  * Created by neil on 11/12/2016.
  */
-public abstract class FunctionDefinition
+public abstract class FunctionGroup
 {
     private final String name;
     private final @LocalizableKey String shortDescriptionKey;
 
-    FunctionDefinition(String name, @LocalizableKey String shortDescriptionKey)
+    FunctionGroup(String name, @LocalizableKey String shortDescriptionKey)
     {
         this.name = name;
         this.shortDescriptionKey = shortDescriptionKey;
@@ -94,24 +94,6 @@ public abstract class FunctionDefinition
             }
             return true;
         }).get(0));
-    }
-
-    public abstract List<FunctionType> getOverloads(UnitManager mgr) throws InternalException;
-
-    /**
-     * For auto-completion; what are common argument types for this function?
-     * @param unitManager
-     */
-    public final List<DataType> getLikelyArgTypes(UnitManager unitManager) throws UserException, InternalException
-    {
-        List<DataType> r = new ArrayList<>();
-        for (FunctionType functionType : getOverloads(unitManager))
-        {
-            @Nullable DataType t = functionType.getLikelyParamType();
-            if (t != null)
-                r.add(t);
-        }
-        return r;
     }
 
     public @LocalizableKey String getShortDescriptionKey()

@@ -19,7 +19,7 @@ import java.util.Random;
 /**
  * Created by neil on 14/01/2017.
  */
-public class Count extends FunctionDefinition
+public class Count extends FunctionGroup
 {
     public Count()
     {

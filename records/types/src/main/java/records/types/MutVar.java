@@ -22,10 +22,10 @@ public class MutVar extends TypeExp
     // mutable reference:
     @Nullable TypeExp pointer;
 
-    public MutVar(ExpressionBase src, @Nullable TypeExp pointTo)
+    public MutVar(@Nullable ExpressionBase src)
     {
         super(src);
-        this.pointer = pointTo;
+        this.pointer = null;
     }
 
     @Override

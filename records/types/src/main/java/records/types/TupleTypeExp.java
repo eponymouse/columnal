@@ -14,7 +14,7 @@ public class TupleTypeExp extends TypeExp
     // e.g. "first" uses this, has single knownMembers and complete==false
     public final boolean complete;
 
-    public TupleTypeExp(ExpressionBase src, ImmutableList<TypeExp> knownMembers, boolean complete)
+    public TupleTypeExp(@Nullable ExpressionBase src, ImmutableList<TypeExp> knownMembers, boolean complete)
     {
         super(src);
         this.knownMembers = knownMembers;
@@ -88,7 +88,7 @@ public class TupleTypeExp extends TypeExp
                 unified.add(bt.knownMembers.get(i));
             }
         }
-        return Either.right(new TupleTypeExp(src, unified.build(), complete || bt.complete));
+        return Either.right(new TupleTypeExp(src != null ? src : b.src, unified.build(), complete || bt.complete));
     }
 }
 
