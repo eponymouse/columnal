@@ -170,8 +170,8 @@ public class PropTypecheckIndividual
         if (a.isNumber() && b.isNumber())
         {
             // Will actually type-check
-            Unit aOverB = a.getNumberInfo().getUnit().divide(b.getNumberInfo().getUnit());
-            Unit bOverA = b.getNumberInfo().getUnit().divide(a.getNumberInfo().getUnit());
+            Unit aOverB = a.getNumberInfo().getUnit().divideBy(b.getNumberInfo().getUnit());
+            Unit bOverA = b.getNumberInfo().getUnit().divideBy(a.getNumberInfo().getUnit());
             assertEquals(DataType.number(new NumberInfo(aOverB, null)), new DivideExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
             assertEquals(DataType.number(new NumberInfo(bOverA, null)), new DivideExpression(new DummyExpression(b), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
         }

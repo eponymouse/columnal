@@ -44,7 +44,7 @@ public class Unit
         return u;
     }
 
-    public Unit divide(Unit rhs)
+    public Unit divideBy(Unit rhs)
     {
         return times(rhs.reciprocal());
     }

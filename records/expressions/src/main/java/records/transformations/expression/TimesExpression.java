@@ -17,7 +17,9 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.types.NumTypeExp;
 import records.types.TypeExp;
+import records.types.units.UnitExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -68,23 +70,22 @@ public class TimesExpression extends NaryOpExpression
     @Override
     public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
-        Unit runningUnit = Unit.SCALAR;
-        @Nullable NumberDisplayInfo displayInfo = null;
+        UnitExp runningUnit = UnitExp.SCALAR;
         for (Expression expression : expressions)
         {
-            @Nullable TypeExp expType = expression.check(data, state, onError);
-            if (expType == null)
+            UnitExp unitVar = UnitExp.makeVariable();
+            TypeExp expectedType = new NumTypeExp(this, unitVar);
+            @Nullable TypeExp inferredType = expression.check(data, state, onError);
+            if (inferredType == null)
                 return null;
-            if (!expType.isNumber())
-            {
-                onError.recordError(expression, "Non-numeric type in multiplication expression: " + expType);
+            
+            // This should unify our unitVar appropriately:
+            if (onError.recordError(this, TypeExp.unifyTypes(expectedType, inferredType)) == null)
                 return null;
-            }
-            NumberInfo numberInfo = expType.getNumberInfo();
-            runningUnit = runningUnit.times(numberInfo.getUnit());
-            displayInfo = NumberDisplayInfo.merge(displayInfo, numberInfo.getDisplayInfo());
+            
+            runningUnit = runningUnit.times(unitVar);
         }
-        return DataType.number(new NumberInfo(runningUnit, displayInfo));
+        return new NumTypeExp(this, runningUnit);
     }
 
     @Override

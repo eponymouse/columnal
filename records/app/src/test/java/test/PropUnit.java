@@ -27,10 +27,10 @@ public class PropUnit
         assertEquals(a.canScaleTo(b, mgr), b.canScaleTo(a, mgr).map(Rational::reciprocal));
         assertEquals(a, a.reciprocal().reciprocal());
         assertEquals(b, b.reciprocal().reciprocal());
-        assertEquals(a.divide(b), b.divide(a).reciprocal());
-        assertEquals(a.times(b), a.divide(b.reciprocal()));
-        assertEquals(a, a.divide(b).times(b));
-        assertEquals(a, a.times(b).divide(b));
+        assertEquals(a.divideBy(b), b.divideBy(a).reciprocal());
+        assertEquals(a.times(b), a.divideBy(b.reciprocal()));
+        assertEquals(a, a.divideBy(b).times(b));
+        assertEquals(a, a.times(b).divideBy(b));
         for (int i = 1; i < 10; i++)
             assertEquals(a, a.raisedTo(i).rootedBy(i));
     }

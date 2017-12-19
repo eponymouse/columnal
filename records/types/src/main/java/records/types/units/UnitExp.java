@@ -3,6 +3,7 @@ package records.types.units;
 import com.google.common.math.IntMath;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.unit.SingleUnit;
 import records.data.unit.Unit;
 import utility.Either;
@@ -51,7 +52,7 @@ public class UnitExp
         return u;
     }
 
-    public UnitExp divide(UnitExp rhs)
+    public UnitExp divideBy(UnitExp rhs)
     {
         return times(rhs.reciprocal());
     }
@@ -172,6 +173,13 @@ public class UnitExp
         unit.getDetails().forEach((k, v) -> {
             unitExp.units.put(Either.right(k), v);
         });
+        return unitExp;
+    }
+
+    public static UnitExp makeVariable()
+    {
+        UnitExp unitExp = new UnitExp();
+        unitExp.units.put(Either.left(new MutSingleUnit()), 1);
         return unitExp;
     }
 }

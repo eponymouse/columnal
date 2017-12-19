@@ -21,7 +21,6 @@ import utility.Utility;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -132,7 +131,7 @@ public class UnitManager
     {
         Unit u = loadUnit(ctx.unit());
         if (ctx.divideBy() != null)
-            u = u.divide(loadUnit(ctx.divideBy().unit()));
+            u = u.divideBy(loadUnit(ctx.divideBy().unit()));
         else
         {
             for (TimesByContext rhs : ctx.timesBy())

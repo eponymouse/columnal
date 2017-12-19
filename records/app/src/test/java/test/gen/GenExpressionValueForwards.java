@@ -605,7 +605,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
     {
         // So we have src * x = dest
         // This can be rearranged to x = dest/src
-        return dest.divide(src);
+        return dest.divideBy(src);
     }
 
     private Unit getUnit(String name) throws InternalException, UserException

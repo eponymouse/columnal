@@ -1,10 +1,8 @@
 package records.transformations.expression;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.gui.expressioneditor.ConsecutiveBase;
-import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.UnitCompound;
 import records.gui.expressioneditor.UnitNodeParent;
@@ -33,7 +31,7 @@ public class UnitDivideExpression extends UnitExpression
         Either<Pair<String, List<UnitExpression>>, UnitExp> num = numerator.asUnit(unitManager);
         Either<Pair<String, List<UnitExpression>>, UnitExp> den = denominator.asUnit(unitManager);
 
-        return num.flatMap(n -> den.map(d -> n.divide(d)));
+        return num.flatMap(n -> den.map(d -> n.divideBy(d)));
     }
 
     @Override

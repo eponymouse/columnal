@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.sosy_lab.common.rationals.Rational;
@@ -9,15 +10,14 @@ import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
-import records.data.datatype.DataType;
-import records.data.datatype.NumberDisplayInfo;
-import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.types.NumTypeExp;
 import records.types.TypeExp;
+import records.types.units.UnitExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -53,20 +53,17 @@ public class DivideExpression extends BinaryOpExpression
     @RequiresNonNull({"lhsType", "rhsType"})
     protected @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
+        @NonNull TypeExp lhsTypeFinal = lhsType;
+        @NonNull TypeExp rhsTypeFinal = rhsType;
+        UnitExp topUnit = UnitExp.makeVariable();
+        UnitExp bottomUnit = UnitExp.makeVariable();
         // You can divide any number by any other number
-        if (!lhsType.isNumber())
+        if (onError.recordError(this, TypeExp.unifyTypes(new NumTypeExp(this, topUnit), lhsTypeFinal)) == null
+            || onError.recordError(this, TypeExp.unifyTypes(new NumTypeExp(this, bottomUnit), rhsTypeFinal)) == null)
         {
-            onError.recordError(lhs, "Non-numeric type in numerator");
             return null;
         }
-        if (!rhsType.isNumber())
-        {
-            onError.recordError(rhs, "Non-numeric type in denominator");
-            return null;
-        }
-        NumberInfo numberInfoLHS = lhsType.getNumberInfo();
-        NumberInfo numberInfoRHS = rhsType.getNumberInfo();
-        return DataType.number(new NumberInfo(numberInfoLHS.getUnit().divide(numberInfoRHS.getUnit()), NumberDisplayInfo.merge(numberInfoLHS.getDisplayInfo(), numberInfoRHS.getDisplayInfo())));
+        return new NumTypeExp(this, topUnit.divideBy(bottomUnit));
     }
 
     @Override
