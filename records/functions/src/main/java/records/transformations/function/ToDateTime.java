@@ -33,11 +33,11 @@ public class ToDateTime extends ToTemporalFunction
     private static List<List<DateTimeFormatter>> FORMATS = new ArrayList<>();
 
     @Override
-    public List<FunctionType> getOverloads(UnitManager mgr)
+    public List<FunctionDefinition> getOverloads(UnitManager mgr)
     {
-        ArrayList<FunctionType> r = new ArrayList<>(fromString("datetime.string"));
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)),"datetime.datetimez"));
-        r.add(new FunctionType(DateAndTimeInstance::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY))), "datetime.ymd_time"));
+        ArrayList<FunctionDefinition> r = new ArrayList<>(fromString("datetime.string"));
+        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)),"datetime.datetimez"));
+        r.add(new FunctionDefinition(DateAndTimeInstance::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY))), "datetime.ymd_time"));
         return r;
     }
 

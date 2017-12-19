@@ -1,41 +1,43 @@
 package records.transformations.function;
 
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.TypeRelation;
+import records.data.unit.Unit;
+import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.types.TypeExp;
+import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
-import java.util.function.Consumer;
+import java.util.Random;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 
 /**
  * This class is one function, it will have a unique name, a single type and a single implementation
  */
-public class FunctionType
+public class FunctionDefinition
 {
     private final String name;
     private final TypeMatcher typeMatcher;
     private final Supplier<FunctionInstance> makeInstance;
 
-    public FunctionType(String name, Supplier<FunctionInstance> makeInstance, TypeMatcher typeMatcher)
+    public FunctionDefinition(String name, Supplier<FunctionInstance> makeInstance, TypeMatcher typeMatcher)
     {
         this.name = name;
         this.makeInstance = makeInstance;
         this.typeMatcher = typeMatcher;
     }
 
-    public FunctionType(String name, Supplier<FunctionInstance> makeInstance, DataType returnType, DataType paramType)
+    public FunctionDefinition(String name, Supplier<FunctionInstance> makeInstance, DataType returnType, DataType paramType)
     {
         this.name = name;
         this.makeInstance = makeInstance;
@@ -88,15 +90,9 @@ public class FunctionType
         }
     }
 
-    /**
-     * Gets the localization key for the text which describes this particular overload of the function.
-     * If no text is available for this overload (common when there is only one overload
-     * of a function) then null is returned, and nothing should be displayed.
-     */
-    @Pure
-    public @Nullable @LocalizableKey String getOverloadDescriptionKey()
+    public String getName()
     {
-        return overloadDescriptionKey;
+        return name;
     }
 
     public static interface TypeMatcher
@@ -139,5 +135,27 @@ public class FunctionType
             this.paramType = paramType;
             this.returnType = returnType;
         }
+    }
+
+    // Only for testing:
+    public static interface _test_TypeVary<EXPRESSION>
+    {
+        public EXPRESSION getDifferentType(@Nullable DataType type) throws InternalException, UserException;
+        public EXPRESSION getAnyType() throws UserException, InternalException;
+        public EXPRESSION getNonNumericType() throws InternalException, UserException;
+
+        public EXPRESSION getType(Predicate<DataType> mustMatch) throws InternalException, UserException;
+        public List<EXPRESSION> getTypes(int amount, ExFunction<List<DataType>, Boolean> mustMatch) throws InternalException, UserException;
+
+        public EXPRESSION makeArrayExpression(ImmutableList<EXPRESSION> items);
+    }
+
+    // For testing: give a unit list and parameter list that should fail typechecking
+    public <E> Pair<List<Unit>, E> _test_typeFailure(Random r, _test_TypeVary<E> newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
+    {
+        return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.getTypes(1, type ->
+        {
+            return TypeExp.unifyTypes(typeMatcher.makeParamAndReturnType().paramType, TypeExp.fromConcrete(null, type.get(0))).isLeft();
+        }).get(0));
     }
 }

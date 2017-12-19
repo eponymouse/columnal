@@ -19,7 +19,7 @@ import java.util.Random;
 /**
  * Created by neil on 14/01/2017.
  */
-public class Count extends FunctionType
+public class Count extends FunctionDefinition
 {
     public Count()
     {
@@ -28,7 +28,7 @@ public class Count extends FunctionType
 
     public static FunctionGroup group()
     {
-        return new FunctionGroup("count", "count.short", new Count());
+        return new FunctionGroup("count.short", new Count());
     }
     
     @Override

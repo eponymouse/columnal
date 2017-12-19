@@ -33,11 +33,11 @@ public class ToTimeAndZone extends ToTemporalFunction
     }
 
     @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    public List<FunctionDefinition> getOverloads(UnitManager mgr) throws InternalException
     {
-        ArrayList<FunctionType> r = new ArrayList<>(fromString("timez.string"));
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "timez.datetimez"));
-        r.add(new FunctionType(T_Z::new, DataType.date(getResultType()),
+        ArrayList<FunctionDefinition> r = new ArrayList<>(fromString("timez.string"));
+        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "timez.datetimez"));
+        r.add(new FunctionDefinition(T_Z::new, DataType.date(getResultType()),
             DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT), "timez.time_string"));
         return r;
     }

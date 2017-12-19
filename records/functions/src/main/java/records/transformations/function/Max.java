@@ -1,11 +1,8 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.function.FunctionType.FunctionTypes;
-import records.transformations.function.FunctionType.TypeMatcher;
 import records.types.MutVar;
 import records.types.TypeCons;
 import records.types.TypeExp;
@@ -14,10 +11,7 @@ import threadchecker.Tag;
 import utility.Utility;
 import utility.Utility.ListEx;
 
-import java.util.Collections;
-import java.util.List;
-
-public class Max extends FunctionType
+public class Max extends FunctionDefinition
 {
     public Max()
     {
@@ -26,7 +20,7 @@ public class Max extends FunctionType
 
     public static FunctionGroup group()
     {
-        return new FunctionGroup("max", "max.short", new Max());
+        return new FunctionGroup("max.short", new Max());
     }
     
     private static FunctionTypes listOfAny()

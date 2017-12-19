@@ -1,32 +1,26 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
-import java.util.List;
-
-public class Xor extends FunctionGroup
+public class Xor extends FunctionDefinition
 {
     public Xor()
     {
-        super("xor", "xor.short");
+        super("xor", Instance::new, DataType.BOOLEAN, DataType.tuple(DataType.BOOLEAN, DataType.BOOLEAN));
     }
-
-    @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    public static FunctionGroup group()
     {
-        return ImmutableList.of(new FunctionType(Instance::new, DataType.BOOLEAN, DataType.tuple(DataType.BOOLEAN, DataType.BOOLEAN), null));
+        return new FunctionGroup("xor.short", new Xor());
     }
 
-    private class Instance extends FunctionInstance
+    private static class Instance extends FunctionInstance
     {
 
         @Override

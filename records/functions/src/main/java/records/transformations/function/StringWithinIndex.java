@@ -1,10 +1,8 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
@@ -15,7 +13,7 @@ import utility.Utility.ListEx;
 import java.util.ArrayList;
 import java.util.List;
 
-public class StringWithinIndex extends FunctionType
+public class StringWithinIndex extends FunctionDefinition
 {
     public StringWithinIndex()
     {
@@ -24,7 +22,7 @@ public class StringWithinIndex extends FunctionType
 
     public static FunctionGroup group()
     {
-        return new FunctionGroup("within.indexes", "within.indexes.short", new StringWithinIndex());
+        return new FunctionGroup("within.indexes.short", new StringWithinIndex());
     }
 
     private static class Instance extends FunctionInstance

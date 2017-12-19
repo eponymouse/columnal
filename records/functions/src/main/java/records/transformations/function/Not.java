@@ -13,20 +13,19 @@ import utility.Utility;
 
 import java.util.List;
 
-public class Not extends FunctionGroup
+public class Not extends FunctionDefinition
 {
     public Not()
     {
-        super("not", "not.short");
+        super("not", Instance::new, DataType.BOOLEAN, DataType.BOOLEAN);
     }
-
-    @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    
+    public static FunctionGroup group()
     {
-        return ImmutableList.of(new FunctionType(Instance::new, DataType.BOOLEAN, DataType.BOOLEAN, null));
+        return new FunctionGroup("not.short", new Not());
     }
 
-    private class Instance extends FunctionInstance
+    private static class Instance extends FunctionInstance
     {
 
         @Override

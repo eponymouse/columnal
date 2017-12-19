@@ -36,9 +36,9 @@ import records.transformations.expression.BooleanLiteral;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
+import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionList;
-import records.transformations.function.FunctionType;
 import utility.Either;
 import utility.ExFunction;
 import utility.FXPlatformConsumer;
@@ -495,8 +495,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             List<Node> overloads = new ArrayList<>();
             try
             {
-                List<FunctionType> overloadTypes = function.getOverloads(unitManager);
-                for (FunctionType functionType : overloadTypes)
+                List<FunctionDefinition> overloadTypes = function.getOverloads(unitManager);
+                for (FunctionDefinition functionType : overloadTypes)
                 {
                     Text overloadType = new Text(functionType.getParamDisplay() + " -> " + functionType.getReturnDisplay() + "\n");
                     overloadType.getStyleClass().add("function-info-overload-type");

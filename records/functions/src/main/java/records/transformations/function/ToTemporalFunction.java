@@ -1,6 +1,7 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
@@ -32,9 +33,9 @@ import java.util.stream.Collectors;
  */
 public abstract class ToTemporalFunction extends FunctionGroup
 {
-    public ToTemporalFunction(String name, @LocalizableKey String shortDescripKey)
+    public ToTemporalFunction(String name, @LocalizableKey String shortDescripKey, FunctionDefinition... functions)
     {
-        super(name, shortDescripKey);
+        super(name, shortDescripKey, ImmutableList.copyOf(functions));
     }
 
     static DateTimeFormatter m(String sep, F... items)
@@ -97,11 +98,11 @@ public abstract class ToTemporalFunction extends FunctionGroup
         return Arrays.asList(args);
     }
 
-    List<FunctionType> fromString(@LocalizableKey String descripKey)
+    static List<FunctionDefinition> fromString(@LocalizableKey String descripKey)
     {
         return Arrays.asList(
-            new FunctionType(FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT, descripKey)
-            //new FunctionType(FromStringInstance::new, DataType.date(getResultType()), DataType.tuple(DataType.TEXT, DataType.TEXT))
+            new FunctionDefinition(FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT, descripKey)
+            //new FunctionDefinition(FromStringInstance::new, DataType.date(getResultType()), DataType.tuple(DataType.TEXT, DataType.TEXT))
         );
     }
 
@@ -109,7 +110,7 @@ public abstract class ToTemporalFunction extends FunctionGroup
 
     static enum F {FRAC_SEC_OPT, SEC_OPT, MIN, HOUR, HOUR12, AMPM, DAY, MONTH_TEXT, MONTH_NUM, YEAR2, YEAR4 }
 
-    private class FromStringInstance extends FunctionInstance
+    private static class FromStringInstance extends FunctionInstance
     {
         private ArrayList<Pair<List<DateTimeFormatter>, Integer>> usedFormats = new ArrayList<>();
         private ArrayList<List<DateTimeFormatter>> unusedFormats = new ArrayList<>(getFormats());

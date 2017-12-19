@@ -30,13 +30,13 @@ public class ToYearMonth extends ToTemporalFunction
     }
 
     @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    public List<FunctionDefinition> getOverloads(UnitManager mgr) throws InternalException
     {
-        ArrayList<FunctionType> r = new ArrayList<>(fromString("dateym.string"));
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), "dateym.ymd"));
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), "dateym.datetime"));
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "dateym.datetimez"));
-        r.add(new FunctionType(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
+        ArrayList<FunctionDefinition> r = new ArrayList<>(fromString("dateym.string"));
+        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), "dateym.ymd"));
+        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), "dateym.datetime"));
+        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "dateym.datetimez"));
+        r.add(new FunctionDefinition(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
             DataType.number(new NumberInfo(mgr.loadBuiltIn("year"), null)),
             DataType.number(new NumberInfo(mgr.loadBuiltIn("month"), null))
         ), "dateym.year_month"));

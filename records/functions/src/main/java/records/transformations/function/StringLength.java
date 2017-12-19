@@ -1,19 +1,15 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
-import java.util.List;
-
-public class StringLength extends FunctionType
+public class StringLength extends FunctionDefinition
 {
     public StringLength()
     {
@@ -22,7 +18,7 @@ public class StringLength extends FunctionType
     
     public static FunctionGroup group()
     {
-        return new FunctionGroup("length", "length.short", new StringLength());
+        return new FunctionGroup("length.short", new StringLength());
     }
     
     private static class Instance extends FunctionInstance

@@ -11,19 +11,30 @@ import java.util.List;
 public class FunctionList
 {
     public static List<FunctionGroup> FUNCTIONS = Arrays.asList(
-        new Absolute(),
-        new AsUnit(),
-        new Count(),
-        new GetElement(),
-        new Mean(),
-        new Round(),
-        new Sum(),
-        new ToDate(),
-        new ToDateTime(),
-        new ToDateTimeZone(),
-        new ToTime(),
-        new ToTimeAndZone(),
-        new ToYearMonth()
+        Absolute.group(),
+        AsUnit.group(),
+        Count.group(),
+        GetElement.group(),
+        Max.group(),
+        Mean.group(),
+        Min.group(),
+        Not.group(),
+        Round.group(),
+        StringLeft.group(),
+        StringLength.group(),
+        StringMid.group(),
+        StringReplaceAll.group(),
+        StringRight.group(),
+        StringTrim.group(),
+        StringWithin.group(),
+        StringWithinIndex.group(),
+        Sum.group(),
+        ToDate.group(),
+        ToDateTime.group(),
+        ToDateTimeZone.group(),
+        ToTime.group(),
+        ToTimeAndZone.group(),
+        ToYearMonth.group()
     );
 
     public static @Nullable FunctionGroup lookup(String functionName)

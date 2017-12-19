@@ -35,15 +35,15 @@ public class ToDateTimeZone extends ToTemporalFunction
     private static List<List<DateTimeFormatter>> FORMATS = new ArrayList<>();
 
     @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    public List<FunctionDefinition> getOverloads(UnitManager mgr) throws InternalException
     {
-        ArrayList<FunctionType> r = new ArrayList<>(fromString("datetimez.string"));
-        r.add(new FunctionType(DT_Z::new, DataType.date(getResultType()),
+        ArrayList<FunctionDefinition> r = new ArrayList<>(fromString("datetimez.string"));
+        r.add(new FunctionDefinition(DT_Z::new, DataType.date(getResultType()),
             DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), DataType.TEXT), "datetimez.datetime_string"));
-        r.add(new FunctionType(D_T_Z::new, DataType.date(getResultType()), DataType.tuple(
+        r.add(new FunctionDefinition(D_T_Z::new, DataType.date(getResultType()), DataType.tuple(
             DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
             DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT), "datetimez.ymd_time_string"));
-        r.add(new FunctionType(D_TZ::new, DataType.date(getResultType()), DataType.tuple(
+        r.add(new FunctionDefinition(D_TZ::new, DataType.date(getResultType()), DataType.tuple(
             DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
             DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))), "datetimez.ymd_timez"));
         return r;

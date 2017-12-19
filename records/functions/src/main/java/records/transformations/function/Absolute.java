@@ -15,11 +15,10 @@ public class Absolute extends SingleNumericInOutFunction
 {
     public Absolute()
     {
-        super("abs", "abs.short");
+        super("abs", Absolute::makeInstance);
     }
 
-    @Override
-    protected FunctionInstance makeInstance()
+    private static FunctionInstance makeInstance()
     {
         return new FunctionInstance()
         {

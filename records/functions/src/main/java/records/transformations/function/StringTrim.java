@@ -13,17 +13,16 @@ import utility.Utility;
 
 import java.util.List;
 
-public class StringTrim extends FunctionGroup
+public class StringTrim extends FunctionDefinition
 {
-    public StringTrim()
+    private StringTrim()
     {
-        super("trim", "trim.short");
+        super("trim", Instance::new, DataType.TEXT, DataType.TEXT);
     }
-
-    @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    
+    public static FunctionGroup group()
     {
-        return ImmutableList.of(new FunctionType(Instance::new, DataType.TEXT, DataType.TEXT, null));
+        return new FunctionGroup("trim.short", new StringTrim());
     }
 
     private static class Instance extends FunctionInstance

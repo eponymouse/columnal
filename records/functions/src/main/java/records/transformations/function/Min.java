@@ -4,8 +4,8 @@ import annotation.qual.Value;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.function.FunctionType.FunctionTypes;
-import records.transformations.function.FunctionType.TypeMatcher;
+import records.transformations.function.FunctionDefinition.FunctionTypes;
+import records.transformations.function.FunctionDefinition.TypeMatcher;
 import records.types.MutVar;
 import records.types.TypeCons;
 import records.types.TypeExp;
@@ -17,21 +17,19 @@ import utility.Utility.ListEx;
 import java.util.Collections;
 import java.util.List;
 
-public class Min extends FunctionGroup
+public class Min extends FunctionDefinition
 {
     public Min()
     {
-        super("min", "min.short");
-    }
-
-    @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
-    {
-        TypeMatcher listOfAny = () -> {
+        super("min", Instance::new, () -> {
             TypeExp any = new MutVar(null);
             return new FunctionTypes(any, new TypeCons(null, TypeExp.CONS_LIST, any));
-        };
-        return Collections.singletonList(new FunctionType(Instance::new, listOfAny, null));
+        });
+    }
+    
+    public static FunctionGroup group()
+    {
+        return new FunctionGroup("min.short", new Min());
     }
 
     private static class Instance extends FunctionInstance

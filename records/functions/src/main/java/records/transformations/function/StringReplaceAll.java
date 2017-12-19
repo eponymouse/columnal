@@ -13,20 +13,19 @@ import utility.Utility;
 
 import java.util.List;
 
-public class StringReplaceAll extends FunctionGroup
+public class StringReplaceAll extends FunctionDefinition
 {
     public StringReplaceAll()
     {
-        super("replace.all", "replace.all.short");
+        super("replace.all", Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.TEXT, DataType.TEXT));
     }
 
-    @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    public static FunctionGroup group()
     {
-        return ImmutableList.of(new FunctionType(Instance::new, DataType.TEXT, DataType.tuple(DataType.TEXT, DataType.TEXT, DataType.TEXT), null));
+        return new FunctionGroup("replace.all.short", new StringReplaceAll());
     }
-
-    private class Instance extends FunctionInstance
+    
+    private static class Instance extends FunctionInstance
     {
 
         @Override

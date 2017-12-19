@@ -173,7 +173,7 @@ public abstract class TypeExp
         return Either.left("Type mismatch: " + toString() + " versus " + other.toString());
     }
 
-    public static TypeExp fromConcrete(ExpressionBase src, DataType dataType) throws InternalException
+    public static TypeExp fromConcrete(@Nullable ExpressionBase src, DataType dataType) throws InternalException
     {
         return dataType.apply(new DataTypeVisitorEx<TypeExp, InternalException>()
         {

@@ -1,19 +1,15 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
-import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
-import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
 
-import java.util.List;
-
-public class StringMid extends FunctionType
+public class StringMid extends FunctionDefinition
 {
     public StringMid()
     {
@@ -22,7 +18,7 @@ public class StringMid extends FunctionType
 
     public static FunctionGroup group()
     {
-        return new FunctionGroup("middle", "middle.short", new StringMid());
+        return new FunctionGroup("middle.short", new StringMid());
     }
 
     private static class Instance extends FunctionInstance

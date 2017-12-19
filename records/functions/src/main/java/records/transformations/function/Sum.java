@@ -16,13 +16,7 @@ public class Sum extends SingleNumericSummaryFunction
 {
     public Sum()
     {
-        super("sum", "sum.short");
-    }
-
-    @Override
-    protected FunctionInstance makeInstance()
-    {
-        return new Instance();
+        super("sum", Instance::new);
     }
 
     private static class Instance extends FunctionInstance

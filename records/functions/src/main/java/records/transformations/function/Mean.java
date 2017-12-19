@@ -16,13 +16,7 @@ public class Mean extends SingleNumericSummaryFunction
 {
     public Mean()
     {
-        super("average", "average.short");
-    }
-
-    @Override
-    protected FunctionInstance makeInstance()
-    {
-        return new FunctionInstance()
+        super("average", () -> new FunctionInstance()
         {
             @Override
             public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, @Value Object param) throws UserException, InternalException
@@ -39,6 +33,11 @@ public class Mean extends SingleNumericSummaryFunction
                 }
                 return DataTypeUtility.value(average);
             }
-        };
+        });
+    }
+    
+    public static FunctionGroup group()
+    {
+        return new FunctionGroup("average.short", new Mean());
     }
 }

@@ -46,13 +46,13 @@ public class ToTime extends ToTemporalFunction
     );
 
     @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    public List<FunctionDefinition> getOverloads(UnitManager mgr) throws InternalException
     {
-        ArrayList<FunctionType> r = new ArrayList<>(fromString("time.string"));
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), "time.datetime"));
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "time.datetimez"));
-        r.add(new FunctionType(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)), "time.timez"));
-        r.add(new FunctionType(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
+        ArrayList<FunctionDefinition> r = new ArrayList<>(fromString("time.string"));
+        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), "time.datetime"));
+        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "time.datetimez"));
+        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)), "time.timez"));
+        r.add(new FunctionDefinition(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
             DataType.number(new NumberInfo(mgr.loadBuiltIn("hour"), null)),
             DataType.number(new NumberInfo(mgr.loadBuiltIn("min"), null)),
             DataType.number(new NumberInfo(mgr.loadBuiltIn("s"), null))

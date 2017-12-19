@@ -1,12 +1,9 @@
 package records.transformations.function;
 
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.function.FunctionType.FunctionTypes;
-import records.transformations.function.FunctionType.TypeMatcher;
 import records.types.NumTypeExp;
 import records.types.units.UnitExp;
 import utility.Pair;
@@ -14,6 +11,7 @@ import utility.Pair;
 import java.util.Collections;
 import java.util.List;
 import java.util.Random;
+import java.util.function.Supplier;
 
 /**
  * Base class for functions which take a single numeric input,
@@ -21,24 +19,15 @@ import java.util.Random;
  *
  * package-visible
  */
-abstract class SingleNumericInOutFunction extends FunctionGroup
+abstract class SingleNumericInOutFunction extends FunctionDefinition
 {
-    SingleNumericInOutFunction(String name, @LocalizableKey String shortDescripKey)
+    SingleNumericInOutFunction(String name, Supplier<FunctionInstance> makeInstance)
     {
-        super(name, shortDescripKey);
-    }
-
-    @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
-    {
-        TypeMatcher anyUnit = () -> {
+        super(name, makeInstance, () -> {
             NumTypeExp numType = new NumTypeExp(null, UnitExp.makeVariable());
             return new FunctionTypes(numType, numType);
-        };
-        return Collections.singletonList(new FunctionType(this::makeInstance, anyUnit, null));
+        });
     }
-
-    protected abstract FunctionInstance makeInstance();
 
     @Override
     public <E> Pair<List<Unit>, E> _test_typeFailure(Random r, _test_TypeVary<E> newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException

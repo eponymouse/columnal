@@ -7,8 +7,8 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.function.FunctionType.FunctionTypes;
-import records.transformations.function.FunctionType.TypeMatcher;
+import records.transformations.function.FunctionDefinition.FunctionTypes;
+import records.transformations.function.FunctionDefinition.TypeMatcher;
 import records.types.MutVar;
 import records.types.NumTypeExp;
 import records.types.TupleTypeExp;
@@ -34,7 +34,7 @@ public class GetElement extends FunctionGroup
 
     // Takes parameters: column/array, index
     @Override
-    public List<FunctionType> getOverloads(UnitManager mgr) throws InternalException
+    public List<FunctionDefinition> getOverloads(UnitManager mgr) throws InternalException
     {
         TypeMatcher listOfAnyAndIndex = () -> {
             TypeExp any = new MutVar(null);
@@ -46,7 +46,7 @@ public class GetElement extends FunctionGroup
             ));
         };
         
-        return Collections.singletonList(new FunctionType(Instance::new, listOfAnyAndIndex, null));
+        return Collections.singletonList(new FunctionDefinition(Instance::new, listOfAnyAndIndex, null));
     }
 
     private static class Instance extends FunctionInstance
