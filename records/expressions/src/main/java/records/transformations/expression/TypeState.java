@@ -198,7 +198,7 @@ public class TypeState
             if (!typeState.unitManager.equals(original.unitManager))
                 throw new InternalException("Unit manager changed between different type states");
             // Functions shouldn't have changed:
-            if (!typeState.functions.equals(original.functions))
+            if (!typeState.functions.keySet().equals(original.functions.keySet()))
                 throw new InternalException("Functions changed between different type states");
             // Variables: we first remove all the variables which already existed
             // What is left must not overlap

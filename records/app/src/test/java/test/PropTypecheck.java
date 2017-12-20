@@ -97,7 +97,7 @@ public class PropTypecheck
     }
 
     @Property(trials = 1000)
-    @SuppressWarnings("nullness")
+    // @SuppressWarnings("nullness")
     public void propTypeCheckSucceed(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {
         StringBuilder b = new StringBuilder();
@@ -114,7 +114,7 @@ public class PropTypecheck
             {
                 throw new RuntimeException(e);
             }
-        }).collect(Collectors.joining(", ")), src.type, TypeExp.unifyTypes(srcTypeExp, checked));
+        }).collect(Collectors.joining(", ")), src.type, checked == null ? null : TypeExp.unifyTypes(srcTypeExp, checked));
     }
 
     //#error Have property which generates tables/expressions of given types, and check they don't typecheck

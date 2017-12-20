@@ -50,11 +50,18 @@ public class UnitExp
         u.units.putAll(units);
         for (Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> rhsUnit : rhs.units.entrySet())
         {
-            // Decl to suppress nullness warnings on remapping function:
-            @SuppressWarnings("nullness")
-            int _dummy = u.units.merge(rhsUnit.getKey(), rhsUnit.getValue(), (l, r) -> (l + r == 0) ? null : l + r);
+            u.units.merge(rhsUnit.getKey(), rhsUnit.getValue(), (l, r) -> {
+                return addButZeroIsNull(l, r);
+            });
         }
         return u;
+    }
+
+    private Integer addButZeroIsNull(Integer l, Integer r)
+    {
+        @SuppressWarnings("nullness") // Fine according to method contract
+        @NonNull Integer added = (l + r == 0) ? null : l + r;
+        return added;
     }
 
     public UnitExp divideBy(UnitExp rhs)
@@ -92,14 +99,7 @@ public class UnitExp
         units.forEach((k, v) -> aimingForOne.units.put(k, v));
         other.units.forEach((k, v) ->
             // Very important: minus v to multiply by inverse of RHS:    
-            aimingForOne.units.merge(k, -v, (a, b) -> a + b));
-        // Take out any that resolved to zero:
-        for (Iterator<Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer>> iterator = aimingForOne.units.entrySet().iterator(); iterator.hasNext(); )
-        {
-            if (iterator.next().getValue() == 0)
-                iterator.remove();
-
-        }
+            aimingForOne.units.merge(k, -v, this::addButZeroIsNull));
 
         @Nullable Map<MutUnitVar, UnitExp> mapping = aimingForOne.unifyToOne();
         if (mapping != null)
@@ -148,10 +148,21 @@ public class UnitExp
         // type variable become modulo that power.  Must admit, don't quite understand this step...
         Pair<MutUnitVar, Integer> lowestAbsPower = typeVars.stream().min(Comparator.comparing(p -> Math.abs(p.getSecond()))).orElse(null);
         if (lowestAbsPower == null)
-            // Impossible!
+            // Impossible!  We know typeVars.size() > 1 at this point
             return null;
         @NonNull Pair<MutUnitVar, Integer> lowestAbsPowerFinal = lowestAbsPower;
-        units.replaceAll((k, v) -> k.equals(Either.right(lowestAbsPowerFinal.getFirst())) ? v : IntMath.mod(v, lowestAbsPowerFinal.getSecond()));
+        for (Iterator<Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer>> iterator = units.entrySet().iterator(); iterator.hasNext(); )
+        {
+            Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> entry = iterator.next();
+            if (!entry.getKey().equals(Either.right(lowestAbsPowerFinal.getFirst())))
+            {
+                int mod = IntMath.mod(entry.getValue(), Math.abs(lowestAbsPowerFinal.getSecond()));
+                if (mod == 0)
+                    iterator.remove();
+                else
+                    entry.setValue(mod);
+            }
+        }
         // Round we go again:
         
         // TODO but we're discarding the change we just made!  Not right, need some tests here...

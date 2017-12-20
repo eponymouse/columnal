@@ -47,6 +47,7 @@ public class CallExpression extends NonOperatorExpression
     private final List<Unit> units;
     // If null, function doesn't exist
     private final @Nullable FunctionDefinition definition;
+    // If null, didn't type check
     @MonotonicNonNull
     private FunctionInstance instance;
 
@@ -77,6 +78,7 @@ public class CallExpression extends NonOperatorExpression
         @Nullable TypeExp checked = onError.recordError(this, TypeExp.unifyTypes(types.paramType, paramType));
         if (checked == null)
             return null;
+        instance = definition.getFunction();
         return types.returnType;
     }
 
@@ -84,7 +86,7 @@ public class CallExpression extends NonOperatorExpression
     public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
         if (instance == null)
-            throw new InternalException("Calling function which didn't typecheck");
+            throw new InternalException("Calling function " + functionName + " which didn't typecheck");
 
         return instance.getValue(rowIndex, param.getValue(rowIndex, state));
     }

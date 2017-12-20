@@ -1,5 +1,6 @@
 package records.data.unit;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import records.error.UserException;
@@ -37,9 +38,12 @@ public class Unit
         u.units.putAll(units);
         for (Entry<SingleUnit, Integer> rhsUnit : rhs.units.entrySet())
         {
-            // Decl to suppress nullness warnings on remapping function:
-            @SuppressWarnings("nullness")
-            int _dummy = u.units.merge(rhsUnit.getKey(), rhsUnit.getValue(), (l, r) -> (l + r == 0) ? null : l + r);
+            u.units.merge(rhsUnit.getKey(), rhsUnit.getValue(), (l, r) -> {
+                // Suppress null warning when we're removing key (fine with contract of method):
+                @SuppressWarnings("nullness")
+                @NonNull Integer added = (l + r == 0) ? null : l + r;
+                return added;
+            });
         }
         return u;
     }
