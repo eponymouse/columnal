@@ -8,10 +8,12 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionInstance;
 import records.transformations.function.Not;
 import records.transformations.function.Xor;
+import test.TestUtil;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -40,8 +42,8 @@ public class TestBooleanFunctions
     @OnThread(Tag.Simulation)
     public void testNot() throws UserException, InternalException
     {
-        FunctionGroup function = new Not();
-        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.BOOLEAN, s -> {}, mgr);
+        FunctionDefinition function = new Not();
+        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.BOOLEAN);
         if (checked == null)
         {
             fail("Type check failure");
@@ -59,8 +61,8 @@ public class TestBooleanFunctions
     @OnThread(Tag.Simulation)
     public void testXor() throws InternalException, UserException
     {
-        FunctionGroup function = new Xor();
-        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(DataType.BOOLEAN, DataType.BOOLEAN), s -> {}, mgr);
+        FunctionDefinition function = new Xor();
+        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(DataType.BOOLEAN, DataType.BOOLEAN));
         if (checked == null)
         {
             fail("Type check failure");

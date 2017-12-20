@@ -13,6 +13,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
+import records.types.TypeCons;
 import records.types.TypeExp;
 import utility.Pair;
 
@@ -77,6 +78,6 @@ public class OrExpression extends NaryOpExpression
     public Expression _test_typeFailure(Random r, _test_TypeVary newExpressionOfDifferentType, UnitManager unitManager) throws InternalException, UserException
     {
         int index = r.nextInt(expressions.size());
-        return copy(makeNullList(index, newExpressionOfDifferentType.getDifferentType(DataType.BOOLEAN)));
+        return copy(makeNullList(index, newExpressionOfDifferentType.getDifferentType(new TypeCons(null, TypeExp.CONS_BOOLEAN))));
     }
 }

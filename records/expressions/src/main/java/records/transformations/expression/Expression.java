@@ -485,11 +485,13 @@ public abstract class Expression extends ExpressionBase
     // Only for testing:
     public static interface _test_TypeVary extends FunctionDefinition._test_TypeVary<Expression>
     {
+        /*
         public Expression getDifferentType(@Nullable TypeExp type) throws InternalException, UserException;
         public Expression getAnyType() throws UserException, InternalException;
         public Expression getNonNumericType() throws InternalException, UserException;
 
         public Expression getType(Predicate<DataType> mustMatch) throws InternalException, UserException;
         public List<Expression> getTypes(int amount, ExFunction<List<DataType>, Boolean> mustMatch) throws InternalException, UserException;
+        */
     }
 }

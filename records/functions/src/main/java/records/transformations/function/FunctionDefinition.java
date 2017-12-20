@@ -145,7 +145,7 @@ public class FunctionDefinition
     // Only for testing:
     public static interface _test_TypeVary<EXPRESSION>
     {
-        public EXPRESSION getDifferentType(@Nullable DataType type) throws InternalException, UserException;
+        public EXPRESSION getDifferentType(@Nullable TypeExp type) throws InternalException, UserException;
         public EXPRESSION getAnyType() throws UserException, InternalException;
         public EXPRESSION getNonNumericType() throws InternalException, UserException;
 

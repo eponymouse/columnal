@@ -15,6 +15,7 @@ import records.error.UserException;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression._test_TypeVary;
+import records.types.TypeExp;
 import test.DummyManager;
 import test.TestUtil;
 import test.gen.GenTypecheckFail.TypecheckInfo;
@@ -109,7 +110,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                     {
                         @Override
                         @OnThread(value = Tag.Simulation, ignoreParent = true)
-                        public Expression getDifferentType(@Nullable DataType type) throws InternalException, UserException
+                        public Expression getDifferentType(@Nullable TypeExp type) throws InternalException, UserException
                         {
                             if (type == null)
                                 throw new RuntimeException("Getting different type than failure?");
@@ -225,14 +226,14 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         return GenExpressionValueBackwards.makeType(r);
     }
 
-    private static DataType pickTypeOtherThan(@Nullable DataType type, SourceOfRandomness r) throws InternalException, UserException
+    private static DataType pickTypeOtherThan(@Nullable TypeExp type, SourceOfRandomness r) throws InternalException, UserException
     {
         DataType picked;
         do
         {
             picked = pickType(r);
         }
-        while (picked.equals(type) || DataType.checkSame(picked, type, s -> {}) != null);
+        while (type != null && TypeExp.unifyTypes(type, TypeExp.fromConcrete(null, picked)) != null);
         return picked;
     }
 

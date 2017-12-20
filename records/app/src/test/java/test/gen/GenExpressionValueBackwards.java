@@ -244,7 +244,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             public Expression date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
             {
                 List<ExpressionMaker> deep = new ArrayList<ExpressionMaker>();
-                deep.add(() -> new CallExpression(getCreator(dateTimeInfo.getType()), make(DataType.TEXT, targetValue.toString(), maxLevels - 1)));
+                deep.add(() -> call(getCreator(dateTimeInfo.getType()), make(DataType.TEXT, targetValue.toString(), maxLevels - 1)));
 
                 switch (dateTimeInfo.getType())
                 {
@@ -252,14 +252,14 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                     {
                         @NonNull DateTimeType dateTimeType = r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
                         DataType t = DataType.date(new DateTimeInfo(dateTimeType));
-                        deep.add(() -> new CallExpression("date", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
+                        deep.add(() -> call("date", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
                         LocalDate target = (LocalDate) targetValue;
-                        deep.add(() -> new CallExpression("date",
+                        deep.add(() -> call("date",
                             make(DataType.number(new NumberInfo(getUnit("year"), null)), target.getYear(), maxLevels - 1),
                             make(DataType.number(new NumberInfo(getUnit("month"), null)), target.getMonthValue(), maxLevels - 1),
                             make(DataType.number(new NumberInfo(getUnit("day"), null)), target.getDayOfMonth(), maxLevels - 1)
                         ));
-                        deep.add(() -> new CallExpression("date",
+                        deep.add(() -> call("date",
                             make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), YearMonth.of(target.getYear(), target.getMonth()), maxLevels - 1),
                             make(DataType.number(new NumberInfo(getUnit("day"), null)), target.getDayOfMonth(), maxLevels - 1)
                         ));
@@ -269,9 +269,9 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                     {
                         DateTimeType dateTimeType = r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
                         DataType t = DataType.date(new DateTimeInfo(dateTimeType));
-                        deep.add(() -> new CallExpression("dateym", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
+                        deep.add(() -> call("dateym", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
                         YearMonth target = (YearMonth) targetValue;
-                        deep.add(() -> new CallExpression("dateym",
+                        deep.add(() -> call("dateym",
                             make(DataType.number(new NumberInfo(getUnit("year"), null)), target.getYear(), maxLevels - 1),
                             make(DataType.number(new NumberInfo(getUnit("month"), null)), target.getMonthValue(), maxLevels - 1)
                         ));
@@ -281,9 +281,9 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                     {
                         DateTimeType dateTimeType = r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAYZONED, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
                         DataType t = DataType.date(new DateTimeInfo(dateTimeType));
-                        deep.add(() -> new CallExpression("time", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
+                        deep.add(() -> call("time", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
                         LocalTime target = (LocalTime) targetValue;
-                        deep.add(() -> new CallExpression("time",
+                        deep.add(() -> call("time",
                             make(DataType.number(new NumberInfo(getUnit("hour"), null)), target.getHour(), maxLevels - 1),
                             make(DataType.number(new NumberInfo(getUnit("min"), null)), target.getMinute(), maxLevels - 1),
                             // We only generate integers in this class, so generate nanos then divide:
@@ -295,9 +295,9 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                     {
                         DateTimeType dateTimeType = r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIMEZONED));
                         DataType t = DataType.date(new DateTimeInfo(dateTimeType));
-                        deep.add(() -> new CallExpression("timez", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
+                        deep.add(() -> call("timez", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
                         OffsetTime target = (OffsetTime) targetValue;
-                        deep.add(() -> new CallExpression("timez",
+                        deep.add(() -> call("timez",
                             make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), target.toLocalTime(), maxLevels - 1),
                             make(DataType.TEXT, target.getOffset().toString(), maxLevels - 1)
                         ));
@@ -307,7 +307,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                     {
                         LocalDateTime target = (LocalDateTime) targetValue;
                         //date+time+zone:
-                        deep.add(() -> new CallExpression("datetime",
+                        deep.add(() -> call("datetime",
                             make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), target.toLocalDate(), maxLevels - 1),
                             make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), target.toLocalTime(), maxLevels - 1)
                         ));
@@ -317,7 +317,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                     {
                         ZonedDateTime target = (ZonedDateTime) targetValue;
                         //datetime+zone
-                        deep.add(() -> new CallExpression("datetimez",
+                        deep.add(() -> call("datetimez",
                             make(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), target.toLocalDateTime(), maxLevels - 1),
                             make(DataType.TEXT, target.getZone().toString(), maxLevels - 1)
                         ));
@@ -325,13 +325,13 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         // only if using offset, not a zone:
                         if (target.getZone().equals(target.getOffset()))
                         {
-                            deep.add(() -> new CallExpression("datetimez",
+                            deep.add(() -> call("datetimez",
                                 make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), target.toLocalDate(), maxLevels - 1),
                                 make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)), target.toOffsetDateTime().toOffsetTime(), maxLevels - 1)
                             ));
                         }
                         //date+time+zone:
-                        deep.add(() -> new CallExpression("datetimez",
+                        deep.add(() -> call("datetimez",
                             make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), target.toLocalDate(), maxLevels - 1),
                             make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), target.toLocalTime(), maxLevels - 1),
                             make(DataType.TEXT, target.getZone().toString(), maxLevels - 1)
@@ -341,7 +341,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 }
 
                 return termDeep(maxLevels, type, l((ExpressionMaker)() -> {
-                    return new CallExpression(getCreator(dateTimeInfo.getType()), new StringLiteral(targetValue.toString()));
+                    return call(getCreator(dateTimeInfo.getType()), new StringLiteral(targetValue.toString()));
                 }, () -> columnRef(type, targetValue)), deep);
             }
 

@@ -39,6 +39,12 @@ import records.grammar.GrammarUtility;
 import records.gui.MainWindow;
 import records.importers.ChoicePoint.ChoiceType;
 import records.transformations.TransformationManager;
+import records.transformations.expression.ErrorRecorder;
+import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionDefinition.FunctionTypes;
+import records.transformations.function.FunctionInstance;
+import records.transformations.function.StringLength;
+import records.types.TypeExp;
 import test.gen.GenImmediateData;
 import test.gen.GenImmediateData.MustIncludeNumber;
 import test.gen.GenImmediateData.NumTables;
@@ -923,6 +929,28 @@ public class TestUtil
     private static String stringAsHexChars(String str)
     {
         return str.chars().mapToObj(c -> Integer.toHexString(c) + (c == 10 ? "\n" : "")).collect(Collectors.joining(" "));
+    }
+
+    public static @Nullable Pair<FunctionInstance,DataType> typeCheckFunction(FunctionDefinition function, List<Object> units, DataType paramType) throws InternalException
+    {
+        ErrorRecorder onError = (src, err, fixes) -> {throw new RuntimeException(err);};
+        FunctionTypes functionTypes = function.makeParamAndReturnType();
+        @SuppressWarnings("nullness") // For null src
+        TypeExp paramTypeExp = onError.recordError(null, TypeExp.unifyTypes(functionTypes.paramType, TypeExp.fromConcrete(null, paramType)));
+        if (paramTypeExp == null)
+            return null;
+        try
+        {
+            @SuppressWarnings("nullness") // For null src
+            @Nullable DataType returnType = onError.recordError(null, functionTypes.returnType.toConcreteType(new DummyManager().getTypeManager()));
+            if (returnType != null)
+                return new Pair<>(function.getFunction(), returnType);
+        }
+        catch (UserException e)
+        {
+            throw new RuntimeException(e);
+        }
+        return null;
     }
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>

@@ -28,6 +28,7 @@ import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.*;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.MatchExpression.Pattern;
+import records.types.TypeExp;
 import test.gen.GenDataType;
 import test.gen.GenUnit;
 import threadchecker.OnThread;
@@ -57,17 +58,17 @@ public class PropTypecheckIndividual
     // A shell expression that exists just to resolve its type checking to a given type.
     private static class DummyExpression extends Expression
     {
-        private final @Nullable DataType type;
+        private final DataType type;
 
-        private DummyExpression(@Nullable DataType type)
+        private DummyExpression(DataType type)
         {
             this.type = type;
         }
 
         @Override
-        public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+        public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
         {
-            return type;
+            return TypeExp.fromConcrete(this, type);
         }
 
         @Override
@@ -136,7 +137,7 @@ public class PropTypecheckIndividual
     {
         private final Rational value;
 
-        private DummyConstExpression(@Nullable DataType type, Rational value)
+        private DummyConstExpression(DataType type, Rational value)
         {
             super(type);
             this.value = value;
@@ -329,7 +330,7 @@ public class PropTypecheckIndividual
             Arrays.asList(new Pattern(new DummyPatternMatch(matchType), null), new Pattern(new DummyPatternMatch(matchType), null)), new DummyExpression(other))))));
     }
 
-    private static @Nullable DataType check(Expression e) throws UserException, InternalException
+    private static @Nullable TypeExp check(Expression e) throws UserException, InternalException
     {
         return e.check(new DummyRecordSet(), TestUtil.typeState(), (ex, s, q) -> {});
     }
@@ -352,15 +353,15 @@ public class PropTypecheckIndividual
         }
 
         @Override
-        public @Nullable DataType check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+        public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
         {
             throw new InternalException("Should not be called");
         }
 
         @Override
-        public @Nullable Pair<DataType, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+        public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
         {
-            return DataType.checkSame(srcType, expected, s -> {}) != null ? new Pair<>(srcType, state) : null;
+            return new Pair<>(TypeExp.fromConcrete(this, expected), state);
         }
 
         @Override

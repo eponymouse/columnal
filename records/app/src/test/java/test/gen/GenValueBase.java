@@ -12,12 +12,16 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.SingleUnit;
 import records.data.unit.Unit;
+import records.data.unit.UnitManager;
+import records.transformations.expression.CallExpression;
+import records.transformations.expression.Expression;
 import records.transformations.expression.SingleUnitExpression;
 import records.transformations.expression.UnitDivideExpression;
 import records.transformations.expression.UnitExpression;
 import records.transformations.expression.UnitExpressionIntLiteral;
 import records.transformations.expression.UnitRaiseExpression;
 import records.transformations.expression.UnitTimesExpression;
+import test.DummyManager;
 import utility.Pair;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
@@ -233,5 +237,17 @@ public abstract class GenValueBase<T> extends Generator<T>
         }
 
         return u;
+    }
+    
+    protected final CallExpression call(String name, Expression... args)
+    {
+        try
+        {
+            return new CallExpression(new UnitManager(), name, args);
+        }
+        catch (InternalException | UserException e)
+        {
+            throw new RuntimeException(e);
+        }
     }
 }

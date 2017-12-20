@@ -15,6 +15,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.Count;
+import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionInstance;
 import records.transformations.function.GetElement;
@@ -43,13 +44,6 @@ import static org.junit.Assert.fail;
 @RunWith(JUnitQuickcheck.class)
 public class PropListFunctions
 {
-    private @MonotonicNonNull UnitManager mgr;
-    @Before
-    public void init() throws UserException, InternalException
-    {
-        mgr = new UnitManager();
-    }
-
     @Property
     @OnThread(Tag.Simulation)
     public void propMinMax(@From(GenValueList.class) GenValueList.ListAndType src) throws Throwable
@@ -57,15 +51,10 @@ public class PropListFunctions
         if (src.type.isArray() && src.type.getMemberType().isEmpty())
             return; // Ignore blank array type
 
-        if (mgr == null)
-            throw new RuntimeException();
-
-        FunctionGroup minFunction = new Min();
-        FunctionGroup maxFunction = new Max();
-        @Nullable Pair<FunctionInstance, DataType> minChecked = minFunction.typeCheck(Collections.emptyList(), src.type, s -> {
-        }, mgr);
-        @Nullable Pair<FunctionInstance, DataType> maxChecked = maxFunction.typeCheck(Collections.emptyList(), src.type, s -> {
-        }, mgr);
+        FunctionDefinition minFunction = new Min();
+        FunctionDefinition maxFunction = new Max();
+        @Nullable Pair<FunctionInstance, DataType> minChecked = TestUtil.typeCheckFunction(minFunction, Collections.emptyList(), src.type);
+        @Nullable Pair<FunctionInstance, DataType> maxChecked = TestUtil.typeCheckFunction(maxFunction, Collections.emptyList(), src.type);
 
         if (minChecked == null || maxChecked == null)
         {
@@ -105,10 +94,8 @@ public class PropListFunctions
     @OnThread(Tag.Simulation)
     public void propCount(@From(GenValueList.class) GenValueList.ListAndType src) throws Throwable
     {
-        if (mgr == null)
-            throw new RuntimeException();
         Count function = new Count();
-        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), src.type, s -> {}, mgr);
+        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), src.type);
         if (checked == null)
         {
             fail("Type check failure");
@@ -125,10 +112,8 @@ public class PropListFunctions
     @OnThread(Tag.Simulation)
     public void propElement(@From(GenValueList.class) GenValueList.ListAndType src) throws Throwable
     {
-        if (mgr == null)
-            throw new RuntimeException();
         GetElement function = new GetElement();
-        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(src.type, DataType.NUMBER), s -> {}, mgr);
+        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(src.type, DataType.NUMBER));
         if (checked == null)
         {
             // It's ok to fail on empty array type; that's expected:

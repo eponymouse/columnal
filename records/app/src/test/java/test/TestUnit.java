@@ -172,6 +172,8 @@ public class TestUnit
     @OnThread(Tag.Simulation)
     private void test_(String expected, String destUnit, String src, String srcUnit) throws InternalException, UserException, Throwable
     {
+        throw new RuntimeException("TODO get AsUnit working again");
+        /*
         try
         {
             @Nullable Pair<FunctionInstance, DataType> instance = new AsUnit().typeCheck(Collections.singletonList(mgr.loadUse(destUnit)), DataType.number(new NumberInfo(mgr.loadUse(srcUnit), null)), s ->
@@ -188,7 +190,7 @@ public class TestUnit
                 throw e.getCause();
             else
                 throw e;
-        }
+        }*/
     }
 
     private Matcher<Object> numberMatch(BigDecimal n)

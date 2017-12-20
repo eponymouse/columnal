@@ -15,7 +15,7 @@ import java.util.List;
 
 public class StringTrim extends FunctionDefinition
 {
-    private StringTrim()
+    public StringTrim()
     {
         super("trim", Instance::new, DataType.TEXT, DataType.TEXT);
     }

@@ -39,11 +39,12 @@ public class GenNonsenseSummaryStats extends Generator<Transformation_Mgr>
     {
         Pair<TableId, TableId> ids = TestUtil.generateTableIdPair(sourceOfRandomness);
         List<ColumnId> splitBy = TestUtil.makeList(sourceOfRandomness, 0, 4, () -> TestUtil.generateColumnId(sourceOfRandomness));
-        List<Pair<ColumnId, Expression>> summaries = TestUtil.makeList(sourceOfRandomness, 1, 5, () -> new Pair<>(TestUtil.generateColumnId(sourceOfRandomness),
-            new CallExpression("count", new ColumnReference(TestUtil.generateColumnId(sourceOfRandomness), ColumnReferenceType.WHOLE_COLUMN))));
+        
         try
         {
             DummyManager mgr = new DummyManager();
+            List<Pair<ColumnId, Expression>> summaries = TestUtil.makeList(sourceOfRandomness, 1, 5, () -> new Pair<>(TestUtil.generateColumnId(sourceOfRandomness),
+                new CallExpression(mgr.getUnitManager(),"count", new ColumnReference(TestUtil.generateColumnId(sourceOfRandomness), ColumnReferenceType.WHOLE_COLUMN))));
             return new Transformation_Mgr(mgr, new SummaryStatistics(mgr, ids.getFirst(), ids.getSecond(), ImmutableList.copyOf(summaries), ImmutableList.copyOf(splitBy)));
         }
         catch (InternalException | UserException e)

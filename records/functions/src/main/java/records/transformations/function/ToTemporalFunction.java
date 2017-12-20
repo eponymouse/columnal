@@ -101,7 +101,8 @@ public abstract class ToTemporalFunction extends FunctionGroup
         return Arrays.asList(args);
     }
 
-    final FunctionDefinition fromString(@LocalizableKey String descripKey)
+    // Public for testing purposes only
+    public final FunctionDefinition fromString(@LocalizableKey String descripKey)
     {
         return new FunctionDefinition(getName() + ".from.str", FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT);
     }

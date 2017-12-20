@@ -14,12 +14,14 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionInstance;
 import records.transformations.function.ToDate;
 import records.transformations.function.ToDateTime;
 import records.transformations.function.ToDateTimeZone;
 import records.transformations.function.ToTime;
+import test.TestUtil;
 import test.gen.GenDate;
 import test.gen.GenZoneId;
 import threadchecker.OnThread;
@@ -83,7 +85,7 @@ public class PropDateFunctions
     {
         LocalDateTime src = LocalDateTime.of(date, time);
         // Test with string input:
-        Object o = runFunction1(v(src.toString()), DataType.TEXT, new ToDateTime());
+        Object o = runFunction1(v(src.toString()), DataType.TEXT, new ToDateTime().fromString(""));
         assertEquals(LocalDateTime.class, o.getClass());
         assertEquals(src, o);
     }
@@ -100,7 +102,7 @@ public class PropDateFunctions
     {
         ZonedDateTime src = ZonedDateTime.of(date, time, zone);
         // Test with string input:
-        Object o = runFunction1(v(src.toLocalDateTime().toString() + " " + zone.toString()), DataType.TEXT, new ToDateTimeZone());
+        Object o = runFunction1(v(src.toLocalDateTime().toString() + " " + zone.toString()), DataType.TEXT, new ToDateTimeZone().fromString(""));
         assertEquals(ZonedDateTime.class, o.getClass());
         assertEquals(src, o);
     }
@@ -179,38 +181,35 @@ public class PropDateFunctions
     @OnThread(Tag.Simulation)
     private void checkDateTime(LocalDateTime of, String src) throws Throwable
     {
-        assertEquals(of, runFunction1(v(src), DataType.TEXT, new ToDateTime()));
+        assertEquals(of, runFunction1(v(src), DataType.TEXT, new ToDateTime().fromString("")));
     }
 
     @OnThread(Tag.Simulation)
     private void checkDateTimeZone(ZonedDateTime of, String src) throws Throwable
     {
-        assertEquals(of, runFunction1(v(src), DataType.TEXT, new ToDateTimeZone()));
+        assertEquals(of, runFunction1(v(src), DataType.TEXT, new ToDateTimeZone().fromString("")));
     }
 
     @OnThread(Tag.Simulation)
     private Object strToTime(String src) throws Throwable
     {
-        return runFunction1(v(src), DataType.TEXT, new ToTime());
+        return runFunction1(v(src), DataType.TEXT, new ToTime().fromString(""));
     }
 
     @OnThread(Tag.Simulation)
     private Object strToDate(String src) throws Throwable
     {
-        return runFunction1(v(src), DataType.TEXT, new ToDate());
+        return runFunction1(v(src), DataType.TEXT, new ToDate().fromString(""));
     }
 
     // Tests single numeric input, numeric output function
     @SuppressWarnings("nullness")
     @OnThread(Tag.Simulation)
-    private Object runFunction1(@Value Object src, DataType srcType, FunctionGroup function) throws InternalException, UserException, Throwable
+    private Object runFunction1(@Value Object src, DataType srcType, FunctionDefinition function) throws InternalException, UserException, Throwable
     {
         try
         {
-            @Nullable Pair<FunctionInstance, DataType> instance = function.typeCheck(Collections.emptyList(), srcType, s ->
-            {
-                throw new RuntimeException(new UserException("Checking " + function.getName() + " with " + srcType + ": " + s));
-            }, mgr);
+            @Nullable Pair<FunctionInstance, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), srcType);
             assertNotNull(instance);
             return instance.getFirst().getValue(0, src);
         }

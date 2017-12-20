@@ -192,12 +192,12 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                             //if (r.nextBoolean() || Utility.compareNumbers(rhs.getFirst().get(0), 10) > 0)
                             //{
                                 // Apply abs to LHS:
-                                lhs = num(Utility.withNumber(lhs.getFirst(), l -> safeAbs(l), BigDecimal::abs), new CallExpression("abs", lhs.getSecond()));
+                                lhs = num(Utility.withNumber(lhs.getFirst(), l -> safeAbs(l), BigDecimal::abs), call("abs", lhs.getSecond()));
                             //}
                             //else
                             //{
                                 // Apply round to RHS:
-                                //rhs = new Pair<>(Collections.singletonList(Utility.withNumber(rhs.getFirst().get(0), x -> x, x -> x, d -> d.setScale(0, BigDecimal.ROUND_UP))), new CallExpression("round", rhs.getSecond()));
+                                //rhs = new Pair<>(Collections.singletonList(Utility.withNumber(rhs.getFirst().get(0), x -> x, x -> x, d -> d.setScale(0, BigDecimal.ROUND_UP))), call("round", rhs.getSecond()));
                             //}
                         }
 
@@ -250,7 +250,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                                 if (Utility.compareNumbers(lhs.getFirst(), 0) < 0)
                                 {
                                     // Apply abs to LHS:
-                                    lhs = num(Utility.withNumber(lhs.getFirst(), l -> safeAbs(l), BigDecimal::abs), new CallExpression("abs", lhs.getSecond()));
+                                    lhs = num(Utility.withNumber(lhs.getFirst(), l -> safeAbs(l), BigDecimal::abs), call("abs", lhs.getSecond()));
                                 }
                                 return num(Utility.raiseNumber((Number) lhs.getFirst(), BigDecimal.valueOf(1.0 / raiseTo)), new RaiseExpression(lhs.getSecond(), new DivideExpression(new NumericLiteral(1, null), new NumericLiteral(raiseTo, null))));
                             }
@@ -306,7 +306,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                     case YEARMONTHDAY:
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return map(dateTimes, v -> LocalDate.from((TemporalAccessor) v), e -> new CallExpression("date", e));
+                            return map(dateTimes, v -> LocalDate.from((TemporalAccessor) v), e -> call("date", e));
                         });
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTime = make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), maxLevels - 1);
@@ -315,43 +315,43 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                             {
                                 YearMonth yearMonth = YearMonth.from((TemporalAccessor) v);
                                 return LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), day);
-                            }, e -> new CallExpression("date", e, new NumericLiteral(day, makeUnitExpression(getUnit("day")))));
+                            }, e -> call("date", e, new NumericLiteral(day, makeUnitExpression(getUnit("day")))));
                         });
                         break;
                     case YEARMONTH:
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return map(dateTimes, v -> YearMonth.from((TemporalAccessor) v), e -> new CallExpression("dateym", e));
+                            return map(dateTimes, v -> YearMonth.from((TemporalAccessor) v), e -> call("dateym", e));
                         });
                         break;
                     case TIMEOFDAY:
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAYZONED, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return map(dateTimes, v -> LocalTime.from((TemporalAccessor) v), e -> new CallExpression("time", e));
+                            return map(dateTimes, v -> LocalTime.from((TemporalAccessor) v), e -> call("time", e));
                         });
                         break;
                     case TIMEOFDAYZONED:
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return map(dateTimes, v -> OffsetTime.from((TemporalAccessor) v), e -> new CallExpression("timez", e));
+                            return map(dateTimes, v -> OffsetTime.from((TemporalAccessor) v), e -> call("timez", e));
                         });
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
-                            return map(dateTimes, v -> OffsetTime.of((LocalTime)v, zone), e -> new CallExpression("timez", e, new StringLiteral(zone.toString())));
+                            return map(dateTimes, v -> OffsetTime.of((LocalTime)v, zone), e -> call("timez", e, new StringLiteral(zone.toString())));
                         });
                         break;
                     case DATETIME:
                         // down cast:
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return map(dateTimes, v -> LocalDateTime.from((TemporalAccessor) v), e -> new CallExpression("datetime", e));
+                            return map(dateTimes, v -> LocalDateTime.from((TemporalAccessor) v), e -> call("datetime", e));
                         });
                         // date + time:
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
                             Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
-                            return map2(dates, times, (date, time) -> LocalDateTime.of((LocalDate) date, (LocalTime) time), (dateE, timeE) -> new CallExpression("datetime", dateE, timeE));
+                            return map2(dates, times, (date, time) -> LocalDateTime.of((LocalDate) date, (LocalTime) time), (dateE, timeE) -> call("datetime", dateE, timeE));
                         });
                         break;
                     case DATETIMEZONED:
@@ -359,14 +359,14 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIME)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
-                            return map(dateTimes, v -> ZonedDateTime.of((LocalDateTime)v, zone), e -> new CallExpression("datetimez", e, new StringLiteral(zone.toString())));
+                            return map(dateTimes, v -> ZonedDateTime.of((LocalDateTime)v, zone), e -> call("datetimez", e, new StringLiteral(zone.toString())));
                         });
                         // date+time+zone:
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
                             Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
-                            return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone), (dateE, timeE) -> new CallExpression("datetimez", dateE, timeE, new StringLiteral(zone.toString())));
+                            return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone), (dateE, timeE) -> call("datetimez", dateE, timeE, new StringLiteral(zone.toString())));
                         });
                         break;
                 }
@@ -377,22 +377,22 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                     {
                         case YEARMONTHDAY:
                             @Value LocalDate date = TestUtil.generateDate(r, gs);
-                            return literal(date, new CallExpression("date", new StringLiteral(date.toString())));
+                            return literal(date, call("date", new StringLiteral(date.toString())));
                         case YEARMONTH:
                             @Value YearMonth ym = YearMonth.from(TestUtil.generateDate(r, gs));
-                            return literal(ym, new CallExpression("dateym", new StringLiteral(ym.toString())));
+                            return literal(ym, call("dateym", new StringLiteral(ym.toString())));
                         case TIMEOFDAY:
                             @Value LocalTime time = TestUtil.generateTime(r, gs);
-                            return literal(time, new CallExpression("time", new StringLiteral(time.toString())));
+                            return literal(time, call("time", new StringLiteral(time.toString())));
                         case TIMEOFDAYZONED:
                             @Value OffsetTime timez = OffsetTime.from(TestUtil.generateDateTimeZoned(r, gs));
-                            return literal(timez, new CallExpression("timez", new StringLiteral(timez.toString())));
+                            return literal(timez, call("timez", new StringLiteral(timez.toString())));
                         case DATETIME:
                             @Value LocalDateTime dateTime = TestUtil.generateDateTime(r, gs);
-                            return literal(dateTime, new CallExpression("datetime", new StringLiteral(dateTime.toString())));
+                            return literal(dateTime, call("datetime", new StringLiteral(dateTime.toString())));
                         case DATETIMEZONED:
                             @Value ZonedDateTime zonedDateTime = TestUtil.generateDateTimeZoned(r, gs);
-                            return literal(zonedDateTime, new CallExpression("datetimez", new StringLiteral(zonedDateTime.toString())));
+                            return literal(zonedDateTime, call("datetimez", new StringLiteral(zonedDateTime.toString())));
 
                     }
                     throw new RuntimeException("No date generator for " + dateTimeInfo.getType());
@@ -405,7 +405,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                             int year = r.nextInt(1, 9999);
                             int month = r.nextInt(1, 12);
                             int day = r.nextInt(1, 28);
-                            return literal(LocalDate.of(year, month, day), new CallExpression("date",
+                            return literal(LocalDate.of(year, month, day), call("date",
                                 new NumericLiteral(year, makeUnitExpression(getUnit("year"))),
                                 new NumericLiteral(month, makeUnitExpression(getUnit("month"))),
                                 new NumericLiteral(day, makeUnitExpression(getUnit("day")))
@@ -416,7 +416,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                         shallow.add(() -> {
                             int year = r.nextInt(1, 9999);
                             int month = r.nextInt(1, 12);
-                            return literal(YearMonth.of(year, month), new CallExpression("dateym",
+                            return literal(YearMonth.of(year, month), call("dateym",
                                 new NumericLiteral(year, makeUnitExpression(getUnit("year"))),
                                 new NumericLiteral(month, makeUnitExpression(getUnit("month")))
                             ));
@@ -428,7 +428,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                             int minute = r.nextInt(0, 59);
                             int second = r.nextInt(0, 59);
                             int nano = r.nextInt(0, 999999999);
-                            return literal(LocalTime.of(hour, minute, second, nano), new CallExpression("time",
+                            return literal(LocalTime.of(hour, minute, second, nano), call("time",
                                 new NumericLiteral(hour, makeUnitExpression(getUnit("hour"))),
                                 new NumericLiteral(minute, makeUnitExpression(getUnit("min"))),
                                 new NumericLiteral(BigDecimal.valueOf(nano).divide(BigDecimal.valueOf(1_000_000_000)).add(BigDecimal.valueOf(second)), makeUnitExpression(getUnit("s")))

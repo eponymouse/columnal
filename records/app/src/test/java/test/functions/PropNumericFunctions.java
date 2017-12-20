@@ -16,11 +16,13 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.function.Absolute;
+import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionInstance;
 import records.transformations.function.Mean;
 import records.transformations.function.Round;
 import records.transformations.function.Sum;
+import test.TestUtil;
 import test.gen.GenNumber;
 import test.gen.GenNumbers;
 import test.gen.GenUnit;
@@ -120,16 +122,13 @@ public class PropNumericFunctions
 
     // Tests single numeric input, numeric output function
     @OnThread(Tag.Simulation)
-    private Number runNumericFunction(String expectedUnit, Number src, String srcUnit, FunctionGroup function) throws InternalException, UserException, Throwable
+    private Number runNumericFunction(String expectedUnit, Number src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
     {
         if (mgr == null)
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<FunctionInstance, DataType> instance = function.typeCheck(Collections.emptyList(), DataType.number(new NumberInfo(mgr.loadUse(srcUnit), null)), s ->
-            {
-                throw new RuntimeException(new UserException(s));
-            }, mgr);
+            @Nullable Pair<FunctionInstance, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.number(new NumberInfo(mgr.loadUse(srcUnit), null)));
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();
@@ -149,16 +148,13 @@ public class PropNumericFunctions
 
     // Tests single numeric input, numeric output function
     @OnThread(Tag.Simulation)
-    private Number runNumericSummaryFunction(String expectedUnit, List<Number> src, String srcUnit, FunctionGroup function) throws InternalException, UserException, Throwable
+    private Number runNumericSummaryFunction(String expectedUnit, List<Number> src, String srcUnit, FunctionDefinition function) throws InternalException, UserException, Throwable
     {
         if (mgr == null)
             throw new RuntimeException();
         try
         {
-            @Nullable Pair<FunctionInstance, DataType> instance = function.typeCheck(Collections.emptyList(), DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit), null))), s ->
-            {
-                throw new RuntimeException(new UserException(s));
-            }, mgr);
+            @Nullable Pair<FunctionInstance, DataType> instance = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.array(DataType.number(new NumberInfo(mgr.loadUse(srcUnit), null))));
             assertNotNull(instance);
             // Won't happen, but for nullness checker:
             if (instance == null) throw new RuntimeException();

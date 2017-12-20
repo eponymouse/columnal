@@ -27,6 +27,7 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
+import records.types.TypeExp;
 import test.gen.ExpressionValue;
 import test.gen.GenDataType;
 import test.gen.GenExpressionValueBackwards;
@@ -100,14 +101,20 @@ public class PropTypecheck
     public void propTypeCheckSucceed(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {
         StringBuilder b = new StringBuilder();
-        @Nullable DataType checked = src.expression.check(src.recordSet, TestUtil.typeState(), (e, s, q) ->
+        @Nullable TypeExp checked = src.expression.check(src.recordSet, TestUtil.typeState(), (e, s, q) ->
         {
             b.append("Err in " + e + ": " + s);
         });
-        assertEquals(src.expression.toString() + "\n" + b.toString() + "\nCol types: " + src.recordSet.getColumns().stream().map(c -> {try
-    {
-        return c.getType().toString();
-    } catch (InternalException | UserException e) { throw new RuntimeException(e); }}).collect(Collectors.joining(", ")), src.type, DataType.checkSame(src.type, checked, s -> {}));
+        TypeExp srcTypeExp = TypeExp.fromConcrete(null, src.type);
+        assertEquals(src.expression.toString() + "\n" + b.toString() + "\nCol types: " + src.recordSet.getColumns().stream().map(c -> {
+            try
+            {
+                return c.getType().toString();
+            } catch (InternalException | UserException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }).collect(Collectors.joining(", ")), src.type, TypeExp.unifyTypes(srcTypeExp, checked));
     }
 
     //#error Have property which generates tables/expressions of given types, and check they don't typecheck

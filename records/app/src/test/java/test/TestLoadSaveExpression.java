@@ -2,6 +2,7 @@ package test;
 
 import org.junit.Test;
 import records.data.ColumnId;
+import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.AddSubtractExpression;
@@ -92,7 +93,7 @@ public class TestLoadSaveExpression
 
         assertBothWays(
             new AddSubtractExpression(Arrays.asList(
-                new CallExpression("abs",
+                new CallExpression(new UnitManager(), "abs",
                     new AddSubtractExpression(Arrays.asList(
                         new BooleanLiteral(true),
                         new BooleanLiteral(false),

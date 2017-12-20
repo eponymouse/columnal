@@ -7,6 +7,9 @@ import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
+import records.types.MutVar;
+import records.types.TypeCons;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -34,7 +37,7 @@ public class Count extends FunctionDefinition
     @Override
     public <E> Pair<List<Unit>, E> _test_typeFailure(Random r, _test_TypeVary<E> newExpressionOfDifferentType, UnitManager unitManager) throws UserException, InternalException
     {
-        return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.getDifferentType(DataType.array()));
+        return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.getDifferentType(new TypeCons(null, TypeExp.CONS_LIST, new MutVar(null))));
     }
 
     private static class Instance extends FunctionInstance

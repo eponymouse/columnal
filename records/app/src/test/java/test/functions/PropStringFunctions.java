@@ -50,7 +50,7 @@ public class PropStringFunctions
     public void propTextLength(@From(UnicodeStringGenerator.class) String str) throws Throwable
     {
         StringLength function = new StringLength();
-        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.TEXT, s -> {}, mgr);
+        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.TEXT);
         if (checked == null)
         {
             fail("Type check failure");
@@ -69,7 +69,7 @@ public class PropStringFunctions
     public void propTrim(@From(UnicodeStringGenerator.class) String orig, @From(GenRandom.class) Random r) throws Throwable
     {
         StringTrim function = new StringTrim();
-        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.TEXT, s -> {}, mgr);
+        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.TEXT);
         if (checked == null)
         {
             fail("Type check failure");
@@ -112,7 +112,7 @@ public class PropStringFunctions
     public void propLeft(@From(UnicodeStringGenerator.class) String str) throws Throwable
     {
         StringLeft function = new StringLeft();
-        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER), s -> {}, mgr);
+        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER));
         if (checked == null)
         {
             fail("Type check failure");
@@ -139,7 +139,7 @@ public class PropStringFunctions
     public void propRight(@From(UnicodeStringGenerator.class) String str) throws Throwable
     {
         StringRight function = new StringRight();
-        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER), s -> {}, mgr);
+        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER));
         if (checked == null)
         {
             fail("Type check failure");
@@ -166,7 +166,7 @@ public class PropStringFunctions
     public void propMid(@From(UnicodeStringGenerator.class) String str) throws Throwable
     {
         StringMid function = new StringMid();
-        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER, DataType.NUMBER), s -> {}, mgr);
+        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.NUMBER, DataType.NUMBER));
         if (checked == null)
         {
             fail("Type check failure");
@@ -212,10 +212,10 @@ public class PropStringFunctions
         }
         StringWithin function = new StringWithin();
         StringWithinIndex functionIndex = new StringWithinIndex();
-        FunctionGroup replaceFunction = new StringReplaceAll();
-        @Nullable Pair<FunctionInstance, DataType> checked = function.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT), _s -> {}, mgr);
-        @Nullable Pair<FunctionInstance, DataType> checkedIndex = functionIndex.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT), _s -> {}, mgr);
-        @Nullable Pair<FunctionInstance, DataType> checkedReplace = replaceFunction.typeCheck(Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT, DataType.TEXT), _s -> {}, mgr);
+        FunctionDefinition replaceFunction = new StringReplaceAll();
+        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT));
+        @Nullable Pair<FunctionInstance, DataType> checkedIndex = TestUtil.typeCheckFunction(functionIndex, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT));
+        @Nullable Pair<FunctionInstance, DataType> checkedReplace = TestUtil.typeCheckFunction(replaceFunction, Collections.emptyList(), DataType.tuple(DataType.TEXT, DataType.TEXT, DataType.TEXT));
 
         if (checked == null || checkedIndex == null || checkedReplace == null)
         {

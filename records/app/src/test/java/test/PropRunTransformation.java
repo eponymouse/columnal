@@ -141,7 +141,7 @@ public class PropRunTransformation
             new ComparisonExpression(
                 Arrays.asList(
                     new ColumnReference(target.getName(), ColumnReferenceType.CORRESPONDING_ROW),
-                    new CallExpression("element", new ColumnReference(target.getName(), ColumnReferenceType.WHOLE_COLUMN), new NumericLiteral(targetIndex + 1 /* User index */, null))
+                    new CallExpression(srcTable.mgr.getUnitManager(), "element", new ColumnReference(target.getName(), ColumnReferenceType.WHOLE_COLUMN), new NumericLiteral(targetIndex + 1 /* User index */, null))
                 ), ImmutableList.of(op)));
         for (int row = 0; row < filter.getData().getLength(); row++)
         {
@@ -153,7 +153,7 @@ public class PropRunTransformation
             new ComparisonExpression(
                 Arrays.asList(
                     new ColumnReference(target.getName(), ColumnReferenceType.CORRESPONDING_ROW),
-                    new CallExpression("element", new ColumnReference(target.getName(), ColumnReferenceType.WHOLE_COLUMN), new NumericLiteral(targetIndex + 1 /* User index */, null))
+                    new CallExpression(srcTable.mgr.getUnitManager(), "element", new ColumnReference(target.getName(), ColumnReferenceType.WHOLE_COLUMN), new NumericLiteral(targetIndex + 1 /* User index */, null))
                 ), ImmutableList.of(invert(op))));
 
         // Lengths should equal original:
@@ -197,13 +197,13 @@ public class PropRunTransformation
         }).findFirst();
         assumeTrue(numericColumn.isPresent());
 
-        Expression countExpression = new CallExpression("count", new ColumnReference(original.data().getData().getColumns().get(0).getName(), ColumnReferenceType.WHOLE_COLUMN));
+        Expression countExpression = new CallExpression(original.mgr.getUnitManager(), "count", new ColumnReference(original.data().getData().getColumns().get(0).getName(), ColumnReferenceType.WHOLE_COLUMN));
         SummaryStatistics summaryStatistics = new SummaryStatistics(original.mgr, null, original.data().getId(), ImmutableList.of(new Pair<>(new ColumnId("COUNT"), countExpression)), ImmutableList.of());
         assertEquals(1, summaryStatistics.getData().getLength());
         assertEquals(1, summaryStatistics.getData().getColumns().size());
         assertEquals(original.data().getData().getLength(), DataTypeUtility.requireInteger(summaryStatistics.getData().getColumns().get(0).getType().getCollapsed(0)));
 
-        Expression sumExpression = new CallExpression("sum", new ColumnReference(numericColumn.get().getName(), ColumnReferenceType.WHOLE_COLUMN));
+        Expression sumExpression = new CallExpression(original.mgr.getUnitManager(),"sum", new ColumnReference(numericColumn.get().getName(), ColumnReferenceType.WHOLE_COLUMN));
         summaryStatistics = new SummaryStatistics(original.mgr, null, original.data().getId(), ImmutableList.of(new Pair<>(new ColumnId("SUM"), sumExpression)), ImmutableList.of());
         assertEquals(1, summaryStatistics.getData().getLength());
         assertEquals(1, summaryStatistics.getData().getColumns().size());
