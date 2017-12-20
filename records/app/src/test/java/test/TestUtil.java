@@ -939,17 +939,10 @@ public class TestUtil
         TypeExp paramTypeExp = onError.recordError(null, TypeExp.unifyTypes(functionTypes.paramType, TypeExp.fromConcrete(null, paramType)));
         if (paramTypeExp == null)
             return null;
-        try
-        {
-            @SuppressWarnings("nullness") // For null src
-            @Nullable DataType returnType = onError.recordError(null, functionTypes.returnType.toConcreteType(new DummyManager().getTypeManager()));
-            if (returnType != null)
-                return new Pair<>(function.getFunction(), returnType);
-        }
-        catch (UserException e)
-        {
-            throw new RuntimeException(e);
-        }
+        @SuppressWarnings("nullness") // For null src
+        @Nullable DataType returnType = onError.recordError(null, functionTypes.returnType.toConcreteType(DummyManager.INSTANCE.getTypeManager()));
+        if (returnType != null)
+            return new Pair<>(function.getFunction(), returnType);
         return null;
     }
 

@@ -46,7 +46,7 @@ public class NumTypeExp extends TypeExp
     {
         @Nullable Unit concreteUnit = this.unit.toConcreteUnit();
         if (concreteUnit == null)
-            return Either.left("Ambiguous unit");
+            return Either.left("Ambiguous unit: " + unit);
         else
             return Either.right(DataType.number(new NumberInfo(concreteUnit, null)));
     }

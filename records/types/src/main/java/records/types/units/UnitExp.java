@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.SingleUnit;
 import records.data.unit.Unit;
+import utility.ComparableEither;
 import utility.Either;
 import utility.Pair;
 
@@ -14,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.StringJoiner;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -28,7 +30,7 @@ public class UnitExp
 {
     // scalar if empty.  Maps single unit to power (can be negative, can't be zero)
     // A long is a type variable.
-    private final TreeMap<Either<MutUnitVar, SingleUnit>, Integer> units = new TreeMap<>();
+    private final TreeMap<ComparableEither<MutUnitVar, SingleUnit>, Integer> units = new TreeMap<>();
     
     private UnitExp()
     {
@@ -37,7 +39,7 @@ public class UnitExp
     
     public UnitExp(MutUnitVar singleUnitVar)
     {
-        units.put(Either.left(singleUnitVar), 1);
+        units.put(ComparableEither.left(singleUnitVar), 1);
     }
 
     public static final UnitExp SCALAR = new UnitExp();
@@ -46,7 +48,7 @@ public class UnitExp
     {
         UnitExp u = new UnitExp();
         u.units.putAll(units);
-        for (Entry<Either<MutUnitVar, SingleUnit>, Integer> rhsUnit : rhs.units.entrySet())
+        for (Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> rhsUnit : rhs.units.entrySet())
         {
             // Decl to suppress nullness warnings on remapping function:
             @SuppressWarnings("nullness")
@@ -64,7 +66,7 @@ public class UnitExp
     public UnitExp reciprocal()
     {
         UnitExp u = new UnitExp();
-        for (Entry<Either<MutUnitVar, SingleUnit>, Integer> entry : units.entrySet())
+        for (Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> entry : units.entrySet())
         {
             u.units.put(entry.getKey(), - entry.getValue());
         }
@@ -92,7 +94,7 @@ public class UnitExp
             // Very important: minus v to multiply by inverse of RHS:    
             aimingForOne.units.merge(k, -v, (a, b) -> a + b));
         // Take out any that resolved to zero:
-        for (Iterator<Entry<Either<MutUnitVar, SingleUnit>, Integer>> iterator = aimingForOne.units.entrySet().iterator(); iterator.hasNext(); )
+        for (Iterator<Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer>> iterator = aimingForOne.units.entrySet().iterator(); iterator.hasNext(); )
         {
             if (iterator.next().getValue() == 0)
                 iterator.remove();
@@ -135,7 +137,7 @@ public class UnitExp
                 // Do it!
                 UnitExp result = new UnitExp();
                 units.forEach((k, v) -> {
-                    k.either_(var -> {}, singleUnit -> result.units.put(Either.right(singleUnit), -v / powerOfTypeVar));
+                    k.either_(var -> {}, singleUnit -> result.units.put(ComparableEither.right(singleUnit), -v / powerOfTypeVar));
                 });
                 return Collections.singletonMap(typeVars.get(0).getFirst(), result);
             }
@@ -160,7 +162,7 @@ public class UnitExp
     public @Nullable Unit toConcreteUnit()
     {
         Unit u = Unit.SCALAR;
-        for (Entry<Either<MutUnitVar, SingleUnit>, Integer> e : units.entrySet())
+        for (Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> e : units.entrySet())
         {
             @Nullable Unit multiplier = e.getKey().<@Nullable Unit>either(l -> null, singleUnit -> new Unit(singleUnit).raisedTo(e.getValue()));
             if (multiplier == null)
@@ -174,7 +176,7 @@ public class UnitExp
     {
         UnitExp unitExp = new UnitExp();
         unit.getDetails().forEach((k, v) -> {
-            unitExp.units.put(Either.right(k), v);
+            unitExp.units.put(ComparableEither.right(k), v);
         });
         return unitExp;
     }
@@ -182,7 +184,57 @@ public class UnitExp
     public static UnitExp makeVariable()
     {
         UnitExp unitExp = new UnitExp();
-        unitExp.units.put(Either.left(new MutUnitVar()), 1);
+        unitExp.units.put(ComparableEither.left(new MutUnitVar()), 1);
         return unitExp;
+    }
+
+    @Override
+    public String toString()
+    {
+        StringJoiner top = new StringJoiner("*");
+        // First add positives:
+        int[] pos = new int[] {0};
+        units.forEach((u, p) -> {
+            if (p >= 1)
+            {
+                if (p > 1)
+                    top.add(etoString(u) + "^" + p);
+                else
+                    top.add(etoString(u));
+                pos[0] += 1;
+            }
+        });
+        int neg = units.size() - pos[0];
+        String allUnits = pos[0] > 1 ? "(" + top.toString() + ")" : top.toString();
+        if (neg > 0)
+        {
+            StringJoiner bottom = new StringJoiner("*");
+
+            boolean showAsNegative = allUnits.isEmpty();
+
+            units.forEach((u, p) ->
+            {
+                if (p < -1 || (p == -1 && showAsNegative))
+                    bottom.add(etoString(u) + "^" + (showAsNegative ? p : -p));
+                else if (p == -1)
+                    bottom.add(etoString(u));
+            });
+            if (allUnits.isEmpty())
+                allUnits = bottom.toString();
+            else if (neg > 1)
+                allUnits += "/(" + bottom + ")";
+            else
+                allUnits += "/" + bottom;
+
+        }
+        if (!allUnits.isEmpty())
+            return allUnits;
+        else
+            return "1";
+    }
+
+    private String etoString(ComparableEither<MutUnitVar, SingleUnit> u)
+    {
+        return u.either(mut -> mut.toString(), singleUnit -> singleUnit.getName());
     }
 }

@@ -18,13 +18,14 @@ public class Either<A, B>
     private final @Nullable B b;
     private final boolean isA;
 
-    private Either(@Nullable A a, @Nullable B b, boolean isA)
+    // For ComparableEither, this is package-private
+    Either(@Nullable A a, @Nullable B b, boolean isA)
     {
         this.a = a;
         this.b = b;
         this.isA = isA;
     }
-
+    
     public static <A, B> Either<A, B> left(A a)
     {
         return new Either<>(a, null, true);
