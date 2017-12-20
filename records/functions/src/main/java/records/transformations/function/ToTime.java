@@ -1,6 +1,7 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import records.data.datatype.DataType;
@@ -46,18 +47,19 @@ public class ToTime extends ToTemporalFunction
     );
 
     @Override
-    public List<FunctionDefinition> getOverloads(UnitManager mgr) throws InternalException
+    public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
-        ArrayList<FunctionDefinition> r = new ArrayList<>(fromString("time.string"));
-        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), "time.datetime"));
-        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "time.datetimez"));
-        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)), "time.timez"));
-        r.add(new FunctionDefinition(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
+        ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
+        r.add(fromString("time.string"));
+        r.add(new FunctionDefinition("time.from.datetime", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
+        r.add(new FunctionDefinition("time.from.datetimez", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
+        r.add(new FunctionDefinition("time.from.timez", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))));
+        r.add(new FunctionDefinition("time", FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
             DataType.number(new NumberInfo(mgr.loadBuiltIn("hour"), null)),
             DataType.number(new NumberInfo(mgr.loadBuiltIn("min"), null)),
             DataType.number(new NumberInfo(mgr.loadBuiltIn("s"), null))
-        ), "time.h_m_s"));
-        return r;
+        )));
+        return r.build();
     }
 
     @Override

@@ -18,6 +18,11 @@ public class Sum extends SingleNumericSummaryFunction
     {
         super("sum", Instance::new);
     }
+    
+    public static FunctionGroup group()
+    {
+        return new FunctionGroup("sum.short", new Sum());
+    }
 
     private static class Instance extends FunctionInstance
     {

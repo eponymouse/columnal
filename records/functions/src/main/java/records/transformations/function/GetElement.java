@@ -25,28 +25,26 @@ import java.util.List;
 /**
  * Created by neil on 17/01/2017.
  */
-public class GetElement extends FunctionGroup
+public class GetElement extends FunctionDefinition
 {
+    // Takes parameters: column/array, index
     public GetElement()
     {
-        super("element", "element.short");
+        super("element", Instance::new, () -> {
+                TypeExp any = new MutVar(null);
+                return new FunctionTypes(any, new TupleTypeExp(null,
+                    ImmutableList.of(
+                        new TypeCons(null, TypeExp.CONS_LIST, any),
+                        new NumTypeExp(null, UnitExp.SCALAR)
+                    ), true
+                ));
+            }
+        );
     }
-
-    // Takes parameters: column/array, index
-    @Override
-    public List<FunctionDefinition> getOverloads(UnitManager mgr) throws InternalException
+    
+    public static FunctionGroup group()
     {
-        TypeMatcher listOfAnyAndIndex = () -> {
-            TypeExp any = new MutVar(null);
-            return new FunctionTypes(any, new TupleTypeExp(null,
-                ImmutableList.of(
-                    new TypeCons(null, TypeExp.CONS_LIST, any),
-                    new NumTypeExp(null, UnitExp.SCALAR)
-                ), true
-            ));
-        };
-        
-        return Collections.singletonList(new FunctionDefinition(Instance::new, listOfAnyAndIndex, null));
+        return new FunctionGroup("element.short", new GetElement());
     }
 
     private static class Instance extends FunctionInstance

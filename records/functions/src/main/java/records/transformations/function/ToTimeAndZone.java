@@ -1,6 +1,7 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -29,17 +30,18 @@ public class ToTimeAndZone extends ToTemporalFunction
 
     public ToTimeAndZone()
     {
-        super("timez", "timez.short");
+        super("timezoned", "timez.short");
     }
 
     @Override
-    public List<FunctionDefinition> getOverloads(UnitManager mgr) throws InternalException
+    public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
-        ArrayList<FunctionDefinition> r = new ArrayList<>(fromString("timez.string"));
-        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "timez.datetimez"));
-        r.add(new FunctionDefinition(T_Z::new, DataType.date(getResultType()),
-            DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT), "timez.time_string"));
-        return r;
+        ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
+        r.add(fromString("timez.string"));
+        r.add(new FunctionDefinition("timezoned.from.datetimezoned", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
+        r.add(new FunctionDefinition("timezoned", T_Z::new, DataType.date(getResultType()),
+            DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT)));
+        return r.build();
     }
 
     @Override

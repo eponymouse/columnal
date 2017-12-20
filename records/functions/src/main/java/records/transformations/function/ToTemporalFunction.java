@@ -3,10 +3,13 @@ package records.transformations.function;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import org.checkerframework.checker.initialization.qual.UnderInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.jetbrains.annotations.NotNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
+import records.data.unit.UnitManager;
+import records.error.InternalException;
 import records.error.UserException;
 import utility.Pair;
 
@@ -33,9 +36,9 @@ import java.util.stream.Collectors;
  */
 public abstract class ToTemporalFunction extends FunctionGroup
 {
-    public ToTemporalFunction(String name, @LocalizableKey String shortDescripKey, FunctionDefinition... functions)
+    public ToTemporalFunction(String name, @LocalizableKey String shortDescripKey)
     {
-        super(name, shortDescripKey, ImmutableList.copyOf(functions));
+        super(name, shortDescripKey, ImmutableList.of());
     }
 
     static DateTimeFormatter m(String sep, F... items)
@@ -98,19 +101,16 @@ public abstract class ToTemporalFunction extends FunctionGroup
         return Arrays.asList(args);
     }
 
-    static List<FunctionDefinition> fromString(@LocalizableKey String descripKey)
+    final FunctionDefinition fromString(@LocalizableKey String descripKey)
     {
-        return Arrays.asList(
-            new FunctionDefinition(FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT, descripKey)
-            //new FunctionDefinition(FromStringInstance::new, DataType.date(getResultType()), DataType.tuple(DataType.TEXT, DataType.TEXT))
-        );
+        return new FunctionDefinition(getName() + ".from.str", FromStringInstance::new, DataType.date(getResultType()), DataType.TEXT);
     }
 
     abstract DateTimeInfo getResultType();
 
     static enum F {FRAC_SEC_OPT, SEC_OPT, MIN, HOUR, HOUR12, AMPM, DAY, MONTH_TEXT, MONTH_NUM, YEAR2, YEAR4 }
 
-    private static class FromStringInstance extends FunctionInstance
+    private class FromStringInstance extends FunctionInstance
     {
         private ArrayList<Pair<List<DateTimeFormatter>, Integer>> usedFormats = new ArrayList<>();
         private ArrayList<List<DateTimeFormatter>> unusedFormats = new ArrayList<>(getFormats());
@@ -200,4 +200,17 @@ public abstract class ToTemporalFunction extends FunctionGroup
     }
 
     abstract @Value Temporal fromTemporal(TemporalAccessor temporalAccessor);
+
+    @Override
+    public ImmutableList<FunctionDefinition> getFunctions(UnitManager mgr) throws InternalException
+    {
+        ImmutableList<FunctionDefinition> existing = super.getFunctions(mgr);
+        if (existing.isEmpty())
+        {
+            setFunctions(getTemporalFunctions(mgr));
+        }
+        return super.getFunctions(mgr);
+    }
+
+    abstract ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException;
 }

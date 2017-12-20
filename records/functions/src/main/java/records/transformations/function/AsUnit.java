@@ -25,8 +25,9 @@ import java.util.function.Consumer;
 /**
  * Created by neil on 11/12/2016.
  */
-public class AsUnit extends FunctionGroup
+public class AsUnit 
 {
+    /*
     public AsUnit()
     {
         super("as", "as.short");
@@ -91,4 +92,5 @@ public class AsUnit extends FunctionGroup
             return DataTypeUtility.value(Utility.multiplyNumbers((Number)param, scaleBD != null ? scaleBD : scaleInt));
         }
     }
+    */
 }

@@ -60,6 +60,7 @@ import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
+import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionList;
 import records.types.ExpressionBase;
@@ -471,7 +472,7 @@ public abstract class Expression extends ExpressionBase
     public abstract int hashCode();
 
     // Only for testing:
-    public static interface _test_TypeVary extends FunctionGroup._test_TypeVary<Expression>
+    public static interface _test_TypeVary extends FunctionDefinition._test_TypeVary<Expression>
     {
         public Expression getDifferentType(@Nullable TypeExp type) throws InternalException, UserException;
         public Expression getAnyType() throws UserException, InternalException;

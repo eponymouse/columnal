@@ -18,6 +18,11 @@ public class Absolute extends SingleNumericInOutFunction
         super("abs", Absolute::makeInstance);
     }
 
+    public static FunctionGroup group()
+    {
+        return new FunctionGroup("abs.short", new Absolute());
+    }
+    
     private static FunctionInstance makeInstance()
     {
         return new FunctionInstance()

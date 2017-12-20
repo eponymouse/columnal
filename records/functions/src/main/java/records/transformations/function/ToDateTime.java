@@ -1,6 +1,7 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -33,12 +34,13 @@ public class ToDateTime extends ToTemporalFunction
     private static List<List<DateTimeFormatter>> FORMATS = new ArrayList<>();
 
     @Override
-    public List<FunctionDefinition> getOverloads(UnitManager mgr)
+    public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
-        ArrayList<FunctionDefinition> r = new ArrayList<>(fromString("datetime.string"));
-        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)),"datetime.datetimez"));
-        r.add(new FunctionDefinition(DateAndTimeInstance::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY))), "datetime.ymd_time"));
-        return r;
+        ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
+        r.add(fromString("datetime.string"));
+        r.add(new FunctionDefinition("datetime.from.datetimez", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
+        r.add(new FunctionDefinition("datetime", DateAndTimeInstance::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)))));
+        return r.build();
     }
 
     @Override

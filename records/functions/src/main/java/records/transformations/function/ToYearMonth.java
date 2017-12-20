@@ -1,6 +1,7 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -28,19 +29,19 @@ public class ToYearMonth extends ToTemporalFunction
     {
         super("dateym", "dateym.short");
     }
-
-    @Override
-    public List<FunctionDefinition> getOverloads(UnitManager mgr) throws InternalException
+    
+    ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
-        ArrayList<FunctionDefinition> r = new ArrayList<>(fromString("dateym.string"));
-        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)), "dateym.ymd"));
-        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), "dateym.datetime"));
-        r.add(new FunctionDefinition(FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), "dateym.datetimez"));
-        r.add(new FunctionDefinition(FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
+        ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
+        r.add(fromString("dateym.string"));
+        r.add(new FunctionDefinition("dateym.from.ymd", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY))));
+        r.add(new FunctionDefinition("dateym.from.datetime", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
+        r.add(new FunctionDefinition("dateym.from.datetimez", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
+        r.add(new FunctionDefinition("dateym", FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
             DataType.number(new NumberInfo(mgr.loadBuiltIn("year"), null)),
             DataType.number(new NumberInfo(mgr.loadBuiltIn("month"), null))
-        ), "dateym.year_month"));
-        return r;
+        )));
+        return r.build();
     }
 
     @Override

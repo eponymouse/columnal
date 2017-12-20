@@ -1,6 +1,7 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -29,24 +30,25 @@ public class ToDateTimeZone extends ToTemporalFunction
 {
     public ToDateTimeZone()
     {
-        super("datetimez", "datetimez.short");
+        super("datetimezoned", "datetimezoned.short");
     }
 
     private static List<List<DateTimeFormatter>> FORMATS = new ArrayList<>();
 
     @Override
-    public List<FunctionDefinition> getOverloads(UnitManager mgr) throws InternalException
+    public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
-        ArrayList<FunctionDefinition> r = new ArrayList<>(fromString("datetimez.string"));
-        r.add(new FunctionDefinition(DT_Z::new, DataType.date(getResultType()),
-            DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), DataType.TEXT), "datetimez.datetime_string"));
-        r.add(new FunctionDefinition(D_T_Z::new, DataType.date(getResultType()), DataType.tuple(
+        ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
+        r.add(fromString("datetimez.string"));
+        r.add(new FunctionDefinition("datetimezoned.datetime.zone", DT_Z::new, DataType.date(getResultType()),
+            DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), DataType.TEXT)));
+        r.add(new FunctionDefinition("datetimezoned", D_T_Z::new, DataType.date(getResultType()), DataType.tuple(
             DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
-            DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT), "datetimez.ymd_time_string"));
-        r.add(new FunctionDefinition(D_TZ::new, DataType.date(getResultType()), DataType.tuple(
+            DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT)));
+        r.add(new FunctionDefinition("datetimezoned.date.timezoned", D_TZ::new, DataType.date(getResultType()), DataType.tuple(
             DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
-            DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))), "datetimez.ymd_timez"));
-        return r;
+            DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)))));
+        return r.build();
     }
 
     @Override
