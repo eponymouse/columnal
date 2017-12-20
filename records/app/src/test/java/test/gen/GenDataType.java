@@ -102,6 +102,6 @@ public class GenDataType extends Generator<DataType>
         {
             types.add(r.nextInt(types.size() + 1), null);
         }
-        return typeManager.registerTaggedType("A", Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<DataType>("T" + i, t)));
+        return typeManager.registerTaggedType("" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z'), Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<DataType>("T" + i, t)));
     }
 }
