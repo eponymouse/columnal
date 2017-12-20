@@ -13,6 +13,7 @@ import records.gui.expressioneditor.ConsecutiveBase;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
+import records.types.NumTypeExp;
 import records.types.TypeExp;
 import utility.Pair;
 
@@ -131,11 +132,11 @@ public abstract class BinaryOpExpression extends Expression
         // Most binary ops require same type, so this is typical (can always override):
         if (r.nextBoolean())
         {
-            return copy(lhsType != null && lhsType.isNumber() ? newExpressionOfDifferentType.getNonNumericType() : newExpressionOfDifferentType.getDifferentType(rhsType), rhs);
+            return copy(lhsType != null && lhsType.prune() instanceof NumTypeExp ? newExpressionOfDifferentType.getNonNumericType() : newExpressionOfDifferentType.getDifferentType(rhsType), rhs);
         }
         else
         {
-            return copy(lhs, rhsType != null && rhsType.isNumber() ? newExpressionOfDifferentType.getNonNumericType() : newExpressionOfDifferentType.getDifferentType(lhsType));
+            return copy(lhs, rhsType != null && rhsType.prune() instanceof NumTypeExp ? newExpressionOfDifferentType.getNonNumericType() : newExpressionOfDifferentType.getDifferentType(lhsType));
         }
     }
 

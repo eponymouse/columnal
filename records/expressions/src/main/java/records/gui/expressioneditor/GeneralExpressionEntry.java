@@ -367,9 +367,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
     }
 
     @RequiresNonNull("parent")
-    private void addAllFunctions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, ArrayList<Completion> r)
+    private void addAllFunctions(@UnknownInitialization(EntryNode.class)GeneralExpressionEntry this, ArrayList<Completion> r) throws InternalException
     {
-        for (FunctionGroup function : FunctionList.FUNCTIONS)
+        for (FunctionDefinition function : FunctionList.getAllFunctionDefinitions(parent.getEditor().getTypeManager().getUnitManager()))
         {
             r.add(new FunctionCompletion(function, parent.getEditor().getTypeManager().getUnitManager()));
         }
@@ -440,10 +440,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
 
     public static class FunctionCompletion extends Completion
     {
-        private final FunctionGroup function;
+        private final FunctionDefinition function;
         private final UnitManager unitManager;
 
-        public FunctionCompletion(FunctionGroup function, UnitManager unitManager)
+        public FunctionCompletion(FunctionDefinition function, UnitManager unitManager)
         {
             this.function = function;
             this.unitManager = unitManager;
@@ -490,28 +490,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             functionName.getStyleClass().add("function-info-name");
             textFlow.getChildren().add(functionName);
             textFlow.getChildren().addAll(
-                TranslationUtility.makeTextLine(function.getShortDescriptionKey(), "function-info-short-description")
+                TranslationUtility.makeTextLine(function.getName(), "function-info-short-description")
             );
-            List<Node> overloads = new ArrayList<>();
-            try
-            {
-                List<FunctionDefinition> overloadTypes = function.getOverloads(unitManager);
-                for (FunctionDefinition functionType : overloadTypes)
-                {
-                    Text overloadType = new Text(functionType.getParamDisplay() + " -> " + functionType.getReturnDisplay() + "\n");
-                    overloadType.getStyleClass().add("function-info-overload-type");
-                    overloads.add(overloadType);
-                    if (functionType.getOverloadDescriptionKey() != null)
-                    {
-                        overloads.addAll(TranslationUtility.makeTextLine(functionType.getOverloadDescriptionKey(), "function-info-overload-description"));
-                    }
-                }
-            }
-            catch (InternalException e)
-            {
-                Utility.log(e);
-            }
-            textFlow.getChildren().addAll(overloads);
             textFlow.getStyleClass().add("function-info");
             return textFlow;
         }

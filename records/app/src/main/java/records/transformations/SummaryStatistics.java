@@ -40,6 +40,7 @@ import records.transformations.expression.ErrorRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TypeState;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
@@ -182,11 +183,13 @@ public class SummaryStatistics extends TransformationEditable
             {
                 Expression expression = e.getSecond();
                 ErrorRecorderStorer errors = new ErrorRecorderStorer();
-                @Nullable DataType type = expression.check(src, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
-                if (type == null)
+                @Nullable TypeExp type = expression.check(src, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
+                @Nullable DataType concrete = type == null ? null : errors.recordError(expression, type.toConcreteType(mgr.getTypeManager()));
+                if (type == null || concrete == null)
                     throw new UserException((@NonNull String)errors.getAllErrors().findFirst().orElse("Unknown type error"));
-                @NonNull DataType typeFinal = type;
+                @NonNull DataType typeFinal = concrete;
                 columns.add(rs -> typeFinal.makeCalculatedColumn(rs, e.getFirst(), i -> expression.getValue(i, new EvaluateState())));
+                
             }
 
             theResult = new RecordSet(columns)

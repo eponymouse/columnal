@@ -3,8 +3,8 @@ package records.types.units;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.unit.SingleUnit;
 
-public class MutSingleUnit
+public class MutUnitVar
 {
     // package-visible:
-    @Nullable SingleUnit pointer;
+    @Nullable UnitExp pointer;
 }

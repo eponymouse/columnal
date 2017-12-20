@@ -18,6 +18,8 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.FunctionNode;
 import records.gui.expressioneditor.OperandNode;
+import records.transformations.function.FunctionDefinition;
+import records.transformations.function.FunctionDefinition.FunctionTypes;
 import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionInstance;
 import records.transformations.function.FunctionList;
@@ -44,11 +46,11 @@ public class CallExpression extends NonOperatorExpression
     private final Expression param;
     private final List<Unit> units;
     // If null, function doesn't exist
-    private final @Nullable FunctionGroup definition;
+    private final @Nullable FunctionDefinition definition;
     @MonotonicNonNull
     private FunctionInstance instance;
 
-    public CallExpression(String functionName, @Nullable FunctionGroup functionDefinition, List<Unit> units, Expression arg)
+    public CallExpression(String functionName, @Nullable FunctionDefinition functionDefinition, List<Unit> units, Expression arg)
     {
         this.functionName = functionName;
         this.definition = functionDefinition;
@@ -57,9 +59,9 @@ public class CallExpression extends NonOperatorExpression
     }
 
     // For testing:
-    public CallExpression(String functionName, Expression... args)
+    public CallExpression(UnitManager mgr, String functionName, Expression... args) throws InternalException
     {
-        this(functionName, FunctionList.lookup(functionName), Collections.emptyList(), args.length == 1 ? args[0] : new TupleExpression(ImmutableList.copyOf(args)));
+        this(functionName, FunctionList.lookup(mgr, functionName), Collections.emptyList(), args.length == 1 ? args[0] : new TupleExpression(ImmutableList.copyOf(args)));
     }
 
     @Override
@@ -71,11 +73,11 @@ public class CallExpression extends NonOperatorExpression
         @Nullable TypeExp paramType = param.check(data, state, onError);
         if (paramType == null)
             return null;
-        @Nullable Pair<FunctionInstance, DataType> checked = definition.typeCheck(units, paramType, onError.recordError(this), state.getUnitManager());
+        FunctionTypes types = definition.makeParamAndReturnType();
+        @Nullable TypeExp checked = onError.recordError(this, TypeExp.unifyTypes(types.paramType, paramType));
         if (checked == null)
             return null;
-        this.instance = checked.getFirst();
-        return checked.getSecond();
+        return types.returnType;
     }
 
     @Override
@@ -114,7 +116,7 @@ public class CallExpression extends NonOperatorExpression
         // If successfully type-checked:
         if (definition != null)
         {
-            @NonNull FunctionGroup definitionFinal = definition;
+            @NonNull FunctionDefinition definitionFinal = definition;
             return (p, s) -> new FunctionNode(Either.right(definitionFinal), s, param, p);
         }
         else

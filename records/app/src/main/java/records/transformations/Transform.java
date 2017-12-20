@@ -18,6 +18,7 @@ import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.controlsfx.control.PopOver.ArrowLocation;
@@ -42,10 +43,12 @@ import records.gui.TypeLabel;
 import records.gui.View;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.loadsave.OutputBuilder;
+import records.transformations.expression.ErrorRecorder;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
 import records.transformations.expression.TypeState;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
@@ -126,13 +129,16 @@ public class Transform extends TransformationEditable
 
             for (Pair<ColumnId, Expression> newCol : toCalculate)
             {
-                @Nullable DataType type = newCol.getSecond().check(srcRecordSet, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), (e, s, q) ->
+                ErrorRecorder errorRecorder = (e, s, q) ->
                 {
                     error = s;
-                });
-                if (type == null)
+                };
+                @Nullable TypeExp type = newCol.getSecond().check(srcRecordSet, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorRecorder);
+                
+                DataType concrete = type == null ? null : errorRecorder.recordError(newCol.getSecond(), type.toConcreteType(mgr.getTypeManager()));
+                if (type == null || concrete == null)
                     throw new UserException(error); // A bit redundant, but control flow will pan out right
-                DataType typeFinal = type;
+                @NonNull DataType typeFinal = concrete;
                 columns.add(rs -> typeFinal.makeCalculatedColumn(rs, newCol.getFirst(), index -> newCol.getSecond().getValue(index, new EvaluateState())));
             }
 

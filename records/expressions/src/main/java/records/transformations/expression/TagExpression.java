@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import org.jetbrains.annotations.NotNull;
@@ -89,7 +90,13 @@ public class TagExpression extends NonOperatorExpression
             onError.recordError(this, "Tag " + getQualifiedTagName() + " has no inner value, but one was given");
             return null;
         }
-        return onError.recordError(this, TypeExp.unifyTypes(typeAndIndex.tagInfo.getInner(), innerDerivedType));
+        if (innerDerivedType == null)
+            return null;
+        else
+        {
+            @NonNull TypeExp innerDer = innerDerivedType;
+            return onError.recordError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, typeAndIndex.tagInfo.getInner()), innerDer));
+        }
     }
 
     @NotNull
@@ -99,23 +106,30 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varAllowed, DataType srcType, RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         @Nullable TagInfo typeAndIndex = tag.<@Nullable TagInfo>either(s -> null, x -> x);
         if (typeAndIndex == null)
             return null;
 
-        @Nullable Pair<DataType, TypeState> typeAndState = (inner == null || typeAndIndex.tagInfo.getInner() == null) ? null : inner.checkAsPattern(varAllowed, typeAndIndex.tagInfo.getInner(), data, state, onError);
+        @Nullable Pair<TypeExp, TypeState> typeAndState = (inner == null || typeAndIndex.tagInfo.getInner() == null) ? null : inner.checkAsPattern(varAllowed, data, state, onError);
         if (typeAndState != null)
             innerDerivedType = typeAndState.getFirst();
-        // We must not pass nulls to checkSame as that counts as failed checking, not optional items
-        if ((inner == null && typeAndIndex.tagInfo.getInner() == null && typeAndState == null) ||
-            (inner != null && typeAndIndex.tagInfo.getInner() != null && typeAndState != null && DataType.checkSame(typeAndIndex.tagInfo.getInner(), innerDerivedType, onError.recordError(this)) != null))
+
+        // If we expect no inner type, and we have no inner type, nothing more to do:
+        if (inner == null && typeAndIndex.tagInfo.getInner() == null)
         {
-            return new Pair<>(typeAndIndex.wholeType, typeAndState == null ? state : typeAndState.getSecond());
+            return new Pair<>(TypeExp.fromConcrete(this, typeAndIndex.wholeType), typeAndState == null ? state : typeAndState.getSecond());
         }
-        else
-            return null;
+        // If we expect an inner type, and have one, check it matches up:
+        if (inner != null && typeAndIndex.tagInfo.getInner() != null && typeAndState != null)
+        {
+            TypeExp unified = onError.recordError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, typeAndIndex.tagInfo.getInner()), typeAndState.getFirst()));
+            if (unified != null)
+                return new Pair<>(TypeExp.fromConcrete(this, typeAndIndex.wholeType), typeAndState == null ? state : typeAndState.getSecond());
+        }
+        
+        return null;
     }
 
     @Override

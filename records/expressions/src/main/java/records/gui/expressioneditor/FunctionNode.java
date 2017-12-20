@@ -7,6 +7,7 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.CallExpression;
 import records.transformations.expression.Expression;
+import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionGroup;
 import utility.Either;
 import utility.FXPlatformConsumer;
@@ -23,12 +24,12 @@ import java.util.List;
 public class FunctionNode extends SurroundNode implements ExpressionNodeParent
 {
     // If it is known, it is Right(definition).  If unknown, Left(name)
-    private Either<String, FunctionGroup> function;
+    private Either<String, FunctionDefinition> function;
 
     @SuppressWarnings("initialization") // Because LeaveableTextField gets marked uninitialized
-    public FunctionNode(Either<String, FunctionGroup> function, ExpressionNodeParent semanticParent, @Nullable Expression argumentsExpression, ConsecutiveBase<Expression, ExpressionNodeParent> parent)
+    public FunctionNode(Either<String, FunctionDefinition> function, ExpressionNodeParent semanticParent, @Nullable Expression argumentsExpression, ConsecutiveBase<Expression, ExpressionNodeParent> parent)
     {
-        super(parent, semanticParent, "function", TranslationUtility.getString("function"), function.either(n -> n, FunctionGroup::getName), true, argumentsExpression);
+        super(parent, semanticParent, "function", TranslationUtility.getString("function"), function.either(n -> n, FunctionDefinition::getName), true, argumentsExpression);
         this.function = function;
     }
 
@@ -60,7 +61,9 @@ public class FunctionNode extends SurroundNode implements ExpressionNodeParent
         if (function.isLeft())
             return Collections.emptyList();
 
-        return Utility.mapList(function.getRight().getLikelyArgTypes(getEditor().getTypeManager().getUnitManager()), t -> new Pair<>(t, Collections.emptyList()));
+        // TODO
+        //return Utility.mapList(function.getRight().makeParamAndReturnType().paramType, t -> new Pair<>(t, Collections.emptyList()));
+        return Collections.emptyList();
     }
 
     @Override

@@ -21,6 +21,7 @@ import threadchecker.Tag;
 import utility.Pair;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.Set;
@@ -43,14 +44,14 @@ public class VarUseExpression extends NonOperatorExpression
     @Override
     public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
-        Set<TypeExp> varType = state.findVarType(varName);
+        List<TypeExp> varType = state.findVarType(varName);
         if (varType == null)
         {
             onError.recordError(this, "Undeclared variable: \"" + varName + "\"");
             return null;
         }
         // If they're trying to use it, it justifies us trying to unify all the types:
-        return onError.recordError(this, TypeExp.unifyTypes(new ArrayList<>(varType)));
+        return onError.recordError(this, TypeExp.unifyTypes(varType));
     }
 
     @Override

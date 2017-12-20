@@ -49,10 +49,15 @@ public class FunctionDefinition
         return makeInstance.get();
     }
 
+    public FunctionTypes makeParamAndReturnType() throws InternalException
+    {
+        return typeMatcher.makeParamAndReturnType();
+    }
+    
     /**
      * For autocompleting parameters: what are likely types to this function?
      */
-    public @Nullable TypeExp getLikelyParamType()
+    private @Nullable TypeExp getLikelyParamType()
     {
         try
         {

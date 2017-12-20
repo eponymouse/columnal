@@ -43,7 +43,7 @@ public class MatchAnyExpression extends NonOperatorExpression
     @Override
     public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varDeclAllowed, RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
     {
-        return new Pair<>(new MutVar(this, null), typeState);
+        return new Pair<>(new MutVar(this), typeState);
     }
 
     @Override

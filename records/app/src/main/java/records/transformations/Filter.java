@@ -52,6 +52,7 @@ import records.transformations.expression.ErrorRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TypeState;
+import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExFunction;
@@ -165,12 +166,15 @@ public class Filter extends TransformationEditable
                 // Must set it before, in case it throws:
                 typeChecked = true;
                 ErrorRecorderStorer errors = new ErrorRecorderStorer();
-                @Nullable DataType checked = filterExpression.check(data, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
+                @Nullable TypeExp checked = filterExpression.check(data, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
+                @Nullable DataType typeFinal = null;
                 if (checked != null)
-                    type = checked;
-                else
+                    typeFinal = errors.recordError(filterExpression, checked.toConcreteType(getManager().getTypeManager()));
+                
+                if (typeFinal == null)
                     throw new UserException((@NonNull String)errors.getAllErrors().findFirst().orElse("Unknown type error"));
-
+                
+                type = typeFinal;
             }
             if (type == null)
                 return;

@@ -17,6 +17,7 @@ import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
+import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -362,7 +363,17 @@ public abstract class Expression extends ExpressionBase
             else
                 args = new TupleExpression(ImmutableList.copyOf(Utility.<ExpressionContext, Expression>mapList(ctx.expression(), e -> visitExpression(e))));
             String functionName = ctx.functionName().getText();
-            return new CallExpression(functionName, FunctionList.lookup(functionName), Collections.emptyList(), args);
+            @Nullable FunctionDefinition functionDefinition = null;
+            try
+            {
+                functionDefinition = FunctionList.lookup(typeManager.getUnitManager(), functionName);
+            }
+            catch (InternalException e)
+            {
+                Utility.report(e);
+                // Carry on, but function is null so will count as unknown
+            }
+            return new CallExpression(functionName, functionDefinition, Collections.emptyList(), args);
         }
 
         /*

@@ -1,5 +1,6 @@
 package records.transformations.expression;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.MapDifference;
 import com.google.common.collect.Maps;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -9,10 +10,12 @@ import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
+import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionList;
 import records.types.MutVar;
 import records.types.TypeExp;
+import utility.Utility;
 
 import java.util.Collections;
 import java.util.HashMap;
@@ -33,9 +36,10 @@ import java.util.stream.Collectors;
  */
 public class TypeState
 {
-    // If variable is in there but > size 1, means it is known but cannot be used because it has multiple types in different guards
-    private final Map<String, Set<TypeExp>> variables;
-    private final Map<String, FunctionGroup> functions;
+    // If variable is in there but > size 1, means it is known but it is defined by multiple guards
+    // This is okay if they don't use it, but if they do use it, must attempt unification across all the types.
+    private final Map<String, List<TypeExp>> variables;
+    private final Map<String, FunctionDefinition> functions;
     private final TypeManager typeManager;
     private final UnitManager unitManager;
 
@@ -44,23 +48,33 @@ public class TypeState
         this(new HashMap<>(), typeManager, unitManager);
     }
 
-    private TypeState(Map<String, Set<TypeExp>> variables, TypeManager typeManager, UnitManager unitManager)
+    private TypeState(Map<String, List<TypeExp>> variables, TypeManager typeManager, UnitManager unitManager)
     {
         this.variables = Collections.unmodifiableMap(variables);
         this.typeManager = typeManager;
-        this.functions = FunctionList.FUNCTIONS.stream().collect(Collectors.<@NonNull FunctionGroup, @NonNull String, @NonNull FunctionGroup>toMap(FunctionGroup::getName, Function.<FunctionGroup>identity()));
+        ImmutableList<FunctionDefinition> allFunctions;
+        try
+        {
+            allFunctions = FunctionList.getAllFunctionDefinitions(unitManager);
+        }
+        catch (InternalException e)
+        {
+            Utility.report(e);
+            allFunctions = ImmutableList.of();
+        }
+        this.functions = allFunctions.stream().collect(Collectors.<@NonNull FunctionDefinition, @NonNull String, @NonNull FunctionDefinition>toMap(FunctionDefinition::getName, Function.<FunctionDefinition>identity()));
         this.unitManager = unitManager;
     }
 
     public @Nullable TypeState add(String varName, MutVar type, Consumer<String> error)
     {
-        HashMap<String, Set<TypeExp>> copy = new HashMap<>(variables);
+        HashMap<String, List<TypeExp>> copy = new HashMap<>(variables);
         if (copy.containsKey(varName))
         {
             error.accept("Duplicate variable name: " + varName);
             return null;
         }
-        copy.put(varName, Collections.singleton(type));
+        copy.put(varName, Collections.singletonList(type));
         return new TypeState(copy, typeManager, unitManager);
     }
 
@@ -78,18 +92,13 @@ public class TypeState
 
     public static TypeState intersect(List<TypeState> typeStates)
     {
-        Map<String, Set<TypeExp>> mergedVars = new HashMap<>(typeStates.get(0).variables);
+        Map<String, List<TypeExp>> mergedVars = new HashMap<>(typeStates.get(0).variables);
         for (int i = 1; i < typeStates.size(); i++)
         {
-            for (Entry<String, Set<TypeExp>> entry : typeStates.get(i).variables.entrySet())
+            for (Entry<String, List<TypeExp>> entry : typeStates.get(i).variables.entrySet())
             {
                 // If it's present in both sets, only keep if same type, otherwise mask:
-                mergedVars.merge(entry.getKey(), entry.getValue(), (a, b) -> {
-                    HashSet<DataType> merged = new HashSet<DataType>();
-                    merged.addAll(a);
-                    merged.addAll(b);
-                    return merged;
-                });
+                mergedVars.merge(entry.getKey(), entry.getValue(), (a, b) -> Utility.concat(a, b));
             }
         }
         return new TypeState(mergedVars, typeStates.get(0).typeManager, typeStates.get(0).unitManager);
@@ -114,14 +123,9 @@ public class TypeState
 
     // If it's null, it's totally unknown
     // If it's > size 1, it should count as masked because it has different types in different guards
-    public @Nullable Set<TypeExp> findVarType(String varName)
+    public @Nullable List<TypeExp> findVarType(String varName)
     {
         return variables.get(varName);
-    }
-
-    public Optional<FunctionGroup> findFunction(String name)
-    {
-        return Optional.ofNullable(functions.get(name));
     }
 
     /*
@@ -184,7 +188,7 @@ public class TypeState
         else if (typeStates.length == 1)
             return typeStates[0];
 
-        Map<String, Set<DataType>> allNewVars = new HashMap<>();
+        Map<String, List<TypeExp>> allNewVars = new HashMap<>();
 
         for (TypeState typeState : typeStates)
         {
@@ -198,7 +202,7 @@ public class TypeState
                 throw new InternalException("Functions changed between different type states");
             // Variables: we first remove all the variables which already existed
             // What is left must not overlap
-            MapDifference<String, Set<DataType>> diff = Maps.difference(typeState.variables, original.variables);
+            MapDifference<String, List<TypeExp>> diff = Maps.difference(typeState.variables, original.variables);
             if (!diff.entriesOnlyOnRight().isEmpty())
                 throw new InternalException("Altered type state is missing some original variables: " + diff.entriesOnlyOnRight());
             if (!diff.entriesDiffering().isEmpty())

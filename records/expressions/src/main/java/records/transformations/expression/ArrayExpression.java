@@ -26,6 +26,7 @@ import records.types.TypeCons;
 import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
+import utility.Either;
 import utility.Pair;
 import utility.Utility;
 import utility.Utility.ListEx;
@@ -40,6 +41,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
+import static jdk.nashorn.internal.runtime.ScriptObject.isArray;
 
 /**
  * An array expression like [0, x, 3].  This could be called an array literal, but didn't want to confuse
@@ -63,7 +66,7 @@ public class ArrayExpression extends Expression
     {
         // Empty array - special case:
         if (items.isEmpty())
-            return new TypeCons(this, TypeExp.CONS_LIST, new MutVar(this, null));
+            return new TypeCons(this, TypeExp.CONS_LIST, new MutVar(this));
         TypeExp[] typeArray = new TypeExp[items.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
@@ -84,7 +87,7 @@ public class ArrayExpression extends Expression
     {
         // Empty array - special case:
         if (items.isEmpty())
-            return new Pair<>(new TypeCons(this, TypeExp.CONS_LIST, new MutVar(this, null)), state);
+            return new Pair<>(new TypeCons(this, TypeExp.CONS_LIST, new MutVar(this)), state);
         TypeExp[] typeArray = new TypeExp[items.size()];
         TypeState[] typeStates = new TypeState[items.size()];
         for (int i = 0; i < typeArray.length; i++)
@@ -187,8 +190,23 @@ public class ArrayExpression extends Expression
         boolean hasOtherNonBlank = false;
         for (int i = 0; i < items.size(); i++)
         {
-            if (i != index && (!_test_originalTypes.get(i).isArray() || !_test_originalTypes.get(i).getMemberType().isEmpty()))
+            if (i == index)
+                continue;
+            
+            // We test if it is non-blank by unifying with an array type of MutVar, and seeing if the MutVat points to anything after pruning:
+            MutVar mut = new MutVar(null);
+            TypeCons arrayOfMut = new TypeCons(null, TypeExp.CONS_LIST, mut);
+
+            Either<String, TypeExp> unifyResult = TypeExp.unifyTypes(_test_originalTypes.get(i), arrayOfMut);
+            // If it doesn't match, not an array:
+            if (unifyResult.isLeft())
+            {
                 hasOtherNonBlank = true;
+            }
+            else
+            {
+                hasOtherNonBlank = !(mut.prune() instanceof MutVar);
+            }
         }
         if (!hasOtherNonBlank)
             return null; // Won't make a failure

@@ -53,7 +53,7 @@ public class VarDeclExpression extends NonOperatorExpression
         if (!varDeclAllowed)
             return null; // We are a variable declaration, so clearly not allowed!
 
-        MutVar type = new MutVar(this, null);
+        MutVar type = new MutVar(this);
         @Nullable TypeState newState = typeState.add(varName, type, onError.recordError(this));
         if (newState == null)
             return null;
