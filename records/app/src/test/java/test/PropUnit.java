@@ -55,6 +55,41 @@ public class PropUnit
             unify(unitExp("m"), times(u, UnitExp.SCALAR));
             assertEquals(unit("m"), u.toConcreteUnit());
         });
+
+        withMut(u -> {
+            unify(u.raisedTo(4), times(unitExp("m^3/s"), unitExp("m/s^3")));
+            assertEquals(unit("m/s"), u.toConcreteUnit());
+        });
+        withMut(u -> {
+            unify(u.raisedTo(2), times(unitExp("m^3/s"), unitExp("m/s^3")));
+            assertEquals(unit("m^2/s^2"), u.toConcreteUnit());
+        });
+        withMut(u -> withMut(u3 -> {
+            unify(u.times(u3.raisedTo(3)), times(unitExp("m^3/s"), unitExp("m/s^3")));
+            // It can have multiple resolutions here, so let it be either:
+            assertEquals(unit("m^4/s^4"), u.times(u3).toConcreteUnit());
+        }));
+        withMut(u -> withMut(u3 -> {
+            // Test that an ambiguous resolution, followed by clarifier, gives right result:
+            unify(u.times(u3.raisedTo(3)), times(unitExp("m^3/s"), unitExp("m/s^3")));
+            unify(u, unitExp("m/s"));
+            assertEquals(unit("m/s"), u.toConcreteUnit());
+            assertEquals(unit("m/s"), u3.toConcreteUnit());
+        }));
+        withMut(u -> withMut(u3 -> {
+            // Test that an ambiguous resolution, followed by clarifier, gives right result:
+            unify(u.times(u3.raisedTo(4)), times(unitExp("m^3/s"), unitExp("m/s^3")));
+            unify(u, unitExp("m^4"));
+            assertEquals(unit("m^4"), u.toConcreteUnit());
+            assertEquals(unit("s^-1"), u3.toConcreteUnit());
+        }));
+        withMut(u -> withMut(u3 -> {
+            // Test that an ambiguous resolution, followed by clarifier, gives right result:
+            unify(u.times(u3), times(unitExp("m^3/s"), unitExp("m/s^3")));
+            unify(u, unitExp("m/s"));
+            assertEquals(unit("m/s"), u.toConcreteUnit());
+            assertEquals(unit("m^3/s^3"), u3.toConcreteUnit());
+        }));
         
         failure(() -> unify(unitExp("m"), unitExp("s")));
     }
@@ -91,7 +126,7 @@ public class PropUnit
     {
         for (int i = 1; i < units.length; i++)
         {
-            assertNotNull(units[0].unifyWith(units[i]));
+            assertNotNull("Unifying " + units[0] + " with " + units[i], units[0].unifyWith(units[i]));
         }
     }
 

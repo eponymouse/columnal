@@ -106,18 +106,10 @@ public class UnitExp
             // Very important: minus v to multiply by inverse of RHS:    
             aimingForOne.units.merge(k, -v, this::addButZeroIsNull));
 
-        @Nullable Map<MutUnitVar, UnitExp> mapping = aimingForOne.unifyToOne();
-        if (mapping != null)
+        if (aimingForOne.unifyToOne())
         {
-            // Actually, map will be at most size one:
-            for (Entry<MutUnitVar, UnitExp> entry : mapping.entrySet())
-            {
-                entry.getKey().pointer = entry.getValue();
-            }
-            
             this.substituteMutVars();
             other.substituteMutVars();
-            
             return this;
         }
         else
@@ -152,58 +144,96 @@ public class UnitExp
     /**
      * Note: this function modifies the current object.  Only call it on a temporary item.
      */
-    private @Nullable Map<MutUnitVar, UnitExp> unifyToOne()
+    private boolean unifyToOne()
     {
+        // Make sure any mut vars involved are pointing to null (substitute if not):
+        substituteMutVars();
+        
         // Continuing in Figure 5: we already have the normal form, although not neatly separated
         // into type vars and normal, and not sorted by power value.
         
         // If no type vars and no normal vars then unification was perfect and resulted in scalar,
         // so no type vars to resolve:
         if (units.isEmpty())
-            return Collections.emptyMap();
+            return true;
         List<Pair<MutUnitVar, Integer>> typeVars = units.entrySet().stream().flatMap(e -> e.getKey().either(mut -> Stream.of(new Pair<>(mut, e.getValue())), fixed -> Stream.empty())).collect(Collectors.toList());
         
         // If no type vars (and not empty overall) then we can't unify to one: fail
         if (typeVars.isEmpty())
-            return null;
+            return false;
         // If one type var, it needs to divide all the remaining fixed units:
         if (typeVars.size() == 1)
         {
             int powerOfTypeVar = typeVars.get(0).getSecond();
             if (units.entrySet().stream().filter(e -> e.getKey().isRight()).allMatch(e -> Math.abs(e.getValue()) % Math.abs(powerOfTypeVar) == 0))
             {
-                // Do it!
+                // It does divide all remaining fixed units: Do it!
                 UnitExp result = new UnitExp();
                 units.forEach((k, v) -> {
                     k.either_(var -> {}, singleUnit -> result.units.put(ComparableEither.right(singleUnit), -v / powerOfTypeVar));
                 });
-                return Collections.singletonMap(typeVars.get(0).getFirst(), result);
+                typeVars.get(0).getFirst().pointer = result;
+                return true;
             }
-            else
-                return null;
+            else // Otherwise, we have e.g. A^2 = m^3, which we can't solve because we require integer exponents.
+                return false;
         }
         // Otherwise, we perform a mapping so that all other variables except the lowest absolute-power
-        // type variable become modulo that power.  Must admit, don't quite understand this step...
+        // type variable become modulo that power.  Here's an example:
+        // Imagine we have (capital letters are type variables, lower case are actual units:
+        //   A^2 B^7 m^2 s^-7 = 1
+        // We can perform a subsitution for a new variable by taking the lowest-exponent type variable and substituting
+        // it for an equation that cancels out the rest usefully.  What the paper says is that the new variable will
+        // be equal to the lowest-exponent type variable, multiplied by the negated floor division of the rest by that lowest-exponent.
+        // In our example, this means:
+        //   A = C^1 B^-3 m^-1 s^3
+        // Therefore when raised to A's current power (the lowest exponent):
+        //   A^2 = C^2 B^-6 m^-2 s^6
+        // And once substituted, it effectively makes all exponents be modulo the lowest-exponent:
+        //   (C^2 B^-6 m^-2 s^6) (B^7 m^2 s^-7) = 1
+        //   C^2 B^1 s^-1 = 1
+        // Now we go again, with B having lowest exponent:
+        //   B = D^1 C^-2 s^1
+        // Substituting:
+        //   (D^1 C^-2 s^1) (C^2 s^-1) = 1
+        //   D = 1
+        // Then we will go into a different clause.
+        // The main question I have is: how do we get the value for C, given that we eliminated it from the equations without substituting?
+        // We can't ignore it because both A and B depend on C.  I think the answer is that after all unit inference, if inference
+        // is successful, all units that point to nothing can be set to scalar.        
+        
         Pair<MutUnitVar, Integer> lowestAbsPower = typeVars.stream().min(Comparator.comparing(p -> Math.abs(p.getSecond()))).orElse(null);
         if (lowestAbsPower == null)
             // Impossible!  We know typeVars.size() > 1 at this point
-            return null;
-        @NonNull Pair<MutUnitVar, Integer> lowestAbsPowerFinal = lowestAbsPower;
+            return false;
+
+        MutUnitVar newVar = new MutUnitVar();
+        
+        // Get rid of old unit:
+        units.remove(ComparableEither.left(lowestAbsPower.getFirst()));
+        // Ready new subsitution, but only insert at end (don't want to adjust its powers):
+        UnitExp subst = new UnitExp();
+        subst.units.put(ComparableEither.left(newVar), 1);
+        // All others get the negated floored division:
+        int divisor = lowestAbsPower.getSecond();
+        units.forEach((k, v) -> subst.units.put(k, -(v / divisor)));
+        lowestAbsPower.getFirst().pointer = subst;
+        
         for (Iterator<Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer>> iterator = units.entrySet().iterator(); iterator.hasNext(); )
         {
             Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> entry = iterator.next();
-            if (!entry.getKey().equals(Either.right(lowestAbsPowerFinal.getFirst())))
+            int mod = IntMath.mod(entry.getValue(), Math.abs(lowestAbsPower.getSecond()));
+            if (mod == 0)
             {
-                int mod = IntMath.mod(entry.getValue(), Math.abs(lowestAbsPowerFinal.getSecond()));
-                if (mod == 0)
-                    iterator.remove();
-                else
-                    entry.setValue(mod);
+                iterator.remove();
             }
+            else
+                entry.setValue(mod);
         }
-        // Round we go again:
+        // Having removed old var, put new var in with same power:
+        units.put(ComparableEither.left(newVar), lowestAbsPower.getSecond());
         
-        // TODO but we're discarding the change we just made!  Not right, need some tests here...
+        // Round we go again:
         return unifyToOne();
             
     }
@@ -214,9 +244,7 @@ public class UnitExp
         Unit u = Unit.SCALAR;
         for (Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> e : units.entrySet())
         {
-            @Nullable Unit multiplier = e.getKey().<@Nullable Unit>either(l -> null, singleUnit -> new Unit(singleUnit).raisedTo(e.getValue()));
-            if (multiplier == null)
-                return null;
+            Unit multiplier = e.getKey().either(l -> Unit.SCALAR, singleUnit -> new Unit(singleUnit).raisedTo(e.getValue()));
             u = u.times(multiplier);
         }
         return u;

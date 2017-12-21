@@ -22,6 +22,10 @@ public class MutUnitVar implements Comparable<MutUnitVar>
     @Override
     public String toString()
     {
-        return "_u" + id; 
+        String name = "_u" + id;
+        if (pointer == null)
+            return name;
+        else
+            return name + "[=" + pointer.toString() + "]";
     }
 }
