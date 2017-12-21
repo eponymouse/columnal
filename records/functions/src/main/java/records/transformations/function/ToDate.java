@@ -65,7 +65,7 @@ public class ToDate extends ToTemporalFunction
         ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
         r.add(fromString("date.from.string"));
         r.add(new FunctionDefinition("date.from.datetime", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
-        r.add(new FunctionDefinition("date.from.datetimez", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
+        r.add(new FunctionDefinition("date.from.datetimezoned", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
         r.add(new FunctionDefinition("date.from.ym.day", FromYearMonth_Day::new, DataType.date(getResultType()), DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), DataType.number(new NumberInfo(mgr.loadBuiltIn("day"), null)))));
         r.add(new FunctionDefinition("date", FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
             DataType.number(new NumberInfo(mgr.loadBuiltIn("year"), null)),

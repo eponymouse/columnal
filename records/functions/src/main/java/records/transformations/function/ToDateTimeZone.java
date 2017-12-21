@@ -40,12 +40,12 @@ public class ToDateTimeZone extends ToTemporalFunction
     {
         ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
         r.add(fromString("datetimezoned.from.string"));
-        r.add(new FunctionDefinition("datetimezoned.datetime.zone", DT_Z::new, DataType.date(getResultType()),
+        r.add(new FunctionDefinition("datetimezoned.from.datetime.zone", DT_Z::new, DataType.date(getResultType()),
             DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), DataType.TEXT)));
         r.add(new FunctionDefinition("datetimezoned", D_T_Z::new, DataType.date(getResultType()), DataType.tuple(
             DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
             DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), DataType.TEXT)));
-        r.add(new FunctionDefinition("datetimezoned.date.timezoned", D_TZ::new, DataType.date(getResultType()), DataType.tuple(
+        r.add(new FunctionDefinition("datetimezoned.from.date.timezoned", D_TZ::new, DataType.date(getResultType()), DataType.tuple(
             DataType.date(new DateTimeInfo(DateTimeType.YEARMONTHDAY)),
             DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)))));
         return r.build();

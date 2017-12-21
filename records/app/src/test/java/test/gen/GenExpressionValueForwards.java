@@ -370,7 +370,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIME)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
-                            return map(dateTimes, v -> ZonedDateTime.of((LocalDateTime)v, zone), e -> call("datetimezoned.datetime.zone", e, new StringLiteral(zone.toString())));
+                            return map(dateTimes, v -> ZonedDateTime.of((LocalDateTime)v, zone), e -> call("datetimezoned.from.datetime.zone", e, new StringLiteral(zone.toString())));
                         });
                         // date+time+zone:
                         deep.add(() -> {

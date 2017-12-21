@@ -95,7 +95,9 @@ public class TagExpression extends NonOperatorExpression
         else
         {
             @NonNull TypeExp innerDer = innerDerivedType;
-            return onError.recordError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, typeAndIndex.tagInfo.getInner()), innerDer));
+            if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, typeAndIndex.tagInfo.getInner()), innerDer)) == null)
+                return null;
+            return TypeExp.fromConcrete(this, typeAndIndex.wholeType);
         }
     }
 

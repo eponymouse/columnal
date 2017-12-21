@@ -249,9 +249,11 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 {
                     case YEARMONTHDAY:
                     {
-                        @NonNull DateTimeType dateTimeType = r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
-                        DataType t = DataType.date(new DateTimeInfo(dateTimeType));
-                        deep.add(() -> call("date.from.string", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
+                        Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
+                            new Pair<>("date.from.datetime", DateTimeType.DATETIME),
+                            new Pair<>("date.from.datetimezoned", DateTimeType.DATETIMEZONED)));
+                        DataType t = DataType.date(new DateTimeInfo(convertAndType.getSecond()));
+                        deep.add(() -> call(convertAndType.getFirst(), make(t, makeTemporalToMatch(convertAndType.getSecond(), (TemporalAccessor) targetValue), maxLevels - 1)));
                         LocalDate target = (LocalDate) targetValue;
                         deep.add(() -> call("date",
                             make(DataType.number(new NumberInfo(getUnit("year"), null)), target.getYear(), maxLevels - 1),
@@ -266,9 +268,12 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         break;
                     case YEARMONTH:
                     {
-                        DateTimeType dateTimeType = r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED));
-                        DataType t = DataType.date(new DateTimeInfo(dateTimeType));
-                        deep.add(() -> call("dateym.from.string", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
+                        Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
+                            new Pair<>("dateym.from.date", DateTimeType.YEARMONTHDAY),
+                            new Pair<>("dateym.from.datetime", DateTimeType.DATETIME),
+                            new Pair<>("dateym.from.datetimezoned", DateTimeType.DATETIMEZONED)));
+                        DataType t = DataType.date(new DateTimeInfo(convertAndType.getSecond()));
+                        deep.add(() -> call(convertAndType.getFirst(), make(t, makeTemporalToMatch(convertAndType.getSecond(), (TemporalAccessor) targetValue), maxLevels - 1)));
                         YearMonth target = (YearMonth) targetValue;
                         deep.add(() -> call("dateym",
                             make(DataType.number(new NumberInfo(getUnit("year"), null)), target.getYear(), maxLevels - 1),
@@ -297,7 +302,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                     {
                         DateTimeType dateTimeType = r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIMEZONED));
                         DataType t = DataType.date(new DateTimeInfo(dateTimeType));
-                        deep.add(() -> call("timezoned.from.string", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
+                        deep.add(() -> call("timezoned.from.datetimezoned", make(t, makeTemporalToMatch(dateTimeType, (TemporalAccessor) targetValue), maxLevels - 1)));
                         OffsetTime target = (OffsetTime) targetValue;
                         deep.add(() -> call("timezoned",
                             make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), target.toLocalTime(), maxLevels - 1),
