@@ -15,9 +15,11 @@ import records.types.units.MutUnitVar;
 import records.types.units.UnitExp;
 import test.gen.GenUnit;
 import utility.ExConsumer;
+import utility.ExRunnable;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.fail;
 
 /**
  * Created by neil on 24/01/2017.
@@ -45,16 +47,31 @@ public class PropUnit
     public void testTypecheckUnitTimes() throws UserException, InternalException
     {
         withMut(u -> {
-            unify(unit("m"), times(u, unit("m/s")));
-            assertEquals(u, unit("s"));
+            unify(unitExp("m"), times(u, unitExp("m/s")));
+            assertEquals(unit("s"), u.toConcreteUnit());
         });
 
         withMut(u -> {
-            unify(unit("m"), times(u, UnitExp.SCALAR));
-            assertEquals(u, unit("m"));
+            unify(unitExp("m"), times(u, UnitExp.SCALAR));
+            assertEquals(unit("m"), u.toConcreteUnit());
         });
+        
+        failure(() -> unify(unitExp("m"), unitExp("s")));
     }
     
+    private void failure(ExRunnable item)
+    {
+        try
+        {
+            item.run();
+            fail("Expected failure but succeeded");
+        }
+        catch (AssertionError | InternalException | UserException e)
+        {
+            return;
+        }
+    }
+
     private void withMut(ExConsumer<UnitExp> with) throws InternalException, UserException
     {
         with.accept(new UnitExp(new MutUnitVar()));
@@ -78,8 +95,13 @@ public class PropUnit
         }
     }
 
-    private UnitExp unit(String unit) throws InternalException, UserException
+    private UnitExp unitExp(String unit) throws InternalException, UserException
     {
-        return UnitExp.fromConcrete(DummyManager.INSTANCE.getUnitManager().loadUse(unit));
+        return UnitExp.fromConcrete(unit(unit));
+    }
+
+    private Unit unit(String unit) throws UserException, InternalException
+    {
+        return DummyManager.INSTANCE.getUnitManager().loadUse(unit);
     }
 }

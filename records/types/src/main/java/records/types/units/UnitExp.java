@@ -48,13 +48,18 @@ public class UnitExp
     {
         UnitExp u = new UnitExp();
         u.units.putAll(units);
+        u.timesInPlace(rhs);
+        return u;
+    }
+
+    private void timesInPlace(UnitExp rhs)
+    {
         for (Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> rhsUnit : rhs.units.entrySet())
         {
-            u.units.merge(rhsUnit.getKey(), rhsUnit.getValue(), (l, r) -> {
+            units.merge(rhsUnit.getKey(), rhsUnit.getValue(), (l, r) -> {
                 return addButZeroIsNull(l, r);
             });
         }
-        return u;
     }
 
     private Integer addButZeroIsNull(Integer l, Integer r)
@@ -96,7 +101,7 @@ public class UnitExp
         // section 3.5/Figure 5.  First we invert one side and multiply together, then attempt to unify to one:
         
         UnitExp aimingForOne = new UnitExp();
-        units.forEach((k, v) -> aimingForOne.units.put(k, v));
+        aimingForOne.units.putAll(units);
         other.units.forEach((k, v) ->
             // Very important: minus v to multiply by inverse of RHS:    
             aimingForOne.units.merge(k, -v, this::addButZeroIsNull));
@@ -104,11 +109,44 @@ public class UnitExp
         @Nullable Map<MutUnitVar, UnitExp> mapping = aimingForOne.unifyToOne();
         if (mapping != null)
         {
-            // TODO if non-null, effect the mappings
+            // Actually, map will be at most size one:
+            for (Entry<MutUnitVar, UnitExp> entry : mapping.entrySet())
+            {
+                entry.getKey().pointer = entry.getValue();
+            }
+            
+            this.substituteMutVars();
+            other.substituteMutVars();
+            
             return this;
         }
         else
             return null;
+    }
+
+    // Makes sure all MutVar that point to a resolution get removed from the map
+    private void substituteMutVars()
+    {
+        boolean substituted = false;
+        do
+        {
+            substituted = false;
+            for (Iterator<Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer>> iterator = units.entrySet().iterator(); iterator.hasNext(); )
+            {
+                Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> entry = iterator.next();
+                @Nullable UnitExp pointer = entry.getKey().<@Nullable UnitExp>either(mut -> mut.pointer, s -> null);
+                if (pointer != null)
+                {
+                    // Must remove before doing times in place, otherwise modification exception:
+                    iterator.remove();
+                    timesInPlace(pointer.raisedTo(entry.getValue()));
+                    substituted = true;
+                    // Breaks the for/iterator loop
+                    break;
+                }
+            }
+        }
+        while (substituted);
     }
 
     /**
@@ -172,6 +210,7 @@ public class UnitExp
 
     public @Nullable Unit toConcreteUnit()
     {
+        substituteMutVars();
         Unit u = Unit.SCALAR;
         for (Entry<ComparableEither<MutUnitVar, SingleUnit>, Integer> e : units.entrySet())
         {
