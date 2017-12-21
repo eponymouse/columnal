@@ -69,7 +69,10 @@ public class CallExpression extends NonOperatorExpression
     public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
     {
         if (definition == null)
+        {
+            onError.recordError(this, "Unknown function: \"" + functionName + "\"");
             return null;
+        }
 
         @Nullable TypeExp paramType = param.check(data, state, onError);
         if (paramType == null)

@@ -50,10 +50,10 @@ public class ToTime extends ToTemporalFunction
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
         ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
-        r.add(fromString("time.string"));
+        r.add(fromString("time.from.string"));
         r.add(new FunctionDefinition("time.from.datetime", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIME))));
-        r.add(new FunctionDefinition("time.from.datetimez", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
-        r.add(new FunctionDefinition("time.from.timez", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))));
+        r.add(new FunctionDefinition("time.from.datetimezoned", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED))));
+        r.add(new FunctionDefinition("time.from.timezoned", FromTemporalInstance::new, DataType.date(getResultType()), DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED))));
         r.add(new FunctionDefinition("time", FromNumbers::new, DataType.date(getResultType()), DataType.tuple(
             DataType.number(new NumberInfo(mgr.loadBuiltIn("hour"), null)),
             DataType.number(new NumberInfo(mgr.loadBuiltIn("min"), null)),

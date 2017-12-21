@@ -39,7 +39,7 @@ public class ToDateTimeZone extends ToTemporalFunction
     public ImmutableList<FunctionDefinition> getTemporalFunctions(UnitManager mgr) throws InternalException
     {
         ImmutableList.Builder<FunctionDefinition> r = ImmutableList.builder();
-        r.add(fromString("datetimez.string"));
+        r.add(fromString("datetimezoned.from.string"));
         r.add(new FunctionDefinition("datetimezoned.datetime.zone", DT_Z::new, DataType.date(getResultType()),
             DataType.tuple(DataType.date(new DateTimeInfo(DateTimeType.DATETIME)), DataType.TEXT)));
         r.add(new FunctionDefinition("datetimezoned", D_T_Z::new, DataType.date(getResultType()), DataType.tuple(

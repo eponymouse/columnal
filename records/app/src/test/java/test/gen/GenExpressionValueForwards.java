@@ -305,8 +305,11 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 {
                     case YEARMONTHDAY:
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return map(dateTimes, v -> LocalDate.from((TemporalAccessor) v), e -> call("date", e));
+                            Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
+                                new Pair<>("date.from.datetime", DateTimeType.DATETIME),
+                                new Pair<>("date.from.datetimezoned", DateTimeType.DATETIMEZONED)));
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(convertAndType.getSecond())), maxLevels - 1);
+                            return map(dateTimes, v -> LocalDate.from((TemporalAccessor) v), e -> call(convertAndType.getFirst(), e));
                         });
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTime = make(DataType.date(new DateTimeInfo(DateTimeType.YEARMONTH)), maxLevels - 1);
@@ -315,37 +318,45 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                             {
                                 YearMonth yearMonth = YearMonth.from((TemporalAccessor) v);
                                 return LocalDate.of(yearMonth.getYear(), yearMonth.getMonth(), day);
-                            }, e -> call("date", e, new NumericLiteral(day, makeUnitExpression(getUnit("day")))));
+                            }, e -> call("date.from.ym.day", e, new NumericLiteral(day, makeUnitExpression(getUnit("day")))));
                         });
                         break;
                     case YEARMONTH:
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return map(dateTimes, v -> YearMonth.from((TemporalAccessor) v), e -> call("dateym", e));
+                            Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
+                                new Pair<>("dateym.from.date", DateTimeType.YEARMONTHDAY),
+                                new Pair<>("dateym.from.datetime", DateTimeType.DATETIME),
+                                new Pair<>("dateym.from.datetimezoned", DateTimeType.DATETIMEZONED)));
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(convertAndType.getSecond())), maxLevels - 1);
+                            return map(dateTimes, v -> YearMonth.from((TemporalAccessor) v), e -> call(convertAndType.getFirst(), e));
                         });
                         break;
                     case TIMEOFDAY:
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAYZONED, DateTimeType.DATETIME, DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return map(dateTimes, v -> LocalTime.from((TemporalAccessor) v), e -> call("time", e));
+                            Pair<String, DateTimeType> convertAndType = r.choose(Arrays.asList(
+                                new Pair<>("time.from.timezoned", DateTimeType.TIMEOFDAYZONED),
+                                new Pair<>("time.from.datetime", DateTimeType.DATETIME), 
+                                new Pair<>("time.from.datetimezoned", DateTimeType.DATETIMEZONED)));
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(convertAndType.getSecond())), maxLevels - 1);
+                            return map(dateTimes, v -> LocalTime.from((TemporalAccessor) v), e -> call(convertAndType.getFirst(), e));
                         });
                         break;
                     case TIMEOFDAYZONED:
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return map(dateTimes, v -> OffsetTime.from((TemporalAccessor) v), e -> call("timez", e));
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(DateTimeType.DATETIMEZONED)), maxLevels - 1);
+                            return map(dateTimes, v -> OffsetTime.from((TemporalAccessor) v), e -> call("timezoned.from.datetimezoned", e));
                         });
                         deep.add(() -> {
-                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
+                            Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
-                            return map(dateTimes, v -> OffsetTime.of((LocalTime)v, zone), e -> call("timez", e, new StringLiteral(zone.toString())));
+                            return map(dateTimes, v -> OffsetTime.of((LocalTime)v, zone), e -> call("timezoned", e, new StringLiteral(zone.toString())));
                         });
                         break;
                     case DATETIME:
                         // down cast:
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIMEZONED)))), maxLevels - 1);
-                            return map(dateTimes, v -> LocalDateTime.from((TemporalAccessor) v), e -> call("datetime", e));
+                            return map(dateTimes, v -> LocalDateTime.from((TemporalAccessor) v), e -> call("datetime.from.datetimezoned", e));
                         });
                         // date + time:
                         deep.add(() -> {
@@ -359,14 +370,14 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dateTimes = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.DATETIME)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
-                            return map(dateTimes, v -> ZonedDateTime.of((LocalDateTime)v, zone), e -> call("datetimez", e, new StringLiteral(zone.toString())));
+                            return map(dateTimes, v -> ZonedDateTime.of((LocalDateTime)v, zone), e -> call("datetimezoned.datetime.zone", e, new StringLiteral(zone.toString())));
                         });
                         // date+time+zone:
                         deep.add(() -> {
                             Pair<List<@Value Object>, Expression> dates = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.YEARMONTHDAY)))), maxLevels - 1);
                             Pair<List<@Value Object>, Expression> times = make(DataType.date(new DateTimeInfo(r.<@NonNull DateTimeType>choose(Arrays.asList(DateTimeType.TIMEOFDAY)))), maxLevels - 1);
                             ZoneOffset zone = TestUtil.generateZoneOffset(r, gs);
-                            return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone), (dateE, timeE) -> call("datetimez", dateE, timeE, new StringLiteral(zone.toString())));
+                            return map2(dates, times, (date, time) -> ZonedDateTime.of((LocalDate)date, (LocalTime) time, zone), (dateE, timeE) -> call("datetimezoned", dateE, timeE, new StringLiteral(zone.toString())));
                         });
                         break;
                 }
@@ -377,22 +388,22 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                     {
                         case YEARMONTHDAY:
                             @Value LocalDate date = TestUtil.generateDate(r, gs);
-                            return literal(date, call("date", new StringLiteral(date.toString())));
+                            return literal(date, call("date.from.string", new StringLiteral(date.toString())));
                         case YEARMONTH:
                             @Value YearMonth ym = YearMonth.from(TestUtil.generateDate(r, gs));
-                            return literal(ym, call("dateym", new StringLiteral(ym.toString())));
+                            return literal(ym, call("dateym.from.string", new StringLiteral(ym.toString())));
                         case TIMEOFDAY:
                             @Value LocalTime time = TestUtil.generateTime(r, gs);
-                            return literal(time, call("time", new StringLiteral(time.toString())));
+                            return literal(time, call("time.from.string", new StringLiteral(time.toString())));
                         case TIMEOFDAYZONED:
                             @Value OffsetTime timez = OffsetTime.from(TestUtil.generateDateTimeZoned(r, gs));
-                            return literal(timez, call("timez", new StringLiteral(timez.toString())));
+                            return literal(timez, call("timezoned.from.string", new StringLiteral(timez.toString())));
                         case DATETIME:
                             @Value LocalDateTime dateTime = TestUtil.generateDateTime(r, gs);
-                            return literal(dateTime, call("datetime", new StringLiteral(dateTime.toString())));
+                            return literal(dateTime, call("datetime.from.string", new StringLiteral(dateTime.toString())));
                         case DATETIMEZONED:
                             @Value ZonedDateTime zonedDateTime = TestUtil.generateDateTimeZoned(r, gs);
-                            return literal(zonedDateTime, call("datetimez", new StringLiteral(zonedDateTime.toString())));
+                            return literal(zonedDateTime, call("datetimezoned.from.string", new StringLiteral(zonedDateTime.toString())));
 
                     }
                     throw new RuntimeException("No date generator for " + dateTimeInfo.getType());

@@ -35,6 +35,7 @@ import test.gen.GenExpressionValueForwards;
 import test.gen.GenRandom;
 import test.gen.GenTypecheckFail;
 import test.gen.GenUnit;
+import utility.Either;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -98,7 +99,7 @@ public class PropTypecheck
 
     @Property(trials = 1000)
     // @SuppressWarnings("nullness")
-    public void propTypeCheckSucceed(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
+    public void propTypeCheckSucceed(@When(seed=-7508931225028973587L)@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {
         StringBuilder b = new StringBuilder();
         @Nullable TypeExp checked = src.expression.check(src.recordSet, TestUtil.typeState(), (e, s, q) ->
@@ -114,7 +115,7 @@ public class PropTypecheck
             {
                 throw new RuntimeException(e);
             }
-        }).collect(Collectors.joining(", ")), src.type, checked == null ? null : TypeExp.unifyTypes(srcTypeExp, checked));
+        }).collect(Collectors.joining(", ")), Either.right(src.type), checked == null ? null : TypeExp.unifyTypes(srcTypeExp, checked).flatMapInt(t -> t.toConcreteType(src.typeManager)));
     }
 
     //#error Have property which generates tables/expressions of given types, and check they don't typecheck

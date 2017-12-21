@@ -575,17 +575,17 @@ public class DataType
                 switch (dateTimeInfo.type)
                 {
                     case YEARMONTHDAY:
-                        return "DateYMD";
+                        return "Date";
                     case YEARMONTH:
                         return "DateYM";
                     case TIMEOFDAY:
                         return "Time";
                     case TIMEOFDAYZONED:
-                        return "TimeZ";
+                        return "TimeZoned";
                     case DATETIME:
                         return "DateTime";
                     case DATETIMEZONED:
-                        return "DateTimeZ";
+                        return "DateTimeZoned";
                 }
                 throw new InternalException("Unknown date type: " + dateTimeInfo.type);
             }

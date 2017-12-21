@@ -8,6 +8,7 @@ import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import utility.Either;
+import utility.Utility;
 
 public class TypeCons extends TypeExp
 {
@@ -96,5 +97,11 @@ public class TypeCons extends TypeExp
                 }
                 return Either.left("Unknown type constructor: " + name);
         }
+    }
+
+    @Override
+    public String toString()
+    {
+        return name + (operands.isEmpty() ? "" : Utility.listToString(operands));
     }
 }
