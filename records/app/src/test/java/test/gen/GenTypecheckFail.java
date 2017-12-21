@@ -233,7 +233,7 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         {
             picked = pickType(r);
         }
-        while (type != null && TypeExp.unifyTypes(type, TypeExp.fromConcrete(null, picked)) != null);
+        while (type != null && TypeExp.unifyTypes(type, TypeExp.fromConcrete(null, picked)).isRight());
         return picked;
     }
 
