@@ -28,7 +28,9 @@ import records.gui.expressioneditor.OperatorEntry;
 import records.transformations.expression.*;
 import records.transformations.expression.ComparisonExpression.ComparisonOperator;
 import records.transformations.expression.MatchExpression.Pattern;
+import records.types.NumTypeExp;
 import records.types.TypeExp;
+import records.types.units.UnitExp;
 import test.gen.GenDataType;
 import test.gen.GenUnit;
 import threadchecker.OnThread;
@@ -166,15 +168,15 @@ public class PropTypecheckIndividual
     }
 
     @Property
-    public void testDivide(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException, UserException
+    public void propDivide(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException, UserException
     {
         if (a.isNumber() && b.isNumber())
         {
             // Will actually type-check
             Unit aOverB = a.getNumberInfo().getUnit().divideBy(b.getNumberInfo().getUnit());
             Unit bOverA = b.getNumberInfo().getUnit().divideBy(a.getNumberInfo().getUnit());
-            assertEquals(DataType.number(new NumberInfo(aOverB, null)), new DivideExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
-            assertEquals(DataType.number(new NumberInfo(bOverA, null)), new DivideExpression(new DummyExpression(b), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
+            assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(aOverB)), new DivideExpression(new DummyExpression(a), new DummyExpression(b)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
+            assertEquals(new NumTypeExp(null, UnitExp.fromConcrete(bOverA)), new DivideExpression(new DummyExpression(b), new DummyExpression(a)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
         }
         else
         {

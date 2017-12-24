@@ -15,6 +15,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
@@ -314,5 +315,21 @@ public class UnitExp
     private String etoString(ComparableEither<MutUnitVar, SingleUnit> u)
     {
         return u.either(mut -> mut.toString(), singleUnit -> singleUnit.getName());
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        UnitExp unitExp = (UnitExp) o;
+        return Objects.equals(units, unitExp.units);
+    }
+
+    @Override
+    public int hashCode()
+    {
+
+        return Objects.hash(units);
     }
 }

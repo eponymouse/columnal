@@ -9,6 +9,8 @@ import records.error.InternalException;
 import records.types.units.UnitExp;
 import utility.Either;
 
+import java.util.Objects;
+
 public class NumTypeExp extends TypeExp
 {
     public final UnitExp unit;
@@ -49,5 +51,26 @@ public class NumTypeExp extends TypeExp
             return Either.left("Ambiguous unit: " + unit);
         else
             return Either.right(DataType.number(new NumberInfo(concreteUnit, null)));
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        NumTypeExp that = (NumTypeExp) o;
+        return Objects.equals(unit, that.unit);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(unit);
+    }
+
+    @Override
+    public String toString()
+    {
+        return "Number{" + unit + "}";
     }
 }
