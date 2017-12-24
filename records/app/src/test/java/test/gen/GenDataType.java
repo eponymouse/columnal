@@ -3,6 +3,7 @@ package test.gen;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
@@ -13,7 +14,9 @@ import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import test.TestUtil;
+import test.gen.GenDataType.DataTypeAndManager;
 import utility.ExSupplier;
+import utility.Pair;
 import utility.Utility;
 
 import java.util.ArrayList;
@@ -23,14 +26,10 @@ import java.util.List;
 /**
  * Created by neil on 13/01/2017.
  */
-public class GenDataType extends Generator<DataType>
+public class GenDataType extends Generator<DataTypeAndManager>
 {
-
-    private final TypeManager typeManager;
-
-    public GenDataType()
-    {
-        super(DataType.class);
+    protected static final TypeManager typeManager;
+    static {
         try
         {
             typeManager = new TypeManager(new UnitManager());
@@ -40,14 +39,31 @@ public class GenDataType extends Generator<DataType>
             throw new RuntimeException(e);
         }
     }
+    
+    public static class DataTypeAndManager
+    {
+        public final TypeManager typeManager;
+        public final DataType dataType;
+
+        public DataTypeAndManager(TypeManager typeManager, DataType dataType)
+        {
+            this.typeManager = typeManager;
+            this.dataType = dataType;
+        }
+    }
+
+    public GenDataType()
+    {
+        super(DataTypeAndManager.class);
+    }
 
     @Override
-    public DataType generate(SourceOfRandomness r, GenerationStatus generationStatus)
+    public DataTypeAndManager generate(SourceOfRandomness r, GenerationStatus generationStatus)
     {
         // Use depth system to prevent infinite generation:
         try
         {
-            return genDepth(r, 3, generationStatus);
+            return new DataTypeAndManager(typeManager, genDepth(r, 3, generationStatus));
         }
         catch (InternalException | UserException e)
         {
@@ -81,11 +97,11 @@ public class GenDataType extends Generator<DataType>
         }
 
         @Override
-        public DataType generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
+        public DataTypeAndManager generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
         {
             try
             {
-                return genTagged(sourceOfRandomness, 3, generationStatus);
+                return new DataTypeAndManager(typeManager, genTagged(sourceOfRandomness, 3, generationStatus));
             }
             catch (InternalException | UserException e)
             {
@@ -96,12 +112,23 @@ public class GenDataType extends Generator<DataType>
 
     protected DataType genTagged(SourceOfRandomness r, int maxDepth, GenerationStatus gs) throws InternalException, UserException
     {
-        ArrayList<@Nullable DataType> types = new ArrayList<>(TestUtil.makeList(r, 1, 10, () -> genDepth(r, maxDepth - 1, gs)));
-        int extraNulls = r.nextInt(5);
-        for (int i = 0; i < extraNulls; i++)
+        // Limit it to 100 types:
+        int typeIndex = r.nextInt(100);
+        if (typeIndex > typeManager.getKnownTaggedTypes().size())
         {
-            types.add(r.nextInt(types.size() + 1), null);
+            // Don't need to add N more, just add one for now:
+
+            ArrayList<@Nullable DataType> types = new ArrayList<>(TestUtil.makeList(r, 1, 10, () -> genDepth(r, maxDepth - 1, gs)));
+            int extraNulls = r.nextInt(5);
+            for (int i = 0; i < extraNulls; i++)
+            {
+                types.add(r.nextInt(types.size() + 1), null);
+            }
+            return typeManager.registerTaggedType("" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z'), Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<DataType>("T" + i, t)));
         }
-        return typeManager.registerTaggedType("" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z'), Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<DataType>("T" + i, t)));
+        else
+        {
+            return r.choose(typeManager.getKnownTaggedTypes().values());
+        }
     }
 }

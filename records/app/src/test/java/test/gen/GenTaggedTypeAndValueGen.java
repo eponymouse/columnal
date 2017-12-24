@@ -14,6 +14,7 @@ import test.gen.GenTypeAndValueGen.TypeAndValueGen;
  */
 public class GenTaggedTypeAndValueGen extends GenTypeAndValueGen
 {
+    @Override
     public GenDataType typeGenerator()
     {
         return new GenTaggedType();

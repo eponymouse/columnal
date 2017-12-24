@@ -281,7 +281,7 @@ public class MatchExpression extends NonOperatorExpression
 
     @Override
     public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
-    {
+    {        
         // Need to check several things:
         //   - That all of the patterns have the same type as the expression being matched
         //   - That all of the pattern guards have boolean type
@@ -291,6 +291,12 @@ public class MatchExpression extends NonOperatorExpression
         if (srcType == null)
             return null;
 
+        if (clauses.isEmpty())
+        {
+            onError.recordError(this, "Must have at least one clause in a match");
+            return null;
+        }
+        
         // Add one extra for the srcType:
         TypeExp[] patternTypes = new TypeExp[1 + clauses.size()];
         patternTypes[0] = srcType;

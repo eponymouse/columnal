@@ -58,7 +58,7 @@ public class TestGenDataType
         for (int i = 0; i < 1000; i++)
         {
             SourceOfRandomness sourceOfRandomness = new SourceOfRandomness(r);
-            DataType t = genDataType.generate(sourceOfRandomness, new SimpleGenerationStatus(new GeometricDistribution(), sourceOfRandomness, 10));
+            DataType t = genDataType.generate(sourceOfRandomness, new SimpleGenerationStatus(new GeometricDistribution(), sourceOfRandomness, 10)).dataType;
             nestings.removeAll(calculateNesting(t).collect(Collectors.toList()));
         }
 

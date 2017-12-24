@@ -48,7 +48,7 @@ public class GenTypeAndValueGen extends GenValueBase<TypeAndValueGen>
     public TypeAndValueGen generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         GenDataType genDataType = typeGenerator();
-        DataType type = genDataType.generate(sourceOfRandomness, generationStatus);
+        DataType type = genDataType.generate(sourceOfRandomness, generationStatus).dataType;
 
         this.r = sourceOfRandomness;
         this.gs = generationStatus;

@@ -32,7 +32,7 @@ public class GenEditableColumn extends GenValueBase<EditableColumn>
     @OnThread(value = Tag.Simulation,ignoreParent = true)
     public EditableColumn generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
-        DataType type = new GenDataType().generate(sourceOfRandomness, generationStatus);
+        DataType type = new GenDataType().generate(sourceOfRandomness, generationStatus).dataType;
         this.r = sourceOfRandomness;
         this.gs = generationStatus;
         try
