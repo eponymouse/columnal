@@ -253,15 +253,15 @@ public class PropTypecheckIndividual
     }
 
     @Property
-    public void checkAndOr(@From(GenDataType.class) DataType nonBool) throws InternalException, UserException
+    public void propAndOr(@From(GenDataType.class) DataType nonBool) throws InternalException, UserException
     {
         Assume.assumeFalse(nonBool.equals(DataType.BOOLEAN));
 
         for (Function<List<Expression>, Expression> create : Arrays.<Function<List<Expression>, Expression>>asList(AndExpression::new, OrExpression::new))
         {
-            assertEquals(DataType.BOOLEAN, check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN)))));
-            assertEquals(DataType.BOOLEAN, check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN)))));
-            assertEquals(DataType.BOOLEAN, check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN)))));
+            assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN)))));
+            assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN)))));
+            assertEquals(TypeExp.fromConcrete(null, DataType.BOOLEAN), check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN), new DummyExpression(DataType.BOOLEAN)))));
 
             assertEquals(null, check(create.apply(Arrays.asList(new DummyExpression(nonBool)))));
             assertEquals(null, check(create.apply(Arrays.asList(new DummyExpression(DataType.BOOLEAN), new DummyExpression(nonBool)))));

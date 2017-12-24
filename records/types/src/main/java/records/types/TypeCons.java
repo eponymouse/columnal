@@ -10,6 +10,8 @@ import records.error.InternalException;
 import utility.Either;
 import utility.Utility;
 
+import java.util.Objects;
+
 public class TypeCons extends TypeExp
 {
     public final String name;
@@ -103,5 +105,21 @@ public class TypeCons extends TypeExp
     public String toString()
     {
         return name + (operands.isEmpty() ? "" : Utility.listToString(operands));
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TypeCons typeCons = (TypeCons) o;
+        return Objects.equals(name, typeCons.name) &&
+            Objects.equals(operands, typeCons.operands);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(name, operands);
     }
 }

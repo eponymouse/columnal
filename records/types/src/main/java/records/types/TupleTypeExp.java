@@ -7,6 +7,8 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import utility.Either;
 
+import java.util.Objects;
+
 public class TupleTypeExp extends TypeExp
 {
     public final ImmutableList<TypeExp> knownMembers;
@@ -89,6 +91,22 @@ public class TupleTypeExp extends TypeExp
             }
         }
         return Either.right(new TupleTypeExp(src != null ? src : b.src, unified.build(), complete || bt.complete));
+    }
+
+    @Override
+    public boolean equals(@Nullable Object o)
+    {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TupleTypeExp that = (TupleTypeExp) o;
+        return complete == that.complete &&
+            Objects.equals(knownMembers, that.knownMembers);
+    }
+
+    @Override
+    public int hashCode()
+    {
+        return Objects.hash(knownMembers, complete);
     }
 }
 
