@@ -212,7 +212,7 @@ public class PropTypecheckIndividual
 
     // Tests non-numeric types in raise expressions
     @Property
-    public void testRaiseNonNumeric(@From(GenDataType.class) DataType a) throws UserException, InternalException
+    public void propRaiseNonNumeric(@From(GenDataType.class) DataType a) throws UserException, InternalException
     {
         Assume.assumeFalse(a.isNumber());
         assertEquals(null, new RaiseExpression(new DummyExpression(a), new DummyExpression(DataType.NUMBER)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
@@ -220,7 +220,7 @@ public class PropTypecheckIndividual
     }
 
     @Property
-    public void testRaiseNumeric(@From(GenUnit.class) Unit unit) throws UserException, InternalException
+    public void propRaiseNumeric(@From(GenUnit.class) Unit unit) throws UserException, InternalException
     {
         // The rules for raise (besides both must be numeric) are:
         // RHS unit is forbidden
@@ -235,21 +235,21 @@ public class PropTypecheckIndividual
 
         // No units on RHS:
         DataType unitNum = DataType.number(new NumberInfo(unit, null));
-        assertEquals(null, check(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(unitNum))));
+        assertEquals(null, checkConcrete(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(unitNum))));
         // Plain on both is fine, even when RHS doesn't constant fold:
-        assertEquals(DataType.NUMBER, check(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(DataType.NUMBER))));
+        assertEquals(DataType.NUMBER, checkConcrete(new RaiseExpression(new DummyExpression(DataType.NUMBER), new DummyExpression(DataType.NUMBER))));
         // LHS units is banned if RHS doesn't constant fold:
-        assertEquals(null, check(new RaiseExpression(new DummyExpression(unitNum), new DummyExpression(DataType.NUMBER))));
+        assertEquals(null, checkConcrete(new RaiseExpression(new DummyExpression(unitNum), new DummyExpression(DataType.NUMBER))));
         // LHS units and RHS integer is fine:
-        assertEquals(unitNum, check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.ONE))));
-        assertEquals(DataType.NUMBER, check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.ZERO))));
-        assertEquals(DataType.number(new NumberInfo(unit.raisedTo(5), null)), check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(5)))));
-        assertEquals(DataType.number(new NumberInfo(unit.reciprocal(), null)), check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(-1)))));
-        assertEquals(DataType.number(new NumberInfo(unit.raisedTo(3).reciprocal(), null)), check(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(-3)))));
+        assertEquals(unitNum, checkConcrete(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.ONE))));
+        assertEquals(DataType.NUMBER, checkConcrete(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.ZERO))));
+        assertEquals(DataType.number(new NumberInfo(unit.raisedTo(5), null)), checkConcrete(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(5)))));
+        assertEquals(DataType.number(new NumberInfo(unit.reciprocal(), null)), checkConcrete(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(-1)))));
+        assertEquals(DataType.number(new NumberInfo(unit.raisedTo(3).reciprocal(), null)), checkConcrete(new RaiseExpression(new DummyExpression(unitNum), new DummyConstExpression(DataType.NUMBER, Rational.of(-3)))));
         // 1/integer is ok if all units divisible:
-        assertEquals(unitNum, check(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(3), null))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(1L, 3L)))));
+        assertEquals(unitNum, checkConcrete(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(3), null))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(1L, 3L)))));
         // Any other rational not allowed:
-        assertEquals(null, check(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(6), null))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(2L, 3L)))));
+        assertEquals(null, checkConcrete(new RaiseExpression(new DummyExpression(DataType.number(new NumberInfo(unit.raisedTo(6), null))), new DummyConstExpression(DataType.NUMBER, Rational.ofLongs(2L, 3L)))));
     }
 
     @Property
@@ -335,6 +335,15 @@ public class PropTypecheckIndividual
     private static @Nullable TypeExp check(Expression e) throws UserException, InternalException
     {
         return e.check(new DummyRecordSet(), TestUtil.typeState(), (ex, s, q) -> {});
+    }
+
+    private static @Nullable DataType checkConcrete(Expression e) throws UserException, InternalException
+    {
+        TypeExp typeExp = e.check(new DummyRecordSet(), TestUtil.typeState(), (ex, s, q) -> {});
+        if (typeExp == null)
+            return null;
+        else
+            return typeExp.toConcreteType(DummyManager.INSTANCE.getTypeManager()).<@Nullable DataType>either(err -> null, t -> t);
     }
 
     private static class DummyRecordSet extends KnownLengthRecordSet
