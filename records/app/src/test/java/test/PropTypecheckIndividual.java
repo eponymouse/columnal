@@ -193,8 +193,10 @@ public class PropTypecheckIndividual
 
     @Property
     @SuppressWarnings({"i18n", "deprecation"}) // Because of assumeThat, bizarrely
-    public void testArray(@From(GenDataType.class) DataType a, @From(GenDataType.class) DataType b) throws InternalException, UserException
+    public void testArray(@From(GenDataType.class) GenDataType.DataTypeAndManager am, @From(GenDataType.class) GenDataType.DataTypeAndManager bm) throws InternalException, UserException
     {
+        DataType a = am.dataType;
+        DataType b = bm.dataType;
         boolean same = DataType.checkSame(a, b, s -> {}) != null;
         Assume.assumeThat(same, Matchers.<Boolean>equalTo(false));
 
@@ -204,14 +206,14 @@ public class PropTypecheckIndividual
             // Add once more as length increases:
             types.add(a);
             // All a should type check:
-            assertEquals(DataType.array(a), new ArrayExpression(Utility.mapListExI(types, DummyExpression::new)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
+            assertEquals(DataType.array(a), checkConcrete(am.typeManager, new ArrayExpression(Utility.mapListExI(types, DummyExpression::new))));
 
             for (int i = 0; i <= length; i++)
             {
                 // Once we add b in, should fail to type check:
                 List<DataType> badTypes = new ArrayList<>(types);
                 badTypes.add(i, b);
-                assertEquals(null, new ArrayExpression(Utility.mapListExI(badTypes, DummyExpression::new)).check(new DummyRecordSet(), TestUtil.typeState(), (e, s, q) -> {}));
+                assertEquals(null, checkConcrete(am.typeManager, new ArrayExpression(Utility.mapListExI(badTypes, DummyExpression::new))));
             }
         }
     }
@@ -302,7 +304,7 @@ public class PropTypecheckIndividual
     // TODO typecheck all the compound expressions (addsubtract, times, tag)
 
     @Property
-    public void checkMatch(@When(seed=-6571861168286304921L) @From(GenDataType.class) GenDataType.DataTypeAndManager match, @When(seed=682874621816604477L) @From(GenDataType.class) GenDataType.DataTypeAndManager result, @When(seed=-8326175991826210433L) @From(GenDataType.class) GenDataType.DataTypeAndManager other) throws InternalException, UserException
+    public void checkMatch(@From(GenDataType.class) GenDataType.DataTypeAndManager match, @From(GenDataType.class) GenDataType.DataTypeAndManager result, @From(GenDataType.class) GenDataType.DataTypeAndManager other) throws InternalException, UserException
     {
         DataType matchType = match.dataType;
         DataType resultType = result.dataType;
