@@ -3,6 +3,7 @@ package test.functions;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -113,7 +114,15 @@ public class PropListFunctions
     public void propElement(@From(GenValueList.class) GenValueList.ListAndType src) throws Throwable
     {
         GetElement function = new GetElement();
-        @Nullable Pair<FunctionInstance, DataType> checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(src.type, DataType.NUMBER));
+        @Nullable Pair<FunctionInstance, DataType> checked = null;
+        try
+        {
+            checked = TestUtil.typeCheckFunction(function, Collections.emptyList(), DataType.tuple(src.type, DataType.NUMBER));
+        }
+        catch (Exception e)
+        {
+            // This can be ok, if it was empty array,
+        }
         if (checked == null)
         {
             // It's ok to fail on empty array type; that's expected:

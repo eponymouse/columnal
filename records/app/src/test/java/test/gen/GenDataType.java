@@ -10,6 +10,7 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.NumberInfo;
+import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -129,7 +130,8 @@ public class GenDataType extends Generator<DataTypeAndManager>
         }
         else
         {
-            return r.choose(typeManager.getKnownTaggedTypes().values()).instantiate(ImmutableList.of());
+            TaggedTypeDefinition typeDefinition = r.choose(typeManager.getKnownTaggedTypes().values());
+            return typeDefinition.instantiate(Utility.mapListExI(typeDefinition.getTypeArguments(), _arg -> genDepth(r, maxDepth - 1, gs)));
         }
     }
 }

@@ -64,7 +64,7 @@ public class MutVar extends TypeExp
     protected Either<String, DataType> _concrete(TypeManager typeManager)
     {
         // Will have been pruned, so error here
-        return Either.left("Error: cannot determine type");
+        return Either.left("Error: cannot determine type (free variable remaining)");
     }
 
     @Override
