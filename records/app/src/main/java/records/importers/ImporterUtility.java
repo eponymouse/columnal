@@ -124,16 +124,9 @@ public class ImporterUtility
             {
                 OrBlankColumnType or = (OrBlankColumnType) columnType;
                 NumericColumnType inner = (NumericColumnType) or.getInner();
-                String idealTypeName = "?Number{" + (inner.unit.equals(Unit.SCALAR) ? "" : inner.unit) + "}";
-                @Nullable DataType type = mgr.getTypeManager().lookupType(idealTypeName);
-                // Only way it's there already is if it's same from another column, so use it.
-                if (type == null)
-                {
-                    type = mgr.getTypeManager().registerTaggedType(idealTypeName, Arrays.asList(
-                        new TagType<DataType>("Blank", null),
-                        new TagType<DataType>(idealTypeName.substring(1), DataType.number(new NumberInfo(inner.unit, inner.displayInfo)))
-                    ));
-                }
+                @Nullable DataType type = mgr.getTypeManager().getMaybeType().instantiate(ImmutableList.of(
+                    DataType.number(new NumberInfo(inner.unit, inner.displayInfo)))
+                );
                 @NonNull DataType typeFinal = type;
                 columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, typeFinal.getTaggedTypeName(), typeFinal.getTagTypes(), Utility.mapListEx(slice, item -> {
                     if (item.isEmpty() || item.trim().equals(or.getBlankString()))

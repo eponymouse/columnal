@@ -2,6 +2,7 @@ package utility;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.error.InternalException;
+import records.error.UserException;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -55,6 +56,15 @@ public class Either<A, B>
     }
 
     @SuppressWarnings("nullness") // No annotation to explain this is safe
+    public <R> R eitherEx(ExFunction<? super A, R> withLeft, ExFunction<? super B, R> withRight) throws InternalException, UserException
+    {
+        if (isA)
+            return withLeft.apply(a);
+        else
+            return withRight.apply(b);
+    }
+
+    @SuppressWarnings("nullness") // No annotation to explain this is safe
     public void either_(Consumer<? super A> withLeft, Consumer<? super B> withRight)
     {
         if (isA)
@@ -74,6 +84,21 @@ public class Either<A, B>
     
     @SuppressWarnings("nullness")
     public static <E, R, T> Either<E, List<R>> mapMInt(List<T> xs, FunctionInt<? super T, Either<E, R>> applyOne) throws InternalException
+    {
+        List<R> r = new ArrayList<>(xs.size());
+        for (T x : xs)
+        {
+            Either<E, R> y = applyOne.apply(x);
+            if (y.a != null)
+                return Either.left(y.a);
+            else
+                r.add(y.b);
+        }
+        return Either.right(r);
+    }
+
+    @SuppressWarnings("nullness")
+    public static <E, R, T> Either<E, List<R>> mapMEx(List<T> xs, ExFunction<? super T, Either<E, R>> applyOne) throws InternalException, UserException
     {
         List<R> r = new ArrayList<>(xs.size());
         for (T x : xs)
@@ -126,6 +151,16 @@ public class Either<A, B>
         else
             return bind.apply(b);
     }
+    // Equivalent to either(Either::left, applyRight)
+    @SuppressWarnings("nullness")
+    public <R> Either<A, R> flatMapEx(ExFunction<? super B, Either<A, R>> bind) throws InternalException, UserException
+    {
+        if (isA)
+            return Either.left(a);
+        else
+            return bind.apply(b);
+    }
+    
 
     //Use either/either_ instead if at all possible
     public A getLeft() throws InternalException

@@ -7,9 +7,11 @@ import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
+import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
+import records.error.UserException;
 import records.types.units.UnitExp;
 import utility.Either;
 import utility.Utility;
@@ -172,6 +174,11 @@ public abstract class TypeExp
     {
         return Either.left("Type mismatch: " + toString() + " versus " + other.toString());
     }
+    
+    public static TypeExp fromTagged(@Nullable ExpressionBase src, TaggedTypeDefinition taggedTypeDefinition) throws InternalException
+    {
+        return new TypeCons(src, taggedTypeDefinition.getTaggedTypeName().getRaw(), taggedTypeDefinition.getTypeArguments().stream().map(_name -> new MutVar(src)).collect(ImmutableList.toImmutableList()));
+    }
 
     public static TypeExp fromConcrete(@Nullable ExpressionBase src, DataType dataType) throws InternalException
     {
@@ -221,11 +228,11 @@ public abstract class TypeExp
         });
     }
 
-    public Either<String, DataType> toConcreteType(TypeManager typeManager) throws InternalException
+    public Either<String, DataType> toConcreteType(TypeManager typeManager) throws InternalException, UserException
     {
         return prune()._concrete(typeManager);
         
     }
 
-    protected abstract Either<String,DataType> _concrete(TypeManager typeManager) throws InternalException;
+    protected abstract Either<String,DataType> _concrete(TypeManager typeManager) throws InternalException, UserException;
 }

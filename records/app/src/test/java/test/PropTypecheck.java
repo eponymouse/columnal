@@ -115,7 +115,7 @@ public class PropTypecheck
             {
                 throw new RuntimeException(e);
             }
-        }).collect(Collectors.joining(", ")), Either.right(src.type), checked == null ? null : TypeExp.unifyTypes(srcTypeExp, checked).flatMapInt(t -> t.toConcreteType(src.typeManager)));
+        }).collect(Collectors.joining(", ")), Either.right(src.type), checked == null ? null : TypeExp.unifyTypes(srcTypeExp, checked).flatMapEx(t -> t.toConcreteType(src.typeManager)));
     }
 
     //#error Have property which generates tables/expressions of given types, and check they don't typecheck
@@ -248,9 +248,9 @@ public class PropTypecheck
             @Override
             public DataType tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                @Nullable DataType dataType = typeManager.lookupType(typeName);
+                @Nullable DataType dataType = typeManager.lookupType(typeName, ImmutableList.of());
                 if (dataType == null)
-                    return typeManager.registerTaggedType(typeName.getRaw(), Utility.mapListEx(tags, tt -> new TagType<DataType>(tt.getName(), tt.getInner())));
+                    return typeManager.registerTaggedType(typeName.getRaw(), Utility.mapListExI(tags, tt -> new TagType<DataType>(tt.getName(), tt.getInner()))).instantiate(ImmutableList.of());
                 return dataType;
             }
 

@@ -7,9 +7,11 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
+import records.error.UserException;
 import utility.Either;
 import utility.Utility;
 
+import java.util.List;
 import java.util.Objects;
 
 public class TypeCons extends TypeExp
@@ -73,7 +75,7 @@ public class TypeCons extends TypeExp
     }
 
     @Override
-    protected Either<String, DataType> _concrete(TypeManager typeManager) throws InternalException
+    protected Either<String, DataType> _concrete(TypeManager typeManager) throws InternalException, UserException
     {
         switch (name)
         {
@@ -92,12 +94,16 @@ public class TypeCons extends TypeExp
                 {
                     // Not a date type, continue...
                 }
-                @Nullable DataType tagged =  typeManager.lookupType(name);
-                if (tagged != null)
-                {
-                    return Either.right(tagged);
-                }
-                return Either.left("Unknown type constructor: " + name);
+                Either<String, List<DataType>> errOrOperandsAsTypes = Either.mapMEx(operands, o -> o.toConcreteType(typeManager));
+                return errOrOperandsAsTypes.eitherEx(s -> Either.left(s), (List<DataType> operandsAsTypes) -> {
+                    @Nullable DataType tagged = typeManager.lookupType(name, ImmutableList.copyOf(operandsAsTypes));
+                    if (tagged != null)
+                    {
+                        return Either.right(tagged);
+                    }
+                    return Either.left("Unknown type constructor: " + name);
+                });
+                
         }
     }
 

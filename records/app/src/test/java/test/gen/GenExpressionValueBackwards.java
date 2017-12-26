@@ -19,6 +19,7 @@ import records.data.MemoryTemporalColumn;
 import records.data.MemoryTupleColumn;
 import records.data.RecordSet;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
 import utility.Either;
 import utility.TaggedValue;
@@ -475,7 +476,10 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
                 int tagIndex = ((TaggedValue) targetValue).getTagIndex();
                 TagType<DataType> tag = tags.get(tagIndex);
-                TagInfo tagInfo = new TagInfo(type, tagIndex, tag);
+                @Nullable TaggedTypeDefinition typeDefinition = DummyManager.INSTANCE.getTypeManager().lookupDefinition(typeName);
+                if (typeDefinition == null)
+                    throw new InternalException("Looked up type but null definition: " + typeName);
+                TagInfo tagInfo = new TagInfo(typeDefinition, tagIndex);
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {
@@ -773,13 +777,16 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                     {
                         TagType<DataType> tagType = tagTypes.get(p.getTagIndex());
                         @Nullable DataType inner = tagType.getInner();
+                        @Nullable TaggedTypeDefinition typeDefinition = DummyManager.INSTANCE.getTypeManager().lookupDefinition(typeName);
+                        if (typeDefinition == null)
+                            throw new InternalException("Looked up type but null definition: " + typeName);
                         if (inner == null)
-                            return new Pair<>(new TagExpression(Either.right(new TagInfo(t, p.getTagIndex(), tagType)), null), null);
+                            return new Pair<>(new TagExpression(Either.right(new TagInfo(typeDefinition, p.getTagIndex())), null), null);
                         @Nullable Object innerValue = p.getInner();
                         if (innerValue == null)
                             throw new InternalException("Type says inner value but is null");
                         Pair<Expression, @Nullable Expression> subPattern = makePatternMatch(maxLevels, inner, innerValue);
-                        return new Pair<>(new TagExpression(Either.right(new TagInfo(t, p.getTagIndex(), tagType)), subPattern.getFirst()), subPattern.getSecond());
+                        return new Pair<>(new TagExpression(Either.right(new TagInfo(typeDefinition, p.getTagIndex())), subPattern.getFirst()), subPattern.getSecond());
                     }
                 });
 

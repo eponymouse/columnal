@@ -76,16 +76,16 @@ public class TagExpression extends NonOperatorExpression
 
         innerDerivedType = inner == null ? null : inner.check(data, state, onError);
         // We must not pass nulls to checkSame if inner is empty, as that counts as failed checking, not optional items:
-        boolean innerExpAndTypeBlank = inner == null && typeAndIndex.tagInfo.getInner() == null;
+        boolean innerExpAndTypeBlank = inner == null && typeAndIndex.getTagInfo().getInner() == null;
         if (innerExpAndTypeBlank)
-            return TypeExp.fromConcrete(this, typeAndIndex.wholeType);
+            return TypeExp.fromTagged(this, typeAndIndex.wholeType);
         // If inner expression is null, it's meant to be there:
         if (inner == null)
         {
             onError.recordError(this, "Tag " + getQualifiedTagName() + " requires value, but none given");
             return null;
         }
-        if (typeAndIndex.tagInfo.getInner() == null)
+        if (typeAndIndex.getTagInfo().getInner() == null)
         {
             onError.recordError(this, "Tag " + getQualifiedTagName() + " has no inner value, but one was given");
             return null;
@@ -95,16 +95,16 @@ public class TagExpression extends NonOperatorExpression
         else
         {
             @NonNull TypeExp innerDer = innerDerivedType;
-            if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, typeAndIndex.tagInfo.getInner()), innerDer)) == null)
+            if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, typeAndIndex.getTagInfo().getInner()), innerDer)) == null)
                 return null;
-            return TypeExp.fromConcrete(this, typeAndIndex.wholeType);
+            return TypeExp.fromTagged(this, typeAndIndex.wholeType);
         }
     }
 
     @NotNull
     private String getQualifiedTagName()
     {
-        return tag.either(s -> "?:" + s, p -> p.wholeTypeName + ":" + p.tagInfo.getName());
+        return tag.either(s -> "?:" + s, p -> p.getTypeName() + ":" + p.getTagInfo().getName());
     }
 
     @Override
@@ -114,21 +114,21 @@ public class TagExpression extends NonOperatorExpression
         if (typeAndIndex == null)
             return null;
 
-        @Nullable Pair<TypeExp, TypeState> typeAndState = (inner == null || typeAndIndex.tagInfo.getInner() == null) ? null : inner.checkAsPattern(varAllowed, data, state, onError);
+        @Nullable Pair<TypeExp, TypeState> typeAndState = (inner == null || typeAndIndex.getTagInfo().getInner() == null) ? null : inner.checkAsPattern(varAllowed, data, state, onError);
         if (typeAndState != null)
             innerDerivedType = typeAndState.getFirst();
 
         // If we expect no inner type, and we have no inner type, nothing more to do:
-        if (inner == null && typeAndIndex.tagInfo.getInner() == null)
+        if (inner == null && typeAndIndex.getTagInfo().getInner() == null)
         {
-            return new Pair<>(TypeExp.fromConcrete(this, typeAndIndex.wholeType), typeAndState == null ? state : typeAndState.getSecond());
+            return new Pair<>(TypeExp.fromTagged(this, typeAndIndex.wholeType), typeAndState == null ? state : typeAndState.getSecond());
         }
         // If we expect an inner type, and have one, check it matches up:
-        if (inner != null && typeAndIndex.tagInfo.getInner() != null && typeAndState != null)
+        if (inner != null && typeAndIndex.getTagInfo().getInner() != null && typeAndState != null)
         {
-            TypeExp unified = onError.recordError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, typeAndIndex.tagInfo.getInner()), typeAndState.getFirst()));
+            TypeExp unified = onError.recordError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, typeAndIndex.getTagInfo().getInner()), typeAndState.getFirst()));
             if (unified != null)
-                return new Pair<>(TypeExp.fromConcrete(this, typeAndIndex.wholeType), typeAndState == null ? state : typeAndState.getSecond());
+                return new Pair<>(TypeExp.fromTagged(this, typeAndIndex.wholeType), typeAndState == null ? state : typeAndState.getSecond());
         }
         
         return null;
@@ -173,7 +173,7 @@ public class TagExpression extends NonOperatorExpression
     @Override
     public String save(boolean topLevel)
     {
-        String tag = this.tag.either(s -> "@unknowntag " + OutputBuilder.quotedIfNecessary(s), t -> "@tag " + OutputBuilder.quotedIfNecessary(t.wholeTypeName.getRaw()) + "\\" + OutputBuilder.quotedIfNecessary(t.tagInfo.getName()));
+        String tag = this.tag.either(s -> "@unknowntag " + OutputBuilder.quotedIfNecessary(s), t -> "@tag " + OutputBuilder.quotedIfNecessary(t.getTypeName().getRaw()) + "\\" + OutputBuilder.quotedIfNecessary(t.getTagInfo().getName()));
         if (inner == null)
             return tag;
         else

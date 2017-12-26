@@ -1,5 +1,6 @@
 package records.gui;
 
+import com.google.common.collect.ImmutableList;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.scene.Scene;
 import javafx.scene.control.Button;
@@ -13,6 +14,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.TaggedTypeDefinition;
+import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.gui.ErrorableTextField.ConversionResult;
@@ -37,7 +40,7 @@ import java.util.Optional;
  * so there is no need for the caller to worry about that.
  */
 @OnThread(Tag.FXPlatform)
-public class EditTaggedTypeDialog extends ErrorableDialog<DataType>
+public class EditTaggedTypeDialog extends ErrorableDialog<TaggedTypeDefinition>
 {
     private final VBox tagsList;
     private final ErrorableTextField<String> typeName;
@@ -53,7 +56,7 @@ public class EditTaggedTypeDialog extends ErrorableDialog<DataType>
             name = name.trim();
             if (name.isEmpty())
                 return ErrorableTextField.ConversionResult.<@NonNull String>error(TranslationUtility.getString("taggedtype.error.name.missing"));
-            else if (typeManager.lookupType(name) == null)
+            else if (typeManager.getKnownTaggedTypes().get(new TypeId(name)) == null)
                 return ErrorableTextField.ConversionResult.success(name);
             else
                 return ErrorableTextField.ConversionResult.<@NonNull String>error(TranslationUtility.getString("taggedtype.exists", name));
@@ -78,7 +81,7 @@ public class EditTaggedTypeDialog extends ErrorableDialog<DataType>
     }
 
     @Override
-    protected Either<@Localized String, DataType> calculateResult()
+    protected Either<@Localized String, TaggedTypeDefinition> calculateResult()
     {
         @Nullable String name = typeName.valueProperty().get();
         if (name == null)
@@ -90,7 +93,7 @@ public class EditTaggedTypeDialog extends ErrorableDialog<DataType>
             return Either.left(TranslationUtility.getString("taggedtype.error.empty"));
         }
 
-        List<TagType<DataType>> tagTypes = new ArrayList<>();
+        ImmutableList.Builder<TagType<DataType>> tagTypes = ImmutableList.builder();
         for (TagInfo info : tagInfo)
         {
             Either<@Localized String, TagType<DataType>> r = info.calculateResult();
@@ -107,7 +110,7 @@ public class EditTaggedTypeDialog extends ErrorableDialog<DataType>
 
         try
         {
-            return Either.right(typeManager.registerTaggedType(name, tagTypes));
+            return Either.right(typeManager.registerTaggedType(name, tagTypes.build()));
         }
         catch (InternalException e)
         {

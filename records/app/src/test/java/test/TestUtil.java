@@ -34,6 +34,7 @@ import records.data.TableManager;
 import records.data.TableManager.TransformationLoader;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeId;
 import records.grammar.GrammarUtility;
 import records.gui.MainWindow;
@@ -404,8 +405,10 @@ public class TestUtil
     static {
         try
         {
-            DataType a = DummyManager.INSTANCE.getTypeManager().registerTaggedType("A", Arrays.asList(new TagType<DataType>("Single", null)));
-            DataType c = DummyManager.INSTANCE.getTypeManager().registerTaggedType("C", Arrays.asList(new TagType<DataType>("Blank", null), new TagType<DataType>("Number", DataType.NUMBER)));
+            DataType a = DummyManager.INSTANCE.getTypeManager().registerTaggedType("A", ImmutableList.of(new TagType<DataType>("Single", null))).instantiate(ImmutableList.of());
+            DataType c = DummyManager.INSTANCE.getTypeManager().registerTaggedType("C", ImmutableList.of(new TagType<DataType>("Blank", null), new TagType<DataType>("Number", DataType.NUMBER))).instantiate(ImmutableList.of());
+            DataType b = DummyManager.INSTANCE.getTypeManager().registerTaggedType("B", ImmutableList.of(new TagType<DataType>("Single", null))).instantiate(ImmutableList.of());
+            DataType nested = DummyManager.INSTANCE.getTypeManager().registerTaggedType("Nested", ImmutableList.of(new TagType<DataType>("A", a), new TagType<DataType>("C", c))).instantiate(ImmutableList.of());
             distinctTypes = Arrays.<DataType>asList(
                 DataType.BOOLEAN,
                 DataType.TEXT,
@@ -422,9 +425,9 @@ public class TestUtil
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("cm"), null)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("($*m)/s^2"), null)),
                 a,
-                DummyManager.INSTANCE.getTypeManager().registerTaggedType("B", Arrays.asList(new TagType<DataType>("Single", null))),
+                b,
                 c,
-                DummyManager.INSTANCE.getTypeManager().registerTaggedType("Nested", Arrays.asList(new TagType<DataType>("A", a), new TagType<DataType>("C", c))),
+                nested,
                 DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.NUMBER)),
                 DataType.tuple(Arrays.asList(DataType.BOOLEAN, DataType.TEXT, DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)), c)),
                 DataType.tuple(Arrays.asList(DataType.NUMBER, DataType.tuple(Arrays.asList(DataType.TEXT, DataType.NUMBER)))),
@@ -451,16 +454,11 @@ public class TestUtil
         {
             UnitManager unitManager = new UnitManager();
             TypeManager typeManager = new TypeManager(unitManager);
-            distinctTypes.stream().filter(p -> p.isTagged()).forEach(t -> {
-                try
-                {
-                    typeManager.registerTaggedType(t.getTaggedTypeName().getRaw(), t.getTagTypes());
-                }
-                catch (InternalException e)
-                {
-                    throw new RuntimeException(e);
-                }
-            });
+            List<DataType> taggedTypes = distinctTypes.stream().filter(p -> p.isTagged()).collect(Collectors.toList());
+            for (DataType t : taggedTypes)
+            {
+                typeManager.registerTaggedType(t.getTaggedTypeName().getRaw(), t.getTagTypes());
+            }
             return new TypeState(unitManager, typeManager);
         }
         catch (InternalException | UserException e)
@@ -931,7 +929,7 @@ public class TestUtil
         return str.chars().mapToObj(c -> Integer.toHexString(c) + (c == 10 ? "\n" : "")).collect(Collectors.joining(" "));
     }
 
-    public static @Nullable Pair<FunctionInstance,DataType> typeCheckFunction(FunctionDefinition function, List<Object> units, DataType paramType) throws InternalException
+    public static @Nullable Pair<FunctionInstance,DataType> typeCheckFunction(FunctionDefinition function, List<Object> units, DataType paramType) throws InternalException, UserException
     {
         ErrorRecorder onError = (src, err, fixes) -> {throw new RuntimeException(err);};
         FunctionTypes functionTypes = function.makeParamAndReturnType();

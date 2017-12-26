@@ -12,6 +12,7 @@ import records.data.ColumnId;
 import records.data.KnownLengthRecordSet;
 import records.data.RecordSet;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
 import utility.Either;
 import utility.TaggedValue;
@@ -530,7 +531,10 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 TagType<DataType> tag = tags.get(tagIndex);
-                TagInfo tagInfo = new TagInfo(type, tagIndex, tag);
+                @Nullable TaggedTypeDefinition typeDefinition = DummyManager.INSTANCE.getTypeManager().lookupDefinition(typeName);
+                if (typeDefinition == null)
+                    throw new InternalException("Looked up type but null definition: " + typeName);
+                TagInfo tagInfo = new TagInfo(typeDefinition, tagIndex);
                 final @Nullable DataType inner = tag.getInner();
                 if (inner == null)
                 {

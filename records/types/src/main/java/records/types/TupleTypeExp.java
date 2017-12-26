@@ -5,6 +5,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
+import records.error.UserException;
 import utility.Either;
 
 import java.util.Objects;
@@ -38,11 +39,11 @@ public class TupleTypeExp extends TypeExp
     }
 
     @Override
-    protected Either<String, DataType> _concrete(TypeManager typeManager) throws InternalException
+    protected Either<String, DataType> _concrete(TypeManager typeManager) throws InternalException, UserException
     {
         if (!complete)
             return Either.left("Error: tuple of indeterminate size");
-        return Either.mapMInt(knownMembers, (TypeExp t) -> t.toConcreteType(typeManager)).map(ts -> DataType.tuple(ts));
+        return Either.mapMEx(knownMembers, (TypeExp t) -> t.toConcreteType(typeManager)).map(ts -> DataType.tuple(ts));
     }
 
     @Override

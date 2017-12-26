@@ -20,6 +20,7 @@ import records.data.Column;
 import records.data.ColumnId;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -282,14 +283,14 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             r.add(new SimpleCompletion(ARROW_SAME_ROW, column.getName().getRaw(), " [value in this row]", Status.COLUMN_REFERENCE_SAME_ROW));
             r.add(new SimpleCompletion(ARROW_WHOLE, column.getName().getRaw(), " [whole column]", Status.COLUMN_REFERENCE_WHOLE));
         }
-        for (DataType dataType : parent.getEditor().getTypeManager().getKnownTaggedTypes().values())
+        for (TaggedTypeDefinition taggedType : parent.getEditor().getTypeManager().getKnownTaggedTypes().values())
         {
             try
             {
-                List<TagType<DataType>> tagTypes = dataType.getTagTypes();
+                List<TagType<DataType>> tagTypes = taggedType.getTags();
                 for (int i = 0; i < tagTypes.size(); i++)
                 {
-                    r.add(new TagCompletion(new TagInfo(dataType, i, tagTypes.get(i))));
+                    r.add(new TagCompletion(new TagInfo(taggedType, i)));
                 }
             }
             catch (InternalException e)
@@ -645,25 +646,25 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
         {
-            return new Pair<>(null, new ReadOnlyStringWrapper(tagInfo.tagInfo.getName() + " [type " + tagInfo.wholeTypeName + "]"));
+            return new Pair<>(null, new ReadOnlyStringWrapper(tagInfo.getTagInfo().getName() + " [type " + tagInfo.getTypeName() + "]"));
         }
 
         @Override
         public boolean shouldShow(String input)
         {
-            return tagInfo.tagInfo.getName().startsWith(input) || getScopedName().startsWith(input);
+            return tagInfo.getTagInfo().getName().startsWith(input) || getScopedName().startsWith(input);
         }
 
         @NotNull
         private String getScopedName()
         {
-            return tagInfo.wholeTypeName.getRaw() + ":" + tagInfo.tagInfo.getName();
+            return tagInfo.getTypeName().getRaw() + ":" + tagInfo.getTagInfo().getName();
         }
 
         @Override
         public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
         {
-            if (tagInfo.tagInfo.getName().equals(input) || getScopedName().equals(input))
+            if (tagInfo.getTagInfo().getName().equals(input) || getScopedName().equals(input))
                 return onlyAvailableCompletion ? CompletionAction.COMPLETE_IMMEDIATELY : CompletionAction.SELECT;
             return CompletionAction.NONE;
         }
@@ -673,10 +674,10 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             // Important to check type first.  If type is same as tag,
             // type will permit more characters to follow than tag alone:
-            if (tagInfo.wholeTypeName.getRaw().startsWith(curInput))
+            if (tagInfo.getTypeName().getRaw().startsWith(curInput))
             {
                 // It is part/all of the type, what's left is colon
-                return character == ':' || tagInfo.tagInfo.getName().contains("" + character);
+                return character == ':' || tagInfo.getTagInfo().getName().contains("" + character);
             }
             else if (getScopedName().startsWith(curInput))
             {
@@ -684,9 +685,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 // colon and then some:
                 return getScopedName().substring(curInput.length()).contains("" + character);
             }
-            else if (tagInfo.tagInfo.getName().startsWith(curInput))
+            else if (tagInfo.getTagInfo().getName().startsWith(curInput))
             {
-                return tagInfo.tagInfo.getName().substring(curInput.length()).contains("" + character);
+                return tagInfo.getTagInfo().getName().substring(curInput.length()).contains("" + character);
             }
             return false;
         }
@@ -761,8 +762,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             else if (c instanceof TagCompletion)
             {
                 TagCompletion tc = (TagCompletion)c;
-                TagExpressionNode tagExpressionNode = new TagExpressionNode(parent, semanticParent, Either.right(tc.tagInfo), tc.tagInfo.tagInfo.getInner() == null ? null : new UnfinishedExpression(""));
-                if (tc.tagInfo.tagInfo.getInner() != null)
+                TagExpressionNode tagExpressionNode = new TagExpressionNode(parent, semanticParent, Either.right(tc.tagInfo), tc.tagInfo.getTagInfo().getInner() == null ? null : new UnfinishedExpression(""));
+                if (tc.tagInfo.getTagInfo().getInner() != null)
                 {
                     tagExpressionNode.focusWhenShown();
                 }

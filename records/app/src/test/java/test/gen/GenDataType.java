@@ -1,5 +1,6 @@
 package test.gen;
 
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
@@ -124,11 +125,11 @@ public class GenDataType extends Generator<DataTypeAndManager>
             {
                 types.add(r.nextInt(types.size() + 1), null);
             }
-            return typeManager.registerTaggedType("" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z'), Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<DataType>("T" + i, t)));
+            return typeManager.registerTaggedType("" + r.nextChar('A', 'Z') + r.nextChar('A', 'Z'), Utility.mapListExI_Index(types, (i, t) -> new DataType.TagType<DataType>("T" + i, t))).instantiate(ImmutableList.of());
         }
         else
         {
-            return r.choose(typeManager.getKnownTaggedTypes().values());
+            return r.choose(typeManager.getKnownTaggedTypes().values()).instantiate(ImmutableList.of());
         }
     }
 }

@@ -3,6 +3,7 @@ package records.data.datatype;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
@@ -48,16 +49,22 @@ import static records.data.datatype.DataType.TEXT;
 public class TypeManager
 {
     private final UnitManager unitManager;
-    private final HashMap<TypeId, DataType> knownTypes = new HashMap<>();
+    private final HashMap<TypeId, TaggedTypeDefinition> knownTypes = new HashMap<>();
+    private final TaggedTypeDefinition maybeType;
 
     public TypeManager(UnitManager unitManager)
     {
         this.unitManager = unitManager;
+        maybeType = new TaggedTypeDefinition(new TypeId("Maybe"), ImmutableList.of("type"), ImmutableList.of(
+            new TagType<>("Missing", null),
+            new TagType<>("Present", DataType.typeVariable("type"))
+        ));
+        knownTypes.put(maybeType.getTaggedTypeName(), maybeType);
     }
 
     // Either makes a new one, or fetches the existing one if it is the same type
     // or renames it to a spare name and returns that.
-    public DataType registerTaggedType(String idealTypeName, List<TagType<DataType>> tagTypes) throws InternalException
+    public TaggedTypeDefinition registerTaggedType(String idealTypeName, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
     {
         if (tagTypes.isEmpty())
             throw new InternalException("Tagged type cannot have zero tags");
@@ -65,9 +72,9 @@ public class TypeManager
         TypeId idealTypeId = new TypeId(idealTypeName);
         if (knownTypes.containsKey(idealTypeId))
         {
-            DataType existingType = knownTypes.get(idealTypeId);
+            TaggedTypeDefinition existingType = knownTypes.get(idealTypeId);
             // Check if it's the same:
-            if (tagTypes.equals(existingType.getTagTypes()))
+            if (tagTypes.equals(existingType.getTags()))
             {
                 // It is; all is well
                 return existingType;
@@ -81,7 +88,7 @@ public class TypeManager
         else
         {
             // TODO run sanity check for duplicate tag type names
-            DataType newType = DataType.tagged(idealTypeId, tagTypes);
+            TaggedTypeDefinition newType = new TaggedTypeDefinition(idealTypeId, ImmutableList.of(), tagTypes);
             knownTypes.put(idealTypeId, newType);
             return newType;
         }
@@ -113,8 +120,8 @@ public class TypeManager
             else
                 tags.add(new TagType<DataType>(tagName, null));
         }
-
-        knownTypes.put(typeName, DataType.tagged(typeName, tags));
+        
+        knownTypes.put(typeName, new TaggedTypeDefinition(typeName, ImmutableList.of(), ImmutableList.copyOf(tags)));
     }
 
 
@@ -152,7 +159,7 @@ public class TypeManager
         {
             if (type.tagRef().STRING() == null)
                 throw new UserException("Missing tag name: " + type.tagRef());
-            DataType taggedType = lookupType(new TypeId(type.tagRef().STRING().getText()));
+            DataType taggedType = lookupType(new TypeId(type.tagRef().STRING().getText()), ImmutableList.of());
             if (taggedType == null)
                 throw new UserException("Undeclared tagged type: \"" + type.tagRef().STRING().getText() + "\"");
             return taggedType;
@@ -188,20 +195,29 @@ public class TypeManager
         return str.substring(0, i) + num.add(BigInteger.ONE).toString();
     }
 
-    public @Nullable DataType lookupType(String typeName)
+    public @Nullable DataType lookupType(String typeName, ImmutableList<DataType> typeVariableSubs) throws UserException, InternalException
     {
-        return lookupType(new TypeId(typeName));
+        return lookupType(new TypeId(typeName), typeVariableSubs);
     }
 
-    public @Nullable DataType lookupType(TypeId typeId)
+    public @Nullable DataType lookupType(TypeId typeId, ImmutableList<DataType> typeVariableSubs) throws InternalException, UserException
     {
-        return knownTypes.get(typeId);
+        TaggedTypeDefinition taggedTypeDefinition = knownTypes.get(typeId);
+        if (taggedTypeDefinition == null)
+            return null;
+        else
+            return taggedTypeDefinition.instantiate(typeVariableSubs);
+    }
+    
+    public @Nullable TaggedTypeDefinition lookupDefinition(TypeId typeId)
+    {
+        return getKnownTaggedTypes().get(typeId);
     }
 
     /**
      * Gets all the known (tagged) types.
      */
-    public Map<TypeId, DataType> getKnownTaggedTypes()
+    public Map<TypeId, TaggedTypeDefinition> getKnownTaggedTypes()
     {
         return Collections.unmodifiableMap(knownTypes);
     }
@@ -209,86 +225,92 @@ public class TypeManager
     @OnThread(Tag.Simulation)
     public String save() throws InternalException, UserException
     {
-        Map<@NonNull DataType, Collection<DataType>> incomingRefs = new HashMap<>();
-        for (DataType dataType : knownTypes.values())
+        Map<@NonNull TaggedTypeDefinition, Collection<TaggedTypeDefinition>> incomingRefs = new HashMap<>();
+        for (TaggedTypeDefinition taggedTypeDefinition : knownTypes.values())
         {
-            dataType.apply(new DataTypeVisitor<UnitType>()
+            for (TagType<DataType> tagType : taggedTypeDefinition.getTags())
             {
-                boolean topLevel = true;
+                if (tagType.getInner() == null)
+                    continue;
 
-                @Override
-                public UnitType number(NumberInfo displayInfo) throws InternalException, UserException
+                tagType.getInner().apply(new DataTypeVisitor<UnitType>()
                 {
-                    return UnitType.UNIT;
-                }
+                    boolean topLevel = true;
 
-                @Override
-                public UnitType text() throws InternalException, UserException
-                {
-                    return UnitType.UNIT;
-                }
-
-                @Override
-                public UnitType date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
-                {
-                    return UnitType.UNIT;
-                }
-
-                @Override
-                public UnitType bool() throws InternalException, UserException
-                {
-                    return UnitType.UNIT;
-                }
-
-                @Override
-                public UnitType tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
-                {
-                    if (!topLevel)
+                    @Override
+                    public UnitType number(NumberInfo displayInfo) throws InternalException, UserException
                     {
-                        @Nullable DataType referencedType = knownTypes.get(typeName);
-                        if (referencedType != null)
-                            incomingRefs.computeIfAbsent(referencedType, t -> new ArrayList<DataType>()).add(dataType);
+                        return UnitType.UNIT;
                     }
-                    topLevel = false;
-                    for (TagType<DataType> tag : tags)
+
+                    @Override
+                    public UnitType text() throws InternalException, UserException
                     {
-                        @Nullable DataType inner = tag.getInner();
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType date(DateTimeInfo dateTimeInfo) throws InternalException, UserException
+                    {
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType bool() throws InternalException, UserException
+                    {
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+                    {
+                        if (!topLevel)
+                        {
+                            @Nullable TaggedTypeDefinition referencedType = knownTypes.get(typeName);
+                            if (referencedType != null)
+                                incomingRefs.computeIfAbsent(referencedType, t -> new ArrayList<>()).add(taggedTypeDefinition);
+                        }
+                        topLevel = false;
+                        for (TagType<DataType> tag : tags)
+                        {
+                            @Nullable DataType inner = tag.getInner();
+                            if (inner != null)
+                                inner.apply(this);
+                        }
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType tuple(ImmutableList<DataType> inner) throws InternalException, UserException
+                    {
+                        for (DataType type : inner)
+                        {
+                            type.apply(this);
+                        }
+                        return UnitType.UNIT;
+                    }
+
+                    @Override
+                    public UnitType array(@Nullable DataType inner) throws InternalException, UserException
+                    {
                         if (inner != null)
                             inner.apply(this);
+                        return UnitType.UNIT;
                     }
-                    return UnitType.UNIT;
-                }
-
-                @Override
-                public UnitType tuple(ImmutableList<DataType> inner) throws InternalException, UserException
-                {
-                    for (DataType type : inner)
-                    {
-                        type.apply(this);
-                    }
-                    return UnitType.UNIT;
-                }
-
-                @Override
-                public UnitType array(@Nullable DataType inner) throws InternalException, UserException
-                {
-                    if (inner != null)
-                        inner.apply(this);
-                    return UnitType.UNIT;
-                }
-            });
+                });
+            }
         }
 
-        List<DataType> orderedDataTypes = GraphUtility.<DataType>lineariseDAG(knownTypes.values(), incomingRefs, Collections.<DataType>emptyList());
+        List<TaggedTypeDefinition> orderedDataTypes = GraphUtility.<TaggedTypeDefinition>lineariseDAG(knownTypes.values(), incomingRefs, Collections.emptyList());
         // lineariseDAG makes all edges point forwards, but we want them pointing backwards
         // so reverse:
         Collections.reverse(orderedDataTypes);
         OutputBuilder b = new OutputBuilder();
-        for (DataType dataType : orderedDataTypes)
+        for (TaggedTypeDefinition taggedTypeDefinition : orderedDataTypes)
         {
             b.t(FormatLexer.TYPE, FormatLexer.VOCABULARY);
-            b.quote(dataType.getTaggedTypeName());
-            dataType.save(b, true);
+            b.quote(taggedTypeDefinition.getTaggedTypeName());
+            taggedTypeDefinition.save(b);
             b.nl();
         }
         return b.toString();
@@ -306,39 +328,40 @@ public class TypeManager
 
     public Either<String, TagInfo> lookupTag(String typeName, String constructorName)
     {
-        @Nullable DataType type = lookupType(typeName);
-        if (type == null || !type.isTagged())
+        @Nullable TaggedTypeDefinition type = knownTypes.get(new TypeId(typeName));
+        if (type == null)
             return Either.left(constructorName);
 
         try
         {
-            @NonNull DataType typeFinal = type;
-            Optional<Pair<Integer, TagType<DataType>>> matchingTag = Utility.streamIndexed(type.getTagTypes()).filter(tt -> tt.getSecond().getName().equals(constructorName)).findFirst();
+            @NonNull TaggedTypeDefinition typeFinal = type;
+            Optional<Pair<Integer, TagType<DataType>>> matchingTag = Utility.streamIndexed(type.getTags()).filter(tt -> tt.getSecond().getName().equals(constructorName)).findFirst();
             if (matchingTag.isPresent())
-                return Either.<String, TagInfo>right(new TagInfo(typeFinal, matchingTag.get().getFirst(), matchingTag.get().getSecond()));
+                return Either.<String, TagInfo>right(new TagInfo(typeFinal, matchingTag.get().getFirst()));
             else
                 return Either.left(typeName);
         }
         catch (InternalException e)
         {
-            Utility.log(e);
+            Utility.report(e);
             return Either.left(constructorName);
         }
     }
 
+    public TaggedTypeDefinition getMaybeType()
+    {
+        return maybeType;
+    }
+
     public static class TagInfo
     {
-        public final DataType wholeType;
-        public final TypeId wholeTypeName;
+        public final TaggedTypeDefinition wholeType;
         public final int tagIndex;
-        public final TagType<DataType> tagInfo;
 
-        public TagInfo(DataType wholeType, int tagIndex, TagType<DataType> tagInfo) throws InternalException
+        public TagInfo(TaggedTypeDefinition wholeType, int tagIndex) throws InternalException
         {
             this.wholeType = wholeType;
-            this.wholeTypeName = wholeType.getTaggedTypeName();
             this.tagIndex = tagIndex;
-            this.tagInfo = tagInfo;
         }
 
         @Override
@@ -359,6 +382,17 @@ public class TypeManager
             int result = wholeType.hashCode();
             result = 31 * result + tagIndex;
             return result;
+        }
+
+        public TypeId getTypeName()
+        {
+            return wholeType.getTaggedTypeName();
+        }
+        
+        @Pure
+        public TagType<DataType> getTagInfo()
+        {
+            return wholeType.getTags().get(tagIndex);
         }
     }
 }

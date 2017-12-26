@@ -1,5 +1,6 @@
 package records.gui;
 
+import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.binding.ObjectBinding;
@@ -33,18 +34,23 @@ import records.data.datatype.DataType;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.NumberInfo;
+import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
+import records.error.InternalException;
+import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 import utility.Pair;
+import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -100,23 +106,40 @@ public class TypeSelectionPane
         dateNotSelected = addType("type.datetime", FXUtility.<@Nullable DataType, @Nullable Optional<DataType>>mapBindingEager(dateTimeComboBox.valueProperty(), x -> x == null ? null : Optional.of(x)), dateTimeComboBox);
         dateTimeComboBox.disableProperty().bind(dateNotSelected);
 
-        ComboBox<DataType> taggedComboBox = new ComboBox<>();
+        ComboBox<TaggedTypeDefinition> taggedComboBox = new ComboBox<>();
         taggedComboBox.getStyleClass().add("type-tagged-combo");
         FXPlatformRunnable updateTaggedCombo = () -> {
-            for (Entry<TypeId, DataType> taggedType : typeManager.getKnownTaggedTypes().entrySet())
+            for (Entry<TypeId, TaggedTypeDefinition> taggedType : typeManager.getKnownTaggedTypes().entrySet())
             {
                 taggedComboBox.getItems().add(taggedType.getValue());
             }
         };
         Button newTaggedTypeButton = GUI.button("type.tagged.new", () -> {
-            @Nullable DataType newType = new EditTaggedTypeDialog(typeManager).showAndWait().orElse(null);
+            @Nullable TaggedTypeDefinition newType = new EditTaggedTypeDialog(typeManager).showAndWait().orElse(null);
             updateTaggedCombo.run();
             if (newType != null)
             {
                 taggedComboBox.getSelectionModel().select(newType);
             }
         });
-        taggedNotSelected = addType("type.tagged", FXUtility.<@Nullable DataType, @Nullable Optional<DataType>>mapBindingEager(taggedComboBox.valueProperty(), x -> x == null ? null : Optional.of(x)), taggedComboBox, newTaggedTypeButton);
+        taggedNotSelected = addType("type.tagged", FXUtility.<@Nullable TaggedTypeDefinition, @Nullable Optional<DataType>>mapBindingEager(taggedComboBox.valueProperty(), x -> {
+            if (x == null)
+            {
+                return null;
+            }
+            else
+            {
+                try
+                {
+                    return Optional.of(x.instantiate(ImmutableList.of() /* TODO */));
+                }
+                catch (InternalException | UserException e)
+                {
+                    Utility.log(e);
+                    return null;
+                }
+            }
+        }), taggedComboBox, newTaggedTypeButton);
 
         updateTaggedCombo.run();
         taggedComboBox.getSelectionModel().selectFirst();

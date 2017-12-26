@@ -285,8 +285,44 @@ public class DataType
             }
         });
     }
+
+    public DataType substitute(Map<String, DataType> substitutions) throws InternalException, UserException
+    {
+        switch (kind)
+        {
+            case TAGGED:
+                if (taggedTypeName == null) throw new InternalException("Null name for tagged type");
+                if (tagTypes == null) throw new InternalException("Null tags for tagged type");
+                
+                return DataType.tagged(taggedTypeName, Utility.mapListExI(tagTypes, t -> {
+                    @Nullable DataType inner = t.getInner();
+                    if (inner == null)
+                        return t;
+                    return new TagType<>(t.getName(), inner.substitute(substitutions));
+                }));
+            case TUPLE:
+                if (memberType == null) throw new InternalException("Null members for tuple");
+                return DataType.tuple(Utility.mapListEx(memberType, t -> t.substitute(substitutions)));
+            case ARRAY:
+                if (memberType == null) throw new InternalException("Null members for array");
+                return memberType.isEmpty() ? DataType.array() : DataType.array(memberType.get(0).substitute(substitutions));
+            case TYPE_VARIABLE:
+                DataType substitute = substitutions.get(typeVariableName);
+                if (substitute == null)
+                    throw new UserException("Free variable " + typeVariableName + " in type");
+                return substitute;
+            default:
+                return this;
+        }
+    }
+
+    public static DataType typeVariable(String name)
+    {
+        return new DataType(Kind.TYPE_VARIABLE, null, null, null, null, name);
+    }
+
     // Flattened ADT.  kind is the head tag, other bits are null/non-null depending:
-    public static enum Kind {NUMBER, TEXT, DATETIME, BOOLEAN, TAGGED, TUPLE, ARRAY }
+    public static enum Kind {NUMBER, TEXT, DATETIME, BOOLEAN, TAGGED, TUPLE, ARRAY, TYPE_VARIABLE }
     final Kind kind;
     // For NUMBER:
     final @Nullable NumberInfo numberInfo;
@@ -294,13 +330,17 @@ public class DataType
     final @Nullable DateTimeInfo dateTimeInfo;
     // For TAGGED:
     final @Nullable TypeId taggedTypeName;
+    // We don't store the declared type variables here because they should already be substituted,
+    // even if only for another type variable
     final @Nullable ImmutableList<TagType<DataType>> tagTypes;
     // For TUPLE (2+) and ARRAY (1).  If ARRAY and memberType is empty, indicates
     // the empty array (which can type-check against any array type)
     final @Nullable ImmutableList<DataType> memberType;
+    // For TYPE_VARIABLE: the name of the variable being used here.
+    final @Nullable String typeVariableName;
 
     // package-visible
-    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataType>>> tagInfo, @Nullable List<DataType> memberType)
+    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataType>>> tagInfo, @Nullable List<DataType> memberType, @Nullable String typeVariableName)
     {
         this.kind = kind;
         this.numberInfo = numberInfo;
@@ -308,20 +348,21 @@ public class DataType
         this.taggedTypeName = tagInfo == null ? null : tagInfo.getFirst();
         this.tagTypes = tagInfo == null ? null : ImmutableList.copyOf(tagInfo.getSecond());
         this.memberType = memberType == null ? null : ImmutableList.copyOf(memberType);
+        this.typeVariableName = typeVariableName;
     }
 
     public static final DataType NUMBER = DataType.number(NumberInfo.DEFAULT);
-    public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null, null, null);
-    public static final DataType TEXT = new DataType(Kind.TEXT, null, null, null, null);
+    public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null, null, null, null);
+    public static final DataType TEXT = new DataType(Kind.TEXT, null, null, null, null, null);
 
     public static DataType array()
     {
-        return new DataType(Kind.ARRAY, null, null, null, Collections.emptyList());
+        return new DataType(Kind.ARRAY, null, null, null, Collections.emptyList(), null);
     }
 
     public static DataType array(DataType inner)
     {
-        return new DataType(Kind.ARRAY, null, null, null, Collections.singletonList(inner));
+        return new DataType(Kind.ARRAY, null, null, null, Collections.singletonList(inner), null);
     }
 
     public static DataType tuple(DataType... inner)
@@ -331,12 +372,12 @@ public class DataType
 
     public static DataType tuple(List<DataType> inner)
     {
-        return new DataType(Kind.TUPLE, null, null, null, new ArrayList<>(inner));
+        return new DataType(Kind.TUPLE, null, null, null, new ArrayList<>(inner), null);
     }
 
     public static DataType date(DateTimeInfo dateTimeInfo)
     {
-        return new DataType(Kind.DATETIME, null, dateTimeInfo, null, null);
+        return new DataType(Kind.DATETIME, null, dateTimeInfo, null, null, null);
     }
 
     public static interface DataTypeVisitorEx<R, E extends Throwable>
@@ -614,13 +655,13 @@ public class DataType
     // package-visible
     static DataType tagged(TypeId name, List<TagType<DataType>> tagTypes)
     {
-        return new DataType(Kind.TAGGED, null, null, new Pair<>(name, tagTypes), null);
+        return new DataType(Kind.TAGGED, null, null, new Pair<>(name, tagTypes), null, null);
     }
 
 
     public static DataType number(NumberInfo numberInfo)
     {
-        return new DataType(Kind.NUMBER, numberInfo, null, null, null);
+        return new DataType(Kind.NUMBER, numberInfo, null, null, null, null);
     }
 
     public static <T extends DataType> boolean canFitInOneNumeric(List<? extends TagType<T>> tags) throws InternalException, UserException
@@ -707,7 +748,7 @@ public class DataType
         throw new InternalException("Trying to get tag type name of non-tag type: " + this);
     }
 
-    public List<TagType<DataType>> getTagTypes() throws InternalException
+    public ImmutableList<TagType<DataType>> getTagTypes() throws InternalException
     {
         if (tagTypes != null)
             return tagTypes;

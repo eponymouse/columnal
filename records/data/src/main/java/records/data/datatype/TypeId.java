@@ -13,8 +13,7 @@ public class TypeId
 {
     private final String typeId;
 
-    // package-visible
-    TypeId(String typeId)
+    public TypeId(String typeId)
     {
         this.typeId = typeId;
     }
