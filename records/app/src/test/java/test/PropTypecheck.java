@@ -167,35 +167,35 @@ public class PropTypecheck
     // Need at least two types for tuple, so they are explicit, plus list of more (which may be empty):
     @SuppressWarnings("unchecked")
     @Property
-    public void checkTuple(@From(GenDataType.class) DataType typeA, @From(GenDataType.class) DataType typeB, @From(DataTypeListGenerator.class)  List typeRest) throws InternalException, UserException
+    public void checkTuple(@From(GenDataType.class) GenDataType.DataTypeAndManager typeA, @From(GenDataType.class) GenDataType.DataTypeAndManager typeB, @From(DataTypeListGenerator.class)  List typeRest) throws InternalException, UserException
     {
-        List<DataType> all = Stream.<DataType>concat(Stream.<@NonNull DataType>of(typeA, typeB), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
+        List<DataType> all = Stream.<DataType>concat(Stream.<@NonNull DataType>of(typeA.dataType, typeB.dataType), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
         DataType type = DataType.tuple(all);
         DataTypeValue typeV = DataTypeValue.tupleV(Utility.mapListEx(all, t -> toValue(t)));
-        List<DataType> allSwapped = Stream.<DataType>concat(Stream.of(typeB, typeA), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
+        List<DataType> allSwapped = Stream.<DataType>concat(Stream.of(typeB.dataType, typeA.dataType), ((List<DataType>)typeRest).stream()).collect(Collectors.<@NonNull DataType>toList());
         DataType typeS = DataType.tuple(allSwapped);
         DataTypeValue typeSV = DataTypeValue.tupleV(Utility.mapListEx(allSwapped, t -> toValue(t)));
         // Swapped is same as unswapped only if typeA and typeB are same:
-        checkSameRelations(type, typeS, typeV, typeSV, DataType.checkSame(typeA, typeB, s -> {}) != null);
+        checkSameRelations(type, typeS, typeV, typeSV, DataType.checkSame(typeA.dataType, typeB.dataType, s -> {}) != null);
     }
 
     @Property
-    public void checkArray(@From(GenDataType.class) DataType innerA, @From(GenDataType.class) DataType innerB) throws InternalException, UserException
+    public void checkArray(@From(GenDataType.class) GenDataType.DataTypeAndManager innerA, @From(GenDataType.class) GenDataType.DataTypeAndManager innerB) throws InternalException, UserException
     {
-        DataType typeA = DataType.array(innerA);
-        DataType typeB = DataType.array(innerB);
-        checkSameRelations(typeA, typeB, toValue(typeA), toValue(typeB), DataType.checkSame(innerA, innerB, s -> {}) != null);
+        DataType typeA = DataType.array(innerA.dataType);
+        DataType typeB = DataType.array(innerB.dataType);
+        checkSameRelations(typeA, typeB, toValue(typeA), toValue(typeB), DataType.checkSame(innerA.dataType, innerB.dataType, s -> {}) != null);
     }
 
     @Property
-    public void checkTagged(@From(GenDataType.GenTaggedType.class) DataType typeA, @From(GenDataType.GenTaggedType.class) DataType typeB) throws UserException, InternalException
+    public void checkTagged(@From(GenDataType.GenTaggedType.class) GenDataType.DataTypeAndManager typeA, @From(GenDataType.GenTaggedType.class) GenDataType.DataTypeAndManager typeB) throws UserException, InternalException
     {
         // Is equals right here?
-        checkSameRelations(typeA, typeB, toValue(typeA), toValue(typeB), typeA.equals(typeB));
+        checkSameRelations(typeA.dataType, typeB.dataType, toValue(typeA.dataType), toValue(typeB.dataType), typeA.dataType.equals(typeB));
     }
 
     @Property(trials = 2000)
-    public void checkBlankArray(@From(GenDataType.class) DataType original, @From(GenRandom.class) Random r) throws UserException, InternalException
+    public void checkBlankArray(@From(GenDataType.class) GenDataType.DataTypeAndManager original, @From(GenRandom.class) Random r) throws UserException, InternalException
     {
         // We make a list with the original type, and N duplicates of that type
         // with arrays randomly swapped to blank (and other types left unchanged).  No matter what order you
@@ -208,12 +208,12 @@ public class PropTypecheck
         int amount = r.nextInt(8);
         for (int i = 0; i < amount; i++)
         {
-            types.add(blankArray(original, r));
+            types.add(blankArray(original.dataType, r));
         }
 
         // Now add original at random place:
-        types.add(r.nextInt(types.size() + 1), original);
-        assertEquals(original, DataType.checkAllSame(types, s -> {}));
+        types.add(r.nextInt(types.size() + 1), original.dataType);
+        assertEquals(original.dataType, DataType.checkAllSame(types, s -> {}));
     }
 
     private DataType blankArray(DataType original, Random r) throws UserException, InternalException
@@ -389,7 +389,7 @@ public class PropTypecheck
         @Override
         public List generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
         {
-            return TestUtil.makeList(sourceOfRandomness.nextInt(0, 10), new GenDataType(), sourceOfRandomness, generationStatus);
+            return Utility.mapList(TestUtil.makeList(sourceOfRandomness.nextInt(0, 10), new GenDataType(), sourceOfRandomness, generationStatus), t -> t.dataType);
         }
     }
 }

@@ -391,6 +391,11 @@ public class DataType
         R tuple(ImmutableList<DataType> inner) throws InternalException, E;
         // If null, array is empty and thus of unknown type
         R array(@Nullable DataType inner) throws InternalException, E;
+
+        default R typeVariable(String typeVariableName) throws InternalException, E
+        {
+            throw new InternalException("Free variable " + typeVariableName + " in type");
+        };
     }
 
     public static interface DataTypeVisitor<R> extends DataTypeVisitorEx<R, UserException>
@@ -466,6 +471,8 @@ public class DataType
                     return visitor.array(memberType.get(0));
             case TUPLE:
                 return visitor.tuple(memberType);
+            case TYPE_VARIABLE:
+                return visitor.typeVariable(typeVariableName);
             default:
                 throw new InternalException("Missing kind case");
         }
