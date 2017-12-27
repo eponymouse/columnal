@@ -421,7 +421,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                         // First form a valid set of values and sort them into order
                         boolean ascending = r.nextBoolean();
                         DataType dataType = r.choose(TestUtil.distinctTypes);
-                        List<Pair<@Value Object, Expression>> operands = TestUtil.makeList(r, 2, 5, () -> makeOfType(dataType));
+                        List<Pair<@Value Object, Expression>> operands = new ArrayList<>(TestUtil.makeList(r, 2, 5, () -> makeOfType(dataType)));
                         Collections.sort(operands, (a, b) -> { try
                         {
                             return Utility.compareValues(a.getFirst(), b.getFirst()) * (ascending ? 1 : -1);

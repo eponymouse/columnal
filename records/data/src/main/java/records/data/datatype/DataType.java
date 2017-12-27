@@ -310,7 +310,7 @@ public class DataType
             case TYPE_VARIABLE:
                 DataType substitute = substitutions.get(typeVariableName);
                 if (substitute == null)
-                    throw new UserException("Free variable " + typeVariableName + " in type");
+                    return this;
                 return substitute;
             default:
                 return this;
@@ -594,6 +594,8 @@ public class DataType
             public String tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 @Localized String typeStr = typeName.getRaw();
+                if (!typeVars.isEmpty())
+                    typeStr += " (" + typeVars.stream().map(t -> t.toString()).collect(Collectors.joining(" ")) + ")";
                 if (drillIntoTagged)
                 {
                     typeStr += " <";
@@ -665,6 +667,12 @@ public class DataType
             {
                 return "Boolean";
             }
+
+            @Override
+            public String typeVariable(String typeVariableName) throws InternalException, UserException
+            {
+                return typeVariableName + "*";
+            }
         });
     }
 
@@ -677,7 +685,8 @@ public class DataType
         }
         catch (UserException | InternalException e)
         {
-            return "Error";
+            Utility.log(e);
+            return "Error: " + e.getLocalizedMessage();
         }
     }
 

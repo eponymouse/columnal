@@ -64,7 +64,7 @@ public class TypeManager
 
     // Either makes a new one, or fetches the existing one if it is the same type
     // or renames it to a spare name and returns that.
-    public TaggedTypeDefinition registerTaggedType(String idealTypeName, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
+    public TaggedTypeDefinition registerTaggedType(String idealTypeName, ImmutableList<String> typeVariables, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
     {
         if (tagTypes.isEmpty())
             throw new InternalException("Tagged type cannot have zero tags");
@@ -82,13 +82,13 @@ public class TypeManager
             else
             {
                 // Keep trying new names:
-                return registerTaggedType(increaseNumber(idealTypeName), tagTypes);
+                return registerTaggedType(increaseNumber(idealTypeName), typeVariables, tagTypes);
             }
         }
         else
         {
             // TODO run sanity check for duplicate tag type names
-            TaggedTypeDefinition newType = new TaggedTypeDefinition(idealTypeId, ImmutableList.of(), tagTypes);
+            TaggedTypeDefinition newType = new TaggedTypeDefinition(idealTypeId, typeVariables, tagTypes);
             knownTypes.put(idealTypeId, newType);
             return newType;
         }

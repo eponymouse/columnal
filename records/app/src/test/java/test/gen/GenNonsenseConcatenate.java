@@ -1,6 +1,7 @@
 package test.gen;
 
 import annotation.qual.Value;
+import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import records.data.ColumnId;
@@ -47,7 +48,7 @@ public class GenNonsenseConcatenate extends GenValueBase<Transformation_Mgr>
             for (DataType type : TestUtil.distinctTypes)
             {
                 if (type.isTagged())
-                    mgr.getTypeManager().registerTaggedType(type.getTaggedTypeName().getRaw(), type.getTagTypes());
+                    mgr.getTypeManager().registerTaggedType(type.getTaggedTypeName().getRaw(), ImmutableList.of(),  type.getTagTypes());
             }
         }
         catch (InternalException | UserException e)

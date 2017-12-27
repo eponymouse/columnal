@@ -110,7 +110,7 @@ public class EditTaggedTypeDialog extends ErrorableDialog<TaggedTypeDefinition>
 
         try
         {
-            return Either.right(typeManager.registerTaggedType(name, tagTypes.build()));
+            return Either.right(typeManager.registerTaggedType(name, ImmutableList.of(), tagTypes.build()));
         }
         catch (InternalException e)
         {

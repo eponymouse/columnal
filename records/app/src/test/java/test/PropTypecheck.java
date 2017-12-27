@@ -187,7 +187,7 @@ public class PropTypecheck
     }
 
     @Property
-    public void checkTagged(@When(seed=5544937066791761634L) @From(GenDataType.GenTaggedType.class) GenDataType.DataTypeAndManager typeA, @When(seed=7193812678125222301L) @From(GenDataType.GenTaggedType.class) GenDataType.DataTypeAndManager typeB) throws UserException, InternalException
+    public void checkTagged(@When(seed=1L) @From(GenDataType.GenTaggedType.class) GenDataType.DataTypeAndManager typeA, @From(GenDataType.GenTaggedType.class) GenDataType.DataTypeAndManager typeB) throws UserException, InternalException
     {
         // Is equals right here?
         checkSameRelations(typeA.typeManager, typeA.dataType, typeB.dataType, toValue(typeA.dataType), toValue(typeB.dataType), typeA.dataType.equals(typeB.dataType));

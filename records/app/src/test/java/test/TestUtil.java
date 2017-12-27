@@ -212,15 +212,15 @@ public class TestUtil
         return keywords;
     }
 
-    public static <T> List<T> makeList(SourceOfRandomness r, int minSizeIncl, int maxSizeIncl, ExSupplier<T> makeOne)
+    public static <T> ImmutableList<T> makeList(SourceOfRandomness r, int minSizeIncl, int maxSizeIncl, ExSupplier<T> makeOne)
     {
         try
         {
             int size = r.nextInt(minSizeIncl, maxSizeIncl);
-            ArrayList<T> list = new ArrayList<>();
+            ImmutableList.Builder<T> list = ImmutableList.builder();
             for (int i = 0; i < size; i++)
                 list.add(makeOne.get());
-            return list;
+            return list.build();
         }
         catch (InternalException | UserException e)
         {
@@ -395,10 +395,11 @@ public class TestUtil
     static {
         try
         {
-            DataType a = DummyManager.INSTANCE.getTypeManager().registerTaggedType("A", ImmutableList.of(new TagType<DataType>("Single", null))).instantiate(ImmutableList.of());
-            DataType c = DummyManager.INSTANCE.getTypeManager().registerTaggedType("C", ImmutableList.of(new TagType<DataType>("Blank", null), new TagType<DataType>("Number", DataType.NUMBER))).instantiate(ImmutableList.of());
-            DataType b = DummyManager.INSTANCE.getTypeManager().registerTaggedType("B", ImmutableList.of(new TagType<DataType>("Single", null))).instantiate(ImmutableList.of());
-            DataType nested = DummyManager.INSTANCE.getTypeManager().registerTaggedType("Nested", ImmutableList.of(new TagType<DataType>("A", a), new TagType<DataType>("C", c))).instantiate(ImmutableList.of());
+            // TODO add a higher-order type
+            DataType a = DummyManager.INSTANCE.getTypeManager().registerTaggedType("A", ImmutableList.of(), ImmutableList.of(new TagType<DataType>("Single", null))).instantiate(ImmutableList.of());
+            DataType c = DummyManager.INSTANCE.getTypeManager().registerTaggedType("C", ImmutableList.of(), ImmutableList.of(new TagType<DataType>("Blank", null), new TagType<DataType>("Number", DataType.NUMBER))).instantiate(ImmutableList.of());
+            DataType b = DummyManager.INSTANCE.getTypeManager().registerTaggedType("B", ImmutableList.of(), ImmutableList.of(new TagType<DataType>("Single", null))).instantiate(ImmutableList.of());
+            DataType nested = DummyManager.INSTANCE.getTypeManager().registerTaggedType("Nested", ImmutableList.of(), ImmutableList.of(new TagType<DataType>("A", a), new TagType<DataType>("C", c))).instantiate(ImmutableList.of());
             distinctTypes = Arrays.<DataType>asList(
                 DataType.BOOLEAN,
                 DataType.TEXT,
@@ -447,7 +448,7 @@ public class TestUtil
             List<DataType> taggedTypes = distinctTypes.stream().filter(p -> p.isTagged()).collect(Collectors.toList());
             for (DataType t : taggedTypes)
             {
-                typeManager.registerTaggedType(t.getTaggedTypeName().getRaw(), t.getTagTypes());
+                typeManager.registerTaggedType(t.getTaggedTypeName().getRaw(), ImmutableList.of(), t.getTagTypes());
             }
             return new TypeState(unitManager, typeManager);
         }
@@ -699,7 +700,7 @@ public class TestUtil
             @Override
             public @Nullable Void tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                typeManager.registerTaggedType(typeName.getRaw(), tags);
+                typeManager.registerTaggedType(typeName.getRaw(), ImmutableList.of(), tags);
                 for (TagType<DataType> tag : tags)
                 {
                     if (tag.getInner() != null)
