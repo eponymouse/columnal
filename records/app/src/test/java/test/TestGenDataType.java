@@ -9,7 +9,6 @@ import org.junit.Test;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
-import records.data.datatype.DataType.SpecificDataTypeVisitor;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
@@ -96,7 +95,7 @@ public class TestGenDataType
                 }
 
                 @Override
-                public Stream<Pair<@Nullable Container, @Nullable Container>> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+                public Stream<Pair<@Nullable Container, @Nullable Container>> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                 {
                     return tags.stream().flatMap(t -> Utility.streamNullable(t.getInner())).flatMap(TestGenDataType::calculateNesting).map(wrap(Container.TAGGED));
                 }

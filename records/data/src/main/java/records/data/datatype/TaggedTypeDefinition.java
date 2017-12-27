@@ -48,14 +48,14 @@ public class TaggedTypeDefinition
             substitutions.put(typeVariables.get(i), typeVariableSubs.get(i));
         }
 
-        List<TagType<DataType>> substitutedTags = Utility.mapListEx(tags, tag -> {
+        ImmutableList<TagType<DataType>> substitutedTags = Utility.mapListExI(tags, tag -> {
             if (tag.getInner() == null)
                 return tag;
             @NonNull DataType inner = tag.getInner();
             return new TagType<>(tag.getName(), inner.substitute(substitutions));
         });
         
-        return DataType.tagged(name, substitutedTags);
+        return DataType.tagged(name, typeVariableSubs, substitutedTags);
     }
 
     public TypeId getTaggedTypeName()

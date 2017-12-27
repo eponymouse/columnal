@@ -106,7 +106,7 @@ public class EditableRecordSet extends RecordSet
             }
 
             @Override
-            public EditableColumn tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public EditableColumn tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 List<TaggedValue> r = new ArrayList<>();
                 for (int i = 0; original.indexValid(i); i++)
@@ -115,7 +115,7 @@ public class EditableRecordSet extends RecordSet
                     @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();
                     r.add(new TaggedValue(tagIndex, inner == null ? null : inner.getCollapsed(i)));
                 }
-                return new MemoryTaggedColumn(rs, original.getName(), typeName, Utility.mapList(tagTypes, t -> new TagType<>(t.getName(), t.getInner())), r, Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.makeDefaultTaggedValue(tagTypes)), TaggedValue.class));
+                return new MemoryTaggedColumn(rs, original.getName(), typeName, typeVars, Utility.mapList(tagTypes, t -> new TagType<>(t.getName(), t.getInner())), r, Utility.cast(Utility.replaceNull(defaultValue, DataTypeUtility.makeDefaultTaggedValue(tagTypes)), TaggedValue.class));
             }
 
             @Override

@@ -262,7 +262,7 @@ public class TypeManager
                     }
 
                     @Override
-                    public UnitType tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+                    public UnitType tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
                     {
                         if (!topLevel)
                         {

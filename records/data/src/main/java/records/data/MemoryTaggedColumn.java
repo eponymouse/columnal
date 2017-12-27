@@ -25,13 +25,15 @@ public class MemoryTaggedColumn extends EditableColumn
     private final TaggedColumnStorage storage;
     private final TypeId typeName;
     private final TaggedValue defaultValue;
+    private final ImmutableList<DataType> typeVars;
 
-    public MemoryTaggedColumn(RecordSet rs, ColumnId title, TypeId typeName, List<TagType<DataType>> tags, List<TaggedValue> list, TaggedValue defaultValue) throws InternalException
+    public MemoryTaggedColumn(RecordSet rs, ColumnId title, TypeId typeName, ImmutableList<DataType> typeVars, List<TagType<DataType>> tags, List<TaggedValue> list, TaggedValue defaultValue) throws InternalException
     {
         super(rs, title);
         this.typeName = typeName;
+        this.typeVars = typeVars;
         this.defaultValue = defaultValue;
-        this.storage = new TaggedColumnStorage(typeName, tags);
+        this.storage = new TaggedColumnStorage(typeName, typeVars, tags);
         this.storage.addAll(list);
     }
 
@@ -48,12 +50,12 @@ public class MemoryTaggedColumn extends EditableColumn
         List<TagType<DataType>> tags = getType().apply(new SpecificDataTypeVisitor<List<TagType<DataType>>>()
         {
             @Override
-            public List<TagType<DataType>> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public List<TagType<DataType>> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return tags;
             }
         });
-        return new MemoryTaggedColumn(rs, getName(), typeName, tags, storage.getShrunk(shrunkLength), defaultValue);
+        return new MemoryTaggedColumn(rs, getName(), typeName, typeVars, tags, storage.getShrunk(shrunkLength), defaultValue);
     }
 
     public void add(TaggedValue taggedValue) throws InternalException

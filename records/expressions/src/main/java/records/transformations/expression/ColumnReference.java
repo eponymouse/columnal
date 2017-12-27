@@ -164,7 +164,7 @@ public class ColumnReference extends NonOperatorExpression
             }
 
             @Override
-            public Formula tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Formula tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 throw new UserException("Can't do tags...");
             }

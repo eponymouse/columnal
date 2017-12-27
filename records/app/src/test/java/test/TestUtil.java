@@ -697,7 +697,7 @@ public class TestUtil
             }
 
             @Override
-            public @Nullable Void tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public @Nullable Void tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 typeManager.registerTaggedType(typeName.getRaw(), tags);
                 for (TagType<DataType> tag : tags)
@@ -963,7 +963,7 @@ public class TestUtil
             }
 
             @Override
-            public UnitType tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+            public UnitType tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
                 for (TagType<DataType> tag : tags)
                 {

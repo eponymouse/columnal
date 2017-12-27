@@ -124,11 +124,12 @@ public class ImporterUtility
             {
                 OrBlankColumnType or = (OrBlankColumnType) columnType;
                 NumericColumnType inner = (NumericColumnType) or.getInner();
-                @Nullable DataType type = mgr.getTypeManager().getMaybeType().instantiate(ImmutableList.of(
-                    DataType.number(new NumberInfo(inner.unit, inner.displayInfo)))
+                DataType numberType = DataType.number(new NumberInfo(inner.unit, inner.displayInfo));
+                @Nullable DataType type = mgr.getTypeManager().getMaybeType().instantiate(
+                    ImmutableList.of(numberType)
                 );
                 @NonNull DataType typeFinal = type;
-                columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, typeFinal.getTaggedTypeName(), typeFinal.getTagTypes(), Utility.mapListEx(slice, item -> {
+                columns.add(rs -> new MemoryTaggedColumn(rs, columnInfo.title, typeFinal.getTaggedTypeName(), ImmutableList.of(numberType), typeFinal.getTagTypes(), Utility.mapListEx(slice, item -> {
                     if (item.isEmpty() || item.trim().equals(or.getBlankString()))
                         return new TaggedValue(0, null);
                     else

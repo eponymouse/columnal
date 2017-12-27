@@ -7,8 +7,10 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import utility.Either;
+import utility.Utility;
 
 import java.util.Objects;
+import java.util.stream.Collectors;
 
 public class TupleTypeExp extends TypeExp
 {
@@ -108,6 +110,14 @@ public class TupleTypeExp extends TypeExp
     public int hashCode()
     {
         return Objects.hash(knownMembers, complete);
+    }
+
+    @Override
+    public String toString()
+    {
+        return "(" + 
+            knownMembers.stream().map(t -> t.toString()).collect(Collectors.joining(","))
+            + (complete ? ")" : ", ...)");
     }
 }
 

@@ -33,7 +33,6 @@ import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.ParseException;
 import records.error.UserException;
-import records.grammar.DataLexer;
 import records.grammar.DataParser;
 import records.grammar.DataParser.BoolContext;
 import records.grammar.DataParser.NumberContext;
@@ -75,6 +74,7 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -161,9 +161,9 @@ public class DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public Column tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Column tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return new CachedCalculatedColumn<TaggedColumnStorage>(rs, name, (BeforeGet<TaggedColumnStorage> g) -> new TaggedColumnStorage(typeName, tags, g), cache -> {
+                return new CachedCalculatedColumn<TaggedColumnStorage>(rs, name, (BeforeGet<TaggedColumnStorage> g) -> new TaggedColumnStorage(typeName, typeVars, tags, g), cache -> {
                     cache.add(castTo(TaggedValue.class, getItem.apply(cache.filled())));
                 });
             }
@@ -237,10 +237,10 @@ public class DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public DataTypeValue tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public DataTypeValue tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 GetValue<TaggedValue> getTaggedValue = castTo(TaggedValue.class);
-                return DataTypeValue.tagged(typeName, Utility.mapListEx(tags, tag -> {
+                return DataTypeValue.tagged(typeName, typeVars, Utility.mapListExI(tags, tag -> {
                     @Nullable DataType inner = tag.getInner();
                     return new TagType<>(tag.getName(), inner == null ? null : inner.fromCollapsed(
                         (i, prog) -> {
@@ -293,8 +293,9 @@ public class DataType
             case TAGGED:
                 if (taggedTypeName == null) throw new InternalException("Null name for tagged type");
                 if (tagTypes == null) throw new InternalException("Null tags for tagged type");
+                if (tagTypeVariableSubstitutions == null) throw new InternalException("Null substitutions for tagged type");
                 
-                return DataType.tagged(taggedTypeName, Utility.mapListExI(tagTypes, t -> {
+                return DataType.tagged(taggedTypeName, Utility.mapListExI(this.tagTypeVariableSubstitutions, t -> t.substitute(substitutions)), Utility.mapListExI(tagTypes, t -> {
                     @Nullable DataType inner = t.getInner();
                     if (inner == null)
                         return t;
@@ -330,8 +331,9 @@ public class DataType
     final @Nullable DateTimeInfo dateTimeInfo;
     // For TAGGED:
     final @Nullable TypeId taggedTypeName;
-    // We don't store the declared type variables here because they should already be substituted,
-    // even if only for another type variable
+    // We store the declared type variables here even through they should already be substituted,
+    // in case we need to turn this concrete type back into a TypeExp for unification:
+    final @Nullable ImmutableList<DataType> tagTypeVariableSubstitutions;
     final @Nullable ImmutableList<TagType<DataType>> tagTypes;
     // For TUPLE (2+) and ARRAY (1).  If ARRAY and memberType is empty, indicates
     // the empty array (which can type-check against any array type)
@@ -340,13 +342,14 @@ public class DataType
     final @Nullable String typeVariableName;
 
     // package-visible
-    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataType>>> tagInfo, @Nullable List<DataType> memberType, @Nullable String typeVariableName)
+    DataType(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable TagTypeDetails tagInfo, @Nullable List<DataType> memberType, @Nullable String typeVariableName)
     {
         this.kind = kind;
         this.numberInfo = numberInfo;
         this.dateTimeInfo = dateTimeInfo;
-        this.taggedTypeName = tagInfo == null ? null : tagInfo.getFirst();
-        this.tagTypes = tagInfo == null ? null : ImmutableList.copyOf(tagInfo.getSecond());
+        this.taggedTypeName = tagInfo == null ? null : tagInfo.name;
+        this.tagTypeVariableSubstitutions = tagInfo == null ? null : tagInfo.typeVariableSubstitutions;
+        this.tagTypes = tagInfo == null ? null : tagInfo.tagTypes;
         this.memberType = memberType == null ? null : ImmutableList.copyOf(memberType);
         this.typeVariableName = typeVariableName;
     }
@@ -355,6 +358,20 @@ public class DataType
     public static final DataType BOOLEAN = new DataType(Kind.BOOLEAN, null, null, null, null, null);
     public static final DataType TEXT = new DataType(Kind.TEXT, null, null, null, null, null);
 
+    protected static class TagTypeDetails
+    {
+        private final TypeId name;
+        private final ImmutableList<DataType> typeVariableSubstitutions;
+        private final ImmutableList<TagType<DataType>> tagTypes;
+
+        protected TagTypeDetails(TypeId name, ImmutableList<DataType> typeVariableSubstitutions, ImmutableList<TagType<DataType>> tagTypes)
+        {
+            this.name = name;
+            this.typeVariableSubstitutions = typeVariableSubstitutions;
+            this.tagTypes = tagTypes;
+        }
+    }
+    
     public static DataType array()
     {
         return new DataType(Kind.ARRAY, null, null, null, Collections.emptyList(), null);
@@ -387,7 +404,7 @@ public class DataType
         R date(DateTimeInfo dateTimeInfo) throws InternalException, E;
         R bool() throws InternalException, E;
 
-        R tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, E;
+        R tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, E;
         R tuple(ImmutableList<DataType> inner) throws InternalException, E;
         // If null, array is empty and thus of unknown type
         R array(@Nullable DataType inner) throws InternalException, E;
@@ -418,7 +435,7 @@ public class DataType
         }
 
         @Override
-        public R tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+        public R tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
         {
             throw new InternalException("Unexpected tagged data type");
         }
@@ -463,7 +480,7 @@ public class DataType
             case BOOLEAN:
                 return visitor.bool();
             case TAGGED:
-                return visitor.tagged(taggedTypeName, tagTypes);
+                return visitor.tagged(taggedTypeName, tagTypeVariableSubstitutions, tagTypes);
             case ARRAY:
                 if (memberType.isEmpty())
                     return visitor.array(null);
@@ -526,6 +543,11 @@ public class DataType
         {
             return name + (inner == null ? "" : (":" + inner.toString()));
         }
+
+        public TagType<DataType> upcast()
+        {
+            return new TagType<>(name, inner);
+        }
     }
 
     @OnThread(Tag.Any)
@@ -569,7 +591,7 @@ public class DataType
             }
 
             @Override
-            public String tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public String tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 @Localized String typeStr = typeName.getRaw();
                 if (drillIntoTagged)
@@ -660,9 +682,9 @@ public class DataType
     }
 
     // package-visible
-    static DataType tagged(TypeId name, List<TagType<DataType>> tagTypes)
+    static DataType tagged(TypeId name, ImmutableList<DataType> typeVariableSubstitutes, ImmutableList<TagType<DataType>> tagTypes)
     {
-        return new DataType(Kind.TAGGED, null, null, new Pair<>(name, tagTypes), null, null);
+        return new DataType(Kind.TAGGED, null, null, new TagTypeDetails(name, typeVariableSubstitutes, tagTypes), null, null);
     }
 
 
@@ -798,6 +820,7 @@ public class DataType
         if (dateTimeInfo != null ? !dateTimeInfo.sameType(dataType.dateTimeInfo) : dateTimeInfo != null) return false;
         if (memberType != null ? !memberType.equals(dataType.memberType) : dataType.memberType != null) return false;
         if (taggedTypeName != null ? !taggedTypeName.equals(dataType.taggedTypeName) : dataType.taggedTypeName != null) return false;
+        if (!Objects.equals(tagTypeVariableSubstitutions, ((DataType) o).tagTypeVariableSubstitutions)) return false;
         return tagTypes != null ? tagTypes.equals(dataType.tagTypes) : dataType.tagTypes == null;
     }
 
@@ -928,16 +951,27 @@ public class DataType
                 }
 
                 @Override
-                public @Nullable DataType tagged(DataType a, DataType b, TypeId typeNameA, List<TagType<DataType>> tagsA, TypeId typeNameB, List<TagType<DataType>> tagsB) throws InternalException, UserException
+                public @Nullable DataType tagged(DataType a, DataType b, TypeId typeNameA, ImmutableList<DataType> varsA, List<TagType<DataType>> tagsA, TypeId typeNameB, ImmutableList<DataType> varsB, List<TagType<DataType>> tagsB) throws InternalException, UserException
                 {
                     // Because of the way tagged types work, there's no need to dig any deeper.  The types in a
                     // tagged type are known a priori because they're declared upfront, so as soon as you know
                     // what tag it is, you know what the full type is.  Thus the only question is: are these
-                    // two types the same type?  It should be enough to compare type names usually, but because
-                    // of the tricks we pull in testing, we also check tags for sanity:
-                    boolean same = typeNameA.equals(typeNameB) && tagsA.equals(tagsB);
-                    if (same)
+                    // two types the same type?  It should be enough to compare type names and type variables:
+                    boolean sameName = typeNameA.equals(typeNameB);
+                    if (sameName)
+                    {
+                        if (varsA.size() != varsB.size())
+                        {
+                            throw new InternalException("Type vars differ in number for same type: " + a);
+                        }
+                        for (int i = 0; i < varsA.size(); i++)
+                        {
+                            DataType t = checkSame(varsA.get(i), varsB.get(i), onError);
+                            if (t == null)
+                                return null;
+                        }
                         return a;
+                    }
                     else
                     {
                         switch (relation)
@@ -1036,7 +1070,7 @@ public class DataType
                 case BOOLEAN:
                     return visitor.bool(a, b);
                 case TAGGED:
-                    return visitor.tagged(a, b, a.taggedTypeName, a.tagTypes, b.taggedTypeName, b.tagTypes);
+                    return visitor.tagged(a, b, a.taggedTypeName, a.tagTypeVariableSubstitutions, a.tagTypes, b.taggedTypeName, b.tagTypeVariableSubstitutions, b.tagTypes);
                 case TUPLE:
                     return visitor.tuple(a, b, a.memberType, b.memberType);
                 case ARRAY:
@@ -1112,9 +1146,9 @@ public class DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public ExFunction<RecordSet, EditableColumn> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public ExFunction<RecordSet, EditableColumn> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return rs -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Utility.mapListEx(value, Utility::valueTagged), Utility.cast(defaultValue, TaggedValue.class));
+                return rs -> new MemoryTaggedColumn(rs, columnId, typeName, typeVars, tags, Utility.mapListEx(value, Utility::valueTagged), Utility.cast(defaultValue, TaggedValue.class));
             }
 
             @Override
@@ -1180,9 +1214,9 @@ public class DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnMaker<?, ?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public ColumnMaker<?, ?> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return new ColumnMaker<MemoryTaggedColumn, TaggedValue>(defaultValue, TaggedValue.class, (rs, defaultValue) -> new MemoryTaggedColumn(rs, columnId, typeName, tags, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), p -> {
+                return new ColumnMaker<MemoryTaggedColumn, TaggedValue>(defaultValue, TaggedValue.class, (rs, defaultValue) -> new MemoryTaggedColumn(rs, columnId, typeName, typeVars, tags, Collections.emptyList(), defaultValue), (c, t) -> c.add(t), p -> {
                     return loadTaggedValue(tags, p);
                 });
             }
@@ -1377,7 +1411,7 @@ public class DataType
             }
 
             @Override
-            public @Value Object tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public @Value Object tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return loadTaggedValue(tags, p);
             }
@@ -1461,7 +1495,7 @@ public class DataType
 
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public UnitType tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+            public UnitType tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
                 b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
                 if (topLevelDeclaration)
@@ -1517,7 +1551,7 @@ public class DataType
     {
         return apply(new SpecificDataTypeVisitor<Boolean>() {
             @Override
-            public Boolean tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Boolean tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return tags.stream().anyMatch(tt -> tt.getName().equals(tagName));
             }
@@ -1827,7 +1861,7 @@ public class DataType
         R date(T a, T b, DateTimeInfo dateTimeInfoA, DateTimeInfo dateTimeInfoB) throws InternalException, UserException;
         R bool(T a, T b) throws InternalException, UserException;
 
-        R tagged(T a, T b, TypeId typeNameA, List<TagType<DataType>> tagsA, TypeId typeNameB, List<TagType<DataType>> tagsB) throws InternalException, UserException;
+        R tagged(T a, T b, TypeId typeNameA, ImmutableList<DataType> varsA, List<TagType<DataType>> tagsA, TypeId typeNameB, ImmutableList<DataType> varsB, List<TagType<DataType>> tagsB) throws InternalException, UserException;
         R tuple(T a, T b, List<DataType> innerA, List<DataType> innerB) throws InternalException, UserException;
         // If null, array is empty and thus of unknown type
         R array(T a, T b, @Nullable DataType innerA, @Nullable DataType innerB) throws InternalException, UserException;

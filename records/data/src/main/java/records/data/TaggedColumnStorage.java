@@ -10,13 +10,11 @@ import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.DataTypeValue;
-import records.data.datatype.DataTypeValue.DataTypeVisitorGet;
 import records.data.datatype.DataTypeValue.DataTypeVisitorGetEx;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TypeId;
 import records.error.InternalException;
-import records.error.UnimplementedException;
 import records.error.UserException;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -66,13 +64,13 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
     @OnThread(Tag.Any)
     private final DataTypeValue dataType;
 
-    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, List<TagType<DT>> copyTagTypes) throws InternalException
+    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<DataType> typeVars, List<TagType<DT>> copyTagTypes) throws InternalException
     {
-        this(typeName, copyTagTypes, null);
+        this(typeName, typeVars, copyTagTypes, null);
     }
 
     @SuppressWarnings("initialization")
-    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, List<TagType<DT>> copyTagTypes, @Nullable BeforeGet<TaggedColumnStorage> beforeGet) throws InternalException
+    public <DT extends DataType> TaggedColumnStorage(TypeId typeName, ImmutableList<DataType> typeVars, List<TagType<DT>> copyTagTypes, @Nullable BeforeGet<TaggedColumnStorage> beforeGet) throws InternalException
     {
         tagStore = new NumericColumnStorage();
         innerValueIndex = new NumericColumnStorage();
@@ -94,7 +92,7 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
                 valueStores.add(null);
             }
         }
-        dataType = DataTypeValue.tagged(typeName, tagTypes, new GetValue<Integer>()
+        dataType = DataTypeValue.tagged(typeName, typeVars, ImmutableList.copyOf(tagTypes), new GetValue<Integer>()
         {
             @Override
             public Integer getWithProgress(int i, ProgressListener prog) throws UserException, InternalException
@@ -224,9 +222,9 @@ public class TaggedColumnStorage implements ColumnStorage<TaggedValue>
             }
 
             @Override
-            public DataTypeValue tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
+            public DataTypeValue tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
-                return DataTypeValue.tagged(typeName, Utility.mapListInt(tagTypes, (TagType<DataTypeValue> tt) -> new TagType<DataTypeValue>(tt.getName(), tt.getInner() == null ? null : reMap(tt.getInner()))), reMapGV(g));
+                return DataTypeValue.tagged(typeName, typeVars, Utility.mapListInt(tagTypes, (TagType<DataTypeValue> tt) -> new TagType<DataTypeValue>(tt.getName(), tt.getInner() == null ? null : reMap(tt.getInner()))), reMapGV(g));
             }
 
             @Override

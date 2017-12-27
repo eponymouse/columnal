@@ -5,7 +5,6 @@ import com.google.common.collect.ImmutableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.VBox;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
@@ -17,7 +16,6 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.Table.Display;
 import records.data.datatype.DataType;
-import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataTypeUtility;
@@ -33,7 +31,6 @@ import records.gui.stable.EditorKitCache;
 import records.gui.stable.EditorKitCallback;
 import records.gui.stable.StableView.ColumnDetails;
 import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
-import records.gui.stf.*;
 import records.gui.stf.StructuredTextField.EditorKit;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -370,7 +367,7 @@ public class TableDisplayUtility
             }
 
             @Override
-            public ImmutableList<String> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException
+            public ImmutableList<String> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
                 return ImmutableList.of("stf-cell-tagged");
             }
@@ -440,7 +437,7 @@ public class TableDisplayUtility
             }
 
             @Override
-            public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
+            public GetValueAndComponent<?> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException
             {
                 GetValue<TaggedValue> getTagged = DataTypeUtility.toTagged(g, tagTypes);
                 return new GetValueAndComponent<TaggedValue>(getTagged, (parents, v) -> (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, v));
@@ -588,7 +585,7 @@ public class TableDisplayUtility
 
             @Override
             @OnThread(Tag.FXPlatform)
-            public Component<@NonNull @Value ?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
+            public Component<@NonNull @Value ?> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tagTypes) throws InternalException
             {
                 return (Component<@Value TaggedValue>)new TaggedComponent(parents, tagTypes, (TaggedValue)value);
             }

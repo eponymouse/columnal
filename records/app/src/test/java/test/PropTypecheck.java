@@ -23,7 +23,6 @@ import records.data.datatype.DataTypeValue;
 import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
-import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.Expression;
@@ -188,14 +187,14 @@ public class PropTypecheck
     }
 
     @Property
-    public void checkTagged(@From(GenDataType.GenTaggedType.class) GenDataType.DataTypeAndManager typeA, @From(GenDataType.GenTaggedType.class) GenDataType.DataTypeAndManager typeB) throws UserException, InternalException
+    public void checkTagged(@When(seed=5544937066791761634L) @From(GenDataType.GenTaggedType.class) GenDataType.DataTypeAndManager typeA, @When(seed=7193812678125222301L) @From(GenDataType.GenTaggedType.class) GenDataType.DataTypeAndManager typeB) throws UserException, InternalException
     {
         // Is equals right here?
-        checkSameRelations(typeA.typeManager, typeA.dataType, typeB.dataType, toValue(typeA.dataType), toValue(typeB.dataType), typeA.dataType.equals(typeB));
+        checkSameRelations(typeA.typeManager, typeA.dataType, typeB.dataType, toValue(typeA.dataType), toValue(typeB.dataType), typeA.dataType.equals(typeB.dataType));
     }
 
     @Property(trials = 2000)
-    public void checkBlankArray(@When(seed=-897637067215529712L) @From(GenDataType.class) GenDataType.DataTypeAndManager original, @When(seed=-8249640037650175033L) @From(GenRandom.class) Random r) throws UserException, InternalException
+    public void checkBlankArray(@From(GenDataType.class) GenDataType.DataTypeAndManager original, @From(GenRandom.class) Random r) throws UserException, InternalException
     {
         // We make a list with the original type, and N duplicates of that type
         // with arrays randomly swapped to blank (and other types left unchanged).  No matter what order you
@@ -248,7 +247,7 @@ public class PropTypecheck
             }
 
             @Override
-            public DataType tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public DataType tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 return original;
             }
@@ -256,7 +255,7 @@ public class PropTypecheck
             @Override
             public DataType tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return DataType.tuple(Utility.mapListEx(inner, t -> t.apply(this)));
+                return DataType.tuple(Utility.mapListEx(inner, t -> blankArray(t, r)));
             }
 
             @Override
@@ -265,7 +264,7 @@ public class PropTypecheck
                 if (inner == null || r.nextInt(3) == 0)
                     return DataType.array();
                 else
-                    return DataType.array(inner.apply(this));
+                    return DataType.array(blankArray(inner, r));
             }
         });
     }
@@ -299,9 +298,9 @@ public class PropTypecheck
             }
 
             @Override
-            public DataTypeValue tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public DataTypeValue tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                return DataTypeValue.tagged(typeName, Utility.mapListEx(tags, tt -> new TagType<DataTypeValue>(tt.getName(), tt.getInner() == null ? null : toValue(tt.getInner()))), (i, prog) -> {throw new InternalException("");});
+                return DataTypeValue.tagged(typeName, typeVars, Utility.mapListExI(tags, tt -> new TagType<DataTypeValue>(tt.getName(), tt.getInner() == null ? null : toValue(tt.getInner()))), (i, prog) -> {throw new InternalException("");});
             }
 
             @Override

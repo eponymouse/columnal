@@ -18,7 +18,6 @@ import javafx.stage.Stage;
 import javafx.stage.Window;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.jetbrains.annotations.NotNull;
 import org.junit.After;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -227,7 +226,7 @@ public class TestBlankMainWindow extends ApplicationTest implements ComboUtilTra
             }
 
             @Override
-            public Void tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Void tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 clickOnSubOfDataTypeDialog(".id-type-tagged");
                 @SuppressWarnings("unchecked")

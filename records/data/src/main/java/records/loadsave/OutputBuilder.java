@@ -213,7 +213,7 @@ public class OutputBuilder
 
             @Override
             @OnThread(Tag.Simulation)
-            public String tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public String tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 TagType<DataTypeValue> t = tagTypes.get(g.get(index));
                 @Nullable DataTypeValue inner = t.getInner();

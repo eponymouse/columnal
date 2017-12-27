@@ -209,9 +209,9 @@ public abstract class TypeExp
             }
 
             @Override
-            public TypeExp tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+            public TypeExp tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
-                return new TypeCons(src, typeName.getRaw());
+                return new TypeCons(src, typeName.getRaw(), Utility.mapListInt(typeVars, v -> fromConcrete(src, v)));
             }
 
             @Override

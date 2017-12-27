@@ -166,11 +166,10 @@ public class TextImporter implements Importer
                 if (orBlankColumnType.getInner() instanceof NumericColumnType)
                 {
                     NumericColumnType numericColumnType = (NumericColumnType) orBlankColumnType.getInner();
-                    DataType numberOrBlank = typeManager.getMaybeType().instantiate(ImmutableList.of(
-                        DataType.number(new NumberInfo(numericColumnType.unit, numericColumnType.displayInfo)))
-                    );
+                    DataType numberType = DataType.number(new NumberInfo(numericColumnType.unit, numericColumnType.displayInfo));
+                    DataType numberOrBlank = typeManager.getMaybeType().instantiate(ImmutableList.of(numberType));
                     columns.add(rs -> {
-                        return TextFileColumn.taggedColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener, numberOrBlank.getTaggedTypeName(), numberOrBlank.getTagTypes(), str -> {
+                        return TextFileColumn.taggedColumn(rs, reader, format.separator, columnInfo.title, iFinal, totalColumns, listener, numberOrBlank.getTaggedTypeName(), ImmutableList.of(numberType), numberOrBlank.getTagTypes(), str -> {
                             if (str.equals(orBlankColumnType.getBlankString()))
                             {
                                 return new TaggedValue(1, null);

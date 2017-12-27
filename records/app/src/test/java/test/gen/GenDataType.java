@@ -35,6 +35,7 @@ import java.util.Random;
  */
 public class GenDataType extends Generator<DataTypeAndManager>
 {
+    // This isn't ideal because it makes tests inter-dependent:
     protected static final TypeManager typeManager;
     static {
         try

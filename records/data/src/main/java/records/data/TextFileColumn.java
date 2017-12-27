@@ -1,5 +1,6 @@
 package records.data;
 
+import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnStorage.BeforeGet;
 import records.data.Table.Display;
@@ -130,10 +131,10 @@ public final class TextFileColumn extends Column
         );
     }
 
-    public static <DT extends DataType> TextFileColumn taggedColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, @Nullable TextFileColumnListener listener, TypeId typeName, List<TagType<DT>> tagTypes, ExFunction<String, TaggedValue> parseValue) throws InternalException, UserException
+    public static <DT extends DataType> TextFileColumn taggedColumn(RecordSet recordSet, ReadState reader, @Nullable String sep, ColumnId columnName, int columnIndex, int totalColumns, @Nullable TextFileColumnListener listener, TypeId typeName, ImmutableList<DataType> typeVars, List<TagType<DT>> tagTypes, ExFunction<String, TaggedValue> parseValue) throws InternalException, UserException
     {
         return new TextFileColumn(recordSet, reader, sep, columnName, columnIndex, totalColumns, listener,
-            (BeforeGet<TaggedColumnStorage> fill) -> new TaggedColumnStorage(typeName, tagTypes, fill),
+            (BeforeGet<TaggedColumnStorage> fill) -> new TaggedColumnStorage(typeName, typeVars, tagTypes, fill),
             (storage, values) -> {
                 storage.addAll(Utility.mapListEx(values, parseValue));
             }

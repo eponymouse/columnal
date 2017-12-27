@@ -36,9 +36,9 @@ public class DataTypeValue extends DataType
 
     // package-visible
     @SuppressWarnings("unchecked")
-    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable Pair<TypeId, List<TagType<DataTypeValue>>> tagTypes, @Nullable List<DataType> memberTypes, @Nullable GetValue<@Value Number> getNumber, @Nullable GetValue<@Value String> getText, @Nullable GetValue<@Value TemporalAccessor> getDate, @Nullable GetValue<@Value Boolean> getBoolean, @Nullable GetValue<Integer> getTag, @Nullable GetValue<Pair<Integer, DataTypeValue>> getArrayContent)
+    DataTypeValue(Kind kind, @Nullable NumberInfo numberInfo, @Nullable DateTimeInfo dateTimeInfo, @Nullable TagTypeDetails tagTypes, @Nullable List<DataType> memberTypes, @Nullable GetValue<@Value Number> getNumber, @Nullable GetValue<@Value String> getText, @Nullable GetValue<@Value TemporalAccessor> getDate, @Nullable GetValue<@Value Boolean> getBoolean, @Nullable GetValue<Integer> getTag, @Nullable GetValue<Pair<Integer, DataTypeValue>> getArrayContent)
     {
-        super(kind, numberInfo, dateTimeInfo, (Pair<TypeId, List<TagType<DataType>>>)(Pair)tagTypes, memberTypes, null);
+        super(kind, numberInfo, dateTimeInfo, tagTypes, memberTypes, null);
         this.getNumber = getNumber;
         this.getText = getText;
         this.getDate = getDate;
@@ -52,9 +52,9 @@ public class DataTypeValue extends DataType
         return new DataTypeValue(Kind.BOOLEAN, null, null, null, null, null, null, null, getValue, null, null);
     }
 
-    public static DataTypeValue tagged(TypeId name, List<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag)
+    public static DataTypeValue tagged(TypeId name, ImmutableList<DataType> tagTypeVariableSubsts, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> getTag)
     {
-        return new DataTypeValue(Kind.TAGGED, null, null, new Pair<>(name, tagTypes), null, null, null, null, null, getTag, null);
+        return new DataTypeValue(Kind.TAGGED, null, null, new TagTypeDetails(name, tagTypeVariableSubsts, tagTypes.stream().map(tt -> tt.upcast()).collect(ImmutableList.toImmutableList())), null, null, null, null, null, getTag, null);
     }
 
     public static DataTypeValue text(GetValue<@Value String> getText)
@@ -125,7 +125,7 @@ public class DataTypeValue extends DataType
 
             @Override
             @OnThread(Tag.Simulation)
-            public Void tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public Void tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 TaggedValue taggedValue = (TaggedValue)value;
                 g.set(rowIndex, taggedValue.getTagIndex());
@@ -215,7 +215,7 @@ public class DataTypeValue extends DataType
         }
 
         @Override
-        public R tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tags, GetValue<Integer> g) throws InternalException, UserException
+        public R tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tags, GetValue<Integer> g) throws InternalException, UserException
         {
             return defaultOp("Unexpected tagged data type");
         }
@@ -252,7 +252,7 @@ public class DataTypeValue extends DataType
         R bool(GetValue<@Value Boolean> g) throws InternalException, E;
         R date(DateTimeInfo dateTimeInfo, GetValue<@Value TemporalAccessor> g) throws InternalException, E;
 
-        R tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
+        R tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, E;
         R tuple(ImmutableList<DataTypeValue> types) throws InternalException, E;
 
         // Each item is a pair of size and accessor.  The inner type gives the type
@@ -281,7 +281,7 @@ public class DataTypeValue extends DataType
             case BOOLEAN:
                 return visitor.bool(getBoolean);
             case TAGGED:
-                return visitor.tagged(taggedTypeName, (ImmutableList<TagType<DataTypeValue>>)(ImmutableList)tagTypes, getTag);
+                return visitor.tagged(taggedTypeName, tagTypeVariableSubstitutions, (ImmutableList<TagType<DataTypeValue>>)(ImmutableList)tagTypes, getTag);
             case TUPLE:
                 return visitor.tuple((ImmutableList<DataTypeValue>)(ImmutableList)memberType);
             case ARRAY:
@@ -347,7 +347,7 @@ public class DataTypeValue extends DataType
 
             @Override
             @OnThread(value = Tag.Simulation, ignoreParent = true)
-            public @Value Object tagged(TypeId typeName, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
+            public @Value Object tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataTypeValue>> tagTypes, GetValue<Integer> g) throws InternalException, UserException
             {
                 Integer tagIndex = g.get(index);
                 @Nullable DataTypeValue inner = tagTypes.get(tagIndex).getInner();;
@@ -409,19 +409,19 @@ public class DataTypeValue extends DataType
      */
     public static DataTypeValue copySeveral(DataType original, GetValue<Pair<DataTypeValue, Integer>> getOriginalValueAndIndex) throws InternalException
     {
-        Pair<TypeId, List<TagType<DataTypeValue>>> newTagTypes = null;
-        if (original.tagTypes != null && original.taggedTypeName != null)
+        TagTypeDetails newTagTypes = null;
+        if (original.tagTypes != null && original.tagTypeVariableSubstitutions != null && original.taggedTypeName != null)
         {
-            newTagTypes = new Pair<>(original.taggedTypeName, new ArrayList<>());
+            ImmutableList.Builder<TagType<DataType>> tagTypes = ImmutableList.builder();
             for (int tagIndex = 0; tagIndex < original.tagTypes.size(); tagIndex++)
             {
                 TagType t = original.tagTypes.get(tagIndex);
                 int tagIndexFinal = tagIndex;
                 DataType inner = t.getInner();
                 if (inner == null)
-                    newTagTypes.getSecond().add(new TagType<>(t.getName(), null));
+                    tagTypes.add(new TagType<>(t.getName(), null));
                 else
-                    newTagTypes.getSecond().add(new TagType<>(t.getName(), ((DataTypeValue) inner).copySeveral(inner, (i, prog) ->
+                    tagTypes.add(new TagType<>(t.getName(), ((DataTypeValue) inner).copySeveral(inner, (i, prog) ->
                     {
                         @NonNull Pair<DataTypeValue, Integer> destinationParent = getOriginalValueAndIndex.get(i);
                         @Nullable List<TagType<DataType>> destinationTagTypes = destinationParent.getFirst().tagTypes;
@@ -433,6 +433,7 @@ public class DataTypeValue extends DataType
                         return new Pair<DataTypeValue, Integer>(innerDTV, destinationParent.getSecond());
                     })));
             }
+            newTagTypes = new TagTypeDetails(original.taggedTypeName, original.tagTypeVariableSubstitutions, tagTypes.build());
         }
 
         final @Nullable List<DataType> memberTypes;

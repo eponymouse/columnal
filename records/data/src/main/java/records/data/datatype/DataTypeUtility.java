@@ -22,7 +22,6 @@ import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
-import records.grammar.DataParser;
 import records.grammar.GrammarUtility;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -86,7 +85,7 @@ public class DataTypeUtility
             }
 
             @Override
-            public @Value TaggedValue tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public @Value TaggedValue tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 int tag = index % tags.size();
                 @Nullable DataType inner = tags.get(tag).getInner();
@@ -146,9 +145,9 @@ public class DataTypeUtility
 
             @Override
             @OnThread(Tag.Simulation)
-            public ColumnStorage<?> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException
+            public ColumnStorage<?> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException
             {
-                return new TaggedColumnStorage(typeName, tags, (BeforeGet<TaggedColumnStorage>)beforeGet);
+                return new TaggedColumnStorage(typeName, typeVars, tags, (BeforeGet<TaggedColumnStorage>)beforeGet);
             }
 
             @Override
@@ -332,7 +331,7 @@ public class DataTypeUtility
 
             @Override
             @OnThread(Tag.Simulation)
-            public String tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public String tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 TaggedValue tv = (TaggedValue)item;
                 String tagName = tags.get(tv.getTagIndex()).getName();
@@ -474,7 +473,7 @@ public class DataTypeUtility
             }
 
             @Override
-            public @Value Object tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+            public @Value Object tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
                 return makeDefaultTaggedValue(tags);
             }

@@ -32,7 +32,6 @@ import records.transformations.expression.AddSubtractExpression.Op;
 import records.transformations.expression.AndExpression;
 import records.transformations.expression.ArrayExpression;
 import records.transformations.expression.BooleanLiteral;
-import records.transformations.expression.CallExpression;
 import records.transformations.expression.ColumnReference;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.expression.ComparisonExpression;
@@ -525,7 +524,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
 
             @Override
             @OnThread(value = Tag.Simulation,ignoreParent = true)
-            public Pair<List<@Value Object>, Expression> tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
+            public Pair<List<@Value Object>, Expression> tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
