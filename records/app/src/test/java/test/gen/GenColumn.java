@@ -53,19 +53,20 @@ public class GenColumn extends GenValueBase<ExBiFunction<Integer, RecordSet, Col
         try
         {
             TestUtil.registerAllTaggedTypes(mgr.getTypeManager(), type);
+            return columnForType(type);
         }
         catch (InternalException | UserException e)
         {
             throw new RuntimeException(e);
         }
-        return columnForType(type);
     }
 
     // Only valid to call after generate has been called at least once
     @NotNull
     @OnThread(value = Tag.Simulation, ignoreParent = true)
-    public ExBiFunction<Integer, RecordSet, Column> columnForType(DataType type)
+    public ExBiFunction<Integer, RecordSet, Column> columnForType(DataType type) throws InternalException
     {
+        TestUtil.assertNoTypeVariables(type);
         return (len, rs) -> type.makeImmediateColumn(nextCol.get(), Utility.<@Value Object>makeListEx(len, i -> makeValue(type)), makeValue(type)).apply(rs);
     }
 }

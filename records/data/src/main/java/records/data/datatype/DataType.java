@@ -1046,24 +1046,6 @@ public class DataType
         }
     }
 
-
-    public static <T extends DataType> @Nullable DataType checkAllSame(List<T> types, Consumer<String> onError) throws InternalException, UserException
-    {
-        if (types.isEmpty())
-            throw new InternalException("Cannot type-check empty list of types");
-        if (types.size() == 1)
-            return types.get(0);
-        DataType cur = types.get(0);
-        for (int i = 1; i < types.size(); i++)
-        {
-            DataType next = checkSame(cur, types.get(i), onError);
-            if (next == null)
-                return null; // Bail out early
-            cur = next;
-        }
-        return cur;
-    }
-
     public static class ColumnMaker<C extends EditableColumn, V> implements SimulationFunction<RecordSet, EditableColumn>
     {
         private final ExBiConsumer<C, V> addToColumn;

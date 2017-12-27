@@ -2,8 +2,6 @@ package test;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import com.pholser.junit.quickcheck.From;
-import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.generator.java.time.LocalTimeGenerator;
@@ -25,32 +23,24 @@ import records.data.Column;
 import records.data.ColumnId;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
-import records.data.LinkedDataSource;
 import records.data.RecordSet;
 import records.data.Table;
 import records.data.Table.FullSaver;
 import records.data.TableId;
 import records.data.TableManager;
-import records.data.TableManager.TransformationLoader;
 import records.data.datatype.DataType.DataTypeVisitor;
+import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataTypeUtility;
-import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeId;
 import records.grammar.GrammarUtility;
 import records.gui.MainWindow;
 import records.importers.ChoicePoint.ChoiceType;
-import records.transformations.TransformationManager;
 import records.transformations.expression.ErrorRecorder;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionDefinition.FunctionTypes;
 import records.transformations.function.FunctionInstance;
-import records.transformations.function.StringLength;
 import records.types.TypeExp;
-import test.gen.GenImmediateData;
-import test.gen.GenImmediateData.MustIncludeNumber;
-import test.gen.GenImmediateData.NumTables;
 import test.gen.GenString;
-import test.gen.UnicodeStringGenerator;
 import utility.*;
 import records.data.Transformation;
 import records.data.datatype.DataType;
@@ -942,6 +932,72 @@ public class TestUtil
         if (returnType != null)
             return new Pair<>(function.getFunction(), returnType);
         return null;
+    }
+
+    public static void assertNoTypeVariables(DataType dataType) throws InternalException
+    {
+        dataType.apply(new DataTypeVisitorEx<UnitType,InternalException>()
+        {
+            @Override
+            public UnitType number(NumberInfo numberInfo) throws InternalException, InternalException
+            {
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType text() throws InternalException, InternalException
+            {
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType date(DateTimeInfo dateTimeInfo) throws InternalException, InternalException
+            {
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType bool() throws InternalException, InternalException
+            {
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
+            {
+                for (TagType<DataType> tag : tags)
+                {
+                    if (tag.getInner() != null)
+                        tag.getInner().apply(this);
+                }
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType tuple(ImmutableList<DataType> inner) throws InternalException, InternalException
+            {
+                for (DataType t : inner)
+                {
+                    t.apply(this);
+                }
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType array(@Nullable DataType inner) throws InternalException, InternalException
+            {
+                if (inner != null)
+                    inner.apply(this);
+                return UnitType.UNIT;
+            }
+
+            @Override
+            public UnitType typeVariable(String typeVariableName) throws InternalException, InternalException
+            {
+                fail("Found type variable in type: " + dataType);
+                return UnitType.UNIT;
+            }
+        });
     }
 
     public static interface FXPlatformSupplierEx<T> extends Callable<T>

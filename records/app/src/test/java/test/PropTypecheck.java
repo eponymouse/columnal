@@ -136,19 +136,19 @@ public class PropTypecheck
 
         boolean same = unitA.equals(unitB);
 
-        checkSameRelations(numberA, numberB, numberAV, numberBV, same);
+        checkSameRelations(DummyManager.INSTANCE.getTypeManager(), numberA, numberB, numberAV, numberBV, same);
     }
 
     @Test
     public void checkBool() throws InternalException, UserException
     {
-        checkSameRelations(DataType.BOOLEAN, DataType.BOOLEAN, DataTypeValue.bool((i, prog) -> DataTypeUtility.value(true)), DataTypeValue.bool((i, prog) -> DataTypeUtility.value(true)), true);
+        checkSameRelations(DummyManager.INSTANCE.getTypeManager(), DataType.BOOLEAN, DataType.BOOLEAN, DataTypeValue.bool((i, prog) -> DataTypeUtility.value(true)), DataTypeValue.bool((i, prog) -> DataTypeUtility.value(true)), true);
     }
 
     @Test
     public void checkText() throws InternalException, UserException
     {
-        checkSameRelations(DataType.TEXT, DataType.TEXT, DataTypeValue.text((i, prog) -> DataTypeUtility.value("")), DataTypeValue.text((i, prog) -> DataTypeUtility.value("")), true);
+        checkSameRelations(DummyManager.INSTANCE.getTypeManager(), DataType.TEXT, DataType.TEXT, DataTypeValue.text((i, prog) -> DataTypeUtility.value("")), DataTypeValue.text((i, prog) -> DataTypeUtility.value("")), true);
     }
 
     @Property
@@ -161,7 +161,7 @@ public class PropTypecheck
 
         boolean same = dateTimeInfoA.sameType(dateTimeInfoB);
 
-        checkSameRelations(dateA, dateB, dateAV, dateBV, same);
+        checkSameRelations(DummyManager.INSTANCE.getTypeManager(), dateA, dateB, dateAV, dateBV, same);
     }
 
     // Need at least two types for tuple, so they are explicit, plus list of more (which may be empty):
@@ -176,7 +176,7 @@ public class PropTypecheck
         DataType typeS = DataType.tuple(allSwapped);
         DataTypeValue typeSV = DataTypeValue.tupleV(Utility.mapListEx(allSwapped, t -> toValue(t)));
         // Swapped is same as unswapped only if typeA and typeB are same:
-        checkSameRelations(type, typeS, typeV, typeSV, DataType.checkSame(typeA.dataType, typeB.dataType, s -> {}) != null);
+        checkSameRelations(typeA.typeManager, type, typeS, typeV, typeSV, DataType.checkSame(typeA.dataType, typeB.dataType, s -> {}) != null);
     }
 
     @Property
@@ -184,41 +184,43 @@ public class PropTypecheck
     {
         DataType typeA = DataType.array(innerA.dataType);
         DataType typeB = DataType.array(innerB.dataType);
-        checkSameRelations(typeA, typeB, toValue(typeA), toValue(typeB), DataType.checkSame(innerA.dataType, innerB.dataType, s -> {}) != null);
+        checkSameRelations(innerA.typeManager, typeA, typeB, toValue(typeA), toValue(typeB), DataType.checkSame(innerA.dataType, innerB.dataType, s -> {}) != null);
     }
 
     @Property
     public void checkTagged(@From(GenDataType.GenTaggedType.class) GenDataType.DataTypeAndManager typeA, @From(GenDataType.GenTaggedType.class) GenDataType.DataTypeAndManager typeB) throws UserException, InternalException
     {
         // Is equals right here?
-        checkSameRelations(typeA.dataType, typeB.dataType, toValue(typeA.dataType), toValue(typeB.dataType), typeA.dataType.equals(typeB));
+        checkSameRelations(typeA.typeManager, typeA.dataType, typeB.dataType, toValue(typeA.dataType), toValue(typeB.dataType), typeA.dataType.equals(typeB));
     }
 
     @Property(trials = 2000)
-    public void checkBlankArray(@From(GenDataType.class) GenDataType.DataTypeAndManager original, @From(GenRandom.class) Random r) throws UserException, InternalException
+    public void checkBlankArray(@When(seed=-897637067215529712L) @From(GenDataType.class) GenDataType.DataTypeAndManager original, @When(seed=-8249640037650175033L) @From(GenRandom.class) Random r) throws UserException, InternalException
     {
         // We make a list with the original type, and N duplicates of that type
         // with arrays randomly swapped to blank (and other types left unchanged).  No matter what order you
         // put them in and feed them to checkAllSameType, you should get back
         // the original, because we add a single unmodified copy back in.
 
-        ArrayList<DataType> types = new ArrayList<>();
+        ArrayList<TypeExp> types = new ArrayList<>();
 
         // Add permutations:
         int amount = r.nextInt(8);
         for (int i = 0; i < amount; i++)
         {
-            types.add(blankArray(original.dataType, r));
+            types.add(TypeExp.fromConcrete(null, blankArray(original.dataType, r)));
         }
 
         // Now add original at random place:
-        types.add(r.nextInt(types.size() + 1), original.dataType);
-        assertEquals(original.dataType, DataType.checkAllSame(types, s -> {}));
+        types.add(r.nextInt(types.size() + 1), TypeExp.fromConcrete(null, original.dataType));
+        assertEquals(Either.right(original.dataType), TypeExp.unifyTypes(types).flatMapEx(t -> t.toConcreteType(original.typeManager)));
     }
 
+    /**
+     * Randomly blanks an array type (or not) within a complex type
+     */
     private DataType blankArray(DataType original, Random r) throws UserException, InternalException
     {
-        TypeManager typeManager = new TypeManager(new UnitManager());
         return original.apply(new DataTypeVisitor<DataType>()
         {
             @Override
@@ -248,16 +250,13 @@ public class PropTypecheck
             @Override
             public DataType tagged(TypeId typeName, ImmutableList<TagType<DataType>> tags) throws InternalException, UserException
             {
-                @Nullable DataType dataType = typeManager.lookupType(typeName, ImmutableList.of());
-                if (dataType == null)
-                    return typeManager.registerTaggedType(typeName.getRaw(), Utility.mapListExI(tags, tt -> new TagType<DataType>(tt.getName(), tt.getInner()))).instantiate(ImmutableList.of());
-                return dataType;
+                return original;
             }
-
+            
             @Override
             public DataType tuple(ImmutableList<DataType> inner) throws InternalException, UserException
             {
-                return DataType.tuple(Utility.mapListEx(inner, t -> blankArray(t, r)));
+                return DataType.tuple(Utility.mapListEx(inner, t -> t.apply(this)));
             }
 
             @Override
@@ -266,7 +265,7 @@ public class PropTypecheck
                 if (inner == null || r.nextInt(3) == 0)
                     return DataType.array();
                 else
-                    return DataType.array(inner);
+                    return DataType.array(inner.apply(this));
             }
         });
     }
@@ -331,7 +330,7 @@ public class PropTypecheck
      * @param typeBV The DataTypeValue version of B (which be equivalent to B)
      * @param same Are A and B the same?
      */
-    private void checkSameRelations(DataType typeA, DataType typeB, DataTypeValue typeAV, DataTypeValue typeBV, boolean same) throws UserException, InternalException
+    private void checkSameRelations(TypeManager typeManager, DataType typeA, DataType typeB, DataTypeValue typeAV, DataTypeValue typeBV, boolean same) throws UserException, InternalException
     {
         assertEquals(typeA, typeA);
         assertEquals(typeA, typeAV);
@@ -340,7 +339,12 @@ public class PropTypecheck
         assertEquals(typeB, typeB);
         assertEquals(typeB, typeBV);
         assertEquals(typeBV, typeBV);
-
+        
+        assertEquals(Either.right(typeA), TypeExp.fromConcrete(null, typeA).toConcreteType(typeManager));
+        assertEquals(Either.right(typeAV), TypeExp.fromConcrete(null, typeAV).toConcreteType(typeManager));
+        assertEquals(Either.right(typeB), TypeExp.fromConcrete(null, typeB).toConcreteType(typeManager));
+        assertEquals(Either.right(typeBV), TypeExp.fromConcrete(null, typeBV).toConcreteType(typeManager));
+        
 
         assertEquals(typeA, DataType.checkSame(typeA, typeA, s -> {}));
         assertEquals(typeA, DataType.checkSame(typeA, typeAV, s -> {}));
@@ -363,20 +367,25 @@ public class PropTypecheck
         assertEquals(expected, DataType.checkSame(typeBV, typeA, s -> {}));
         assertEquals(expected, DataType.checkSame(typeBV, typeAV, s -> {}));
 
-        assertEquals(typeA, DataType.checkAllSame(Arrays.asList(typeA), s -> {}));
-        assertEquals(typeB, DataType.checkAllSame(Arrays.asList(typeB), s -> {}));
-        assertEquals(typeAV, DataType.checkAllSame(Arrays.asList(typeAV), s -> {}));
-        assertEquals(typeBV, DataType.checkAllSame(Arrays.asList(typeBV), s -> {}));
+        assertEquals(typeA, unifyList(typeManager, typeA));
+        assertEquals(typeB, unifyList(typeManager, typeB));
+        assertEquals(typeAV, unifyList(typeManager, typeAV));
+        assertEquals(typeBV, unifyList(typeManager, typeBV));
 
-        assertEquals(typeA, DataType.checkAllSame(Arrays.asList(typeA, typeAV), s -> {}));
-        assertEquals(typeA, DataType.checkAllSame(Arrays.asList(typeAV, typeA), s -> {}));
-        assertEquals(typeB, DataType.checkAllSame(Arrays.asList(typeB, typeBV), s -> {}));
-        assertEquals(typeB, DataType.checkAllSame(Arrays.asList(typeBV, typeB), s -> {}));
+        assertEquals(typeA, unifyList(typeManager, typeA, typeAV));
+        assertEquals(typeA, unifyList(typeManager, typeAV, typeA));
+        assertEquals(typeB, unifyList(typeManager, typeB, typeBV));
+        assertEquals(typeB, unifyList(typeManager, typeBV, typeB));
 
-        assertEquals(expected, DataType.checkAllSame(Arrays.asList(typeA, typeB), s -> {}));
-        assertEquals(expected, DataType.checkAllSame(Arrays.asList(typeA, typeAV, typeB), s -> {}));
-        assertEquals(expected, DataType.checkAllSame(Arrays.asList(typeA, typeAV, typeB, typeBV), s -> {}));
-        assertEquals(expected, DataType.checkAllSame(Arrays.asList(typeB, typeBV, typeA, typeAV), s -> {}));
+        assertEquals(expected, unifyList(typeManager, typeA, typeB));
+        assertEquals(expected, unifyList(typeManager, typeA, typeAV, typeB));
+        assertEquals(expected, unifyList(typeManager, typeA, typeAV, typeB, typeBV));
+        assertEquals(expected, unifyList(typeManager, typeB, typeBV, typeA, typeAV));
+    }
+
+    private @Nullable DataType unifyList(TypeManager typeManager, DataType... types) throws InternalException, UserException
+    {
+        return TypeExp.unifyTypes(Utility.mapListInt(Arrays.asList(types), t -> TypeExp.fromConcrete(null, t))).<@Nullable DataType>eitherEx(e -> null, t -> t.toConcreteType(typeManager).<@Nullable DataType>either(e -> null, x -> x));
     }
 
     public static class DataTypeListGenerator extends Generator<List>

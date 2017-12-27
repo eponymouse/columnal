@@ -31,6 +31,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Map.Entry;
@@ -310,24 +311,16 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
                     // Otherwise, must add null (unknown type).
                     // This is the behaviour of checkAllSame so we can just use that:
                     @Nullable DataType t;
-                    try
+                    List<DataType> nonNull = new ArrayList<>();
+                    for (@Nullable DataType dataType : varType.getValue())
                     {
-                        List<DataType> nonNull = new ArrayList<>();
-                        for (@Nullable DataType dataType : varType.getValue())
-                        {
-                            if (dataType != null)
-                                nonNull.add(dataType);
-                        }
-                        if (nonNull.size() == varType.getValue().size())
-                            t = DataType.checkAllSame(nonNull, s -> {});
-                        else
-                            t = null;
+                        if (dataType != null)
+                            nonNull.add(dataType);
                     }
-                    catch (InternalException | UserException e)
-                    {
-                        // Don't worry too much about it, just give unknown type:
+                    if (nonNull.size() == varType.getValue().size() && new HashSet<>(nonNull).size() == 1)
+                        t = nonNull.get(0);
+                    else
                         t = null;
-                    }
                     vars.add(new Pair<>(varType.getKey(), t));
                 }
             }

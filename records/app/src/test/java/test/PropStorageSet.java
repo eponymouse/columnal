@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
+import javafx.embed.swing.JFXPanel;
 import org.junit.runner.RunWith;
 import records.data.Column;
 import records.data.ColumnId;
@@ -16,6 +17,7 @@ import test.gen.GenTypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 
+import javax.swing.SwingUtilities;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +32,10 @@ import static org.junit.Assert.assertEquals;
 @RunWith(JUnitQuickcheck.class)
 public class PropStorageSet
 {
+    static {
+        SwingUtilities.invokeLater(() -> new JFXPanel());        
+    }
+    
     @Property(trials = 1000)
     @OnThread(Tag.Simulation)
     public void testSet(@From(GenTypeAndValueGen.class) GenTypeAndValueGen.TypeAndValueGen typeAndValueGen, @From(GenRandom.class) Random r) throws UserException, InternalException

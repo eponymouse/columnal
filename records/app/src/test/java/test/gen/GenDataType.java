@@ -1,16 +1,20 @@
 package test.gen;
 
 import com.google.common.collect.ImmutableList;
+import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
+import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
+import records.data.datatype.DataType.TagType;
 import records.data.datatype.NumberInfo;
 import records.data.datatype.TaggedTypeDefinition;
+import records.data.datatype.TypeId;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -24,6 +28,7 @@ import utility.Utility;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Random;
 
 /**
  * Created by neil on 13/01/2017.
@@ -47,10 +52,11 @@ public class GenDataType extends Generator<DataTypeAndManager>
         public final TypeManager typeManager;
         public final DataType dataType;
 
-        public DataTypeAndManager(TypeManager typeManager, DataType dataType)
+        public DataTypeAndManager(TypeManager typeManager, DataType dataType) throws InternalException
         {
             this.typeManager = typeManager;
             this.dataType = dataType;
+            TestUtil.assertNoTypeVariables(dataType);
         }
     }
 
