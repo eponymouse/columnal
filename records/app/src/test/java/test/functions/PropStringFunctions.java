@@ -14,6 +14,8 @@ import records.error.UserException;
 import records.transformations.function.*;
 import test.TestUtil;
 import test.gen.GenRandom;
+import test.gen.GenTypeAndValueGen;
+import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import test.gen.UnicodeStringGenerator;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -247,8 +249,27 @@ public class PropStringFunctions
 
     @Property
     @OnThread(Tag.Simulation)
-    public void propShow()
+    public void propShow(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws UserException, InternalException
     {
-        fail("TODO: test anything->string show function");
+        FunctionDefinition toString = new ToString();
+        FunctionDefinition fromString = new FromString();
+        @Nullable Pair<FunctionInstance, DataType> checkedToString = TestUtil.typeCheckFunction(toString, Collections.emptyList(), typeAndValueGen.getType(), typeAndValueGen.getTypeManager());
+        @Nullable Pair<FunctionInstance, DataType> checkedFromString = TestUtil.typeCheckFunction(fromString, typeAndValueGen.getType(), Collections.emptyList(), DataType.TEXT, typeAndValueGen.getTypeManager());
+        if (checkedToString == null || checkedFromString == null)
+        {
+            fail("Type check failure");
+        } else
+        {
+            assertEquals(DataType.TEXT, checkedToString.getSecond());
+            assertEquals(typeAndValueGen.getType(), checkedFromString.getSecond());
+
+            for (int i = 0; i < 100; i++)
+            {
+                @Value Object value = typeAndValueGen.makeValue();
+                @Value Object asString = checkedToString.getFirst().getValue(0, value);
+                @Value Object roundTripped = checkedFromString.getFirst().getValue(0, asString);
+                TestUtil.assertValueEqual(asString.toString(), value, roundTripped);
+            }
+        }
     }
 }

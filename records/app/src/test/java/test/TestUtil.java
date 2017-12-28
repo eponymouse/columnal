@@ -922,6 +922,11 @@ public class TestUtil
 
     public static @Nullable Pair<FunctionInstance,DataType> typeCheckFunction(FunctionDefinition function, List<Object> units, DataType paramType) throws InternalException, UserException
     {
+        return typeCheckFunction(function, units, paramType, null);
+    }
+
+    public static @Nullable Pair<FunctionInstance,DataType> typeCheckFunction(FunctionDefinition function, List<Object> units, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
+    {
         ErrorRecorder onError = (src, err, fixes) -> {throw new RuntimeException(err);};
         FunctionTypes functionTypes = function.makeParamAndReturnType();
         @SuppressWarnings("nullness") // For null src
@@ -929,7 +934,22 @@ public class TestUtil
         if (paramTypeExp == null)
             return null;
         @SuppressWarnings("nullness") // For null src
-        @Nullable DataType returnType = onError.recordError(null, functionTypes.returnType.toConcreteType(DummyManager.INSTANCE.getTypeManager()));
+        @Nullable DataType returnType = onError.recordError(null, functionTypes.returnType.toConcreteType(overrideTypeManager != null ? overrideTypeManager : DummyManager.INSTANCE.getTypeManager()));
+        if (returnType != null)
+            return new Pair<>(function.getFunction(), returnType);
+        return null;
+    }
+
+    public static @Nullable Pair<FunctionInstance,DataType> typeCheckFunction(FunctionDefinition function, DataType expectedReturnType, List<Object> units, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
+    {
+        ErrorRecorder onError = (src, err, fixes) -> {throw new RuntimeException(err);};
+        FunctionTypes functionTypes = function.makeParamAndReturnType();
+        @SuppressWarnings("nullness") // For null src
+        TypeExp paramTypeExp = onError.recordError(null, TypeExp.unifyTypes(functionTypes.paramType, TypeExp.fromConcrete(null, paramType)));
+        if (paramTypeExp == null)
+            return null;
+        @SuppressWarnings("nullness") // For null src
+        @Nullable DataType returnType = onError.recordError(null, TypeExp.unifyTypes(TypeExp.fromConcrete(null, expectedReturnType), functionTypes.returnType).flatMapEx(t -> t.toConcreteType(overrideTypeManager != null ? overrideTypeManager : DummyManager.INSTANCE.getTypeManager())));
         if (returnType != null)
             return new Pair<>(function.getFunction(), returnType);
         return null;

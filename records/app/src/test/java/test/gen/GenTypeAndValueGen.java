@@ -3,15 +3,12 @@ package test.gen;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.random.SourceOfRandomness;
-import org.jetbrains.annotations.NotNull;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
+import test.gen.GenDataType.DataTypeAndManager;
 import test.gen.GenTypeAndValueGen.TypeAndValueGen;
-import utility.Pair;
-import utility.SimulationSupplier;
-
-import java.util.function.Supplier;
 
 /**
  * Created by neil on 05/06/2017.
@@ -21,15 +18,22 @@ public class GenTypeAndValueGen extends GenValueBase<TypeAndValueGen>
     public class TypeAndValueGen
     {
         private final DataType type;
+        private final TypeManager typeManager;
 
-        public TypeAndValueGen(DataType type)
+        private TypeAndValueGen(DataType type, TypeManager typeManager)
         {
             this.type = type;
+            this.typeManager = typeManager;
         }
 
         public DataType getType()
         {
             return type;
+        }
+
+        public TypeManager getTypeManager()
+        {
+            return typeManager;
         }
 
         public @Value Object makeValue() throws InternalException, UserException
@@ -48,12 +52,11 @@ public class GenTypeAndValueGen extends GenValueBase<TypeAndValueGen>
     public TypeAndValueGen generate(SourceOfRandomness sourceOfRandomness, GenerationStatus generationStatus)
     {
         GenDataType genDataType = typeGenerator();
-        DataType type = genDataType.generate(sourceOfRandomness, generationStatus).dataType;
-
+        DataTypeAndManager generated = genDataType.generate(sourceOfRandomness, generationStatus);
         this.r = sourceOfRandomness;
         this.gs = generationStatus;
 
-        return new TypeAndValueGen(type);
+        return new TypeAndValueGen(generated.dataType, generated.typeManager);
     }
 
     public GenDataType typeGenerator()
