@@ -9,7 +9,7 @@ tuple : OPEN_BRACKET type (COMMA type)+ CLOSE_BRACKET;
 array : OPEN_SQUARE type CLOSE_SQUARE;
 type : BOOLEAN | number | TEXT | date | tagRef | tuple | array | typeVar;
 taggedDecl : TAGGED ident* OPEN_BRACKET tagItem (TAGOR tagItem)* CLOSE_BRACKET;
-tagRef : TAGGED ident;
+tagRef : TAGGED ident type*; // First ident is name, rest are type params
 typeVar : TYPEVAR ident;
 
 ident : UNQUOTED_NAME | STRING;

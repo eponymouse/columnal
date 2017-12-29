@@ -1,7 +1,6 @@
 package records.data;
 
 import annotation.qual.Value;
-import javafx.application.Platform;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.TableOperations.DeleteColumn;
 import records.data.datatype.DataType;
@@ -13,10 +12,8 @@ import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Utility;
-import utility.Workers;
 
 import java.io.File;
-import java.util.Optional;
 
 /**
  * Created by neil on 09/11/2016.
@@ -57,7 +54,7 @@ public class ImmediateDataSource extends DataSource
             for (Column c : data.getColumns())
             {
                 b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).quote(c.getName());
-                c.getType().save(b, false);
+                c.getType().save(b);
 
                 @Nullable @Value Object defaultValue = c.getDefaultValue();
                 if (defaultValue != null)

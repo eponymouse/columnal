@@ -52,6 +52,10 @@ public class PropLoadSaveData
             assertEquals(saved, savedAgain);
             assertEquals(toMap(original.data), loaded);
             assertEquals(loaded, loadedAgain);
+            assertEquals(original.mgr.getTypeManager().getKnownTaggedTypes(), mgr1.getTypeManager().getKnownTaggedTypes());
+            assertEquals(original.mgr.getTypeManager().getKnownTaggedTypes(), mgr2.getTypeManager().getKnownTaggedTypes());
+            assertEquals(original.mgr.getUnitManager().getAllDeclared(), mgr1.getUnitManager().getAllDeclared());
+            assertEquals(original.mgr.getUnitManager().getAllDeclared(), mgr2.getUnitManager().getAllDeclared());
         }
         catch (Throwable t)
         {

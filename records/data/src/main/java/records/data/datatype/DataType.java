@@ -1444,8 +1444,7 @@ public class DataType
     }
 
     // If topLevelDeclaration is false, save a reference (matters for tagged types)
-    @OnThread(Tag.Any)
-    public OutputBuilder save(OutputBuilder b, boolean topLevelDeclaration) throws InternalException
+    public OutputBuilder save(OutputBuilder b) throws InternalException
     {
         apply(new DataTypeVisitorEx<UnitType, InternalException>()
         {
@@ -1509,20 +1508,10 @@ public class DataType
             public UnitType tagged(TypeId typeName, ImmutableList<DataType> typeVars, ImmutableList<TagType<DataType>> tags) throws InternalException, InternalException
             {
                 b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
-                if (topLevelDeclaration)
+                b.quote(typeName);
+                for (DataType typeVar : typeVars)
                 {
-                    b.t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
-                    for (TagType<DataType> tag : tags)
-                    {
-                        b.kw("\\" + b.quotedIfNecessary(tag.getName()) + (tag.getInner() != null ? ":" : ""));
-                        if (tag.getInner() != null)
-                            tag.getInner().save(b, false);
-                    }
-                    b.t(FormatLexer.CLOSE_BRACKET, FormatLexer.VOCABULARY);
-                }
-                else
-                {
-                    b.quote(typeName);
+                    typeVar.save(b);
                 }
                 return UnitType.UNIT;
             }
@@ -1538,7 +1527,7 @@ public class DataType
                     if (!first)
                         b.raw(",");
                     first = false;
-                    dataType.save(b, false);
+                    dataType.save(b);
                 }
                 b.t(FormatLexer.CLOSE_BRACKET, FormatLexer.VOCABULARY);
                 return UnitType.UNIT;
@@ -1550,7 +1539,7 @@ public class DataType
             {
                 b.t(FormatLexer.OPEN_SQUARE, FormatLexer.VOCABULARY);
                 if (inner != null)
-                    inner.save(b, false);
+                    inner.save(b);
                 b.t(FormatLexer.CLOSE_SQUARE, FormatLexer.VOCABULARY);
                 return UnitType.UNIT;
             }

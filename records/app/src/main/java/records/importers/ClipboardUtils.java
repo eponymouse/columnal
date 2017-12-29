@@ -4,7 +4,6 @@ import annotation.qual.Value;
 import javafx.application.Platform;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
-import org.antlr.v4.runtime.Parser;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
@@ -12,7 +11,6 @@ import records.data.DataSource;
 import records.data.DataSource.LoadedFormat;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
-import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -28,10 +26,8 @@ import utility.Pair;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
-import utility.gui.FXUtility;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -108,7 +104,7 @@ public class ClipboardUtils
                 for (Column c : columns)
                 {
                     b.t(FormatLexer.COLUMN, FormatLexer.VOCABULARY).quote(c.getName());
-                    c.getType().save(b, false);
+                    c.getType().save(b);
                     b.nl();
                 }
             });

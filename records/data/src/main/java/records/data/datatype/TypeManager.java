@@ -107,6 +107,7 @@ public class TypeManager
     private void loadTypeDecl(TypeDeclContext typeDeclContext) throws UserException, InternalException
     {
         TypeId typeName = new TypeId(typeDeclContext.typeName().getText());
+        ImmutableList<String> typeParams = Utility.mapListExI(typeDeclContext.taggedDecl().ident(), var -> var.getText());
         List<TagType<DataType>> tags = new ArrayList<>();
         for (TagItemContext item : typeDeclContext.taggedDecl().tagItem())
         {
@@ -121,7 +122,7 @@ public class TypeManager
                 tags.add(new TagType<DataType>(tagName, null));
         }
         
-        knownTypes.put(typeName, new TaggedTypeDefinition(typeName, ImmutableList.of(), ImmutableList.copyOf(tags)));
+        knownTypes.put(typeName, new TaggedTypeDefinition(typeName, typeParams, ImmutableList.copyOf(tags)));
     }
 
 
@@ -159,7 +160,8 @@ public class TypeManager
         {
             if (type.tagRef().ident() == null)
                 throw new UserException("Missing tag name: " + type.tagRef());
-            DataType taggedType = lookupType(new TypeId(type.tagRef().ident().getText()), ImmutableList.of());
+            ImmutableList<DataType> typeParams = Utility.mapListExI(type.tagRef().type(), t -> loadTypeUse(t));
+            DataType taggedType = lookupType(new TypeId(type.tagRef().ident().getText()), typeParams);
             if (taggedType == null)
                 throw new UserException("Undeclared tagged type: \"" + type.tagRef().ident().getText() + "\"");
             return taggedType;

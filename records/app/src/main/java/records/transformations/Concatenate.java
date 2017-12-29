@@ -275,7 +275,7 @@ public class Concatenate extends TransformationEditable
             {
                 OutputBuilder b = new OutputBuilder();
                 b.id(e.getKey()).kw("@TYPE");
-                e.getValue().getFirst().save(b, false);
+                e.getValue().getFirst().save(b);
                 if (e.getValue().getSecond().isPresent())
                     b.kw("@VALUE").dataValue(e.getValue().getFirst(), e.getValue().getSecond().get());
                 else

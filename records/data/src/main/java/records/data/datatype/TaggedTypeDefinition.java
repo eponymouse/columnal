@@ -11,7 +11,6 @@ import records.loadsave.OutputBuilder;
 import utility.Utility;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -66,7 +65,10 @@ public class TaggedTypeDefinition
     public void save(OutputBuilder b) throws InternalException
     {
         b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
-        // TODO save type variables
+        for (String typeVariable : typeVariables)
+        {
+            b.raw(b.quotedIfNecessary(typeVariable));
+        }
         b.t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
         boolean first = true;
         for (TagType<DataType> tag : tags)
@@ -75,7 +77,7 @@ public class TaggedTypeDefinition
                 b.t(FormatLexer.TAGOR, FormatLexer.VOCABULARY);
             b.kw(b.quotedIfNecessary(tag.getName()) + (tag.getInner() != null ? ":" : ""));
             if (tag.getInner() != null)
-                tag.getInner().save(b, false);
+                tag.getInner().save(b);
             first = false;
         }
         b.t(FormatLexer.CLOSE_BRACKET, FormatLexer.VOCABULARY);
@@ -101,5 +103,11 @@ public class TaggedTypeDefinition
     public ImmutableList<String> getTypeArguments()
     {
         return typeVariables;
+    }
+
+    @Override
+    public String toString()
+    {
+        return name + " " + Utility.listToString(typeVariables) + " " + Utility.listToString(tags);
     }
 }
