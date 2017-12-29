@@ -1552,6 +1552,13 @@ public class DataType
                 b.t(FormatLexer.CLOSE_SQUARE, FormatLexer.VOCABULARY);
                 return UnitType.UNIT;
             }
+
+            @Override
+            public UnitType typeVariable(String typeVariableName) throws InternalException, InternalException
+            {
+                b.raw(typeVariableName);
+                return UnitType.UNIT;
+            }
         });
         return b;
     }

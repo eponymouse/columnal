@@ -297,6 +297,12 @@ public class TypeManager
                             inner.apply(this);
                         return UnitType.UNIT;
                     }
+
+                    @Override
+                    public UnitType typeVariable(String typeVariableName) throws InternalException, UserException
+                    {
+                        return UnitType.UNIT;
+                    }
                 });
             }
         }

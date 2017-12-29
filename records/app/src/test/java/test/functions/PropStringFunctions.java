@@ -250,7 +250,7 @@ public class PropStringFunctions
 
     @Property(trials = 200)
     @OnThread(Tag.Simulation)
-    public void propShow(@When(seed=-1282264898563452923L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws UserException, InternalException
+    public void propShow(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws UserException, InternalException
     {
         FunctionDefinition toString = new ToString();
         FunctionDefinition fromString = new FromString();
