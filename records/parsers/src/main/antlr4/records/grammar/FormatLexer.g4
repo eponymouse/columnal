@@ -17,27 +17,29 @@ DATETIME : 'DATETIME';
 DATETIMEZONED : 'DATETIMEZONED';
 TAGGED : 'TAGGED';
 TYPE : 'TYPE';
+TYPEVAR : 'TYPEVAR';
 SPACE_KWD : 'SPACE';
 ZERO_KWD : 'ZERO';
 DEFAULT : 'DEFAULT' -> pushMode(VALUE_MODE);
 
 WS : ( ' ' | '\t' )+ -> skip;
 
+COLUMN : 'COLUMN';
+
 CONS: ':';
-QUOTED_CONSTRUCTOR : ('\\' STRING) { String orig = getText(); setText(GrammarUtility.processEscapes(orig.substring(1))); };
-UNQUOTED_CONSTRUCTOR : ('\\' ~[ \t\r\n:"]+) { setText(getText().substring(1)); };
+UNQUOTED_NAME : ~[ \t\r\n:(),\[\]|"-]+;
 OPEN_BRACKET : '(';
 CLOSE_BRACKET : ')';
 COMMA: ',';
 OPEN_SQUARE : '[';
 CLOSE_SQUARE : ']';
 DASH: '-';
+TAGOR: '|';
 
-COLUMN : 'COLUMN';
+
 
 NEWLINE : '\r'? '\n' ;
 
 mode VALUE_MODE;
 VALUE_END: NEWLINE -> popMode;
 VALUE: (~[\n\r])+;
-

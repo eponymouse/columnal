@@ -68,11 +68,15 @@ public class TaggedTypeDefinition
         b.t(FormatLexer.TAGGED, FormatLexer.VOCABULARY);
         // TODO save type variables
         b.t(FormatLexer.OPEN_BRACKET, FormatLexer.VOCABULARY);
+        boolean first = true;
         for (TagType<DataType> tag : tags)
         {
-            b.kw("\\" + b.quotedIfNecessary(tag.getName()) + (tag.getInner() != null ? ":" : ""));
+            if (!first)
+                b.t(FormatLexer.TAGOR, FormatLexer.VOCABULARY);
+            b.kw(b.quotedIfNecessary(tag.getName()) + (tag.getInner() != null ? ":" : ""));
             if (tag.getInner() != null)
                 tag.getInner().save(b, false);
+            first = false;
         }
         b.t(FormatLexer.CLOSE_BRACKET, FormatLexer.VOCABULARY);
     }

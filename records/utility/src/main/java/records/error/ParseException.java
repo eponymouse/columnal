@@ -25,7 +25,7 @@ public class ParseException extends UserException
     @SuppressWarnings("deprecation")
     public ParseException(Parser p, ParseCancellationException e)
     {
-        super("Found: {" + p.getCurrentToken().getText() + "} " + (p.getCurrentToken().getType() < 0 ? "EOF" : p.getTokenNames()[p.getCurrentToken().getType()]) + " " + p.getCurrentToken().getStartIndex(), e);
+        super("Found: {" + p.getCurrentToken().getText() + "} " + (p.getCurrentToken().getType() < 0 ? "EOF" : p.getTokenNames()[p.getCurrentToken().getType()]) + " [" + p.getCurrentToken().getType() + "] " + p.getCurrentToken().getStartIndex(), e);
     }
 
     private static String formatLocation(ParserRuleContext problemItem)

@@ -30,6 +30,7 @@ import records.data.TaggedColumnStorage;
 import records.data.TemporalColumnStorage;
 import records.data.TupleColumnStorage;
 import records.data.datatype.DataTypeValue.GetValue;
+import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.ParseException;
 import records.error.UserException;
@@ -1457,7 +1458,8 @@ public class DataType
                 {
                     b.n(ndi.getMinimumDP());
                 }
-                b.unit(numberInfo.getUnit().toString());
+                if (!numberInfo.getUnit().equals(Unit.SCALAR))
+                    b.unit(numberInfo.getUnit().toString());
                 return UnitType.UNIT;
             }
 
@@ -1556,6 +1558,7 @@ public class DataType
             @Override
             public UnitType typeVariable(String typeVariableName) throws InternalException, InternalException
             {
+                b.t(FormatLexer.TYPEVAR, FormatLexer.VOCABULARY);
                 b.raw(typeVariableName);
                 return UnitType.UNIT;
             }

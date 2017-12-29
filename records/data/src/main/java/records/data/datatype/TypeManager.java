@@ -110,7 +110,7 @@ public class TypeManager
         List<TagType<DataType>> tags = new ArrayList<>();
         for (TagItemContext item : typeDeclContext.taggedDecl().tagItem())
         {
-            String tagName = item.constructor().getText();
+            String tagName = item.ident().getText();
 
             if (tags.stream().anyMatch(t -> t.getName().equals(tagName)))
                 throw new UserException("Duplicate tag names in format: \"" + tagName + "\"");
@@ -152,16 +152,16 @@ public class TypeManager
         else if (type.number() != null)
         {
             NumberContext n = type.number();
-            Unit unit = unitManager.loadUse(n.UNIT().getText());
+            Unit unit = n.UNIT() == null ? Unit.SCALAR : unitManager.loadUse(n.UNIT().getText());
             return DataType.number(new NumberInfo(unit, null /*TODO */));
         }
         else if (type.tagRef() != null)
         {
-            if (type.tagRef().STRING() == null)
+            if (type.tagRef().ident() == null)
                 throw new UserException("Missing tag name: " + type.tagRef());
-            DataType taggedType = lookupType(new TypeId(type.tagRef().STRING().getText()), ImmutableList.of());
+            DataType taggedType = lookupType(new TypeId(type.tagRef().ident().getText()), ImmutableList.of());
             if (taggedType == null)
-                throw new UserException("Undeclared tagged type: \"" + type.tagRef().STRING().getText() + "\"");
+                throw new UserException("Undeclared tagged type: \"" + type.tagRef().ident().getText() + "\"");
             return taggedType;
         }
         else if (type.tuple() != null)
@@ -171,6 +171,10 @@ public class TypeManager
         else if (type.array() != null)
         {
             return DataType.array(loadTypeUse(type.array().type()));
+        }
+        else if (type.typeVar() != null)
+        {
+            return DataType.typeVariable(type.typeVar().ident().getText());
         }
         else
             throw new InternalException("Unrecognised case: \"" + type.getText() + "\"");
