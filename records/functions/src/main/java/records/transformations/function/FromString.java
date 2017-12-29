@@ -46,6 +46,11 @@ public class FromString extends FunctionDefinition
         });
     }
 
+    public static FunctionGroup group()
+    {
+        return new FunctionGroup("from.string.short", new FromString());
+    }
+
     private static class Instance extends FunctionInstance
     {
         private final DataType type;
