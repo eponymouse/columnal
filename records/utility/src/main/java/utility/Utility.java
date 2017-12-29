@@ -277,7 +277,7 @@ public class Utility
         else if (ax instanceof List)
             cmp = compareLists((List<@NonNull @Value ?>)ax, (List<@NonNull @Value ?>)bx, epsilon);
         else if (ax instanceof ListEx)
-            cmp = compareLists((ListEx)ax, (ListEx)bx, epsilon);
+            cmp = compareLists(Utility.cast(ax, ListEx.class), Utility.cast(bx, ListEx.class), epsilon);
         else if (ax instanceof Comparable)
         {
             // Need to be declaration to use annotation:
@@ -1080,6 +1080,18 @@ public class Utility
             return highBoundIncl;
         else
             return value;
+    }
+
+    public static String numberToString(Number value)
+    {
+        String num;
+        if (value instanceof Double)
+            num = String.format("%f", value.doubleValue());
+        else if (value instanceof BigDecimal)
+            num = ((BigDecimal)value).toPlainString();
+        else
+            num =  value.toString();
+        return num;
     }
 
     public static class ReadState

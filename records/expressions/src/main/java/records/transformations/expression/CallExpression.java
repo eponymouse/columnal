@@ -49,7 +49,7 @@ public class CallExpression extends NonOperatorExpression
     private final @Nullable FunctionDefinition definition;
     // If null, didn't type check
     @MonotonicNonNull
-    private FunctionInstance instance;
+    private FunctionTypes types;
 
     public CallExpression(String functionName, @Nullable FunctionDefinition functionDefinition, List<Unit> units, Expression arg)
     {
@@ -77,21 +77,20 @@ public class CallExpression extends NonOperatorExpression
         @Nullable TypeExp paramType = param.check(data, state, onError);
         if (paramType == null)
             return null;
-        FunctionTypes types = definition.makeParamAndReturnType();
+        types = definition.makeParamAndReturnType(state.getTypeManager());
         @Nullable TypeExp checked = onError.recordError(this, TypeExp.unifyTypes(types.paramType, paramType));
         if (checked == null)
             return null;
-        instance = definition.getFunction();
         return types.returnType;
     }
 
     @Override
     public @OnThread(Tag.Simulation) @Value Object getValue(int rowIndex, EvaluateState state) throws UserException, InternalException
     {
-        if (instance == null)
+        if (types == null)
             throw new InternalException("Calling function " + functionName + " which didn't typecheck");
-
-        return instance.getValue(rowIndex, param.getValue(rowIndex, state));
+        
+        return types.getInstanceAfterTypeCheck().getValue(rowIndex, param.getValue(rowIndex, state));
     }
 
     @Override

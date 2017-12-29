@@ -1,6 +1,7 @@
 package records.transformations.function;
 
 import annotation.qual.Value;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.types.MutVar;
@@ -15,7 +16,7 @@ public class Max extends FunctionDefinition
 {
     public Max()
     {
-        super("max", Instance::new, Max::listOfAny);
+        super("max", Max::listOfAny);
     }
 
     public static FunctionGroup group()
@@ -23,10 +24,10 @@ public class Max extends FunctionDefinition
         return new FunctionGroup("max.short", new Max());
     }
     
-    private static FunctionTypes listOfAny()
+    private static FunctionTypes listOfAny(TypeManager typeManager)
     {
         TypeExp any = new MutVar(null);
-        return new FunctionTypes(any, new TypeCons(null, TypeExp.CONS_LIST, any));
+        return new FunctionTypesUniform(typeManager, Instance::new, any, new TypeCons(null, TypeExp.CONS_LIST, any));
     }    
 
     private static class Instance extends FunctionInstance

@@ -3,9 +3,11 @@ package records.transformations.function;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -28,30 +30,22 @@ public class FunctionDefinition
 {
     private final String name;
     private final TypeMatcher typeMatcher;
-    private final Supplier<FunctionInstance> makeInstance;
 
-    public FunctionDefinition(String name, Supplier<FunctionInstance> makeInstance, TypeMatcher typeMatcher)
+    public FunctionDefinition(String name, TypeMatcher typeMatcher)
     {
         this.name = name;
-        this.makeInstance = makeInstance;
         this.typeMatcher = typeMatcher;
     }
 
     public FunctionDefinition(String name, Supplier<FunctionInstance> makeInstance, DataType returnType, DataType paramType)
     {
         this.name = name;
-        this.makeInstance = makeInstance;
-        this.typeMatcher = new ExactType(returnType, paramType);
+        this.typeMatcher = new ExactType(makeInstance, returnType, paramType);
     }
 
-    public FunctionInstance getFunction()
+    public FunctionTypes makeParamAndReturnType(TypeManager typeManager) throws InternalException
     {
-        return makeInstance.get();
-    }
-
-    public FunctionTypes makeParamAndReturnType() throws InternalException
-    {
-        return typeMatcher.makeParamAndReturnType();
+        return typeMatcher.makeParamAndReturnType(typeManager);
     }
     
     /**
@@ -59,6 +53,7 @@ public class FunctionDefinition
      */
     private @Nullable TypeExp getLikelyParamType()
     {
+        return null; /*
         try
         {
             return typeMatcher.makeParamAndReturnType().paramType;
@@ -67,7 +62,7 @@ public class FunctionDefinition
         {
             Utility.report(e);
             return null;
-        }
+        }*/
     }
 
     /**
@@ -84,6 +79,7 @@ public class FunctionDefinition
      */
     public @Localized String getReturnDisplay()
     {
+        return ""; /*
         try
         {
             return typeMatcher.makeParamAndReturnType().returnType.toString();
@@ -92,7 +88,7 @@ public class FunctionDefinition
         {
             Utility.report(e);
             return "";
-        }
+        }*/
     }
 
     public String getName()
@@ -105,7 +101,7 @@ public class FunctionDefinition
         // We have to make it fresh for each type inference, because the params and return may
         // share a type variable which will get unified during the inference
         
-        public FunctionTypes makeParamAndReturnType() throws InternalException;
+        public FunctionTypes makeParamAndReturnType(TypeManager typeManager) throws InternalException;
     }
 
     // For functions which have no type variables (or unit variables) shared between params and return
@@ -113,32 +109,66 @@ public class FunctionDefinition
     {
         private final DataType exactReturnType;
         private final DataType exactParamType;
-        
+        private final Supplier<FunctionInstance> makeInstance;
 
-        public ExactType(DataType exactReturnType, DataType exactParamType)
+
+        public ExactType(Supplier<FunctionInstance> makeInstance, DataType exactReturnType, DataType exactParamType)
         {
+            this.makeInstance = makeInstance;
             this.exactReturnType = exactReturnType;
             this.exactParamType = exactParamType;
         }
 
         @Override
-        public FunctionTypes makeParamAndReturnType() throws InternalException
+        public FunctionTypes makeParamAndReturnType(TypeManager typeManager) throws InternalException
         {
-            return new FunctionTypes(TypeExp.fromConcrete(null, exactReturnType), TypeExp.fromConcrete(null, exactParamType));
+            return new FunctionTypesUniform(typeManager, makeInstance, TypeExp.fromConcrete(null, exactReturnType), TypeExp.fromConcrete(null, exactParamType));
         }
     }
 
 
-    public static class FunctionTypes
+    public static abstract class FunctionTypes
     {
         public final TypeExp paramType;
         public final TypeExp returnType;
+        protected final TypeManager typeManager;
+        @MonotonicNonNull
+        private FunctionInstance instance;
 
-
-        FunctionTypes(TypeExp returnType, TypeExp paramType)
+        FunctionTypes(TypeManager typeManager, TypeExp returnType, TypeExp paramType)
         {
-            this.paramType = paramType;
+            this.typeManager = typeManager;
             this.returnType = returnType;
+            this.paramType = paramType;
+        }
+        
+        protected abstract FunctionInstance makeInstanceAfterTypeCheck() throws UserException, InternalException;
+
+        public final FunctionInstance getInstanceAfterTypeCheck() throws InternalException, UserException
+        {
+            if (instance == null)
+            {
+                instance = makeInstanceAfterTypeCheck();
+            }
+            return instance;
+        }
+    }
+    
+    // A version that has a single instance generator, regardless of type.
+    public static class FunctionTypesUniform extends FunctionTypes
+    {
+        private final Supplier<FunctionInstance> makeInstance;
+
+        FunctionTypesUniform(TypeManager typeManager, Supplier<FunctionInstance> makeInstance, TypeExp returnType, TypeExp paramType)
+        {
+            super(typeManager, returnType, paramType);
+            this.makeInstance = makeInstance;
+        }
+
+        @Override
+        protected FunctionInstance makeInstanceAfterTypeCheck()
+        {
+            return makeInstance.get();
         }
     }
 
@@ -153,6 +183,8 @@ public class FunctionDefinition
         public List<EXPRESSION> getTypes(int amount, ExFunction<List<DataType>, Boolean> mustMatch) throws InternalException, UserException;
 
         public EXPRESSION makeArrayExpression(ImmutableList<EXPRESSION> items);
+        
+        public TypeManager getTypeManager();
     }
 
     // For testing: give a unit list and parameter list that should fail typechecking
@@ -160,7 +192,7 @@ public class FunctionDefinition
     {
         return new Pair<>(Collections.emptyList(), newExpressionOfDifferentType.getTypes(1, type ->
         {
-            return TypeExp.unifyTypes(typeMatcher.makeParamAndReturnType().paramType, TypeExp.fromConcrete(null, type.get(0))).isLeft();
+            return TypeExp.unifyTypes(typeMatcher.makeParamAndReturnType(newExpressionOfDifferentType.getTypeManager()).paramType, TypeExp.fromConcrete(null, type.get(0))).isLeft();
         }).get(0));
     }
 }

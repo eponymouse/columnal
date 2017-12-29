@@ -23,9 +23,9 @@ abstract class SingleNumericInOutFunction extends FunctionDefinition
 {
     SingleNumericInOutFunction(String name, Supplier<FunctionInstance> makeInstance)
     {
-        super(name, makeInstance, () -> {
+        super(name, typeManager -> {
             NumTypeExp numType = new NumTypeExp(null, UnitExp.makeVariable());
-            return new FunctionTypes(numType, numType);
+            return new FunctionTypesUniform(typeManager, makeInstance, numType, numType);
         });
     }
 

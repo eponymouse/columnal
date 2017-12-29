@@ -26,9 +26,9 @@ public abstract class SingleNumericSummaryFunction extends FunctionDefinition
 {
     public SingleNumericSummaryFunction(String name, Supplier<FunctionInstance> makeInstance)
     {
-        super(name, makeInstance, () -> {
+        super(name, typeManager -> {
             NumTypeExp numType = new NumTypeExp(null, UnitExp.makeVariable());
-            return new FunctionTypes(numType, new TypeCons(null, TypeCons.CONS_LIST, numType));
+            return new FunctionTypesUniform(typeManager, makeInstance, numType, new TypeCons(null, TypeCons.CONS_LIST, numType));
         });
     }
 

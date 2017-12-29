@@ -9,7 +9,6 @@ import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.datatype.DataType;
-import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.Unit;
 import records.error.InternalException;
@@ -83,14 +82,7 @@ public class NumericLiteral extends Literal
 
     private String numberAsString()
     {
-        String num;
-        if (value instanceof Double)
-            num = String.format("%f", value.doubleValue());
-        else if (value instanceof BigDecimal)
-            num = ((BigDecimal)value).toPlainString();
-        else
-            num =  value.toString();
-        return num;
+        return Utility.numberToString(value);
     }
 
     @Override

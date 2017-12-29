@@ -3,6 +3,7 @@ package test.functions;
 import annotation.qual.Value;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
+import com.pholser.junit.quickcheck.When;
 import com.pholser.junit.quickcheck.runner.JUnitQuickcheck;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.junit.runner.RunWith;
@@ -247,9 +248,9 @@ public class PropStringFunctions
         }
     }
 
-    @Property
+    @Property(trials = 200)
     @OnThread(Tag.Simulation)
-    public void propShow(@From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws UserException, InternalException
+    public void propShow(@When(seed=-1282264898563452923L) @From(GenTypeAndValueGen.class) TypeAndValueGen typeAndValueGen) throws UserException, InternalException
     {
         FunctionDefinition toString = new ToString();
         FunctionDefinition fromString = new FromString();

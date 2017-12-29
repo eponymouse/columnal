@@ -10,6 +10,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.RecordSet;
 import records.data.datatype.DataType;
+import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.transformations.expression.ArrayExpression;
@@ -179,6 +180,12 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
                         public Expression makeArrayExpression(ImmutableList<Expression> items)
                         {
                             return new ArrayExpression(items);
+                        }
+
+                        @Override
+                        public TypeManager getTypeManager()
+                        {
+                            return DummyManager.INSTANCE.getTypeManager();
                         }
                     }, DummyManager.INSTANCE.getUnitManager());
                     if (failedCopy == null)

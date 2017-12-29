@@ -170,6 +170,11 @@ public class TypeState
         return unitManager;
     }
 
+    public TypeManager getTypeManager()
+    {
+        return typeManager;
+    }
+
     /**
      * Merges a set of TypeState items which came from the same original typestate,
      * but got passed to different sub expressions in a single pattern (e.g. in a tuple pattern match),
