@@ -12,7 +12,7 @@ UNIT : '{' ~'}'* '}'
   { String orig = getText(); setText(orig.substring(1, orig.length() - 1)); };
 
 PLUS_MINUS: '+-';
-ADD_OR_SUBTRACT: [+-];
+ADD_OR_SUBTRACT: [+\-];
 TIMES: '*';
 DIVIDE: '/';
 AND: '&';
@@ -43,12 +43,12 @@ UNKNOWNCONSTRUCTOR : '@unknowntag';
 RAISEDTO : '^';
 COMMA: ',';
 
-NUMBER : [+-]? [0-9]+ ('.' [0-9]+)?;
+NUMBER : [+\-]? [0-9]+ ('.' [0-9]+)?;
 
 TRUE: 'true';
 FALSE: 'false';
 
-UNQUOTED_IDENT : ~[ \t\n\r"()[\]@+-/*&|=?:;~$!<>\\~]+ {GrammarUtility.validUnquoted(getText())}?;
+UNQUOTED_IDENT : ~[ \t\n\r"()[\]@+\-/*&|=?:;~$!<>\\]+ {GrammarUtility.validUnquoted(getText())}?;
 
 
 

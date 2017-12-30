@@ -6,7 +6,7 @@ WS : ( ' ' | '\t' )+;
 
 NEWLINE : '\r'? '\n' ;
 
-NUMBER : [+-]? [0-9] [_0-9]* ('.' [_0-9]* [0-9])? {setText(getText().replace("_", ""));};
+NUMBER : [+\-]? [0-9] [_0-9]* ('.' [_0-9]* [0-9])? {setText(getText().replace("_", ""));};
 
 POWER : '^';
 TIMES: '*';

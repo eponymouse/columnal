@@ -22,7 +22,7 @@ PLUS : '+';
 MINUS : '-';
 COLON: ':';
 
-UNQUOTED_IDENT : ~[ \t\n\r"()@+-/*&|=?:;~$!<>\\,[\]]+ {GrammarUtility.validUnquoted(getText())}?;
+UNQUOTED_IDENT : ~[ \t\n\r"()@+\-/*&|=?:;~$!<>\\,[\]]+ {GrammarUtility.validUnquoted(getText())}?;
 
 
 

@@ -53,7 +53,7 @@ public class GrammarUtility
 
     /**
      * Things like a00, abcd, random unicode emoji, return true
-     * Things like 0aa, a+0, a.0, "a a" return false
+     * Things like 0aa, a+0, a!0, "a a" return false
      *
      * This method is used both to check for valid variable names and
      * what can be printed without needing quotes (same concept, essentially)
@@ -70,7 +70,7 @@ public class GrammarUtility
         if (!Character.isAlphabetic(firstCodepoint))
             return false;
         // Underscore is not letter or digit, so needs special case here:
-        return s.codePoints().skip(1).allMatch(c -> Character.isLetterOrDigit(c) || c == '_');
+        return s.codePoints().skip(1).allMatch(c -> Character.isLetterOrDigit(c) || c == '_' || c == '.');
     }
 
     public static String escapeChars(String s)
