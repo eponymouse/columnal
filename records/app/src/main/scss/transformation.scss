@@ -24,6 +24,12 @@
 }
 .transformation-description-wrapper {
     -fx-padding: 0 0 1em 0;
+    .hyperlink {
+       -fx-padding: 0 0.5em 0 0.5em;
+       -fx-label-padding: 0;
+       -fx-background-insets: 0;
+       -fx-border-width: 0;
+    }
 }
 .transformation-description {
     -fx-fill: grey;
