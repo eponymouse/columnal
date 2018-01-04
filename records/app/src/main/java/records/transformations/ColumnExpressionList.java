@@ -60,6 +60,11 @@ public class ColumnExpressionList
         ObjectExpression<@Nullable Table> srcTable = srcTableControl.tableProperty();
 
         columnEditors = new VBox();
+        columnEditors.getChildren().add(GUI.button("columnExpression.addEnd", () -> {
+            // Important that columns.size() is a fresh call, so that we add to current end of list,
+            // not the original end of list:
+            addColumn(mgr, srcTable, makeNewColumnDetails(), columns.size());
+        }));
         for (Pair<ColumnId, Expression> newColumn : initialColumns)
         {
             addColumn(mgr, srcTable, newColumn, columns.size());
@@ -109,12 +114,12 @@ public class ColumnExpressionList
                 GUI.menuItem("columnExpression.addBefore", () -> {
                     // Don't use destIndex, because it might be stale.  Instead find us in list:
                     int curIndex = Utility.indexOfRef(columns, columnPair);
-                    addColumn(mgr, srcTable, new Pair<>(new ColumnId(""), new UnfinishedExpression("")), curIndex);
+                    addColumn(mgr, srcTable, makeNewColumnDetails(), curIndex);
                 }),
                 GUI.menuItem("columnExpression.addAfter", () -> {
                     // Don't use destIndex, because it might be stale.  Instead find us in list:
                     int curIndex = Utility.indexOfRef(columns, columnPair);
-                    addColumn(mgr, srcTable, new Pair<>(new ColumnId(""), new UnfinishedExpression("")), curIndex + 1);
+                    addColumn(mgr, srcTable, makeNewColumnDetails(), curIndex + 1);
                 })
             );
         }), 2, 0);
@@ -124,6 +129,11 @@ public class ColumnExpressionList
         GridPane.setColumnSpan(containerAndLabel, 3);
         GridPane.setHgrow(containerAndLabel, Priority.ALWAYS);
         columnEditors.getChildren().add(destIndex, gridPane);
+    }
+
+    private static Pair<ColumnId, Expression> makeNewColumnDetails()
+    {
+        return new Pair<>(new ColumnId(""), new UnfinishedExpression(""));
     }
 
 
