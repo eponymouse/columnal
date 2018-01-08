@@ -43,7 +43,7 @@ import java.util.stream.Stream;
  */
 public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<Expression>, ErrorDisplayer, ExpressionNodeParent
 {
-    public static final double BRACKET_WIDTH = 2.0;
+    public static final double BRACKET_WIDTH = 0.0;
     private static final double aspectRatio = 0.2;
     protected final TextField head;
     protected final @Nullable ConsecutiveBase<Expression, ExpressionNodeParent> contents;
@@ -258,7 +258,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
 
     private class OpenBracketShape extends VBox
     {
-        public static final double TOP_GAP = 2.0;
+        public static final double TOP_GAP = 0.0;
         private final Node rhs;
 
         public OpenBracketShape()
@@ -273,7 +273,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
             bottomField.setVisible(false);
 
 
-            Node lhs = new OpenBracketOuter(heightProperty().subtract(1.0));
+            Node lhs = new OpenBracketOuter(heightProperty());
             lhs.getStyleClass().add(cssClass + "-bracket");
             rhs = new OpenBracketInner(heightProperty().subtract(TOP_GAP));
 
