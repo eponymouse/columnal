@@ -13,6 +13,7 @@ import javafx.stage.FileChooser;
 import javafx.stage.Stage;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import records.data.DataSource;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
 import records.error.InternalException;
@@ -144,7 +145,7 @@ public class MainWindow
             {
                 try
                 {
-                    ImporterManager.getInstance().importFile(stage, v.getManager(), file, file.toURI().toURL(), ds -> v.addSource(ds));
+                    ImporterManager.getInstance().importFile(stage, v.getManager(), file, file.toURI().toURL(), ds -> recordTable(v, ds));
                 }
                 catch (MalformedURLException e)
                 {
@@ -156,12 +157,18 @@ public class MainWindow
 
     private static void chooseAndImportFile(View v, Stage stage)
     {
-        ImporterManager.getInstance().chooseAndImportFile(stage, v.getManager(), ds -> v.addSource(ds));
+        ImporterManager.getInstance().chooseAndImportFile(stage, v.getManager(), ds -> recordTable(v, ds));
     }
 
     private static void chooseAndImportURL(View v, Stage stage)
     {
-        ImporterManager.getInstance().chooseAndImportURL(stage, v.getManager(), ds -> v.addSource(ds));
+        ImporterManager.getInstance().chooseAndImportURL(stage, v.getManager(), ds -> recordTable(v, ds));
+    }
+
+    @OnThread(Tag.Any)
+    private static void recordTable(View v, DataSource ds)
+    {
+        Workers.onWorkerThread("Registering table", Priority.SAVE_ENTRY, () -> v.getManager().record(ds));
     }
 
     public static void closeAll()
