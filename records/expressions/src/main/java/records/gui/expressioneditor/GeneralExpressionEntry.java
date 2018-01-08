@@ -739,6 +739,12 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         protected String selected(String currentText, @Interned @Nullable Completion c, String rest)
         {
+            return selected(currentText, c, rest, true);
+        }
+
+        
+        private String selected(String currentText, @Interned @Nullable Completion c, String rest, boolean moveFocus)
+        {
             if (c instanceof KeyShortcutCompletion)
             {
                 @Interned KeyShortcutCompletion ksc = (@Interned KeyShortcutCompletion) c;
@@ -797,7 +803,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 }
                 else
                 {
-                    parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
+                    if (moveFocus)
+                        parent.focusRightOf(GeneralExpressionEntry.this, Focus.LEFT);
                 }
                 parent.replace(GeneralExpressionEntry.this, tagExpressionNode);
             }
@@ -806,7 +813,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 completing = true;
                 status.setValue(Status.VARIABLE_DECL);
                 parent.setOperatorToRight(GeneralExpressionEntry.this, rest);
-                parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
+                if (moveFocus)
+                    parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
                 return currentText;
             }
             else if (c instanceof VarUseCompletion)
@@ -814,7 +822,8 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 completing = true;
                 status.setValue(Status.VARIABLE_USE);
                 parent.setOperatorToRight(GeneralExpressionEntry.this, rest);
-                parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
+                if (moveFocus)
+                    parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
                 return currentText;
             }
             else if (c == null || c instanceof GeneralCompletion)
@@ -824,7 +833,9 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 parent.setOperatorToRight(GeneralExpressionEntry.this, rest);
                 status.setValue(gc == null ? Status.UNFINISHED : gc.getType());
                 // End of following operator, since we pushed rest into there:
-                parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
+                if (moveFocus)
+                    parent.focusRightOf(GeneralExpressionEntry.this, Focus.RIGHT);
+                
                 if (gc instanceof SimpleCompletion)
                 {
                     prefix.setText(((SimpleCompletion)gc).prefix);
@@ -846,7 +857,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         {
             if (!(selectedItem instanceof KeyShortcutCompletion))
             {
-                return selected(currentText, selectedItem, "");
+                return selected(currentText, selectedItem, "", false);
             }
             return currentText;
         }
