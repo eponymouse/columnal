@@ -57,6 +57,12 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
                 parent.focusRightOf(StringLiteralNode.this, Focus.LEFT);
                 return currentText;
             }
+
+            @Override
+            public String focusLeaving(String currentText, AutoComplete.@Nullable Completion selectedItem)
+            {
+                return currentText;
+            }
         }, c -> false);
 
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), text -> parent.changed(this));

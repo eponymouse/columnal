@@ -130,6 +130,15 @@ public class SingleSourceControl extends HBox implements CompletionListener
         return ((TableCompletion)selectedItem).t.getId().getOutput();
     }
 
+    @Override
+    public String focusLeaving(String currentText, AutoComplete.@Nullable Completion selectedItem)
+    {
+        if (selectedItem != null)
+            return ((TableCompletion)selectedItem).t.getId().getOutput();
+        else
+            return currentText;
+    }
+
     public ObjectExpression<@Nullable Table> tableProperty()
     {
         return curSelection;

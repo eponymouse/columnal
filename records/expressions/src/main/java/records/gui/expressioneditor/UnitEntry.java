@@ -188,6 +188,12 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
             }
             return currentText;
         }
+
+        @Override
+        public String focusLeaving(String currentText, AutoComplete.@Nullable Completion selectedItem)
+        {
+            return currentText;
+        }
     }
 
     private static class KnownUnitCompletion extends Completion

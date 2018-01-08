@@ -224,5 +224,20 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
             }
             return textField.getText();
         }
+
+        @Override
+        public String focusLeaving(String currentText, AutoComplete.@Nullable Completion selectedItem)
+        {
+            if (selectedItem != null && selectedItem instanceof SimpleCompletion)
+            {
+                SimpleCompletion c = (SimpleCompletion)selectedItem;
+                // Has to be exact match if leaving slot:
+                if (c.operator.equals(currentText))
+                {
+                    return selected(currentText, c, "");
+                }
+            }
+            return currentText;
+        }
     }
 }

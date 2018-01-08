@@ -2,6 +2,7 @@ package records.gui.expressioneditor;
 
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableStringValue;
+import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -111,7 +112,14 @@ public class AutoComplete extends PopupControl
             else
             {
                 if (isShowing())
+                {
+                    Completion completion = getCompletionIfFocusLeftNow();
+                    if (completion != null)
+                    {
+                        textField.setText(onSelect.focusLeaving(textField.getText(), completion));
+                    }
                     hide();
+                }
             }
         });
 
@@ -259,6 +267,21 @@ public class AutoComplete extends PopupControl
         }
     }
 
+    @RequiresNonNull({"textField", "completions"})
+    public @Nullable Completion getCompletionIfFocusLeftNow(@UnknownInitialization(Object.class) AutoComplete this)
+    {
+        List<Completion> availableCompletions = completions.getItems();
+        for (Completion completion : availableCompletions)
+        {
+            CompletionAction completionAction = completion.completesOnExactly(textField.getText(), availableCompletions.size() == 1);
+            if (completionAction != CompletionAction.NONE)
+            {
+                return completion;
+            }
+        }
+        return null;
+    }
+
     public abstract static @Interned class Completion
     {
         /**
@@ -386,6 +409,11 @@ public class AutoComplete extends PopupControl
         // Selected because completesOnExactly returned true
         // Returns the new text for the textfield
         String exactCompletion(String currentText, Completion selectedItem);
+        
+        // Leaving the slot.  selectedItem is only non-null if
+        // completesOnExactly is true.
+        // Returns the new text for the textfield
+        String focusLeaving(String currentText, @Nullable Completion selectedItem);
     }
 
     public static abstract class SimpleCompletionListener implements CompletionListener

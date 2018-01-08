@@ -187,7 +187,12 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         FXUtility.addChangeListenerPlatformNN(textField.textProperty(), t -> {
             if (!completing)
             {
-                status.set(Status.UNFINISHED);
+                // TODO set prospective status if focus left now
+                @Nullable Completion completion = autoComplete.getCompletionIfFocusLeftNow();
+                if (completion == null)
+                    status.set(Status.UNFINISHED);
+                else
+                    status.set(getStatusFor(completion));
             }
             else
                 completing = false;
@@ -205,6 +210,18 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 initialContentEntered.set(true);
             });
         }
+    }
+
+    private static Status getStatusFor(@Nullable Completion completion)
+    {
+        if (completion == null)
+            return Status.UNFINISHED;
+        else if (completion instanceof NumericLiteralCompletion)
+            return Status.LITERAL;
+        else if (completion instanceof SimpleCompletion)
+            return ((SimpleCompletion)completion).type;
+        
+        return Status.UNFINISHED;
     }
 
     @Override
@@ -498,7 +515,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
     }
 
-    private static class NumericLiteralCompletion extends GeneralCompletion
+    private class NumericLiteralCompletion extends GeneralCompletion
     {
         @Override
         public Pair<@Nullable Node, ObservableStringValue> getDisplay(ObservableStringValue currentText)
@@ -524,7 +541,18 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
         {
-            return onlyAvailableCompletion ? CompletionAction.SELECT : CompletionAction.NONE;
+            NumericLiteralContext number = parseOrNull(ExpressionParser::numericLiteral);
+            if (number != null)
+            {
+                return CompletionAction.SELECT;
+            }
+            else
+            {
+                if (onlyAvailableCompletion)
+                    return CompletionAction.SELECT;
+                else
+                    return CompletionAction.NONE;
+            }
         }
 
         @Override
@@ -811,6 +839,16 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             else
                 Utility.logStackTrace("Unsupported completion: " + c.getClass());
             return textField.getText();
+        }
+
+        @Override
+        public String focusLeaving(String currentText, AutoComplete.@Nullable Completion selectedItem)
+        {
+            if (!(selectedItem instanceof KeyShortcutCompletion))
+            {
+                return selected(currentText, selectedItem, "");
+            }
+            return currentText;
         }
     }
 
