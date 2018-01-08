@@ -71,3 +71,6 @@ expression : bracketedCompound | terminal | bracketedMatch | callExpression | tu
 topLevelExpression : compoundExpression | match | expression /* includes terminal */;
 
 completeExpression: topLevelExpression EOF;
+
+completeBooleanLiteral : booleanLiteral EOF;
+completeNumericLiteral : numericLiteral EOF;

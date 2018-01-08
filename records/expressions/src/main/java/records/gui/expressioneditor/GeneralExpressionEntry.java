@@ -28,6 +28,8 @@ import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
 import records.grammar.ExpressionParser.BooleanLiteralContext;
+import records.grammar.ExpressionParser.CompleteBooleanLiteralContext;
+import records.grammar.ExpressionParser.CompleteNumericLiteralContext;
 import records.grammar.ExpressionParser.NumericLiteralContext;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
@@ -541,17 +543,14 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         @Override
         public CompletionAction completesOnExactly(String input, boolean onlyAvailableCompletion)
         {
-            NumericLiteralContext number = parseOrNull(ExpressionParser::numericLiteral);
+            CompleteNumericLiteralContext number = parseOrNull(ExpressionParser::completeNumericLiteral);
             if (number != null)
             {
                 return CompletionAction.SELECT;
             }
             else
             {
-                if (onlyAvailableCompletion)
-                    return CompletionAction.SELECT;
-                else
-                    return CompletionAction.NONE;
+                return CompletionAction.NONE;
             }
         }
 
@@ -585,7 +584,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
         }
         else if (status.get() == Status.LITERAL)
         {
-            BooleanLiteralContext bool = parseOrNull(ExpressionParser::booleanLiteral);
+            CompleteBooleanLiteralContext bool = parseOrNull(ExpressionParser::completeBooleanLiteral);
             if (bool != null)
             {
                 return errorDisplayer.record(this, new BooleanLiteral(bool.getText().equals("true")));
@@ -601,7 +600,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             return new VarUseExpression(textField.getText().trim());
         }
         // Unfinished -- could be number though:
-        NumericLiteralContext number = parseOrNull(ExpressionParser::numericLiteral);
+        CompleteNumericLiteralContext number = parseOrNull(ExpressionParser::completeNumericLiteral);
         if (number != null)
         {
             try
