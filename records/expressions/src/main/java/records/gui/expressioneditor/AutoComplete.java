@@ -125,7 +125,6 @@ public class AutoComplete extends PopupControl
             }
         });
 
-        // TODO listen to scene's position in window, and window's position
         FXUtility.addChangeListenerPlatformNN(textField.localToSceneTransformProperty(), t -> updatePosition());
         FXUtility.addChangeListenerPlatformNN(textField.layoutXProperty(), t -> updatePosition());
         FXUtility.addChangeListenerPlatformNN(textField.layoutYProperty(), t -> updatePosition());
