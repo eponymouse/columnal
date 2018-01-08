@@ -1,7 +1,9 @@
 package records.gui.expressioneditor;
 
 import javafx.beans.property.ReadOnlyStringWrapper;
+import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableStringValue;
+import javafx.beans.value.ObservableValue;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -128,6 +130,45 @@ public class AutoComplete extends PopupControl
         FXUtility.addChangeListenerPlatformNN(textField.layoutXProperty(), t -> updatePosition());
         FXUtility.addChangeListenerPlatformNN(textField.layoutYProperty(), t -> updatePosition());
         FXUtility.addChangeListenerPlatformNN(textField.heightProperty(), t -> updatePosition());
+        
+        textField.sceneProperty().addListener(new ChangeListener<@Nullable Scene>()
+        {
+            // This listens to scene all the time.
+            // While scene is non-null, positionListener listens to scene's X/Y position.
+            // (Scene X/Y position is position within window, which seems unlikely to change [window decoration etc]
+            // but seems correct to listen to it)
+            
+            // While scene is non-null, the inner listener listens to window:
+            private final ChangeListener<@Nullable Window> windowListener = new WindowChangeListener();
+            private final ChangeListener<Number> positionListener = new NumberChangeListener();
+            
+            {
+                // Set up initial state:
+                changed(textField.sceneProperty(), null, textField.getScene());
+            }
+            
+            @Override
+            @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+            public void changed(ObservableValue<? extends @Nullable Scene> observable, @Nullable Scene oldValue, @Nullable Scene newValue)
+            {
+                if (oldValue != null)
+                {
+                    oldValue.xProperty().removeListener(positionListener);
+                    oldValue.yProperty().removeListener(positionListener);
+                    oldValue.windowProperty().removeListener(windowListener);
+                    windowListener.changed(oldValue.windowProperty(), oldValue.getWindow(), null);
+                }
+                if (newValue != null)
+                {
+                    newValue.xProperty().addListener(positionListener);
+                    newValue.yProperty().addListener(positionListener);
+                    newValue.windowProperty().addListener(windowListener);
+                    windowListener.changed(newValue.windowProperty(), null, newValue.getWindow());
+                }
+                // If scene/window has changed, we should update position even if X/Y hasn't changed:
+                updatePosition();
+            }
+        });
 
         textField.setTextFormatter(new TextFormatter<String>(change -> {
             // We're not interested in changes in just the selection:
@@ -253,10 +294,10 @@ public class AutoComplete extends PopupControl
         );
     }
 
-    @RequiresNonNull({"textField"})
+    @OnThread(Tag.FXPlatform)
     private void updatePosition(@UnknownInitialization(Object.class) AutoComplete this)
     {
-        if (isShowing())
+        if (isShowing() && textField != null)
         {
             @Nullable Pair<Double, Double> pos = calculatePosition();
             if (pos != null)
@@ -465,6 +506,40 @@ public class AutoComplete extends PopupControl
         @OnThread(Tag.FX)
         public void dispose()
         {
+        }
+    }
+
+    // For reasons I'm not clear about, this listener needs to be its own class, not anonymous:
+    private class NumberChangeListener implements ChangeListener<Number>
+    {
+        @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        public void changed(ObservableValue<? extends Number> prop, Number oldVal, Number newVal)
+        {
+            updatePosition();
+        }
+    }
+
+    private class WindowChangeListener implements ChangeListener<@Nullable Window>
+    {
+        final ChangeListener<Number> positionListener = new NumberChangeListener();
+
+        @Override
+        @OnThread(value = Tag.FXPlatform, ignoreParent = true)
+        public void changed(ObservableValue<? extends @Nullable Window> prop, @Nullable Window oldValue, @Nullable Window newValue)
+        {
+            if (oldValue != null)
+            {
+                oldValue.xProperty().removeListener(positionListener);
+                oldValue.yProperty().removeListener(positionListener);
+            }
+            if (newValue != null)
+            {
+                newValue.xProperty().addListener(positionListener);
+                newValue.yProperty().addListener(positionListener);
+            }
+            // If scene/window has changed, we should update position even if X/Y hasn't changed:
+            updatePosition();
         }
     }
 }
