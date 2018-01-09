@@ -1456,6 +1456,12 @@ public class DataType
                 if (ndi != null)
                 {
                     b.n(ndi.getMinimumDP());
+                    if (ndi.getMinimumDP() != ndi.getMaximumDP())
+                    {
+                        b.raw("-");
+                        b.n(ndi.getMaximumDP());
+                    }
+                    b.t(ndi.getPaddingChar().equals("0") ? FormatLexer.ZERO_KWD : FormatLexer.SPACE_KWD, FormatLexer.VOCABULARY);
                 }
                 if (!numberInfo.getUnit().equals(Unit.SCALAR))
                     b.unit(numberInfo.getUnit().toString());

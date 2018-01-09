@@ -8,6 +8,7 @@ import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DateTimeInfo;
 import records.data.datatype.DataType.DateTimeInfo.DateTimeType;
 import records.data.datatype.DataType.TagType;
+import records.data.datatype.NumberDisplayInfo.Padding;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -15,6 +16,7 @@ import records.error.UserException;
 import records.grammar.FormatLexer;
 import records.grammar.FormatParser;
 import records.grammar.FormatParser.DateContext;
+import records.grammar.FormatParser.DecimalPlacesContext;
 import records.grammar.FormatParser.NumberContext;
 import records.grammar.FormatParser.TagItemContext;
 import records.grammar.FormatParser.TypeContext;
@@ -38,6 +40,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.stream.Collectors;
 
 import static records.data.datatype.DataType.BOOLEAN;
@@ -148,13 +151,23 @@ public class TypeManager
             else if (d.TIMEOFDAYZONED() != null)
                 return DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED));
 
-            throw new InternalException("Unrecognised date/time type: " + d.getText());
+            throw new UserException("Unrecognised date/time type: " + d.getText());
         }
         else if (type.number() != null)
         {
             NumberContext n = type.number();
             Unit unit = n.UNIT() == null ? Unit.SCALAR : unitManager.loadUse(n.UNIT().getText());
-            return DataType.number(new NumberInfo(unit, null /*TODO */));
+            @Nullable NumberDisplayInfo ndi = null;
+            if (n.decimalPlaces() != null)
+            {
+                DecimalPlacesContext dp = n.decimalPlaces();
+                OptionalInt minDP = Utility.parseIntegerOpt(dp.DIGITS(0).getText());
+                OptionalInt maxDP = dp.DIGITS().size() == 1 ? minDP : Utility.parseIntegerOpt(dp.DIGITS(1).getText());
+                if (!minDP.isPresent() || !maxDP.isPresent())
+                    throw new InternalException("Cannot parse integer from digits: " + dp.getText());
+                ndi = new NumberDisplayInfo(minDP.getAsInt(), maxDP.getAsInt(), dp.ZERO_KWD() != null ? Padding.ZERO : Padding.SPACE);
+            }
+            return DataType.number(new NumberInfo(unit, ndi));
         }
         else if (type.tagRef() != null)
         {
