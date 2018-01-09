@@ -32,6 +32,7 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import org.checkerframework.checker.guieffect.qual.UIEffect;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -410,7 +411,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             recordSetOrError = Either.left(e.getLocalizedMessage());
         }
         this.recordSetOrError = recordSetOrError;
-        StackPane body = new StackPane(this.recordSetOrError.<Node>either(err -> new Label(err),
+        StackPane body = new StackPane(this.recordSetOrError.<Node>either(err -> makeErrorDisplay(err),
             recordSet -> (tableDataDisplay = new TableDataDisplay(recordSet, table.getDisplayMessageWhenEmpty(), () -> {
                 parent.modified();
                 Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH,() -> Utility.alertOnError_(() -> parent.getManager().edit(table.getId(), null)));
@@ -575,6 +576,15 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         // Must be done as last item:
         @SuppressWarnings("initialization") @Initialized TableDisplay usInit = this;
         this.table.setDisplay(usInit);
+    }
+
+    @RequiresNonNull({"parent", "table"})
+    private Node makeErrorDisplay(@UnknownInitialization(Object.class) TableDisplay this, String err)
+    {
+        if (table instanceof TransformationEditable)
+            return new VBox(new Label(err), GUI.button("transformation.edit", () -> parent.editTransform((TransformationEditable)table)));
+        else
+            return new Label(err);
     }
 
     private List<TableDisplay> getDragGroup()
