@@ -31,7 +31,10 @@ import records.data.TableManager;
 import records.data.datatype.DataType.DataTypeVisitor;
 import records.data.datatype.DataType.DataTypeVisitorEx;
 import records.data.datatype.DataTypeUtility;
+import records.data.datatype.NumberDisplayInfo;
+import records.data.datatype.NumberDisplayInfo.Padding;
 import records.data.datatype.TypeId;
+import records.data.unit.Unit;
 import records.grammar.GrammarUtility;
 import records.gui.MainWindow;
 import records.importers.ChoicePoint.ChoiceType;
@@ -410,6 +413,8 @@ public class TestUtil
                 DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAY)),
                 DataType.date(new DateTimeInfo(DateTimeType.TIMEOFDAYZONED)),
                 DataType.NUMBER,
+                DataType.number(new NumberInfo(Unit.SCALAR, new NumberDisplayInfo(0, 6, Padding.ZERO))),
+                DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("GBP"), new NumberDisplayInfo(2, 3, Padding.SPACE))),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m"), null)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m^2"), null)),
                 DataType.number(new NumberInfo(DummyManager.INSTANCE.getUnitManager().loadUse("m^3/s^3"), null)),
