@@ -20,7 +20,7 @@ public class NumericColumnType extends ColumnType
     public NumericColumnType(Unit unit, int minDP, @Nullable String commonPrefix)
     {
         this.unit = unit;
-        this.displayInfo = new NumberDisplayInfo(minDP, -1, Padding.ZERO);
+        this.displayInfo = new NumberDisplayInfo(minDP, 10, Padding.ZERO);
         this.commonPrefix = commonPrefix;
     }
 
