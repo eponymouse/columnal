@@ -65,7 +65,7 @@ public class InitialWindow
                 }
             }
         });
-        mruListView.setItems(Utility.getRecentFilesList());
+        mruListView.getItems().setAll(Utility.readRecentFilesList());
         VBox content = GUI.vbox("initial-content",
                 GUI.vbox("initial-section-new", GUI.label("initial.new.title", "initial-heading"), newButton, GUI.labelWrap("initial.new.detail")),
                 GUI.vbox("initial-section-open", GUI.label("initial.open.title", "initial-heading"), openButton, GUI.label("initial.open.recent"), mruListView)

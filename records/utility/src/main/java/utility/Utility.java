@@ -71,9 +71,8 @@ import threadchecker.Tag;
  */
 public class Utility
 {
-    @OnThread(Tag.FXPlatform)
-    private static @MonotonicNonNull ObservableList<File> mruList;
     public static final String MRU_FILE_NAME = "recent.mru";
+    // Used to remember which thread set off which runnable:
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private static final Map<Thread, StackTraceElement[]> threadedCallers = new WeakHashMap<>();
 
@@ -813,14 +812,24 @@ public class Utility
     @OnThread(Tag.FXPlatform)
     public static void usedFile(File src)
     {
-        getRecentFilesList();
+        ArrayList<File> mruList = new ArrayList<>(readRecentFilesList());
 
-        // This may cause multiple file writes of MRU, but we can live with that:
-        mruList.removeAll(src);
-        mruList.removeAll(src.getAbsoluteFile());
+        // Make sure it's only featured once, at the head:
+        mruList.removeAll(Collections.singletonList(src));
+        mruList.removeAll(Collections.singletonList(src.getAbsoluteFile()));
         mruList.add(0, src);
         while (mruList.size() > 15)
             mruList.remove(mruList.size() - 1);
+
+        try
+        {
+            List<@NonNull File> newContent = Utility.mapList(mruList, File::getAbsoluteFile);
+            FileUtils.writeLines(new File(getStorageDirectory(), MRU_FILE_NAME), "UTF-8", newContent);
+        }
+        catch (IOException e)
+        {
+            Utility.log(e);
+        }
     }
 
     // If item is null, returns empty stream, otherwise stream containing that item
@@ -1564,117 +1573,22 @@ public class Utility
     }
 
     @OnThread(Tag.FXPlatform)
-    @EnsuresNonNull("mruList")
-    public static @NonNull ObservableList<File> getRecentFilesList()
-    {
-        if (mruList != null)
-            return mruList;
-        try
-        {
-            mruList = FXCollections.observableArrayList();
-            reloadMRU();
-            // After loading, add the listener:
-            mruList.addListener((ListChangeListener<File>)(c -> {
-                try
-                {
-                    FileUtils.writeLines(new File(getStorageDirectory(), MRU_FILE_NAME), "UTF-8", Utility.mapList(c.getList(), File::getAbsoluteFile));
-                }
-                catch (IOException e)
-                {
-                    Utility.log(e);
-                }
-            }));
-
-            // From http://stackoverflow.com/questions/16251273/can-i-watch-for-single-file-change-with-watchservice-not-the-whole-directory
-            final Path path = getStorageDirectory().toPath();
-            Thread t = new Thread(() -> {
-                try (final WatchService watchService = FileSystems.getDefault().newWatchService())
-                {
-                    final WatchKey watchKey = path.register(watchService, StandardWatchEventKinds.ENTRY_MODIFY);
-
-                    // Because mruList is monotonic non-null and is non-null
-                    // at the start of the enclosing method, this is true:
-                    assert mruList != null : "@AssumeAssertion(nullness)";
-                    watchMRU(watchService);
-                }
-                catch (IOException e)
-                {
-                    // No need to tell user, we just won't have the list
-                    Utility.log(e);
-                }
-            });
-            t.setDaemon(true);
-            t.start();
-        }
-        catch (IOException e)
-        {
-            // No need to tell user, we just won't have the list
-            Utility.log(e);
-            mruList = FXCollections.observableArrayList();
-        }
-        return mruList;
-    }
-
-    @RequiresNonNull("mruList")
-    private static void watchMRU(WatchService watchService)
-    {
-        while (true)
-        {
-            try
-            {
-                final WatchKey wk = watchService.take();
-                for (WatchEvent<?> event : wk.pollEvents())
-                {
-                    //we only register "ENTRY_MODIFY" so the context is always a Path.
-                    final Path changed = (Path) event.context();
-                    if (changed != null && changed.endsWith(MRU_FILE_NAME))
-                    {
-                        Platform.runLater(() -> {
-                            // Because mruList is monotonic non-null and is non-null
-                            // at the start of the enclosing method, this is true:
-                            assert mruList != null : "@AssumeAssertion(nullness)";
-                            reloadMRU();
-                        });
-                    }
-                }
-                // reset the key
-                boolean valid = wk.reset();
-                if (!valid)
-                {
-                    // Just stop watching:
-                    return;
-                }
-            }
-            catch (InterruptedException e)
-            {
-                // Go round again...
-            }
-        }
-    }
-
-    @OnThread(Tag.FXPlatform)
-    @RequiresNonNull("mruList")
-    private static void reloadMRU()
+    public static @NonNull ImmutableList<File> readRecentFilesList()
     {
         try
         {
             File mruFile = new File(getStorageDirectory(), MRU_FILE_NAME);
             if (mruFile.exists())
             {
-                List<String> content = FileUtils.readLines(mruFile, "UTF-8");
-                mruList.setAll(Utility.mapList(content, File::new));
-            }
-            else
-            {
-                mruList.clear();
+                return FileUtils.readLines(mruFile, "UTF-8").stream().map(File::new).collect(ImmutableList.toImmutableList());
             }
         }
         catch (IOException e)
         {
             Utility.log(e);
         }
+        return ImmutableList.of();
     }
-
 
     // All loaded properties (each one is stored in a separate file)
     private static Map<String, Properties> properties = new HashMap<>();
