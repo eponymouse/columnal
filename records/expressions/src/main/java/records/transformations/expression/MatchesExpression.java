@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
@@ -49,26 +50,26 @@ public class MatchesExpression extends BinaryOpExpression
 
     // Must use checkAsPattern on RHS, not check:
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         lhsType = lhs.check(data, typeState, onError);
         if (lhsType == null)
             return null;
         @NonNull TypeExp lhsFinal = lhsType;
-        @Nullable Pair<TypeExp, TypeState> rhsPatType = rhs.checkAsPattern(false, data, typeState, onError);
+        @Nullable Pair<@Recorded TypeExp, TypeState> rhsPatType = rhs.checkAsPattern(false, data, typeState, onError);
         if (rhsPatType == null)
             return null;
         // We can just discard the RHS type state because it can't introduce any new variables
         rhsType = rhsPatType.getFirst();
         
         if (onError.recordError(this, TypeExp.unifyTypes(lhsFinal, rhsType)) != null)
-            return checkBinaryOp(data, typeState, onError);
+            return onError.recordType(this, checkBinaryOp(data, typeState, onError));
         else
             return null;
     }
 
     @Override
-    protected @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
+    protected @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // If we get this far, the RHS pattern must have matched the LHS expression
         // So we just return our type, which is boolean:

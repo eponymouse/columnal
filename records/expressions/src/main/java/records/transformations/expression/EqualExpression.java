@@ -1,6 +1,5 @@
 package records.transformations.expression;
 
-import java.lang.reflect.Type;
 import java.util.Map;
 
 import annotation.qual.Value;
@@ -46,7 +45,7 @@ public class EqualExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    public @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         if (onError.recordError(this, TypeExp.unifyTypes(lhsType, rhsType)) == null)
             return null;

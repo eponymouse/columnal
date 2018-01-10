@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
@@ -106,12 +107,12 @@ public class ComparisonExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         type = checkAllOperandsSameType(data, state, onError);
         if (type == null)
             return null;
-        return TypeExp.fromConcrete(this, DataType.BOOLEAN);
+        return onError.recordType(this, TypeExp.fromConcrete(this, DataType.BOOLEAN));
     }
 
     @Override

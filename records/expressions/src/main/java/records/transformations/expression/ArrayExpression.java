@@ -1,16 +1,15 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
-import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -42,8 +41,6 @@ import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static jdk.nashorn.internal.runtime.ScriptObject.isArray;
-
 /**
  * An array expression like [0, x, 3].  This could be called an array literal, but didn't want to confuse
  * as the items in the array don't have to be literals.  But this expression is for constructing
@@ -62,11 +59,11 @@ public class ArrayExpression extends Expression
     }
 
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Empty array - special case:
         if (items.isEmpty())
-            return new TypeCons(this, TypeExp.CONS_LIST, new MutVar(this));
+            return onError.recordType(this, new TypeCons(this, TypeExp.CONS_LIST, new MutVar(this)));
         TypeExp[] typeArray = new TypeExp[items.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
@@ -79,20 +76,20 @@ public class ArrayExpression extends Expression
         _test_originalTypes = Arrays.asList(typeArray);
         if (elementType == null)
             return null;
-        return new TypeCons(this, TypeExp.CONS_LIST, elementType);
+        return onError.recordType(this, new TypeCons(this, TypeExp.CONS_LIST, elementType));
     }
 
     @Override
-    public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, final TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, final TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // Empty array - special case:
         if (items.isEmpty())
-            return new Pair<>(new TypeCons(this, TypeExp.CONS_LIST, new MutVar(this)), state);
+            return new Pair<>(onError.recordTypeNN(this, new TypeCons(this, TypeExp.CONS_LIST, new MutVar(this))), state);
         TypeExp[] typeArray = new TypeExp[items.size()];
         TypeState[] typeStates = new TypeState[items.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable Pair<TypeExp, TypeState> t = items.get(i).checkAsPattern(varAllowed, data, state, onError);
+            @Nullable Pair<@Recorded TypeExp, TypeState> t = items.get(i).checkAsPattern(varAllowed, data, state, onError);
             if (t == null)
                 return null;
             typeArray[i] = t.getFirst();
@@ -105,7 +102,7 @@ public class ArrayExpression extends Expression
         @Nullable TypeState endState = TypeState.union(state, onError.recordError(this), typeStates);
         if (endState == null)
             return null;
-        return new Pair<>(new TypeCons(this, TypeExp.CONS_LIST, elementType), endState);
+        return new Pair<>(onError.recordTypeNN(this, new TypeCons(this, TypeExp.CONS_LIST, elementType)), endState);
     }
 
     @Override

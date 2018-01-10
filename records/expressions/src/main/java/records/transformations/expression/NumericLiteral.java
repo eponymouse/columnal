@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
@@ -13,7 +14,7 @@ import records.data.datatype.DataTypeUtility;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.ErrorRecorder.QuickFix;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import records.types.NumTypeExp;
 import records.types.TypeExp;
 import records.types.units.UnitExp;
@@ -42,16 +43,16 @@ public class NumericLiteral extends Literal
     }
 
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException
     {
         if (unit == null)
-            return TypeExp.fromConcrete(this, DataType.NUMBER);
+            return onError.recordType(this, TypeExp.fromConcrete(this, DataType.NUMBER));
 
         Either<Pair<String, List<UnitExpression>>, UnitExp> errOrUnit = unit.asUnit(state.getUnitManager());
-        return errOrUnit.<@Nullable TypeExp>either(err -> {
+        return errOrUnit.<@Nullable @Recorded TypeExp>either(err -> {
             onError.recordError(this, err.getFirst(), Utility.mapList(err.getSecond(), u -> new QuickFix(TranslationUtility.getString("quick.fix.unit"), () -> new NumericLiteral(value, u))));
             return null;
-        }, u -> new NumTypeExp(this, u));
+        }, u -> onError.recordType(this, new NumTypeExp(this, u)));
     }
 
     @Override

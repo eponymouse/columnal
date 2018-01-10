@@ -1,27 +1,14 @@
 package records.transformations;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.ObjectExpression;
-import javafx.beans.property.ReadOnlyBooleanWrapper;
-import javafx.beans.property.ReadOnlyObjectWrapper;
-import javafx.beans.property.SimpleBooleanProperty;
-import javafx.beans.property.SimpleObjectProperty;
-import javafx.scene.Node;
-import javafx.scene.control.Label;
-import javafx.scene.control.ScrollPane;
-import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.GridPane;
 import javafx.scene.layout.Pane;
-import javafx.scene.layout.Priority;
-import javafx.scene.layout.VBox;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import org.controlsfx.control.PopOver.ArrowLocation;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -37,13 +24,10 @@ import records.grammar.TransformationLexer;
 import records.grammar.TransformationParser;
 import records.grammar.TransformationParser.TransformContext;
 import records.grammar.TransformationParser.TransformItemContext;
-import records.gui.ColumnNameTextField;
 import records.gui.SingleSourceControl;
-import records.gui.TypeLabel;
 import records.gui.View;
-import records.gui.expressioneditor.ExpressionEditor;
 import records.loadsave.OutputBuilder;
-import records.transformations.expression.ErrorRecorder;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.NumericLiteral;
@@ -56,9 +40,6 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
 import utility.Utility;
-import utility.gui.FXUtility;
-import utility.gui.GUI;
-import utility.gui.ScrollPaneFill;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
@@ -129,13 +110,24 @@ public class Transform extends TransformationEditable
 
             for (Pair<ColumnId, Expression> newCol : toCalculate)
             {
-                ErrorRecorder errorRecorder = (e, s, q) ->
+                ErrorAndTypeRecorder errorAndTypeRecorder = new ErrorAndTypeRecorder()
                 {
-                    error = s;
+                    @Override
+                    public void recordError(Expression src, String s, List<QuickFix> fixes)
+                    {
+                        error = s;
+                    }
+
+                    @SuppressWarnings("recorded")
+                    @Override
+                    public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
+                    {
+                        return typeExp;
+                    }
                 };
-                @Nullable TypeExp type = newCol.getSecond().check(srcRecordSet, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorRecorder);
+                @Nullable TypeExp type = newCol.getSecond().check(srcRecordSet, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorAndTypeRecorder);
                 
-                DataType concrete = type == null ? null : errorRecorder.recordLeftError(newCol.getSecond(), type.toConcreteType(mgr.getTypeManager()));
+                DataType concrete = type == null ? null : errorAndTypeRecorder.recordLeftError(newCol.getSecond(), type.toConcreteType(mgr.getTypeManager()));
                 if (type == null || concrete == null)
                     throw new UserException(error); // A bit redundant, but control flow will pan out right
                 @NonNull DataType typeFinal = concrete;

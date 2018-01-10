@@ -1,6 +1,7 @@
 package test;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.generator.GenerationStatus;
 import com.pholser.junit.quickcheck.generator.Generator;
@@ -38,7 +39,7 @@ import records.data.unit.Unit;
 import records.grammar.GrammarUtility;
 import records.gui.MainWindow;
 import records.importers.ChoicePoint.ChoiceType;
-import records.transformations.expression.ErrorRecorder;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionDefinition.FunctionTypes;
 import records.transformations.function.FunctionInstance;
@@ -924,6 +925,25 @@ public class TestUtil
     {
         return str.chars().mapToObj(c -> Integer.toHexString(c) + (c == 10 ? "\n" : "")).collect(Collectors.joining(" "));
     }
+    
+    public static ErrorAndTypeRecorder excOnError()
+    {
+        return new ErrorAndTypeRecorder()
+        {
+            @Override
+            public void recordError(Expression src, String error, List<QuickFix> fixes)
+            {
+                throw new RuntimeException(error);
+            }
+
+            @SuppressWarnings("recorded")
+            @Override
+            public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
+            {
+                return typeExp;
+            }
+        };
+    }
 
     public static @Nullable Pair<FunctionInstance,DataType> typeCheckFunction(FunctionDefinition function, List<Object> units, DataType paramType) throws InternalException, UserException
     {
@@ -932,7 +952,7 @@ public class TestUtil
 
     public static @Nullable Pair<FunctionInstance,DataType> typeCheckFunction(FunctionDefinition function, List<Object> units, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
     {
-        ErrorRecorder onError = (src, err, fixes) -> {throw new RuntimeException(err);};
+        ErrorAndTypeRecorder onError = excOnError();
         TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.INSTANCE.getTypeManager();
         FunctionTypes functionTypes = function.makeParamAndReturnType(typeManager);
         @SuppressWarnings("nullness") // For null src
@@ -949,7 +969,7 @@ public class TestUtil
 
     public static @Nullable Pair<FunctionInstance,DataType> typeCheckFunction(FunctionDefinition function, DataType expectedReturnType, List<Object> units, DataType paramType, @Nullable TypeManager overrideTypeManager) throws InternalException, UserException
     {
-        ErrorRecorder onError = (src, err, fixes) -> {throw new RuntimeException(err);};
+        ErrorAndTypeRecorder onError = excOnError();
         TypeManager typeManager = overrideTypeManager != null ? overrideTypeManager : DummyManager.INSTANCE.getTypeManager();
         FunctionTypes functionTypes = function.makeParamAndReturnType(typeManager);
         @SuppressWarnings("nullness") // For null src

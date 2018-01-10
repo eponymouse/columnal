@@ -2,17 +2,12 @@ package records.gui.expressioneditor;
 
 import javafx.beans.value.ObservableObjectValue;
 import javafx.beans.value.ObservableStringValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.data.datatype.DataType;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.SimpleCompletionListener;
-import records.transformations.expression.ErrorRecorder;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import utility.FXPlatformConsumer;
 import utility.Pair;
@@ -89,7 +84,7 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     }
 
     @Override
-    public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
+    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix> quickFixes)
     {
         // TODO
     }

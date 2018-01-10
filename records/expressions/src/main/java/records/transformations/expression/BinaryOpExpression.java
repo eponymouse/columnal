@@ -1,10 +1,10 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import records.data.ColumnId;
 import records.data.RecordSet;
-import records.data.datatype.DataType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -105,17 +105,17 @@ public abstract class BinaryOpExpression extends Expression
     public abstract BinaryOpExpression copy(@Nullable Expression replaceLHS, @Nullable Expression replaceRHS);
 
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         lhsType = lhs.check(data, typeState, onError);
         rhsType = rhs.check(data, typeState, onError);
         if (lhsType == null || rhsType == null)
             return null;
-        return checkBinaryOp(data, typeState, onError);
+        return onError.recordType(this, checkBinaryOp(data, typeState, onError));
     }
 
     @RequiresNonNull({"lhsType", "rhsType"})
-    protected abstract @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException;
+    protected abstract @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     @Override
     public Stream<Pair<Expression, Function<Expression, Expression>>> _test_childMutationPoints()

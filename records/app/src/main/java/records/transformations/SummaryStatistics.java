@@ -36,7 +36,7 @@ import records.grammar.TransformationParser.SummaryContext;
 import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.loadsave.OutputBuilder;
-import records.transformations.expression.ErrorRecorderStorer;
+import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TypeState;
@@ -182,7 +182,7 @@ public class SummaryStatistics extends TransformationEditable
             for (Pair<ColumnId, Expression> e : summaries)
             {
                 Expression expression = e.getSecond();
-                ErrorRecorderStorer errors = new ErrorRecorderStorer();
+                ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
                 @Nullable TypeExp type = expression.check(src, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errors);
                 @Nullable DataType concrete = type == null ? null : errors.recordLeftError(expression, type.toConcreteType(mgr.getTypeManager()));
                 if (type == null || concrete == null)

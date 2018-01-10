@@ -83,12 +83,8 @@ public class GenTypecheckFail extends Generator<TypecheckInfo>
         Expression expression = valid.expression;
         try
         {
-            if (null == expression.check(valid.recordSet, TestUtil.typeState(), (e, s, q) ->
-            {
-                // Throw an exception because the *original* should type-check, before
-                // we come to it and try to turn it into a failure:
-                throw new RuntimeException("Original did not type check: " + expression + " because " + s);
-            })) throw new RuntimeException("Original did not type check: " + expression);
+            if (null == expression.check(valid.recordSet, TestUtil.typeState(), TestUtil.excOnError()))
+                throw new RuntimeException("Original did not type check: " + expression);
         }
         catch (InternalException | UserException | RuntimeException e)
         {

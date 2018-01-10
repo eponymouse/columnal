@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -48,7 +49,7 @@ public class IfThenElseExpression extends NonOperatorExpression
 
 
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable TypeExp conditionType = condition.check(data, state, onError);
         if (conditionType == null)
@@ -62,7 +63,7 @@ public class IfThenElseExpression extends NonOperatorExpression
         if (thenType == null || elseType == null)
             return null;
 
-        return onError.recordError(this, TypeExp.unifyTypes(thenType, elseType));
+        return onError.recordTypeAndError(this, TypeExp.unifyTypes(thenType, elseType));
     }
 
     @Override

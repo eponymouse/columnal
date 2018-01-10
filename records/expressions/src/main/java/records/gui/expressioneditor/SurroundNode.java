@@ -22,7 +22,7 @@ import javafx.scene.shape.VLineTo;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import records.transformations.expression.ErrorRecorder;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.SingleLoader;
 import threadchecker.OnThread;
@@ -394,7 +394,7 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
     }
 
     @Override
-    public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
+    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix> quickFixes)
     {
         showError.showError(error, quickFixes);
     }

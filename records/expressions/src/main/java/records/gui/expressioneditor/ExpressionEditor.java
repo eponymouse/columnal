@@ -1,5 +1,6 @@
 package records.gui.expressioneditor;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableSet;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
@@ -7,7 +8,6 @@ import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
-import javafx.scene.control.ScrollPane;
 import javafx.scene.control.TextField;
 import javafx.scene.input.Dragboard;
 import javafx.scene.layout.FlowPane;
@@ -22,7 +22,7 @@ import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.ExpressionEditorUtil.CopiedItems;
-import records.transformations.expression.ErrorRecorder;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.SingleLoader;
 import records.transformations.expression.TypeState;
@@ -292,7 +292,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
             {
                 if (srcTable != null && tableManager != null)
                 {
-                    ErrorRecorder errorRecorder = new ErrorRecorder()
+                    ErrorAndTypeRecorder errorAndTypeRecorder = new ErrorAndTypeRecorder()
                     {
                         @Override
                         public void recordError(Expression e, String s, List<QuickFix> q)
@@ -307,12 +307,19 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
                         @Override
                         public @Nullable TypeExp recordError(Expression src, Either<String, TypeExp> errorOrType)
                         {
-                            errorDisplayers.recordType(src, errorOrType);
-                            return ErrorRecorder.super.recordError(src, errorOrType);
+                            return ErrorAndTypeRecorder.super.recordError(src, errorOrType);
+                        }
+
+                        @SuppressWarnings("recorded")
+                        @Override
+                        public @Recorded TypeExp recordTypeNN(Expression expression, TypeExp typeExp)
+                        {
+                            errorDisplayers.recordType(expression, Either.right(typeExp));
+                            return typeExp;
                         }
                     };
-                    @Nullable TypeExp dataType = expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), errorRecorder);
-                    latestType.set(dataType == null ? null : errorRecorder.recordLeftError(expression, dataType.toConcreteType(tableManager.getTypeManager())));
+                    @Nullable TypeExp dataType = expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), errorAndTypeRecorder);
+                    latestType.set(dataType == null ? null : errorAndTypeRecorder.recordLeftError(expression, dataType.toConcreteType(tableManager.getTypeManager())));
                     errorDisplayers.showAllTypes(tableManager.getTypeManager());
                 }
             }

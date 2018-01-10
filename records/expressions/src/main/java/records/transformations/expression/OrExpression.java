@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -44,7 +45,7 @@ public class OrExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         TypeExp bool = TypeExp.fromConcrete(this, DataType.BOOLEAN);
         for (Expression expression : expressions)
@@ -53,7 +54,7 @@ public class OrExpression extends NaryOpExpression
             if (type == null || onError.recordError(this, TypeExp.unifyTypes(bool, type)) == null)
                 return null;
         }
-        return bool;
+        return onError.recordType(this, bool);
     }
 
     @Override

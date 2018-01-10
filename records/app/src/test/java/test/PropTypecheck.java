@@ -1,5 +1,6 @@
 package test;
 
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import com.pholser.junit.quickcheck.From;
 import com.pholser.junit.quickcheck.Property;
@@ -25,6 +26,8 @@ import records.data.datatype.TypeManager;
 import records.data.unit.Unit;
 import records.error.InternalException;
 import records.error.UserException;
+import records.transformations.expression.ErrorAndTypeRecorder;
+import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.Expression;
 import records.types.TypeExp;
 import test.gen.ExpressionValue;
@@ -90,7 +93,21 @@ public class PropTypecheck
         for (Expression expression : src.expressionFailures)
         {
             AtomicBoolean errorReported = new AtomicBoolean(false);
-            assertNull(src.getDisplay(expression), expression.check(src.recordSet, TestUtil.typeState(), (e, s, q) -> {errorReported.set(true);}));
+            assertNull(src.getDisplay(expression), expression.check(src.recordSet, TestUtil.typeState(), new ErrorAndTypeRecorder()
+            {
+                @Override
+                public void recordError(Expression src, String error, List<QuickFix> fixes)
+                {
+                    errorReported.set(true);
+                }
+
+                @SuppressWarnings("recorded")
+                @Override
+                public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp)
+                {
+                    return typeExp;
+                }
+            }));
             // If it was null, an error should also have been reported:
             assertTrue(src.getDisplay(expression) + "\n\n(failure from original: " + src.getDisplay(src.original) + ")", errorReported.get());
         }
@@ -100,13 +117,10 @@ public class PropTypecheck
     // @SuppressWarnings("nullness")
     public void propTypeCheckSucceed(@From(GenExpressionValueBackwards.class) @From(GenExpressionValueForwards.class) ExpressionValue src) throws InternalException, UserException
     {
-        StringBuilder b = new StringBuilder();
-        @Nullable TypeExp checked = src.expression.check(src.recordSet, TestUtil.typeState(), (e, s, q) ->
-        {
-            b.append("Err in " + e + ": " + s);
-        });
+        ErrorAndTypeRecorderStorer storer = new ErrorAndTypeRecorderStorer();
+        @Nullable TypeExp checked = src.expression.check(src.recordSet, TestUtil.typeState(), storer);
         TypeExp srcTypeExp = TypeExp.fromConcrete(null, src.type);
-        assertEquals(src.expression.toString() + "\n" + b.toString() + "\nCol types: " + src.recordSet.getColumns().stream().map(c -> {
+        assertEquals(src.expression.toString() + "\n" + storer.getAllErrors().collect(Collectors.joining("\n")) + "\nCol types: " + src.recordSet.getColumns().stream().map(c -> {
             try
             {
                 return c.getType().toString();

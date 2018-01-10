@@ -73,6 +73,7 @@
                             <configuration>
                                 <annotationProcessors>
                                     <annotationProcessor>org.checkerframework.checker.nullness.NullnessChecker</annotationProcessor>
+                                    <annotationProcessor>annotation.recorded.RecordedChecker</annotationProcessor>
                                 </annotationProcessors>
                                 <compilerArgs>
                                     <!-- location of the annotated JDK, which comes from a Maven dependency -->
@@ -116,6 +117,7 @@
                                     <annotationProcessor>annotation.ValueTypeChecker</annotationProcessor>
                                     <annotationProcessor>annotation.userindex.UserIndexChecker</annotationProcessor>
                                     <annotationProcessor>annotation.help.HelpFileChecker</annotationProcessor>
+                                    <annotationProcessor>annotation.recorded.RecordedChecker</annotationProcessor>
                                 </annotationProcessors>
                                 <annotationProcessorPaths>
                                     <path>

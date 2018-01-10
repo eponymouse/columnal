@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.antlr.v4.runtime.tree.ParseTree;
 import org.antlr.v4.runtime.tree.RuleNode;
@@ -15,9 +16,7 @@ import records.data.Column.ProgressListener;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
-import records.data.datatype.DataType;
 import records.data.datatype.TypeManager;
-import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UserException;
@@ -62,14 +61,12 @@ import records.transformations.expression.ComparisonExpression.ComparisonOperato
 import records.transformations.expression.MatchExpression.MatchClause;
 import records.transformations.expression.MatchExpression.Pattern;
 import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionList;
 import records.types.ExpressionBase;
 import records.types.TypeExp;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.ExFunction;
 import utility.Pair;
 import utility.Utility;
 
@@ -80,7 +77,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 /**
@@ -102,15 +98,15 @@ public abstract class Expression extends ExpressionBase
 
     // Checks that all used variable names and column references are defined,
     // and that types check.  Return null if any problems
-    public abstract @Nullable TypeExp check(RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException;
+    public abstract @Nullable @Recorded TypeExp check(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException;
 
     // Like check, but for patterns.  For many expressions this is same as check,
     // unless you are a new-variable declaration or can have one beneath you.
     // If you override this, you should also override matchAsPattern
-    public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varDeclAllowed, RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varDeclAllowed, RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // By default, check as normal, and return same TypeState:
-        @Nullable TypeExp type = check(data, typeState, onError);
+        @Nullable @Recorded TypeExp type = check(data, typeState, onError);
         if (type == null)
             return null;
         else

@@ -3,7 +3,6 @@ package records.transformations.expression;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.ColumnId;
 import records.data.RecordSet;
-import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.expressioneditor.BracketedExpression;
@@ -120,7 +119,7 @@ public abstract class NaryOpExpression extends Expression
         return Collections.unmodifiableList(expressions);
     }
 
-    protected @Nullable TypeExp checkAllOperandsSameType(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    protected @Nullable TypeExp checkAllOperandsSameType(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         List<TypeExp> types = new ArrayList<>();
         for (Expression expression : expressions)

@@ -1,13 +1,13 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
-import records.data.datatype.DataType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
@@ -39,7 +39,7 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern
@@ -48,7 +48,7 @@ public class VarDeclExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varDeclAllowed, RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varDeclAllowed, RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         if (!varDeclAllowed)
             return null; // We are a variable declaration, so clearly not allowed!
@@ -58,7 +58,7 @@ public class VarDeclExpression extends NonOperatorExpression
         if (newState == null)
             return null;
         else
-            return new Pair<>(type, newState);
+            return new Pair<>(onError.recordTypeNN(this, type), newState);
     }
 
     @Override

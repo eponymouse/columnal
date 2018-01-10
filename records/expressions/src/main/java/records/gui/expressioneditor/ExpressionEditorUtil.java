@@ -18,8 +18,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.controlsfx.control.PopOver;
 import org.jetbrains.annotations.NotNull;
-import records.transformations.expression.ErrorRecorder;
-import records.transformations.expression.ErrorRecorder.QuickFix;
+import records.transformations.expression.ErrorAndTypeRecorder;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -89,7 +89,7 @@ public class ExpressionEditorUtil
     {
         private final TextField textField;
         private final SimpleStringProperty message = new SimpleStringProperty("");
-        private final ObservableList<ErrorRecorder.QuickFix> quickFixes = FXCollections.observableArrayList();
+        private final ObservableList<ErrorAndTypeRecorder.QuickFix> quickFixes = FXCollections.observableArrayList();
         private final VBox vBox;
         private @Nullable PopOver popup = null;
         private boolean focused = false;
@@ -109,21 +109,21 @@ public class ExpressionEditorUtil
             private final BooleanBinding hasFixes;
 
             @SuppressWarnings("initialization")
-            public ErrorMessagePopup(StringProperty msg, ObservableList<ErrorRecorder.QuickFix> quickFixes)
+            public ErrorMessagePopup(StringProperty msg, ObservableList<ErrorAndTypeRecorder.QuickFix> quickFixes)
             {
                 Label errorLabel = new Label();
                 errorLabel.getStyleClass().add("expression-error-popup");
                 errorLabel.textProperty().bind(msg);
 
-                ListView<ErrorRecorder.QuickFix> fixList = new ListView<>(quickFixes);
+                ListView<ErrorAndTypeRecorder.QuickFix> fixList = new ListView<>(quickFixes);
                 // Keep reference to prevent GC:
                 hasFixes = Bindings.isEmpty(quickFixes).not();
                 fixList.visibleProperty().bind(hasFixes);
 
-                fixList.setCellFactory(lv -> new ListCell<ErrorRecorder.QuickFix>() {
+                fixList.setCellFactory(lv -> new ListCell<ErrorAndTypeRecorder.QuickFix>() {
                     @Override
                     @OnThread(Tag.FX)
-                    protected void updateItem(ErrorRecorder.QuickFix item, boolean empty) {
+                    protected void updateItem(ErrorAndTypeRecorder.QuickFix item, boolean empty) {
                         super.updateItem(item, empty);
                         setText("");
                         setGraphic(empty ? null : new TextFlow(new Text(item.getTitle())));
@@ -200,7 +200,7 @@ public class ExpressionEditorUtil
             this.focused = newFocused;
         }
 
-        public void setMessageAndFixes(@Nullable Pair<String, List<ErrorRecorder.QuickFix>> newMsgAndFixes)
+        public void setMessageAndFixes(@Nullable Pair<String, List<ErrorAndTypeRecorder.QuickFix>> newMsgAndFixes)
         {
             if (newMsgAndFixes == null)
             {

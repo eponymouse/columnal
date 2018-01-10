@@ -1,8 +1,11 @@
 package records.transformations.expression;
 
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.i18n.qual.Localized;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import records.types.MutVar;
 import records.types.TypeExp;
 import utility.Either;
 import utility.ExConsumer;
@@ -15,7 +18,7 @@ import java.util.function.Supplier;
 /**
  * A listener that records where errors have occurred when checking an expression.
  */
-public interface ErrorRecorder
+public interface ErrorAndTypeRecorder
 {
     /**
      * Records an error source and error message, with no available quick fixes
@@ -48,6 +51,17 @@ public interface ErrorRecorder
     }
 
     /**
+     * Records the type for a particular expression.
+     */
+    public default @Recorded @Nullable TypeExp recordType(Expression expression, @Nullable TypeExp typeExp)
+    {
+        if (typeExp != null)
+            return recordTypeNN(expression, typeExp);
+        else
+            return null;
+    }
+
+    /**
      * A curried version of the two-arg function of the same name.
      */
     @Pure
@@ -61,6 +75,13 @@ public interface ErrorRecorder
      */
     // TODO make the String @Localized
     public void recordError(Expression src, String error, List<QuickFix> fixes);
+
+    public default @Recorded @Nullable TypeExp recordTypeAndError(Expression expression, Either<String, TypeExp> typeOrError)
+    {
+        return recordType(expression, recordError(expression, typeOrError));
+    }
+
+    public @Recorded @NonNull TypeExp recordTypeNN(Expression expression, @NonNull TypeExp typeExp);
 
     /**
      * A quick fix for an error.  Has a title to display, and a thunk to run

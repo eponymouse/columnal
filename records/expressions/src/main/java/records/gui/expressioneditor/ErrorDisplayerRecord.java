@@ -6,7 +6,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.TypeManager;
 import records.error.InternalException;
 import records.error.UserException;
-import records.transformations.expression.ErrorRecorder;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.UnitExpression;
 import records.types.TypeExp;
@@ -41,7 +41,7 @@ public class ErrorDisplayerRecord
         return e;
     }
 
-    public boolean showError(Expression e, String s, List<ErrorRecorder.QuickFix> quickFixes)
+    public boolean showError(Expression e, String s, List<ErrorAndTypeRecorder.QuickFix> quickFixes)
     {
         @Nullable ErrorDisplayer d = expressionDisplayers.get(e);
         if (d != null)

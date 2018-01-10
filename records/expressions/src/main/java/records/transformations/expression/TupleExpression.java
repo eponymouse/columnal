@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -9,7 +10,6 @@ import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
-import records.data.datatype.DataType;
 import records.data.datatype.DataTypeUtility;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -17,11 +17,9 @@ import records.error.UnimplementedException;
 import records.error.UserException;
 import records.gui.expressioneditor.BracketedExpression;
 import records.gui.expressioneditor.ConsecutiveBase;
-import records.gui.expressioneditor.ConsecutiveBase.OperandOps;
 import records.gui.expressioneditor.ExpressionNodeParent;
 import records.gui.expressioneditor.OperandNode;
 import records.gui.expressioneditor.OperatorEntry;
-import records.types.MutVar;
 import records.types.TupleTypeExp;
 import records.types.TypeExp;
 import threadchecker.OnThread;
@@ -53,7 +51,7 @@ public class TupleExpression extends Expression
     }
 
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @NonNull TypeExp[] typeArray = new TypeExp[members.size()];
         for (int i = 0; i < typeArray.length; i++)
@@ -65,17 +63,17 @@ public class TupleExpression extends Expression
         }
         memberTypes = ImmutableList.copyOf(typeArray);
         tupleType = new TupleTypeExp(this, memberTypes, true);
-        return tupleType;
+        return onError.recordType(this, tupleType);
     }
 
     @Override
-    public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, final TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, final TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @NonNull TypeExp[] typeArray = new TypeExp[members.size()];
         @NonNull TypeState[] typeStates = new TypeState[members.size()];
         for (int i = 0; i < typeArray.length; i++)
         {
-            @Nullable Pair<TypeExp, TypeState> t = members.get(i).checkAsPattern(varAllowed, data, state, onError);
+            @Nullable Pair<@Recorded TypeExp, TypeState> t = members.get(i).checkAsPattern(varAllowed, data, state, onError);
             if (t == null)
                 return null;
             typeArray[i] = t.getFirst();
@@ -86,7 +84,7 @@ public class TupleExpression extends Expression
         @Nullable TypeState endState = TypeState.union(state, onError.recordError(this), typeStates);
         if (endState == null)
             return null;
-        return new Pair<>(tupleType, endState);
+        return new Pair<>(onError.recordTypeNN(this, tupleType), endState);
     }
 
     @Override

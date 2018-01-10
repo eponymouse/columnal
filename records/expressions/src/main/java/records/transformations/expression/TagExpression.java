@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -15,7 +16,6 @@ import records.gui.expressioneditor.TagExpressionNode;
 import records.types.TypeExp;
 import utility.Either;
 import utility.TaggedValue;
-import records.data.datatype.DataType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
@@ -25,7 +25,6 @@ import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.Utility;
 
 import java.util.Map;
 import java.util.Random;
@@ -67,7 +66,7 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable TagInfo typeAndIndex = tag.<@Nullable TagInfo>either(s -> null, x -> x);
         // Not valid tag; nothing more we can do:
@@ -78,7 +77,7 @@ public class TagExpression extends NonOperatorExpression
         // We must not pass nulls to checkSame if inner is empty, as that counts as failed checking, not optional items:
         boolean innerExpAndTypeBlank = inner == null && typeAndIndex.getTagInfo().getInner() == null;
         if (innerExpAndTypeBlank)
-            return TypeExp.fromTagged(this, typeAndIndex.wholeType);
+            return onError.recordType(this, TypeExp.fromTagged(this, typeAndIndex.wholeType));
         // If inner expression is null, it's meant to be there:
         if (inner == null)
         {
@@ -97,7 +96,7 @@ public class TagExpression extends NonOperatorExpression
             @NonNull TypeExp innerDer = innerDerivedType;
             if (onError.recordError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, typeAndIndex.getTagInfo().getInner()), innerDer)) == null)
                 return null;
-            return TypeExp.fromTagged(this, typeAndIndex.wholeType);
+            return onError.recordType(this, TypeExp.fromTagged(this, typeAndIndex.wholeType));
         }
     }
 
@@ -108,27 +107,27 @@ public class TagExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         @Nullable TagInfo typeAndIndex = tag.<@Nullable TagInfo>either(s -> null, x -> x);
         if (typeAndIndex == null)
             return null;
 
-        @Nullable Pair<TypeExp, TypeState> typeAndState = (inner == null || typeAndIndex.getTagInfo().getInner() == null) ? null : inner.checkAsPattern(varAllowed, data, state, onError);
+        @Nullable Pair<@Recorded TypeExp, TypeState> typeAndState = (inner == null || typeAndIndex.getTagInfo().getInner() == null) ? null : inner.checkAsPattern(varAllowed, data, state, onError);
         if (typeAndState != null)
             innerDerivedType = typeAndState.getFirst();
 
         // If we expect no inner type, and we have no inner type, nothing more to do:
         if (inner == null && typeAndIndex.getTagInfo().getInner() == null)
         {
-            return new Pair<>(TypeExp.fromTagged(this, typeAndIndex.wholeType), typeAndState == null ? state : typeAndState.getSecond());
+            return new Pair<>(onError.recordTypeNN(this, TypeExp.fromTagged(this, typeAndIndex.wholeType)), typeAndState == null ? state : typeAndState.getSecond());
         }
         // If we expect an inner type, and have one, check it matches up:
         if (inner != null && typeAndIndex.getTagInfo().getInner() != null && typeAndState != null)
         {
             TypeExp unified = onError.recordError(this, TypeExp.unifyTypes(TypeExp.fromConcrete(this, typeAndIndex.getTagInfo().getInner()), typeAndState.getFirst()));
             if (unified != null)
-                return new Pair<>(TypeExp.fromTagged(this, typeAndIndex.wholeType), typeAndState == null ? state : typeAndState.getSecond());
+                return new Pair<>(onError.recordTypeNN(this, TypeExp.fromTagged(this, typeAndIndex.wholeType)), typeAndState == null ? state : typeAndState.getSecond());
         }
         
         return null;

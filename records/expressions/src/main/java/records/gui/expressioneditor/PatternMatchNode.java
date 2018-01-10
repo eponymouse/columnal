@@ -4,7 +4,6 @@ import com.google.common.collect.ImmutableList;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableObjectValue;
 import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
@@ -17,7 +16,7 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
-import records.transformations.expression.ErrorRecorder;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.SingleLoader;
 import records.transformations.expression.MatchExpression;
@@ -25,17 +24,12 @@ import records.transformations.expression.MatchExpression.MatchClause;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.IdentityHashMap;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map.Entry;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -299,7 +293,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     }
 
     @Override
-    public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
+    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix> quickFixes)
     {
         source.showError(error, quickFixes);
     }

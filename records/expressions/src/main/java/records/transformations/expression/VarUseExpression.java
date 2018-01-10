@@ -1,13 +1,13 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
-import records.data.datatype.DataType;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
@@ -20,13 +20,10 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -42,7 +39,7 @@ public class VarUseExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         List<TypeExp> varType = state.findVarType(varName);
         if (varType == null)
@@ -51,7 +48,7 @@ public class VarUseExpression extends NonOperatorExpression
             return null;
         }
         // If they're trying to use it, it justifies us trying to unify all the types:
-        return onError.recordError(this, TypeExp.unifyTypes(varType));
+        return onError.recordTypeAndError(this, TypeExp.unifyTypes(varType));
     }
 
     @Override

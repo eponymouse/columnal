@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -81,15 +82,15 @@ public class ColumnReference extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState typeState, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState typeState, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         column = data.getColumn(columnName);
         switch (referenceType)
         {
             case CORRESPONDING_ROW:
-                return TypeExp.fromConcrete(this, column.getType());
+                return onError.recordType(this, TypeExp.fromConcrete(this, column.getType()));
             case WHOLE_COLUMN:
-                return TypeExp.fromConcrete(this, DataType.array(column.getType()));
+                return onError.recordType(this, TypeExp.fromConcrete(this, DataType.array(column.getType())));
         }
         throw new InternalException("Unknown reference type: " + referenceType);
     }

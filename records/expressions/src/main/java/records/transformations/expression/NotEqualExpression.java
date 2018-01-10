@@ -39,7 +39,7 @@ public class NotEqualExpression extends BinaryOpExpression
 
     @Override
     @RequiresNonNull({"lhsType", "rhsType"})
-    public @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         if (onError.recordError(this, TypeExp.unifyTypes(lhsType, rhsType)) == null)
             return null;

@@ -1,6 +1,6 @@
 package records.gui.expressioneditor;
 
-import records.transformations.expression.ErrorRecorder;
+import records.transformations.expression.ErrorAndTypeRecorder;
 
 import java.util.List;
 
@@ -11,7 +11,7 @@ import java.util.List;
 public interface ErrorDisplayer
 {
     // TODO make the String @Localized
-    public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes);
+    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix> quickFixes);
     
     public void showType(String type);
 }

@@ -1,13 +1,13 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
-import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UnimplementedException;
 import records.error.UserException;
@@ -20,7 +20,6 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.Arrays;
 import java.util.Map;
 
 /**
@@ -46,7 +45,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    protected @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    protected @Nullable TypeExp checkBinaryOp(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // If normal check is called, something has gone wrong because we are only
         // valid in a pattern
@@ -61,7 +60,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
     }
 
     @Override
-    public @Nullable Pair<TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable Pair<@Recorded TypeExp, TypeState> checkAsPattern(boolean varAllowed, RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         // The LHS and RHS must be numbers with matching units.  The result is then that same number
         
@@ -74,7 +73,7 @@ public class PlusMinusPatternExpression extends BinaryOpExpression
         if (lhsType == null || rhsType == null)
             return null;
 
-        TypeExp combined = onError.recordError(this, TypeExp.unifyTypes(new NumTypeExp(this, new UnitExp(new MutUnitVar())), lhsType, rhsType));
+        @Recorded TypeExp combined = onError.recordTypeAndError(this, TypeExp.unifyTypes(new NumTypeExp(this, new UnitExp(new MutUnitVar())), lhsType, rhsType));
         if (combined == null)
             return null;
         else

@@ -2,11 +2,11 @@
   <configuration default="false" name="Main" type="Application" factoryName="Application">
     <extension name="coverage" enabled="false" merge="false" sample_coverage="true" runner="idea" />
     <option name="MAIN_CLASS_NAME" value="records.gui.Main" />
-    <option name="VM_PARAMETERS" value="-Djava.library.path=target\classes" />
-    <option name="PROGRAM_PARAMETERS" value="J:/comped-papers/2015-gf3/study/experience.xlsx" />
+    <option name="VM_PARAMETERS" value="-Djava.library.path=target\classes -Xmx512M" />
+    <option name="PROGRAM_PARAMETERS" value="J:/Dropbox/Neil/ac-blog/compile-pixels.xlsx" />
     <option name="WORKING_DIRECTORY" value="file://$MODULE_DIR$" />
     <option name="ALTERNATIVE_JRE_PATH_ENABLED" value="true" />
-    <option name="ALTERNATIVE_JRE_PATH" value="1.8" />
+    <option name="ALTERNATIVE_JRE_PATH" value="1.8u144" />
     <option name="ENABLE_SWING_INSPECTOR" value="false" />
     <option name="ENV_VARIABLES" />
     <option name="PASS_PARENT_ENVS" value="true" />

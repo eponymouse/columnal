@@ -48,7 +48,7 @@ import records.gui.SingleSourceControl;
 import records.gui.View;
 import records.gui.expressioneditor.ExpressionEditor;
 import records.transformations.expression.BooleanLiteral;
-import records.transformations.expression.ErrorRecorderStorer;
+import records.transformations.expression.ErrorAndTypeRecorderStorer;
 import records.transformations.expression.EvaluateState;
 import records.transformations.expression.Expression;
 import records.transformations.expression.TypeState;
@@ -165,7 +165,7 @@ public class Filter extends TransformationEditable
             {
                 // Must set it before, in case it throws:
                 typeChecked = true;
-                ErrorRecorderStorer errors = new ErrorRecorderStorer();
+                ErrorAndTypeRecorderStorer errors = new ErrorAndTypeRecorderStorer();
                 @Nullable TypeExp checked = filterExpression.check(data, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
                 @Nullable DataType typeFinal = null;
                 if (checked != null)
@@ -276,7 +276,7 @@ public class Filter extends TransformationEditable
             @Nullable Table src = srcControl.getTableOrNull();
             if (src == null)
                 return;
-            if (expression.check(src.getData(), new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), (e, s, q) -> {}) == null)
+            if (expression.check(src.getData(), new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), new ErrorAndTypeRecorderStorer()) == null)
                 return;
 
             if (allColumns.isEmpty())

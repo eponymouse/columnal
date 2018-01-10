@@ -1,5 +1,6 @@
 package records.importers.gui;
 
+import annotation.recorded.qual.RecordedBottom;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.beans.binding.Bindings;
@@ -286,7 +287,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                         return fieldValue.get();
                     else
                         return null;
-            }, fieldValue == null ? new ObservableValue<?> @KeyForBottom [0] : new ObservableValue<?> @KeyForBottom [] {fieldValue});
+            }, fieldValue == null ? new ObservableValue<?> @RecordedBottom @KeyForBottom [0] : new ObservableValue<?> @RecordedBottom @KeyForBottom [] {fieldValue});
         }
         int rowNumber = controlGrid.addRow(GUI.labelledGridRow(options.choiceType.getLabelKey(), options.choiceType.getHelpId(), choiceNode));
         FXPlatformConsumer<@Nullable C> pick = item -> {

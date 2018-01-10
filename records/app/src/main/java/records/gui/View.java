@@ -1,5 +1,6 @@
 package records.gui;
 
+import annotation.recorded.qual.UnknownIfRecorded;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
 import javafx.beans.binding.ObjectExpression;
@@ -691,7 +692,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
 
         // Must use identity hash map as transformations' hash code can change if position changes.
         overlays = FXCollections.observableMap(new IdentityHashMap<>());
-        overlays.addListener((MapChangeListener<? super Transformation, ? super Overlays>) c -> {
+        overlays.addListener((MapChangeListener<? super @UnknownIfRecorded Transformation, ? super @UnknownIfRecorded Overlays>) c -> {
             Overlays removed = c.getValueRemoved();
             if (removed != null)
             {

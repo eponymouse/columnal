@@ -769,7 +769,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     }
 
     @Override
-    public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
+    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix> quickFixes)
     {
         operands.get(0).showError(error, quickFixes);
     }

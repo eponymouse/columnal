@@ -2,6 +2,7 @@ package records.gui.stable;
 
 import annotation.help.qual.UnknownIfHelp;
 import annotation.qual.UnknownIfValue;
+import annotation.recorded.qual.UnknownIfRecorded;
 import annotation.userindex.qual.UnknownIfUserIndex;
 import com.google.common.collect.ImmutableList;
 import javafx.animation.AnimationTimer;
@@ -970,7 +971,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
             FXUtility.addChangeListenerPlatformNN(heightProperty(), h -> updateVBar());
 
 
-            EventHandler<? super @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp MouseEvent> clickHandler = mouseEvent -> {
+            EventHandler<? super @UnknownIfRecorded @UnknownKeyFor @UnknownIfValue @UnknownIfUserIndex @UnknownIfHelp MouseEvent> clickHandler = mouseEvent -> {
 
                 @Nullable CellSelection cellPosition = getCellPositionAt(mouseEvent.getX(), mouseEvent.getY());
                 @Nullable StructuredTextField cell = cellPosition == null ? null : visibleCells.get(cellPosition.editPosition());

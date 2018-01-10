@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import com.google.common.collect.ImmutableList;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -10,7 +11,6 @@ import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
-import records.data.datatype.DataType;
 import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
@@ -20,8 +20,6 @@ import records.gui.expressioneditor.FunctionNode;
 import records.gui.expressioneditor.OperandNode;
 import records.transformations.function.FunctionDefinition;
 import records.transformations.function.FunctionDefinition.FunctionTypes;
-import records.transformations.function.FunctionGroup;
-import records.transformations.function.FunctionInstance;
 import records.transformations.function.FunctionList;
 import records.types.TypeExp;
 import threadchecker.OnThread;
@@ -66,7 +64,7 @@ public class CallExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         if (definition == null)
         {
@@ -81,7 +79,7 @@ public class CallExpression extends NonOperatorExpression
         @Nullable TypeExp checked = onError.recordError(this, TypeExp.unifyTypes(types.paramType, paramType));
         if (checked == null)
             return null;
-        return types.returnType;
+        return onError.recordType(this, types.returnType);
     }
 
     @Override

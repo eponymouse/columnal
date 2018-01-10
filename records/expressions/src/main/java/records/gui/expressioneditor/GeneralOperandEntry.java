@@ -1,24 +1,16 @@
 package records.gui.expressioneditor;
 
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.geometry.Point2D;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
-import javafx.scene.control.TextField;
-import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.expressioneditor.ExpressionEditorUtil.ErrorUpdater;
-import records.transformations.expression.ErrorRecorder.QuickFix;
+import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import utility.Pair;
 import utility.gui.FXUtility;
 
 import java.util.List;
-import java.util.stream.Stream;
 
 /**
  * A helper class that implements various methods when you

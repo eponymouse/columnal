@@ -2,11 +2,8 @@ package records.gui.expressioneditor;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.primitives.Chars;
 import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ObservableObjectValue;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.layout.VBox;
@@ -18,22 +15,17 @@ import records.data.datatype.DataType;
 import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
-import records.transformations.expression.ErrorRecorder;
+import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.Expression;
 import records.transformations.expression.Expression.SingleLoader;
 import records.transformations.expression.IfThenElseExpression;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.Utility;
-import utility.gui.FXUtility;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 /**
@@ -271,7 +263,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     }
 
     @Override
-    public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
+    public void showError(String error, List<ErrorAndTypeRecorder.QuickFix> quickFixes)
     {
         ifLabel.getSecond().showError(error, quickFixes);
     }

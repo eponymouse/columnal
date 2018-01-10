@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.common.rationals.Rational;
 import org.sosy_lab.java_smt.api.Formula;
@@ -8,11 +9,7 @@ import org.sosy_lab.java_smt.api.FormulaManager;
 import records.data.ColumnId;
 import records.data.RecordSet;
 import records.data.TableId;
-import records.data.datatype.DataType;
-import records.data.datatype.NumberDisplayInfo;
-import records.data.datatype.NumberInfo;
 import records.data.datatype.DataTypeUtility;
-import records.data.unit.Unit;
 import records.data.unit.UnitManager;
 import records.error.InternalException;
 import records.error.UnimplementedException;
@@ -68,7 +65,7 @@ public class TimesExpression extends NaryOpExpression
     }
 
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {
         UnitExp runningUnit = UnitExp.SCALAR;
         for (Expression expression : expressions)
@@ -85,7 +82,7 @@ public class TimesExpression extends NaryOpExpression
             
             runningUnit = runningUnit.times(unitVar);
         }
-        return new NumTypeExp(this, runningUnit);
+        return onError.recordType(this, new NumTypeExp(this, runningUnit));
     }
 
     @Override

@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -29,9 +30,9 @@ public class BooleanLiteral extends Literal
     }
 
     @Override
-    public TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws InternalException
+    public @Recorded @Nullable TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException
     {
-        return TypeExp.fromConcrete(this, DataType.BOOLEAN);
+        return onError.recordType(this, TypeExp.fromConcrete(this, DataType.BOOLEAN));
     }
 
     @Override

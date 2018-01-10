@@ -1,6 +1,7 @@
 package records.transformations.expression;
 
 import annotation.qual.Value;
+import annotation.recorded.qual.Recorded;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.sosy_lab.java_smt.api.Formula;
 import org.sosy_lab.java_smt.api.FormulaManager;
@@ -21,7 +22,6 @@ import threadchecker.Tag;
 import utility.Pair;
 import utility.Utility;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -62,7 +62,7 @@ public class MatchExpression extends NonOperatorExpression
         /**
          * Returns pattern match type, outcome type
          */
-        public @Nullable Pair<TypeExp, TypeExp> check(RecordSet data, TypeState state, ErrorRecorder onError) throws InternalException, UserException
+        public @Nullable Pair<TypeExp, TypeExp> check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
         {
             TypeExp[] patternTypes = new TypeExp[patterns.size()];
             TypeState[] rhsStates = new TypeState[patterns.size()];
@@ -74,7 +74,7 @@ public class MatchExpression extends NonOperatorExpression
             }
             for (int i = 0; i < patterns.size(); i++)
             {
-                @Nullable Pair<TypeExp, TypeState> ts = patterns.get(i).check(data, state, onError);
+                @Nullable Pair<@Recorded TypeExp, TypeState> ts = patterns.get(i).check(data, state, onError);
                 if (ts == null)
                     return null;
                 patternTypes[i] = ts.getFirst();
@@ -159,9 +159,9 @@ public class MatchExpression extends NonOperatorExpression
         /**
          * Returns pattern type, and resulting type state (including any declared vars)
          */
-        public @Nullable Pair<TypeExp, TypeState> check(RecordSet data, TypeState state, ErrorRecorder onError) throws InternalException, UserException
+        public @Nullable Pair<@Recorded TypeExp, TypeState> check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws InternalException, UserException
         {
-            @Nullable Pair<TypeExp, TypeState> rhsState = pattern.checkAsPattern(true, data, state, onError);
+            final @Nullable Pair<@Recorded TypeExp, TypeState> rhsState = pattern.checkAsPattern(true, data, state, onError);
             if (rhsState == null)
                 return null;
             
@@ -280,7 +280,7 @@ public class MatchExpression extends NonOperatorExpression
     }
 
     @Override
-    public @Nullable TypeExp check(RecordSet data, TypeState state, ErrorRecorder onError) throws UserException, InternalException
+    public @Nullable @Recorded TypeExp check(RecordSet data, TypeState state, ErrorAndTypeRecorder onError) throws UserException, InternalException
     {        
         // Need to check several things:
         //   - That all of the patterns have the same type as the expression being matched
@@ -312,7 +312,7 @@ public class MatchExpression extends NonOperatorExpression
         if (onError.recordError(this, TypeExp.unifyTypes(patternTypes)) == null)
             return null;
 
-        return onError.recordError(this, TypeExp.unifyTypes(outcomeTypes));
+        return onError.recordTypeAndError(this, TypeExp.unifyTypes(outcomeTypes));
     }
 
     @Override
