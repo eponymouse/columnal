@@ -12,4 +12,6 @@ public interface ErrorDisplayer
 {
     // TODO make the String @Localized
     public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes);
+    
+    public void showType(String type);
 }

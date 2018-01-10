@@ -400,6 +400,12 @@ public abstract class SurroundNode implements EEDisplayNodeParent, OperandNode<E
     }
 
     @Override
+    public void showType(String type)
+    {
+        showError.showType(type);
+    }
+
+    @Override
     public boolean isOrContains(EEDisplayNode child)
     {
         return this == child || (contents != null && contents.isOrContains(child));

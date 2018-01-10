@@ -169,7 +169,7 @@ public class Filter extends TransformationEditable
                 @Nullable TypeExp checked = filterExpression.check(data, new TypeState(getManager().getUnitManager(), getManager().getTypeManager()), errors);
                 @Nullable DataType typeFinal = null;
                 if (checked != null)
-                    typeFinal = errors.recordError(filterExpression, checked.toConcreteType(getManager().getTypeManager()));
+                    typeFinal = errors.recordLeftError(filterExpression, checked.toConcreteType(getManager().getTypeManager()));
                 
                 if (typeFinal == null)
                     throw new UserException((@NonNull String)errors.getAllErrors().findFirst().orElse("Unknown type error"));

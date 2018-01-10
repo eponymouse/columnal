@@ -3,6 +3,7 @@ package records.transformations.expression;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
+import records.types.TypeExp;
 import utility.Either;
 import utility.ExConsumer;
 
@@ -27,7 +28,18 @@ public interface ErrorRecorder
     /**
      * Records an error source and error message, with no available quick fixes
      */
-    public default <T> @Nullable T recordError(Expression src, Either<String, T> errorOrVal)
+    public default @Nullable TypeExp recordError(Expression src, Either<String, TypeExp> errorOrType)
+    {
+        return errorOrType.<@Nullable TypeExp>either(err -> {
+            recordError(src, err);
+            return null;
+        }, val -> val);
+    }
+
+    /**
+     * Records an error source and error message, with no available quick fixes
+     */
+    public default <T> @Nullable T recordLeftError(Expression src, Either<String, T> errorOrVal)
     {
         return errorOrVal.<@Nullable T>either(err -> {
             recordError(src, err);

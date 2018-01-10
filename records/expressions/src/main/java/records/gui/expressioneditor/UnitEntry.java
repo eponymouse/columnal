@@ -106,7 +106,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
         {
             int num = Integer.parseInt(text);
             UnitExpressionIntLiteral unitExpressionIntLiteral = new UnitExpressionIntLiteral(num);
-            errorDisplayer.record(this, unitExpressionIntLiteral);
+            errorDisplayer.recordUnit(this, unitExpressionIntLiteral);
             return unitExpressionIntLiteral;
         }
         catch (NumberFormatException e)
@@ -114,7 +114,7 @@ public class UnitEntry extends GeneralOperandEntry<UnitExpression, UnitNodeParen
             if (parent.getThisAsSemanticParent().getUnitManager().isUnit(text))
             {
                 SingleUnitExpression singleUnitExpression = new SingleUnitExpression(text);
-                errorDisplayer.record(this, singleUnitExpression);
+                errorDisplayer.recordUnit(this, singleUnitExpression);
                 return singleUnitExpression;
             }
             else

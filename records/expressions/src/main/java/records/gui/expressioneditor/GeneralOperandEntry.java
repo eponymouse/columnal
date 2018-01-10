@@ -6,6 +6,7 @@ import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Tooltip;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
@@ -84,5 +85,11 @@ abstract class GeneralOperandEntry<EXPRESSION extends @NonNull Object, SEMANTIC_
     {
         ExpressionEditorUtil.setError(container, error);
         errorUpdater.setMessageAndFixes(new Pair<>(error, quickFixes));
+    }
+
+    @Override
+    public void showType(String type)
+    {
+        ExpressionEditorUtil.showTypeAsTooltip(type, typeLabel);
     }
 }

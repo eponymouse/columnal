@@ -7,20 +7,19 @@ import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Bounds;
-import javafx.scene.Node;
 import javafx.scene.control.*;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.VBox;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import javafx.stage.PopupWindow.AnchorLocation;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
 import org.controlsfx.control.PopOver;
 import org.jetbrains.annotations.NotNull;
 import records.transformations.expression.ErrorRecorder;
+import records.transformations.expression.ErrorRecorder.QuickFix;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
@@ -62,10 +61,26 @@ public class ExpressionEditorUtil
         VBox vBox = new VBox(typeLabel, textField);
         vBox.getStyleClass().add(cssClass);
         ErrorUpdater errorShower = installErrorShower(vBox, textField);
-        return new Pair<>(vBox, (String s, List<ErrorRecorder.QuickFix> q) -> {
-            setError(vBox, s);
-            errorShower.setMessageAndFixes(new Pair<>(s, q));
+        return new Pair<>(vBox, new ErrorDisplayer()
+        {
+            @Override
+            public void showError(String s, List<QuickFix> q)
+            {
+                setError(vBox, s);
+                errorShower.setMessageAndFixes(new Pair<>(s, q));
+            }
+
+            @Override
+            public void showType(String type)
+            {
+                showTypeAsTooltip(type, typeLabel);
+            }
         });
+    }
+
+    static void showTypeAsTooltip(String type, Label typeLabel)
+    {
+        typeLabel.setTooltip(new Tooltip("Type: " + type));
     }
 
     // Needs to listen to in the message, the focus of the text field, and changes
@@ -221,12 +236,12 @@ public class ExpressionEditorUtil
     }
 
     @NotNull
-    protected static <E> VBox keyword(String keyword, String cssClass, @Nullable @UnknownInitialization OperandNode<E> surrounding, Stream<String> parentStyles)
+    protected static <E> Pair<VBox, ErrorDisplayer> keyword(String keyword, String cssClass, @Nullable @UnknownInitialization OperandNode<E> surrounding, Stream<String> parentStyles)
     {
         TextField t = new TextField(keyword);
         t.setEditable(false);
         t.setDisable(true);
-        return withLabelAbove(t, cssClass, "", surrounding, parentStyles).getFirst();
+        return withLabelAbove(t, cssClass, "", surrounding, parentStyles);
     }
 
     public static void setStyles(Label topLabel, Stream<String> parentStyles)

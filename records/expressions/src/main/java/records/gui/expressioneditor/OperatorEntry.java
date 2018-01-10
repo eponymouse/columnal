@@ -38,7 +38,7 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
     /**
      * The outermost container for the whole thing:
      */
-    private final VBox container;
+    private final Pair<VBox, ErrorDisplayer> container;
     private final @MonotonicNonNull AutoComplete autoComplete;
     private final SimpleBooleanProperty initialContentEntered = new SimpleBooleanProperty(false);
 
@@ -58,8 +58,8 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
             initialContentEntered.set(true);
         }
         FXUtility.sizeToFit(textField, 5.0, 5.0);
-        container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, parent.getParentStyles()).getFirst();
-        container.getStyleClass().add("entry");
+        container = ExpressionEditorUtil.withLabelAbove(textField, "operator", "", this, parent.getParentStyles());
+        container.getFirst().getStyleClass().add("entry");
         updateNodes();
 
         this.autoComplete = new AutoComplete(textField, (s, q) -> getCompletions(parent, parent.operations.getValidOperators(parent.getThisAsSemanticParent()), s), new CompletionListener(), c -> !parent.operations.isOperatorAlphabet(c, parent.getThisAsSemanticParent()) && !parent.terminatedByChars().contains(c));
@@ -83,7 +83,7 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
     @Override
     protected Stream<Node> calculateNodes()
     {
-        return Stream.of(container);
+        return Stream.of(container.getFirst());
     }
 
     private static <EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> List<Completion> getCompletions(ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent, List<Pair<String, @Localized String>> validOperators, String s)
@@ -121,7 +121,7 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
     @Override
     public void setSelected(boolean selected)
     {
-        FXUtility.setPseudoclass(container, "exp-selected", selected);
+        FXUtility.setPseudoclass(container.getFirst(), "exp-selected", selected);
     }
 
     @Override
@@ -145,6 +145,11 @@ public class OperatorEntry<EXPRESSION extends @NonNull Object, SEMANTIC_PARENT> 
             if (isFocused())
                 super.focus(side);
         });
+    }
+
+    public void showType(String type)
+    {
+        container.getSecond().showType(type);
     }
 
     private static class SimpleCompletion extends Completion

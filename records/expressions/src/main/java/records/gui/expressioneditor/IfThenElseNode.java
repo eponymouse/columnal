@@ -46,7 +46,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     private final @Interned Consecutive<Expression, ExpressionNodeParent> condition;
     private final @Interned Consecutive<Expression, ExpressionNodeParent> thenPart;
     private final @Interned Consecutive<Expression, ExpressionNodeParent> elsePart;
-    private final VBox ifLabel;
+    private final Pair<VBox, ErrorDisplayer> ifLabel;
     private final VBox thenLabel;
     private final VBox elseLabel;
 
@@ -57,10 +57,10 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
         this.semanticParent = semanticParent;
 
         ifLabel = ExpressionEditorUtil.keyword("if", "if-keyword", this, getParentStyles());
-        thenLabel = ExpressionEditorUtil.keyword("then", "if-keyword", this, getParentStyles());
-        elseLabel = ExpressionEditorUtil.keyword("else", "if-keyword", this, getParentStyles());
+        thenLabel = ExpressionEditorUtil.keyword("then", "if-keyword", this, getParentStyles()).getFirst();
+        elseLabel = ExpressionEditorUtil.keyword("else", "if-keyword", this, getParentStyles()).getFirst();
 
-        condition = new SubConsecutive(ifLabel, "if-condition", startingCondition) {
+        condition = new SubConsecutive(ifLabel.getFirst(), "if-condition", startingCondition) {
             @Override
             public OperatorOutcome addOperandToRight(OperatorEntry<Expression, ExpressionNodeParent> rightOf, String operatorEntered, String initialContent, boolean focus)
             {
@@ -143,7 +143,7 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     @Override
     public <C> Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
-        @Nullable Pair<ConsecutiveChild<? extends C>, Double> startDist = ConsecutiveChild.closestDropSingle(this, Expression.class, ifLabel, loc, forType);
+        @Nullable Pair<ConsecutiveChild<? extends C>, Double> startDist = ConsecutiveChild.closestDropSingle(this, Expression.class, ifLabel.getFirst(), loc, forType);
 
         return Utility.streamNullable(startDist, condition.findClosestDrop(loc, forType), thenPart.findClosestDrop(loc, forType), elsePart.findClosestDrop(loc, forType))
             .filter(x -> x != null).min(Comparator.comparing(p -> p.getSecond())).get();
@@ -273,7 +273,13 @@ public class IfThenElseNode extends DeepNodeTree implements OperandNode<Expressi
     @Override
     public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
     {
-        condition.showError(error, quickFixes);
+        ifLabel.getSecond().showError(error, quickFixes);
+    }
+
+    @Override
+    public void showType(String type)
+    {
+        ifLabel.getSecond().showType(type);
     }
 
     @Override

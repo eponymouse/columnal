@@ -43,7 +43,7 @@ import java.util.stream.Stream;
  */
 public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParent, OperandNode<Expression>, ExpressionNodeParent
 {
-    private final VBox matchLabel;
+    private final Pair<VBox, ErrorDisplayer> matchLabel;
     private final ConsecutiveBase<Expression, ExpressionNodeParent> source;
     private final ObservableList<ClauseNode> clauses;
     private ConsecutiveBase<Expression, ExpressionNodeParent> parent;
@@ -53,7 +53,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     {
         this.parent = parent;
         this.matchLabel = ExpressionEditorUtil.keyword("match", "match", this, getParentStyles());
-        this.source = new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, matchLabel, null, "match", sourceAndClauses == null ? null : SingleLoader.withSemanticParent(sourceAndClauses.getFirst().loadAsConsecutive(false), this), ')') {
+        this.source = new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, matchLabel.getFirst(), null, "match", sourceAndClauses == null ? null : SingleLoader.withSemanticParent(sourceAndClauses.getFirst().loadAsConsecutive(false), this), ')') {
             @Override
             public boolean isFocused()
             {
@@ -276,7 +276,7 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     @Override
     public <C> Pair<ConsecutiveChild<? extends C>, Double> findClosestDrop(Point2D loc, Class<C> forType)
     {
-        @Nullable Pair<ConsecutiveChild<? extends C>, Double> startDist = ConsecutiveChild.closestDropSingle(this, Expression.class, matchLabel, loc, forType);
+        @Nullable Pair<ConsecutiveChild<? extends C>, Double> startDist = ConsecutiveChild.closestDropSingle(this, Expression.class, matchLabel.getFirst(), loc, forType);
 
         return Stream.<Pair<ConsecutiveChild<? extends C>, Double>>concat(Utility.streamNullable(startDist), clauses.stream().flatMap(c -> Utility.streamNullable(c.findClosestDrop(loc, forType))))
             .min(Comparator.comparing(p -> p.getSecond())).get();
@@ -302,6 +302,12 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     public void showError(String error, List<ErrorRecorder.QuickFix> quickFixes)
     {
         source.showError(error, quickFixes);
+    }
+
+    @Override
+    public void showType(String type)
+    {
+        matchLabel.getSecond().showType(type);
     }
 
     public ClauseNode addNewCaseToRightOf(ClauseNode clause)

@@ -292,16 +292,28 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
             {
                 if (srcTable != null && tableManager != null)
                 {
-                    ErrorRecorder errorRecorder = (e, s, q) ->
+                    ErrorRecorder errorRecorder = new ErrorRecorder()
                     {
-                        if (!errorDisplayers.showError(e, s, q))
+                        @Override
+                        public void recordError(Expression e, String s, List<QuickFix> q)
                         {
-                            // Show it on us, then:
-                            showError(s, q);
+                            if (!errorDisplayers.showError(e, s, q))
+                            {
+                                // Show it on us, then:
+                                ExpressionEditor.this.showError(s, q);
+                            }
+                        }
+
+                        @Override
+                        public @Nullable TypeExp recordError(Expression src, Either<String, TypeExp> errorOrType)
+                        {
+                            errorDisplayers.recordType(src, errorOrType);
+                            return ErrorRecorder.super.recordError(src, errorOrType);
                         }
                     };
                     @Nullable TypeExp dataType = expression.check(srcTable.getData(), new TypeState(tableManager.getUnitManager(), tableManager.getTypeManager()), errorRecorder);
-                    latestType.set(dataType == null ? null : errorRecorder.recordError(expression, dataType.toConcreteType(tableManager.getTypeManager())));
+                    latestType.set(dataType == null ? null : errorRecorder.recordLeftError(expression, dataType.toConcreteType(tableManager.getTypeManager())));
+                    errorDisplayers.showAllTypes(tableManager.getTypeManager());
                 }
             }
             catch (InternalException | UserException e)

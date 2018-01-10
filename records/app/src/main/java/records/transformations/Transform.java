@@ -135,7 +135,7 @@ public class Transform extends TransformationEditable
                 };
                 @Nullable TypeExp type = newCol.getSecond().check(srcRecordSet, new TypeState(mgr.getUnitManager(), mgr.getTypeManager()), errorRecorder);
                 
-                DataType concrete = type == null ? null : errorRecorder.recordError(newCol.getSecond(), type.toConcreteType(mgr.getTypeManager()));
+                DataType concrete = type == null ? null : errorRecorder.recordLeftError(newCol.getSecond(), type.toConcreteType(mgr.getTypeManager()));
                 if (type == null || concrete == null)
                     throw new UserException(error); // A bit redundant, but control flow will pan out right
                 @NonNull DataType typeFinal = concrete;

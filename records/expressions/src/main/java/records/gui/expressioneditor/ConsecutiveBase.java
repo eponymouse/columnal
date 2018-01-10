@@ -774,6 +774,15 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
         operands.get(0).showError(error, quickFixes);
     }
 
+    @Override
+    public void showType(String type)
+    {
+        for (OperatorEntry<EXPRESSION, SEMANTIC_PARENT> operator : operators)
+        {
+            operator.showType(type);
+        }
+    }
+
     public static enum BracketedStatus
     {
         /** Direct round brackets, i.e. if there's only commas, this can be a tuple expression */
@@ -1036,19 +1045,19 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
 
             if (operands.size() == 2 && ops.size() == 1 && ops.get(0).equals("/"))
             {
-                return errorDisplayers.record(displayer, new UnitDivideExpression(operands.get(0), operands.get(1)));
+                return errorDisplayers.recordUnit(displayer, new UnitDivideExpression(operands.get(0), operands.get(1)));
             }
             else if (operands.size() == 2 && ops.size() == 1 && ops.get(0).equals("^") && operands.get(1) instanceof UnitExpressionIntLiteral)
             {
-                return errorDisplayers.record(displayer, new UnitRaiseExpression(operands.get(0), ((UnitExpressionIntLiteral)operands.get(1)).getNumber()));
+                return errorDisplayers.recordUnit(displayer, new UnitRaiseExpression(operands.get(0), ((UnitExpressionIntLiteral)operands.get(1)).getNumber()));
             }
             else if (ops.size() > 0 && ops.stream().allMatch(o -> o.equals("*")))
             {
-                return errorDisplayers.record(displayer, new UnitTimesExpression(ImmutableList.copyOf(operands)));
+                return errorDisplayers.recordUnit(displayer, new UnitTimesExpression(ImmutableList.copyOf(operands)));
             }
             else if (ops.size() == 0 && operands.size() == 1)
             {
-                return errorDisplayers.record(displayer, operands.get(0));
+                return errorDisplayers.recordUnit(displayer, operands.get(0));
             }
 
             return new InvalidOperatorUnitExpression(ImmutableList.copyOf(operands), ImmutableList.copyOf(ops));

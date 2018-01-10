@@ -75,7 +75,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     public ClauseNode(PatternMatchNode parent, @Nullable Pair<List<Pair<Expression, @Nullable Expression>>, Expression> patternsAndGuardsToOutcome)
     {
         this.parent = parent;
-        this.caseLabel = ExpressionEditorUtil.keyword("case", "case", parent, getParentStyles());
+        this.caseLabel = ExpressionEditorUtil.keyword("case", "case", parent, getParentStyles()).getFirst();
         this.matches = FXCollections.observableArrayList();
         // Must initialize outcome first because updateNodes will use it:
         this.outcome = makeConsecutive(SubType.OUTCOME/*"\u2794"*/, patternsAndGuardsToOutcome == null ? null : patternsAndGuardsToOutcome.getSecond());
@@ -130,7 +130,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
     @SuppressWarnings("initialization") // Because of Consecutive
     private Consecutive<Expression, ExpressionNodeParent> makeConsecutive(@UnknownInitialization(Object.class)ClauseNode this, SubType subType, @Nullable Expression startingContent)
     {
-        return new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, ExpressionEditorUtil.keyword(subType.getPrefixKeyword(), "match", parent, getParentStyles()), null, "match", startingContent == null ? null : SingleLoader.withSemanticParent(startingContent.loadAsConsecutive(false), this)) {
+        return new Consecutive<Expression, ExpressionNodeParent>(ConsecutiveBase.EXPRESSION_OPS, this, ExpressionEditorUtil.keyword(subType.getPrefixKeyword(), "match", parent, getParentStyles()).getFirst(), null, "match", startingContent == null ? null : SingleLoader.withSemanticParent(startingContent.loadAsConsecutive(false), this)) {
 
             @Override
             public OperatorOutcome addOperandToRight(OperatorEntry<Expression, ExpressionNodeParent> rightOf, String operatorEntered, String initialContent, boolean focus)

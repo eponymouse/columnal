@@ -95,6 +95,12 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     }
 
     @Override
+    public void showType(String type)
+    {
+        // It's obviously a string.  Do we need to show the type?
+    }
+
+    @Override
     public boolean isOrContains(EEDisplayNode child)
     {
         return this == child;

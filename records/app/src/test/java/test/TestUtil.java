@@ -941,7 +941,7 @@ public class TestUtil
             return null;
         
         @SuppressWarnings("nullness") // For null src
-        @Nullable DataType returnType = onError.recordError(null, functionTypes.returnType.toConcreteType(typeManager));
+        @Nullable DataType returnType = onError.recordLeftError(null, functionTypes.returnType.toConcreteType(typeManager));
         if (returnType != null)
             return new Pair<>(functionTypes.getInstanceAfterTypeCheck(), returnType);
         return null;
@@ -957,7 +957,7 @@ public class TestUtil
         if (paramTypeExp == null)
             return null;
         @SuppressWarnings("nullness") // For null src
-        @Nullable DataType returnType = onError.recordError(null, TypeExp.unifyTypes(TypeExp.fromConcrete(null, expectedReturnType), functionTypes.returnType).flatMapEx(t -> t.toConcreteType(typeManager)));
+        @Nullable DataType returnType = onError.recordLeftError(null, TypeExp.unifyTypes(TypeExp.fromConcrete(null, expectedReturnType), functionTypes.returnType).flatMapEx(t -> t.toConcreteType(typeManager)));
         if (returnType != null)
             return new Pair<>(functionTypes.getInstanceAfterTypeCheck(), returnType);
         return null;
