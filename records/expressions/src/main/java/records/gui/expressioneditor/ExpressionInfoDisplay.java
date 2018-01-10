@@ -54,20 +54,33 @@ public class ExpressionInfoDisplay
 
         public ErrorMessagePopup()
         {
+            getStyleClass().add("expression-info-popup");
             setArrowLocation(ArrowLocation.BOTTOM_CENTER);
             // If we let the position vary to fit on screen, we end up with the popup bouncing in and out
             // as the mouse hovers on item then on popup then hides.  Better to let the item be off-screen
             // and let the user realise they need to move things about a bit:
             setAutoFix(false);
+            // It's the skin that binds the height, so we must unbind after the skin is set:
+            FXUtility.onceNotNull(skinProperty(), skin -> {
+                // By default, the min width and height are the same, to allow for arrow + corners.
+                // But we know arrow is on bottom, so we don't need such a large min height:
+                getRoot().minHeightProperty().unbind();
+                getRoot().setMinHeight(20.0);
+            });
+            
             
             Label errorLabel = new Label();
             errorLabel.getStyleClass().add("expression-info-error");
             errorLabel.textProperty().bind(message);
+            errorLabel.visibleProperty().bind(errorLabel.textProperty().isNotEmpty());
+            errorLabel.managedProperty().bind(errorLabel.visibleProperty());
 
             ListView<QuickFix> fixList = new ListView<>(quickFixes);
+            fixList.setMaxHeight(150.0);
             // Keep reference to prevent GC:
             hasFixes = Bindings.isEmpty(quickFixes).not();
             fixList.visibleProperty().bind(hasFixes);
+            fixList.managedProperty().bind(fixList.visibleProperty());
 
             fixList.setCellFactory(lv -> new ListCell<QuickFix>() {
                 @Override

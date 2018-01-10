@@ -148,6 +148,7 @@ class PopupControl
 {
     ObservableList<String> getStyleClass() @UnknownInitialization;
     void setSkin(Skin<?> value) @UnknownInitialization;
+    ObjectProperty<Skin<?>> skinProperty() @UnknownInitialization;
 }
 class Menu
 {
@@ -270,10 +271,20 @@ class SegmentedButton
 }
 class PopOver
 {
+    Node getRoot() @UnknownInitialization;
+
     void show(@UnknownInitialization @NonNull Node owner);
     void setContentNode(@Nullable Node content) @UnknownInitialization;
     void setArrowLocation(ArrowLocation location) @UnknownInitialization;
-    void setAutoFix(boolean value) @UnknownInitialization; 
+    void setAutoFix(boolean value) @UnknownInitialization;
+    
+    void setMinWidth(double v) @UnknownInitialization;
+    void setPrefWidth(double v) @UnknownInitialization;
+    void setMaxWidth(double v) @UnknownInitialization;
+    
+    void setMinHeight(double v) @UnknownInitialization;
+    void setPrefHeight(double v) @UnknownInitialization;
+    void setMaxHeight(double v) @UnknownInitialization; 
 }
 package org.fxmisc.richtext;
 class StyleClassedTextArea
