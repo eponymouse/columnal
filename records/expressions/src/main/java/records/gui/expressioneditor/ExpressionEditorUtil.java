@@ -1,27 +1,13 @@
 package records.gui.expressioneditor;
 
-import javafx.beans.binding.Bindings;
-import javafx.beans.binding.BooleanBinding;
-import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
-import javafx.collections.FXCollections;
-import javafx.collections.ObservableList;
-import javafx.geometry.Bounds;
 import javafx.scene.control.*;
 import javafx.scene.input.Dragboard;
 import javafx.scene.input.TransferMode;
 import javafx.scene.layout.VBox;
-import javafx.scene.text.Text;
-import javafx.scene.text.TextFlow;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import org.controlsfx.control.PopOver;
 import org.jetbrains.annotations.NotNull;
-import records.transformations.expression.ErrorAndTypeRecorder;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
-import threadchecker.OnThread;
-import threadchecker.Tag;
 import utility.Pair;
 import utility.gui.FXUtility;
 
@@ -60,7 +46,7 @@ public class ExpressionEditorUtil
         setStyles(typeLabel, parentStyles);
         VBox vBox = new VBox(typeLabel, textField);
         vBox.getStyleClass().add(cssClass);
-        ErrorUpdater errorShower = installErrorShower(vBox, textField);
+        ExpressionInfoDisplay errorShower = installErrorShower(vBox, textField);
         return new Pair<>(vBox, new ErrorDisplayer()
         {
             @Override
@@ -73,161 +59,14 @@ public class ExpressionEditorUtil
             @Override
             public void showType(String type)
             {
-                showTypeAsTooltip(type, typeLabel);
+                errorShower.setType(type);
             }
         });
     }
 
-    static void showTypeAsTooltip(String type, Label typeLabel)
+    public static ExpressionInfoDisplay installErrorShower(VBox vBox, TextField textField)
     {
-        typeLabel.setTooltip(new Tooltip("Type: " + type));
-    }
-
-    // Needs to listen to in the message, the focus of the text field, and changes
-    // in the mouse position
-    public static class ErrorUpdater
-    {
-        private final TextField textField;
-        private final SimpleStringProperty message = new SimpleStringProperty("");
-        private final ObservableList<ErrorAndTypeRecorder.QuickFix> quickFixes = FXCollections.observableArrayList();
-        private final VBox vBox;
-        private @Nullable PopOver popup = null;
-        private boolean focused = false;
-        private boolean hovering = false;
-
-        @SuppressWarnings("initialization")
-        public ErrorUpdater(VBox vBox, TextField textField)
-        {
-            this.vBox = vBox;
-            this.textField = textField;
-            FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), this::textFieldFocusChanged);
-            FXUtility.addChangeListenerPlatformNN(vBox.hoverProperty(), this::mouseHoverStatusChanged);
-        }
-
-        private static class ErrorMessagePopup extends PopOver
-        {
-            private final BooleanBinding hasFixes;
-
-            @SuppressWarnings("initialization")
-            public ErrorMessagePopup(StringProperty msg, ObservableList<ErrorAndTypeRecorder.QuickFix> quickFixes)
-            {
-                Label errorLabel = new Label();
-                errorLabel.getStyleClass().add("expression-error-popup");
-                errorLabel.textProperty().bind(msg);
-
-                ListView<ErrorAndTypeRecorder.QuickFix> fixList = new ListView<>(quickFixes);
-                // Keep reference to prevent GC:
-                hasFixes = Bindings.isEmpty(quickFixes).not();
-                fixList.visibleProperty().bind(hasFixes);
-
-                fixList.setCellFactory(lv -> new ListCell<ErrorAndTypeRecorder.QuickFix>() {
-                    @Override
-                    @OnThread(Tag.FX)
-                    protected void updateItem(ErrorAndTypeRecorder.QuickFix item, boolean empty) {
-                        super.updateItem(item, empty);
-                        setText("");
-                        setGraphic(empty ? null : new TextFlow(new Text(item.getTitle())));
-                    }
-                });
-
-                VBox container = new VBox(errorLabel, fixList);
-
-                setContentNode(container);
-            }
-        }
-
-        private void show()
-        {
-            // Shouldn't be non-null already, but just in case:
-            if (popup != null)
-            {
-                hide();
-            }
-            if (vBox.getScene() != null)
-            {
-                Bounds screenBounds = vBox.localToScreen(vBox.getBoundsInLocal());
-                popup = new ErrorMessagePopup(message, quickFixes);
-                popup.show(vBox);
-            }
-        }
-
-        @RequiresNonNull("popup")
-        // Can't have an ensuresnull check
-        private void hide()
-        {
-            popup.hide();
-            popup = null;
-        }
-
-        public void mouseHoverStatusChanged(boolean newHovering)
-        {
-            if (newHovering)
-            {
-                if (popup == null && !message.get().isEmpty())
-                {
-                    show();
-                }
-            }
-            else
-            {
-                // If mouse leaves, then we hide only if not focused:
-                if (!focused && popup != null)
-                {
-                    hide();
-                }
-            }
-            this.hovering = newHovering;
-        }
-
-        public void textFieldFocusChanged(boolean newFocused)
-        {
-            if (newFocused)
-            {
-                System.out.println("Focused, message is " + message.get() + " popup " + popup);
-                if (!message.get().isEmpty())
-                {
-                    show();
-                }
-            }
-            else
-            {
-                // If focus leaves, then even if you are still hovering, we hide:
-                if (popup != null)
-                {
-                    hide();
-                }
-            }
-            this.focused = newFocused;
-        }
-
-        public void setMessageAndFixes(@Nullable Pair<String, List<ErrorAndTypeRecorder.QuickFix>> newMsgAndFixes)
-        {
-            if (newMsgAndFixes == null)
-            {
-                message.setValue("");
-                quickFixes.clear();
-                // Hide the popup:
-                if (popup != null)
-                {
-                    hide();
-                }
-            }
-            else
-            {
-                message.set(newMsgAndFixes.getFirst());
-                quickFixes.setAll(newMsgAndFixes.getSecond());
-                // If we are focused or hovering already, now need to show message
-                if (focused || hovering)
-                {
-                    show();
-                }
-            }
-        }
-    }
-
-    public static ErrorUpdater installErrorShower(VBox vBox, TextField textField)
-    {
-        return new ErrorUpdater(vBox, textField);
+        return new ExpressionInfoDisplay(vBox, textField);
     }
 
     public static void setError(VBox vBox, @Nullable String s)

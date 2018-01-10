@@ -5,7 +5,6 @@ import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import records.gui.expressioneditor.ExpressionEditorUtil.ErrorUpdater;
 import records.transformations.expression.ErrorAndTypeRecorder.QuickFix;
 import utility.Pair;
 import utility.gui.FXUtility;
@@ -35,7 +34,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends @NonNull Object, SEMANTIC_
      */
     protected final VBox container;
 
-    private final ErrorUpdater errorUpdater;
+    private final ExpressionInfoDisplay expressionInfoDisplay;
 
     protected GeneralOperandEntry(Class<EXPRESSION> operandClass, ConsecutiveBase<EXPRESSION, SEMANTIC_PARENT> parent)
     {
@@ -51,7 +50,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends @NonNull Object, SEMANTIC_
         prefix = new Label();
         container = new VBox(typeLabel, new HBox(prefix, textField));
         container.getStyleClass().add("entry");
-        this.errorUpdater = ExpressionEditorUtil.installErrorShower(container, textField);
+        this.expressionInfoDisplay = ExpressionEditorUtil.installErrorShower(container, textField);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
     }
 
@@ -76,12 +75,12 @@ abstract class GeneralOperandEntry<EXPRESSION extends @NonNull Object, SEMANTIC_
     public void showError(String error, List<QuickFix> quickFixes)
     {
         ExpressionEditorUtil.setError(container, error);
-        errorUpdater.setMessageAndFixes(new Pair<>(error, quickFixes));
+        expressionInfoDisplay.setMessageAndFixes(new Pair<>(error, quickFixes));
     }
 
     @Override
     public void showType(String type)
     {
-        ExpressionEditorUtil.showTypeAsTooltip(type, typeLabel);
+        expressionInfoDisplay.setType(type);
     }
 }

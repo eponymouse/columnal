@@ -121,7 +121,11 @@ $parent-colors: (function, $function-color), (match, $match-color), (if, $if-col
     -fx-border-color: grey;
 }
 
-.expression-error-popup {
+.expression-info-type {
+    -fx-text-fill: black;
+}
+
+.expression-info-error {
     -fx-background-color: darkred;
     -fx-background-radius: 7px;
     -fx-border-color: white;
