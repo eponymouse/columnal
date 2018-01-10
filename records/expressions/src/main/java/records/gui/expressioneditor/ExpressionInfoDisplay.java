@@ -29,6 +29,12 @@ import java.util.List;
 
 /**
  * Manages the display of errors, quick fixes and type information in the expression editor.
+ * 
+ * The rule for when it displays is either:
+ *  - The user hovers over the label at the top of an expression item (regardless of error state), OR
+ *  - (The user hovers over the main part or focuses the main part) AND there is an error.
+ * Bindings to do this will get too intricate, so we just keep track of the properties involved
+ *  
  */
 public class ExpressionInfoDisplay
 {
@@ -38,14 +44,17 @@ public class ExpressionInfoDisplay
     private final VBox expressionNode;
     private @Nullable PopOver popup = null;
     private boolean focused = false;
-    private boolean hovering = false;
+    private boolean hoveringOverall = false;
+    private boolean hoveringTop = false;
 
     @SuppressWarnings("initialization")
-    public ExpressionInfoDisplay(VBox expressionNode, TextField textField)
+    public ExpressionInfoDisplay(VBox expressionNode, Label topLabel, TextField textField)
     {
         this.expressionNode = expressionNode;
         FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), this::textFieldFocusChanged);
-        FXUtility.addChangeListenerPlatformNN(expressionNode.hoverProperty(), this::mouseHoverStatusChanged);
+        FXUtility.addChangeListenerPlatformNN(expressionNode.hoverProperty(), b -> mouseHoverStatusChanged(expressionNode.isHover(), topLabel.isHover()));
+        FXUtility.addChangeListenerPlatformNN(topLabel.hoverProperty(), b -> mouseHoverStatusChanged(expressionNode.isHover(), topLabel.isHover()));
+        FXUtility.addChangeListenerPlatformNN(message, s -> updateShowHide());
     }
 
     private class ErrorMessagePopup extends PopOver
@@ -123,45 +132,32 @@ public class ExpressionInfoDisplay
         popup = null;
     }
 
-    private void mouseHoverStatusChanged(boolean newHovering)
+    private void mouseHoverStatusChanged(boolean hoverOverall, boolean hoverTop)
     {
-        if (newHovering)
-        {
-            if (popup == null)
-            {
-                show();
-            }
-        }
-        else
-        {
-            // If mouse leaves, then we hide only if not focused:
-            if (!focused && popup != null)
-            {
-                hide();
-            }
-        }
-        this.hovering = newHovering;
+        this.hoveringOverall = hoverOverall;
+        this.hoveringTop = hoverTop;
+        updateShowHide();
     }
 
     private void textFieldFocusChanged(boolean newFocused)
     {
-        if (newFocused)
+        this.focused = newFocused;
+        updateShowHide();
+    }
+
+
+    private void updateShowHide()
+    {
+        if (hoveringTop || ((hoveringOverall || focused) && !message.get().isEmpty()))
         {
-            System.out.println("Focused, message is " + message.get() + " popup " + popup);
-            if (!message.get().isEmpty())
-            {
+            if (popup == null)
                 show();
-            }
         }
         else
         {
-            // If focus leaves, then even if you are still hovering, we hide:
             if (popup != null)
-            {
                 hide();
-            }
         }
-        this.focused = newFocused;
     }
 
     public void setMessageAndFixes(@Nullable Pair<String, List<QuickFix>> newMsgAndFixes)
@@ -180,11 +176,6 @@ public class ExpressionInfoDisplay
         {
             message.set(newMsgAndFixes.getFirst());
             quickFixes.setAll(newMsgAndFixes.getSecond());
-            // If we are focused or hovering already, now need to show message
-            if ((focused || hovering) && popup == null)
-            {
-                show();
-            }
         }
     }
     

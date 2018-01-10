@@ -50,7 +50,7 @@ abstract class GeneralOperandEntry<EXPRESSION extends @NonNull Object, SEMANTIC_
         prefix = new Label();
         container = new VBox(typeLabel, new HBox(prefix, textField));
         container.getStyleClass().add("entry");
-        this.expressionInfoDisplay = ExpressionEditorUtil.installErrorShower(container, textField);
+        this.expressionInfoDisplay = ExpressionEditorUtil.installErrorShower(container, typeLabel, textField);
         ExpressionEditorUtil.setStyles(typeLabel, parent.getParentStyles());
     }
 

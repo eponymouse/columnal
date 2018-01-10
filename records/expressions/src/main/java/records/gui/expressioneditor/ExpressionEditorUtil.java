@@ -46,7 +46,7 @@ public class ExpressionEditorUtil
         setStyles(typeLabel, parentStyles);
         VBox vBox = new VBox(typeLabel, textField);
         vBox.getStyleClass().add(cssClass);
-        ExpressionInfoDisplay errorShower = installErrorShower(vBox, textField);
+        ExpressionInfoDisplay errorShower = installErrorShower(vBox, typeLabel, textField);
         return new Pair<>(vBox, new ErrorDisplayer()
         {
             @Override
@@ -64,9 +64,9 @@ public class ExpressionEditorUtil
         });
     }
 
-    public static ExpressionInfoDisplay installErrorShower(VBox vBox, TextField textField)
+    public static ExpressionInfoDisplay installErrorShower(VBox vBox, Label topLabel, TextField textField)
     {
-        return new ExpressionInfoDisplay(vBox, textField);
+        return new ExpressionInfoDisplay(vBox, topLabel, textField);
     }
 
     public static void setError(VBox vBox, @Nullable String s)
