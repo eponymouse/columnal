@@ -2,10 +2,17 @@
     -fx-text-fill: #777;
     -fx-font-size: 200%;
 }
+.initial-subheading {
+    -fx-text-fill: #777;
+    -fx-font-size: 140%;
+}
 .initial-content {
-    -fx-padding: 1em 1.5em 1.5em 1.5em;
+    -fx-padding: 1em 1.5em 1.5em 1em;
     -fx-spacing: 1em;
 }
 .initial-section-new, .initial-section-open {
     -fx-spacing: 1em;
+}
+.initial-recent {
+    -fx-spacing: 0.3em;
 }
