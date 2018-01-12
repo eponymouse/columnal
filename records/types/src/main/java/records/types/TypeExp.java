@@ -228,11 +228,11 @@ public abstract class TypeExp
         });
     }
 
-    public Either<String, DataType> toConcreteType(TypeManager typeManager) throws InternalException, UserException
+    public Either<TypeConcretisationError, DataType> toConcreteType(TypeManager typeManager) throws InternalException, UserException
     {
         return prune()._concrete(typeManager);
         
     }
 
-    protected abstract Either<String,DataType> _concrete(TypeManager typeManager) throws InternalException, UserException;
+    protected abstract Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager) throws InternalException, UserException;
 }

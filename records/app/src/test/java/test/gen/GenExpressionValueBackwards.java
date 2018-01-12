@@ -21,6 +21,7 @@ import records.data.RecordSet;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
+import records.transformations.expression.FixedTypeExpression;
 import utility.Either;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
@@ -164,7 +165,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 return termDeep(maxLevels, type, l(
                     () -> columnRef(type, targetValue),
                     () -> new NumericLiteral((Number)targetValue, makeUnitExpression(displayInfo.getUnit()))
-                ), l(() -> {
+                ), l(fixType(maxLevels - 1, type, targetValue), () -> {
                     // We just make up a bunch of numbers, and at the very end we add one more to correct the difference
                     int numMiddle = r.nextInt(0, 6);
                     List<Expression> expressions = new ArrayList<>();
@@ -236,7 +237,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 return termDeep(maxLevels, type, l(
                     () -> columnRef(type, targetValue),
                     () -> new StringLiteral((String)targetValue)
-                ), l());
+                ), l(fixType(maxLevels - 1, type, targetValue)));
             }
 
             @Override
@@ -347,6 +348,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                     }
                         break;
                 }
+                deep.add(fixType(maxLevels - 1, type, targetValue));
 
                 return termDeep(maxLevels, type, l((ExpressionMaker)() -> {
                     return call(getStringCreator(dateTimeInfo.getType()), new StringLiteral(targetValue.toString()));
@@ -358,7 +360,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
             public Expression bool() throws InternalException, UserException
             {
                 boolean target = (Boolean)targetValue;
-                return termDeep(maxLevels, type, l(() -> columnRef(type, targetValue), () -> new BooleanLiteral(target)), l(
+                return termDeep(maxLevels, type, l(() -> columnRef(type, targetValue), () -> new BooleanLiteral(target)), l(fixType(maxLevels - 1, type, targetValue),
                     () -> {
                         DataType t = makeType(r);
                         @Value Object valA = makeValue(t);
@@ -497,6 +499,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                     });
                 }
                 terminals.add(() -> columnRef(type, targetValue));
+                nonTerm.add(fixType(maxLevels - 1, type, targetValue));
                 return termDeep(maxLevels, type, terminals, nonTerm);
             }
 
@@ -510,6 +513,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
                 terminals.add(() -> new TupleExpression(Utility.mapListExI_Index(inner, (i, t) -> make(t, target[i], maxLevels - 1))));
                 terminals.add(() -> columnRef(type, targetValue));
+                nonTerm.add(fixType(maxLevels - 1, type, targetValue));
                 return termDeep(maxLevels, type, terminals, nonTerm);
             }
 
@@ -526,6 +530,7 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
                 terminals.add(() -> new ArrayExpression(Utility.mapListExI(target, t -> make(innerFinal, t, maxLevels - 1))));
                 terminals.add(() -> columnRef(type, targetValue));
+                nonTerm.add(fixType(maxLevels - 1, type, targetValue));
                 return termDeep(maxLevels, type, terminals, nonTerm);
             }
         });
@@ -630,8 +635,13 @@ public class GenExpressionValueBackwards extends GenValueBase<ExpressionValue>
         UnitManager m = DummyManager.INSTANCE.getUnitManager();
         return m.loadUse(name);
     }
+    
+    private ExpressionMaker fixType(int maxLevels, DataType type, @Value Object value)
+    {
+        return () -> FixedTypeExpression.fixType(type, make(type, value, maxLevels - 1));
+    }
 
-    private Expression columnRef(DataType type, Object value)
+    private Expression columnRef(DataType type, @Value Object value)
     {
         ColumnId name = new ColumnId("GEV Col " + columns.size());
         columns.add(rs -> type.apply(new DataTypeVisitor<Column>()

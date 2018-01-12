@@ -132,6 +132,16 @@ public class Either<A, B>
             return Either.right(applyRight.apply(b));
     }
 
+    // Equivalent to either(Either::left, Either.right . applyRight)
+    @SuppressWarnings("nullness")
+    public <R> Either<A, R> mapEx(ExFunction<? super B, R> applyRight) throws InternalException, UserException
+    {
+        if (isA)
+            return Either.left(a);
+        else
+            return Either.right(applyRight.apply(b));
+    }
+
     // Equivalent to either(Either::left, applyRight)
     @SuppressWarnings("nullness")
     public <R> Either<A, R> flatMap(Function<? super B, Either<A, R>> bind)

@@ -90,6 +90,13 @@ public class StringLiteralNode extends EntryNode<Expression, ExpressionNodeParen
     }
 
     @Override
+    public boolean isShowingError()
+    {
+        // TODO
+        return false;
+    }
+
+    @Override
     public void showType(String type)
     {
         // It's obviously a string.  Do we need to show the type?

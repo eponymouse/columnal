@@ -776,6 +776,12 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     }
 
     @Override
+    public boolean isShowingError()
+    {
+        return operands.get(0).isShowingError();
+    }
+
+    @Override
     public void showType(String type)
     {
         for (OperatorEntry<EXPRESSION, SEMANTIC_PARENT> operator : operators)

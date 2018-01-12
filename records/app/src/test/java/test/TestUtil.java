@@ -977,9 +977,14 @@ public class TestUtil
         if (paramTypeExp == null)
             return null;
         @SuppressWarnings("nullness") // For null src
-        @Nullable DataType returnType = onError.recordLeftError(null, TypeExp.unifyTypes(TypeExp.fromConcrete(null, expectedReturnType), functionTypes.returnType).flatMapEx(t -> t.toConcreteType(typeManager)));
-        if (returnType != null)
-            return new Pair<>(functionTypes.getInstanceAfterTypeCheck(), returnType);
+        @Nullable TypeExp typeExp = onError.recordError(null, TypeExp.unifyTypes(TypeExp.fromConcrete(null, expectedReturnType), functionTypes.returnType));
+        if (typeExp != null)
+        {
+            @SuppressWarnings("nullness") // For null src
+            @Nullable DataType returnType = onError.recordLeftError(null, typeExp.toConcreteType(typeManager));
+            if (returnType != null)
+                return new Pair<>(functionTypes.getInstanceAfterTypeCheck(), returnType);
+        }
         return null;
     }
 

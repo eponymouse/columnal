@@ -6,6 +6,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
 import records.types.MutVar;
+import records.types.TypeConcretisationError;
 import records.types.TypeExp;
 import utility.Either;
 import utility.ExConsumer;
@@ -42,10 +43,10 @@ public interface ErrorAndTypeRecorder
     /**
      * Records an error source and error message, with no available quick fixes
      */
-    public default <T> @Nullable T recordLeftError(Expression src, Either<String, T> errorOrVal)
+    public default <T> @Nullable T recordLeftError(Expression src, Either<TypeConcretisationError, T> errorOrVal)
     {
         return errorOrVal.<@Nullable T>either(err -> {
-            recordError(src, err);
+            recordError(src, err.getErrorText());
             return null;
         }, val -> val);
     }
@@ -87,7 +88,7 @@ public interface ErrorAndTypeRecorder
      * A quick fix for an error.  Has a title to display, and a thunk to run
      * to get a replacement expression for the error source.
      */
-    public static class QuickFix
+    public final static class QuickFix
     {
         private final @Localized String title;
         private final Supplier<Expression> fixedReplacement;

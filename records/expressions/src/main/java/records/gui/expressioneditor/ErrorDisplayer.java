@@ -14,4 +14,6 @@ public interface ErrorDisplayer
     public void showError(String error, List<ErrorAndTypeRecorder.QuickFix> quickFixes);
     
     public void showType(String type);
+
+    public boolean isShowingError();
 }

@@ -50,6 +50,12 @@ public class ExpressionEditorUtil
         return new Pair<>(vBox, new ErrorDisplayer()
         {
             @Override
+            public boolean isShowingError()
+            {
+                return errorShower.isShowingError();
+            }
+
+            @Override
             public void showError(String s, List<QuickFix> q)
             {
                 setError(vBox, s);

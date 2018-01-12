@@ -295,7 +295,13 @@ public class PatternMatchNode extends DeepNodeTree implements EEDisplayNodeParen
     @Override
     public void showError(String error, List<ErrorAndTypeRecorder.QuickFix> quickFixes)
     {
-        source.showError(error, quickFixes);
+        matchLabel.getSecond().showError(error, quickFixes);
+    }
+
+    @Override
+    public boolean isShowingError()
+    {
+        return matchLabel.getSecond().isShowingError();
     }
 
     @Override

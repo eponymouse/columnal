@@ -33,7 +33,7 @@ public class ToString extends FunctionDefinition
             @Override
             protected FunctionInstance makeInstanceAfterTypeCheck() throws UserException, InternalException
             {
-                return new Instance(paramType.toConcreteType(typeManager).eitherEx(err -> {throw new UserException(err);}, x -> x));
+                return new Instance(paramType.toConcreteType(typeManager).eitherEx(err -> {throw new UserException(err.getErrorText());}, x -> x));
             }
         });
     }

@@ -41,10 +41,13 @@ public class TupleTypeExp extends TypeExp
     }
 
     @Override
-    protected Either<String, DataType> _concrete(TypeManager typeManager) throws InternalException, UserException
+    protected Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager) throws InternalException, UserException
     {
         if (!complete)
-            return Either.left("Error: tuple of indeterminate size");
+        {
+            @Nullable DataType assumingComplete = Either.mapMEx(knownMembers, (TypeExp t) -> t.toConcreteType(typeManager)).map(ts -> DataType.tuple(ts)).<@Nullable DataType>either(err -> null, t -> t);
+            return Either.left(new TypeConcretisationError("Error: tuple of indeterminate size", assumingComplete));
+        }
         return Either.mapMEx(knownMembers, (TypeExp t) -> t.toConcreteType(typeManager)).map(ts -> DataType.tuple(ts));
     }
 

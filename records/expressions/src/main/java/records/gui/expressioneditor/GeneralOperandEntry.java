@@ -79,6 +79,12 @@ abstract class GeneralOperandEntry<EXPRESSION extends @NonNull Object, SEMANTIC_
     }
 
     @Override
+    public boolean isShowingError()
+    {
+        return expressionInfoDisplay.isShowingError();
+    }
+
+    @Override
     public void showType(String type)
     {
         expressionInfoDisplay.setType(type);

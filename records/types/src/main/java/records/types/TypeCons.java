@@ -75,7 +75,7 @@ public class TypeCons extends TypeExp
     }
 
     @Override
-    protected Either<String, DataType> _concrete(TypeManager typeManager) throws InternalException, UserException
+    protected Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager) throws InternalException, UserException
     {
         switch (name)
         {
@@ -94,14 +94,14 @@ public class TypeCons extends TypeExp
                 {
                     // Not a date type, continue...
                 }
-                Either<String, List<DataType>> errOrOperandsAsTypes = Either.mapMEx(operands, o -> o.toConcreteType(typeManager));
-                return errOrOperandsAsTypes.eitherEx(s -> Either.left(s), (List<DataType> operandsAsTypes) -> {
+                Either<TypeConcretisationError, List<DataType>> errOrOperandsAsTypes = Either.mapMEx(operands, o -> o.toConcreteType(typeManager));
+                return errOrOperandsAsTypes.eitherEx(err -> Either.left(new TypeConcretisationError(err.getErrorText(), null)), (List<DataType> operandsAsTypes) -> {
                     @Nullable DataType tagged = typeManager.lookupType(name, ImmutableList.copyOf(operandsAsTypes));
                     if (tagged != null)
                     {
                         return Either.right(tagged);
                     }
-                    return Either.left("Unknown type constructor: " + name);
+                    return Either.left(new TypeConcretisationError("Unknown type constructor: " + name));
                 });
                 
         }

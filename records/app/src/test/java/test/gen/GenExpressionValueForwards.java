@@ -14,6 +14,7 @@ import records.data.RecordSet;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TaggedTypeDefinition;
 import records.data.datatype.TypeManager.TagInfo;
+import records.transformations.expression.FixedTypeExpression;
 import utility.Either;
 import utility.TaggedValue;
 import records.data.datatype.DataType;
@@ -151,7 +152,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                         @Value Number number = TestUtil.generateNumberV(r, gs);
                         return literal(number, new NumericLiteral(number, makeUnitExpression(displayInfo.getUnit())));
                     }
-                ), l(() -> {
+                ), l(fix(maxLevels - 1, type), () -> {
                     int numArgs = r.nextInt(2, 6);
                     List<Expression> expressions = new ArrayList<>();
                     List<Op> ops = new ArrayList<>();
@@ -290,7 +291,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                         @Value String value = TestUtil.makeStringV(r, gs);
                         return literal(value, new StringLiteral(value));
                     }
-                ), l());
+                ), l(fix(maxLevels - 1, type)));
             }
 
             @Override
@@ -446,6 +447,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                             ));
                         });
                 }
+                shallow.add(columnRef(type));
 
                 return termDeep(maxLevels, type, shallow, deep);
             }
@@ -458,7 +460,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 {
                     boolean value = r.nextBoolean();
                     return literal(DataTypeUtility.value(value), new BooleanLiteral(value));
-                }), l(
+                }), l(fix(maxLevels - 1, type),
                     () -> {
                         DataType t = makeType(r);
 
@@ -528,6 +530,8 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
             {
                 List<ExpressionMaker> terminals = new ArrayList<>();
                 List<ExpressionMaker> nonTerm = new ArrayList<>();
+                terminals.add(columnRef(type));
+                nonTerm.add(fix(maxLevels - 1, type));
                 int tagIndex = r.nextInt(0, tags.size() - 1);
                 TagType<DataType> tag = tags.get(tagIndex);
                 @Nullable TaggedTypeDefinition typeDefinition = DummyManager.INSTANCE.getTypeManager().lookupDefinition(typeName);
@@ -558,7 +562,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 if (inner.size() < 2)
                     throw new InternalException("Invalid tuple type of size " + inner.size() + " during generation");
 
-                return termDeep(maxLevels, type, l(columnRef(type)), l(() ->
+                return termDeep(maxLevels, type, l(columnRef(type)), l(fix(maxLevels - 1, type), () ->
                 {
                     List<@Value Object[]> tuples = GenExpressionValueForwards.this.<@Value Object[]>replicateM(() -> new Object[inner.size()]);
                     List<Expression> expressions = new ArrayList<>();
@@ -583,7 +587,7 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
                 if (inner == null)
                     return literal(DataTypeUtility.value(Collections.emptyList()), new ArrayExpression(ImmutableList.of()));
                 @Nullable DataType innerFinal = inner;
-                return termDeep(maxLevels, type, l(columnRef(type)), l(() ->
+                return termDeep(maxLevels, type, l(columnRef(type)), l(fix(maxLevels - 1, type), () ->
                 {
                     int length = r.nextInt(1, 12);
                     // Each outer list item is one row in the final set of expression values
@@ -657,6 +661,14 @@ public class GenExpressionValueForwards extends GenValueBase<ExpressionValue>
             List<@Value Object> value = GenExpressionValueForwards.this.<@Value Object>replicateM(() -> makeValue(type));
             columns.add(rs -> type.makeCalculatedColumn(rs, name, i -> value.get(i)));
             return new Pair<List<@Value Object>, Expression>(value, new ColumnReference(name, ColumnReferenceType.CORRESPONDING_ROW));
+        };
+    }
+    
+    private ExpressionMaker fix(int maxLevels, DataType type)
+    {
+        return () -> {
+            Pair<List<@Value Object>, Expression> inner = make(type, maxLevels);
+            return new Pair<>(inner.getFirst(), FixedTypeExpression.fixType(type, inner.getSecond()));
         };
     }
 

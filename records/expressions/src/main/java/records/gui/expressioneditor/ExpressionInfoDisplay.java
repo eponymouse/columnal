@@ -3,11 +3,8 @@ package records.gui.expressioneditor;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanBinding;
 import javafx.beans.property.SimpleStringProperty;
-import javafx.beans.property.StringProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.geometry.Bounds;
-import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListCell;
 import javafx.scene.control.ListView;
@@ -39,7 +36,7 @@ import java.util.List;
 public class ExpressionInfoDisplay
 {
     private final SimpleStringProperty type = new SimpleStringProperty("");
-    private final SimpleStringProperty message = new SimpleStringProperty("");
+    private final SimpleStringProperty errorMessage = new SimpleStringProperty("");
     private final ObservableList<QuickFix> quickFixes = FXCollections.observableArrayList();
     private final VBox expressionNode;
     private @Nullable PopOver popup = null;
@@ -54,7 +51,7 @@ public class ExpressionInfoDisplay
         FXUtility.addChangeListenerPlatformNN(textField.focusedProperty(), this::textFieldFocusChanged);
         FXUtility.addChangeListenerPlatformNN(expressionNode.hoverProperty(), b -> mouseHoverStatusChanged(expressionNode.isHover(), topLabel.isHover()));
         FXUtility.addChangeListenerPlatformNN(topLabel.hoverProperty(), b -> mouseHoverStatusChanged(expressionNode.isHover(), topLabel.isHover()));
-        FXUtility.addChangeListenerPlatformNN(message, s -> updateShowHide());
+        FXUtility.addChangeListenerPlatformNN(errorMessage, s -> updateShowHide());
     }
 
     private class ErrorMessagePopup extends PopOver
@@ -80,7 +77,7 @@ public class ExpressionInfoDisplay
             
             Label errorLabel = new Label();
             errorLabel.getStyleClass().add("expression-info-error");
-            errorLabel.textProperty().bind(message);
+            errorLabel.textProperty().bind(errorMessage);
             errorLabel.visibleProperty().bind(errorLabel.textProperty().isNotEmpty());
             errorLabel.managedProperty().bind(errorLabel.visibleProperty());
 
@@ -148,7 +145,7 @@ public class ExpressionInfoDisplay
 
     private void updateShowHide()
     {
-        if (hoveringTop || ((hoveringOverall || focused) && !message.get().isEmpty()))
+        if (hoveringTop || ((hoveringOverall || focused) && !errorMessage.get().isEmpty()))
         {
             if (popup == null)
                 show();
@@ -164,7 +161,7 @@ public class ExpressionInfoDisplay
     {
         if (newMsgAndFixes == null)
         {
-            message.setValue("");
+            errorMessage.setValue("");
             quickFixes.clear();
             // Hide the popup:
             if (popup != null)
@@ -174,9 +171,14 @@ public class ExpressionInfoDisplay
         }
         else
         {
-            message.set(newMsgAndFixes.getFirst());
+            errorMessage.set(newMsgAndFixes.getFirst());
             quickFixes.setAll(newMsgAndFixes.getSecond());
         }
+    }
+    
+    public boolean isShowingError()
+    {
+        return !errorMessage.get().isEmpty();
     }
     
     public void setType(String type)

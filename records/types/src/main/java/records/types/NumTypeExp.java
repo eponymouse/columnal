@@ -44,11 +44,11 @@ public class NumTypeExp extends TypeExp
 
 
     @Override
-    protected Either<String, DataType> _concrete(TypeManager typeManager)
+    protected Either<TypeConcretisationError, DataType> _concrete(TypeManager typeManager)
     {
         @Nullable Unit concreteUnit = this.unit.toConcreteUnit();
         if (concreteUnit == null)
-            return Either.left("Ambiguous unit: " + unit);
+            return Either.left(new TypeConcretisationError("Ambiguous unit: " + unit, DataType.NUMBER));
         else
             return Either.right(DataType.number(new NumberInfo(concreteUnit, null)));
     }

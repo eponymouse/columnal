@@ -128,7 +128,7 @@ public class PropTypecheck
             {
                 throw new RuntimeException(e);
             }
-        }).collect(Collectors.joining(", ")), Either.right(src.type), checked == null ? null : TypeExp.unifyTypes(srcTypeExp, checked).flatMapEx(t -> t.toConcreteType(src.typeManager)));
+        }).collect(Collectors.joining(", ")), Either.right(src.type), checked == null ? null : TypeExp.unifyTypes(srcTypeExp, checked).eitherEx(err -> Either.left(err), t -> t.toConcreteType(src.typeManager)));
     }
 
     //#error Have property which generates tables/expressions of given types, and check they don't typecheck
@@ -226,7 +226,7 @@ public class PropTypecheck
 
         // Now add original at random place:
         types.add(r.nextInt(types.size() + 1), TypeExp.fromConcrete(null, original.dataType));
-        assertEquals(Either.right(original.dataType), TypeExp.unifyTypes(types).flatMapEx(t -> t.toConcreteType(original.typeManager)));
+        assertEquals(Either.right(original.dataType), TypeExp.unifyTypes(types).eitherEx(err -> Either.left(err), t -> t.toConcreteType(original.typeManager)));
     }
 
     /**
