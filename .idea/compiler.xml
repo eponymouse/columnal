@@ -33,7 +33,7 @@
         <outputRelativeToContentRoot value="true" />
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\utility/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/utility/../stubs" />
         <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="utility" />
@@ -51,7 +51,7 @@
         <outputRelativeToContentRoot value="true" />
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\gui-utility/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/gui-utility/../stubs" />
         <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="gui-utility" />
@@ -62,7 +62,7 @@
         <outputRelativeToContentRoot value="true" />
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\data/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/data/../stubs" />
         <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="data" />
@@ -73,7 +73,7 @@
         <outputRelativeToContentRoot value="true" />
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\stf/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/stf/../stubs" />
         <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="stf" />
@@ -84,7 +84,7 @@
         <outputRelativeToContentRoot value="true" />
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\functions/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/functions/../stubs" />
         <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="functions" />
@@ -95,7 +95,7 @@
         <outputRelativeToContentRoot value="true" />
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\expressions/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/expressions/../stubs" />
         <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="expressions" />
@@ -106,7 +106,7 @@
         <outputRelativeToContentRoot value="true" />
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\types/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/types/../stubs" />
         <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="types" />
@@ -117,7 +117,7 @@
         <outputRelativeToContentRoot value="true" />
         <option name="printErrorStack" value="" />
         <option name="skipDefs" value="records.grammar.|one.util." />
-        <option name="stubs" value="C:\Users\neil\intellij\records\records\app/../stubs" />
+        <option name="stubs" value="$PROJECT_DIR$/records/app/../stubs" />
         <processor name="annotation.recorded.RecordedChecker" />
         <processor name="org.checkerframework.checker.nullness.NullnessChecker" />
         <module name="app" />
