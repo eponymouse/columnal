@@ -18,137 +18,6 @@
    sodipodi:docname="logo.svg">
   <defs
      id="defs4">
-    <filter
-       style="color-interpolation-filters:sRGB;"
-       inkscape:label="Drop Shadow"
-       id="filter4200">
-      <feFlood
-         flood-opacity="0.498039"
-         flood-color="rgb(0,0,0)"
-         result="flood"
-         id="feFlood4202" />
-      <feComposite
-         in="flood"
-         in2="SourceGraphic"
-         operator="in"
-         result="composite1"
-         id="feComposite4204" />
-      <feGaussianBlur
-         in="composite1"
-         stdDeviation="3"
-         result="blur"
-         id="feGaussianBlur4206" />
-      <feOffset
-         dx="6"
-         dy="6"
-         result="offset"
-         id="feOffset4208" />
-      <feComposite
-         in="SourceGraphic"
-         in2="offset"
-         operator="over"
-         result="fbSourceGraphic"
-         id="feComposite4210" />
-      <feColorMatrix
-         result="fbSourceGraphicAlpha"
-         in="fbSourceGraphic"
-         values="0 0 0 -1 0 0 0 0 -1 0 0 0 0 -1 0 0 0 0 1 0"
-         id="feColorMatrix4212" />
-      <feFlood
-         id="feFlood4214"
-         flood-opacity="0.498039"
-         flood-color="rgb(0,0,0)"
-         result="flood"
-         in="fbSourceGraphic" />
-      <feComposite
-         id="feComposite4216"
-         in2="fbSourceGraphic"
-         in="flood"
-         operator="in"
-         result="composite1" />
-      <feGaussianBlur
-         id="feGaussianBlur4218"
-         in="composite1"
-         stdDeviation="2.5"
-         result="blur" />
-      <feOffset
-         id="feOffset4220"
-         dx="6"
-         dy="6"
-         result="offset" />
-      <feComposite
-         id="feComposite4222"
-         in2="offset"
-         in="fbSourceGraphic"
-         operator="over"
-         result="fbSourceGraphic" />
-      <feColorMatrix
-         result="fbSourceGraphicAlpha"
-         in="fbSourceGraphic"
-         values="0 0 0 -1 0 0 0 0 -1 0 0 0 0 -1 0 0 0 0 1 0"
-         id="feColorMatrix4224" />
-      <feFlood
-         id="feFlood4226"
-         flood-opacity="0.498039"
-         flood-color="rgb(0,0,0)"
-         result="flood"
-         in="fbSourceGraphic" />
-      <feComposite
-         id="feComposite4228"
-         in2="fbSourceGraphic"
-         in="flood"
-         operator="in"
-         result="composite1" />
-      <feGaussianBlur
-         id="feGaussianBlur4230"
-         in="composite1"
-         stdDeviation="2.5"
-         result="blur" />
-      <feOffset
-         id="feOffset4232"
-         dx="5"
-         dy="5"
-         result="offset" />
-      <feComposite
-         id="feComposite4234"
-         in2="offset"
-         in="fbSourceGraphic"
-         operator="over"
-         result="fbSourceGraphic" />
-      <feColorMatrix
-         result="fbSourceGraphicAlpha"
-         in="fbSourceGraphic"
-         values="0 0 0 -1 0 0 0 0 -1 0 0 0 0 -1 0 0 0 0 1 0"
-         id="feColorMatrix4236" />
-      <feFlood
-         id="feFlood4238"
-         flood-opacity="0.498039"
-         flood-color="rgb(0,0,0)"
-         result="flood"
-         in="fbSourceGraphic" />
-      <feComposite
-         id="feComposite4240"
-         in2="fbSourceGraphic"
-         in="flood"
-         operator="in"
-         result="composite1" />
-      <feGaussianBlur
-         id="feGaussianBlur4242"
-         in="composite1"
-         stdDeviation="2.5"
-         result="blur" />
-      <feOffset
-         id="feOffset4244"
-         dx="3"
-         dy="5"
-         result="offset" />
-      <feComposite
-         id="feComposite4246"
-         in2="offset"
-         in="fbSourceGraphic"
-         operator="over"
-         result="composite2" />
-    </filter>
   </defs>
   <sodipodi:namedview
      id="base"
@@ -189,8 +58,7 @@
      inkscape:groupmode="layer"
      id="layer1">
     <g
-       id="g4144"
-       style="filter:url(#filter4200)">
+       id="g4144">
       <path
          inkscape:transform-center-y="-4.4688517"
          inkscape:transform-center-x="0.1872209"

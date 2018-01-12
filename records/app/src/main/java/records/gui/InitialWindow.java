@@ -1,13 +1,20 @@
 package records.gui;
 
+import javafx.beans.value.ChangeListener;
+import javafx.beans.value.ObservableValue;
 import javafx.geometry.Insets;
+import javafx.geometry.Pos;
+import javafx.scene.Group;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
+import javafx.scene.layout.Pane;
+import javafx.scene.layout.Region;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -79,10 +86,26 @@ public class InitialWindow
         {
             logo.setPreserveRatio(true);
             logo.setSmooth(true);
-            logo.fitHeightProperty().bind(titleLabel.heightProperty());
+            logo.fitHeightProperty().bind(titleLabel.heightProperty().multiply(0.7));
+            @NonNull ImageView logoFinal = logo;
+            // Problem is that the imageView is too large initially because it shows at original size
+            // and only sizes down once the label has been sized, but by then it's too late and the window
+            // sizing is ruined.  So we only add the logo once the label height is set right:
+            titleLabel.heightProperty().addListener(new ChangeListener<Number>()
+            {
+                @Override
+                public void changed(ObservableValue<? extends Number> prop, Number oldVal, Number newVal)
+                {
+                    if (newVal.doubleValue() >= 1.0)
+                    {
+                        titleLabel.setGraphic(logoFinal);
+                        titleLabel.heightProperty().removeListener(this);
+                    }
+                }
+            });
         }
         VBox content = GUI.vbox("initial-content",
-                logo == null ? titleLabel : new HBox(titleLabel, logo),
+                titleLabel,
                 headed("initial-section-new", GUI.label("initial.new.title", "initial-heading"), newButton, GUI.labelWrap("initial.new.detail")),
                 headed("initial-section-open", GUI.label("initial.open.title", "initial-heading"), openButton, GUI.vbox("initial-recent", GUI.label("initial.open.recent", "initial-subheading"), mruListView))
         );
