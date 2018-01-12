@@ -236,10 +236,23 @@ public class FXUtility
     {
         if (!loadedFonts.contains(fontFileName))
         {
-            try (InputStream fis = ClassLoader.getSystemClassLoader().getResourceAsStream(fontFileName))
+            try (@Nullable InputStream fis = ClassLoader.getSystemClassLoader().getResourceAsStream(fontFileName))
             {
-                Font.loadFont(fis, 10);
-                loadedFonts.add(fontFileName);
+                if (fis == null)
+                {
+                    Log.logStackTrace("Cannot load font as file not found: \"" + fontFileName + "\"");
+                }
+                else
+                {
+                    if (Font.loadFont(fis, 10) == null)
+                    {
+                        Log.logStackTrace("Cannot load font for unknown reason: \"" + fontFileName + "\"");
+                    }
+                    else
+                    {
+                        loadedFonts.add(fontFileName);
+                    }
+                }
             }
             catch (IOException | NullPointerException e)
             {
