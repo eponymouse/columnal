@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList;
 import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.BorderPane;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.fxmisc.richtext.model.ReadOnlyStyledDocument;
@@ -39,6 +40,7 @@ import records.gui.stable.StableView.ColumnHandler;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
 import utility.Workers.Priority;
+import utility.gui.FXUtility;
 import utility.gui.GUI;
 
 import java.time.LocalDate;
@@ -142,7 +144,7 @@ public class TableDisplayUtility
                 }
                 catch (UserException | InternalException e)
                 {
-                    Utility.log(e);
+                    Log.log(e);
                     typeLabel = GUI.label("column.type.unknown", "stable-view-column-type-unknown");
                 }
                 // Wrap typeLabel in a BorderPane so that it can centre-align:
@@ -325,7 +327,7 @@ public class TableDisplayUtility
         {
             return new EditorKitCache<T>(columnIndex, g, vis -> {}, (rowIndex, value, relinquishFocus) -> {
                 return new EditorKit<T>(makeComponent.makeComponent(ImmutableList.of(), value), isEditable ? (Pair<String, T> p) -> {
-                    Workers.onWorkerThread("Saving", Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> g.set(rowIndex, p.getSecond())));
+                    Workers.onWorkerThread("Saving", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> g.set(rowIndex, p.getSecond())));
                     onModify.run();} : null, () -> relinquishFocus.consume(new CellPosition(rowIndex, columnIndex)), stfStyles);
             });
         }

@@ -5,6 +5,7 @@ import com.google.common.collect.ImmutableList.Builder;
 import javafx.beans.property.SimpleBooleanProperty;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
+import log.Log;
 import records.error.InternalException;
 import records.error.UserException;
 import records.gui.stf.StructuredTextField.ErrorFix;
@@ -14,8 +15,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformFunctionIntUser;
-import utility.FXPlatformRunnable;
-import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
@@ -250,7 +249,7 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
                 }
                 catch (InternalException e)
                 {
-                    Utility.log(e);
+                    Log.log(e);
                     // Just cancel any further insertions:
                     return new InsertState(state.lenSoFar, state.cursorPos, ImmutableList.of());
                 }
@@ -278,7 +277,7 @@ public abstract class VariableLengthComponentList<R, T> extends Component<R>
                 }
                 catch (InternalException e)
                 {
-                    Utility.log(e);
+                    Log.log(e);
                     // Just cancel any further insertions:
                     return new InsertState(state.lenSoFar, state.cursorPos, ImmutableList.of());
                 }

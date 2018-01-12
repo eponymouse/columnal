@@ -19,6 +19,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyCombination.Modifier;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
+import log.Log;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.SystemUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -54,7 +55,6 @@ import test.gen.GenTypeAndValueGen.TypeAndValueGen;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.Pair;
 import utility.SimulationSupplier;
 import utility.TaggedValue;
 import utility.Utility;
@@ -238,7 +238,7 @@ public class TestStructuredTextField extends ApplicationTest
             }
             catch (InternalException | UserException e)
             {
-                Utility.log(e);
+                Log.log(e);
             }
         });
 

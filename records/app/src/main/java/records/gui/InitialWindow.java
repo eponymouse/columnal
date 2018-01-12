@@ -4,7 +4,6 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
-import javafx.scene.layout.TilePane;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -104,7 +103,7 @@ public class InitialWindow
     @OnThread(Tag.FXPlatform)
     public static MainWindow.@Nullable MainWindowActions newProject(@Nullable Stage parent)
     {
-        return Utility.<MainWindow.@Nullable MainWindowActions>alertOnErrorFX(() ->
+        return FXUtility.<MainWindow.@Nullable MainWindowActions>alertOnErrorFX(() ->
         {
             @Nullable File dest;
             try

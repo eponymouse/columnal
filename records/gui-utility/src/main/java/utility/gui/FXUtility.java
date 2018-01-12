@@ -3,7 +3,6 @@ package utility.gui;
 import javafx.animation.KeyFrame;
 import javafx.animation.Timeline;
 import javafx.application.Platform;
-import javafx.beans.Observable;
 import javafx.beans.binding.Bindings;
 import javafx.beans.binding.BooleanExpression;
 import javafx.beans.binding.DoubleBinding;
@@ -11,7 +10,6 @@ import javafx.beans.binding.ObjectBinding;
 import javafx.beans.binding.ObjectExpression;
 import javafx.beans.property.ObjectProperty;
 import javafx.beans.property.Property;
-import javafx.beans.property.ReadOnlyObjectProperty;
 import javafx.beans.property.SimpleObjectProperty;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableBooleanValue;
@@ -34,16 +32,16 @@ import javafx.scene.text.Font;
 import javafx.scene.text.Text;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
-import javafx.stage.Stage;
+import javafx.stage.Modality;
 import javafx.stage.Window;
 import javafx.util.Duration;
 import javafx.util.StringConverter;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.checkerframework.checker.nullness.qual.UnknownKeyFor;
 import org.checkerframework.dataflow.qual.Pure;
 import org.controlsfx.validation.ValidationResult;
 import org.jetbrains.annotations.NotNull;
@@ -60,6 +58,7 @@ import java.net.URL;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -227,7 +226,7 @@ public class FXUtility
         }
         catch (NullPointerException e)
         {
-            Utility.log("Problem loading stylesheet: " + stylesheetName, e);
+            Log.log("Problem loading stylesheet: " + stylesheetName, e);
             return "";
         }
     }
@@ -244,7 +243,7 @@ public class FXUtility
             }
             catch (IOException | NullPointerException e)
             {
-                Utility.log(e);
+                Log.log(e);
             }
         }
     }
@@ -382,6 +381,130 @@ public class FXUtility
             return new FileChooser().showSaveDialog(parent.getScene() == null ? null : parent.getScene().getWindow());
     }
 
+
+    private static List<Exception> queuedErrors = new ArrayList<>();
+    private static boolean showingError = false;
+
+    // From https://stackoverflow.com/a/12717377/412908 but tweaked to check all threads
+    private static boolean isJUnitTest()
+    {
+        // Need to defeat thread checker because getAllStackTraces
+        // is currently annotated wrongly:
+        for (StackTraceElement[] stackTrace : ((Supplier<Map<Thread, StackTraceElement[]>>)Thread::getAllStackTraces).get().values())
+        {
+            List<StackTraceElement> list = Arrays.asList(stackTrace);
+            for (StackTraceElement element : list)
+            {
+                if (element.getClassName().startsWith("org.junit."))
+                {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+
+    @OnThread(Tag.Simulation)
+    public static void alertOnError_(RunOrError r)
+    {
+        alertOnError_(err -> err, r);
+    }
+
+    @OnThread(Tag.Simulation)
+    public static void alertOnError_(Function<@Localized String, @Localized String> errWrap, RunOrError r)
+    {
+        try
+        {
+            r.run();
+        }
+        catch (InternalException | UserException e)
+        {
+            Platform.runLater(() ->
+            {
+                showError(errWrap, e);
+            });
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static void alertOnErrorFX_(RunOrErrorFX r)
+    {
+        try
+        {
+            r.run();
+        }
+        catch (InternalException | UserException e)
+        {
+            showError(e);
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static <T> @Nullable T alertOnErrorFX(GenOrErrorFX<T> r)
+    {
+        try
+        {
+            return r.run();
+        }
+        catch (InternalException | UserException e)
+        {
+            showError(e);
+            return null;
+        }
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static void showError(Exception e)
+    {
+        showError(x -> x, e);
+    }
+
+    @OnThread(Tag.FXPlatform)
+    public static void showError(Function<@Localized String, @Localized String> errWrap, Exception e)
+    {
+        if (showingError)
+        {
+            // TODO do something with the queued errors; add to shown dialog?
+            queuedErrors.add(e);
+        }
+        else
+        {
+            Log.log(e);
+            // Don't show dialog which would interrupt a JUnit test:
+            if (!isJUnitTest())
+            {
+                String localizedMessage = errWrap.apply(e.getLocalizedMessage());
+                Alert alert = new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK);
+                alert.initModality(Modality.APPLICATION_MODAL);
+                showingError = true;
+                alert.showAndWait();
+                showingError = false;
+            }
+        }
+    }
+
+    @OnThread(Tag.Simulation)
+    public static <T> Optional<T> alertOnError(GenOrError<@Nullable T> r)
+    {
+        try
+        {
+            @Nullable T t = r.run();
+            if (t == null)
+                return Optional.empty();
+            else
+                return Optional.of(t);
+        }
+        catch (InternalException | UserException e)
+        {
+            Platform.runLater(() ->
+            {
+                showError(e);
+            });
+            return Optional.empty();
+        }
+    }
+
     public static interface DragHandler
     {
         @OnThread(Tag.FXPlatform)
@@ -501,7 +624,7 @@ public class FXUtility
     private static void _logAndShowError(@LocalizableKey String actionKey, Exception ex)
     {
         @Localized String actionString = TranslationUtility.getString(actionKey);
-        FXPlatformRunnable runAlert = () -> Utility.showError((@Localized String s) -> Utility.universal(actionString + ": " + s), ex);
+        FXPlatformRunnable runAlert = () -> showError((@Localized String s) -> Utility.universal(actionString + ": " + s), ex);
         if (Platform.isFxApplicationThread())
             ((Runnable)runAlert::run).run();
         else
@@ -594,5 +717,29 @@ public class FXUtility
         {
             //FXUtility.addChangeListenerPlatformNN(src, listener);
         }
+    }
+
+    public static interface GenOrError<T>
+    {
+        @OnThread(Tag.Simulation)
+        T run() throws InternalException, UserException;
+    }
+
+    public static interface RunOrError
+    {
+        @OnThread(Tag.Simulation)
+        void run() throws InternalException, UserException;
+    }
+
+    public static interface GenOrErrorFX<T>
+    {
+        @OnThread(Tag.FXPlatform)
+        T run() throws InternalException, UserException;
+    }
+
+    public static interface RunOrErrorFX
+    {
+        @OnThread(Tag.FXPlatform)
+        void run() throws InternalException, UserException;
     }
 }

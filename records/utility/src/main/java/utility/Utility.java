@@ -12,7 +12,6 @@ import java.lang.reflect.Array;
 import java.math.BigDecimal;
 import java.math.MathContext;
 import java.nio.charset.Charset;
-import java.nio.file.*;
 import java.time.temporal.TemporalAccessor;
 import java.util.*;
 import java.util.function.Consumer;
@@ -28,9 +27,6 @@ import annotation.userindex.qual.UserIndex;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
 import javafx.application.Platform;
-import javafx.collections.FXCollections;
-import javafx.collections.ListChangeListener;
-import javafx.collections.ObservableList;
 import javafx.css.Styleable;
 import javafx.geometry.Bounds;
 import javafx.geometry.Point2D;
@@ -38,6 +34,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Alert.AlertType;
 import javafx.scene.control.ButtonType;
 import javafx.stage.Modality;
+import log.Log;
 import org.antlr.v4.runtime.ANTLRInputStream;
 import org.antlr.v4.runtime.BailErrorStrategy;
 import org.antlr.v4.runtime.BaseErrorListener;
@@ -72,9 +69,6 @@ import threadchecker.Tag;
 public class Utility
 {
     public static final String MRU_FILE_NAME = "recent.mru";
-    // Used to remember which thread set off which runnable:
-    @OnThread(value = Tag.Any, requireSynchronized = true)
-    private static final Map<Thread, StackTraceElement[]> threadedCallers = new WeakHashMap<>();
 
     public static <T, R> List<@NonNull R> mapList(List<@NonNull T> list, Function<@NonNull T, @NonNull R> func)
     {
@@ -621,67 +615,6 @@ public class Utility
         });
     }
 
-    @SuppressWarnings("i18n")
-    public static void log(String info, Throwable e)
-    {
-        System.err.println(info);
-        // Print our stack trace
-        System.err.println(e);
-        StackTraceElement[] trace = e.getStackTrace();
-        for (StackTraceElement traceElement : trace)
-            System.err.println("\tat " + traceElement);
-
-        // Print suppressed exceptions, if any
-        for (Throwable se : e.getSuppressed())
-            log("Suppressed:", se);
-
-        // Print cause, if any
-        Throwable ourCause = e.getCause();
-        if (ourCause != null)
-            log("Caused by:", ourCause);
-
-        synchronized (Utility.class)
-        {
-            StackTraceElement[] el = threadedCallers.get(Thread.currentThread());
-            if (el != null)
-            {
-                System.err.println("Original caller:");
-                for (StackTraceElement traceElement : el)
-                    System.err.println("\tat " + traceElement);
-            }
-        }
-    }
-
-    /**
-     * For the current thread, store the stack as extra info that will be printed
-     * if an exception is logged in this thread.  Will be overwritten by another
-     * call to this same method on the same thread.
-     */
-    public synchronized static void storeThreadedCaller(StackTraceElement @Nullable [] stack)
-    {
-        if (stack != null)
-            threadedCallers.put(Thread.currentThread(), stack);
-        else
-            threadedCallers.remove(Thread.currentThread());
-    }
-
-    public static void log(Exception e)
-    {
-        log("", e);
-    }
-
-    public static void logStackTrace(String s)
-    {
-        try
-        {
-            throw new Exception(s);
-        }
-        catch (Exception e)
-        {
-            log(e);
-        }
-    }
-
     public static <T> Iterable<T> iterableStream(Stream<T> values)
     {
         return () -> values.iterator();
@@ -828,7 +761,7 @@ public class Utility
         }
         catch (IOException e)
         {
-            Utility.log(e);
+            Log.log(e);
         }
     }
 
@@ -1262,147 +1195,6 @@ public class Utility
 
     }
 
-    public static interface GenOrError<T>
-    {
-        @OnThread(Tag.Simulation)
-        T run() throws InternalException, UserException;
-    }
-    public static interface RunOrError
-    {
-        @OnThread(Tag.Simulation)
-        void run() throws InternalException, UserException;
-    }
-    public static interface GenOrErrorFX<T>
-    {
-        @OnThread(Tag.FXPlatform)
-        T run() throws InternalException, UserException;
-    }
-    public static interface RunOrErrorFX
-    {
-        @OnThread(Tag.FXPlatform)
-        void run() throws InternalException, UserException;
-    }
-
-    @OnThread(Tag.Simulation)
-    public static void alertOnError_(RunOrError r)
-    {
-        alertOnError_(err -> err, r);
-    }
-
-    @OnThread(Tag.Simulation)
-    public static void alertOnError_(Function<@Localized String, @Localized String> errWrap, RunOrError r)
-    {
-        try
-        {
-            r.run();
-        }
-        catch (InternalException | UserException e)
-        {
-            Platform.runLater(() ->
-            {
-                showError(errWrap, e);
-            });
-        }
-    }
-
-    @OnThread(Tag.FXPlatform)
-    public static void alertOnErrorFX_(RunOrErrorFX r)
-    {
-        try
-        {
-            r.run();
-        }
-        catch (InternalException | UserException e)
-        {
-            showError(e);
-        }
-    }
-
-    @OnThread(Tag.FXPlatform)
-    public static <T> @Nullable T alertOnErrorFX(GenOrErrorFX<T> r)
-    {
-        try
-        {
-            return r.run();
-        }
-        catch (InternalException | UserException e)
-        {
-            showError(e);
-            return null;
-        }
-    }
-
-    private static List<Exception> queuedErrors = new ArrayList<>();
-    private static boolean showingError = false;
-
-    @OnThread(Tag.FXPlatform)
-    public static void showError(Exception e)
-    {
-        showError(x -> x, e);
-    }
-
-    @OnThread(Tag.FXPlatform)
-    public static void showError(Function<@Localized String, @Localized String> errWrap, Exception e)
-    {
-        if (showingError)
-        {
-            // TODO do something with the queued errors; add to shown dialog?
-            queuedErrors.add(e);
-        }
-        else
-        {
-            log(e);
-            // Don't show dialog which would interrupt a JUnit test:
-            if (!isJUnitTest())
-            {
-                String localizedMessage = errWrap.apply(e.getLocalizedMessage());
-                Alert alert = new Alert(AlertType.ERROR, localizedMessage == null ? "Unknown error" : localizedMessage, ButtonType.OK);
-                alert.initModality(Modality.APPLICATION_MODAL);
-                showingError = true;
-                alert.showAndWait();
-                showingError = false;
-            }
-        }
-    }
-
-    // From https://stackoverflow.com/a/12717377/412908 but tweaked to check all threads
-    private static boolean isJUnitTest()
-    {
-        for (StackTraceElement[] stackTrace : ((Supplier<Map<Thread, StackTraceElement[]>>)Thread::getAllStackTraces).get().values())
-        {
-            List<StackTraceElement> list = Arrays.asList(stackTrace);
-            for (StackTraceElement element : list)
-            {
-                if (element.getClassName().startsWith("org.junit."))
-                {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
-
-    @OnThread(Tag.Simulation)
-    public static <T> Optional<T> alertOnError(GenOrError<@Nullable T> r)
-    {
-        try
-        {
-            @Nullable T t = r.run();
-            if (t == null)
-                return Optional.empty();
-            else
-                return Optional.of(t);
-        }
-        catch (InternalException | UserException e)
-        {
-            Platform.runLater(() ->
-            {
-                showError(e);
-            });
-            return Optional.empty();
-        }
-    }
-
     public static class DescriptiveErrorListener extends BaseErrorListener
     {
         public final List<String> errors = new ArrayList<>();
@@ -1585,7 +1377,7 @@ public class Utility
         }
         catch (IOException e)
         {
-            Utility.log(e);
+            Log.log(e);
         }
         return ImmutableList.of();
     }
@@ -1609,7 +1401,7 @@ public class Utility
         }
         catch (IOException e)
         {
-            Utility.log(e);
+            Log.log(e);
         }
     }
 
@@ -1625,7 +1417,7 @@ public class Utility
             }
             catch (IOException e)
             {
-                Utility.log(e);
+                Log.log(e);
             }
             return p;
         });

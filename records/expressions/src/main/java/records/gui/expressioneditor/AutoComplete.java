@@ -4,7 +4,6 @@ import javafx.beans.property.ReadOnlyStringWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableStringValue;
 import javafx.beans.value.ObservableValue;
-import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.Scene;
@@ -19,6 +18,7 @@ import javafx.scene.input.KeyCode;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
 import javafx.stage.Window;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -30,7 +30,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.ExBiFunction;
 import utility.Pair;
-import utility.Utility;
 import utility.gui.FXUtility;
 
 import java.util.Arrays;
@@ -203,7 +202,7 @@ public class AutoComplete extends PopupControl
                 }
                 catch (UserException | InternalException e)
                 {
-                    Utility.log(e);
+                    Log.log(e);
                 }
             }
             // We want to select top one, not last one, so keep track of
@@ -270,7 +269,7 @@ public class AutoComplete extends PopupControl
         }
         catch (InternalException | UserException e)
         {
-            Utility.log(e);
+            Log.log(e);
             this.completions.getItems().clear();
         }
         return this.completions.getItems();

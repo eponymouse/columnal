@@ -16,6 +16,7 @@ import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyCombination.Modifier;
 import javafx.scene.text.Text;
 import javafx.stage.PopupWindow.AnchorLocation;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -64,7 +65,7 @@ public class TranslationUtility
             }
             catch (MissingResourceException e)
             {
-                Utility.log(e);
+                Log.log(e);
                 return null;
             }
         }
@@ -146,7 +147,7 @@ public class TranslationUtility
             catch (InternalException | UserException e)
             {
                 // No need to tell the user, it's an internal error:
-                Utility.log(e);
+                Log.log(e);
             }
             return new Pair<>(original.substring(0, atIndex), shortcut);
         }

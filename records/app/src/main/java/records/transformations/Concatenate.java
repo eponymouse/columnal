@@ -6,6 +6,7 @@ import javafx.beans.binding.BooleanExpression;
 import javafx.beans.property.ReadOnlyBooleanWrapper;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.KeyFor;
@@ -284,7 +285,7 @@ public class Concatenate extends TransformationEditable
             }
             catch (InternalException | UserException e1)
             {
-                Utility.log(e1);
+                Log.log(e1);
                 // Not correct but at least will manage to save:
                 return e.getKey().getOutput() + " @TYPE BOOLEAN @VALUE " + e.getValue().getSecond().get();
             }

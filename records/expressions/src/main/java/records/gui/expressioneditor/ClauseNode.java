@@ -9,6 +9,7 @@ import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
 import javafx.scene.layout.VBox;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -326,7 +327,7 @@ public class ClauseNode extends DeepNodeTree implements EEDisplayNodeParent, EED
             }
             return vars;
         }
-        Utility.logStackTrace("Unknown child: " + child);
+        Log.logStackTrace("Unknown child: " + child);
         return vars;
     }
 

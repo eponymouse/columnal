@@ -3,6 +3,7 @@ package records.data.datatype;
 import annotation.qual.UnknownIfValue;
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
+import log.Log;
 import org.antlr.v4.runtime.ParserRuleContext;
 import org.antlr.v4.runtime.misc.ParseCancellationException;
 import org.checkerframework.checker.i18n.qual.Localized;
@@ -561,7 +562,7 @@ public class DataType
         }
         catch (InternalException | UserException e)
         {
-            Utility.log(e);
+            Log.log(e);
             return "ERR";
         }
     }
@@ -686,7 +687,7 @@ public class DataType
         }
         catch (UserException | InternalException e)
         {
-            Utility.log(e);
+            Log.log(e);
             return "Error: " + e.getLocalizedMessage();
         }
     }

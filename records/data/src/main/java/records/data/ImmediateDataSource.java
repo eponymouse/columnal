@@ -11,7 +11,7 @@ import records.grammar.MainLexer;
 import records.loadsave.OutputBuilder;
 import threadchecker.OnThread;
 import threadchecker.Tag;
-import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.io.File;
 
@@ -49,7 +49,7 @@ public class ImmediateDataSource extends DataSource
 
         OutputBuilder b = new OutputBuilder();
         b.t(MainLexer.DATA).id(getId()).t(MainLexer.FORMAT).begin().nl();
-        Utility.alertOnError_(() ->
+        FXUtility.alertOnError_(() ->
         {
             for (Column c : data.getColumns())
             {
@@ -66,7 +66,7 @@ public class ImmediateDataSource extends DataSource
             }
         });
         b.end().t(MainLexer.FORMAT).nl();
-        Utility.alertOnError_(() -> {
+        FXUtility.alertOnError_(() -> {
             b.t(MainLexer.VALUES).begin().nl();
             for (int i = 0; data.indexValid(i); i++)
             {
@@ -86,7 +86,7 @@ public class ImmediateDataSource extends DataSource
     public @OnThread(Tag.Any) TableOperations getOperations()
     {
         return new TableOperations((newColumnName, newColumnType, defaultValue) -> {
-            Utility.alertOnError_(() -> {
+            FXUtility.alertOnError_(() -> {
                 data.addColumn(newColumnType.makeImmediateColumn(newColumnName, defaultValue));
             });
             // All columns in ImmediateDataSource can be renamed:
@@ -97,22 +97,22 @@ public class ImmediateDataSource extends DataSource
             @Override
             public @OnThread(Tag.Simulation) void deleteColumn(ColumnId deleteColumnName)
             {
-                Utility.alertOnError_(() -> {
+                FXUtility.alertOnError_(() -> {
                     data.deleteColumn(deleteColumnName);
                 });
             }
         }, appendRowCount -> {
-            Utility.alertOnError_(() ->
+            FXUtility.alertOnError_(() ->
             {
                 data.insertRows(data.getLength(), appendRowCount);
             });
         }, (rowIndex, insertRowCount) -> {
-            Utility.alertOnError_(() ->
+            FXUtility.alertOnError_(() ->
             {
                 data.insertRows(rowIndex, insertRowCount);
             });
         }, (deleteRowFrom, deleteRowCount) -> {
-            Utility.alertOnError_(() -> data.removeRows(deleteRowFrom, deleteRowCount));
+            FXUtility.alertOnError_(() -> data.removeRows(deleteRowFrom, deleteRowCount));
         });
     }
 

@@ -26,6 +26,7 @@ import utility.TaggedValue;
 import utility.Utility;
 import utility.Utility.ListEx;
 import utility.Utility.ListExList;
+import utility.gui.FXUtility;
 
 import java.time.temporal.TemporalAccessor;
 import java.util.ArrayList;
@@ -184,7 +185,7 @@ public class EditableRecordSet extends RecordSet
         }
         catch (InternalException | UserException e)
         {
-            Platform.runLater(() -> Utility.showError(e));
+            Platform.runLater(() -> FXUtility.showError(e));
             for (SimulationRunnable revertOne : revert)
             {
                 try
@@ -193,7 +194,7 @@ public class EditableRecordSet extends RecordSet
                 }
                 catch (InternalException | UserException e2)
                 {
-                    Platform.runLater(() -> Utility.showError(e2));
+                    Platform.runLater(() -> FXUtility.showError(e2));
                 }
             }
             return null;
@@ -230,7 +231,7 @@ public class EditableRecordSet extends RecordSet
         }
         catch (InternalException | UserException e)
         {
-            Platform.runLater(() -> Utility.showError(e));
+            Platform.runLater(() -> FXUtility.showError(e));
             for (SimulationRunnable revertOne : revert)
             {
                 try
@@ -239,7 +240,7 @@ public class EditableRecordSet extends RecordSet
                 }
                 catch (InternalException | UserException e2)
                 {
-                    Platform.runLater(() -> Utility.showError(e2));
+                    Platform.runLater(() -> FXUtility.showError(e2));
                 }
             }
             return null;

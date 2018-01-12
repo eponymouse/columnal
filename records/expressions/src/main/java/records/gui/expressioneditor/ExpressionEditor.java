@@ -11,6 +11,7 @@ import javafx.scene.Node;
 import javafx.scene.control.TextField;
 import javafx.scene.input.Dragboard;
 import javafx.scene.layout.FlowPane;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -221,7 +222,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
         }
         catch (UserException e)
         {
-            Utility.log(e);
+            Log.log(e);
             return Collections.emptyList();
         }
         catch (InternalException e)
@@ -325,7 +326,7 @@ public class ExpressionEditor extends ConsecutiveBase<Expression, ExpressionNode
             }
             catch (InternalException | UserException e)
             {
-                Utility.log(e);
+                Log.log(e);
                 String msg = e.getLocalizedMessage();
                 if (msg != null)
                     showError(msg, Collections.emptyList());

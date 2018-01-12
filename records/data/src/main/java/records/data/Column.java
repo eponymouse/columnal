@@ -2,8 +2,6 @@ package records.data;
 
 import annotation.qual.Value;
 import javafx.application.Platform;
-import javafx.beans.value.ObservableValue;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -15,9 +13,9 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformConsumer;
 import utility.Pair;
-import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
+import utility.gui.FXUtility;
 
 import java.util.List;
 import java.util.Optional;
@@ -74,7 +72,7 @@ public abstract class Column
     public final void withDisplay(FXPlatformConsumer<String> withType)
     {
         Workers.onWorkerThread("Fetching display from column " + getName(), Priority.FETCH, () -> {
-            Utility.alertOnError_(() -> {
+            FXUtility.alertOnError_(() -> {
                 String s = getType().getHeaderDisplay();
                 Platform.runLater(() -> withType.consume(s));
             });

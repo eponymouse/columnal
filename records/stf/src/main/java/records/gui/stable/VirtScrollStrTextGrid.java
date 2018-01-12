@@ -40,6 +40,7 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.shape.Rectangle;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -62,7 +63,6 @@ import utility.FXPlatformFunction;
 import utility.FXPlatformRunnable;
 import utility.Pair;
 import utility.SimulationFunction;
-import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
@@ -72,7 +72,6 @@ import utility.gui.TranslationUtility;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -359,7 +358,7 @@ public class VirtScrollStrTextGrid implements EditorKitCallback, ScrollBindable
                 }
                 catch (InternalException | UserException e)
                 {
-                    Utility.log(e);
+                    Log.log(e);
                     break;
                 }
             }

@@ -11,6 +11,7 @@ import javafx.application.Platform;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.scene.control.Label;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -865,7 +866,7 @@ public class GuessFormat
             }
             catch (IOException | InternalException | UserException e)
             {
-                Utility.log(e);
+                Log.log(e);
                 Platform.runLater(() -> gui.tableView.setPlaceholderText(e.getLocalizedMessage()));
 
             }

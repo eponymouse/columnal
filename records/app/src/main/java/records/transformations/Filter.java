@@ -8,6 +8,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -59,7 +60,6 @@ import utility.ExFunction;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationSupplier;
-import utility.Utility;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
@@ -264,7 +264,7 @@ public class Filter extends TransformationEditable
                 }
                 catch (InternalException | UserException ex)
                 {
-                    Utility.log(ex);
+                    Log.log(ex);
                     // TODO what should we show in interface?
                 }
             });

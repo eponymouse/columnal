@@ -40,7 +40,6 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
-import org.checkerframework.dataflow.qual.Pure;
 import records.data.Column;
 import records.data.ColumnId;
 import records.data.RecordSet;
@@ -267,7 +266,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
             //boolean expandable = getColumns().stream().allMatch(TableColumn::isEditable);
             Workers.onWorkerThread("Determining row count", Workers.Priority.FETCH, () -> {
                 ArrayList<Integer> indexesToAdd = new ArrayList<Integer>();
-                Utility.alertOnError_(() -> {
+                FXUtility.alertOnError_(() -> {
                     for (int i = 0; i < INITIAL_LOAD; i++)
                     {
                         if (recordSet.indexValid(i))
@@ -305,7 +304,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         @Override
         protected void withNewColumnDetails(AppendColumn appendColumn)
         {
-            Utility.alertOnErrorFX_(() -> {
+            FXUtility.alertOnErrorFX_(() -> {
                 // Show a dialog to prompt for the name and type:
                 NewColumnDialog dialog = new NewColumnDialog(parent.getManager());
                 Optional<NewColumnDialog.NewColumnDetails> choice = dialog.showAndWait();
@@ -313,7 +312,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 {
                     Workers.onWorkerThread("Adding column", Workers.Priority.SAVE_ENTRY, () ->
                     {
-                        Utility.alertOnError_(() ->
+                        FXUtility.alertOnError_(() ->
                         {
                             appendColumn.appendColumn(choice.get().name, choice.get().type, choice.get().defaultValue);
                             Platform.runLater(() -> parent.modified());
@@ -384,7 +383,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                         }
                         catch (UserException | InternalException e)
                         {
-                            Utility.showError(e);
+                            FXUtility.showError(e);
                         }
                         break;
                     case CUSTOM:
@@ -414,7 +413,7 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
         StackPane body = new StackPane(this.recordSetOrError.<Node>either(err -> makeErrorDisplay(err),
             recordSet -> (tableDataDisplay = new TableDataDisplay(recordSet, table.getDisplayMessageWhenEmpty(), () -> {
                 parent.modified();
-                Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH,() -> Utility.alertOnError_(() -> parent.getManager().edit(table.getId(), null)));
+                Workers.onWorkerThread("Updating dependents", Workers.Priority.FETCH,() -> FXUtility.alertOnError_(() -> parent.getManager().edit(table.getId(), null)));
             })).getNode()));
         Utility.addStyleClass(body, "table-body");
         setCenter(body);
@@ -701,13 +700,13 @@ public class TableDisplay extends BorderPane implements TableDisplayBase
                 GUI.radioMenuItems(show, showItems.values().toArray(new RadioMenuItem[0]))
             ),
             GUI.menuItem("tableDisplay.menu.addTransformation", () -> parent.newTransformFromSrc(table)),
-            GUI.menuItem("tableDisplay.menu.copyValues", () -> Utility.alertOnErrorFX_(() -> ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), table.getData().getColumns()))),
+            GUI.menuItem("tableDisplay.menu.copyValues", () -> FXUtility.alertOnErrorFX_(() -> ClipboardUtils.copyValuesToClipboard(parent.getManager().getUnitManager(), parent.getManager().getTypeManager(), table.getData().getColumns()))),
             GUI.menuItem("tableDisplay.menu.exportToCSV", () -> {
                 File file = FXUtility.getFileSaveAs(parent);
                 if (file != null)
                 {
                     final File fileNonNull = file;
-                    Workers.onWorkerThread("Export to CSV", Workers.Priority.SAVE_TO_DISK, () -> Utility.alertOnError_(() -> exportToCSV(table, fileNonNull)));
+                    Workers.onWorkerThread("Export to CSV", Workers.Priority.SAVE_TO_DISK, () -> FXUtility.alertOnError_(() -> exportToCSV(table, fileNonNull)));
                 }
             })
         ));

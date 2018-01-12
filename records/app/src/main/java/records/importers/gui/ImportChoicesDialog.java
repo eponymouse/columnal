@@ -20,14 +20,12 @@ import javafx.scene.control.Label;
 import javafx.scene.control.SplitPane;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyEvent;
-import javafx.scene.input.ScrollEvent;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Pane;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
-import javafx.stage.Modality;
-import org.checkerframework.checker.i18n.qual.LocalizableKey;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.Initialized;
 import org.checkerframework.checker.nullness.qual.KeyForBottom;
@@ -47,7 +45,6 @@ import records.gui.stable.StableView.ColumnDetails;
 import records.gui.stf.TableDisplayUtility;
 import records.gui.TableNameTextField;
 import records.gui.stable.StableView;
-import records.gui.stable.StableView.ColumnHandler;
 import records.gui.stable.VirtScrollStrTextGrid.ScrollLock;
 import records.importers.ChoicePoint;
 import records.importers.ChoicePoint.Choice;
@@ -62,18 +59,15 @@ import utility.Either;
 import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationFunction;
-import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.LabelledGrid;
 import utility.gui.LabelledGrid.Row;
-import utility.gui.SegmentedButtonValue;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -128,7 +122,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
                     }
                     catch (InternalException | UserException e)
                     {
-                        Utility.log(e);
+                        Log.log(e);
                         Platform.runLater(() -> tableView.setPlaceholderText(e.getLocalizedMessage()));
 
                     }
@@ -144,7 +138,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             if (curChoices != null)
             {
                 @NonNull final Choices curChoicesNonNull = curChoices;
-                Workers.onWorkerThread("Showing import source", Priority.FETCH, () -> Utility.alertOnError_(() -> {
+                Workers.onWorkerThread("Showing import source", Priority.FETCH, () -> FXUtility.alertOnError_(() -> {
                     SourceInfo sourceInfo = srcData.apply(curChoicesNonNull);
                     if (sourceInfo != null)
                     {
@@ -165,7 +159,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
         }
         catch (InternalException e)
         {
-            Utility.log(e);
+            Log.log(e);
             choices.addRow(new Row(new Label("Internal error: "), null, new TextFlow(new Text(e.getLocalizedMessage()))));
         }
 
@@ -305,7 +299,7 @@ public class ImportChoicesDialog<FORMAT extends Format> extends Dialog<Pair<Impo
             }
             catch (InternalException e)
             {
-                Utility.log(e);
+                Log.log(e);
                 tableView.clear(null);
                 tableView.setPlaceholderText(e.getLocalizedMessage());
             }

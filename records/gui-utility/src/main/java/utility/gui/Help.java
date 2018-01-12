@@ -4,19 +4,17 @@ import annotation.help.qual.HelpKey;
 import com.google.common.cache.CacheBuilder;
 import com.google.common.cache.CacheLoader;
 import com.google.common.cache.LoadingCache;
+import log.Log;
 import nu.xom.Builder;
 import nu.xom.Document;
 import nu.xom.Element;
 import nu.xom.Elements;
-import nu.xom.Node;
 import nu.xom.Nodes;
-import nu.xom.ParsingException;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import utility.Utility;
 
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -77,7 +75,7 @@ class Help
         }
         catch (Exception e)
         {
-            Utility.log(e);
+            Log.log(e);
             throw new RuntimeException(e);
         }
     }
@@ -105,7 +103,7 @@ class Help
         }
         catch (ExecutionException e)
         {
-            Utility.log(e);
+            Log.log(e);
             return null;
         }
     }

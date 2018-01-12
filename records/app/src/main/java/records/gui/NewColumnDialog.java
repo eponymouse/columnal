@@ -29,7 +29,6 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.Pair;
-import utility.Utility;
 import utility.gui.ErrorableDialog;
 import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
@@ -89,7 +88,7 @@ public class NewColumnDialog extends ErrorableDialog<NewColumnDetails>
             if (optDataType != null && optDataType.isPresent())
             {
                 @NonNull DataType dataType = optDataType.get();
-                Utility.alertOnErrorFX_(() ->
+                FXUtility.alertOnErrorFX_(() ->
                 {
                     defaultValueEditor.resetContent(makeEditorKit(dataType));
                     defaultValueEditor.getStyleClass().add("new-column-value");

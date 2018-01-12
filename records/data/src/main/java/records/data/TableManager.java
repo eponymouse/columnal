@@ -1,7 +1,7 @@
 package records.data;
 
 import com.google.common.collect.Sets;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.dataflow.qual.Pure;
@@ -19,6 +19,7 @@ import threadchecker.Tag;
 import utility.GraphUtility;
 import utility.SimulationSupplier;
 import utility.Utility;
+import utility.gui.FXUtility;
 
 import java.io.File;
 import java.util.*;
@@ -134,7 +135,7 @@ public class TableManager
                 }
                 catch (InternalException | UserException e)
                 {
-                    Utility.log(e);
+                    Log.log(e);
                     exceptions.add(e);
                 }
                 if (loaded.size() + exceptions.size() == total)
@@ -148,7 +149,7 @@ public class TableManager
                 }
                 catch (InternalException | UserException e)
                 {
-                    Utility.log(e);
+                    Log.log(e);
                     exceptions.add(e);
                 }
                 if (loaded.size() + exceptions.size() == total)
@@ -161,7 +162,7 @@ public class TableManager
         }
         catch (InterruptedException | ExecutionException e)
         {
-            Utility.log(e);
+            Log.log(e);
         }
 
         if (exceptions.isEmpty())
@@ -327,7 +328,7 @@ public class TableManager
         }
 
         savedToReRun.thenAccept(ss -> {
-            Utility.alertOnError_(() -> reAddAll(ss));
+            FXUtility.alertOnError_(() -> reAddAll(ss));
         });
     }
 
@@ -387,7 +388,7 @@ public class TableManager
     {
         for (String script : scripts)
         {
-            Utility.alertOnError_(() -> {
+            FXUtility.alertOnError_(() -> {
                 Transformation transformation = transformationLoader.loadOne(this, script);
             });
 

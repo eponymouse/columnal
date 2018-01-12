@@ -7,6 +7,7 @@ import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.geometry.Point2D;
 import javafx.scene.Node;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
@@ -239,7 +240,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
     {
         int index = Utility.indexOfRef(operands, operand);
         if (index == -1)
-            Utility.logStackTrace("Asked for index but " + operand + " not a child of parent " + this);
+            Log.logStackTrace("Asked for index but " + operand + " not a child of parent " + this);
         return index;
     }
 
@@ -930,7 +931,7 @@ public @Interned abstract class ConsecutiveBase<EXPRESSION extends @NonNull Obje
                 }
                 catch (UserException | InternalException e)
                 {
-                    Utility.log(e);
+                    Log.log(e);
                     // Fall-through...
                 }
             }

@@ -3,6 +3,7 @@ package records.gui.stable;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import javafx.application.Platform;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
@@ -14,7 +15,6 @@ import records.data.ColumnId;
 import records.data.datatype.DataTypeValue.GetValue;
 import records.error.InternalException;
 import records.error.UserException;
-import records.gui.stable.EditorKitCallback;
 import records.gui.stable.VirtScrollStrTextGrid.CellPosition;
 import records.gui.stf.EditorKitSimpleLabel;
 import records.gui.stf.StructuredTextField.EditorKit;
@@ -22,16 +22,14 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
 import utility.FXPlatformConsumer;
-import utility.FXPlatformRunnable;
 import utility.Pair;
-import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.Workers.Worker;
 import records.gui.stable.StableView.ColumnHandler;
+import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
-import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.OptionalInt;
 import java.util.TreeMap;
@@ -145,7 +143,7 @@ public final class EditorKitCache<V> implements ColumnHandler
         }
         catch (ExecutionException e)
         {
-            Utility.log(e);
+            Log.log(e);
             setCellContent.loadedValue(rowIndex, columnIndex, new EditorKitSimpleLabel<>(e.getLocalizedMessage()));
         }
         formatVisible(OptionalInt.of(rowIndex));
@@ -267,7 +265,7 @@ public final class EditorKitCache<V> implements ColumnHandler
 
         public synchronized void update(V loadedItem)
         {
-            Utility.alertOnErrorFX_(() -> {
+            FXUtility.alertOnErrorFX_(() -> {
                 this.loadedItemOrError = Either.left(new Pair<>(loadedItem, makeEditorKit.makeKit(rowIndex, loadedItem, relinquishFocus)/*makeGraphical(rowIndex, loadedItem, onFocusChange, relinquishFocus)*/));
             });
             updateDisplay();
@@ -338,7 +336,7 @@ public final class EditorKitCache<V> implements ColumnHandler
             }
             catch (UserException | InternalException e)
             {
-                Utility.log(e);
+                Log.log(e);
                 Platform.runLater(new Runnable()
                 {
                     @Override

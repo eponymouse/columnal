@@ -5,13 +5,13 @@ import javafx.event.ActionEvent;
 import javafx.scene.Node;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Either;
-import utility.Utility;
 
 /**
  * A dialog which has an error label, and a single converter function which returns
@@ -45,7 +45,7 @@ public abstract class ErrorableDialog<R> extends Dialog<R>
                 }
                 else
                 {
-                    Utility.logStackTrace("OK pressed successfully but blank result");
+                    Log.logStackTrace("OK pressed successfully but blank result");
                 }
             }
             return null;

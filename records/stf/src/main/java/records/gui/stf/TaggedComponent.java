@@ -2,12 +2,11 @@ package records.gui.stf;
 
 import annotation.qual.Value;
 import com.google.common.collect.ImmutableList;
-import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.datatype.DataType;
 import records.data.datatype.DataType.TagType;
 import records.error.InternalException;
-import records.gui.stf.TableDisplayUtility;
 import records.gui.stf.StructuredTextField.ErrorFix;
 import records.gui.stf.StructuredTextField.Item;
 import records.gui.stf.StructuredTextField.ItemVariant;
@@ -52,7 +51,7 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
             }
             catch (InternalException e)
             {
-                Utility.log(e);
+                Log.log(e);
                 // Just leave blank:
                 currentChild = null;
             }
@@ -86,7 +85,7 @@ public class TaggedComponent extends ParentComponent<TaggedValue>
                 }
                 catch (InternalException e)
                 {
-                    Utility.log(e);
+                    Log.log(e);
                     // Just leave blank:
                     currentChild = null;
                 }

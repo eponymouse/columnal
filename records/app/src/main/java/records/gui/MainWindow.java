@@ -22,7 +22,6 @@ import records.importers.manager.ImporterManager;
 import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.Pair;
-import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
 import utility.gui.FXUtility;
@@ -133,7 +132,7 @@ public class MainWindow
         if (src != null)
         {
             @NonNull Pair<File, String> srcFinal = src;
-            Workers.onWorkerThread("Load", Priority.LOAD_FROM_DISK, () -> Utility.alertOnError_(err -> TranslationUtility.getString("error.loading", srcFinal.getFirst().getAbsolutePath(), err), () -> v.getManager().loadAll(srcFinal.getSecond())));
+            Workers.onWorkerThread("Load", Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(err -> TranslationUtility.getString("error.loading", srcFinal.getFirst().getAbsolutePath(), err), () -> v.getManager().loadAll(srcFinal.getSecond())));
         }
 
         stage.show();

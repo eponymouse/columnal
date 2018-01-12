@@ -4,6 +4,7 @@ import annotation.qual.Value;
 import javafx.application.Platform;
 import javafx.scene.input.Clipboard;
 import javafx.scene.input.DataFormat;
+import log.Log;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.data.Column;
 import records.data.ColumnId;
@@ -26,6 +27,7 @@ import utility.Pair;
 import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
+import utility.gui.FXUtility;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -54,11 +56,11 @@ public class ClipboardUtils
             }
             catch (UserException e)
             {
-                Utility.showError(e);
+                FXUtility.showError(e);
             }
             catch (InternalException e)
             {
-                Utility.log(e);
+                Log.log(e);
             }
             return Optional.empty();
         }
@@ -96,10 +98,10 @@ public class ClipboardUtils
             b.end().t(MainLexer.UNITS).nl();
             b.t(MainLexer.TYPES).begin().nl();
             // TODO Utility.alertOnError_(() -> b.raw(unitManager.save()));
-            Utility.alertOnError_(() -> b.raw(typeManager.save()).nl());
+            FXUtility.alertOnError_(() -> b.raw(typeManager.save()).nl());
             b.end().t(MainLexer.TYPES).nl();
             b.t(MainLexer.FORMAT).begin().nl();
-            Utility.alertOnError_(() ->
+            FXUtility.alertOnError_(() ->
             {
                 for (Column c : columns)
                 {
@@ -110,7 +112,7 @@ public class ClipboardUtils
             });
             b.end().t(MainLexer.FORMAT).nl();
             RecordSet data = columns.get(0).getRecordSet();
-            Utility.alertOnError_(() -> {
+            FXUtility.alertOnError_(() -> {
                 b.t(MainLexer.VALUES).begin().nl();
                 for (int i = 0; data.indexValid(i); i++)
                 {

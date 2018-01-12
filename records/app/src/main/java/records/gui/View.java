@@ -25,7 +25,6 @@ import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Dialog;
-import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
 import javafx.scene.layout.BorderPane;
@@ -812,7 +811,7 @@ public class View extends StackPane implements TableManager.TableManagerListener
         dialog.show().ifPresent(t -> {
             if (replaceOnOK != null)
                 overlays.remove(replaceOnOK);
-            Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> Utility.alertOnError_(() -> tableManager.edit(replaceOnOK == null ? null : replaceOnOK.getId(), () -> t.get().loadPosition(position))));
+            Workers.onWorkerThread("Updating tables", Priority.SAVE_ENTRY, () -> FXUtility.alertOnError_(() -> tableManager.edit(replaceOnOK == null ? null : replaceOnOK.getId(), () -> t.get().loadPosition(position))));
         });
         currentlyShowingEditTransformationDialog = null;
     }

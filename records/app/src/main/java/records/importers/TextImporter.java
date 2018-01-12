@@ -4,6 +4,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.io.Files;
 import javafx.application.Platform;
 import javafx.stage.Window;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.Localized;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.jetbrains.annotations.NotNull;
@@ -11,7 +12,6 @@ import records.data.Column;
 import records.data.DataSource;
 import records.data.EditableRecordSet;
 import records.data.ImmediateDataSource;
-import records.data.LinkedDataSource;
 import records.data.RecordSet;
 import records.data.TableId;
 import records.data.TableManager;
@@ -24,13 +24,11 @@ import records.data.columntype.OrBlankColumnType;
 import records.data.columntype.TextColumnType;
 import records.data.datatype.DataType;
 import records.data.datatype.NumberInfo;
-import records.data.datatype.DataType.TagType;
 import records.data.datatype.DataTypeUtility;
 import records.data.datatype.TypeManager;
 import records.error.FetchException;
 import records.error.InternalException;
 import records.error.UserException;
-import records.grammar.MainLexer;
 import records.importers.GuessFormat.ImportInfo;
 import records.importers.base.Importer;
 import threadchecker.OnThread;
@@ -109,7 +107,7 @@ public class TextImporter implements Importer
             catch (InternalException | UserException | IOException e)
             {
                 // TODO display
-                Utility.log(e);
+                Log.log(e);
             }
         });
     }

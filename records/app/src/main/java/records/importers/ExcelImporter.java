@@ -5,7 +5,6 @@ import javafx.application.Platform;
 import javafx.stage.Window;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
-import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.CellType;
 import org.apache.poi.ss.usermodel.DateUtil;
 import org.apache.poi.ss.usermodel.Row;
@@ -29,17 +28,15 @@ import utility.FXPlatformConsumer;
 import utility.Pair;
 import utility.SimulationFunction;
 import utility.SimulationSupplier;
-import utility.Utility;
 import utility.Workers;
 import utility.Workers.Priority;
+import utility.gui.FXUtility;
 import utility.gui.TranslationUtility;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -107,7 +104,7 @@ public class ExcelImporter implements Importer
             {
                 @NonNull Pair<ImportInfo, Format> outcomeNonNull = outcome;
                 SimulationSupplier<DataSource> makeDataSource = () -> new ImmediateDataSource(mgr, loadData.apply(outcomeNonNull.getSecond()));
-                Workers.onWorkerThread("Loading " + src.getName(), Priority.LOAD_FROM_DISK, () -> Utility.alertOnError_(() -> {
+                Workers.onWorkerThread("Loading " + src.getName(), Priority.LOAD_FROM_DISK, () -> FXUtility.alertOnError_(() -> {
                     DataSource dataSource = makeDataSource.get();
                     Platform.runLater(() -> onLoad.consume(dataSource));
                 }));

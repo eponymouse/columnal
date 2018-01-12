@@ -11,6 +11,7 @@ import javafx.scene.Node;
 import javafx.scene.control.Label;
 import javafx.scene.text.Text;
 import javafx.scene.text.TextFlow;
+import log.Log;
 import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.interning.qual.Interned;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -27,10 +28,8 @@ import records.error.InternalException;
 import records.error.UserException;
 import records.grammar.ExpressionLexer;
 import records.grammar.ExpressionParser;
-import records.grammar.ExpressionParser.BooleanLiteralContext;
 import records.grammar.ExpressionParser.CompleteBooleanLiteralContext;
 import records.grammar.ExpressionParser.CompleteNumericLiteralContext;
-import records.grammar.ExpressionParser.NumericLiteralContext;
 import records.gui.expressioneditor.AutoComplete.Completion;
 import records.gui.expressioneditor.AutoComplete.CompletionQuery;
 import records.gui.expressioneditor.AutoComplete.KeyShortcutCompletion;
@@ -40,7 +39,6 @@ import records.transformations.expression.ColumnReference;
 import records.transformations.expression.*;
 import records.transformations.expression.ColumnReference.ColumnReferenceType;
 import records.transformations.function.FunctionDefinition;
-import records.transformations.function.FunctionGroup;
 import records.transformations.function.FunctionList;
 import utility.Either;
 import utility.ExFunction;
@@ -314,7 +312,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
             }
             catch (InternalException e)
             {
-                Utility.log(e);
+                Log.log(e);
                 // Forget that type, then...
             }
         }
@@ -847,7 +845,7 @@ public class GeneralExpressionEntry extends GeneralOperandEntry<Expression, Expr
                 }
             }
             else
-                Utility.logStackTrace("Unsupported completion: " + c.getClass());
+                Log.logStackTrace("Unsupported completion: " + c.getClass());
             return textField.getText();
         }
 

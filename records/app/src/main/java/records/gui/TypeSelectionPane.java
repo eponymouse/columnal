@@ -24,9 +24,9 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.Window;
+import log.Log;
 import org.checkerframework.checker.i18n.qual.LocalizableKey;
 import org.checkerframework.checker.initialization.qual.UnderInitialization;
-import org.checkerframework.checker.initialization.qual.UnknownInitialization;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.checker.nullness.qual.RequiresNonNull;
@@ -44,13 +44,11 @@ import threadchecker.OnThread;
 import threadchecker.Tag;
 import utility.FXPlatformRunnable;
 import utility.Pair;
-import utility.Utility;
 import utility.gui.FXUtility;
 import utility.gui.GUI;
 import utility.gui.TranslationUtility;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map.Entry;
@@ -135,7 +133,7 @@ public class TypeSelectionPane
                 }
                 catch (InternalException | UserException e)
                 {
-                    Utility.log(e);
+                    Log.log(e);
                     return null;
                 }
             }

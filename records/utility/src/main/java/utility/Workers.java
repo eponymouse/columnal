@@ -1,7 +1,7 @@
 package utility;
 
 import com.google.common.collect.ImmutableList;
-import javafx.scene.layout.Priority;
+import log.Log;
 import org.checkerframework.checker.interning.qual.UsesObjectEquals;
 import org.checkerframework.checker.lock.qual.GuardedBy;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -11,7 +11,6 @@ import threadchecker.Tag;
 
 import java.util.Comparator;
 import java.util.Iterator;
-import java.util.List;
 import java.util.OptionalLong;
 import java.util.PriorityQueue;
 import java.util.Stack;
@@ -222,7 +221,7 @@ public class Workers
         }
         try
         {
-            Utility.storeThreadedCaller(work.caller);
+            Log.storeThreadedCaller(work.caller);
             work.work.run();
         }
         catch (Throwable t)
