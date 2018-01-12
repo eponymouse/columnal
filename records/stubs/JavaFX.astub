@@ -15,6 +15,13 @@ class Styleable
     ObservableList<String> getStyleClass() @UnknownInitialization;
 }
 
+package javafx.animation;
+class Animation
+{
+    // It doesn't alter any nullness, so counts as pure for us:
+    @Pure void stop();
+}
+
 package javafx.geometry;
 class Point2D
 {
@@ -277,6 +284,7 @@ class PopOver
     void setContentNode(@Nullable Node content) @UnknownInitialization;
     void setArrowLocation(ArrowLocation location) @UnknownInitialization;
     void setAutoFix(boolean value) @UnknownInitialization;
+    void setDetachable(boolean value) @UnknownInitialization;
     
     void setMinWidth(double v) @UnknownInitialization;
     void setPrefWidth(double v) @UnknownInitialization;
@@ -285,6 +293,8 @@ class PopOver
     void setMinHeight(double v) @UnknownInitialization;
     void setPrefHeight(double v) @UnknownInitialization;
     void setMaxHeight(double v) @UnknownInitialization; 
+    
+    BooleanProperty detachedProperty() @UnknownInitialization;
 }
 package org.fxmisc.richtext;
 class StyleClassedTextArea
