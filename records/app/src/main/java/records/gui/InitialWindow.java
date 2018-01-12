@@ -4,8 +4,10 @@ import javafx.geometry.Insets;
 import javafx.scene.Node;
 import javafx.scene.Scene;
 import javafx.scene.control.*;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.MouseButton;
 import javafx.scene.layout.BorderPane;
+import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.stage.FileChooser;
 import javafx.stage.Stage;
@@ -71,7 +73,16 @@ public class InitialWindow
             }
         });
         mruListView.getItems().setAll(Utility.readRecentFilesList());
+        Label titleLabel = GUI.label("us", "initial-title");
+        ImageView logo = TranslationUtility.makeImageView("logo.png");
+        if (logo != null)
+        {
+            logo.setPreserveRatio(true);
+            logo.setSmooth(true);
+            logo.fitHeightProperty().bind(titleLabel.heightProperty());
+        }
         VBox content = GUI.vbox("initial-content",
+                logo == null ? titleLabel : new HBox(titleLabel, logo),
                 headed("initial-section-new", GUI.label("initial.new.title", "initial-heading"), newButton, GUI.labelWrap("initial.new.detail")),
                 headed("initial-section-open", GUI.label("initial.open.title", "initial-heading"), openButton, GUI.vbox("initial-recent", GUI.label("initial.open.recent", "initial-subheading"), mruListView))
         );

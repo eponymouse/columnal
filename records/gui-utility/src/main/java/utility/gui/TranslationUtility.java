@@ -9,6 +9,7 @@ import javafx.scene.control.Hyperlink;
 import javafx.scene.control.Label;
 import javafx.scene.control.PopupControl;
 import javafx.scene.control.Skin;
+import javafx.scene.image.ImageView;
 import javafx.scene.input.KeyCharacterCombination;
 import javafx.scene.input.KeyCode;
 import javafx.scene.input.KeyCodeCombination;
@@ -34,6 +35,7 @@ import utility.FXPlatformSupplier;
 import utility.Pair;
 import utility.Utility;
 
+import java.net.URL;
 import java.util.*;
 
 /**
@@ -252,5 +254,19 @@ public class TranslationUtility
             return sub;
         };
         return Bindings.createStringBinding(() -> update.get(), values.<javafx.beans.Observable>toArray(new javafx.beans.Observable[0]));
+    }
+
+    public static @Nullable ImageView makeImageView(String filename)
+    {
+        ClassLoader systemClassLoader = ClassLoader.getSystemClassLoader();
+        if (systemClassLoader != null)
+        {
+            URL imageURL = systemClassLoader.getResource(filename);
+            if (imageURL != null)
+            {
+                return new ImageView(imageURL.toExternalForm());
+            }
+        }
+        return null;
     }
 }

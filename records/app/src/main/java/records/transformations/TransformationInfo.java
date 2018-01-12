@@ -41,7 +41,7 @@ public abstract class TransformationInfo
     {
         this.canonicalName = canonicalName;
         this.displayName = displayName;
-        this.imageFileName =imageFileName;
+        this.imageFileName = imageFileName;
         this.keywords = keywords;
     }
 
