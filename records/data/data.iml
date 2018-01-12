@@ -22,6 +22,8 @@
     <orderEntry type="library" name="Maven: org.sosy-lab:smtinterpol:comp:2.1-255-gcdd5908" level="project" />
     <orderEntry type="library" name="Maven: org.sosy-lab:smtinterpol:sources:2.1-255-gcdd5908" level="project" />
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.5" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-api:2.10.0" level="project" />
+    <orderEntry type="library" name="Maven: org.apache.logging.log4j:log4j-core:2.10.0" level="project" />
     <orderEntry type="module-library">
       <library name="Maven: org.bluej:threadchecker-tags:0.1">
         <CLASSES>

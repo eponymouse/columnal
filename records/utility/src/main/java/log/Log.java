@@ -1,5 +1,8 @@
 package log;
 
+import org.apache.logging.log4j.Level;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import threadchecker.OnThread;
 import threadchecker.Tag;
@@ -10,19 +13,21 @@ import java.util.WeakHashMap;
 
 public class Log
 {
+    private static Logger logger = LogManager.getRootLogger();
+    
     // Used to remember which thread set off which runnable:
     @OnThread(value = Tag.Any, requireSynchronized = true)
     private static final Map<Thread, StackTraceElement[]> threadedCallers = new WeakHashMap<>();
 
+    public static void normal(String message)
+    {
+        logger.info(message);
+    }
+    
     @SuppressWarnings("i18n")
     public static void log(String info, Throwable e)
     {
-        System.err.println(info);
-        // Print our stack trace
-        System.err.println(e);
-        StackTraceElement[] trace = e.getStackTrace();
-        for (StackTraceElement traceElement : trace)
-            System.err.println("\tat " + traceElement);
+        logger.log(Level.ERROR, info, e);
 
         // Print suppressed exceptions, if any
         for (Throwable se : e.getSuppressed())
@@ -38,10 +43,13 @@ public class Log
             StackTraceElement[] el = threadedCallers.get(Thread.currentThread());
             if (el != null)
             {
-                System.err.println("Original caller:");
+                StringBuilder sb = new StringBuilder();
+                sb.append("Original caller:\n");
                 for (StackTraceElement traceElement : el)
-                    System.err.println("\tat " + traceElement);
+                    sb.append("\tat " + traceElement + "\n");
+                logger.log(Level.ERROR, sb);
             }
+            
         }
     }
 
@@ -73,5 +81,10 @@ public class Log
         {
             log(e);
         }
+    }
+
+    public static void error(String s)
+    {
+        logger.log(Level.ERROR, s);
     }
 }

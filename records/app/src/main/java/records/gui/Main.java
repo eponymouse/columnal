@@ -2,6 +2,7 @@ package records.gui;
 
 import javafx.application.Application;
 import javafx.stage.Stage;
+import log.Log;
 import org.apache.commons.io.FileUtils;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import records.gui.MainWindow.MainWindowActions;
@@ -26,19 +27,24 @@ public class Main extends Application
     @OnThread(value = Tag.FXPlatform,ignoreParent = true)
     public void start(final Stage primaryStage) throws Exception
     {
+        Log.normal("Started application");
+        
         FXUtility.ensureFontLoaded("DroidSansMono-Regular.ttf");
         FXUtility.ensureFontLoaded("NotoSans-Regular.ttf");
         FXUtility.ensureFontLoaded("SourceCodePro-Regular.ttf");
         FXUtility.ensureFontLoaded("SourceCodePro-Semibold.ttf");
+        Log.normal("Loaded fonts");
 
         ImporterManager.getInstance().registerImporter(new TextImporter());
         // TODO move this to a plugin:
         ImporterManager.getInstance().registerImporter(new HTMLImporter());
         ImporterManager.getInstance().registerImporter(new ExcelImporter());
+        Log.normal("Registered importers");
 
         Parameters parameters = getParameters();
         if (parameters.getUnnamed().isEmpty())
         {
+            Log.normal("Showing initial window (no params)");
             InitialWindow.show(primaryStage);
         }
         else
@@ -48,14 +54,20 @@ public class Main extends Application
                 File paramFile = new File(param);
                 if (param.endsWith(".rec"))
                 {
+                    Log.normal("Showing main window, to load file: \"" + paramFile.getAbsolutePath() + "\"");
                     MainWindow.show(new Stage(), paramFile, new Pair<>(paramFile, FileUtils.readFileToString(paramFile, Charset.forName("UTF-8"))));
                 }
                 else
                 {
+                    Log.normal("Showing main window, to import file: \"" + paramFile.getAbsolutePath() + "\"");
                     @Nullable MainWindowActions mainWindowActions = InitialWindow.newProject(null);
                     if (mainWindowActions != null)
                     {
                         mainWindowActions.importFile(paramFile);
+                    }
+                    else
+                    {
+                        Log.error("No window actions found for blank new project");
                     }
                 }
             }
